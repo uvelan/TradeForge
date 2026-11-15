@@ -703,14 +703,17 @@ function StrategyLab(){
  const [savedRun,setSavedRun]=useState<BacktestRun>();
  const [runs,setRuns]=useState<BacktestRunSummary[]>([]);
  const [compareRun,setCompareRun]=useState('');
+ const [comparison,setComparison]=useState<{current:BacktestRun;peer:BacktestRun}>();
+ const compareRequest=useRef(0);
  const [archiveError,setArchiveError]=useState('');
  const refreshRuns=useCallback(()=>api.backtestRuns().then(value=>{setRuns(value);setArchiveError('');})
    .catch(error=>setArchiveError(error.message)),[]);
  useEffect(()=>{void refreshRuns();},[refreshRuns]);
  async function openRun(id:string){
    if(!id)return;
+   compareRequest.current++;setComparison(undefined);setCompareRun('');
    setLoading(true);setError('');
-   try{const snapshot=await api.backtestRun(id);setSavedRun(snapshot);setResult(snapshot.result);}
+   try{const snapshot=await api.backtestRun(id);setSavedRun(snapshot);setResult(snapshot.result);setCompareRun('');void refreshRuns();}
    catch(reason){setError((reason as Error).message);}finally{setLoading(false);}
  }
  const [tickArchives,setTickArchives]=useState<Dataset[]>([]);
@@ -730,36 +733,69 @@ function StrategyLab(){
  const validGap=Number.isInteger(Number(maxGap))&&Number(maxGap)>=1&&Number(maxGap)<=60;
  const validCosts=[slippage,commission].every(value=>value.trim()!==""&&Number(value)>=0&&Number(value)<=100);
  async function run(){
+   compareRequest.current++;setComparison(undefined);setCompareRun('');
    setLoading(true);setError('');setResult(null);setSavedRun(undefined);
    try{
      const snapshot=await api.saveBacktest(symbol,timeframe,source,saved?range:undefined,tick);
      setSavedRun(snapshot);setResult(snapshot.result);void refreshRuns();
    }catch(e){setError((e as Error).message)}finally{setLoading(false);}
  }
- const comparisonRun=runs.find(item=>item.id===compareRun);
+ async function rerunArchive(){
+   if(!savedRun)return;
+   compareRequest.current++;setComparison(undefined);setCompareRun('');
+   setLoading(true);setError('');
+   try{
+     const snapshot=await api.post<BacktestRun>(`/backtest/runs/${savedRun.id}/rerun`,{});
+     setSavedRun(snapshot);setResult(snapshot.result);setCompareRun('');void refreshRuns();
+   }catch(error){setError((error as Error).message)}
+   finally{setLoading(false)}
+ }
+ async function selectComparison(id:string){
+   const request=++compareRequest.current;
+   setCompareRun(id);setComparison(undefined);setError('');
+   if(!savedRun||!id)return;
+   try{
+     const [current,peer]=await Promise.all([api.backtestRun(savedRun.id),api.backtestRun(id)]);
+     if(request!==compareRequest.current)return;
+     setSavedRun(current);setResult(current.result);
+     if(!current.result.trust?.performance_eligible||!peer.result.trust?.performance_eligible){
+       setError('Comparison requires two replay runs with verified simulation provenance.');
+       return;
+     }
+     setComparison({current,peer});
+   }catch(error){if(request===compareRequest.current)setError((error as Error).message);}
+ }
+ const comparisonRun=comparison?.peer;
  const currentRun=runs.find(item=>item.id===savedRun?.id);
+ const comparable=Boolean(currentRun?.trust?.performance_eligible&&result?.trust?.performance_eligible);
+ const displayPerformance=Boolean(result?.trust?.performance_eligible||
+   ['SYNTHETIC_RESEARCH','OHLC_RESEARCH'].includes(result?.trust?.status??''));
  return <><PageHeading eyebrow="QUANT RESEARCH / LAB" title="Strategy laboratory" subtitle="Reproducible testing without look-ahead or misleading certainty."/><Notice tone="amber">This laboratory tests one breakout rule. Bid/ask replay supports slippage and commission. OHLC simulation excludes execution costs.</Notice><div className="two-column lab-layout"><Card><SectionTitle eyebrow="SIMULATION SETUP" title="Research parameters"/><label className="field"><span>Instrument</span><Select value={symbol} onChange={v=>setSymbol(v as SymbolName)} options={['EURUSD','GBPUSD','USDJPY','XAUUSD']}/></label><label className="field"><span>Timeframe</span><Select value={timeframe} onChange={v=>setTimeframe(v as Timeframe)} options={['M1','M3','M5','M15','M30','H1','H4','D1']}/></label><label className="field"><span>Data source</span><Select value={source} onChange={v=>setSource(v as SourceName)} options={['DEMO','MT5','MT5_SAVED','DUKASCOPY_SAVED']}/></label>{source.endsWith('_SAVED')&&<SavedRange range={range} onChange={setRange}/>}{saved&&<label className="field"><span>Execution data</span><select value={tick?.id??""} onChange={event=>setTickId(event.target.value)}>
     <option value="">OHLC candles</option><option value="archive-range">Bid/ask ticks across saved range</option>{choices.map(dataset=><option key={dataset.id} value={dataset.id}>Bid/ask ticks · {dataset.rows_count.toLocaleString()} · {dataset.id.slice(0,8)}</option>)}
   </select></label>}
   {tick&&<div className="two-column"><label className="field"><span>Slippage per side (bps)</span><input type="number" min="0" max="100" step="any" value={slippage} onChange={event=>setSlippage(event.target.value)}/></label><label className="field"><span>Commission per side (bps)</span><input type="number" min="0" max="100" step="any" value={commission} onChange={event=>setCommission(event.target.value)}/></label><label className="field"><span>Maximum quote gap (seconds)</span><input type="number" min="1" max="60" step="1" value={maxGap} onChange={event=>setMaxGap(event.target.value)}/></label></div>}
   <div className="lab-model"><strong>Mechanical baseline</strong><p>Previous-bar breakout → enter at next bar open → 2R target → stop at recent extreme → max 12 bars. Ambiguous exits contribute to expectancy bounds.</p></div><button className="btn btn-primary full" disabled={loading||Boolean(tick&&(!validCosts||!validGap))} onClick={()=>void run()}>{loading?<Spinner/>:<Zap size={17}/>} Run historical simulation</button></Card>
- <Card className="lab-results"><SectionTitle eyebrow="RESEARCH OUTPUT" title="Simulation summary"/>{result?<><div className="lab-metrics"><div><span>Eligible signals</span><strong>{result.eligible_signals}</strong></div><div><span>Win rate</span><strong>{result.win_rate==null?'—':result.win_rate+'%'}</strong></div><div><span>Expectancy</span><strong className={result.expectancy_r!=null&&result.expectancy_r>=0?'positive':'negative'}>{result.expectancy_r==null?'—':`${result.expectancy_r} R`}</strong></div><div><span>Ambiguous exits</span><strong>{result.ambiguous_excluded}{result.ambiguous_rate==null?'':` (${result.ambiguous_rate}%)`}</strong></div></div><Badge tone={result.synthetic?'amber':'blue'}>{result.synthetic?'SYNTHETIC · NOT EVIDENCE':'BROKER/DATASET SOURCE'}</Badge><p className="muted small">{result.data_note}</p>{result.unresolved_outcomes?.map(outcome=><Notice key={outcome.signal_time}>Replay stopped at {new Date(outcome.signal_time*1000).toISOString()}. {outcome.reason.toLowerCase().replaceAll('_',' ')}.</Notice>)}{Boolean(result.candle_gaps?.length)&&<Notice>The selected range has candle gaps. Only verified individual trades are shown.</Notice>}{result.ambiguous_excluded>0&&result.expectancy_bounds_r&&<Notice>Expectancy is indeterminate from OHLC. Bounds: {result.expectancy_bounds_r.worst} to {result.expectancy_bounds_r.best} R per signal. Tick replay is required.</Notice>}</>:<Empty icon={<FlaskConical/>} title="No simulation results" body="Choose a dataset and run the mechanical baseline to inspect its limitations."/>}</Card></div>
+ <Card className="lab-results"><SectionTitle eyebrow="RESEARCH OUTPUT" title="Simulation summary"/>{result?<>{!displayPerformance&&<Notice tone="amber"><strong>{result.trust?.status==='LEGACY_UNVERIFIED_ORDER'?'UNVERIFIED LEGACY REPLAY':'Replay performance unavailable'}</strong><p>{result.trust?.reason??'This response lacks a supported trust classification.'}</p></Notice>}{displayPerformance&&<div className="lab-metrics"><div><span>Eligible signals</span><strong>{result.eligible_signals}</strong></div><div><span>Win rate</span><strong>{result.win_rate==null?'—':result.win_rate+'%'}</strong></div><div><span>Expectancy</span><strong className={result.expectancy_r!=null&&result.expectancy_r>=0?'positive':'negative'}>{result.expectancy_r==null?'—':`${result.expectancy_r} R`}</strong></div><div><span>Ambiguous exits</span><strong>{result.ambiguous_excluded}{result.ambiguous_rate==null?'':` (${result.ambiguous_rate}%)`}</strong></div></div>}<Badge tone={result.synthetic?'amber':'blue'}>{result.trust?.status==='VERIFIED_PROVENANCE'?'VERIFIED SIMULATION PROVENANCE':result.trust?.status==='SYNTHETIC_RESEARCH'?'SYNTHETIC RESEARCH':result.trust?.status==='OHLC_RESEARCH'?'OHLC RESEARCH':'PERFORMANCE RESTRICTED'}</Badge><p className="muted small">{result.data_note}</p>{result.unresolved_outcomes?.map(outcome=><Notice key={outcome.signal_time}>Replay stopped at {new Date(outcome.signal_time*1000).toISOString()}. {outcome.reason.toLowerCase().replaceAll('_',' ')}.</Notice>)}{Boolean(result.candle_gaps?.length)&&<Notice>The selected range has candle gaps. Validated performance is unavailable.</Notice>}{result.ambiguous_excluded>0&&result.expectancy_bounds_r&&<Notice>Expectancy is indeterminate from OHLC. Bounds: {result.expectancy_bounds_r.worst} to {result.expectancy_bounds_r.best} R per signal. Tick replay is required.</Notice>}</>:<Empty icon={<FlaskConical/>} title="No simulation results" body="Choose a dataset and run the mechanical baseline to inspect its limitations."/>}</Card></div>
  {error&&<Notice tone="red">{error}</Notice>}<Card><SectionTitle title="Saved simulation runs"/>
    {archiveError&&<Notice tone="red">{archiveError}</Notice>}
    {runs.length>0?<div className="research-controls">
      <label>Open saved run<select value={savedRun?.id??''} disabled={loading} onChange={event=>void openRun(event.target.value)}>
        <option value="">Choose a run</option>{runs.map(item=><option key={item.id} value={item.id}>{item.symbol} · {item.timeframe} · {item.model} · {formatDate(item.created_at)}</option>)}
      </select></label>
-     {currentRun&&<label>Compare with<select value={compareRun===currentRun.id?'':compareRun} onChange={event=>setCompareRun(event.target.value)}>
-       <option value="">Choose another run</option>{runs.filter(item=>item.id!==currentRun.id).map(item=><option key={item.id} value={item.id}>{item.symbol} · {item.model} · {formatDate(item.created_at)}</option>)}
+     {currentRun&&<label>Compare with<select disabled={!comparable} value={!comparable||compareRun===currentRun.id?'':compareRun} onChange={event=>void selectComparison(event.target.value)}>
+       <option value="">Choose another run</option>{runs.filter(item=>item.id!==currentRun.id).map(item=><option key={item.id} value={item.id} disabled={!item.trust?.performance_eligible}>{item.symbol} · {item.model} · {formatDate(item.created_at)}{item.trust?.performance_eligible?'':' · Restricted'}</option>)}
      </select></label>}
    </div>:!archiveError&&<p className="muted">No saved simulations yet.</p>}
-   {currentRun&&comparisonRun&&currentRun.id!==comparisonRun.id&&<div className="evidence-pairs">
-     {[currentRun,comparisonRun].map(item=><section key={item.id}><h3>{item.symbol} · {item.timeframe} · {item.model}</h3>
+   {comparison&&comparable&&comparison.current.id===savedRun?.id&&comparisonRun&&<div className="evidence-pairs">
+     {[comparison.current,comparisonRun].map(({id,result:item})=><section key={id}><h3>{item.symbol} · {item.timeframe} · Bid/ask model</h3>
        <p>{item.source} · {item.count} recorded trades</p><p>Expectancy {item.expectancy_r===null?'Unavailable':`${item.expectancy_r} R`}</p>
      </section>)}
    </div>}
- </Card>{result&&<SimulationEvidence key={savedRun?.id} result={result} run={savedRun}/>}{result&&<Card><SectionTitle eyebrow="SIMULATION DETAILS" title="Recorded sample trades"/><div className="table-scroll"><table><thead><tr><th>ENTRY TIME</th><th>DIRECTION</th><th>ENTRY</th><th>STOP</th><th>TARGET</th><th>RESULT</th></tr></thead><tbody>{result.trades.map((t,i)=><tr key={i}><td>{formatDate(t.entry_time*1000)}</td><td>{t.side}</td><td>{t.entry.toFixed(5)}</td><td>{t.stop.toFixed(5)}</td><td>{t.target.toFixed(5)}</td><td className={t.result_r>=0?'positive':'negative'}>{t.result_r>0?'+':''}{t.result_r} R</td></tr>)}</tbody></table>{!result.trades.length&&<p className="muted">No eligible unambiguous simulated trades.</p>}</div></Card>}
+ {savedRun&&<div className="split-buttons">
+   <a className="text-button" href={`/research/api/backtest/runs/${savedRun.id}/audit`}>Download raw audit record</a>
+   {result?.execution_model&&!result.trust?.performance_eligible&&<button className="btn btn-outline" disabled={loading} onClick={()=>void rerunArchive()}>Rerun with verified archives</button>}
+ </div>}
+ </Card>{result&&<SimulationEvidence key={savedRun?.id} result={result} run={savedRun}/>}{result&&displayPerformance&&<Card><SectionTitle eyebrow="SIMULATION DETAILS" title="Recorded sample trades"/><div className="table-scroll"><table><thead><tr><th>ENTRY TIME</th><th>DIRECTION</th><th>ENTRY</th><th>STOP</th><th>TARGET</th><th>RESULT</th></tr></thead><tbody>{result.trades.map((t,i)=><tr key={i}><td>{formatDate(t.entry_time*1000)}</td><td>{t.side}</td><td>{t.entry.toFixed(5)}</td><td>{t.stop.toFixed(5)}</td><td>{t.target.toFixed(5)}</td><td className={t.result_r>=0?'positive':'negative'}>{t.result_r>0?'+':''}{t.result_r} R</td></tr>)}</tbody></table>{!result.trades.length&&<p className="muted">No eligible unambiguous simulated trades.</p>}</div></Card>}
  </>
 }
 

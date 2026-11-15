@@ -155,3 +155,38 @@ test("links four chart views and opens a saved simulation after reload",async ({
   await expect(page.getByText("Run "+id,{exact:true})).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("restricts legacy trade metrics and disables mixed saved-run comparisons", async ({page})=>{
+  const legacyId="a".repeat(64), verifiedId="b".repeat(64);
+  const model={version:2,max_quote_gap_ms:60_000,slippage_bps:"0",commission_bps_per_side:"0"};
+  const legacyTrust={version:1,status:"LEGACY_UNVERIFIED_ORDER",reason:"Historical cross-file order is unverified.",
+    performance_eligible:false,broker_execution_verified:false};
+  const verifiedTrust={...legacyTrust,status:"VERIFIED_PROVENANCE",reason:"Verified fixtures.",performance_eligible:true};
+  const meta={created_at:"2024-01-01T00:00:00Z",count:1,source:"DUKASCOPY_SAVED",symbol:"EURUSD",
+    timeframe:"M1",model:"TICK",synthetic:false};
+  await page.route("**/research/api/backtest/runs",route=>route.fulfill({json:[
+    {...meta,id:legacyId,trust:legacyTrust,expectancy_r:null},
+    {...meta,id:verifiedId,trust:verifiedTrust,expectancy_r:2.5},
+  ]}));
+  await page.route("**/research/api/backtest/runs/*",route=>{
+    const legacy=route.request().url().endsWith(legacyId);
+    const score=legacy?99:2.5;
+    return route.fulfill({json:{...meta,id:legacy?legacyId:verifiedId,market:{candles:[]},
+      result:{...meta,trust:legacy?legacyTrust:verifiedTrust,eligible_signals:1,ambiguous_excluded:0,
+        win_rate:100,expectancy_r:score,total_r:score,execution_model:model,
+        trades:[{entry_time:180,entry:101,stop:99,target:105,side:"BUY",result_r:score}]}}});
+  });
+  await page.goto("/");
+  await page.getByRole("button",{name:"Strategy Lab",exact:true}).click();
+  await page.getByLabel("Open saved run").selectOption(legacyId);
+  await expect(page.getByText("UNVERIFIED LEGACY REPLAY")).toBeVisible();
+  await expect(page.getByRole("link",{name:"Download raw audit record"})).toBeVisible();
+  await expect(page.getByRole("button",{name:"Rerun with verified archives"})).toBeVisible();
+  await expect(page.getByLabel("Compare with")).toBeDisabled();
+  await expect(page.getByText("99 R",{exact:true})).toHaveCount(0);
+  await expect(page.getByRole("img",{name:"Modelled cumulative result in R"})).toHaveCount(0);
+  await page.getByLabel("Open saved run").selectOption(verifiedId);
+  await expect(page.getByRole("img",{name:"Modelled cumulative result in R"})).toBeVisible();
+  await expect(page.getByLabel("Compare with")).toBeEnabled();
+  await expect(page.getByLabel("Compare with").locator(`option[value="${legacyId}"]`)).toBeDisabled();
+});

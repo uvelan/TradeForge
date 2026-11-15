@@ -7,7 +7,15 @@ import {CandleChart} from './components';
 import {api} from './api';
 type QuotePage={items:{time_ms:number;source_order:number;original_source_order?:number;source_partition_id?:string;source_sha256?:string;bid_units:number;ask_units:number;scale:number}[];total:number;next_offset:number|null};
 
-export function SimulationEvidence({result,run}: {result:BacktestResult;run?:BacktestRun}) {
+export function SimulationEvidence(props:{result:BacktestResult;run?:BacktestRun}) {
+  const status=props.result.trust?.status;
+  if(!props.result.trust?.performance_eligible&&status!=='SYNTHETIC_RESEARCH'&&status!=='OHLC_RESEARCH'){
+    return props.run?<section className="card"><h2>Simulation evidence</h2><p className="evidence-id">Run {props.run.id}</p></section>:null;
+  }
+  return <PerformanceEvidence {...props}/>;
+}
+
+function PerformanceEvidence({result,run}: {result:BacktestResult;run?:BacktestRun}) {
   const format=useTimestampFormat();
   const [selected,setSelected]=useState<number>();
   const trade=selected===undefined?undefined:result.trades[selected];

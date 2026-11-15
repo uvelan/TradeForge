@@ -5,7 +5,7 @@ from itertools import combinations, groupby
 from threading import Lock
 
 from .db import rows
-from .storage import partition_path, read_partition, verify_partition
+from .storage import partition_path, read_partition, read_tick_window, verify_partition
 
 
 def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int) -> tuple[int, int]:
@@ -171,8 +171,30 @@ _QUOTE_PATH_MAX_ENTRIES = 4
 _QUOTE_PATH_MAX_ROWS = 10_000
 
 
-def saved_quote_path(datasets: list[dict], start: tuple[int, int], end: tuple[int, int]) -> list[dict]:
-    key = (tuple((part["id"], part["sha256"], partition_path(part), part["rows_count"])
+def verified_execution_window(datasets: list[dict], start: tuple[int, int], end: tuple[int, int]) -> list[dict]:
+    # Caller must establish whole-archive ordering before selecting a window.
+    # Keep every quote at both boundary milliseconds before applying exact ordinals.
+    if sum(part["rows_count"] for part in datasets) > TICK_REPLAY_LIMIT:
+        raise ValueError("Selected tick partitions exceed the quote replay limit")
+    buckets = {}
+    for part in sorted(datasets, key=lambda item: item["id"]):
+        quotes = read_tick_window(part, start[0], end[0])
+        quotes.sort(key=lambda quote: (quote["time_ms"], quote["source_order"]))
+        for time, group in groupby(quotes, key=lambda quote: quote["time_ms"]):
+            if time in buckets:
+                continue
+            bucket = list(group)
+            for index, quote in enumerate(bucket):
+                quote.update(source_partition_id=part["id"], original_source_order=quote["source_order"],
+                             source_order=index if len(datasets) > 1 else quote["source_order"])
+            buckets[time] = bucket
+    return [q for time in sorted(buckets) for q in buckets[time]
+            if start <= (q["time_ms"], q["source_order"]) <= end]
+
+
+def saved_quote_path(datasets: list[dict], start: tuple[int, int], end: tuple[int, int],
+                     *, window_verified: bool = False) -> list[dict]:
+    key = (window_verified, tuple((part["id"], part["sha256"], partition_path(part), part["rows_count"])
                  for part in sorted(datasets, key=lambda item: item["id"])), start, end)
     with _QUOTE_PATH_LOCK:
         cached = _QUOTE_PATH_CACHE.get(key)
@@ -181,13 +203,16 @@ def saved_quote_path(datasets: list[dict], start: tuple[int, int], end: tuple[in
     if cached is not None:
         for dataset in datasets:
             verify_partition(dataset)
-        return cached
+        return [dict(quote) for quote in cached]
 
-    path = [quote for quote in read_tick_partitions(datasets)
-            if start <= (quote["time_ms"], quote["source_order"]) <= end]
+    if window_verified:
+        path = verified_execution_window(datasets, start, end)
+    else:
+        path = [quote for quote in read_tick_partitions(datasets)
+                if start <= (quote["time_ms"], quote["source_order"]) <= end]
     if len(path) <= _QUOTE_PATH_MAX_ROWS:
         with _QUOTE_PATH_LOCK:
-            _QUOTE_PATH_CACHE[key] = path
+            _QUOTE_PATH_CACHE[key] = tuple(dict(quote) for quote in path)
             _QUOTE_PATH_CACHE.move_to_end(key)
             if len(_QUOTE_PATH_CACHE) > _QUOTE_PATH_MAX_ENTRIES:
                 _QUOTE_PATH_CACHE.popitem(last=False)

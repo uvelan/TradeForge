@@ -27,6 +27,7 @@ from . import domain
 from .drawings import router as drawing_router
 from .workspace_routes import router as workspace_router
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
+from .replay_trust import assess_replay, project_replay, stored_replay, validated_tick_sources
 from .saved_history import recent_archive_range, saved_range, tick_partitions, read_tick_partitions, saved_quote_path
 
 
@@ -164,7 +165,9 @@ def stats():return analytics()
 
 
 @app.post('/api/ai/exports/{uid}',status_code=201)
-def create_export(uid:str, plan_version:int|None=Query(None,ge=1)):return export_ai(uid,plan_version)
+def create_export(uid:str, plan_version:int|None=Query(None,ge=1),
+                  backtest_run_id:str|None=Query(None,pattern=r"^[a-f0-9]{64}$")):
+    return export_ai(uid, plan_version, backtest_run_id=backtest_run_id)
 
 
 @app.get('/api/ai/packages')
@@ -398,11 +401,11 @@ def backtest(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',target_r:f
              slippage_bps:Decimal=Query(Decimal(0),ge=0,le=100),
              commission_bps:Decimal=Query(Decimal(0),ge=0,le=100),
              max_quote_gap_seconds:int=Query(60,ge=1,le=60)):
-    return calculate_backtest(BacktestRequest(
+    return project_replay(calculate_backtest(BacktestRequest(
         symbol=symbol,timeframe=timeframe,source=source,target_r=target_r,start=start,end=end,
         tick_dataset_id=tick_dataset_id,tick_archive_range=tick_archive_range,slippage_bps=slippage_bps,commission_bps=commission_bps,
         max_quote_gap_seconds=max_quote_gap_seconds,
-    ))["result"]
+    )), verified_now=True)["result"]
 
 
 class BacktestRequest(BaseModel):
@@ -467,15 +470,8 @@ def calculate_backtest(request: BacktestRequest):
     except (ValueError, RuntimeError, OSError, KeyError) as error:
         raise HTTPException(422, str(error)) from error
     result.update({'source':source,'synthetic':m['synthetic'],'symbol':symbol,'timeframe':timeframe})
-    return {"schema_version":1,"engine_version":1,"parameters":request.model_dump(mode="json"),
+    return {"schema_version":1,"engine_version":2,"parameters":request.model_dump(mode="json"),
             "market":m,"result":result}
-
-
-def run_summary(row: dict) -> dict:
-    summary = {"id": row["id"],"created_at":row["created_at"],**json.loads(row["summary"])}
-    if row.get("legacy_order"):
-        summary["expectancy_r"] = None
-    return summary
 
 
 @app.post('/api/backtest/runs',status_code=201)
@@ -489,61 +485,74 @@ def save_backtest(request:BacktestRequest):
     with transaction() as db:
         db.execute("INSERT INTO backtest_runs VALUES (?,?,?,?) ON CONFLICT(id) DO NOTHING",
                    (run_id,json.dumps(summary),encoded,utc_now()))
-    return load_backtest(run_id)
+    row = one("SELECT created_at FROM backtest_runs WHERE id=?", (run_id,))
+    return {"id":run_id,"created_at":row["created_at"],**project_replay(snapshot, verified_now=True)}
 
 
 @app.get('/api/backtest/runs')
 def backtest_runs(limit:int=Query(40,ge=1,le=100)):
-    return [run_summary(row) for row in rows("""SELECT id,summary,created_at,
-        json_array_length(payload,'$.result.lineage.tick_partitions') > 1
-        AND json_extract(payload,'$.result.lineage.tick_ordering') IS NULL AS legacy_order
-        FROM (SELECT id,summary,created_at,payload FROM backtest_runs ORDER BY created_at DESC,id LIMIT ?)
-        ORDER BY created_at DESC,id""", (limit,))]
+    output = []
+    for row in rows("SELECT id,created_at FROM backtest_runs ORDER BY created_at DESC,id LIMIT ?", (limit,)):
+        try:
+            result = load_backtest(row["id"])["result"]
+        except HTTPException as error:
+            if error.status_code != 409:
+                raise
+            continue  # The hash-invalid record cannot provide even trustworthy display metadata.
+        summary = {key:result[key] for key in ("count","expectancy_r","source","timeframe","symbol","synthetic","trust")}
+        summary["model"] = "TICK" if "execution_model" in result else "OHLC"
+        output.append({**row, **summary})
+    return output
 
 
 @app.get('/api/backtest/runs/{run_id}')
 def load_backtest(run_id:str):
-    row = one("SELECT * FROM backtest_runs WHERE id=?", (run_id,))
-    if row is None:
-        raise HTTPException(404,"Backtest run unavailable")
-    if sha256(row["payload"].encode()).hexdigest() != run_id:
-        raise HTTPException(409,"Saved run checksum mismatch")
-    snapshot = json.loads(row["payload"])
-    result = snapshot["result"]
-    lineage = result.get("lineage", {})
-    if legacy_multi_tick_order(lineage):
-        result.update(expectancy_r=None, expectancy_bounds_r=None, total_r=None, win_rate=None,
-                      data_note="Legacy multi-partition ordering is unverified. Rerun with verified provenance.")
-    return {"id":run_id,"created_at":row["created_at"],**snapshot}
+    row, snapshot = stored_replay(run_id)
+    return {"id":run_id,"created_at":row["created_at"],**project_replay(snapshot)}
 
 
-def legacy_multi_tick_order(lineage: dict) -> bool:
-    return len(lineage.get("tick_partitions", [])) > 1 and lineage.get("tick_ordering") != "PROVENANCE_V1"
+@app.get('/api/backtest/runs/{run_id}/audit')
+def download_backtest_audit(run_id: str):
+    row, snapshot = stored_replay(run_id)
+    record = {"audit_only": True, "id": run_id, "created_at": row["created_at"],
+              "trust": assess_replay(snapshot), "original": snapshot}
+    return Response(json.dumps(record), media_type="application/json",
+                    headers={"Content-Disposition": f'attachment; filename="audit-backtest-{run_id}.json"'})
+
+
+@app.post('/api/backtest/runs/{run_id}/rerun', status_code=201)
+def rerun_backtest(run_id: str):
+    _, snapshot = stored_replay(run_id)
+    params = snapshot["parameters"]
+    if "execution_model" not in snapshot["result"]:
+        raise HTTPException(422, "Select saved bid/ask data to rerun this model in Strategy Lab")
+    updates = {}
+    if not params.get("tick_dataset_id") and not params.get("tick_archive_range"):
+        updates["tick_archive_range"] = True
+    if params.get("start") is None and params.get("end") is None:
+        candles = snapshot["market"]["candles"]
+        if not candles or params["timeframe"] not in FRAME_MIN:
+            raise HTTPException(422, "Original candle window is unavailable")
+        updates["start"] = candles[0]["time"]
+        updates["end"] = candles[-1]["time"] + FRAME_MIN[params["timeframe"]] * 60
+    return save_backtest(BacktestRequest.model_validate({**params, **updates}))
 
 
 @app.get('/api/backtest/runs/{run_id}/trades/{trade_index}/quotes')
 def run_quotes(run_id:str,trade_index:int,offset:int=Query(0,ge=0,le=500_000),limit:int=Query(250,ge=1,le=2000)):
-    snapshot = load_backtest(run_id)
+    _, snapshot = stored_replay(run_id)
+    classification = assess_replay(snapshot, defer_tick_verification=True)
+    if not classification["performance_eligible"]:
+        raise HTTPException(409, classification["reason"])
     result = snapshot["result"]
     if not 0<=trade_index<len(result["trades"]):
         raise HTTPException(404,"Trade not found in run")
-    if "execution_model" not in result:
-        raise HTTPException(409,"This OHLC run has no recorded quote path")
     trade = result["trades"][trade_index]
-    lineage = result["lineage"]
-    partitions = lineage.get("tick_partitions") or [lineage["tick_partition"]]
-    datasets = []
-    for partition in partitions:
-        row = one("SELECT * FROM datasets WHERE id=? AND kind='ticks'", (partition["id"],))
-        if row is None or row["sha256"] != partition["sha256"]:
-            raise HTTPException(409,"Original quote partition unavailable")
-        datasets.append(row)
-    if legacy_multi_tick_order(lineage):
-        raise HTTPException(409, "Legacy multi-partition run used file-local ordering. Rerun with verified provenance.")
     start = (trade["entry_time_ms"],trade["entry_source_order"])
     end = (trade["exit_time_ms"],trade["exit_source_order"])
     try:
-        path = saved_quote_path(datasets, start, end)
+        datasets, _ = validated_tick_sources(snapshot)
+        path = saved_quote_path(datasets, start, end, window_verified=True)
     except (RuntimeError,OSError,ValueError,KeyError) as error:
         raise HTTPException(409,f"Original quote partitions failed verification: {error}") from error
     if not path or (path[0]["time_ms"],path[0]["source_order"]) != start or (

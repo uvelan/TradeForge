@@ -1,0 +1,13 @@
+✓ built in 936ms
+
+> test
+> vitest run
+
+
+ RUN  v5.1.0 K:/Projects/TradeForge/frontend
+
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  21:24:29
+   Duration  536ms (import 42%, transform 27%, tests 24%, worker 7%)

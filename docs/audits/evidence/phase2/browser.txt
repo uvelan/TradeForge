@@ -1,0 +1,26 @@
+
+> e2e
+> playwright test
+
+[WebServer] INFO:     Started server process [20684]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8098 (Press CTRL+C to quit)
+[WebServer] (node:27404) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 7 tests using 2 workers
+
+(node:18932) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28052) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 2 e2e\terminal.spec.ts:3:1 › generates a simulated dataset and reopens it after reload (3.3s)
+  ok 1 e2e\research.spec.ts:3:1 › opens the research dashboard, replays demo bars, and links to the preserved catalog (4.2s)
+  ok 3 e2e\research.spec.ts:22:1 › shows a saved background SMT watch and stops it from Market Terminal (1.3s)
+  ok 4 e2e\research.spec.ts:45:1 › navigates by keyboard and moves recorded signal evidence into a persisted draft (2.5s)
+  ok 5 e2e\research.spec.ts:95:1 › persists a trendline and resumes a frozen replay checkpoint (4.1s)
+  ok 6 e2e\research.spec.ts:135:1 › links four chart views and opens a saved simulation after reload (3.3s)
+  ok 7 e2e\research.spec.ts:159:1 › restricts legacy trade metrics and disables mixed saved-run comparisons (726ms)
+
+  7 passed (22.2s)

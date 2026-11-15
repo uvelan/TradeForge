@@ -167,7 +167,7 @@ def analytics():
       'note':'Manual journal outcomes; not a reconciled broker performance statement'}
 
 
-def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
+def _package_files(t:dict,package_id:str,cutoff:str,backtest_evidence:dict|None=None)->dict[str,bytes]:
     latest=t['versions'][0]
     plan=latest['plan']; validated=TradePlan.model_validate(plan);risk=evaluate(validated)
     with transaction() as db:
@@ -214,6 +214,11 @@ def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
         pieces.append("\n## Linked signal\nSee data/signal.json for the recorded revision and source lineage.")
     if snapshot is not None:
         pieces.append("\n## User chart capture\nSee data/chart.png and data/chart_metadata.json.")
+    if backtest_evidence is not None:
+        manifest["backtest_run"] = backtest_evidence
+        pieces.append("\n## Historical replay classification")
+        pieces.append(f'- {backtest_evidence["trust"]["status"]}. {backtest_evidence["trust"]["reason"]}')
+        pieces.append("- Classification only. This pre-trade package includes no backtest outcomes or performance.")
     return {**({"data/chart.png":snapshot[1],"data/chart_metadata.json":_json(snapshot[0]).encode()}
               if snapshot is not None else {}),
         **({"data/signal.json": _json(signal).encode()} if signal is not None else {}), 'AI_CONTEXT.md':'\n'.join(pieces).encode(),
@@ -224,7 +229,7 @@ def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
         'manifest.json':json.dumps(manifest,indent=2).encode()}
 
 
-def export_ai(uid:str, plan_version:int|None=None)->dict:
+def export_ai(uid:str, plan_version:int|None=None, *, backtest_run_id:str|None=None)->dict:
     t=get_trade(uid)
     if t["outcome"] is not None:
         raise HTTPException(422, "Pre-trade review packages require an open plan")
@@ -234,7 +239,15 @@ def export_ai(uid:str, plan_version:int|None=None)->dict:
     # Strictly bound to the current time, after latest plan was created.
     cutoff=utc_now()
     package_id=_id('PKG')
-    items=_package_files(t,package_id,cutoff)
+    backtest_evidence = None
+    if backtest_run_id is not None:
+        from .replay_trust import assess_replay, stored_replay
+        row, replay = stored_replay(backtest_run_id)
+        if row["created_at"] > cutoff or replay["result"]["symbol"] != latest["plan"]["symbol"]:
+            raise HTTPException(422, "Replay must match the plan instrument and exist at the export cutoff")
+        backtest_evidence = {"run_id": backtest_run_id, "trust": assess_replay(replay),
+                             "performance_included": False}
+    items=_package_files(t,package_id,cutoff,backtest_evidence)
     path=EXPORT_DIR/f'{package_id}.zip';partial=path.with_suffix('.pending')
     with zipfile.ZipFile(partial,'w',compression=zipfile.ZIP_DEFLATED) as z:
         for name,content in items.items():z.writestr(name,content)

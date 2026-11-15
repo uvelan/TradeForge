@@ -36,7 +36,7 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
     temp=folder/f'.part-{uuid.uuid4()}.pending'
     table=pa.Table.from_pylist(records)
     try:
-        pq.write_table(table,temp,compression='zstd')
+        pq.write_table(table, temp, compression='zstd', row_group_size=16_384 if kind == 'ticks' else None)
         with temp.open('rb+') as f:
             digest = hashlib.file_digest(f, 'sha256').hexdigest()
             os.fsync(f.fileno())
@@ -111,6 +111,32 @@ def read_partition(dataset:dict,max_rows:int=2000)->list[dict]:
         if file_signature(file) != signature:
             raise RuntimeError("Dataset changed during read")
         return table.slice(max(0, table.num_rows - max_rows)).to_pylist()
+
+
+def read_tick_window(dataset: dict, lower_ms: int, upper_ms: int) -> list[dict]:
+    """Verify the full file, then decode only row groups intersecting a quote window."""
+    import pyarrow.compute as pc
+    import pyarrow.parquet as pq
+
+    with partition_path(dataset).open("rb") as file:
+        signature = file_signature(file)
+        check_partition_digest(file, dataset["sha256"])
+        file.seek(0)
+        parquet = pq.ParquetFile(file)
+        if parquet.metadata.num_rows != dataset["rows_count"]:
+            raise ValueError("Tick partition row count differs from its manifest")
+        column = parquet.schema.names.index("time_ms")
+        indexes = []
+        for index in range(parquet.num_row_groups):
+            stats = parquet.metadata.row_group(index).column(column).statistics
+            if stats is None or not stats.has_min_max or stats.min <= upper_ms and stats.max >= lower_ms:
+                indexes.append(index)
+        table = parquet.read_row_groups(indexes)
+        if file_signature(file) != signature:
+            raise RuntimeError("Dataset changed during read")
+        timestamps = table["time_ms"]
+        return table.filter(pc.and_(pc.greater_equal(timestamps, lower_ms),
+                                    pc.less_equal(timestamps, upper_ms))).to_pylist()
 
 
 def decode_bi5(payload:bytes, symbol:str,day:datetime,hour:int|None=None)->list[dict]:
