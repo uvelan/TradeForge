@@ -1,0 +1,5 @@
+# Upstream reference lock
+
+- **deepentropy/lightweight-charts-drawing** at [1d42df90a50ab8109c8e919a9110f093e932c071](https://github.com/deepentropy/lightweight-charts-drawing/tree/1d42df90a50ab8109c8e919a9110f093e932c071). Inspected src/runtime/manager.ts, src/core/interact/placement.ts, src/core/interact/drag.ts and LICENSE. MIT. The manager separates active pointer ownership, geometry and preview on a primitive. Its position tool point model differs from TradeForge's durable three-anchor position.
+- **ordercraft-hq/terminal** at [64562c97aab59d206aaaf57ab48b284af3541a2b](https://github.com/ordercraft-hq/terminal/tree/64562c97aab59d206aaaf57ab48b284af3541a2b). Inspected frontend/src/components/ChartPane/DrawingCanvas.tsx and LICENSE. MIT. Its capture-phase chart input and canvas-to-anchor projection are relevant; its chart transport and drawing schema are not part of TF-D01.
+- TradeForge uses Lightweight Charts **5.3.0**, React **19.3.1**, Vite **8.3.8**. Inspected installed v5 definitions for primitive hit-testing, pane bounds, time/price conversion, and snapshot layers. Existing project dependency and attribution are retained.

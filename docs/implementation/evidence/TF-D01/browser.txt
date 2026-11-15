@@ -1,0 +1,32 @@
+
+> e2e
+> playwright test
+
+[WebServer] INFO:     Started server process [12620]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8098 (Press CTRL+C to quit)
+[WebServer] (node:27088) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 13 tests using 1 worker
+
+(node:28948) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1366x768 (2.6s)
+  ok  2 e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1920x1080 (2.8s)
+  ok  3 e2e\drawing-placement.spec.ts:51:1 › touch places a horizontal drawing and its persisted anchor can be edited (2.9s)
+  ok  4 e2e\drawing-placement.spec.ts:78:1 › rejects outside release and Escape then saves a rectangle with two clicks (2.2s)
+  ok  5 e2e\drawing-placement.spec.ts:99:1 › risk/reward commits valid prices after zoom and excludes the comparison axis (3.2s)
+  ok  6 e2e\drawing-placement.spec.ts:134:1 › a stale drawing save reports 409 and reload preserves the competing scene (2.0s)
+  ok  7 e2e\drawing-placement.spec.ts:154:1 › blank chart space and a secondary plot cannot save into the primary scope (2.9s)
+(node:32732) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  8 e2e\research.spec.ts:3:1 › opens the research dashboard, replays demo bars, and links to the preserved catalog (2.9s)
+  ok  9 e2e\research.spec.ts:22:1 › shows a saved background SMT watch and stops it from Market Terminal (1.0s)
+  ok 10 e2e\research.spec.ts:45:1 › navigates by keyboard and moves recorded signal evidence into a persisted draft (2.2s)
+  ok 11 e2e\research.spec.ts:95:1 › persists a trendline and resumes a frozen replay checkpoint (4.2s)
+  ok 12 e2e\research.spec.ts:135:1 › links four chart views and opens a saved simulation after reload (3.6s)
+  ok 13 e2e\terminal.spec.ts:3:1 › generates a simulated dataset and reopens it after reload (1.5s)
+
+  13 passed (40.5s)

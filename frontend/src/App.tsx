@@ -176,6 +176,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [pollError,setPollError]=useState('');
   const symbol=isBinance?'BTCUSDT':source==='MT5'?brokerSymbol:forexSymbol;
   const drawingBook=useDrawingBook(expanded?`${source}:${symbol}:${timeframe}`:"");
+  const placementDraft=useMemo(()=>drawingBook.edit?{kind:drawingBook.edit.kind,anchors:drawingBook.edit.anchors}:undefined,[drawingBook.edit]);
   const [sessionZones,setSessionZones]=useState<Record<string,Drawing>>({});
   const updateZone=useCallback((id:string,drawing?:Drawing)=>{
     setSessionZones(current=>{
@@ -489,7 +490,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
           {smt.alert?.event_key&&onSignal&&<button className="small-tool" onClick={()=>void onSignal({
             event_key:smt.alert!.event_key!,status:'SMT_CONFIRMED'
           }).catch(reason=>setPollError(reason.message))}>Inspect alert evidence</button>}
-        </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(!drawMode?'active':'')} title="Crosshair (Esc)" onClick={()=>setDrawMode(false)}><Crosshair size={18}/></button><button className={'rail-tool '+(drawMode?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={()=>setDrawMode(v=>!v)}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
+        </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(!drawMode?'active':'')} title="Crosshair (Esc)" onClick={()=>{setDrawMode(false);setPicking(false);drawingBook.setEdit(undefined);}}><Crosshair size={18}/></button><button className={'rail-tool '+(drawMode?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={()=>setDrawMode(v=>!v)}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
         <div className={'terminal-chart-columns '+(viewCount!=='1'?'multi-chart':'')}>
           <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events}:undefined} symbol={symbol} precision={digits} indicator={indicator.data || undefined} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
               item.anchors.every(anchor=>anchor.time+frameMinutes[timeframe]*60<=cutoff))}
@@ -501,7 +502,15 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             onSmtSelect={!replayActive&&onSignal?event=>{
               if(event.event_key)void onSignal({event_key:event.event_key,status:event.status}).catch(reason=>setPollError(reason.message));
             }:undefined}
-            onAnchor={drawingBook.edit?(bar,price)=>drawingBook.anchor(bar,price,digits):undefined}
+            onDrawingSelect={id=>{if(drawingBook.current?.items.some(item=>item.id===id))drawingBook.setSelected(id);}}
+            placementDraft={placementDraft}
+            dragPlacement={Boolean(drawingBook.edit&&!drawingBook.edit.item&&!drawingBook.edit.anchors.length&&
+              ['trend','rectangle','risk-reward'].includes(drawingBook.edit.kind))}
+            onAnchor={drawingBook.edit?points=>drawingBook.anchor(points,digits):undefined}
+            onPlacementPreview={drawingBook.edit?points=>{
+              const edit=drawingBook.edit!;
+              return {kind:edit.kind,anchors:[...edit.anchors,...points.map(({bar,price})=>drawingBook.point(bar,price,digits))]};
+            }:undefined}
             drawingPrompt={drawingBook.edit?`${tools[drawingBook.edit.kind][0]} · select ${drawingBook.edit.mode==='move'?'new origin':typeof drawingBook.edit.mode==='number'?drawingBook.edit.mode+1:drawingBook.edit.anchors.length+1}`:
               picking?`Select ${['entry','stop','target'][picked.length]}`:undefined}
             onAddLevel={picking?price=>{

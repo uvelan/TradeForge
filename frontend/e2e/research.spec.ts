@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("opens the research dashboard, replays demo bars, and links to the preserved catalog", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
-  await page.goto("http://127.0.0.1:4180/");
+  await page.goto("/");
   await page.getByRole("button", { name: "Market Terminal", exact: true }).click();
   const source = page.getByRole("combobox").filter({ has: page.getByRole("option", { name: "DEMO (synthetic)", exact: true }) }).last();
   await expect(source).toHaveValue("MT5");
@@ -32,7 +32,7 @@ test("shows a saved background SMT watch and stops it from Market Terminal", asy
     }
     await route.fulfill({json:{configuration:active ? watch : null,last_poll_at:100}});
   });
-  await page.goto("http://127.0.0.1:4180/");
+  await page.goto("/");
   await page.getByRole("button",{name:"Market Terminal",exact:true}).click();
   await page.getByText("Background SMT",{exact:true}).click();
   await expect(page.getByText(/EURUSD \/ GBPUSD.*Polling/)).toBeVisible();
@@ -63,7 +63,7 @@ test("navigates by keyboard and moves recorded signal evidence into a persisted 
     const {primary}=route.request().postDataJSON();
     return route.fulfill({json:{events:primary.length===10?[signal]:[],alerts:[],authority:'CLIENT_SUPPLIED_UNVERIFIED'}});
   });
-  await page.goto('http://127.0.0.1:4180/');
+  await page.goto('/');
   await expect(page.getByRole('button',{name:/Commands/})).toBeVisible();
   await page.keyboard.press('Control+k');
   const palette=page.getByRole('dialog');
@@ -94,7 +94,7 @@ test("navigates by keyboard and moves recorded signal evidence into a persisted 
 
 test("persists a trendline and resumes a frozen replay checkpoint", async ({page})=>{
   await page.setViewportSize({width:1366,height:768});
-  await page.goto("http://127.0.0.1:4180/");
+  await page.goto("/");
   await page.getByRole("button",{name:"Market Terminal",exact:true}).click();
   await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
   const chart=page.locator(".primary-chart canvas").first();
@@ -136,7 +136,7 @@ test("links four chart views and opens a saved simulation after reload",async ({
   await page.setViewportSize({width:1920,height:1080});
   const errors:string[]=[];
   page.on("pageerror",reason=>errors.push(reason.message));
-  await page.goto("http://127.0.0.1:4180/");
+  await page.goto("/");
   await page.getByRole("button",{name:"Market Terminal",exact:true}).click();
   await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
   await page.getByRole("combobox",{name:"Chart layout"}).selectOption("4");

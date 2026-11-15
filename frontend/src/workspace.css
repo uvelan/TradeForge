@@ -312,3 +312,4 @@
 .quote-path{max-height:19rem;overflow:auto}
 .plan-diff td{white-space:pre-wrap;overflow-wrap:anywhere;max-width:30rem}
 .coverage-days{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:.35rem;padding:.6rem 0}.coverage-days button[aria-pressed=true]{border-color:#60dbc1;color:#d7fff5}
+.drawing-enabled .chart-input{touch-action:none;}
