@@ -1,0 +1,1 @@
+"""TradeForge local application."""

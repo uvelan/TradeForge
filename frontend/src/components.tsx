@@ -1,0 +1,274 @@
+import {useEffect,useMemo,useRef,useState} from 'react';
+import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode, type IChartApi, type ISeriesApi, type IPriceLine, type UTCTimestamp} from 'lightweight-charts';
+import type { IndicatorResult } from './indicators';
+import type { SmtEvent } from './smt';
+import {chartTimeOptions,useTimezone} from './timezone';
+import {ArrowDownRight,ArrowUpRight,Camera,Check,ChevronDown,LoaderCircle,Maximize,Minimize,SkipForward,TriangleAlert} from 'lucide-react';
+import type {Candle} from './types';
+
+export function Badge({children,tone='neutral'}:{children:React.ReactNode;tone?:'neutral'|'green'|'red'|'amber'|'blue'}) {return <span className={`badge badge-${tone}`}>{children}</span>}
+export function SectionTitle({eyebrow,title,action}:{eyebrow?:string;title:string;action?:React.ReactNode}){return <div className="section-title"><div>{eyebrow&&<span className="eyebrow">{eyebrow}</span>}<h2>{title}</h2></div>{action}</div>}
+export function Card({children,className=''}:{children:React.ReactNode;className?:string}){return <div className={'card '+className}>{children}</div>}
+export function Metric({title,value,change,icon}:{title:string;value:string;change?:string;icon?:React.ReactNode}) {return <div className="metric card"><div className="metric-top"><span>{title}</span><div className="metric-icon">{icon}</div></div><div className="metric-number">{value}</div><div className="metric-bottom">{change?<span className="subtle">{change}</span>:<span className="muted">Real records only · no estimates</span>}</div></div>}
+export function Empty({icon,title,body}:{icon?:React.ReactNode;title:string;body:string}){return <div className="empty-state">{icon&&<div className="empty-icon">{icon}</div>}<strong>{title}</strong><p>{body}</p></div>}
+export function Spinner(){return <LoaderCircle className="spinning" size={19}/>}
+export function Notice({children,tone='amber'}:{children:React.ReactNode;tone?:'amber'|'blue'|'red'}){return <div className={`notice notice-${tone}`}><TriangleAlert size={17}/><span>{children}</span></div>}
+export function Select({value,onChange,options,label}:{value:string;onChange:(s:string)=>void;options:string[];label?:string}){return <div className="select-wrap"><select aria-label={label} value={value} onChange={e=>onChange(e.target.value)}>{options.map(o=><option key={o} value={o}>{o === "DEMO" ? "DEMO (synthetic)" : o === "BINANCE_SPOT" ? "Binance Spot" : o}</option>)}</select><ChevronDown size={15}/></div>}
+export function PriceChange({value}:{value:number}){return <span className={value>=0?'positive':'negative'}>{value>=0?<ArrowUpRight size={14}/>:<ArrowDownRight size={14}/>} {value>=0?'+':''}{value.toFixed(2)}%</span>}
+
+export type ChartLevel = {id:string; price:number};
+export type ComparisonPlacement = 'Overlay' | 'New pane';
+
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,symbol='EURUSD',precision=5,indicator,comparison,timeframe}:{
+  candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
+  onAddLevel?:(price:number)=>void;showSnapshot?:boolean;symbol?:string;precision?:number;indicator?:IndicatorResult
+  timeframe?: string;
+  comparison?: {symbol:string; candles:Candle[]; precision:number; placement:ComparisonPlacement;
+    onPlacementChange:(placement:ComparisonPlacement)=>void; smt?:SmtEvent[]}
+}){
+  const element=useRef<HTMLDivElement>(null);
+  const pointerGuide=useRef<HTMLDivElement>(null);
+  const surface=useRef<HTMLDivElement>(null);
+  const [fullscreen,setFullscreen]=useState(false);
+  const [fullscreenError,setFullscreenError]=useState("");
+  const [cursorTime,setCursorTime]=useState<number>();
+  useEffect(()=>{
+    const update=()=>setFullscreen(document.fullscreenElement===surface.current);
+    document.addEventListener("fullscreenchange",update);
+    return ()=>document.removeEventListener("fullscreenchange",update);
+  },[]);
+  async function toggleFullscreen(){
+    const target=surface.current;
+    if(!target)return;
+    setFullscreenError("");
+    try{
+      if(document.fullscreenElement===target) await document.exitFullscreen();
+      else await target.requestFullscreen();
+    }catch{
+      setFullscreenError("Fullscreen is unavailable in this browser window.");
+    }
+  }
+  const {zone}=useTimezone();
+  const chartRef=useRef<IChartApi|null>(null);
+  const seriesRef=useRef<ISeriesApi<'Candlestick'>|null>(null);
+  const comparisonRef=useRef<ISeriesApi<'Candlestick'>|null>(null);
+  const linesRef=useRef<IPriceLine[]>([]);
+  const didFit=useRef(false);
+  const clickHandler=useRef(onAddLevel);
+  const drawing=useRef(drawMode);
+  clickHandler.current=onAddLevel;
+  drawing.current=drawMode;
+  function showRecentCandles(rows: Candle[]){
+    const scale=chartRef.current?.timeScale();
+    if(!scale||!rows.length)return;
+    const count=Math.max(12,Math.min(65,Math.floor(scale.width()/11)));
+    const start=scale.timeToIndex(rows[Math.max(0,rows.length-count)].time as UTCTimestamp);
+    const end=scale.timeToIndex(rows[rows.length-1].time as UTCTimestamp);
+    if(start!==null&&end!==null)scale.setVisibleLogicalRange({from:start-0.5,to:end+3});
+  }
+  useEffect(()=>{
+    if(!element.current)return;
+    const chart=createChart(element.current,{autoSize:true,
+      layout:{background:{type:ColorType.Solid,color:'#0c131e'},textColor:'#8395ad',fontFamily:'Inter, system-ui, sans-serif',fontSize:11,attributionLogo:true},
+      grid:{vertLines:{color:'#182434'},horzLines:{color:'#182434'}},
+      crosshair:{mode:CrosshairMode.Normal,vertLine:{visible:false,labelBackgroundColor:'#27384a'},
+        horzLine:{color:'#5a7594',labelBackgroundColor:'#27384a'}},
+      rightPriceScale:{borderColor:'#263343',scaleMargins:{top:.10,bottom:.12}},
+      timeScale:{borderColor:'#263343',timeVisible:true,secondsVisible:false,rightOffset:3,lockVisibleTimeRangeOnResize:true},
+      handleScale:{mouseWheel:true,pinch:true,axisPressedMouseMove:true},
+      handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:true}});
+    chartRef.current=chart;
+    const series=chart.addSeries(CandlestickSeries,{upColor:'#2cd8ae',downColor:'#ea6a80',borderVisible:false,
+      wickUpColor:'#43dab5',wickDownColor:'#e87d90',priceFormat:{type:'price',precision,minMove:10**-precision}});
+    seriesRef.current=series;
+    chart.subscribeCrosshairMove(param=>setCursorTime(typeof param.time==='number'?param.time:undefined));
+    chart.subscribeClick(param=>{
+      if(!drawing.current||!param.point||!clickHandler.current)return;
+      const price=series.coordinateToPrice(param.point.y);
+      if(price!==null&&Number.isFinite(price))clickHandler.current(price);
+    });
+    return ()=>{linesRef.current=[];seriesRef.current=null;chartRef.current=null;didFit.current=false;chart.remove()};
+  },[symbol,precision]);
+  const comparisonSymbol=comparison?.symbol;
+  const comparisonPrecision=comparison?.precision;
+  const placement=comparison?.placement;
+  useEffect(()=>{
+    const chart=chartRef.current;
+    if(!chart||!comparisonSymbol||comparisonPrecision===undefined)return;
+    const overlay=placement==='Overlay';
+    const pane=overlay?0:chart.addPane().paneIndex();
+    if(overlay)chart.applyOptions({leftPriceScale:{visible:true,borderColor:'#263343'}});
+    const series=chart.addSeries(CandlestickSeries,{
+      priceScaleId:overlay?'left':'right',title:comparisonSymbol,priceLineVisible:false,
+      upColor:'rgba(116,162,255,0.26)',downColor:'rgba(195,147,246,0.26)',
+      borderUpColor:'#74a2ff',borderDownColor:'#c393f6',
+      wickUpColor:'#74a2ff',wickDownColor:'#c393f6',
+      priceFormat:{type:'price',precision:comparisonPrecision,minMove:10**-comparisonPrecision},
+    },pane);
+    comparisonRef.current=series;
+    return ()=>{
+      comparisonRef.current=null;
+      if(chartRef.current===chart){
+        chart.removeSeries(series);
+        if(overlay)chart.applyOptions({leftPriceScale:{visible:false}});
+      }
+    };
+  },[comparisonSymbol,comparisonPrecision,placement,symbol,precision]);
+  useEffect(()=>{
+    comparisonRef.current?.setData((comparison?.candles ?? []).map(bar=>({...bar,time:bar.time as UTCTimestamp})));
+  },[comparison,placement,symbol,precision]);
+  useEffect(()=>{
+    const series=seriesRef.current;
+    if(!series)return;
+    const sorted=[...candles].sort((a,b)=>a.time-b.time).filter((c,i,arr)=>i===0||arr[i-1].time!==c.time);
+    series.setData(sorted.map(c=>({time:c.time as UTCTimestamp,open:c.open,high:c.high,low:c.low,close:c.close})));
+    if(!didFit.current&&sorted.length){showRecentCandles(sorted);didFit.current=true}
+  },[candles,symbol,precision]);
+  useEffect(()=>{
+    const series=seriesRef.current;
+    if(!series)return;
+    linesRef.current.forEach(line=>series.removePriceLine(line));
+    linesRef.current=levels.map(level=>series.createPriceLine({price:level.price,color:'#edbd73',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'LEVEL'}));
+  },[levels,symbol,precision]);
+  useEffect(()=>{
+    const format=chartTimeOptions(zone);
+    chartRef.current?.applyOptions({timeScale:{tickMarkFormatter:format.tick},localization:{timeFormatter:format.crosshair}});
+  },[zone,symbol,precision]);
+  useEffect(()=>{
+    const chart=chartRef.current;
+    const series=seriesRef.current;
+    if(!chart||!series||!indicator)return;
+    if(indicator.render==="markers"){
+      const markers=Object.entries(indicator.series).flatMap(([title,points])=>points.map(point=>({
+        time:(point.pivot_time ?? point.time) as UTCTimestamp, price:point.value,
+        position:title==="Swing high"?"atPriceTop" as const:"atPriceBottom" as const,
+        shape:"circle" as const,color:"#e8bb79",text:title,
+      }))).sort((a,b)=>a.time-b.time);
+      const plugin=createSeriesMarkers(series,markers);
+      return ()=>{if(chartRef.current===chart)plugin.detach()};
+    }
+    const colors=["#e8bb79","#8ab4ff","#d5a4f8"];
+    const pane=indicator.render==="pane"?chart.addPane().paneIndex():0;
+    const drawn=Object.entries(indicator.series).map(([title,points],index)=>{
+      const line=chart.addSeries(LineSeries,{title,color:colors[index % colors.length],
+        lineWidth:1,priceLineVisible:false},pane);
+      line.setData(points.map(point=>({time:point.time as UTCTimestamp,value:point.value})));
+      return line;
+    });
+    return ()=>{if(chartRef.current===chart)drawn.forEach(line=>chart.removeSeries(line))};
+  },[indicator,symbol,precision]);
+  const smtEvents=comparison?.smt;
+  useEffect(()=>{
+    const chart=chartRef.current;
+    const series=seriesRef.current;
+    if(!chart||!series||!smtEvents?.length)return;
+    const other=comparisonRef.current;
+    if(!other)return;
+    const lines=smtEvents.flatMap(event=>{
+      const color=event.status==="SMT_INVALIDATED"?"#7b8897":event.direction==="bearish"?"#f7a77d":"#93e3b8";
+      return ([["primary",series],["comparison",other]] as const).map(([side,target])=>{
+        const line=chart.addSeries(LineSeries,{
+          color,lineWidth:2,lineStyle:event.status==="SMT_CONFIRMED"?0:2,
+          priceScaleId:target.options().priceScaleId,priceLineVisible:false,lastValueVisible:false,
+          crosshairMarkerVisible:false,autoscaleInfoProvider:()=>null,
+        },target.getPane().paneIndex());
+        const match=event[side];
+        line.setData([match.previous,match.current].map(point=>({time:point.time as UTCTimestamp,value:point.price})));
+        return line;
+      });
+    });
+    const plugin=createSeriesMarkers(series,smtEvents.map(event=>({
+      time:event.primary.current.time as UTCTimestamp,price:event.primary.current.price,
+      position:event.direction==="bearish"?"atPriceTop" as const:"atPriceBottom" as const,
+      shape:event.status==="SMT_CONFIRMED"?(event.direction==="bearish"?"arrowDown" as const:"arrowUp" as const):"circle" as const,
+      color:event.status==="SMT_INVALIDATED"?"#7b8897":event.direction==="bearish"?"#f7a77d":"#93e3b8",
+      size:0.75,
+    })).sort((a,b)=>a.time-b.time));
+    return()=>{if(chartRef.current===chart){plugin.detach();lines.forEach(line=>chart.removeSeries(line));}};
+  },[smtEvents,symbol,precision,comparisonSymbol,comparisonPrecision,placement]);
+  const snapshot=()=>{
+    const canvas=chartRef.current?.takeScreenshot();
+    if(!canvas)return;
+    const anchor=document.createElement('a');
+    anchor.href=canvas.toDataURL('image/png');
+    anchor.download=`tradeforge-${symbol}-${new Date().toISOString().replace(/[:.]/g,'-')}.png`;
+    anchor.click();
+  };
+  const comparisonBars=useMemo(()=>new Map(comparison?.candles.map(bar=>[bar.time,bar])),[comparison?.candles]);
+  const commonBar=comparison?candles.slice().reverse().find(bar=>comparisonBars.has(bar.time)):undefined;
+  const displayTime=cursorTime ?? commonBar?.time ?? candles.at(-1)?.time;
+  const primaryBar=candles.find(bar=>bar.time===displayTime);
+  const comparisonBar=displayTime===undefined?undefined:comparisonBars.get(displayTime);
+  const hoveredSmt=smtEvents?.filter(event=>event.primary.current.time===cursorTime||event.comparison.current.time===cursorTime);
+  const timestamp=useMemo(()=>new Intl.DateTimeFormat("en-GB",{
+    timeZone:zone,dateStyle:"medium",timeStyle:"short",
+  }),[zone]);
+  function legendRow(name:string, bar:Candle|undefined, digits:number, compared=false){
+    return <div className={compared?"chart-legend-row compared":"chart-legend-row"}>
+      <strong>{name}</strong>
+      {bar?<>{(["open","high","low","close"] as const).map(field=><span key={field}>
+        <b>{field[0].toUpperCase()}</b> {bar[field].toFixed(digits)}
+      </span>)}</>:<span>No candle at this time</span>}
+    </div>;
+  }
+  return <div ref={surface} className={'chart-container chart-surface '+(drawMode?'drawing-enabled':'')} style={{height}}>
+    <div ref={element} style={{height:'100%',width:'100%'}} aria-label="Interactive market candlestick chart"
+      onPointerMove={event=>{
+        const chart=chartRef.current;
+        const guide=pointerGuide.current;
+        if(!chart||!guide)return;
+        const bounds=event.currentTarget.getBoundingClientRect();
+        const x=event.clientX-bounds.left;
+        const y=event.clientY-bounds.top;
+        const scale=chart.timeScale();
+        const left=chart.priceScale('left').width();
+        const bottom=scale.height();
+        guide.hidden=x<left||x>=left+scale.width()||y<0||y>=bounds.height-bottom;
+        guide.style.left=`${x}px`;
+        guide.style.bottom=`${bottom}px`;
+      }}
+      onPointerLeave={()=>{if(pointerGuide.current)pointerGuide.current.hidden=true}}/>
+    <div ref={pointerGuide} className="chart-pointer-guide" aria-hidden="true" hidden/>
+    {drawMode&&<div className="drawing-prompt">Click the chart to place a horizontal level</div>}
+    {(fullscreen||comparison)&&<div className="chart-data-legend" aria-label="Chart data">
+      <div className="chart-legend-meta">
+        {timeframe&&<strong>{timeframe}</strong>}
+        {displayTime!==undefined&&<span>{timestamp.format(displayTime*1000)} · {zone}</span>}
+        {comparison&&<Select label="Comparison placement" value={comparison.placement}
+          options={['Overlay','New pane']} onChange={value=>comparison.onPlacementChange(value as ComparisonPlacement)}/>}
+      </div>
+      {legendRow(symbol,primaryBar,precision)}
+      {comparison&&legendRow(comparison.symbol,comparisonBar,comparison.precision,true)}
+      {comparison&&smtEvents&&<span className="chart-legend-meta">
+        {smtEvents.filter(event=>event.status==="SMT_CONFIRMED").length} confirmed · {smtEvents.filter(event=>event.status==="SMT_CANDIDATE").length} candidates · {smtEvents.filter(event=>event.status==="SMT_INVALIDATED").length} invalidated
+      </span>}
+      {hoveredSmt?.map(event=><div key={event.id} className="chart-legend-meta">
+        {event.status} · {event.direction} · {event.leader==="primary"?symbol:comparisonSymbol} broke its prior {event.direction==="bearish"?"high":"low"}
+        <span>{symbol} {event.primary.previous.price.toFixed(precision)} → {event.primary.current.price.toFixed(precision)}</span>
+        <span>{comparisonSymbol} {event.comparison.previous.price.toFixed(comparisonPrecision)} → {event.comparison.current.price.toFixed(comparisonPrecision)}</span>
+        {event.transitions.map(entry=><span key={entry.status}>{entry.status.replace("SMT_","")} {new Date(entry.time*1000).toISOString().slice(0,16).replace("T"," ")} UTC</span>)}
+      </div>)}
+    </div>}
+    <div className="chart-viewport-actions">
+      <button type="button" className="snapshot-btn" aria-label="Show recent candles" title="Show recent candles"
+        onClick={()=>showRecentCandles(candles)}><SkipForward size={15}/></button>
+      {showSnapshot&&<button type="button" className="snapshot-btn" title="Download chart PNG" onClick={snapshot}><Camera size={15}/> Snapshot</button>}
+      <button type="button" className="snapshot-btn" aria-label={fullscreen?"Exit fullscreen":"Fullscreen chart"}
+        title={fullscreen?"Exit fullscreen (Esc)":"Fullscreen chart"} onClick={()=>void toggleFullscreen()}>
+        {fullscreen?<Minimize size={15}/>:<Maximize size={15}/>}
+      </button>
+      {fullscreenError&&<span role="status">{fullscreenError}</span>}
+    </div>
+  </div>;
+}
+
+export function TextField({label,value,onChange,placeholder='',type='text'}:{label:string;value:string;onChange:(v:string)=>void;placeholder?:string;type?:string}){
+ return <label className="field"><span>{label}</span><input type={type} value={value} placeholder={placeholder} onChange={e=>onChange(e.target.value)}/></label>
+}
+export function TextArea({label,value,onChange,placeholder='',rows=3}:{label:string;value:string;onChange:(v:string)=>void;placeholder?:string;rows?:number}){
+ return <label className="field"><span>{label}</span><textarea value={value} placeholder={placeholder} rows={rows} onChange={e=>onChange(e.target.value)}/></label>
+}
+export function Success({children}:{children:React.ReactNode}){return <p className="success-row"><Check size={16}/>{children}</p>}
+export function useAsync<T>(fetcher:()=>Promise<T>, deps:unknown[]){const [data,setData]=useState<T|null>(null);const [error,setError]=useState('');const [loading,setLoading]=useState(true);
+  useEffect(()=>{let active=true;setLoading(true);fetcher().then(d=>{if(active){setData(d);setError('')}}).catch(e=>{if(active)setError(e.message)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false};},deps);return {data,error,loading,reload:(next:T)=>setData(next)};
+}

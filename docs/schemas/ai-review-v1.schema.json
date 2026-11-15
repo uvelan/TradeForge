@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TradeForge AI review v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "package_id", "trade_decision_id", "plan_version", "review_type",
+    "assessment", "findings", "evidence_refs", "missing_evidence", "contradictions",
+    "risk_concerns", "suggested_actions", "limitations"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "package_id": { "type": "string", "pattern": "^PKG-[A-Za-z0-9-]+$", "maxLength": 120 },
+    "trade_decision_id": { "$ref": "#/$defs/reference" },
+    "plan_version": { "type": "integer", "minimum": 1 },
+    "review_type": {
+      "enum": ["PRE_TRADE", "IN_TRADE", "POST_TRADE", "STRATEGY_RESEARCH", "LEARNING_REVIEW"]
+    },
+    "assessment": { "enum": ["SUPPORTED", "CONDITIONAL", "REJECTED", "INSUFFICIENT_DATA"] },
+    "findings": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["summary", "evidence_refs", "metric_refs"],
+        "properties": {
+          "summary": { "$ref": "#/$defs/note" },
+          "evidence_refs": {
+            "allOf": [{ "$ref": "#/$defs/references" }],
+            "minItems": 1
+          },
+          "metric_refs": { "$ref": "#/$defs/references" }
+        }
+      }
+    },
+    "evidence_refs": { "$ref": "#/$defs/references" },
+    "missing_evidence": { "$ref": "#/$defs/notes" },
+    "contradictions": { "$ref": "#/$defs/notes" },
+    "risk_concerns": { "$ref": "#/$defs/notes" },
+    "suggested_actions": { "$ref": "#/$defs/notes" },
+    "limitations": { "$ref": "#/$defs/notes" }
+  },
+  "$defs": {
+    "reference": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "references": {
+      "type": "array", "maxItems": 200, "uniqueItems": true,
+      "items": { "$ref": "#/$defs/reference" }
+    },
+    "note": { "type": "string", "minLength": 1, "maxLength": 4000 },
+    "notes": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/note" } }
+  }
+}
