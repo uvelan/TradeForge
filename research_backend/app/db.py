@@ -85,6 +85,11 @@ CREATE TABLE IF NOT EXISTS ai_reviews (
     created_at TEXT NOT NULL,
     UNIQUE(package_id, response)
 );
+CREATE TABLE IF NOT EXISTS ai_review_originals (
+  review_id TEXT PRIMARY KEY REFERENCES ai_reviews(id),
+  body BLOB NOT NULL,
+  sha256 TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS trade_outcomes (
     trade_id TEXT PRIMARY KEY REFERENCES trades(id),
     pnl_usd TEXT NOT NULL,
@@ -186,7 +191,7 @@ CREATE INDEX IF NOT EXISTS idx_fills_symbol ON imported_fills(symbol);
 CREATE INDEX IF NOT EXISTS idx_journal_time ON journal_entries(created_at DESC);
 '''
 
-IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
+IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 
 
 def connect():

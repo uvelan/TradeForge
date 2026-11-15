@@ -62,3 +62,40 @@ def saved_range(provider: str, symbol: str, timeframe: str, start: int, end: int
             "partitions": [{"id": item["id"], "sha256": item["sha256"]} for item in partitions],
             "coverage": {"start": start, "end": end, "gaps": gaps, "duplicate_bars": duplicates,
                          "truncated": len(ordered) > limit}}
+
+
+TICK_REPLAY_LIMIT = 500_000
+
+
+def tick_partitions(provider: str, symbol: str, feed_id: str, start: int, end: int) -> list[dict]:
+    first = datetime.fromtimestamp(start, UTC).isoformat()
+    last = datetime.fromtimestamp(end, UTC).isoformat()
+    partitions = rows("""SELECT * FROM datasets
+        WHERE provider=? AND symbol=? AND feed_id=? AND kind='ticks'
+        AND price_basis='BID_ASK_UNITS' AND last_time>=? AND first_time<?
+        ORDER BY first_time,id LIMIT 51""", (provider, symbol, feed_id, first, last))
+    if not partitions:
+        raise ValueError("No compatible saved bid/ask ticks overlap the candle range")
+    if len(partitions) > 50:
+        raise ValueError("Range spans more than 50 tick partitions")
+    return partitions
+
+
+def read_tick_partitions(partitions: list[dict]) -> list[dict]:
+    if sum(part["rows_count"] for part in partitions) > TICK_REPLAY_LIMIT:
+        raise ValueError("Selected tick partitions exceed the 500,000 quote replay limit")
+    quotes = {}
+    for part in partitions:
+        partition_quotes = read_partition(part, max_rows=part["rows_count"] + 1)
+        if len(partition_quotes) != part["rows_count"]:
+            raise ValueError("Tick partition row count differs from its manifest")
+        keys = set()
+        for quote in partition_quotes:
+            key = (quote["time_ms"], quote["source_order"])
+            if key in keys:
+                raise ValueError("Tick source order is ambiguous within a partition")
+            keys.add(key)
+            if key in quotes and quotes[key] != quote:
+                raise ValueError("Conflicting tick quotes in overlapping partitions")
+            quotes[key] = quote
+    return [quotes[key] for key in sorted(quotes)]

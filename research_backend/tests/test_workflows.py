@@ -29,7 +29,11 @@ def test_plan_export_import_closure(client,plan):
     response={'package_id':pkg,'trade_decision_id':uid,'plan_version':1,'assessment':'INSUFFICIENT_DATA',
         'findings':[{'text':'Broker-specific spread evidence missing','evidence_refs':['PLAN','RISK']}],
         'missing_evidence':['Actual market tick history'],'limitations':[]}
-    assert client.post('/api/ai/reviews',json=response).status_code==201
+    original = json.dumps(response, indent=2).encode()
+    imported = client.post('/api/ai/reviews', content=original, headers={'Content-Type':'application/json'})
+    assert imported.status_code == 201, imported.text
+    review_id = imported.json()["id"]
+    assert client.get(f'/api/ai/reviews/{review_id}/original').content == original
     assert client.post('/api/ai/reviews',json=response).json()['verification']=='DUPLICATE_IGNORED'
     assert client.post('/api/ai/reviews',json={**response,'plan_version':999}).status_code==422
     assert client.post('/api/ai/reviews',json={**response,'findings':[{'text':'No source','evidence_refs':['FAKE']}]}).status_code==422

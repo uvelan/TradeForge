@@ -110,7 +110,7 @@ export function SimulationEvidence({result,run}: {result:BacktestResult;run?:Bac
         </div></>}
     </div>}
     {result.lineage&&<details><summary>Source lineage</summary>
-      {[...result.lineage.candle_partitions,result.lineage.tick_partition].map(part=><p className="evidence-id" key={part.id}>{part.id}<br/>{part.sha256}</p>)}
+      {[...result.lineage.candle_partitions,...(result.lineage.tick_partitions??(result.lineage.tick_partition?[result.lineage.tick_partition]:[]))].map(part=><p className="evidence-id" key={part.id}>{part.id}<br/>{part.sha256}</p>)}
     </details>}
   </section>;
 }

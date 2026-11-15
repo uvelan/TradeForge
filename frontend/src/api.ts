@@ -31,7 +31,7 @@ export const api={
   closeTrade:(id:string,pnl:string,r:string,notes:string)=>post(`/trades/${id}/close`,{pnl_usd:pnl,result_r:r,notes}),
   packages:()=>request<import('./types').Package[]>('/ai/packages'),
   reviews:()=>request<import('./types').Review[]>('/ai/reviews'),
-  importReview:(input:unknown)=>post<{id:string;assessment:string;verification:string}>('/ai/reviews',input),
+  importReview:(input:string)=>request<{id:string;assessment:string;verification:string}>('/ai/reviews',{method:'POST',body:input}),
   journal:()=>request<import('./types').JournalEntry[]>('/journal'),
   addJournal:(kind:string,title:string,content:string,signal_reference?:import('./types').SignalReference,context?:import('./types').JournalContext)=>post<{id:string}>('/journal',{kind,title,content,signal_reference,...context}),
   datasets:()=>request<import('./types').Dataset[]>('/datasets'),
@@ -39,12 +39,12 @@ export const api={
     tick?:{id:string;slippage:string;commission:string;maxGap:string})=>
     request<import('./types').BacktestResult>('/backtest?'+new URLSearchParams({
       symbol,timeframe,source,...(range?{start:String(range.start),end:String(range.end)}:{}),
-      ...(tick?{tick_dataset_id:tick.id,slippage_bps:tick.slippage,commission_bps:tick.commission,max_quote_gap_seconds:tick.maxGap}:{}),
+      ...(tick?{...(tick.id==="archive-range"?{tick_archive_range:"true"}:{tick_dataset_id:tick.id}),slippage_bps:tick.slippage,commission_bps:tick.commission,max_quote_gap_seconds:tick.maxGap}:{}),
     })),
   saveBacktest:(symbol:SymbolName,timeframe:Timeframe,source:SourceName,range?:CandleRange,
     tick?:{id:string;slippage:string;commission:string;maxGap:string})=>
     post<import('./types').BacktestRun>('/backtest/runs',{
-      symbol,timeframe,source,...range,...(tick?{tick_dataset_id:tick.id,slippage_bps:tick.slippage,
+      symbol,timeframe,source,...range,...(tick?{...(tick.id==="archive-range"?{tick_archive_range:true}:{tick_dataset_id:tick.id}),slippage_bps:tick.slippage,
         commission_bps:tick.commission,max_quote_gap_seconds:Number(tick.maxGap)}:{}),
     }),
   backtestRuns:()=>request<import('./types').BacktestRunSummary[]>('/backtest/runs'),

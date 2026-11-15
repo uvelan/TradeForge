@@ -246,7 +246,7 @@ def export_ai(uid:str, plan_version:int|None=None)->dict:
     return {'package_id':package_id,'sha256':digest,'download_url':f'/research/api/ai/packages/{package_id}/download'}
 
 
-def import_ai(data:ReviewV1 | ReviewInput)->dict:
+def import_ai(data: ReviewV1 | ReviewInput, original: bytes) -> dict:
     pkg=one('SELECT * FROM ai_packages WHERE id=?',(data.package_id,))
     if not pkg:raise HTTPException(404,'AI package not found')
     if pkg['trade_id']!=data.trade_decision_id or pkg['plan_version']!=data.plan_version:
@@ -286,12 +286,19 @@ def import_ai(data:ReviewV1 | ReviewInput)->dict:
         if 'metric_claims' in f:
             raise HTTPException(422,'Unverified numerical metric claims are not permitted')
     serialized=_json(data.model_dump())
-    existing=one('SELECT id,assessment FROM ai_reviews WHERE package_id=? AND response=?',(data.package_id,serialized))
-    if existing:return {'id':existing['id'],'assessment':existing['assessment'],'verification':'DUPLICATE_IGNORED'}
-    uid=_id('REVIEW')
+    uid = _id('REVIEW')
     with transaction() as db:
+        db.execute("BEGIN IMMEDIATE")
+        existing = db.execute(
+            "SELECT id,assessment FROM ai_reviews WHERE package_id=? AND response=?",
+            (data.package_id, serialized),
+        ).fetchone()
+        if existing:
+            return {"id": existing["id"], "assessment": existing["assessment"], "verification": "DUPLICATE_IGNORED"}
         db.execute('INSERT INTO ai_reviews VALUES(?,?,?,?,?,?)',
           (uid,data.package_id,data.assessment,serialized,'STRUCTURE_VALID_CONTENT_UNVERIFIED',utc_now()))
+        db.execute("INSERT INTO ai_review_originals VALUES(?,?,?)",
+                   (uid, original, hashlib.sha256(original).hexdigest()))
     return {'id':uid,'assessment':data.assessment,'verification':'STRUCTURE_VALID_CONTENT_UNVERIFIED',
       'warning':'Free-text findings are not fact-checked by a model or by this importer.'}
 

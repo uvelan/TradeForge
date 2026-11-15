@@ -65,6 +65,38 @@ def test_saved_run_quote_path_stops_at_exact_source_order(client):
     assert response["total"]==2
 
 
+def test_archive_tick_run_merges_and_pins_verified_partitions(client):
+    candles, ticks = inputs()
+    candles[3].update(high=106, low=98)
+    for tick in ticks:
+        tick["time"] = tick["time_ms"] // 1000
+    write_partition("DUKASCOPY", "test", "EURUSD", "candles", "M1", "BID", candles)
+    inputs_by_partition = [ticks[:2], ticks[1:]]
+    shards = [
+        write_partition("DUKASCOPY", "test", "EURUSD", "ticks", None, "BID_ASK_UNITS", quotes)
+        for quotes in inputs_by_partition
+    ]
+    write_partition("DUKASCOPY", "different-feed", "EURUSD", "ticks", None, "BID_ASK_UNITS", ticks)
+    path = "/api/backtest/runs"
+    payload = {"source": "DUKASCOPY_SAVED", "timeframe": "M1", "tick_archive_range": True}
+    saved = client.post(path, json=payload)
+    assert saved.status_code == 201, saved.text
+    snapshot = saved.json()
+    assert snapshot["result"]["lineage"]["tick_partitions"] == [
+        {"id": part["id"], "sha256": part["sha256"]} for part in shards
+    ]
+    assert snapshot["result"]["trades"][0]["exit_reason"] == "TARGET"
+    url = f"{path}/{snapshot['id']}/trades/0/quotes"
+    assert [row["source_order"] for row in client.get(url).json()["items"]] == [1, 2]
+
+    conflicting = {**ticks[1], "ask_units": 103}
+    write_partition("DUKASCOPY", "test", "EURUSD", "ticks", None, "BID_ASK_UNITS", [conflicting])
+    rejected = client.post(path, json=payload)
+    assert rejected.status_code == 422
+    assert "Conflicting tick quotes" in rejected.json()["detail"]
+    assert [row["source_order"] for row in client.get(url).json()["items"]] == [1, 2]
+
+
 def test_plan_revisions_check_previous_version_and_no_trade_finalizes(client,plan):
     initial=client.post("/api/trades",json=plan).json()
     url="/api/trades/"+initial["id"]

@@ -8,7 +8,7 @@ from hashlib import sha256
 import asyncio
 import json
 import uuid
-from fastapi import FastAPI, HTTPException, Query, UploadFile, File
+from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Request, Response
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel,Field, model_validator
@@ -26,7 +26,7 @@ from . import domain
 from .drawings import router as drawing_router
 from .workspace_routes import router as workspace_router
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
-from .saved_history import recent_archive_range, saved_range
+from .saved_history import recent_archive_range, saved_range, tick_partitions, read_tick_partitions
 
 
 @asynccontextmanager
@@ -181,11 +181,29 @@ def download_ai(pkg:str):
 
 
 @app.post('/api/ai/reviews',status_code=201)
-def import_review(review:ReviewV1 | ReviewInput):return import_ai(review)
+async def import_review(review: ReviewV1 | ReviewInput, request: Request):
+    original = await request.body()
+    if len(original) > 1_000_000:
+        raise HTTPException(413, "AI review exceeds 1 MB")
+    return await asyncio.to_thread(import_ai, review, original)
+
+
+@app.get('/api/ai/reviews/{review_id}/original')
+def download_review_original(review_id: str):
+    row = one("SELECT body,sha256 FROM ai_review_originals WHERE review_id=?", (review_id,))
+    if row is None:
+        raise HTTPException(404, "Original AI review response unavailable")
+    if sha256(row["body"]).hexdigest() != row["sha256"]:
+        raise HTTPException(409, "Original AI review checksum mismatch")
+    return Response(row["body"], media_type="application/json",
+                    headers={"Content-Disposition": 'attachment; filename="ai-review.json"'})
 
 
 @app.get('/api/ai/reviews')
-def reviews():return rows('SELECT id,package_id,assessment,verification,created_at FROM ai_reviews ORDER BY created_at DESC')
+def reviews():
+    return rows("""SELECT id,package_id,assessment,verification,created_at,
+        EXISTS(SELECT 1 FROM ai_review_originals WHERE review_id=ai_reviews.id) AS has_original
+        FROM ai_reviews ORDER BY created_at DESC""")
 
 
 @app.get('/api/journal')
@@ -303,13 +321,13 @@ def imported_deals():return rows('SELECT id,symbol,imported_at FROM imported_fil
 
 @app.get('/api/backtest')
 def backtest(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',target_r:float=Query(2.0,ge=1,le=5),
-             start:int|None=None,end:int|None=None,tick_dataset_id:str|None=None,
+             start:int|None=None,end:int|None=None,tick_dataset_id:str|None=None, tick_archive_range:bool=False,
              slippage_bps:Decimal=Query(Decimal(0),ge=0,le=100),
              commission_bps:Decimal=Query(Decimal(0),ge=0,le=100),
              max_quote_gap_seconds:int=Query(60,ge=1,le=60)):
     return calculate_backtest(BacktestRequest(
         symbol=symbol,timeframe=timeframe,source=source,target_r=target_r,start=start,end=end,
-        tick_dataset_id=tick_dataset_id,slippage_bps=slippage_bps,commission_bps=commission_bps,
+        tick_dataset_id=tick_dataset_id,tick_archive_range=tick_archive_range,slippage_bps=slippage_bps,commission_bps=commission_bps,
         max_quote_gap_seconds=max_quote_gap_seconds,
     ))["result"]
 
@@ -322,6 +340,7 @@ class BacktestRequest(BaseModel):
     start: int | None = Field(default=None, ge=0)
     end: int | None = Field(default=None, ge=0)
     tick_dataset_id: str | None = Field(default=None,max_length=100)
+    tick_archive_range: bool = False
     slippage_bps: Decimal = Field(default=Decimal(0),ge=0,le=100)
     commission_bps: Decimal = Field(default=Decimal(0),ge=0,le=100)
     max_quote_gap_seconds: int = Field(default=60,ge=1,le=60)
@@ -331,24 +350,34 @@ def calculate_backtest(request: BacktestRequest):
     symbol,timeframe,source = request.symbol,request.timeframe,request.source
     start,end,target_r = request.start,request.end,request.target_r
     tick_dataset_id = request.tick_dataset_id
+    if request.tick_archive_range and (tick_dataset_id is not None or not source.endswith("_SAVED")):
+        raise HTTPException(422, "Choose either a single tick partition or matching saved range ticks")
+    tick_enabled = tick_dataset_id is not None or request.tick_archive_range
     m=market_candles(symbol,timeframe,source,limit=700,start=start,end=end)
     coverage = m.get("coverage")
-    if coverage and ((tick_dataset_id is None and coverage["gaps"])
+    if coverage and ((not tick_enabled and coverage["gaps"])
                      or (start is not None and coverage["truncated"])):
         raise HTTPException(422, "Select a complete archive range of at most 700 candles for this backtest")
     try:
-        if tick_dataset_id is None:
+        if not tick_enabled:
             result=breakout_backtest(m['candles'],target_r)
         else:
-            dataset = one("SELECT * FROM datasets WHERE id=?", (tick_dataset_id,))
-            if (not dataset or dataset["kind"] != "ticks" or dataset["symbol"] != symbol
-                    or dataset["provider"] + "_SAVED" != source or dataset["feed_id"] != m.get("feed_id")
-                    or dataset["price_basis"] != "BID_ASK_UNITS" or m["price_basis"] != "BID"):
-                raise ValueError("Choose saved bid candles and a bid/ask tick partition from the same feed and symbol")
-            if dataset["rows_count"] > 500_000:
-                raise ValueError("Tick partition exceeds the 500,000 quote replay limit")
-            ticks = read_partition(dataset, max_rows=500_000)
+            if m["price_basis"] != "BID":
+                raise ValueError("Tick replay requires saved bid candles")
             step = FRAME_MIN[timeframe] * 60
+            if request.tick_archive_range:
+                if not m["candles"]:
+                    raise ValueError("No saved bid candles in the selected range")
+                datasets = tick_partitions(source.removesuffix("_SAVED"), symbol, m["feed_id"],
+                                           m["candles"][0]["time"], m["candles"][-1]["time"] + step)
+            else:
+                dataset = one("SELECT * FROM datasets WHERE id=?", (tick_dataset_id,))
+                if (not dataset or dataset["kind"] != "ticks" or dataset["symbol"] != symbol
+                        or dataset["provider"] + "_SAVED" != source or dataset["feed_id"] != m.get("feed_id")
+                        or dataset["price_basis"] != "BID_ASK_UNITS"):
+                    raise ValueError("Choose saved bid candles and a bid/ask tick partition from the same feed and symbol")
+                datasets = [dataset]
+            ticks = read_tick_partitions(datasets)
             validate_bid_extremes(m["candles"], ticks, step)
             result = replay_breakout(m["candles"], ticks, step, target_r,
                                      slip_bps=request.slippage_bps, commission_bps=request.commission_bps,
@@ -357,8 +386,10 @@ def calculate_backtest(request: BacktestRequest):
                 result["candle_gaps"] = coverage["gaps"]
                 # With no verified calendar, gaps may hide signals even if no open trade spans them.
                 result.update(expectancy_r=None, expectancy_bounds_r=None, total_r=None, win_rate=None)
-            result["lineage"] = {"candle_partitions":m["partitions"],
-                                 "tick_partition":{"id":dataset["id"],"sha256":dataset["sha256"]}}
+            tick_lineage = [{"id": part["id"], "sha256": part["sha256"]} for part in datasets]
+            result["lineage"] = {"candle_partitions": m["partitions"], "tick_partitions": tick_lineage}
+            if tick_dataset_id is not None:
+                result["lineage"]["tick_partition"] = tick_lineage[0]
     except (ValueError, RuntimeError, OSError, KeyError) as error:
         raise HTTPException(422, str(error)) from error
     result.update({'source':source,'synthetic':m['synthetic'],'symbol':symbol,'timeframe':timeframe})
@@ -377,7 +408,7 @@ def save_backtest(request:BacktestRequest):
     run_id = sha256(encoded.encode()).hexdigest()
     result = snapshot["result"]
     summary = {key:result[key] for key in ("count","expectancy_r","source","timeframe","symbol","synthetic")}
-    summary["model"] = "TICK" if request.tick_dataset_id else "OHLC"
+    summary["model"] = "TICK" if "execution_model" in result else "OHLC"
     with transaction() as db:
         db.execute("INSERT INTO backtest_runs VALUES (?,?,?,?) ON CONFLICT(id) DO NOTHING",
                    (run_id,json.dumps(summary),encoded,utc_now()))
@@ -408,14 +439,18 @@ def run_quotes(run_id:str,trade_index:int,offset:int=Query(0,ge=0,le=500_000),li
     if "execution_model" not in result:
         raise HTTPException(409,"This OHLC run has no recorded quote path")
     trade = result["trades"][trade_index]
-    partition = result["lineage"]["tick_partition"]
-    row = one("SELECT * FROM datasets WHERE id=? AND kind='ticks'", (partition["id"],))
-    if row is None or row["sha256"] != partition["sha256"] or row["rows_count"] > 500_000:
-        raise HTTPException(409,"Original quote partition unavailable")
+    lineage = result["lineage"]
+    partitions = lineage.get("tick_partitions") or [lineage["tick_partition"]]
+    datasets = []
+    for partition in partitions:
+        row = one("SELECT * FROM datasets WHERE id=? AND kind='ticks'", (partition["id"],))
+        if row is None or row["sha256"] != partition["sha256"]:
+            raise HTTPException(409,"Original quote partition unavailable")
+        datasets.append(row)
     try:
-        quotes = read_partition(row,max_rows=500_000)
-    except (RuntimeError,OSError,ValueError) as error:
-        raise HTTPException(409,f"Original quote partition failed verification: {error}") from error
+        quotes = read_tick_partitions(datasets)
+    except (RuntimeError,OSError,ValueError,KeyError) as error:
+        raise HTTPException(409,f"Original quote partitions failed verification: {error}") from error
     start = (trade["entry_time_ms"],trade["entry_source_order"])
     end = (trade["exit_time_ms"],trade["exit_source_order"])
     path = sorted((q for q in quotes if start <= (q["time_ms"],q["source_order"]) <= end),
