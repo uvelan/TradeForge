@@ -6,6 +6,8 @@ import {useCandleColors} from './candleColors';
 import {chartTimeOptions,useTimezone} from './timezone';
 import {ArrowDownRight,ArrowUpRight,Camera,Check,ChevronDown,LoaderCircle,Maximize,Minimize,SkipForward,TriangleAlert} from 'lucide-react';
 import type {Candle} from './types';
+import type {ChartLink} from './ChartLink';
+import {DrawingLayer,type Drawing} from './Drawings';
 
 export function Badge({children,tone='neutral'}:{children:React.ReactNode;tone?:'neutral'|'green'|'red'|'amber'|'blue'}) {return <span className={`badge badge-${tone}`}>{children}</span>}
 export function SectionTitle({eyebrow,title,action}:{eyebrow?:string;title:string;action?:React.ReactNode}){return <div className="section-title"><div>{eyebrow&&<span className="eyebrow">{eyebrow}</span>}<h2>{title}</h2></div>{action}</div>}
@@ -20,19 +22,27 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,symbol='EURUSD',precision=5,indicator,comparison,timeframe}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicator,comparison,timeframe,focus,link,linkId,drawings,onAnchor,onSmtSelect,onSaveSnapshot}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
   onAddLevel?:(price:number)=>void;showSnapshot?:boolean;symbol?:string;precision?:number;indicator?:IndicatorResult
   timeframe?: string;
+  drawingPrompt?: string;
+  focus?: {epoch:number;sequence:number};
+  link?:ChartLink; linkId?:string;
+  drawings?:Drawing[]; onAnchor?:(bar:Candle,price:number)=>void; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>;
   comparison?: {symbol:string; candles:Candle[]; precision:number; placement:ComparisonPlacement;
-    onPlacementChange:(placement:ComparisonPlacement)=>void; smt?:SmtEvent[]}
+    onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]}
 }){
   const element=useRef<HTMLDivElement>(null);
   const pointerGuide=useRef<HTMLDivElement>(null);
   const surface=useRef<HTMLDivElement>(null);
   const [fullscreen,setFullscreen]=useState(false);
   const [fullscreenError,setFullscreenError]=useState("");
+  const [snapshotStatus,setSnapshotStatus]=useState("");
+  const [savingSnapshot,setSavingSnapshot]=useState(false);
   const [cursorTime,setCursorTime]=useState<number>();
+  const [missingLinkedTime,setMissingLinkedTime]=useState<number>();
+  const linkedBars=useRef(new Map<number,Candle>());
   useEffect(()=>{
     const update=()=>setFullscreen(document.fullscreenElement===surface.current);
     document.addEventListener("fullscreenchange",update);
@@ -57,6 +67,13 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   const linesRef=useRef<IPriceLine[]>([]);
   const didFit=useRef(false);
   const clickHandler=useRef(onAddLevel);
+  const anchorHandler=useRef(onAnchor);
+  const markerSelection=useRef(onSmtSelect);
+  markerSelection.current=onSmtSelect;
+  const markerEvents=useRef<SmtEvent[]>([]);
+  markerEvents.current=comparison?.smt??[];
+  anchorHandler.current=onAnchor;
+  const paintLayer=useRef<DrawingLayer|null>(null);
   const drawing=useRef(drawMode);
   clickHandler.current=onAddLevel;
   drawing.current=drawMode;
@@ -83,14 +100,67 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const series=chart.addSeries(CandlestickSeries,{upColor:'#2cd8ae',downColor:'#ea6a80',borderVisible:false,
       wickUpColor:'#43dab5',wickDownColor:'#e87d90',priceFormat:{type:'price',precision,minMove:10**-precision}});
     seriesRef.current=series;
-    chart.subscribeCrosshairMove(param=>setCursorTime(typeof param.time==='number'?param.time:undefined));
-    chart.subscribeClick(param=>{
-      if(!drawing.current||!param.point||!clickHandler.current)return;
-      const price=series.coordinateToPrice(param.point.y);
-      if(price!==null&&Number.isFinite(price))clickHandler.current(price);
+    const toolLayer=new DrawingLayer(chart,series);
+    paintLayer.current=toolLayer;
+    series.attachPrimitive(toolLayer);
+    const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime}):undefined;
+    const scale=chart.timeScale();
+    const viewport=()=>{if(linkId)link?.viewport(linkId);};
+    const activate=()=>{if(linkId)link?.activate(linkId);setMissingLinkedTime(undefined);};
+    const leave=()=>{if(linkId)link?.clearCursor(linkId);};
+    const container=element.current;
+    let anchorStart:{x:number;y:number}|undefined;
+    const startAnchor=(event:PointerEvent)=>{
+      activate();
+      anchorStart=event.isPrimary?{x:event.clientX,y:event.clientY}:undefined;
+    };
+    const placeAnchor=(event:MouseEvent)=>{
+      if(!drawing.current||!anchorHandler.current||!anchorStart||
+        Math.hypot(event.clientX-anchorStart.x,event.clientY-anchorStart.y)>6)return;
+      const bounds=container.getBoundingClientRect();
+      const x=event.clientX-bounds.left-chart.priceScale('left').width();
+      const y=event.clientY-bounds.top;
+      if(x<0||x>=scale.width()||y<0||y>=chart.paneSize(0).height)return;
+      const time=scale.coordinateToTime(x);
+      const bar=typeof time==='number'?linkedBars.current.get(time):undefined;
+      const price=series.coordinateToPrice(y);
+      if(bar&&price!==null&&Number.isFinite(price))anchorHandler.current(bar,price);
+    };
+    container.addEventListener('pointerenter',activate);
+    container.addEventListener('pointerdown',startAnchor);
+    container.addEventListener('click',placeAnchor);
+    container.addEventListener('wheel',activate,{passive:true});
+    container.addEventListener('pointerleave',leave);
+    scale.subscribeVisibleLogicalRangeChange(viewport);
+    chart.subscribeCrosshairMove(param=>{
+      const time=typeof param.time==='number'?param.time:undefined;
+      setCursorTime(time);
+      if(linkId)link?.cursor(linkId,time);
     });
-    return ()=>{linesRef.current=[];seriesRef.current=null;chartRef.current=null;didFit.current=false;chart.remove()};
-  },[symbol,precision]);
+    chart.subscribeClick(param=>{
+      if(!drawing.current&&typeof param.hoveredObjectId==='string'&&param.hoveredObjectId.startsWith('smt:')){
+        const event=markerEvents.current.find(item=>item.id===param.hoveredObjectId?.toString().slice(4));
+        if(event?.event_key)markerSelection.current?.(event);
+        return;
+      }
+      if(!drawing.current||!param.point||(param.paneIndex!==undefined&&param.paneIndex!==0))return;
+      const price=series.coordinateToPrice(param.point.y);
+      if(price===null||!Number.isFinite(price))return;
+      if(!anchorHandler.current)clickHandler.current?.(price);
+    });
+    return ()=>{
+      container.removeEventListener('pointerenter',activate);
+      container.removeEventListener('pointerdown',startAnchor);
+      container.removeEventListener('click',placeAnchor);
+      container.removeEventListener('wheel',activate);
+      container.removeEventListener('pointerleave',leave);
+      scale.unsubscribeVisibleLogicalRangeChange(viewport);
+      release?.();
+      paintLayer.current=null;
+      linesRef.current=[];seriesRef.current=null;chartRef.current=null;didFit.current=false;chart.remove();
+    };
+  },[symbol,precision,link,linkId]);
+  useEffect(()=>{paintLayer.current?.update(drawings??[]);},[drawings,symbol,precision]);
   const comparisonSymbol=comparison?.symbol;
   const comparisonPrecision=comparison?.precision;
   const placement=comparison?.placement;
@@ -131,6 +201,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const series=seriesRef.current;
     if(!series)return;
     const sorted=[...candles].sort((a,b)=>a.time-b.time).filter((c,i,arr)=>i===0||arr[i-1].time!==c.time);
+    linkedBars.current=new Map(sorted.map(bar=>[bar.time,bar]));
     series.setData(sorted.map(c=>({time:c.time as UTCTimestamp,open:c.open,high:c.high,low:c.low,close:c.close})));
     if(!didFit.current&&sorted.length){showRecentCandles(sorted);didFit.current=true}
   },[candles,symbol,precision]);
@@ -144,6 +215,18 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const format=chartTimeOptions(zone);
     chartRef.current?.applyOptions({timeScale:{tickMarkFormatter:format.tick},localization:{timeFormatter:format.crosshair}});
   },[zone,symbol,precision]);
+  useEffect(()=>{
+    if(!focus)return;
+    const chart=chartRef.current;
+    const series=seriesRef.current;
+    const bar=candles.find(item=>item.time===focus.epoch);
+    if(!chart||!series)return;
+    const scale=chart.timeScale();
+    const index=scale.timeToIndex(focus.epoch as UTCTimestamp);
+    if(index===null)return;
+    scale.setVisibleLogicalRange({from:index-12,to:index+12});
+    if(bar)chart.setCrosshairPosition(bar.close,bar.time as UTCTimestamp,series);
+  },[focus,candles]);
   useEffect(()=>{
     const chart=chartRef.current;
     const series=seriesRef.current;
@@ -191,7 +274,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     });
     const primaryBars=new Map(markerCandles.current.map(bar=>[bar.time,bar]));
     const markers=smtEvents.map(event=>({
-      time:event.primary.current.time as UTCTimestamp,price:event.primary.current.price,
+      id:'smt:'+event.id,time:event.primary.current.time as UTCTimestamp,price:event.primary.current.price,
       position:event.direction==="bearish"?"atPriceTop" as const:"atPriceBottom" as const,
       shape:"circle" as const,
       color:event.status==="SMT_INVALIDATED"?"#7b8897":event.direction==="bearish"?"#f7a77d":"#93e3b8",
@@ -201,7 +284,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       const bar=event.confirmation_bar_time==null?undefined:primaryBars.get(event.confirmation_bar_time);
       if(!bar)return [];
       return [{
-        time:bar.time as UTCTimestamp,price:event.direction==="bearish"?bar.high:bar.low,
+        id:'smt:'+event.id,time:bar.time as UTCTimestamp,price:event.direction==="bearish"?bar.high:bar.low,
         position:event.direction==="bearish"?"atPriceTop" as const:"atPriceBottom" as const,
         shape:event.direction==="bearish"?"arrowDown" as const:"arrowUp" as const,
         color:event.status==="SMT_INVALIDATED"?"#7b8897":event.direction==="bearish"?"#f7a77d":"#93e3b8",
@@ -256,13 +339,14 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
         guide.style.bottom=`${bottom}px`;
       }}
       onPointerLeave={()=>{if(pointerGuide.current)pointerGuide.current.hidden=true}}/>
+    {missingLinkedTime!==undefined&&link?.options.crosshair&&<span className="linked-no-candle" role="status">No candle at {timestamp.format(missingLinkedTime*1000)}</span>}
     <div ref={pointerGuide} className="chart-pointer-guide" aria-hidden="true" hidden/>
-    {drawMode&&<div className="drawing-prompt">Click the chart to place a horizontal level</div>}
+    {drawMode&&<div className="drawing-prompt">{drawingPrompt??'Click the chart to place a horizontal level'}</div>}
     {(fullscreen||comparison)&&<div className="chart-data-legend" aria-label="Chart data">
       <div className="chart-legend-meta">
         {timeframe&&<strong>{timeframe}</strong>}
         {displayTime!==undefined&&<span>{timestamp.format(displayTime*1000)} · {zone}</span>}
-        {comparison&&<Select label="Comparison placement" value={comparison.placement}
+        {comparison&&!comparison.fixedPlacement&&<Select label="Comparison placement" value={comparison.placement}
           options={['Overlay','New pane']} onChange={value=>comparison.onPlacementChange(value as ComparisonPlacement)}/>}
       </div>
       {legendRow(symbol,primaryBar,precision)}
@@ -284,6 +368,16 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       <button type="button" className="snapshot-btn" aria-label="Show recent candles" title="Show recent candles"
         onClick={()=>showRecentCandles(candles)}><SkipForward size={15}/></button>
       {showSnapshot&&<button type="button" className="snapshot-btn" title="Download chart PNG" onClick={snapshot}><Camera size={15}/> Snapshot</button>}
+      {onSaveSnapshot&&<button type="button" className="snapshot-btn" disabled={savingSnapshot} onClick={()=>{
+        const canvas=chartRef.current?.takeScreenshot();
+        if(!canvas)return;
+        const png=canvas.toDataURL('image/png').split(',')[1];
+        if(!png)return;
+        setSavingSnapshot(true);setSnapshotStatus('');
+        void onSaveSnapshot(png).then(()=>setSnapshotStatus('Chart capture saved')).catch(error=>setSnapshotStatus(error.message))
+          .finally(()=>setSavingSnapshot(false));
+      }}>Save chart evidence</button>}
+      {snapshotStatus&&<span role="status">{snapshotStatus}</span>}
       <button type="button" className="snapshot-btn" aria-label={fullscreen?"Exit fullscreen":"Fullscreen chart"}
         title={fullscreen?"Exit fullscreen (Esc)":"Fullscreen chart"} onClick={()=>void toggleFullscreen()}>
         {fullscreen?<Minimize size={15}/>:<Maximize size={15}/>}

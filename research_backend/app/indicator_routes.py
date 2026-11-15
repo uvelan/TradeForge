@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from hashlib import sha256
 from time import time_ns
 from datetime import UTC, datetime
 from typing import Literal
@@ -12,7 +13,7 @@ from .indicators import Bar, REGISTRY, calculate
 from .market import FRAME_MIN, mt5_rates
 from .smt import confirmation_timing, detect_smt
 from .db import one, rows, transaction
-from .smt_history import record_smt, scope_key
+from .smt_history import event_identity, record_smt, scope_key
 from .storage import read_partition
 from .saved_history import saved_range
 
@@ -130,6 +131,8 @@ def capture_live_smt(request: LiveSmtCalculation, monitor_token: int | None = No
         monitor_token=monitor_token,
     )
     events = [event for event in events if event["id"] not in corrected]
+    for event in events:
+        event["event_key"] = event_identity(scope,event)
     for event in events + alerts:
         event.pop("capture", None)
     return {**response_for(events, alerts, rules, step, provenance["authority"]),
@@ -179,6 +182,9 @@ def configure_monitor(watch: LiveSmtWatch):
 def active_alerts(limit: int, scope: str | None = None):
     query = """SELECT payload FROM smt_alerts AS alerts WHERE NOT EXISTS (
                    SELECT 1 FROM smt_source_corrections AS correction WHERE correction.event_key=alerts.event_key
+               ) AND NOT EXISTS (
+                   SELECT 1 FROM smt_event_history AS history
+                   WHERE history.event_key=alerts.event_key AND history.status='SMT_INVALIDATED'
                )"""
     args = (limit,)
     if scope is not None:
@@ -283,6 +289,8 @@ def smt(request: SmtCalculation):
     if provenance and events and not request.replay:
         scope = scope_key(provenance, rules)
         record_smt(events, scope, provenance, rules)
+        for event in events:
+            event["event_key"] = event_identity(scope,event)
     return response_for(events, alerts, rules, step, "VERIFIED_SAVED_DATASET" if provenance else "CLIENT_SUPPLIED_UNVERIFIED")
 
 
@@ -300,6 +308,132 @@ def smt_history(limit: int = Query(100, ge=1, le=500)):
         event["timing"] = confirmation_timing(event, event["rules"])
         event["available_at"] = event["confirmed_at"]
     return events
+
+
+@router.get("/signals")
+def signals(q: str = Query("", max_length=128), direction: Literal["bullish", "bearish"] | None = None,
+            status: Literal["SMT_CANDIDATE", "SMT_CONFIRMED", "SMT_INVALIDATED", "SMT_SOURCE_CORRECTED"] | None = None,
+            timeframe: str | None = Query(None, max_length=10), source: str | None = Query(None, max_length=30),
+            instrument: str | None = Query(None, max_length=64), start: int | None = Query(None, ge=0),
+            end: int | None = Query(None, ge=0), cursor: str | None = Query(None, max_length=90),
+            limit: int = Query(25, ge=1, le=100)):
+    if start is not None and end is not None and start >= end:
+        raise HTTPException(422, "Choose an end time after the start")
+    conditions, parameters = [], []
+    for sql, value in (
+        ("status=?", status), ("json_extract(payload,'$.direction')=?", direction),
+        ("json_extract(payload,'$.provenance.timeframe')=?", timeframe),
+        ("json_extract(payload,'$.provenance.primary.source')=?", source),
+        ("event_time>=?", start), ("event_time<?", end),
+    ):
+        if value is not None:
+            conditions.append(sql)
+            parameters.append(value)
+    if instrument:
+        conditions.append("""lower(?) IN (lower(json_extract(payload,'$.provenance.primary.symbol')),
+                                          lower(json_extract(payload,'$.provenance.comparison.symbol')))""")
+        parameters.append(instrument)
+    if q:
+        conditions.append("""(instr(lower(event_key), lower(?)) OR instr(lower(json_extract(payload,'$.id')), lower(?))
+            OR instr(lower(json_extract(payload,'$.provenance')), lower(?))
+            OR EXISTS (SELECT 1 FROM plan_versions AS plan
+                       WHERE json_extract(plan.payload,'$.signal_reference.event_key')=latest.event_key
+                         AND instr(lower(plan.trade_id), lower(?))))""")
+        parameters.extend([q] * 4)
+    if cursor is not None:
+        timestamp, _, key = cursor.partition(":")
+        if not timestamp.isascii() or not timestamp.isdecimal() or int(timestamp) >= 2**63 or len(key) != 64 or any(char not in "0123456789abcdef" for char in key):
+            raise HTTPException(422, "Invalid signal cursor")
+        conditions.append("(event_time < ? OR (event_time = ? AND event_key > ?))")
+        parameters.extend([int(timestamp), int(timestamp), key])
+    where = " AND " + " AND ".join(conditions) if conditions else ""
+    page = rows("""
+        WITH history AS (
+            SELECT event_key,event_time,status,payload,
+                CASE status WHEN 'SMT_INVALIDATED' THEN 3 WHEN 'SMT_CONFIRMED' THEN 2 ELSE 1 END AS priority
+            FROM smt_event_history
+            UNION ALL
+            SELECT event_key,event_time,'SMT_SOURCE_CORRECTED',payload,4 FROM smt_source_corrections
+        ), latest AS (
+            SELECT *, row_number() OVER(PARTITION BY event_key ORDER BY priority DESC) AS position FROM history
+        )
+        SELECT event_key,event_time,json_remove(payload,'$.capture') AS payload FROM latest WHERE position=1
+    """ + where + " ORDER BY event_time DESC,event_key LIMIT ?", (*parameters, limit + 1))
+    results = []
+    for row in page[:limit]:
+        event = json.loads(row["payload"])
+        event.pop("capture", None)
+        results.append(event)
+    last = page[limit-1] if len(page) > limit else None
+    return {"items": results, "next_cursor": f"{last['event_time']}:{last['event_key']}" if last else None}
+
+
+@router.get("/signals/{event_key}")
+def signal_revision(event_key: str, status: Literal["SMT_CANDIDATE", "SMT_CONFIRMED",
+                    "SMT_INVALIDATED", "SMT_SOURCE_CORRECTED"]):
+    if status == "SMT_SOURCE_CORRECTED":
+        row = one("SELECT payload FROM smt_source_corrections WHERE event_key=?", (event_key,))
+    else:
+        row = one("SELECT payload FROM smt_event_history WHERE event_key=? AND status=?", (event_key, status))
+    if not row:
+        raise HTTPException(404, "Signal revision unavailable")
+    event = json.loads(row["payload"])
+    event.pop("capture", None)
+    return event
+
+
+@router.get("/signals/{event_key}/plans")
+def signal_plans(event_key: str):
+    return rows("""SELECT version.trade_id,version.version,version.created_at,
+                          json_extract(version.payload,'$.signal_reference.status') AS evidence_status,
+                          json_extract(version.payload,'$.strategy') AS strategy, json_extract(version.payload,'$.symbol') AS symbol
+                   FROM plan_versions AS version
+                   WHERE json_extract(version.payload,'$.signal_reference.event_key')=?
+                   ORDER BY version.created_at DESC,version.id LIMIT 100""",(event_key,))
+
+
+@router.get("/signals/{event_key}/candles")
+def signal_candles(event_key: str, status: Literal["SMT_CANDIDATE", "SMT_CONFIRMED",
+                   "SMT_INVALIDATED", "SMT_SOURCE_CORRECTED"]):
+    if status == "SMT_SOURCE_CORRECTED":
+        correction = one("SELECT payload FROM smt_source_corrections WHERE event_key=?", (event_key,))
+        if not correction:
+            raise HTTPException(404, "Correction unavailable")
+        status = json.loads(correction["payload"])["source_correction"]["previous_status"]
+    row = one("SELECT payload FROM smt_event_history WHERE event_key=? AND status=?", (event_key, status))
+    if not row:
+        raise HTTPException(404, "Signal evidence unavailable")
+    event = json.loads(row["payload"])
+    provenance = event["provenance"]
+    timeframe = provenance["timeframe"]
+    step = FRAME_MIN[timeframe] * 60
+    if "capture" in event:
+        captures = event["capture"]
+        for side in ("primary", "comparison"):
+            evidence = captures[side]
+            if sha256(json.dumps(evidence["bars"], sort_keys=True).encode()).hexdigest() != evidence["sha256"]:
+                raise HTTPException(409, "Recorded evidence checksum mismatch")
+        return {side: captures[side]["bars"] for side in ("primary", "comparison")}
+    result = {}
+    try:
+        for side in ("primary", "comparison"):
+            feed = provenance[side]
+            if feed.get("archive_range"):
+                archive = saved_range(feed["source"].removesuffix("_SAVED"), feed["symbol"], timeframe,
+                                      *feed["archive_range"], step, 2000)
+                if archive["partitions"] != feed["partitions"] or archive["coverage"]["truncated"]:
+                    raise ValueError("Original partition selection unavailable")
+                values = archive["candles"]
+            else:
+                dataset = one("SELECT * FROM datasets WHERE id=?", (feed["dataset_id"],))
+                if not dataset or dataset["sha256"] != feed["sha256"] or dataset["rows_count"] > 2000:
+                    raise ValueError("Original partition unavailable")
+                values = read_partition(dataset)
+            result[side] = [Bar.model_validate(bar).model_dump() for bar in values
+                            if bar["time"] + step <= event["transitions"][-1]["time"]]
+    except (OSError, RuntimeError, ValueError, KeyError) as error:
+        raise HTTPException(409, f"Recorded evidence unavailable: {error}") from error
+    return result
 
 
 @router.get("")

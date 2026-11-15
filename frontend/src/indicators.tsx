@@ -11,9 +11,10 @@ export type IndicatorResult = {
   series: Record<string, { time: number; value: number; pivot_time?: number }[]>;
 };
 
-export function useChartIndicator(enabled: boolean, candles: Candle[], source: ChartSource, timeframe: Timeframe) {
+export function useChartIndicator(enabled: boolean, candles: Candle[], source: ChartSource, timeframe: Timeframe, request?:{indicator?:string;sequence:number}) {
   const [selected, setSelected] = useWorkspacePreference<string>("indicator", "none");
   const [periodText, setPeriod] = useWorkspacePreference<string>("indicator-period", "");
+  useEffect(()=>{if(request?.indicator){setSelected(request.indicator);setPeriod('');}},[request,setSelected,setPeriod]);
   const [definitions, setDefinitions] = useState<Definition[]>([]);
   const [libraryError, setLibraryError] = useState("");
   const [result, setResult] = useState<{ key: string; data: IndicatorResult }>();

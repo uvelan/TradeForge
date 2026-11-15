@@ -1,0 +1,7 @@
+# Chart and replay contract
+
+A server-side replay session pins the selected primary candle response and comparison/secondary panes. Closed availability is explicit when supplied and otherwise uses bar start plus timeframe. The frontiers are UTC seconds and checkpoints store bounded primary array positions and bookmark indices against the immutable session hash. Session rows are append-only. Progress lives separately, so saving a new position does not modify candle evidence. The UI requires an explicit Save replay position action.
+
+Recorded SMT sessions resolve the exact selected event revision and use existing verified capture evidence. Both series are progressively recalculated from their closed-bar prefixes. A pivot can be drawn at its historical candle once the confirmation becomes available. Deferred panes stay unavailable in the captured session. Saved simulations can be stepped around entry and exit using their original candle inputs.
+
+Crosshair synchronization requires an exact match in the receiving series. Active input ownership keeps programmatic peer movement from republishing viewport changes. Range, zoom, instrument, timeframe and replay linking have separate switches. A chart with replay sync off remains outside the shared replay. Legacy horizontal levels retain their original per-chart keys. New drawing scenes persist as SQLite revisions scoped to source, instrument and timeframe.

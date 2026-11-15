@@ -6,12 +6,26 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, model_validator
 Symbol = Literal['EURUSD','GBPUSD','USDJPY','XAUUSD']
 Direction = Literal['BUY','SELL']
 
+class SignalReference(BaseModel):
+    event_key: str = Field(pattern=r"^[0-9a-f]{64}$")
+    status: Literal["SMT_CANDIDATE", "SMT_CONFIRMED", "SMT_INVALIDATED", "SMT_SOURCE_CORRECTED"]
+
+
+SnapshotId = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+Tag = Annotated[str, Field(pattern=r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,23}$")]
+
+
+class PlanReference(BaseModel):
+    trade_id: str = Field(pattern=r"^TD-[A-F0-9]{12}$")
+    version: int = Field(ge=1)
+
+
 class TradePlan(BaseModel):
     symbol: Symbol
     direction: Direction
     strategy: str = Field(default='CRT / Market Structure',min_length=2,max_length=120)
     session: Literal['ASIA','LONDON','NEW_YORK','OTHER']='LONDON'
-    timeframe: Literal['M1','M3','M5','M15','H1','H4','D1']='M5'
+    timeframe: Literal['M1','M3','M5','M15','M30','H1','H4','D1']='M5'
     context: str = Field(min_length=5,max_length=10000)
     observation: str = Field(min_length=5,max_length=10000)
     evidence: str = Field(min_length=5,max_length=10000)
@@ -26,6 +40,8 @@ class TradePlan(BaseModel):
     equity_usd: Decimal = Field(gt=0,le=100000000000)
     risk_percent: Decimal = Field(gt=0,le=2)
     pip_value_per_lot_usd: Decimal = Field(gt=0,le=1000000)
+    signal_reference: SignalReference | None = None
+    snapshot_id: SnapshotId | None = None
     knowledge_cutoff_utc: str | None = None
 
     @model_validator(mode='after')
@@ -42,6 +58,11 @@ class Outcome(BaseModel):
     notes: str=Field(default='',max_length=5000)
 
 class JournalInput(BaseModel):
+    snapshot_id: SnapshotId | None = None
+    plan_reference: PlanReference | None = None
+    supersedes: str | None = Field(default=None,pattern=r"^(T|Q|CHART|RM|M|R)-[0-9]{5,}$")
+    tags: list[Tag] = Field(default_factory=list,max_length=10)
+    signal_reference: SignalReference | None = None
     kind: Literal['T','Q','CHART','RM','M','R']
     title: str=Field(min_length=2,max_length=200)
     content: str=Field(min_length=5,max_length=20000)

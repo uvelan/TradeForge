@@ -107,6 +107,7 @@ def test_tick_backtest_endpoint_returns_execution_lineage(client):
     from research_backend.app.storage import write_partition
 
     candles, ticks = inputs()
+    candles[3].update(high=106, low=98)
     for tick in ticks:
         tick["time"] = tick["time_ms"] // 1000
     candle = write_partition("DUKASCOPY", "test", "EURUSD", "candles", "M1", "BID", candles)
@@ -124,6 +125,7 @@ def test_tick_backtest_endpoint_returns_unresolved_coverage(client):
     from research_backend.app.storage import write_partition
 
     candles, _ = inputs()
+    candles[3]["high"] = 106
     ticks = [tick(180_000, 0), tick(182_000, 1, 106, 107)]
     for quote in ticks:
         quote["time"] = quote["time_ms"] // 1000
@@ -147,6 +149,7 @@ def test_tick_backtest_accepts_saved_range_across_weekend(client):
     sunday = int(datetime(2024, 11, 17, 22, tzinfo=UTC).timestamp())
     for index, candle in enumerate(candles):
         candle["time"] = friday + index * 60 if index < 6 else sunday + (index - 6) * 60
+    candles[6]["high"] = 106
     for part in (candles[:6], candles[6:]):
         write_partition("DUKASCOPY", "test", "EURUSD", "candles", "M1", "BID", part)
     ticks = [tick((friday + offset) * 1000, order) for order, offset in enumerate(range(180, 360, 30))]
@@ -162,3 +165,32 @@ def test_tick_backtest_accepts_saved_range_across_weekend(client):
     result = response.json()
     assert_unresolved(result, "CANDLE_SESSION_BOUNDARY")
     assert result["candle_gaps"] == [{"start": friday + 360, "end": sunday}]
+
+
+def test_tick_backtest_rejects_contradictory_bid_candle(client):
+    from research_backend.app.storage import write_partition
+
+    candles, ticks = inputs()
+    for quote in ticks:
+        quote["time"] = quote["time_ms"] // 1000
+    write_partition("DUKASCOPY", "test", "EURUSD", "candles", "M1", "BID", candles)
+    quotes = write_partition("DUKASCOPY", "test", "EURUSD", "ticks", None, "BID_ASK_UNITS", ticks)
+    response = client.get("/api/backtest", params={
+        "source": "DUKASCOPY_SAVED", "timeframe": "M1", "tick_dataset_id": quotes["id"],
+    })
+    assert response.status_code == 422
+    assert response.json()["detail"].startswith("UNTRUSTED: bid 106")
+
+
+def test_corrupt_candle_partition_cannot_be_acknowledged_on_duplicate(client):
+    from research_backend.app import storage
+
+    candles, _ = inputs()
+    args = ("DUKASCOPY", "test", "EURUSD", "candles", "M1", "BID", candles)
+    dataset = storage.write_partition(*args)
+    (storage.MARKET_DIR / dataset["relative_path"]).write_bytes(b"corrupt")
+    with pytest.raises(RuntimeError, match="UNTRUSTED"):
+        storage.write_partition(*args)
+    response = client.get(f"/api/datasets/{dataset['id']}/coverage")
+    assert response.status_code == 409
+    assert response.json()["detail"].startswith("UNTRUSTED")

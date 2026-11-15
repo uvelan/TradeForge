@@ -1,0 +1,5 @@
+# Performance report
+
+A temporary Windows SQLite database containing 10,000 synthetic single-transition signal records was queried through the explorer route function. Each query filtered EURUSD and returned 25 rows. Seven runs per case gave a median of **44.67 ms** and maximum of **48.59 ms** for the first page, and a median of **40.09 ms** and maximum of **40.67 ms** near the middle. The JSON sample was 4,424 bytes. This includes SQLite and Python encoding of route payloads, excludes HTTP and browser painting, and uses compact synthetic evidence. It is a capacity observation, not a speedup claim.
+
+The prior build of the unchanged production code was 97.02 kB JS (29.08 kB gzip) for the terminal entry. The expanded local UI build measured 168.54 kB (49.80 kB gzip). Bundle output is not a page-load benchmark. The Chromium suite opened four 600-bar charts and linked their timeframes at 1920x1080. It was a functional test. Rerender count, heap retention, chart frame timing, 50,000 candles, long-lived requests and hundreds of drawings or annotations were not profiled. Keep these workloads open for UI-6.

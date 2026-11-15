@@ -92,7 +92,8 @@ def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r:
                 result_r = (direction * (exit_fill - entry) - fee) / risk
                 trades.append({
                     "entry_time":first["time_ms"] // 1000, "entry_time_ms":first["time_ms"],
-                    "exit_time_ms":quote["time_ms"], "side":side, "entry":float(entry), "stop":float(stop),
+                    "exit_time_ms":quote["time_ms"], "entry_source_order":first["source_order"],
+                    "exit_source_order":quote["source_order"], "side":side, "entry":float(entry), "stop":float(stop),
                     "target":float(target), "exit":float(exit_fill), "result_r":round(float(result_r),4),
                     "exit_reason":"TIME_LIMIT" if time_limit else "STOP" if stop_hit else "TARGET",
                 })
@@ -122,3 +123,18 @@ def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r:
         "data_note":"Quoted bid/ask, adverse slippage and commission per side. Execution uses continuous matching-feed candle intervals and bounded quote gaps. Replay stops at the first unresolved window. Quote coverage does not prove executable size.",
         "execution_model":{"version":2,"max_quote_gap_ms":max_gap_ms,"slippage_bps":str(slip_bps),"commission_bps_per_side":str(commission_bps)},
     }
+
+
+def validate_bid_extremes(candles: list[dict], ticks: list[dict], step: int) -> None:
+    """Reject a bid outside the matching UTC candle, even when archive coverage is partial."""
+    bounds = {candle["time"]: (Decimal(str(candle["low"])), Decimal(str(candle["high"])))
+              for candle in candles}
+    for quote in ticks:
+        if quote["scale"] <= 0:
+            raise ValueError("UNTRUSTED: invalid quote price scale")
+        timestamp = quote["time_ms"] // (step * 1000) * step
+        if timestamp in bounds:
+            low, high = bounds[timestamp]
+            bid = Decimal(quote["bid_units"]) / quote["scale"]
+            if not low <= bid <= high:
+                raise ValueError(f"UNTRUSTED: bid {bid} contradicts candle [{low}, {high}] at UTC epoch {timestamp}")

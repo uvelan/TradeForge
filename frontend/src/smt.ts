@@ -5,6 +5,7 @@ type Pivot = {time:number; price:number; confirmed_at:number};
 type Status = "SMT_CANDIDATE" | "SMT_CONFIRMED" | "SMT_INVALIDATED";
 export type SmtEvent = {
   id:string;
+  event_key?:string;
   direction: "bearish" | "bullish";
   leader: "primary" | "comparison";
   primary:{previous:Pivot;current:Pivot};
@@ -63,8 +64,10 @@ export function useSmt(primary: Candle[], comparison: Candle[] | undefined, time
           setResult({body,refresh,events:data.events,authority:data.authority});
           const alert=data.alerts?.at(-1);
           if(alert)setNotice({scope,alert});
-          else if(data.corrected_ids?.length)setNotice(previous=>
-            previous?.scope===scope&&data.corrected_ids?.includes(previous.alert.id)?undefined:previous);
+          else setNotice(previous=>previous?.scope===scope&&(
+            data.corrected_ids?.includes(previous.alert.id) ||
+            !data.events.some(event=>event.id===previous.alert.id&&event.status==='SMT_CONFIRMED')
+          )?undefined:previous);
         }
       }catch(error){
         if(!controller.signal.aborted)setResult({body,refresh,error:error instanceof Error?error.message:"SMT calculation unavailable"});

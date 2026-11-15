@@ -51,6 +51,9 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
                 AND price_basis=? AND sha256=? ORDER BY created_at LIMIT 1""",
                 (provider,feed_id,symbol,kind,timeframe,price_basis,digest)).fetchone()
             if existing and (MARKET_DIR / existing['relative_path']).is_file():
+                with (MARKET_DIR / existing['relative_path']).open('rb') as published:
+                    if hashlib.file_digest(published, 'sha256').hexdigest() != digest:
+                        raise RuntimeError("UNTRUSTED: existing partition checksum mismatch")
                 return {'id':existing['id'],'provider':provider,'symbol':symbol,'rows':len(records),
                         'relative_path':existing['relative_path'],'sha256':digest}
             if existing:

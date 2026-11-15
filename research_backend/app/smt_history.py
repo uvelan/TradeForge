@@ -48,6 +48,11 @@ def record_source_corrections(db, scope: str, capture: dict, observed_at: int) -
     )}
 
 
+def event_identity(scope: str, event: dict) -> str:
+    pivots = {side: event[side] for side in ("primary", "comparison")}
+    return sha256(f"{scope}:{event['id']}:{json.dumps(pivots, sort_keys=True)}".encode()).hexdigest()
+
+
 def record_smt(events: list[dict], scope: str, provenance: dict, rules: dict, *,
                alert_after: int | None = None, capture_step: int | None = None,
                capture: dict | None = None, observed_at: int | None = None,
@@ -63,8 +68,7 @@ def record_smt(events: list[dict], scope: str, provenance: dict, rules: dict, *,
         for event in events:
             if event["id"] in corrected:
                 continue
-            pivots = {side: event[side] for side in ("primary", "comparison")}
-            key = sha256(f"{scope}:{event['id']}:{json.dumps(pivots, sort_keys=True)}".encode()).hexdigest()
+            key = event_identity(scope,event)
             existing = {row["status"]: json.loads(row["payload"]) for row in db.execute(
                 "SELECT status,payload FROM smt_event_history WHERE event_key=?", (key,)
             )}
@@ -97,7 +101,8 @@ def record_smt(events: list[dict], scope: str, provenance: dict, rules: dict, *,
                 )
                 existing[status] = evidence
             confirmed = existing.get("SMT_CONFIRMED")
-            if (confirmed and event["status"] == "SMT_CONFIRMED" and alert_after is not None
+            if (confirmed and "SMT_INVALIDATED" not in existing and event["status"] == "SMT_CONFIRMED"
+                    and alert_after is not None
                     and confirmed["confirmed_at"] > alert_after):
                 alert = {**confirmed, "alert_recorded_at": observed_at}
                 inserted = db.execute(

@@ -117,3 +117,75 @@ def test_worker_creates_and_retracts_alert_without_chart_requests(client, monkey
     assert any(event["status"] == "SMT_CONFIRMED" for event in journal)
     assert client.post(path + "/monitor", json={**config, "enabled": False}).json() == {"enabled": False}
     assert client.get(path + "/monitor").json()["configuration"] is None
+
+
+def test_signal_explorer_returns_latest_and_pins_requested_revision(client, plan):
+    import io
+    import json
+    import zipfile
+
+    request = dict(RULES)
+    for side, symbol, prices in [("primary","EURUSD",LEFT+[12]),("comparison","GBPUSD",RIGHT+[31])]:
+        sequence = candles(prices, 0)
+        dataset = write_partition("DUKASCOPY", "test", symbol, "candles", "M1", "BID", sequence)
+        request[side] = sequence
+        request[f"{side}_feed"] = {"symbol":symbol,"source":"DUKASCOPY_SAVED","feed_id":"test","price_basis":"BID",
+                                  "dataset_id":dataset["id"]}
+        coverage = client.get(f"/api/datasets/{dataset['id']}/coverage").json()
+        assert coverage["coverage"]["gaps"] == []
+        assert coverage["candles"][-1]["time"] == sequence[-1]["time"]
+    base = "/api/indicators"
+    assert client.post(base+"/smt",json=request).status_code == 200
+    page = client.get(base+"/signals",params={"direction":"bearish","instrument":"GBPUSD"}).json()
+    signal, = page["items"]
+    assert signal["status"] == "SMT_INVALIDATED"
+    assert signal["confirmed_at"] == 600
+    key = signal["event_key"]
+    original = client.get(f"{base}/signals/{key}/candles",params={"status":"SMT_CONFIRMED"}).json()
+    assert original["primary"][-1]["time"] == 540
+    link = {"event_key":key,"status":"SMT_INVALIDATED"}
+    created = client.post("/api/trades",json={**plan,"timeframe":"M1","signal_reference":link})
+    assert created.status_code == 201, created.text
+    assert created.json()["versions"][0]["plan"]["signal_reference"] == link
+    trade_id = created.json()["id"]
+    assert client.post("/api/ai/exports/"+trade_id, params={"plan_version": 2}).status_code == 409
+    package = client.post("/api/ai/exports/"+trade_id, params={"plan_version": 1}).json()
+    response = client.get(f"/api/ai/packages/{package['package_id']}/download")
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        assert json.loads(archive.read("data/signal.json"))["event_key"] == key
+    assert client.get(base+"/signals",params={"q":trade_id}).json()["items"][0]["event_key"] == key
+    journal = client.post("/api/journal", json={"kind":"CHART","title":"SMT observation",
+                          "content":"The later candle invalidated the signal.", "signal_reference":link})
+    assert journal.status_code == 201, journal.text
+    assert client.get("/api/journal").json()[0]["signal_reference"] == link
+    assert client.get(f"{base}/signals/{key}",params={"status":link["status"]}).json()["status"] == link["status"]
+    assert key in client.get("/api/journal/download").text
+
+
+def test_invalidated_alert_is_not_active(client):
+    import json
+
+    from research_backend.app.db import transaction
+
+    with transaction() as db:
+        db.execute("INSERT INTO smt_alerts VALUES ('event','scope',60,?)", (json.dumps({"confirmed_at":60}),))
+        db.execute("INSERT INTO smt_event_history VALUES ('event','scope','SMT_INVALIDATED',120,'{}')")
+    assert client.get("/api/indicators/smt/alerts").json() == []
+
+
+def test_signal_keyset_paginates_tied_transitions(client):
+    import json
+
+    from research_backend.app.db import transaction
+
+    keys = [f"{i:064x}" for i in range(3)]
+    with transaction() as db:
+        for key in reversed(keys):
+            db.execute("INSERT INTO smt_event_history VALUES (?,?,?,?,?)",
+                       (key, "scope", "SMT_CANDIDATE", 60, json.dumps({"event_key": key})))
+    path = "/api/indicators/signals"
+    first = client.get(path, params={"limit": 2}).json()
+    second = client.get(path, params={"limit": 2, "cursor": first["next_cursor"]}).json()
+    assert [row["event_key"] for row in first["items"] + second["items"]] == keys
+    assert second["next_cursor"] is None
+    assert client.get(path, params={"cursor": "1:"+"z"*64}).status_code == 422

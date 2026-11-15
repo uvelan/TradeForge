@@ -22,14 +22,18 @@ export const api={
   quote:(symbol:SymbolName,source:'MT5'|'DEMO')=>request<{symbol:string;bid:number;ask:number;stale:boolean;source:string}>(`/market/quote?symbol=${symbol}&source=${source}`),
   trades:()=>request<import('./types').Trade[]>('/trades'),
   createPlan:(plan:Plan)=>post<import('./types').Trade>('/trades',plan),
+  trade:(id:string)=>request<import('./types').Trade>('/trades/'+encodeURIComponent(id)),
+  revisePlan:(id:string,version:number,plan:Plan)=>post<import('./types').Trade>(
+    '/trades/'+encodeURIComponent(id)+'/revisions?expected_version='+version,plan),
+  declinePlan:(id:string,reason:string)=>post<import('./types').Trade>('/trades/'+encodeURIComponent(id)+'/decline',{reason}),
   risk:(plan:Plan)=>post<import('./types').Risk>('/risk/evaluate',{plan}),
-  createExport:(id:string)=>post<{package_id:string;download_url:string}>(`/ai/exports/${id}`,{}),
+  createExport:(id:string,version?:number)=>post<{package_id:string;download_url:string}>(`/ai/exports/${id}${version?`?plan_version=${version}`:""}`,{}),
   closeTrade:(id:string,pnl:string,r:string,notes:string)=>post(`/trades/${id}/close`,{pnl_usd:pnl,result_r:r,notes}),
   packages:()=>request<import('./types').Package[]>('/ai/packages'),
   reviews:()=>request<import('./types').Review[]>('/ai/reviews'),
   importReview:(input:unknown)=>post<{id:string;assessment:string;verification:string}>('/ai/reviews',input),
   journal:()=>request<import('./types').JournalEntry[]>('/journal'),
-  addJournal:(kind:string,title:string,content:string)=>post('/journal',{kind,title,content}),
+  addJournal:(kind:string,title:string,content:string,signal_reference?:import('./types').SignalReference,context?:import('./types').JournalContext)=>post<{id:string}>('/journal',{kind,title,content,signal_reference,...context}),
   datasets:()=>request<import('./types').Dataset[]>('/datasets'),
   backtest:(symbol:SymbolName,timeframe:Timeframe,source:SourceName,range?:CandleRange,
     tick?:{id:string;slippage:string;commission:string;maxGap:string})=>
@@ -37,6 +41,22 @@ export const api={
       symbol,timeframe,source,...(range?{start:String(range.start),end:String(range.end)}:{}),
       ...(tick?{tick_dataset_id:tick.id,slippage_bps:tick.slippage,commission_bps:tick.commission,max_quote_gap_seconds:tick.maxGap}:{}),
     })),
+  saveBacktest:(symbol:SymbolName,timeframe:Timeframe,source:SourceName,range?:CandleRange,
+    tick?:{id:string;slippage:string;commission:string;maxGap:string})=>
+    post<import('./types').BacktestRun>('/backtest/runs',{
+      symbol,timeframe,source,...range,...(tick?{tick_dataset_id:tick.id,slippage_bps:tick.slippage,
+        commission_bps:tick.commission,max_quote_gap_seconds:Number(tick.maxGap)}:{}),
+    }),
+  backtestRuns:()=>request<import('./types').BacktestRunSummary[]>('/backtest/runs'),
+  backtestRun:(id:string)=>request<import('./types').BacktestRun>('/backtest/runs/'+encodeURIComponent(id)),
+  startReplay:(symbol:string,timeframe:Timeframe,source:ChartSource,views:import('./types').ReplayViewRequest[],range?:CandleRange)=>
+    post<import('./types').ReplaySession>('/replay/sessions',{symbol,timeframe,source,views,...range}),
+  replays:(symbol:string,timeframe:Timeframe,source:ChartSource)=>
+    request<{id:string;position:number;updated_at:string}[]>('/replay/sessions?'+new URLSearchParams({symbol,timeframe,source})),
+  replay:(id:string)=>request<import('./types').ReplaySession>('/replay/sessions/'+encodeURIComponent(id)),
+  saveCheckpoint:(id:string,position:number,bookmarks:number[])=>post('/replay/sessions/'+encodeURIComponent(id)+'/checkpoint',{position,bookmarks}),
+  saveSnapshot:(png:string,symbol:string,timeframe:Timeframe,source:string,cutoff?:number,
+    signal_reference?:import('./types').SignalReference)=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference}),
   importMt5:(symbol:SymbolName,timeframe:Timeframe,limit:number)=>post('/market/import/mt5',{symbol,timeframe,limit}),
   importBi5:async(symbol:SymbolName,day:string,file:File,hour:string)=>{
     const f=new FormData();f.append('file',file);

@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS plan_versions (
     created_at TEXT NOT NULL,
     UNIQUE(trade_id,version)
 );
+CREATE INDEX IF NOT EXISTS plan_signal_link ON plan_versions(json_extract(payload,'$.signal_reference.event_key'));
 CREATE TABLE IF NOT EXISTS trade_events (
     id TEXT PRIMARY KEY,
     trade_id TEXT NOT NULL REFERENCES trades(id),
@@ -124,6 +125,51 @@ CREATE TABLE IF NOT EXISTS journal_entries (
     created_at TEXT NOT NULL,
     UNIQUE(kind,sequence)
 );
+CREATE TABLE IF NOT EXISTS journal_signal_links (
+    entry_id TEXT PRIMARY KEY REFERENCES journal_entries(id),
+    event_key TEXT NOT NULL,
+    status TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS chart_drawing_versions (
+    scope TEXT NOT NULL,
+    revision INTEGER NOT NULL,
+    payload TEXT NOT NULL CHECK(json_valid(payload)),
+    created_at TEXT NOT NULL,
+    PRIMARY KEY(scope,revision)
+);
+CREATE TABLE IF NOT EXISTS backtest_runs (
+    id TEXT PRIMARY KEY,
+    summary TEXT NOT NULL CHECK(json_valid(summary)),
+    payload TEXT NOT NULL CHECK(json_valid(payload)),
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS backtest_time ON backtest_runs(created_at DESC,id);
+CREATE TABLE IF NOT EXISTS replay_sessions (
+    id TEXT PRIMARY KEY,
+    symbol TEXT NOT NULL,
+    timeframe TEXT NOT NULL,
+    source TEXT NOT NULL,
+    payload TEXT NOT NULL CHECK(json_valid(payload)),
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS replay_checkpoints (
+    session_id TEXT PRIMARY KEY REFERENCES replay_sessions(id),
+    position INTEGER NOT NULL,
+    bookmarks TEXT NOT NULL CHECK(json_valid(bookmarks)),
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS replay_context ON replay_sessions(symbol,timeframe,source,created_at DESC);
+CREATE TABLE IF NOT EXISTS chart_snapshots (
+    id TEXT PRIMARY KEY,
+    metadata TEXT NOT NULL CHECK(json_valid(metadata)),
+    png BLOB NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS snapshot_signal ON chart_snapshots(json_extract(metadata,'$.signal_reference.event_key'));
+CREATE TABLE IF NOT EXISTS journal_entry_context (
+    entry_id TEXT PRIMARY KEY REFERENCES journal_entries(id),
+    payload TEXT NOT NULL CHECK(json_valid(payload))
+);
 CREATE TABLE IF NOT EXISTS jobs (
     id TEXT PRIMARY KEY,
     kind TEXT NOT NULL,
@@ -140,7 +186,7 @@ CREATE INDEX IF NOT EXISTS idx_fills_symbol ON imported_fills(symbol);
 CREATE INDEX IF NOT EXISTS idx_journal_time ON journal_entries(created_at DESC);
 '''
 
-IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts']
+IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 
 
 def connect():

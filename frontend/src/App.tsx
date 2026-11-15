@@ -1,8 +1,8 @@
-import {useCallback,useEffect,useMemo,useState} from 'react';
-import { Crosshair, Eraser,   ListFilter,  Minus,  Pause, Play, SkipBack, SkipForward,  Activity,Archive,ArrowDownToLine,ArrowRight,ArrowUpRight,BarChart3,BookOpen,BrainCircuit,CalendarClock,CheckCircle2,ChevronRight,Clock3,CloudOff,Database,Download,ExternalLink,FileCheck2,FileText,FlaskConical,FolderOpen,LayoutDashboard,Menu,MoreHorizontal,Plus,Radio,RefreshCw,Settings,ShieldCheck,ShieldAlert,Search,Target,TrendingUp,Upload, X, Zap} from 'lucide-react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import { Crosshair, Eraser,   ListFilter,  Minus,  Activity,Archive,ArrowDownToLine,ArrowRight,ArrowUpRight,BarChart3,BookOpen,BrainCircuit,CalendarClock,CheckCircle2,ChevronRight,Clock3,CloudOff,Database,Download,ExternalLink,FileCheck2,FileText,FlaskConical,FolderOpen,LayoutDashboard,Menu,MoreHorizontal,Plus,Radio,RefreshCw,Settings,ShieldCheck,ShieldAlert,Search,Target,TrendingUp,Upload, X, Zap} from 'lucide-react';
 import {api} from './api';
 import {type ComparisonPlacement,Badge,CandleChart,Card,Empty,Metric,Notice,PriceChange,SectionTitle,Select,Spinner,Success,TextArea,TextField} from './components';
-import type {BacktestResult,BrokerSymbol,CandleRange,CandleResponse,ChartSource,Dataset,JournalEntry,Overview,Package,Plan,Review,SourceName,SymbolName,Timeframe,Trade} from './types';
+import type {BacktestResult,BacktestRun,BacktestRunSummary,ReplaySession,ReplayViewRequest,BrokerSymbol,CandleRange,CandleResponse,ChartSource,Dataset,JournalEntry,JournalContext,Overview,Package,Plan,Review,SourceName,SymbolName,Timeframe,Trade} from './types';
 import {SavedRange} from './SavedRange';
 import {useBinanceCandles} from './useBinanceCandles';
 import './style.css';
@@ -14,11 +14,22 @@ import {ChartView,frameMinutes,useViewCandles} from './chartViews';
 import {useChartIndicator} from './indicators';
 import {smtFeed,useSmt} from './smt';
 import {SmtMonitor} from './SmtMonitor';
+import {closedCandles, ReplayControls} from './ReplayControls';
+import {SignalExplorer,signalSummary,type SignalRecord} from './SignalExplorer';
+import {DataTrust} from './DataTrust';
+import {CommandPalette,CommandSettings,type CommandTarget} from './CommandPalette';
+import {WorkspacePresets} from './WorkspacePresets';
+import {SessionIntelligence} from './SessionIntelligence';
+import {SimulationEvidence} from './SimulationEvidence';
+import {ChartLink} from './ChartLink';
+import {DrawingToolbox,tools,useDrawingBook,type Drawing} from './Drawings';
+import {PlanHistory} from './PlanHistory';
 
-type Section='overview'|'terminal'|'plans'|'ai'|'lab'|'journal'|'data'|'settings';
+type Section='overview'|'terminal'|'signals'|'plans'|'ai'|'lab'|'journal'|'data'|'settings';
 const menu:{id:Section;name:string;icon:typeof Activity}[]=[
   {id:'overview',name:'Overview',icon:LayoutDashboard},
   {id:'terminal',name:'Market Terminal',icon:Activity},
+  {id:'signals',name:'Signal Explorer',icon:ListFilter},
   {id:'plans',name:'Trade Planner',icon:Target},
   {id:'ai',name:'AI Review Center',icon:BrainCircuit},
   {id:'lab',name:'Strategy Lab',icon:FlaskConical},
@@ -27,40 +38,105 @@ const menu:{id:Section;name:string;icon:typeof Activity}[]=[
   {id:'settings',name:'Settings',icon:Settings}
 ];
 const initialPlan:Plan={symbol:'EURUSD',direction:'BUY',strategy:'CRT / Market Structure',session:'LONDON',timeframe:'M5',context:'',observation:'',evidence:'',hypothesis:'',setup:'',trigger:'',invalidation:'',management:'No automatic execution. Manual exit at planned levels.',entry:'',stop:'',target:'',equity_usd:'10000',risk_percent:'0.5',pip_value_per_lot_usd:'10'};
+const draftKey='tradeforge.planner.draft.v1';
+const revisionKey='tradeforge.planner.revision.v1';
+function loadDraft():Plan|null {
+  try {
+    const saved=JSON.parse(localStorage.getItem(draftKey)??'null') as Plan|null;
+    if(saved&&Object.entries(initialPlan).every(([key,value])=>typeof saved[key as keyof Plan]===typeof value)
+      &&['EURUSD','GBPUSD','USDJPY','XAUUSD'].includes(saved.symbol))return saved;
+  }catch{/* Invalid drafts require a new plan. */}
+  return null;
+}
 const snippets={context:'H1 structure and session trend; verify higher timeframe bias.',observation:'M5 price swept a prior session extreme and re-entered the range.',evidence:'Document exact candle times and levels; no historical edge established.',hypothesis:'If reclaim holds, next impulse may reach opposite range liquidity.',setup:'Candidate range and sweep: unconfirmed until close.',trigger:'Wait for M5 close back inside the reference range.',invalidation:'Structure breaks beyond the sweep with a completed candle.'};
 function App(){
   const {zone}=useTimezone();
   const [section,setSection]=useWorkspacePreference<Section>('page','overview',menu.map(item=>item.id));const [sidebar,setSidebar]=useState(false);const [reload,setReload]=useState(0);
+  const [selectedSignal,selectSignal]=useState<SignalRecord>();
+  const [incomingPlan,setIncomingPlan]=useState<Plan>();
+  const [journalSignal,setJournalSignal]=useState<SignalRecord>();
+  const [journalContext,setJournalContext]=useState<JournalContext>();
+  function journalFrom(context:JournalContext,signal?:SignalRecord){
+    setJournalLocation(undefined);setJournalContext(context);setJournalSignal(signal);go('journal');
+  }
+  const [reviewPlan,setReviewPlan]=useState("");
+  const [planLocation,setPlanLocation]=useState<{id:string;version?:number}>();
+  const [journalLocation,setJournalLocation]=useState<JournalEntry>();
+  const [dataLocation,setDataLocation]=useState<Dataset>();
+  const [chartLocation,setChartLocation]=useState<{symbol?:SymbolName;indicator?:string;sequence:number}>();
+  const [indicatorCommands,setIndicatorCommands]=useState<{id:string;label:string}[]>([]);
+  useEffect(()=>{
+    let active=true;
+    api.get<{id:string;label:string}[]>('/indicators').then(values=>{if(active)setIndicatorCommands(values);}).catch(()=>{});
+    return()=>{active=false;};
+  },[]);
+  const openChart=(location:{symbol?:SymbolName;indicator?:string})=>{
+    setChartLocation(previous=>({...location,sequence:(previous?.sequence??0)+1}));go('terminal');
+  };
+
   const [overview,setOverview]=useState<Overview|null>(null);const [backendError,setBackendError]=useState('');
   const refresh=useCallback(()=>setReload(v=>v+1),[]);
   useEffect(()=>{let mounted=true;api.overview().then(x=>{if(mounted){setOverview(x);setBackendError('')}}).catch(e=>{if(mounted)setBackendError(e.message)});return()=>{mounted=false}},[reload]);
   const go=(s:Section)=>{setSection(s);setSidebar(false)};
+  function planFromChart(seed:Partial<Plan>) {
+    if(loadDraft()&&!window.confirm('Replace the unsaved local draft with this chart context?'))return;
+    try{localStorage.removeItem(revisionKey);}catch{}
+    setIncomingPlan({...initialPlan,...seed});
+    go('plans');
+  }
+  async function openSignal(reference:import('./types').SignalReference) {
+    const record=await api.get<SignalRecord>(`/indicators/signals/${reference.event_key}?status=${reference.status}`);
+    selectSignal(record);go('signals');
+  }
+  async function openCommand(target:CommandTarget){
+    if(target.type==='signal'&&target.status){await openSignal({event_key:target.id,status:target.status});return;}
+    if(target.type==='plan'){setPlanLocation({id:target.id});go('plans');return;}
+    if(target.type==='journal'){
+      setJournalLocation(await api.get<JournalEntry>('/journal/entries/'+encodeURIComponent(target.id)));go('journal');return;
+    }
+    if(target.type==='dataset'){
+      setDataLocation(await api.get<Dataset>('/datasets/'+encodeURIComponent(target.id)));go('data');
+    }
+  }
   return <div className="app-shell">
     <aside className={'sidebar '+(sidebar?'side-open':'')}>
       <div className="brand"><div className="brand-mark"><TrendingUp size={23} strokeWidth={2.7}/></div><div><strong>Trade<span>Forge</span></strong><small>INTELLIGENCE TERMINAL</small></div></div>
       <div className="workspace-name"><div className="workspace-avatar">TF</div><div className="workspace-text"><strong>Personal Workspace</strong><span>Local desktop environment</span></div><ChevronRight size={15} className="faint"/></div>
-      <div className="nav-category">WORKSPACE</div><nav>{menu.slice(0,5).map(m=><button className={'nav-item '+(section===m.id?'selected':'')} key={m.id} onClick={()=>go(m.id)}><m.icon size={18} strokeWidth={1.8}/><span>{m.name}</span>{m.id==='ai'&&<span className="tiny-pulse"/>}</button>)}</nav>
-      <div className="nav-category nav-category-second">LIBRARY & CONFIG</div><nav>{menu.slice(5).map(m=><button className={'nav-item '+(section===m.id?'selected':'')} key={m.id} onClick={()=>go(m.id)}><m.icon size={18} strokeWidth={1.8}/><span>{m.name}</span></button>)}</nav>
+      <div className="nav-category">WORKSPACE</div><nav>{menu.slice(0,6).map(m=><button className={'nav-item '+(section===m.id?'selected':'')} key={m.id} onClick={()=>go(m.id)}><m.icon size={18} strokeWidth={1.8}/><span>{m.name}</span>{m.id==='ai'&&<span className="tiny-pulse"/>}</button>)}</nav>
+      <div className="nav-category nav-category-second">LIBRARY & CONFIG</div><nav>{menu.slice(6).map(m=><button className={'nav-item '+(section===m.id?'selected':'')} key={m.id} onClick={()=>go(m.id)}><m.icon size={18} strokeWidth={1.8}/><span>{m.name}</span></button>)}</nav>
       <div className="sidebar-bottom">
         <div className="risk-safety"><ShieldCheck size={18}/><div><strong>Execution Locked</strong><p>No automated orders enabled</p></div></div>
         <div className="profile"><div className="profile-avatar">U</div><div><strong>Local Trader</strong><span>Single-user edition</span></div><MoreHorizontal size={18}/></div>
       </div>
     </aside>
     {sidebar&&<button className="mobile-shade" aria-label="Close navigation" onClick={()=>setSidebar(false)}/>}
-    <main className="main">
+    <main className="main" tabIndex={0}>
       <header className="topbar">
         <div className="topbar-start"><button className="icon-btn mobile-menu" onClick={()=>setSidebar(true)} aria-label="Open navigation"><Menu size={21}/></button><div className="breadcrumb">Workspace <ChevronRight size={15}/> <strong>{menu.find(m=>m.id===section)?.name}</strong></div></div>
-        <div className="topbar-end"><div className="topbar-mode"><span className="dot green"/> LOCAL MODE</div><div className="topbar-sep"/><span className="topbar-date"><CalendarClock size={16}/> {new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:zone})}</span><button className="icon-btn" aria-label="Refresh data" onClick={refresh}><RefreshCw size={17}/></button><div className="top-avatar">U</div></div>
+        <div className="topbar-end"><CommandPalette onTarget={openCommand} commands={[
+          ...menu.map(item=>({id:item.id,label:item.name,run:()=>go(item.id)})),
+          ...watchSymbols.map(symbol=>({id:'instrument:'+symbol,label:'Open '+symbol,run:()=>openChart({symbol})})),
+          ...indicatorCommands.map(item=>({id:'indicator:'+item.id,label:'Add '+item.label,run:()=>openChart({indicator:item.id})})),
+        ]}/><div className="topbar-mode"><span className="dot green"/> LOCAL MODE</div><div className="topbar-sep"/><span className="topbar-date"><CalendarClock size={16}/> {new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:zone})}</span><button className="icon-btn" aria-label="Refresh data" onClick={refresh}><RefreshCw size={17}/></button><div className="top-avatar">U</div></div>
       </header>
       {backendError&&<div className="error-banner"><CloudOff size={18}/> API offline: {backendError}. Start the API using start-api.ps1.</div>}
       <div className="page-content" key={section}>
       {section==='overview'&&<Dashboard overview={overview} go={go}/>}
-      {section==='terminal'&&<Terminal expanded/>}
-      {section==='plans'&&<Planner refresh={refresh}/>}
-      {section==='ai'&&<AIPage refresh={refresh}/>}
+      {section==='terminal'&&<Terminal expanded onPlan={planFromChart} onSignal={openSignal} onChartLesson={snapshot_id=>journalFrom({snapshot_id})} initialLocation={chartLocation}/>}
+      {section==='signals'&&<SignalExplorer selected={selectedSignal} onSelect={selectSignal} onOpenPlan={(id,version)=>{setPlanLocation({id,version});go("plans");}} onJournal={(signal,snapshot_id)=>journalFrom({snapshot_id},signal)} onPlan={(signal,snapshot_id)=>{
+        const {primary,timeframe}=signal.provenance;
+        planFromChart({symbol:primary.symbol as SymbolName,timeframe,strategy:'SMT research',snapshot_id,
+          context:`${primary.source} · ${primary.feed_id} · ${primary.price_basis}`,
+          evidence:signalSummary(signal),signal_reference:{event_key:signal.event_key,status:signal.status}});
+      }}/>}
+      {section==='plans'&&<Planner refresh={refresh} initialLocation={planLocation} onLesson={plan_reference=>journalFrom({plan_reference})} incoming={incomingPlan} onConsume={()=>setIncomingPlan(undefined)} onReview={id=>{setReviewPlan(id);go("ai");}}/>}
+      {section==='ai'&&<AIPage refresh={refresh} initialTrade={reviewPlan}/>}
       {section==='lab'&&<StrategyLab/>}
-      {section==='journal'&&<Journal refresh={refresh}/>}
-      {section==='data'&&<DataLibrary refresh={refresh}/>}
+      {section==='journal'&&<Journal refresh={refresh} initialEntry={journalLocation} incoming={journalSignal} initialContext={journalContext}
+        clearLink={()=>{setJournalSignal(undefined);setJournalContext(undefined);}}
+        openPlan={(id,version)=>{setPlanLocation({id,version});go('plans');}}
+        openSignal={openSignal}/>}
+      {section==='data'&&<DataLibrary refresh={refresh} initialDataset={dataLocation}/>}
       {section==='settings'&&<SettingsPage/>}
       </div>
       <footer className="footer"><span>TRADEFORGE • RESEARCH ENVIRONMENT • SINGLE USER</span><span>Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">TradingView</a> · UTC storage · {zone}</span></footer>
@@ -74,7 +150,11 @@ const watchSymbols:SymbolName[]=['EURUSD','GBPUSD','USDJPY','XAUUSD'];
 const chartSources:ChartSource[]=['MT5','MT5_SAVED','DUKASCOPY_SAVED','BINANCE_SPOT','DEMO'];
 const chartTimeframes:Timeframe[]=['M1','M3','M5','M15','M30','H1','H4','D1'];
 type ChartLevel=import('./components').ChartLevel;
-function Terminal({expanded=false}:{expanded?:boolean}){
+function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}:{expanded?:boolean;onPlan?:(seed:Partial<Plan>)=>void;
+  onSignal?:(reference:import('./types').SignalReference)=>Promise<void>; initialLocation?:{symbol?:SymbolName;indicator?:string;sequence:number};onChartLesson?:(snapshot:string)=>void}){
+  const [picked,setPicked]=useState<string[]>([]);
+  const [chartCapture,setChartCapture]=useState<string>();
+  const [picking,setPicking]=useState(false);
   const {zone}=useTimezone();
   const [forexSymbol,setSymbol]=useWorkspacePreference<SymbolName>('forex-symbol','EURUSD',watchSymbols);
   const [timeframe,setTimeframe]=useWorkspacePreference<Timeframe>('timeframe','M5',chartTimeframes);
@@ -84,16 +164,40 @@ function Terminal({expanded=false}:{expanded?:boolean}){
   const range=savedSource?selectedRange:undefined;
   const isBinance=source==='BINANCE_SPOT';
   const [brokerSymbol,setBrokerSymbol]=useWorkspacePreference<string>('broker-symbol','EURUSD');
+  useEffect(()=>{
+    if(!initialLocation?.symbol)return;
+    if(source==='BINANCE_SPOT')setSource('MT5');
+    setBrokerSymbol(initialLocation.symbol);
+    setSymbol(initialLocation.symbol);
+  },[initialLocation]);
   const [instruments,setInstruments]=useState<BrokerSymbol[]>([]);
   const [symbolQuery,setSymbolQuery]=useState('');
   const [symbolError,setSymbolError]=useState('');
   const [pollError,setPollError]=useState('');
   const symbol=isBinance?'BTCUSDT':source==='MT5'?brokerSymbol:forexSymbol;
+  const drawingBook=useDrawingBook(expanded?`${source}:${symbol}:${timeframe}`:"");
+  const [sessionZones,setSessionZones]=useState<Record<string,Drawing>>({});
+  const updateZone=useCallback((id:string,drawing?:Drawing)=>{
+    setSessionZones(current=>{
+      if(drawing)return {...current,[id]:drawing};
+      if(!current[id])return current;
+      const next={...current};delete next[id];return next;
+    });
+  },[]);
   const digits=instruments.find(item=>item.name===symbol)?.digits ?? (isBinance?2:symbol==='EURUSD'||symbol==='GBPUSD'?5:3);
   const [data,setData]=useState<CandleResponse|null>(null);
   const [error,setError]=useState('');const [busy,setBusy]=useState(true);
   const [refreshCount,setRefreshCount]=useState(0);
   const [viewCount,setViewCount]=useWorkspacePreference('chart-views','1',['1','2','3','4']);
+  const [link]=useState(()=>new ChartLink());
+  const [linkCrosshair,setLinkCrosshair]=useWorkspacePreference('link-crosshair','off',['on','off']);
+  const [linkRange,setLinkRange]=useWorkspacePreference('link-range','off',['on','off']);
+  const [linkZoom,setLinkZoom]=useWorkspacePreference('link-zoom','off',['on','off']);
+  const [linkInstrument,setLinkInstrument]=useWorkspacePreference('link-instrument','off',['on','off']);
+  const [linkTimeframe,setLinkTimeframe]=useWorkspacePreference('link-timeframe','off',['on','off']);
+  const [linkReplay,setLinkReplay]=useWorkspacePreference('link-replay','on',['on','off']);
+  link.options={crosshair:linkCrosshair==='on',range:linkRange==='on',zoom:linkZoom==='on'};
+
   const [comparisonSymbol,setComparisonSymbol]=useWorkspacePreference<string>('chart-comparison','none');
   const [showSmt,setShowSmt]=useWorkspacePreference('show-smt','on',['on','off']);
   const [smtWidth,setSmtWidth]=useWorkspacePreference<string>('smt-width','3');
@@ -103,8 +207,16 @@ function Terminal({expanded=false}:{expanded?:boolean}){
   const [placement,setPlacement]=useWorkspacePreference<ComparisonPlacement>('comparison-placement','Overlay',['Overlay','New pane']);
   const [drawMode,setDrawMode]=useState(false);
   const [levels,setLevels]=useState<ChartLevel[]>([]);
+  const [levelHistory,setLevelHistory]=useState<{undo:ChartLevel[][];redo:ChartLevel[][]}>({undo:[],redo:[]});
   const [replayIndex,setReplayIndex]=useState<number|null>(null);
-  const [playing,setPlaying]=useState(false);
+  const [replayData,setReplayData]=useState<CandleResponse>();
+  const [replaySession,setReplaySession]=useState<ReplaySession>();
+  const [replayBusy,setReplayBusy]=useState(false);
+  const [replayError,setReplayError]=useState('');
+  const [savedReplays,setSavedReplays]=useState<{id:string;position:number;updated_at:string}[]>([]);
+  const replayScope=JSON.stringify([symbol,timeframe,source,range,refreshCount]);
+  const replayScopeRef=useRef(replayScope);
+  replayScopeRef.current=replayScope;
   const [quotes,setQuotes]=useState<Record<string,number|null>>({});
   const refreshCandles=useCallback(()=>setRefreshCount(n=>n+1),[]);
   const live=useBinanceCandles(isBinance,timeframe,refreshCandles);
@@ -122,7 +234,7 @@ function Terminal({expanded=false}:{expanded?:boolean}){
   },[source,refreshCount]);
   useEffect(()=>{
     let active=true;
-    setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setPlaying(false);
+    setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);setReplayBusy(false);setReplayError('');setChartCapture(undefined);setPicked([]);setPicking(false);
     api.candles(symbol,timeframe,source,expanded?600:200,source==='MT5',range)
       .then(main=>{if(active)setData(main)})
       .catch(e=>{if(active){setError(e.message);setData(null)}})
@@ -170,60 +282,95 @@ function Terminal({expanded=false}:{expanded?:boolean}){
   },[expanded,source]);
   useEffect(()=>{
     if(!expanded)return;
+    setLevelHistory({undo:[],redo:[]});
     try{
       const raw=window.localStorage.getItem(`tf-levels:${source}:${symbol}:${timeframe}`);
       const arr=raw?JSON.parse(raw):[];
       setLevels(Array.isArray(arr)?arr.filter((v:ChartLevel)=>typeof v.price==='number'&&Number.isFinite(v.price)).slice(0,50):[]);
     }catch{setLevels([])}
   },[expanded,source,symbol,timeframe]);
-  const addLevel=(price:number)=>{
-    if(!Number.isFinite(price))return;
-    const decimal=digits;
-    const next=[...levels,{id:`${Date.now()}-${levels.length}`,price:Number(price.toFixed(decimal))}].slice(-50);
+  const writeLevels=(next:ChartLevel[])=>{
     setLevels(next);
-    try{window.localStorage.setItem(`tf-levels:${source}:${symbol}:${timeframe}`,JSON.stringify(next))}catch{/* Browser storage unavailable */}
+    try{window.localStorage.setItem(`tf-levels:${source}:${symbol}:${timeframe}`,JSON.stringify(next));}catch{/* Browser storage unavailable */}
+  };
+  const changeLevels=(next:ChartLevel[])=>{
+    setLevelHistory({undo:[...levelHistory.undo,levels].slice(-25),redo:[]});
+    writeLevels(next);
+  };
+  const addLevel=(price:number)=>{
+    if(!Number.isFinite(price)||levels.length>=50)return;
+    changeLevels([...levels,{id:crypto.randomUUID(),price:Number(price.toFixed(digits))}]);
     setDrawMode(false);
   };
-  const clearLevels=()=>{
-    setLevels([]);
-    try{window.localStorage.removeItem(`tf-levels:${source}:${symbol}:${timeframe}`)}catch{/* Browser storage unavailable */}
+  const clearLevels=()=>{if(window.confirm('Remove all horizontal levels from this chart?'))changeLevels([]);};
+  const undoLevels=()=>{
+    const next=levelHistory.undo.at(-1);if(!next)return;
+    setLevelHistory({undo:levelHistory.undo.slice(0,-1),redo:[...levelHistory.redo,levels]});writeLevels(next);
   };
-  const historical=data?.source===source?(data.latest_unconfirmed&&replayIndex!==null?data.candles.slice(0,-1):data.candles):[];
+  const redoLevels=()=>{
+    const next=levelHistory.redo.at(-1);if(!next)return;
+    setLevelHistory({undo:[...levelHistory.undo,levels],redo:levelHistory.redo.slice(0,-1)});writeLevels(next);
+  };
+  const historical=data?.source===source?data.candles:[];
   const liveRows=live?.candles ?? [];
   const candles=isBinance&&liveRows.length
     ? [...new Map([...historical,...liveRows].map(row=>[row.time,row])).values()].sort((a,b)=>a.time-b.time).slice(-600)
     : historical;
-  const replayActive=replayIndex!==null;
-  const visibleCandles=replayIndex===null?candles:candles.slice(0,replayIndex+1);
-  const indicatorCandles=replayIndex===null&&data?.latest_unconfirmed?visibleCandles.slice(0,-1):visibleCandles;
-  const indicator=useChartIndicator(expanded&&!isBinance&&!busy&&!error,indicatorCandles,source,timeframe);
+  const replayActive=replayIndex!==null&&Boolean(replayData);
+  const visibleCandles=replayActive?replayData!.candles.slice(0,replayIndex!+1):candles;
+  const indicatorCandles=!replayActive&&data?.latest_unconfirmed?visibleCandles.slice(0,-1):visibleCandles;
+  const indicator=useChartIndicator(expanded&&!isBinance&&!busy&&!error,indicatorCandles,source,timeframe,initialLocation);
   const last=visibleCandles.at(-1);const first=visibleCandles[0];
   const change=last&&first?(last.close-first.open)/first.open*100:0;
-  const canReplay=expanded&&!isBinance&&candles.length>31;
-  const beginReplay=()=>{if(!canReplay)return;setReplayIndex(Math.max(20,Math.floor(candles.length*.6)));setPlaying(false)};
-  const stepReplay=useCallback((delta:number)=>setReplayIndex(i=>i===null?null:Math.max(0,Math.min(candles.length-1,i+delta))),[candles.length]);
-  useEffect(()=>{
-    if(!playing||replayIndex===null||replayIndex>=candles.length-1){if(playing&&replayIndex!==null&&replayIndex>=candles.length-1)setPlaying(false);return}
-    const timer=window.setInterval(()=>setReplayIndex(i=>i===null?null:Math.min(candles.length-1,i+1)),750);
-    return()=>window.clearInterval(timer);
-  },[playing,replayIndex,candles.length]);
+  const canReplay=expanded&&!isBinance&&!busy&&!error&&Boolean(data&&closedCandles(data).length>0);
+  const replayOptions=useCallback(()=>{
+    if(!expanded||isBinance)return;
+    const scope=replayScope;
+    api.replays(symbol,timeframe,source).then(value=>{
+      if(replayScopeRef.current===scope)setSavedReplays(value);
+    }).catch(()=>{if(replayScopeRef.current===scope)setSavedReplays([]);});
+  },[replayScope,symbol,timeframe,source,expanded,isBinance]);
+  useEffect(()=>{setSavedReplays([]);replayOptions();},[replayOptions]);
+  async function loadReplay(id?:string){
+    if(replayBusy)return;
+    const scope=replayScope;
+    setReplayBusy(true);setReplayError('');
+    try{
+      const views:ReplayViewRequest[]=[];
+      if(compare)views.push({view:'comparison',symbol:compare,timeframe});
+      if(linkReplay==='on')for(let number=2;number<=Number(viewCount);number++){
+        const preference=(key:string)=>{try{return localStorage.getItem('tradeforge.workspace.'+key);}catch{return null;}};
+        const saved=preference(`view-${number}-symbol`)??'';
+        const selectedFrame=preference(number===2?'secondary-timeframe':`view-${number}-frame`) as Timeframe|null;
+        const frame=selectedFrame&&chartTimeframes.includes(selectedFrame)?selectedFrame:number===2?'H1':number===3?'M15':'H4';
+        views.push({view:String(number),symbol:linkInstrument==='on'||!options.includes(saved)?symbol:saved,
+          timeframe:linkTimeframe==='on'?timeframe:frame});
+      }
+      const session=id?await api.replay(id):await api.startReplay(symbol,timeframe,source,views,range);
+      if(replayScopeRef.current!==scope)return;
+      setReplaySession(session);
+      setReplayData(session.market);
+      setReplayIndex(session.checkpoint?.position??Math.floor((session.market.candles.length-1)*.6));
+    }catch(failure){
+      if(replayScopeRef.current===scope)setReplayError((failure as Error).message);
+    }finally{if(replayScopeRef.current===scope)setReplayBusy(false);}
+  }
   useEffect(()=>{
     if(!expanded)return;
     const onKey=(e:KeyboardEvent)=>{
       const target=e.target as HTMLElement|null;
       if(target?.closest('input,textarea,select,[contenteditable="true"]'))return;
       if(e.altKey&&e.key.toLowerCase()==='h'){e.preventDefault();setDrawMode(v=>!v)}
-      if(replayActive&&e.code==='Space'){e.preventDefault();setPlaying(v=>!v)}
-      if(replayActive&&e.key==='ArrowRight'&&e.shiftKey){e.preventDefault();stepReplay(1)}
-      if(e.key==='Escape')setDrawMode(false);
+      if(e.key==='Escape'){setDrawMode(false);setPicking(false);drawingBook.setEdit(undefined);}
     };
     window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
-  },[expanded,replayActive,stepReplay]);
+  },[expanded,drawingBook.setEdit]);
   const boundary=last?.time??0;
-  const cutoff=replayActive?boundary+frameMinutes[timeframe]*60:undefined;
+  const cutoff=replayActive?(last?.available_at ?? boundary+frameMinutes[timeframe]*60):undefined;
   const options=[...new Set([symbol,...(isBinance?[]:source==='MT5'?instruments.map(item=>item.name):watchSymbols)])];
-  const compare=expanded&&comparisonSymbol!==symbol&&options.includes(comparisonSymbol)?comparisonSymbol:'';
-  const comparison=useViewCandles(compare,timeframe,source,refreshCount,cutoff,true,range);
+  const compare=replaySession?replaySession.views.comparison?.symbol??'':
+    expanded&&comparisonSymbol!==symbol&&options.includes(comparisonSymbol)?comparisonSymbol:'';
+  const comparison=useViewCandles(compare,timeframe,source,refreshCount,cutoff,true,range,replaySession?.views.comparison);
   const rules={period:Number(smtWidth),alignment_bars:Number(smtAlignment),
     tolerance_bps:Number(smtTolerance),confirmation_bars:Number(smtConfirmation)};
   const ruleInputs=[
@@ -234,7 +381,7 @@ function Terminal({expanded=false}:{expanded?:boolean}){
   ] as const;
   const validRules=ruleInputs.every(([,value,,min,max,step])=>value!==''&&Number(value)>=min&&
     Number(value)<=max&&(step!==1||Number.isInteger(Number(value))));
-  const firstFeed=smtFeed(symbol,data?.source===source?data:undefined);
+  const firstFeed=smtFeed(symbol,replayData??(data?.source===source?data:undefined));
   const secondFeed=smtFeed(compare,comparison.feed);
   const missingSmtFeed=source!=='DEMO'&&Boolean(compare)&&Boolean(data&&comparison.feed)&&(!firstFeed||!secondFeed);
   const smt=useSmt(indicatorCandles,comparison.candles,timeframe,showSmt==='on'&&Boolean(compare)&&!busy&&!error&&validRules&&
@@ -276,7 +423,7 @@ function Terminal({expanded=false}:{expanded?:boolean}){
   const latestNotice=!replayActive&&data?.latest_unconfirmed?'Latest MT5 bar · close unconfirmed':'';
   if(!expanded)return <Card className="market-card">
     <div className="market-header"><div className="market-title"><div className="pair-icon"><Activity size={19}/></div><div><div className="market-pair-row"><h3>{pairText}</h3><Badge tone={source==='DEMO'?'amber':'blue'}>{source==='DEMO'?'SIMULATED':source}</Badge></div><p>Market context · research environment</p></div></div><div className="price-head">{last?<><strong>{last.close.toFixed(digits)}</strong><PriceChange value={change}/></>:<strong>—</strong>}</div></div>
-    <div className="chart-toolbar"><div className="timeframe-buttons">{(['M1','M3','M5','M15','H1','H4','D1'] as Timeframe[]).map(t=><button key={t} className={timeframe===t?'on':''} onClick={()=>setTimeframe(t)}>{t}</button>)}</div><div className="chart-actions">{!isBinance&&source!=='MT5'&&<Select value={forexSymbol} options={watchSymbols} onChange={s=>setSymbol(s as SymbolName)}/>}<Select label="Market data source" value={source} options={chartSources} onChange={s=>setSource(s as ChartSource)}/></div>{brokerPicker}</div>
+    <div className="chart-toolbar"><div className="timeframe-buttons">{(['M1','M3','M5','M15','M30','H1','H4','D1'] as Timeframe[]).map(t=><button key={t} className={timeframe===t?'on':''} onClick={()=>setTimeframe(t)}>{t}</button>)}</div><div className="chart-actions">{!isBinance&&source!=='MT5'&&<Select value={forexSymbol} options={watchSymbols} onChange={s=>setSymbol(s as SymbolName)}/>}<Select label="Market data source" value={source} options={chartSources} onChange={s=>setSource(s as ChartSource)}/></div>{brokerPicker}</div>
     <div className="chart-frame">{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:candles.length?<CandleChart candles={candles} height={300} symbol={symbol} precision={digits}/>:<Empty title="No candles" body="Connect MT5 or import a validated dataset."/>}</div>
     <div className="chart-footer"><span>{label} {latestNotice} {pollError}</span><span>{candles.length} candles · {zone}</span></div>
   </Card>;
@@ -290,6 +437,36 @@ function Terminal({expanded=false}:{expanded?:boolean}){
         {data?.coverage&&<div className="indicator-controls" role="status">
           {data.coverage.gaps.length} UTC coverage gaps · {data.coverage.duplicate_bars} duplicate bars · {data.coverage.truncated?'Showing latest 600 candles':'Requested range loaded'}
         </div>}
+        {last&&<SessionIntelligence rows={indicatorCandles} step={frameMinutes[timeframe]*60}
+          cutoff={cutoff??Math.min(Date.now()/1000,(indicatorCandles.at(-1)?.time??last.time)+frameMinutes[timeframe]*60)} digits={digits} onZone={updateZone}/>}
+        <DataTrust data={replayData?{...replayData,candles:visibleCandles,coverage:undefined}:data} symbol={symbol} timeframe={timeframe} error={error||pollError}/>
+        {onPlan&&watchSymbols.includes(symbol as SymbolName)&&<div className="research-controls">
+          <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>{
+            setPicked([]);setDrawMode(false);drawingBook.setEdit(undefined);setPicking(!picking);
+          }}>{picking?'Cancel level selection':'Select plan levels'}</button>
+          {picking&&<span role="status">Click primary price for {['entry','stop','target'][picked.length]}</span>}
+          <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>onPlan({
+            symbol:symbol as SymbolName,timeframe,snapshot_id:chartCapture,context:`${source} · ${data?.feed_id??'unverified feed'} · ${data?.price_basis??'unverified basis'}`,
+            entry:picked[0]??'',stop:picked[1]??'',target:picked[2]??'',
+          })}>Create trade plan</button>
+          {chartCapture&&onChartLesson&&<button className="small-tool" onClick={()=>onChartLesson(chartCapture)}>Record chart lesson</button>}
+        </div>}
+        {levels.length>0||levelHistory.undo.length>0||levelHistory.redo.length>0?<details className="data-trust">
+          <summary>Horizontal levels ({levels.length})</summary><div className="research-controls">
+            <button className="small-tool" disabled={!levelHistory.undo.length} onClick={undoLevels}>Undo level edit</button>
+            <button className="small-tool" disabled={!levelHistory.redo.length} onClick={redoLevels}>Redo level edit</button>
+            {levels.map(level=><button className="small-tool" key={level.id}
+              onClick={()=>changeLevels(levels.filter(item=>item.id!==level.id))}>Remove {level.price.toFixed(digits)}</button>)}
+          </div></details>:null}
+        <DrawingToolbox book={drawingBook} onBegin={kind=>{setPicking(false);setDrawMode(false);drawingBook.begin(kind);}}/>
+        {viewCount!=='1'&&<details className="data-trust"><summary>Chart synchronization</summary>
+          <div className="research-controls">{([
+            ['Crosshair',linkCrosshair,setLinkCrosshair],['Time range',linkRange,setLinkRange],['Zoom',linkZoom,setLinkZoom],
+            ['Instrument',linkInstrument,setLinkInstrument],['Timeframe',linkTimeframe,setLinkTimeframe],
+            ['Replay',linkReplay,setLinkReplay],
+          ] as const).map(([name,value,update])=><label key={name}><input type="checkbox" checked={value==='on'}
+            disabled={name==='Replay'&&replayActive} onChange={event=>update(event.target.checked?'on':'off')}/>{name}</label>)}</div>
+        </details>}
         {indicator.controls}<div className="indicator-controls comparison-controls"><label>SMT comparison
           <Select label="SMT comparison" value={compare||'none'} options={['none',...options.filter(item=>item!==symbol)]} onChange={setComparisonSymbol}/>
           </label>{compare&&<label><input className="smt-toggle" type="checkbox" checked={showSmt==='on'}
@@ -309,13 +486,51 @@ function Terminal({expanded=false}:{expanded?:boolean}){
             ? {primary_symbol:symbol,comparison_symbol:compare,timeframe,...rules} : undefined}/>
           <small role="status">{smt.error || comparison.error || (smt.authority==='VERIFIED_MT5_CAPTURE'?'SMT · verified MT5 candles':smt.authority==='VERIFIED_SAVED_DATASET'?'SMT · verified archive evidence':smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
           {smt.alert?.confirmed_at&&<strong role="status">SMT_CONFIRMED · {smt.alert.direction} · {symbol} / {compare} · {new Date(smt.alert.confirmed_at*1000).toISOString()}</strong>}
-        </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(!drawMode?'active':'')} title="Crosshair (Esc)" onClick={()=>setDrawMode(false)}><Crosshair size={18}/></button><button className={'rail-tool '+(drawMode?'active':'')} title="Place horizontal level (Alt+H)" onClick={()=>setDrawMode(v=>!v)}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
+          {smt.alert?.event_key&&onSignal&&<button className="small-tool" onClick={()=>void onSignal({
+            event_key:smt.alert!.event_key!,status:'SMT_CONFIRMED'
+          }).catch(reason=>setPollError(reason.message))}>Inspect alert evidence</button>}
+        </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(!drawMode?'active':'')} title="Crosshair (Esc)" onClick={()=>setDrawMode(false)}><Crosshair size={18}/></button><button className={'rail-tool '+(drawMode?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={()=>setDrawMode(v=>!v)}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
         <div className={'terminal-chart-columns '+(viewCount!=='1'?'multi-chart':'')}>
-          <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:smt?.events}:undefined} symbol={symbol} precision={digits} indicator={indicator.data || undefined} levels={levels} drawMode={drawMode} onAddLevel={addLevel} showSnapshot/>:<Empty title="Market data unavailable" body="Connect MetaTrader 5 or import saved MT5 / Dukascopy candles."/>}</div>
+          <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events}:undefined} symbol={symbol} precision={digits} indicator={indicator.data || undefined} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
+              item.anchors.every(anchor=>anchor.time+frameMinutes[timeframe]*60<=cutoff))}
+            drawMode={drawMode||picking||Boolean(drawingBook.edit)}
+            onSaveSnapshot={async png=>{
+              const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff);
+              setChartCapture(saved.id);
+            }}
+            onSmtSelect={!replayActive&&onSignal?event=>{
+              if(event.event_key)void onSignal({event_key:event.event_key,status:event.status}).catch(reason=>setPollError(reason.message));
+            }:undefined}
+            onAnchor={drawingBook.edit?(bar,price)=>drawingBook.anchor(bar,price,digits):undefined}
+            drawingPrompt={drawingBook.edit?`${tools[drawingBook.edit.kind][0]} · select ${drawingBook.edit.mode==='move'?'new origin':typeof drawingBook.edit.mode==='number'?drawingBook.edit.mode+1:drawingBook.edit.anchors.length+1}`:
+              picking?`Select ${['entry','stop','target'][picked.length]}`:undefined}
+            onAddLevel={picking?price=>{
+              setPicked([...picked,price.toFixed(digits)]);if(picked.length===2)setPicking(false);
+            }:addLevel} showSnapshot/>:<Empty title="Market data unavailable" body="Connect MetaTrader 5 or import saved MT5 / Dukascopy candles."/>}</div>
           {Array.from({length:Number(viewCount)-1},(_,index)=><ChartView key={index+2} number={index+2}
-            mainSymbol={symbol} source={source} options={options} refresh={refreshCount} cutoff={cutoff} precision={precisionFor} range={range}/>)}
+            mainSymbol={symbol} source={source} options={options} refresh={refreshCount} cutoff={linkReplay==='on'?cutoff:undefined} precision={precisionFor} range={range}
+            frozen={replayActive&&linkReplay==='on'?(replaySession?.views[String(index+2)]??
+              {symbol,timeframe,error:'This pane was not captured in the replay snapshot'}):undefined}
+            link={link} linkedFrame={linkTimeframe==='on'?timeframe:undefined} linkedSymbol={linkInstrument==='on'?symbol:undefined}/>)}
         </div></div>
-        <div className="terminal-replay"><div className="terminal-replay-left"><button className={'small-tool '+(replayActive?'active':'')} onClick={()=>replayActive?(setReplayIndex(null),setPlaying(false)):beginReplay()} disabled={!canReplay}><Clock3 size={17}/>{replayActive?'Exit replay':'Bar replay'}</button>{replayActive&&<><button className="small-tool icon-square" onClick={()=>setReplayIndex(Math.max(20,Math.floor(candles.length*.6)))} title="Restart replay"><SkipBack size={16}/></button><button className="small-tool icon-square" onClick={()=>stepReplay(1)} disabled={replayIndex===candles.length-1} title="Next candle (Shift+Right)"><SkipForward size={16}/></button><button className="small-tool active" onClick={()=>setPlaying(p=>!p)}>{playing?<Pause size={15}/>:<Play size={15}/>} {playing?'Pause':'Play'}</button><span className="replay-count">{(replayIndex??0)+1} / {candles.length}</span></>}</div><div className="terminal-footer-info">{replayActive?'Future candles hidden · replay':zone} <span className="footer-divider">|</span> {visibleCandles.length} bars · {data?.price_basis||'unverified'}</div></div>
+        <div className="terminal-replay">
+          {replayActive&&replayData ? <ReplayControls candles={replayData.candles} index={replayIndex!}
+            onSeek={setReplayIndex} onExit={()=>{setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);}}
+            onCheckpoint={replaySession?async(position,bookmarks)=>{
+              await api.saveCheckpoint(replaySession.id,position,bookmarks);replayOptions();
+            }:undefined} initialBookmarks={replaySession?.checkpoint?.bookmarks} step={frameMinutes[timeframe]*60}/>
+            : <div className="research-controls">
+              <button className="small-tool" onClick={()=>void loadReplay()} disabled={!canReplay||replayBusy}><Clock3 size={17}/> Bar replay</button>
+              {savedReplays.length>0&&<label>Resume saved replay <select value="" disabled={replayBusy}
+                onChange={event=>{if(event.target.value)void loadReplay(event.target.value);}}>
+                <option value="">Choose checkpoint</option>{savedReplays.map(item=><option key={item.id} value={item.id}>
+                  {new Date(item.updated_at).toLocaleString()} · candle {item.position+1}
+                </option>)}
+              </select></label>}
+              {replayError&&<span role="alert">{replayError}</span>}
+            </div>}
+          <div className="terminal-footer-info">{zone} · {visibleCandles.length} bars · {data?.price_basis||'unverified'}</div>
+        </div>
       </section>
       <aside className="market-watchlist"><div className="watch-head"><div><span className="eyebrow">INSTRUMENTS</span><h3>Watchlist</h3></div><ListFilter size={17}/></div><div className="watch-columns"><span>PAIR</span><span>{isBinance?'LAST':'BID'}</span></div>{isBinance&&<div className='watch-row current'><strong>BTCUSDT</strong><span>{last?.close.toFixed(2)??'—'}</span></div>}{(isBinance?[]:watchSymbols).map(w=><button key={w} className={'watch-row '+((source==='MT5'?symbol===w||symbol.toUpperCase().includes(w):symbol===w)?'current':'')} onClick={()=>source==='MT5'?setBrokerSymbol(instruments.find(item=>item.name.toUpperCase().includes(w))?.name ?? w):setSymbol(w)}><span className="watch-symbol"><strong>{w}</strong><small>{w==='XAUUSD'?'Spot gold':w.slice(0,3)+' / '+w.slice(3)}</small></span><span className="watch-price">{quotes[w]===undefined||quotes[w]===null?'—':quotes[w]?.toFixed(w==='EURUSD'||w==='GBPUSD'?5:3)}</span></button>)}
         <div className="watch-detail"><span className="eyebrow">ACTIVE WORKSPACE</span><div><span>Feed</span><strong>{source}</strong></div><div><span>Instrument</span><strong>{symbol}</strong></div><div><span>Session clock</span><strong>{zone}</strong></div><p>{source==='DEMO'?'All displayed demo quotes are synthetic and are not suitable for market decisions.':'Broker/data availability is not guaranteed. Confirm quote freshness before use.'}</p></div>
@@ -338,39 +553,105 @@ function Dashboard({overview,go}:{overview:Overview|null;go:(s:Section)=>void}){
   </>
 }
 
-function Planner({refresh}:{refresh:()=>void}){
+function Planner({refresh,incoming,onConsume,onReview,initialLocation,onLesson}:{refresh:()=>void;incoming?:Plan;onConsume:()=>void;onReview:(id:string)=>void;initialLocation?:{id:string;version?:number};onLesson:(reference:import("./types").PlanReference)=>void}){
   const formatDate=useTimestampFormat();
- const [list,setList]=useState<Trade[]>([]);const [loading,setLoading]=useState(true);const [formOpen,setFormOpen]=useState(false);const [plan,setPlan]=useState<Plan>({...initialPlan});const [risk,setRisk]=useState<import('./types').Risk|null>(null);const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');const [error,setError]=useState('');const [closeId,setCloseId]=useState('');const [outcome,setOutcome]=useState({pnl:'0',r:'0',notes:''});
+ const [list,setList]=useState<Trade[]>([]);const [loading,setLoading]=useState(true);const [formOpen,setFormOpen]=useState(()=>Boolean(incoming||loadDraft()));const [plan,setPlan]=useState<Plan>(()=>incoming??loadDraft()??{...initialPlan});const [risk,setRisk]=useState<import('./types').Risk|null>(null);const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');const [error,setError]=useState('');const [closeId,setCloseId]=useState('');const [outcome,setOutcome]=useState({pnl:'0',r:'0',notes:''});
+ useEffect(()=>{
+   if(incoming)onConsume();
+ },[incoming,onConsume]);
+ useEffect(()=>{
+   try {
+     if(JSON.stringify(plan)!==JSON.stringify(initialPlan))localStorage.setItem(draftKey,JSON.stringify(plan));
+   } catch{/* The draft remains in memory. */}
+ },[plan]);
+ const [history,setHistory]=useState<Trade>();
+ const [historyVersion,setHistoryVersion]=useState(initialLocation?.version);
+ useEffect(()=>{
+   if(!initialLocation)return;
+   let active=true;
+   api.trade(initialLocation.id).then(trade=>{if(active)setHistory(trade);})
+     .catch(error=>{if(active)setError(error.message);});
+   return ()=>{active=false;};
+ },[initialLocation]);
+ const [declineId,setDeclineId]=useState('');
+ const [reason,setReason]=useState('');
+ const [guided,setGuided]=useState(false);
+ const [step,setStep]=useState(0);
+ const [revision,setRevision]=useState<{id:string;version:number}>();
+ useEffect(()=>{
+   if(incoming)return;
+   try{
+     const stored=JSON.parse(localStorage.getItem(revisionKey)??'null');
+     if(typeof stored?.id==='string'&&Number.isInteger(stored?.version)&&loadDraft())setRevision(stored);
+   }catch{}
+ },[]);
+ function targetRevision(value?:{id:string;version:number}){
+   setRevision(value);
+   try{if(value)localStorage.setItem(revisionKey,JSON.stringify(value));else localStorage.removeItem(revisionKey);}catch{}
+ }
+ function editLatest(){
+   const version=history?.versions?.[0];
+   if(!history||!version||(loadDraft()&&!window.confirm('Replace the unsaved draft with this revision?')))return;
+   setPlan(version.plan);targetRevision({id:history.id,version:version.version});
+   setRisk(null);setFormOpen(true);setStep(0);setError('');
+ }
+ async function decline(){
+   setBusy(true);setError('');
+   try{await api.declinePlan(declineId,reason);setMessage('Recorded no-trade decision '+declineId);
+     setDeclineId('');setReason('');await load();refresh();}
+   catch(failure){setError((failure as Error).message);}finally{setBusy(false);}
+ }
+ const [savedId,setSavedId]=useState("");
  const load=useCallback(()=>api.trades().then(setList).catch(e=>setError(e.message)).finally(()=>setLoading(false)),[]);useEffect(()=>{void load()},[load]);
  const modify=<K extends keyof Plan>(key:K,value:Plan[K])=>{setPlan(p=>({...p,[key]:value}));setRisk(null)};
  async function calculate(){setBusy(true);setError('');try{setRisk(await api.risk(plan))}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- async function save(){setBusy(true);setError('');try{const result=await api.createPlan(plan);setMessage('Created '+result.id);setFormOpen(false);setRisk(null);setPlan({...initialPlan});await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ async function save(){setBusy(true);setError('');try{const result=revision?await api.revisePlan(revision.id,revision.version,plan):await api.createPlan(plan);setMessage((revision?'Saved revision for ':'Created ')+result.id);targetRevision();setSavedId(result.id);setFormOpen(false);setRisk(null);setPlan({...initialPlan});try{localStorage.removeItem(draftKey)}catch{}await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  async function finalize(){if(!closeId)return;setBusy(true);setError('');try{await api.closeTrade(closeId,outcome.pnl,outcome.r,outcome.notes);setCloseId('');await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  return <><PageHeading eyebrow="TRADING / PLANNING" title="Trade planner" subtitle="A trade should exist as a written hypothesis before it exists as a position." action={<button className="btn btn-primary" onClick={()=>{setFormOpen(true);setMessage('');setError('')}}><Plus size={17}/> New Trade Plan</button>}/>
   <div className="pill-guidance"><ShieldCheck size={17}/><div><strong>Evidence-first workflow</strong><span>Context → Observation → Evidence → Hypothesis → Setup → Trigger → Invalidation → Risk → Execution → Review</span></div></div>
-  {message&&<Success>{message}</Success>}{error&&<Notice tone="red">{error}</Notice>}
-  <Card><SectionTitle eyebrow="PLANNED DECISIONS" title="Your trade log" action={<Badge tone="neutral">{list.length} records</Badge>}/>{loading?<div className="loading-zone"><Spinner/></div>:list.length?<div className="table-scroll"><table><thead><tr><th>DECISION</th><th>SYMBOL</th><th>STRATEGY</th><th>RISK</th><th>STATUS</th><th>CREATED</th><th>ACTION</th></tr></thead><tbody>{list.map(t=><tr key={t.id}><td className="mono">{t.id}</td><td><strong>{t.symbol}</strong> <span className={t.direction==='BUY'?'positive':'negative'}>{t.direction}</span></td><td>{t.plan.strategy}</td><td>{t.plan.risk_percent}%</td><td><Badge tone={t.status==='CLOSED'?'blue':'green'}>{t.status}</Badge></td><td>{formatDate(t.created_at)}</td><td>{t.status==='PLANNED'?<button className="text-button" onClick={()=>setCloseId(t.id)}>Record outcome <ArrowRight size={14}/></button>:t.outcome?`${t.outcome.result_r} R`:'—'}</td></tr>)}</tbody></table></div>:<Empty icon={<Target/>} title="Your trade log is empty" body="Start with a structured plan. Your decisions will be versioned and preserved here."/>}</Card>
+  {message&&<Success>{message}</Success>}{savedId&&<button className="small-tool" onClick={()=>onReview(savedId)}>Review saved plan</button>}{error&&<Notice tone="red">{error}</Notice>}
+  <Card><SectionTitle eyebrow="PLANNED DECISIONS" title="Your trade log" action={<Badge tone="neutral">{list.length} records</Badge>}/>{loading?<div className="loading-zone"><Spinner/></div>:list.length?<div className="table-scroll"><table><thead><tr><th>DECISION</th><th>SYMBOL</th><th>STRATEGY</th><th>RISK</th><th>STATUS</th><th>CREATED</th><th>ACTION</th></tr></thead><tbody>{list.map(t=><tr key={t.id}><td className="mono">{t.id}</td><td><strong>{t.symbol}</strong> <span className={t.direction==='BUY'?'positive':'negative'}>{t.direction}</span></td><td>{t.plan.strategy}</td><td>{t.plan.risk_percent}%</td><td><Badge tone={t.status==='CLOSED'?'blue':'green'}>{t.status}</Badge></td><td>{formatDate(t.created_at)}</td><td><button className="text-button" onClick={()=>{setHistoryVersion(undefined);void api.trade(t.id).then(setHistory).catch(reason=>setError(reason.message));}}>Versions</button>
+  {t.status==='PLANNED'?<><button className="text-button" onClick={()=>setCloseId(t.id)}>Record outcome <ArrowRight size={14}/></button>
+    <button className="text-button" onClick={()=>setDeclineId(t.id)}>No trade</button></>:t.outcome?`${t.outcome.result_r} R`:'—'}</td></tr>)}</tbody></table></div>:<Empty icon={<Target/>} title="Your trade log is empty" body="Start with a structured plan. Your decisions will be versioned and preserved here."/>}</Card>
+  {history&&<PlanHistory key={history.id+(history.versions?.[0]?.version??0)} trade={history} initialVersion={historyVersion} onRevise={editLatest} onLesson={version=>onLesson({trade_id:history.id,version})} onClose={()=>setHistory(undefined)}/>}
+  {declineId&&<div className="modal-shade"><section className="small-modal" role="dialog" aria-label="Record no-trade decision">
+    <h2>Record no-trade decision</h2><TextArea label="Reason for passing" value={reason} onChange={setReason}/>
+    <div className="research-controls"><button className="small-tool" onClick={()=>setDeclineId('')}>Cancel</button>
+      <button className="btn btn-primary" disabled={busy||reason.trim().length<5} onClick={()=>void decline()}>Save no-trade decision</button></div>
+    {error&&<Notice tone="red">{error}</Notice>}
+  </section></div>}
   {closeId&&<div className="modal-shade" onMouseDown={()=>setCloseId('')}><div className="small-modal" onMouseDown={e=>e.stopPropagation()}><div className="modal-top"><h2>Record outcome</h2><button className="icon-btn" onClick={()=>setCloseId('')}><X/></button></div><p className="muted">Manual journal result; this is not broker-reconciled execution accounting.</p><TextField label="Realized P&L (USD)" value={outcome.pnl} onChange={v=>setOutcome(s=>({...s,pnl:v}))}/><TextField label="Result in R" value={outcome.r} onChange={v=>setOutcome(s=>({...s,r:v}))}/><TextArea label="Review notes" value={outcome.notes} onChange={v=>setOutcome(s=>({...s,notes:v}))}/><button className="btn btn-primary full" disabled={busy} onClick={()=>void finalize()}>Save immutable outcome</button></div></div>}
-  {formOpen&&<div className="drawer-overlay" onMouseDown={()=>setFormOpen(false)}><div className="drawer" onMouseDown={e=>e.stopPropagation()}><div className="drawer-heading"><div><span className="eyebrow">PLAN BUILDER / V1</span><h2>New trade hypothesis</h2><p>Complete each evidence field to create an auditable plan.</p></div><button className="icon-btn" onClick={()=>setFormOpen(false)}><X size={20}/></button></div><div className="drawer-body">
-    <div className="form-subtitle">Market parameters</div><div className="form-grid three"><label className="field"><span>Instrument</span><Select value={plan.symbol} onChange={v=>modify('symbol',v as SymbolName)} options={['EURUSD','GBPUSD','USDJPY','XAUUSD']}/></label><label className="field"><span>Direction</span><Select value={plan.direction} onChange={v=>modify('direction',v as 'BUY'|'SELL')} options={['BUY','SELL']}/></label><label className="field"><span>Timeframe</span><Select value={plan.timeframe} onChange={v=>modify('timeframe',v as Timeframe)} options={['M1','M3','M5','M15','H1','H4','D1']}/></label></div>
+  {formOpen&&<div className="drawer-overlay" onMouseDown={()=>setFormOpen(false)}><div className="drawer" onMouseDown={e=>e.stopPropagation()}><div className="drawer-heading"><div><span className="eyebrow">PLAN BUILDER / V1</span><h2>{revision?`Revise ${revision.id} · from v${revision.version}`:'New trade hypothesis'}</h2><p>Complete each evidence field to create an auditable plan.</p></div><button className="icon-btn" onClick={()=>setFormOpen(false)}><X size={20}/></button></div><div className="drawer-body">
+    <div className="research-controls"><label><input type="checkbox" checked={guided}
+      onChange={event=>setGuided(event.target.checked)}/> Guided planner</label>
+      {guided&&['Context and evidence','Levels and risk'].map((label,index)=><button className="small-tool" key={label}
+        aria-pressed={step===index} onClick={()=>setStep(index)}>{label}</button>)}</div>
+    <section hidden={guided&&step!==0}>
+    <div className="form-subtitle">Market parameters</div><div className="form-grid three"><label className="field"><span>Instrument</span><Select value={plan.symbol} onChange={v=>modify('symbol',v as SymbolName)} options={['EURUSD','GBPUSD','USDJPY','XAUUSD']}/></label><label className="field"><span>Direction</span><Select value={plan.direction} onChange={v=>modify('direction',v as 'BUY'|'SELL')} options={['BUY','SELL']}/></label><label className="field"><span>Timeframe</span><Select value={plan.timeframe} onChange={v=>modify('timeframe',v as Timeframe)} options={['M1','M3','M5','M15','M30','H1','H4','D1']}/></label></div>
     <div className="form-grid"><TextField label="Strategy / model" value={plan.strategy} onChange={v=>modify('strategy',v)}/><label className="field"><span>Session</span><Select value={plan.session} onChange={v=>modify('session',v as Plan['session'])} options={['ASIA','LONDON','NEW_YORK','OTHER']}/></label></div>
+    {plan.snapshot_id&&<p><a href={`/research/api/chart-snapshots/${plan.snapshot_id}/image`} target="_blank" rel="noreferrer">Open linked chart capture</a>
+      <button className="text-button" onClick={()=>modify('snapshot_id',undefined)}>Remove chart capture</button></p>}
+    {plan.signal_reference&&<p role="status">Linked SMT revision · {plan.signal_reference.status} · {plan.signal_reference.event_key.slice(0,12)}</p>}
     <div className="form-subtitle">Evidence chain <button className="text-button" onClick={()=>setPlan(p=>({...p,...snippets}))}>Fill example wording (edit before saving)</button></div>
     {(['context','observation','evidence','hypothesis','setup','trigger','invalidation'] as const).map((key,index)=><TextArea key={key} label={`${String(index+1).padStart(2,'0')} · ${key.charAt(0).toUpperCase()+key.slice(1)}`} value={plan[key]} onChange={v=>modify(key,v)} placeholder={`Enter ${key} with observed levels, times, or rules` } rows={2}/>)}
     <TextArea label="Management plan" value={plan.management} onChange={v=>modify('management',v)} rows={2}/>
+    </section>
+    <section hidden={guided&&step!==1}>
     <div className="form-subtitle">Levels and risk</div><div className="form-grid three"><TextField label="Entry" value={plan.entry} onChange={v=>modify('entry',v)}/><TextField label="Stop" value={plan.stop} onChange={v=>modify('stop',v)}/><TextField label="Target" value={plan.target} onChange={v=>modify('target',v)}/></div>
     <div className="form-grid three"><TextField label="Equity USD" value={plan.equity_usd} onChange={v=>modify('equity_usd',v)}/><TextField label="Risk % (max 2)" value={plan.risk_percent} onChange={v=>modify('risk_percent',v)}/><TextField label="Pip value / lot USD" value={plan.pip_value_per_lot_usd} onChange={v=>modify('pip_value_per_lot_usd',v)}/></div>
     <Notice>The pip value and proposed lot step are illustrative; verify broker contract specifications before any real order.</Notice>
     {risk&&<div className="risk-preview"><div><span>Planned maximum loss</span><strong>${risk.maximum_planned_loss_usd}</strong></div><div><span>Illustrative size</span><strong>{risk.illustrative_lots} lots</strong></div><div><span>Reward/risk</span><strong>1 : {risk.reward_risk}</strong></div></div>}
+    </section>
     {error&&<Notice tone="red">{error}</Notice>}
-  </div><div className="drawer-footer"><button className="btn btn-outline" disabled={busy} onClick={()=>void calculate()}><ShieldCheck size={16}/> Calculate Risk</button><button className="btn btn-primary" disabled={busy} onClick={()=>void save()}><FileCheck2 size={16}/> Save Plan <ArrowRight size={16}/></button></div></div></div>}
+  </div><div className="drawer-footer"><button className="btn btn-outline" disabled={busy} onClick={()=>void calculate()}><ShieldCheck size={16}/> Calculate Risk</button><button className="btn btn-primary" disabled={busy} onClick={()=>void save()}><FileCheck2 size={16}/> {revision?'Save revision':'Save plan'} <ArrowRight size={16}/></button></div></div></div>}
  </>
 }
 
-function AIPage({refresh}:{refresh:()=>void}){
+function AIPage({refresh,initialTrade}:{refresh:()=>void;initialTrade:string}){
   const formatDate=useTimestampFormat();
- const [trades,setTrades]=useState<Trade[]>([]);const [packages,setPackages]=useState<Package[]>([]);const [reviews,setReviews]=useState<Review[]>([]);const [chosen,setChosen]=useState('');const [input,setInput]=useState('');const [busy,setBusy]=useState(false);const [result,setResult]=useState('');const [error,setError]=useState('');
+ const [trades,setTrades]=useState<Trade[]>([]);const [packages,setPackages]=useState<Package[]>([]);const [reviews,setReviews]=useState<Review[]>([]);const [chosen,setChosen]=useState(initialTrade);const [input,setInput]=useState('');const [busy,setBusy]=useState(false);const [result,setResult]=useState('');const [error,setError]=useState('');
  const load=useCallback(()=>Promise.all([api.trades(),api.packages(),api.reviews()]).then(([t,p,r])=>{setTrades(t);setPackages(p);setReviews(r);if(!chosen&&t.length)setChosen(t[0].id)}).catch(e=>setError(e.message)),[chosen]);useEffect(()=>{void load()},[load]);
- async function exportPackage(){if(!chosen)return;setBusy(true);setError('');try{const item=await api.createExport(chosen);setResult(`Package ${item.package_id} created. Ready for download.`);window.open(item.download_url,'_blank');await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ async function exportPackage(){if(!chosen)return;setBusy(true);setError('');try{const item=await api.createExport(chosen,trades.find(trade=>trade.id===chosen)?.version);setResult(`Package ${item.package_id} created. Ready for download.`);window.open(item.download_url,'_blank');await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  async function importResponse(){setBusy(true);setError('');try{const data=JSON.parse(input) as unknown;const review=await api.importReview(data);setResult(`Imported ${review.id} — ${review.verification}`);setInput('');await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  const example=()=>{const p=packages[0];if(!p)return;setInput(JSON.stringify({schema_version:1,package_id:p.id,trade_decision_id:p.trade_id,plan_version:p.plan_version,review_type:'PRE_TRADE',assessment:'INSUFFICIENT_DATA',findings:[{summary:'Sample observation only: verify spread and completed session structure.',evidence_refs:['PLAN','RISK'],metric_refs:[]}],evidence_refs:['PLAN','RISK'],missing_evidence:['Historical analog records'],contradictions:[],risk_concerns:[],suggested_actions:[],limitations:['Free-text claims require manual verification.']},null,2))};
  return <><PageHeading eyebrow="INTELLIGENCE / FRONTIER AI" title="AI Review Center" subtitle="Export complete evidence. Challenge your thesis in your preferred frontier chat AI. Bring the review back." action={<Badge tone="blue"><CloudOff size={13}/> NO API REQUIRED</Badge>}/>
@@ -387,6 +668,19 @@ function StrategyLab(){
   const formatDate=useTimestampFormat();
   const [range,setRange]=useState<CandleRange>();
  const [symbol,setSymbol]=useState<SymbolName>('EURUSD');const [timeframe,setTimeframe]=useState<Timeframe>('M5');const [source,setSource]=useState<SourceName>('MT5');const [result,setResult]=useState<BacktestResult|null>(null);const [error,setError]=useState('');const [loading,setLoading]=useState(false);
+ const [savedRun,setSavedRun]=useState<BacktestRun>();
+ const [runs,setRuns]=useState<BacktestRunSummary[]>([]);
+ const [compareRun,setCompareRun]=useState('');
+ const [archiveError,setArchiveError]=useState('');
+ const refreshRuns=useCallback(()=>api.backtestRuns().then(value=>{setRuns(value);setArchiveError('');})
+   .catch(error=>setArchiveError(error.message)),[]);
+ useEffect(()=>{void refreshRuns();},[refreshRuns]);
+ async function openRun(id:string){
+   if(!id)return;
+   setLoading(true);setError('');
+   try{const snapshot=await api.backtestRun(id);setSavedRun(snapshot);setResult(snapshot.result);}
+   catch(reason){setError((reason as Error).message);}finally{setLoading(false);}
+ }
  const [tickArchives,setTickArchives]=useState<Dataset[]>([]);
  const [tickId,setTickId]=useState("");
  const [slippage,setSlippage]=useState("0");
@@ -403,42 +697,117 @@ function StrategyLab(){
  const tick=choices.some(dataset=>dataset.id===tickId)?{id:tickId,slippage,commission,maxGap}:undefined;
  const validGap=Number.isInteger(Number(maxGap))&&Number(maxGap)>=1&&Number(maxGap)<=60;
  const validCosts=[slippage,commission].every(value=>value.trim()!==""&&Number(value)>=0&&Number(value)<=100);
- async function run(){setLoading(true);setError('');try{setResult(await api.backtest(symbol,timeframe,source,saved?range:undefined,tick))}catch(e){setError((e as Error).message)}finally{setLoading(false)}}
- return <><PageHeading eyebrow="QUANT RESEARCH / LAB" title="Strategy laboratory" subtitle="Reproducible testing without look-ahead or misleading certainty."/><Notice tone="amber">This laboratory tests one breakout rule. Bid/ask replay supports slippage and commission. OHLC simulation excludes execution costs.</Notice><div className="two-column lab-layout"><Card><SectionTitle eyebrow="SIMULATION SETUP" title="Research parameters"/><label className="field"><span>Instrument</span><Select value={symbol} onChange={v=>setSymbol(v as SymbolName)} options={['EURUSD','GBPUSD','USDJPY','XAUUSD']}/></label><label className="field"><span>Timeframe</span><Select value={timeframe} onChange={v=>setTimeframe(v as Timeframe)} options={['M1','M3','M5','M15','H1','H4','D1']}/></label><label className="field"><span>Data source</span><Select value={source} onChange={v=>setSource(v as SourceName)} options={['DEMO','MT5','MT5_SAVED','DUKASCOPY_SAVED']}/></label>{source.endsWith('_SAVED')&&<SavedRange range={range} onChange={setRange}/>}{saved&&<label className="field"><span>Execution data</span><select value={tick?.id??""} onChange={event=>setTickId(event.target.value)}>
+ async function run(){
+   setLoading(true);setError('');setResult(null);setSavedRun(undefined);
+   try{
+     const snapshot=await api.saveBacktest(symbol,timeframe,source,saved?range:undefined,tick);
+     setSavedRun(snapshot);setResult(snapshot.result);void refreshRuns();
+   }catch(e){setError((e as Error).message)}finally{setLoading(false);}
+ }
+ const comparisonRun=runs.find(item=>item.id===compareRun);
+ const currentRun=runs.find(item=>item.id===savedRun?.id);
+ return <><PageHeading eyebrow="QUANT RESEARCH / LAB" title="Strategy laboratory" subtitle="Reproducible testing without look-ahead or misleading certainty."/><Notice tone="amber">This laboratory tests one breakout rule. Bid/ask replay supports slippage and commission. OHLC simulation excludes execution costs.</Notice><div className="two-column lab-layout"><Card><SectionTitle eyebrow="SIMULATION SETUP" title="Research parameters"/><label className="field"><span>Instrument</span><Select value={symbol} onChange={v=>setSymbol(v as SymbolName)} options={['EURUSD','GBPUSD','USDJPY','XAUUSD']}/></label><label className="field"><span>Timeframe</span><Select value={timeframe} onChange={v=>setTimeframe(v as Timeframe)} options={['M1','M3','M5','M15','M30','H1','H4','D1']}/></label><label className="field"><span>Data source</span><Select value={source} onChange={v=>setSource(v as SourceName)} options={['DEMO','MT5','MT5_SAVED','DUKASCOPY_SAVED']}/></label>{source.endsWith('_SAVED')&&<SavedRange range={range} onChange={setRange}/>}{saved&&<label className="field"><span>Execution data</span><select value={tick?.id??""} onChange={event=>setTickId(event.target.value)}>
     <option value="">OHLC candles</option>{choices.map(dataset=><option key={dataset.id} value={dataset.id}>Bid/ask ticks · {dataset.rows_count.toLocaleString()} · {dataset.id.slice(0,8)}</option>)}
   </select></label>}
   {tick&&<div className="two-column"><label className="field"><span>Slippage per side (bps)</span><input type="number" min="0" max="100" step="any" value={slippage} onChange={event=>setSlippage(event.target.value)}/></label><label className="field"><span>Commission per side (bps)</span><input type="number" min="0" max="100" step="any" value={commission} onChange={event=>setCommission(event.target.value)}/></label><label className="field"><span>Maximum quote gap (seconds)</span><input type="number" min="1" max="60" step="1" value={maxGap} onChange={event=>setMaxGap(event.target.value)}/></label></div>}
   <div className="lab-model"><strong>Mechanical baseline</strong><p>Previous-bar breakout → enter at next bar open → 2R target → stop at recent extreme → max 12 bars. Ambiguous exits contribute to expectancy bounds.</p></div><button className="btn btn-primary full" disabled={loading||Boolean(tick&&(!validCosts||!validGap))} onClick={()=>void run()}>{loading?<Spinner/>:<Zap size={17}/>} Run historical simulation</button></Card>
  <Card className="lab-results"><SectionTitle eyebrow="RESEARCH OUTPUT" title="Simulation summary"/>{result?<><div className="lab-metrics"><div><span>Eligible signals</span><strong>{result.eligible_signals}</strong></div><div><span>Win rate</span><strong>{result.win_rate==null?'—':result.win_rate+'%'}</strong></div><div><span>Expectancy</span><strong className={result.expectancy_r!=null&&result.expectancy_r>=0?'positive':'negative'}>{result.expectancy_r==null?'—':`${result.expectancy_r} R`}</strong></div><div><span>Ambiguous exits</span><strong>{result.ambiguous_excluded}{result.ambiguous_rate==null?'':` (${result.ambiguous_rate}%)`}</strong></div></div><Badge tone={result.synthetic?'amber':'blue'}>{result.synthetic?'SYNTHETIC · NOT EVIDENCE':'BROKER/DATASET SOURCE'}</Badge><p className="muted small">{result.data_note}</p>{result.unresolved_outcomes?.map(outcome=><Notice key={outcome.signal_time}>Replay stopped at {new Date(outcome.signal_time*1000).toISOString()}. {outcome.reason.toLowerCase().replaceAll('_',' ')}.</Notice>)}{Boolean(result.candle_gaps?.length)&&<Notice>The selected range has candle gaps. Only verified individual trades are shown.</Notice>}{result.ambiguous_excluded>0&&result.expectancy_bounds_r&&<Notice>Expectancy is indeterminate from OHLC. Bounds: {result.expectancy_bounds_r.worst} to {result.expectancy_bounds_r.best} R per signal. Tick replay is required.</Notice>}</>:<Empty icon={<FlaskConical/>} title="No simulation results" body="Choose a dataset and run the mechanical baseline to inspect its limitations."/>}</Card></div>
- {error&&<Notice tone="red">{error}</Notice>}{result&&<Card><SectionTitle eyebrow="SIMULATION DETAILS" title="Recorded sample trades"/><div className="table-scroll"><table><thead><tr><th>ENTRY TIME</th><th>DIRECTION</th><th>ENTRY</th><th>STOP</th><th>TARGET</th><th>RESULT</th></tr></thead><tbody>{result.trades.map((t,i)=><tr key={i}><td>{formatDate(t.entry_time*1000)}</td><td>{t.side}</td><td>{t.entry.toFixed(5)}</td><td>{t.stop.toFixed(5)}</td><td>{t.target.toFixed(5)}</td><td className={t.result_r>=0?'positive':'negative'}>{t.result_r>0?'+':''}{t.result_r} R</td></tr>)}</tbody></table>{!result.trades.length&&<p className="muted">No eligible unambiguous simulated trades.</p>}</div></Card>}
+ {error&&<Notice tone="red">{error}</Notice>}<Card><SectionTitle title="Saved simulation runs"/>
+   {archiveError&&<Notice tone="red">{archiveError}</Notice>}
+   {runs.length>0?<div className="research-controls">
+     <label>Open saved run<select value={savedRun?.id??''} disabled={loading} onChange={event=>void openRun(event.target.value)}>
+       <option value="">Choose a run</option>{runs.map(item=><option key={item.id} value={item.id}>{item.symbol} · {item.timeframe} · {item.model} · {formatDate(item.created_at)}</option>)}
+     </select></label>
+     {currentRun&&<label>Compare with<select value={compareRun===currentRun.id?'':compareRun} onChange={event=>setCompareRun(event.target.value)}>
+       <option value="">Choose another run</option>{runs.filter(item=>item.id!==currentRun.id).map(item=><option key={item.id} value={item.id}>{item.symbol} · {item.model} · {formatDate(item.created_at)}</option>)}
+     </select></label>}
+   </div>:!archiveError&&<p className="muted">No saved simulations yet.</p>}
+   {currentRun&&comparisonRun&&currentRun.id!==comparisonRun.id&&<div className="evidence-pairs">
+     {[currentRun,comparisonRun].map(item=><section key={item.id}><h3>{item.symbol} · {item.timeframe} · {item.model}</h3>
+       <p>{item.source} · {item.count} recorded trades</p><p>Expectancy {item.expectancy_r===null?'Unavailable':`${item.expectancy_r} R`}</p>
+     </section>)}
+   </div>}
+ </Card>{result&&<SimulationEvidence key={savedRun?.id} result={result} run={savedRun}/>}{result&&<Card><SectionTitle eyebrow="SIMULATION DETAILS" title="Recorded sample trades"/><div className="table-scroll"><table><thead><tr><th>ENTRY TIME</th><th>DIRECTION</th><th>ENTRY</th><th>STOP</th><th>TARGET</th><th>RESULT</th></tr></thead><tbody>{result.trades.map((t,i)=><tr key={i}><td>{formatDate(t.entry_time*1000)}</td><td>{t.side}</td><td>{t.entry.toFixed(5)}</td><td>{t.stop.toFixed(5)}</td><td>{t.target.toFixed(5)}</td><td className={t.result_r>=0?'positive':'negative'}>{t.result_r>0?'+':''}{t.result_r} R</td></tr>)}</tbody></table>{!result.trades.length&&<p className="muted">No eligible unambiguous simulated trades.</p>}</div></Card>}
  </>
 }
 
-function Journal({refresh}:{refresh:()=>void}){
+function Journal({refresh,incoming,clearLink,openSignal,initialEntry,initialContext,openPlan}:{
+  refresh:()=>void;incoming?:SignalRecord;initialEntry?:JournalEntry;initialContext?:JournalContext;clearLink:()=>void;openPlan:(id:string,version:number)=>void;openSignal:(reference:import('./types').SignalReference)=>Promise<void>;
+}){
   const formatDate=useTimestampFormat();
- const [entries,setEntries]=useState<JournalEntry[]>([]);const [title,setTitle]=useState('');const [content,setContent]=useState('');const [kind,setKind]=useState('T');const [error,setError]=useState('');const [message,setMessage]=useState('');const [busy,setBusy]=useState(false);
+ const [entries,setEntries]=useState<JournalEntry[]>([]);
+ const [entryQuery,setEntryQuery]=useState("");
+ const [entryKind,setEntryKind]=useState("");
+ const [tags,setTags]=useState('');
+ const [revisionEntry,setRevisionEntry]=useState<JournalEntry>();
+ useEffect(()=>setRevisionEntry(undefined),[initialContext]);
+ const [focusEntry,setFocusEntry]=useState(initialEntry);
+ useEffect(()=>setFocusEntry(initialEntry),[initialEntry]);const [title,setTitle]=useState('');const [content,setContent]=useState('');const [kind,setKind]=useState(incoming||initialContext?.snapshot_id?'CHART':'T');const [error,setError]=useState('');const [message,setMessage]=useState('');const [busy,setBusy]=useState(false);
  const load=useCallback(()=>api.journal().then(setEntries).catch(e=>setError(e.message)),[]);useEffect(()=>{void load()},[load]);
- async function add(){setBusy(true);setError('');try{const e=await api.addJournal(kind,title,content) as {id:string};setMessage(`${e.id} appended to Master Journal`);setTitle('');setContent('');await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ async function add(){setBusy(true);setError('');try{const e=await api.addJournal(kind,title,content,revisionEntry?.signal_reference??(incoming?{event_key:incoming.event_key,status:incoming.status}:undefined),{
+   snapshot_id:revisionEntry?.snapshot_id??initialContext?.snapshot_id,plan_reference:revisionEntry?.plan_reference??initialContext?.plan_reference,
+   supersedes:revisionEntry?.id,tags:tags.split(',').map(tag=>tag.trim()).filter(Boolean),
+ });setMessage(`${e.id} appended to Master Journal`);setTitle('');setContent('');setTags('');setRevisionEntry(undefined);clearLink();await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  return <><PageHeading eyebrow="ACADEMY / REFLECTION" title="Master Learning Journal" subtitle="One cumulative history of questions, chart challenges, mistakes, and corrected reasoning." action={<a href="/research/api/journal/download" className="btn btn-secondary"><Download size={16}/> Export Markdown</a>}/>
- <div className="two-column journal-layout"><Card><SectionTitle eyebrow="CAPTURE KNOWLEDGE" title="New journal entry"/><label className="field"><span>Entry category</span><Select value={kind} onChange={setKind} options={['T','Q','CHART','RM','M','R']}/></label><TextField label="Title" value={title} onChange={setTitle} placeholder="What did you learn?"/><TextArea label="Observation / explanation" value={content} onChange={setContent} placeholder="Record the evidence, uncertainty, and what changed in your thinking." rows={7}/><button className="btn btn-primary full" disabled={busy||title.trim().length<2||content.trim().length<5} onClick={()=>void add()}><Plus size={17}/> Append to journal</button>{message&&<Success>{message}</Success>}{error&&<Notice tone="red">{error}</Notice>}</Card>
- <Card><SectionTitle eyebrow="CUMULATIVE TIMELINE" title="Learning history" action={<Badge tone="neutral">{entries.length} entries</Badge>}/><div className="journal-feed">{entries.map(e=><div className="journal-item" key={e.id}><div className="journal-rail"><div className="journal-dot"/></div><div><span className="mono tag-id">{e.id}</span><h4>{e.title}</h4><p>{e.content}</p><small>{formatDate(e.created_at)}</small></div></div>)}{!entries.length&&<Empty icon={<BookOpen/>} title="Build your knowledge base" body="Start a topic (T) or a question (Q); every entry receives a stable ID."/>}</div></Card></div>
+ <div className="two-column journal-layout"><Card><SectionTitle eyebrow="CAPTURE KNOWLEDGE" title={revisionEntry?'Revision of '+revisionEntry.id:'New journal entry'}/>
+ {revisionEntry&&<button className="text-button" onClick={()=>{setRevisionEntry(undefined);setTitle('');setContent('');setTags('');}}>Cancel revision</button>}
+ {initialContext?.plan_reference&&<p>Linked plan {initialContext.plan_reference.trade_id} · v{initialContext.plan_reference.version}</p>}
+ {initialContext?.snapshot_id&&<p><a href={`/research/api/chart-snapshots/${initialContext.snapshot_id}/image`} target="_blank" rel="noreferrer">Open attached chart capture</a></p>}
+ {incoming&&<p>{signalSummary(incoming)} <button className="text-button" onClick={clearLink}>Remove signal link</button></p>}<label className="field"><span>Entry category</span><Select value={kind} onChange={setKind} options={['T','Q','CHART','RM','M','R']}/></label><TextField label="Title" value={title} onChange={setTitle} placeholder="What did you learn?"/><TextField label="Tags (comma separated)" value={tags} onChange={setTags}/><TextArea label="Observation / explanation" value={content} onChange={setContent} placeholder="Record the evidence, uncertainty, and what changed in your thinking." rows={7}/><button className="btn btn-primary full" disabled={busy||title.trim().length<2||content.trim().length<5} onClick={()=>void add()}><Plus size={17}/> Append to journal</button>{message&&<Success>{message}</Success>}{error&&<Notice tone="red">{error}</Notice>}</Card>
+ <Card>{focusEntry&&<div className="data-trust">
+   <h3>{focusEntry.id} · {focusEntry.title}</h3><p>{focusEntry.content}</p>
+   <button className="text-button" onClick={()=>setFocusEntry(undefined)}>Close selected entry</button></div>}
+   <div className="research-controls">
+     <label>Search journal<input value={entryQuery} onChange={event=>setEntryQuery(event.target.value)}/></label>
+     <label>Filter by category<select value={entryKind} onChange={event=>setEntryKind(event.target.value)}>
+       <option value="">All</option>{['T','Q','CHART','RM','M','R'].map(value=><option key={value}>{value}</option>)}
+     </select></label>
+   </div><SectionTitle eyebrow="CUMULATIVE TIMELINE" title="Learning history" action={<Badge tone="neutral">{entries.length} entries</Badge>}/><div className="journal-feed">{entries.filter(item=>(!entryKind||entryKind===item.kind)&&[item.id,item.title,item.content,...(item.tags??[])].some(value=>value.toLowerCase().includes(entryQuery.trim().toLowerCase()))).map(e=><div className="journal-item" key={e.id}><div className="journal-rail"><div className="journal-dot"/></div><div><span className="mono tag-id">{e.id}</span><h4>{e.title}</h4><p>{e.content}</p>
+ {e.tags?.length?<small>{e.tags.join(' · ')}</small>:null}
+ {e.supersedes&&<small>Supersedes {e.supersedes}</small>}
+ {e.plan_reference&&<button className="text-button" onClick={()=>openPlan(e.plan_reference!.trade_id,e.plan_reference!.version)}>
+   Open linked plan v{e.plan_reference.version}</button>}
+ {e.snapshot_id&&<a className="text-button" href={`/research/api/chart-snapshots/${e.snapshot_id}/image`} target="_blank" rel="noreferrer">Open chart capture</a>}
+ {!entries.some(item=>item.supersedes===e.id)&&<button className="text-button" onClick={()=>{
+   setRevisionEntry(e);setKind(e.kind);setTitle(e.title);setContent(e.content);setTags(e.tags?.join(', ')??'');
+ }}>Revise entry</button>}{e.signal_reference&&<button className="text-button" onClick={()=>void openSignal(e.signal_reference!).catch(reason=>setError(reason.message))}>Open linked signal revision</button>}<small>{formatDate(e.created_at)}</small></div></div>)}{!entries.length&&<Empty icon={<BookOpen/>} title="Build your knowledge base" body="Start a topic (T) or a question (Q); every entry receives a stable ID."/>}</div></Card></div>
  </>
 }
 
-function DataLibrary({refresh}:{refresh:()=>void}){
+function DataLibrary({refresh,initialDataset}:{refresh:()=>void;initialDataset?:Dataset}){
   const formatDate=useTimestampFormat();
  const [datasets,setDatasets]=useState<Dataset[]>([]);const [symbol,setSymbol]=useState<SymbolName>('EURUSD');const [timeframe,setTimeframe]=useState<Timeframe>('M5');const [day,setDay]=useState('2026-11-12');const [hour,setHour]=useState('');const [file,setFile]=useState<File|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [msg,setMsg]=useState('');
+ const [inspected,setInspected]=useState<Dataset|undefined>(initialDataset);
+ useEffect(()=>{if(initialDataset)setInspected(initialDataset);},[initialDataset]);
+ const [trust,setTrust]=useState<CandleResponse>();
+ const [trustError,setTrustError]=useState('');
+ useEffect(()=>{
+   if(!inspected)return;
+   let active=true;
+   setTrust(undefined);setTrustError('');
+   api.get<CandleResponse>('/datasets/'+encodeURIComponent(inspected.id)+'/coverage')
+     .then(value=>{if(active)setTrust(value);}).catch(reason=>{if(active)setTrustError(reason.message);});
+   return()=>{active=false;};
+ },[inspected]);
  const load=useCallback(()=>api.datasets().then(setDatasets).catch(e=>setError(e.message)),[]);useEffect(()=>{void load()},[load]);
  async function importMT5(){setBusy(true);setError('');try{const d=await api.importMt5(symbol,timeframe,500) as {rows:number};setMsg(`Imported ${d.rows} verified MT5 bars`);await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  async function importBi5(){if(!file)return;setBusy(true);setError('');try{const d=await api.importBi5(symbol,day,file,hour);setMsg(`Imported ${d.tick_dataset.rows} source ticks, ${d.candle_rows} M5 bars`);await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  return <><PageHeading eyebrow="STORAGE / PROVENANCE" title="Market data library" subtitle="Maintain separately sourced, checksummed datasets for research and replay." action={<a className="btn btn-secondary" href="/catalog.html">Open fixed-point catalog</a>}/>
  {error&&<Notice tone="red">{error}</Notice>}{msg&&<Success>{msg}</Success>}
+ <Card><SectionTitle title="Inspect archived candle coverage"/>
+   <label className="field">Candle partition <select value={inspected?.id??''}
+     onChange={event=>setInspected(datasets.find(item=>item.id===event.target.value)??(initialDataset?.id===event.target.value?initialDataset:undefined))}>
+       <option value="">Choose a candle partition</option>{[...new Map([...(initialDataset?[initialDataset]:[]),...datasets].map(item=>[item.id,item])).values()].filter(item=>item.kind==='candles').map(item=>
+         <option key={item.id} value={item.id}>{item.symbol} · {item.timeframe} · {item.id.slice(0,12)}</option>)}
+   </select></label>
+   {inspected?.timeframe&&<DataTrust data={trust} symbol={inspected.symbol} timeframe={inspected.timeframe as Timeframe} error={trustError}/>}
+ </Card>
  <div className="two-column"><Card><SectionTitle eyebrow="PRIMARY SOURCE" title="Import from MetaTrader 5"/><p className="muted">Read-only import of completed broker bars through the local Windows MT5 terminal.</p><label className="field"><span>Instrument</span><Select value={symbol} onChange={v=>setSymbol(v as SymbolName)} options={['EURUSD','GBPUSD','USDJPY','XAUUSD']}/></label><label className="field"><span>Timeframe</span><Select value={timeframe} onChange={v=>setTimeframe(v as Timeframe)} options={['M1','M3','M5','M15','M30','H1','H4','D1']}/></label><button className="btn btn-primary full" disabled={busy} onClick={()=>void importMT5()}><ArrowDownToLine size={17}/> Import last 500 completed bars</button><small className="muted">Requires MT5 terminal, connected broker account, MetaTrader5 package and pyarrow on Windows.</small></Card>
  <Card><SectionTitle eyebrow="SECONDARY SOURCE" title="Import Dukascopy .bi5"/><p className="muted">Import an existing daily or legacy hourly Dukascopy tick file. No paid bucket access is initiated.</p><label className="field"><span>Source date (UTC)</span><input type="date" value={day} onChange={e=>setDay(e.target.value)}/></label><label className="field"><span>Legacy hourly file? Hour 0–23 (leave blank for daily)</span><input type="number" min="0" max="23" value={hour} onChange={e=>setHour(e.target.value)}/></label><label className="field"><span>Compressed .bi5 file</span><input type="file" accept=".bi5" onChange={e=>setFile(e.target.files?.[0]||null)}/></label><button className="btn btn-secondary full" disabled={!file||busy} onClick={()=>void importBi5()}><Upload size={17}/> Validate & import file</button><small className="muted">Current Dukascopy documented bulk S3 access may incur requester-pays fees. Browser import is free after you obtain a file.</small></Card></div>
  <Card><SectionTitle eyebrow="LOCAL ARCHIVE" title="Verified dataset catalog" action={<Badge tone="blue">{datasets.length} partitions</Badge>}/><div className="table-scroll"><table><thead><tr><th>SOURCE</th><th>INSTRUMENT</th><th>TYPE</th><th>TIMEFRAME</th><th>RECORDS</th><th>IMPORTED</th></tr></thead><tbody>{datasets.map(d=><tr key={d.id}><td><Badge tone="blue">{d.provider}</Badge></td><td><strong>{d.symbol}</strong></td><td>{d.kind}</td><td>{d.timeframe||'tick'}</td><td>{d.rows_count.toLocaleString()}</td><td>{formatDate(d.created_at)}</td></tr>)}</tbody></table>{!datasets.length&&<Empty icon={<Database/>} title="No real datasets imported" body="Add MT5 candles or a Dukascopy .bi5 file to begin persistent historical research."/>}</div></Card>
  </>
 }
 
-function SettingsPage(){return <><PageHeading eyebrow="LOCAL ENVIRONMENT / CONFIG" title="Platform settings" subtitle="A minimal, auditable setup that runs on one Windows computer."/><div className="two-column"><Card><SectionTitle eyebrow="RUNTIME" title="Application configuration"/><TimezonePicker/><CandleColorSettings/><div className="settings-list"><div><span>Persistence</span><strong>SQLite (WAL)</strong></div><div><span>Market archive</span><strong>Parquet · Zstandard</strong></div><div><span>Network binding</span><strong>127.0.0.1</strong></div><div><span>AI workflow</span><strong>Manual ZIP / JSON</strong></div><div><span>Order execution</span><Badge tone="green">DISABLED</Badge></div></div></Card><Card><SectionTitle eyebrow="DATA SAFETY" title="Important operational notes"/><div className="settings-notes"><div><ShieldCheck size={18}/><span>Live trading functions are intentionally unavailable.</span></div><div><Archive size={18}/><span>Copy data directory and verify database recovery on a separate storage device.</span></div><div><CloudOff size={18}/><span>Historical research and journal work offline once datasets are imported.</span></div><div><BookOpen size={18}/><span>AI findings are untrusted until checked against source evidence.</span></div></div><a href="http://127.0.0.1:8000/research/docs" className="btn btn-outline full" target="_blank" rel="noreferrer">Open API documentation <ExternalLink size={15}/></a></Card></div></>}
+function SettingsPage(){return <><PageHeading eyebrow="LOCAL ENVIRONMENT / CONFIG" title="Platform settings" subtitle="A minimal, auditable setup that runs on one Windows computer."/><div className="two-column"><Card><SectionTitle eyebrow="RUNTIME" title="Application configuration"/><TimezonePicker/><CandleColorSettings/><WorkspacePresets/><CommandSettings/><div className="settings-list"><div><span>Persistence</span><strong>SQLite (WAL)</strong></div><div><span>Market archive</span><strong>Parquet · Zstandard</strong></div><div><span>Network binding</span><strong>127.0.0.1</strong></div><div><span>AI workflow</span><strong>Manual ZIP / JSON</strong></div><div><span>Order execution</span><Badge tone="green">DISABLED</Badge></div></div></Card><Card><SectionTitle eyebrow="DATA SAFETY" title="Important operational notes"/><div className="settings-notes"><div><ShieldCheck size={18}/><span>Live trading functions are intentionally unavailable.</span></div><div><Archive size={18}/><span>Copy data directory and verify database recovery on a separate storage device.</span></div><div><CloudOff size={18}/><span>Historical research and journal work offline once datasets are imported.</span></div><div><BookOpen size={18}/><span>AI findings are untrusted until checked against source evidence.</span></div></div><a href="http://127.0.0.1:8000/research/docs" className="btn btn-outline full" target="_blank" rel="noreferrer">Open API documentation <ExternalLink size={15}/></a></Card></div></>}
 
 export default App;
