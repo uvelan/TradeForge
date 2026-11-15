@@ -42,6 +42,24 @@
 .readiness-item { padding: 12px 0; }
 .timezone-picker { display: grid; gap: 10px; margin-bottom: 16px; }
 .timezone-picker small { color: var(--workspace-muted); }
+.candle-color-settings {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0 0 16px;
+  padding: 10px;
+  border: 1px solid var(--workspace-border);
+  border-radius: 7px;
+}
+.candle-color-settings label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+.candle-color-settings input { width: 36px; height: 30px; padding: 2px; cursor: pointer; }
+.candle-color-settings code { color: var(--workspace-muted); font-size: 11px; }
+.candle-color-settings button { justify-self: start; }
 .indicator-controls {
   display: flex;
   flex-wrap: wrap;
@@ -62,6 +80,7 @@
   padding: 6px;
 }
 .indicator-controls input { width: 70px; }
+.indicator-controls input.archive-date { width: auto; }
 .indicator-controls .smt-toggle { width: auto; accent-color: var(--workspace-accent); }
 .smt-rules { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 8px; }
 .terminal-chart-columns.multi-chart {

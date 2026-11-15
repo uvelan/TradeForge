@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { TickMarkType, type Time } from "lightweight-charts";
 import { useWorkspacePreference } from "./useWorkspacePreference";
 
@@ -8,6 +8,14 @@ const ZoneContext = createContext({ zone: "Asia/Kolkata", preference: "Asia/Kolk
 
 export function TimezoneProvider({ children }: { children: ReactNode }) {
   const [preference, setZone] = useWorkspacePreference("timezone", "Asia/Kolkata", choices);
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const requested = url.searchParams.get("timezone");
+    if (!requested || !choices.includes(requested)) return;
+    setZone(requested);
+    url.searchParams.delete("timezone");
+    window.history.replaceState(window.history.state, "", url);
+  }, [setZone]);
   const zone = preference === "auto" ? Intl.DateTimeFormat().resolvedOptions().timeZone : preference;
   return <ZoneContext.Provider value={{ zone, preference, setZone }}>{children}</ZoneContext.Provider>;
 }

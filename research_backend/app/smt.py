@@ -13,6 +13,24 @@ class Pivot:
     confirmed_at: int
 
 
+def confirmation_timing(event: dict, rules: dict) -> dict:
+    """Explain the recorded timing, including for older immutable journal rows."""
+    latest_pivot = max(event[side][point]["confirmed_at"]
+                       for side in ("primary", "comparison") for point in ("previous", "current"))
+    matching_closed = event["transitions"][0]["time"]
+    confirmed_at = event["confirmed_at"]
+    return {
+        "pivot_right_bars": rules["period"],
+        "all_pivots_confirmed_at": latest_pivot,
+        "alignment_window_bars": rules["alignment_bars"],
+        "matching_closed_at": matching_closed,
+        "matching_wait_seconds": matching_closed - latest_pivot,
+        "required_shared_confirmation_bars": rules["confirmation_bars"],
+        "confirmation_wait_seconds": None if confirmed_at is None else confirmed_at - matching_closed,
+        "reason": "Confirm all four pivots, close the UTC matching window, then wait for the configured shared closed bars.",
+    }
+
+
 def pivots(bars, values, period, step):
     result = []
     for index, price in enumerate(values):

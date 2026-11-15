@@ -11,7 +11,7 @@ import uuid
 import zipfile
 from pathlib import Path
 from fastapi import HTTPException
-from .schemas import TradePlan, Outcome, JournalInput, ReviewInput
+from .schemas import TradePlan, Outcome, JournalInput, ReviewInput, ReviewV1
 from .risk import evaluate
 from .db import transaction, rows, one, utc_now
 from .config import EXPORT_DIR, JOURNAL_DIR, JOURNAL_FILE
@@ -83,14 +83,16 @@ def list_trades():
 
 
 def analytics():
-    all_trades=list_trades();closed=[t for t in all_trades if t['outcome']]
-    values=[Decimal(t['outcome']['result_r']) for t in closed]
+    with transaction() as db:
+        counts = db.execute("SELECT COUNT(*) AS total, COUNT(CASE WHEN status='PLANNED' THEN 1 END) AS active FROM trades").fetchone()
+        closed = db.execute("SELECT result_r, pnl_usd FROM trade_outcomes").fetchall()
+    values=[Decimal(outcome['result_r']) for outcome in closed]
     wins=[v for v in values if v>0];losses=[v for v in values if v<0]
     avg=sum(values)/len(values) if values else Decimal(0)
-    return {'trades':len(all_trades),'active_plans':sum(t['status']=='PLANNED' for t in all_trades),
+    return {'trades':counts['total'],'active_plans':counts['active'],
       'closed':len(closed),'win_rate':round(len(wins)*100/len(values),1) if values else None,
       'expectancy_r':round(float(avg),3) if values else None,
-      'net_pnl_usd':str(sum((Decimal(t['outcome']['pnl_usd']) for t in closed),Decimal(0))),
+      'net_pnl_usd':str(sum((Decimal(outcome['pnl_usd']) for outcome in closed),Decimal(0))),
       'profit_factor':round(float(sum(wins)/abs(sum(losses))),2) if losses else None,
       'note':'Manual journal outcomes; not a reconciled broker performance statement'}
 
@@ -117,10 +119,11 @@ def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
     for event in events:pieces.append(f'- {event["at"]}: {event["kind"]} — {event["payload"]}')
     pieces.extend(['\n## Evidence limitations','- No historical analog dataset is included unless explicitly provided.','- No future price or realized trade outcome is included.',
       '- Broker-specific execution cost and pip value have not been independently verified.'])
-    template={'package_id':package_id,'trade_decision_id':t['id'],'plan_version':latest['version'],
-      'assessment':'INSUFFICIENT_DATA',
-      'findings':[{'text':'State one evidence-linked finding','severity':'MEDIUM','evidence_refs':['PLAN','RISK']}],
-      'missing_evidence':[],'limitations':[]}
+    template=ReviewV1(schema_version=1, package_id=package_id, trade_decision_id=t['id'],
+      plan_version=latest['version'], review_type='PRE_TRADE', assessment='INSUFFICIENT_DATA',
+      findings=[{'summary':'State one evidence-linked finding','evidence_refs':['PLAN','RISK'],'metric_refs':[]}],
+      evidence_refs=['PLAN','RISK'], missing_evidence=[], contradictions=[], risk_concerns=[],
+      suggested_actions=[], limitations=[]).model_dump(mode="json")
     manifest={'schema_version':'1.0.0','package_id':package_id,'trade_decision_id':t['id'],
       'plan_version':latest['version'],'review_type':'PRE_TRADE','knowledge_cutoff_utc':cutoff,
       'evidence_refs':['PLAN','RISK','TIMELINE'], 'generated_at':utc_now(),'source':'Local plan only; no verified historical analogs'}
@@ -134,6 +137,8 @@ def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
 
 def export_ai(uid:str)->dict:
     t=get_trade(uid)
+    if t["outcome"] is not None:
+        raise HTTPException(422, "Pre-trade review packages require an open plan")
     latest=t['versions'][0]
     # Strictly bound to the current time, after latest plan was created.
     cutoff=utc_now()
@@ -150,13 +155,32 @@ def export_ai(uid:str)->dict:
     return {'package_id':package_id,'sha256':digest,'download_url':f'/research/api/ai/packages/{package_id}/download'}
 
 
-def import_ai(data:ReviewInput)->dict:
+def import_ai(data:ReviewV1 | ReviewInput)->dict:
     pkg=one('SELECT * FROM ai_packages WHERE id=?',(data.package_id,))
     if not pkg:raise HTTPException(404,'AI package not found')
     if pkg['trade_id']!=data.trade_decision_id or pkg['plan_version']!=data.plan_version:
         raise HTTPException(422,'AI response does not match immutable package snapshot')
-    if len(data.findings)>30:raise HTTPException(422,'Too many findings')
-    for f in data.findings:
+    if isinstance(data, ReviewV1):
+        if data.review_type != "PRE_TRADE":
+            raise HTTPException(422, "Review type differs from the exported package")
+        if set(data.evidence_refs) - {"PLAN", "RISK", "TIMELINE"}:
+            raise HTTPException(422, "Review references unsupported evidence")
+        path = Path(pkg["location"]).resolve()
+        if not path.is_relative_to(EXPORT_DIR.resolve()) or not path.is_file():
+            raise HTTPException(409, "Package file unavailable")
+        payload = path.read_bytes()
+        if hashlib.sha256(payload).hexdigest() != pkg["sha256"]:
+            raise HTTPException(409, "Package checksum mismatch")
+        with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+            metrics = json.loads(archive.read("data/risk_metrics.json"))
+        for finding in data.findings:
+            if set(finding.evidence_refs) - set(data.evidence_refs):
+                raise HTTPException(422, "Finding references undeclared evidence")
+            if set(finding.metric_refs) - set(metrics):
+                raise HTTPException(422, "Finding references unsupported metrics")
+            if finding.metric_refs and "RISK" not in finding.evidence_refs:
+                raise HTTPException(422, "Metric references require RISK evidence")
+    for f in data.findings if isinstance(data, ReviewInput) else ():
         if not isinstance(f.get('text'),str) or not f['text'].strip() or len(f['text'])>2500:
             raise HTTPException(422,'Finding must include bounded text')
         refs=f.get('evidence_refs')

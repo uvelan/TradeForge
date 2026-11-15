@@ -2,11 +2,13 @@ import {useCallback,useEffect,useMemo,useState} from 'react';
 import { Crosshair, Eraser,   ListFilter,  Minus,  Pause, Play, SkipBack, SkipForward,  Activity,Archive,ArrowDownToLine,ArrowRight,ArrowUpRight,BarChart3,BookOpen,BrainCircuit,CalendarClock,CheckCircle2,ChevronRight,Clock3,CloudOff,Database,Download,ExternalLink,FileCheck2,FileText,FlaskConical,FolderOpen,LayoutDashboard,Menu,MoreHorizontal,Plus,Radio,RefreshCw,Settings,ShieldCheck,ShieldAlert,Search,Target,TrendingUp,Upload, X, Zap} from 'lucide-react';
 import {api} from './api';
 import {type ComparisonPlacement,Badge,CandleChart,Card,Empty,Metric,Notice,PriceChange,SectionTitle,Select,Spinner,Success,TextArea,TextField} from './components';
-import type {BacktestResult,BrokerSymbol,CandleResponse,ChartSource,Dataset,JournalEntry,Overview,Package,Plan,Review,SourceName,SymbolName,Timeframe,Trade} from './types';
+import type {BacktestResult,BrokerSymbol,CandleRange,CandleResponse,ChartSource,Dataset,JournalEntry,Overview,Package,Plan,Review,SourceName,SymbolName,Timeframe,Trade} from './types';
+import {SavedRange} from './SavedRange';
 import {useBinanceCandles} from './useBinanceCandles';
 import './style.css';
 import './workspace.css';
 import {TimezonePicker,useTimestampFormat,useTimezone} from './timezone';
+import {CandleColorSettings} from './candleColors';
 import {useWorkspacePreference} from './useWorkspacePreference';
 import {ChartView,frameMinutes,useViewCandles} from './chartViews';
 import {useChartIndicator} from './indicators';
@@ -76,6 +78,9 @@ function Terminal({expanded=false}:{expanded?:boolean}){
   const [forexSymbol,setSymbol]=useWorkspacePreference<SymbolName>('forex-symbol','EURUSD',watchSymbols);
   const [timeframe,setTimeframe]=useWorkspacePreference<Timeframe>('timeframe','M5',chartTimeframes);
   const [source,setSource]=useWorkspacePreference<ChartSource>('source','MT5',chartSources);
+  const [selectedRange,setRange]=useState<CandleRange>();
+  const savedSource=source==='MT5_SAVED'||source==='DUKASCOPY_SAVED';
+  const range=savedSource?selectedRange:undefined;
   const isBinance=source==='BINANCE_SPOT';
   const [brokerSymbol,setBrokerSymbol]=useWorkspacePreference<string>('broker-symbol','EURUSD');
   const [instruments,setInstruments]=useState<BrokerSymbol[]>([]);
@@ -117,12 +122,12 @@ function Terminal({expanded=false}:{expanded?:boolean}){
   useEffect(()=>{
     let active=true;
     setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setPlaying(false);
-    api.candles(symbol,timeframe,source,expanded?600:200,source==='MT5')
+    api.candles(symbol,timeframe,source,expanded?600:200,source==='MT5',range)
       .then(main=>{if(active)setData(main)})
       .catch(e=>{if(active){setError(e.message);setData(null)}})
       .finally(()=>{if(active)setBusy(false)});
     return()=>{active=false};
-  },[symbol,timeframe,source,expanded,refreshCount]);
+  },[symbol,timeframe,source,expanded,refreshCount,range]);
   useEffect(()=>{
     if(source!=='MT5'||busy||error||replayIndex!==null)return;
     let active=true;
@@ -217,7 +222,7 @@ function Terminal({expanded=false}:{expanded?:boolean}){
   const cutoff=replayActive?boundary+frameMinutes[timeframe]*60:undefined;
   const options=[...new Set([symbol,...(isBinance?[]:source==='MT5'?instruments.map(item=>item.name):watchSymbols)])];
   const compare=expanded&&comparisonSymbol!==symbol&&options.includes(comparisonSymbol)?comparisonSymbol:'';
-  const comparison=useViewCandles(compare,timeframe,source,refreshCount,cutoff,true);
+  const comparison=useViewCandles(compare,timeframe,source,refreshCount,cutoff,true,range);
   const rules={period:Number(smtWidth),alignment_bars:Number(smtAlignment),
     tolerance_bps:Number(smtTolerance),confirmation_bars:Number(smtConfirmation)};
   const ruleInputs=[
@@ -231,8 +236,8 @@ function Terminal({expanded=false}:{expanded?:boolean}){
   const firstFeed=smtFeed(symbol,data?.source===source?data:undefined);
   const secondFeed=smtFeed(compare,comparison.feed);
   const missingSmtFeed=source!=='DEMO'&&Boolean(compare)&&Boolean(data&&comparison.feed)&&(!firstFeed||!secondFeed);
-  const smt=useSmt(indicatorCandles,comparison.candles,timeframe,showSmt==='on'&&Boolean(compare)&&!busy&&!error&&validRules&&
-    (source==='DEMO'||Boolean(firstFeed&&secondFeed)),rules,firstFeed,secondFeed,replayActive);
+  const smt=useSmt(indicatorCandles,comparison.candles,timeframe,showSmt==='on'&&Boolean(compare)&&!range&&!busy&&!error&&validRules&&
+    (source==='DEMO'||Boolean(firstFeed&&secondFeed)),rules,firstFeed,secondFeed,replayActive,refreshCount);
   const precisionFor=(name:string)=>instruments.find(item=>item.name===name)?.digits ?? (name==='BTCUSDT'?2:name==='USDJPY'||name==='XAUUSD'?3:5);
 
   const pairText=symbol==='XAUUSD'?'Gold / US Dollar':`${symbol.slice(0,3)} / ${symbol.slice(3)}`;
@@ -280,6 +285,10 @@ function Terminal({expanded=false}:{expanded?:boolean}){
       <section className="terminal-core">
         <div className="terminal-identity"><div className="terminal-pair"><div className="pair-badge">{symbol.slice(0,3)}</div><div><strong>{pairText}</strong><span>{label}</span><small>{latestNotice} {pollError}</small></div></div><div className="terminal-head-price">{last?<><strong>{last.close.toFixed(digits)}</strong><PriceChange value={change}/></>:<span>—</span>}</div></div>
         <div className="terminal-controls"><div className="timeframe-buttons">{(['M1','M3','M5','M15','M30','H1','H4','D1'] as Timeframe[]).map(t=><button key={t} className={timeframe===t?'on':''} onClick={()=>setTimeframe(t)}>{t}</button>)}</div><div className="terminal-control-right"><Select label="Market data source" value={source} options={chartSources} onChange={s=>setSource(s as ChartSource)}/><Select label="Chart layout" value={viewCount} options={['1','2','3','4']} onChange={value=>setViewCount(value as typeof viewCount)}/><button className="small-tool" onClick={()=>setRefreshCount(n=>n+1)} title="Refresh candles"><RefreshCw size={16}/></button></div>{brokerPicker}</div>
+        {savedSource&&<SavedRange range={range} onChange={setRange}/>}
+        {data?.coverage&&<div className="indicator-controls" role="status">
+          {data.coverage.gaps.length} UTC coverage gaps · {data.coverage.duplicate_bars} duplicate bars · {data.coverage.truncated?'Showing latest 600 candles':'Requested range loaded'}
+        </div>}
         {indicator.controls}<div className="indicator-controls comparison-controls"><label>SMT comparison
           <Select label="SMT comparison" value={compare||'none'} options={['none',...options.filter(item=>item!==symbol)]} onChange={setComparisonSymbol}/>
           </label>{compare&&<label><input className="smt-toggle" type="checkbox" checked={showSmt==='on'}
@@ -290,13 +299,17 @@ function Terminal({expanded=false}:{expanded?:boolean}){
             </label>)}
             {!validRules&&<small role="status">Enter values within the displayed limits.</small>}
           </div></details>}
-          <small role="status">{smt.error || comparison.error || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
-          {smt.alert?.confirmed_at&&<strong role="status">SMT_CONFIRMED · {smt.alert.direction} · {symbol} / {compare} · {new Date(smt.alert.confirmed_at*1000).toISOString()} UTC</strong>}
+          {compare&&showSmt==='on'&&<button type="button" className="small-tool"
+            disabled={!validRules||busy||replayActive} onClick={refreshCandles}
+            title={replayActive?'Exit replay to refresh market data':undefined}>
+            <RefreshCw size={15}/> Refresh SMT data
+          </button>}
+          <small role="status">{smt.error || comparison.error || (compare&&range&&showSmt==='on'?'SMT verification requires a single saved partition per instrument':undefined) || (smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
         </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(!drawMode?'active':'')} title="Crosshair (Esc)" onClick={()=>setDrawMode(false)}><Crosshair size={18}/></button><button className={'rail-tool '+(drawMode?'active':'')} title="Place horizontal level (Alt+H)" onClick={()=>setDrawMode(v=>!v)}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
         <div className={'terminal-chart-columns '+(viewCount!=='1'?'multi-chart':'')}>
           <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:smt?.events}:undefined} symbol={symbol} precision={digits} indicator={indicator.data || undefined} levels={levels} drawMode={drawMode} onAddLevel={addLevel} showSnapshot/>:<Empty title="Market data unavailable" body="Connect MetaTrader 5 or import saved MT5 / Dukascopy candles."/>}</div>
           {Array.from({length:Number(viewCount)-1},(_,index)=><ChartView key={index+2} number={index+2}
-            mainSymbol={symbol} source={source} options={options} refresh={refreshCount} cutoff={cutoff} precision={precisionFor}/>)}
+            mainSymbol={symbol} source={source} options={options} refresh={refreshCount} cutoff={cutoff} precision={precisionFor} range={range}/>)}
         </div></div>
         <div className="terminal-replay"><div className="terminal-replay-left"><button className={'small-tool '+(replayActive?'active':'')} onClick={()=>replayActive?(setReplayIndex(null),setPlaying(false)):beginReplay()} disabled={!canReplay}><Clock3 size={17}/>{replayActive?'Exit replay':'Bar replay'}</button>{replayActive&&<><button className="small-tool icon-square" onClick={()=>setReplayIndex(Math.max(20,Math.floor(candles.length*.6)))} title="Restart replay"><SkipBack size={16}/></button><button className="small-tool icon-square" onClick={()=>stepReplay(1)} disabled={replayIndex===candles.length-1} title="Next candle (Shift+Right)"><SkipForward size={16}/></button><button className="small-tool active" onClick={()=>setPlaying(p=>!p)}>{playing?<Pause size={15}/>:<Play size={15}/>} {playing?'Pause':'Play'}</button><span className="replay-count">{(replayIndex??0)+1} / {candles.length}</span></>}</div><div className="terminal-footer-info">{replayActive?'Future candles hidden · replay':zone} <span className="footer-divider">|</span> {visibleCandles.length} bars · {data?.price_basis||'unverified'}</div></div>
       </section>
@@ -355,7 +368,7 @@ function AIPage({refresh}:{refresh:()=>void}){
  const load=useCallback(()=>Promise.all([api.trades(),api.packages(),api.reviews()]).then(([t,p,r])=>{setTrades(t);setPackages(p);setReviews(r);if(!chosen&&t.length)setChosen(t[0].id)}).catch(e=>setError(e.message)),[chosen]);useEffect(()=>{void load()},[load]);
  async function exportPackage(){if(!chosen)return;setBusy(true);setError('');try{const item=await api.createExport(chosen);setResult(`Package ${item.package_id} created. Ready for download.`);window.open(item.download_url,'_blank');await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  async function importResponse(){setBusy(true);setError('');try{const data=JSON.parse(input) as unknown;const review=await api.importReview(data);setResult(`Imported ${review.id} — ${review.verification}`);setInput('');await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- const example=()=>{const p=packages[0];if(!p)return;setInput(JSON.stringify({package_id:p.id,trade_decision_id:p.trade_id,plan_version:p.plan_version,assessment:'INSUFFICIENT_DATA',findings:[{text:'Sample observation only: verify spread and completed session structure.',severity:'MEDIUM',evidence_refs:['PLAN','RISK']}],missing_evidence:['Historical analog records'],'limitations':['The import validates structure, not free-text truth.']},null,2))};
+ const example=()=>{const p=packages[0];if(!p)return;setInput(JSON.stringify({schema_version:1,package_id:p.id,trade_decision_id:p.trade_id,plan_version:p.plan_version,review_type:'PRE_TRADE',assessment:'INSUFFICIENT_DATA',findings:[{summary:'Sample observation only: verify spread and completed session structure.',evidence_refs:['PLAN','RISK'],metric_refs:[]}],evidence_refs:['PLAN','RISK'],missing_evidence:['Historical analog records'],contradictions:[],risk_concerns:[],suggested_actions:[],limitations:['Free-text claims require manual verification.']},null,2))};
  return <><PageHeading eyebrow="INTELLIGENCE / FRONTIER AI" title="AI Review Center" subtitle="Export complete evidence. Challenge your thesis in your preferred frontier chat AI. Bring the review back." action={<Badge tone="blue"><CloudOff size={13}/> NO API REQUIRED</Badge>}/>
   <div className="ai-feature"><div className="ai-feature-icon"><BrainCircuit size={28}/></div><div><span className="eyebrow">HUMAN-IN-THE-LOOP INTELLIGENCE</span><h2>Evidence goes out. Critical thinking comes back.</h2><p>Versioned Markdown and JSON packages preserve your plan, rationale, risk calculations and review cutoff.</p></div><div className="ai-feature-path"><span>01 EXPORT</span><ArrowRight size={15}/><span>02 REVIEW</span><ArrowRight size={15}/><span>03 IMPORT</span></div></div>
   {error&&<Notice tone="red">{error}</Notice>}{result&&<Success>{result}</Success>}
@@ -368,10 +381,11 @@ function AIPage({refresh}:{refresh:()=>void}){
 
 function StrategyLab(){
   const formatDate=useTimestampFormat();
+  const [range,setRange]=useState<CandleRange>();
  const [symbol,setSymbol]=useState<SymbolName>('EURUSD');const [timeframe,setTimeframe]=useState<Timeframe>('M5');const [source,setSource]=useState<SourceName>('MT5');const [result,setResult]=useState<BacktestResult|null>(null);const [error,setError]=useState('');const [loading,setLoading]=useState(false);
- async function run(){setLoading(true);setError('');try{setResult(await api.backtest(symbol,timeframe,source))}catch(e){setError((e as Error).message)}finally{setLoading(false)}}
- return <><PageHeading eyebrow="QUANT RESEARCH / LAB" title="Strategy laboratory" subtitle="Reproducible testing without look-ahead or misleading certainty."/><Notice tone="amber">This starter laboratory implements one educational breakout rule. It is not a production tick-accurate backtester and excludes transaction costs.</Notice><div className="two-column lab-layout"><Card><SectionTitle eyebrow="SIMULATION SETUP" title="Research parameters"/><label className="field"><span>Instrument</span><Select value={symbol} onChange={v=>setSymbol(v as SymbolName)} options={['EURUSD','GBPUSD','USDJPY','XAUUSD']}/></label><label className="field"><span>Timeframe</span><Select value={timeframe} onChange={v=>setTimeframe(v as Timeframe)} options={['M1','M3','M5','M15','H1','H4','D1']}/></label><label className="field"><span>Data source</span><Select value={source} onChange={v=>setSource(v as SourceName)} options={['DEMO','MT5','MT5_SAVED','DUKASCOPY_SAVED']}/></label><div className="lab-model"><strong>Mechanical baseline</strong><p>Previous-bar breakout → enter at next bar open → 2R target → stop at recent extreme → max 12 bars → skip ambiguous candles.</p></div><button className="btn btn-primary full" disabled={loading} onClick={()=>void run()}>{loading?<Spinner/>:<Zap size={17}/>} Run historical simulation</button></Card>
- <Card className="lab-results"><SectionTitle eyebrow="RESEARCH OUTPUT" title="Simulation summary"/>{result?<><div className="lab-metrics"><div><span>Trades</span><strong>{result.count}</strong></div><div><span>Win rate</span><strong>{result.win_rate==null?'—':result.win_rate+'%'}</strong></div><div><span>Expectancy</span><strong className={result.expectancy_r!=null&&result.expectancy_r>=0?'positive':'negative'}>{result.expectancy_r==null?'—':`${result.expectancy_r} R`}</strong></div><div><span>Ambiguous excluded</span><strong>{result.ambiguous_excluded}</strong></div></div><Badge tone={result.synthetic?'amber':'blue'}>{result.synthetic?'SYNTHETIC · NOT EVIDENCE':'BROKER/DATASET SOURCE'}</Badge><p className="muted small">{result.data_note}</p></>:<Empty icon={<FlaskConical/>} title="No simulation results" body="Choose a dataset and run the mechanical baseline to inspect its limitations."/>}</Card></div>
+ async function run(){setLoading(true);setError('');try{setResult(await api.backtest(symbol,timeframe,source,source.endsWith('_SAVED')?range:undefined))}catch(e){setError((e as Error).message)}finally{setLoading(false)}}
+ return <><PageHeading eyebrow="QUANT RESEARCH / LAB" title="Strategy laboratory" subtitle="Reproducible testing without look-ahead or misleading certainty."/><Notice tone="amber">This starter laboratory implements one educational breakout rule. It is not a production tick-accurate backtester and excludes transaction costs.</Notice><div className="two-column lab-layout"><Card><SectionTitle eyebrow="SIMULATION SETUP" title="Research parameters"/><label className="field"><span>Instrument</span><Select value={symbol} onChange={v=>setSymbol(v as SymbolName)} options={['EURUSD','GBPUSD','USDJPY','XAUUSD']}/></label><label className="field"><span>Timeframe</span><Select value={timeframe} onChange={v=>setTimeframe(v as Timeframe)} options={['M1','M3','M5','M15','H1','H4','D1']}/></label><label className="field"><span>Data source</span><Select value={source} onChange={v=>setSource(v as SourceName)} options={['DEMO','MT5','MT5_SAVED','DUKASCOPY_SAVED']}/></label>{source.endsWith('_SAVED')&&<SavedRange range={range} onChange={setRange}/>}<div className="lab-model"><strong>Mechanical baseline</strong><p>Previous-bar breakout → enter at next bar open → 2R target → stop at recent extreme → max 12 bars. Ambiguous exits contribute to expectancy bounds.</p></div><button className="btn btn-primary full" disabled={loading} onClick={()=>void run()}>{loading?<Spinner/>:<Zap size={17}/>} Run historical simulation</button></Card>
+ <Card className="lab-results"><SectionTitle eyebrow="RESEARCH OUTPUT" title="Simulation summary"/>{result?<><div className="lab-metrics"><div><span>Eligible signals</span><strong>{result.eligible_signals}</strong></div><div><span>Win rate</span><strong>{result.win_rate==null?'—':result.win_rate+'%'}</strong></div><div><span>Expectancy</span><strong className={result.expectancy_r!=null&&result.expectancy_r>=0?'positive':'negative'}>{result.expectancy_r==null?'—':`${result.expectancy_r} R`}</strong></div><div><span>Ambiguous exits</span><strong>{result.ambiguous_excluded}{result.ambiguous_rate==null?'':` (${result.ambiguous_rate}%)`}</strong></div></div><Badge tone={result.synthetic?'amber':'blue'}>{result.synthetic?'SYNTHETIC · NOT EVIDENCE':'BROKER/DATASET SOURCE'}</Badge><p className="muted small">{result.data_note}</p>{result.ambiguous_excluded>0&&result.expectancy_bounds_r&&<Notice>Expectancy is indeterminate from OHLC. Bounds: {result.expectancy_bounds_r.worst} to {result.expectancy_bounds_r.best} R per signal. Tick replay is required.</Notice>}</>:<Empty icon={<FlaskConical/>} title="No simulation results" body="Choose a dataset and run the mechanical baseline to inspect its limitations."/>}</Card></div>
  {error&&<Notice tone="red">{error}</Notice>}{result&&<Card><SectionTitle eyebrow="SIMULATION DETAILS" title="Recorded sample trades"/><div className="table-scroll"><table><thead><tr><th>ENTRY TIME</th><th>DIRECTION</th><th>ENTRY</th><th>STOP</th><th>TARGET</th><th>RESULT</th></tr></thead><tbody>{result.trades.map((t,i)=><tr key={i}><td>{formatDate(t.entry_time*1000)}</td><td>{t.side}</td><td>{t.entry.toFixed(5)}</td><td>{t.stop.toFixed(5)}</td><td>{t.target.toFixed(5)}</td><td className={t.result_r>=0?'positive':'negative'}>{t.result_r>0?'+':''}{t.result_r} R</td></tr>)}</tbody></table>{!result.trades.length&&<p className="muted">No eligible unambiguous simulated trades.</p>}</div></Card>}
  </>
 }
@@ -401,6 +415,6 @@ function DataLibrary({refresh}:{refresh:()=>void}){
  </>
 }
 
-function SettingsPage(){return <><PageHeading eyebrow="LOCAL ENVIRONMENT / CONFIG" title="Platform settings" subtitle="A minimal, auditable setup that runs on one Windows computer."/><div className="two-column"><Card><SectionTitle eyebrow="RUNTIME" title="Application configuration"/><TimezonePicker/><div className="settings-list"><div><span>Persistence</span><strong>SQLite (WAL)</strong></div><div><span>Market archive</span><strong>Parquet · Zstandard</strong></div><div><span>Network binding</span><strong>127.0.0.1</strong></div><div><span>AI workflow</span><strong>Manual ZIP / JSON</strong></div><div><span>Order execution</span><Badge tone="green">DISABLED</Badge></div></div></Card><Card><SectionTitle eyebrow="DATA SAFETY" title="Important operational notes"/><div className="settings-notes"><div><ShieldCheck size={18}/><span>Live trading functions are intentionally unavailable.</span></div><div><Archive size={18}/><span>Copy data directory and verify database recovery on a separate storage device.</span></div><div><CloudOff size={18}/><span>Historical research and journal work offline once datasets are imported.</span></div><div><BookOpen size={18}/><span>AI findings are untrusted until checked against source evidence.</span></div></div><a href="http://127.0.0.1:8000/research/docs" className="btn btn-outline full" target="_blank" rel="noreferrer">Open API documentation <ExternalLink size={15}/></a></Card></div></>}
+function SettingsPage(){return <><PageHeading eyebrow="LOCAL ENVIRONMENT / CONFIG" title="Platform settings" subtitle="A minimal, auditable setup that runs on one Windows computer."/><div className="two-column"><Card><SectionTitle eyebrow="RUNTIME" title="Application configuration"/><TimezonePicker/><CandleColorSettings/><div className="settings-list"><div><span>Persistence</span><strong>SQLite (WAL)</strong></div><div><span>Market archive</span><strong>Parquet · Zstandard</strong></div><div><span>Network binding</span><strong>127.0.0.1</strong></div><div><span>AI workflow</span><strong>Manual ZIP / JSON</strong></div><div><span>Order execution</span><Badge tone="green">DISABLED</Badge></div></div></Card><Card><SectionTitle eyebrow="DATA SAFETY" title="Important operational notes"/><div className="settings-notes"><div><ShieldCheck size={18}/><span>Live trading functions are intentionally unavailable.</span></div><div><Archive size={18}/><span>Copy data directory and verify database recovery on a separate storage device.</span></div><div><CloudOff size={18}/><span>Historical research and journal work offline once datasets are imported.</span></div><div><BookOpen size={18}/><span>AI findings are untrusted until checked against source evidence.</span></div></div><a href="http://127.0.0.1:8000/research/docs" className="btn btn-outline full" target="_blank" rel="noreferrer">Open API documentation <ExternalLink size={15}/></a></Card></div></>}
 
 export default App;

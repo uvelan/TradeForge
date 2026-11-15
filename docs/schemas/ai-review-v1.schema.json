@@ -1,53 +1,175 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "TradeForge AI review v1",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema_version", "package_id", "trade_decision_id", "plan_version", "review_type",
-    "assessment", "findings", "evidence_refs", "missing_evidence", "contradictions",
-    "risk_concerns", "suggested_actions", "limitations"
-  ],
-  "properties": {
-    "schema_version": { "const": 1 },
-    "package_id": { "type": "string", "pattern": "^PKG-[A-Za-z0-9-]+$", "maxLength": 120 },
-    "trade_decision_id": { "$ref": "#/$defs/reference" },
-    "plan_version": { "type": "integer", "minimum": 1 },
-    "review_type": {
-      "enum": ["PRE_TRADE", "IN_TRADE", "POST_TRADE", "STRATEGY_RESEARCH", "LEARNING_REVIEW"]
-    },
-    "assessment": { "enum": ["SUPPORTED", "CONDITIONAL", "REJECTED", "INSUFFICIENT_DATA"] },
-    "findings": {
-      "type": "array",
-      "maxItems": 100,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["summary", "evidence_refs", "metric_refs"],
-        "properties": {
-          "summary": { "$ref": "#/$defs/note" },
-          "evidence_refs": {
-            "allOf": [{ "$ref": "#/$defs/references" }],
-            "minItems": 1
-          },
-          "metric_refs": { "$ref": "#/$defs/references" }
-        }
-      }
-    },
-    "evidence_refs": { "$ref": "#/$defs/references" },
-    "missing_evidence": { "$ref": "#/$defs/notes" },
-    "contradictions": { "$ref": "#/$defs/notes" },
-    "risk_concerns": { "$ref": "#/$defs/notes" },
-    "suggested_actions": { "$ref": "#/$defs/notes" },
-    "limitations": { "$ref": "#/$defs/notes" }
-  },
   "$defs": {
-    "reference": { "type": "string", "minLength": 1, "maxLength": 160 },
-    "references": {
-      "type": "array", "maxItems": 200, "uniqueItems": true,
-      "items": { "$ref": "#/$defs/reference" }
+    "ReviewFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "metric_refs": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 200,
+          "title": "Metric Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "summary",
+        "evidence_refs",
+        "metric_refs"
+      ],
+      "title": "ReviewFinding",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
     },
-    "note": { "type": "string", "minLength": 1, "maxLength": 4000 },
-    "notes": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/note" } }
-  }
+    "package_id": {
+      "maxLength": 120,
+      "pattern": "^PKG-[A-Za-z0-9-]+$",
+      "title": "Package Id",
+      "type": "string"
+    },
+    "trade_decision_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "title": "Trade Decision Id",
+      "type": "string"
+    },
+    "plan_version": {
+      "minimum": 1,
+      "title": "Plan Version",
+      "type": "integer"
+    },
+    "review_type": {
+      "enum": [
+        "PRE_TRADE",
+        "IN_TRADE",
+        "POST_TRADE",
+        "STRATEGY_RESEARCH",
+        "LEARNING_REVIEW"
+      ],
+      "title": "Review Type",
+      "type": "string"
+    },
+    "assessment": {
+      "enum": [
+        "SUPPORTED",
+        "CONDITIONAL",
+        "REJECTED",
+        "INSUFFICIENT_DATA"
+      ],
+      "title": "Assessment",
+      "type": "string"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/ReviewFinding"
+      },
+      "maxItems": 100,
+      "title": "Findings",
+      "type": "array"
+    },
+    "evidence_refs": {
+      "items": {
+        "maxLength": 160,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 200,
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "missing_evidence": {
+      "items": {
+        "maxLength": 4000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Missing Evidence",
+      "type": "array"
+    },
+    "contradictions": {
+      "items": {
+        "maxLength": 4000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Contradictions",
+      "type": "array"
+    },
+    "risk_concerns": {
+      "items": {
+        "maxLength": 4000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Risk Concerns",
+      "type": "array"
+    },
+    "suggested_actions": {
+      "items": {
+        "maxLength": 4000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Suggested Actions",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "maxLength": 4000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Limitations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "package_id",
+    "trade_decision_id",
+    "plan_version",
+    "review_type",
+    "assessment",
+    "findings",
+    "evidence_refs",
+    "missing_evidence",
+    "contradictions",
+    "risk_concerns",
+    "suggested_actions",
+    "limitations"
+  ],
+  "title": "TradeForge AI review v1",
+  "type": "object"
 }

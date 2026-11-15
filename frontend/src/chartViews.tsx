@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { CandleChart, Select } from "./components";
-import type { CandleResponse, ChartSource, Timeframe } from "./types";
+import type { CandleRange, CandleResponse, ChartSource, Timeframe } from "./types";
 import { useWorkspacePreference } from "./useWorkspacePreference";
 
 export const frameMinutes: Record<Timeframe, number> = {M1:1,M3:3,M5:5,M15:15,M30:30,H1:60,H4:240,D1:1440};
 
-export function useViewCandles(symbol: string, frame: Timeframe, source: ChartSource, refresh: number, cutoff?: number, follow=false) {
-  const key = JSON.stringify([symbol, frame, source, refresh]);
+export function useViewCandles(symbol: string, frame: Timeframe, source: ChartSource, refresh: number, cutoff?: number, follow=false, range?:CandleRange) {
+  const key = JSON.stringify([symbol, frame, source, refresh,range]);
   const [result, setResult] = useState<{key: string; data?: CandleResponse; error?: string}>();
   useEffect(() => {
     if (!symbol) return;
     let active = true;
-    api.candles(symbol, frame, source, 600).then(data => {
+    api.candles(symbol, frame, source, 600,false,range).then(data => {
       if (active) setResult({key, data});
     }).catch(error => {
       if (active) setResult({key, error: error.message});
     });
     return () => { active = false; };
-  }, [key, symbol, frame, source]);
+  }, [key, symbol, frame, source,range]);
   const replay = cutoff !== undefined;
   useEffect(() => {
     if (!follow || !symbol || source !== "MT5" || replay) return;
@@ -55,9 +55,10 @@ export function useViewCandles(symbol: string, frame: Timeframe, source: ChartSo
   };
 }
 
-export function ChartView({number, mainSymbol, source, options, refresh, cutoff, precision}: {
+export function ChartView({number, mainSymbol, source, options, refresh, cutoff, precision,range}: {
   number: number; mainSymbol: string; source: ChartSource; options: string[]; refresh: number;
   cutoff?: number; precision: (symbol: string) => number;
+  range?:CandleRange;
 }) {
   const [savedSymbol, setSymbol] = useWorkspacePreference<string>(`view-${number}-symbol`, "");
   const defaultFrame = number === 2 ? "H1" : number === 3 ? "M15" : "H4";
@@ -66,7 +67,7 @@ export function ChartView({number, mainSymbol, source, options, refresh, cutoff,
     defaultFrame, Object.keys(frameMinutes) as Timeframe[],
   );
   const symbol = options.includes(savedSymbol) ? savedSymbol : mainSymbol;
-  const {candles, error} = useViewCandles(symbol, frame, source, refresh, cutoff);
+  const {candles, error} = useViewCandles(symbol, frame, source, refresh, cutoff,false,range);
   return <section className="secondary-chart" aria-label={`Chart view ${number}`}>
     <div className="pane-label view-controls">
       <Select label={`View ${number} instrument`} value={symbol} options={options} onChange={setSymbol}/>

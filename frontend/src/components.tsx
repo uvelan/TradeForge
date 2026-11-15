@@ -2,6 +2,7 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode, type IChartApi, type ISeriesApi, type IPriceLine, type UTCTimestamp} from 'lightweight-charts';
 import type { IndicatorResult } from './indicators';
 import type { SmtEvent } from './smt';
+import {useCandleColors} from './candleColors';
 import {chartTimeOptions,useTimezone} from './timezone';
 import {ArrowDownRight,ArrowUpRight,Camera,Check,ChevronDown,LoaderCircle,Maximize,Minimize,SkipForward,TriangleAlert} from 'lucide-react';
 import type {Candle} from './types';
@@ -49,6 +50,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     }
   }
   const {zone}=useTimezone();
+  const {up,down,comparisonUp,comparisonDown}=useCandleColors();
   const chartRef=useRef<IChartApi|null>(null);
   const seriesRef=useRef<ISeriesApi<'Candlestick'>|null>(null);
   const comparisonRef=useRef<ISeriesApi<'Candlestick'>|null>(null);
@@ -115,6 +117,14 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     };
   },[comparisonSymbol,comparisonPrecision,placement,symbol,precision]);
   useEffect(()=>{
+    seriesRef.current?.applyOptions({upColor:up,downColor:down,wickUpColor:up,wickDownColor:down});
+    comparisonRef.current?.applyOptions({
+      upColor:`${comparisonUp}42`,downColor:`${comparisonDown}42`,
+      borderUpColor:comparisonUp,borderDownColor:comparisonDown,
+      wickUpColor:comparisonUp,wickDownColor:comparisonDown,
+    });
+  },[up,down,comparisonUp,comparisonDown,comparisonSymbol,comparisonPrecision,placement,symbol,precision]);
+  useEffect(()=>{
     comparisonRef.current?.setData((comparison?.candles ?? []).map(bar=>({...bar,time:bar.time as UTCTimestamp})));
   },[comparison,placement,symbol,precision]);
   useEffect(()=>{
@@ -158,6 +168,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     return ()=>{if(chartRef.current===chart)drawn.forEach(line=>chart.removeSeries(line))};
   },[indicator,symbol,precision]);
   const smtEvents=comparison?.smt;
+  const markerCandles=useRef(candles);
+  markerCandles.current=candles;
   useEffect(()=>{
     const chart=chartRef.current;
     const series=seriesRef.current;
@@ -177,13 +189,26 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
         return line;
       });
     });
-    const plugin=createSeriesMarkers(series,smtEvents.map(event=>({
+    const primaryBars=new Map(markerCandles.current.map(bar=>[bar.time,bar]));
+    const markers=smtEvents.map(event=>({
       time:event.primary.current.time as UTCTimestamp,price:event.primary.current.price,
       position:event.direction==="bearish"?"atPriceTop" as const:"atPriceBottom" as const,
-      shape:event.status==="SMT_CONFIRMED"?(event.direction==="bearish"?"arrowDown" as const:"arrowUp" as const):"circle" as const,
+      shape:"circle" as const,
       color:event.status==="SMT_INVALIDATED"?"#7b8897":event.direction==="bearish"?"#f7a77d":"#93e3b8",
       size:0.75,
-    })).sort((a,b)=>a.time-b.time));
+    }));
+    const confirmations=smtEvents.flatMap(event=>{
+      const bar=event.confirmation_bar_time==null?undefined:primaryBars.get(event.confirmation_bar_time);
+      if(!bar)return [];
+      return [{
+        time:bar.time as UTCTimestamp,price:event.direction==="bearish"?bar.high:bar.low,
+        position:event.direction==="bearish"?"atPriceTop" as const:"atPriceBottom" as const,
+        shape:event.direction==="bearish"?"arrowDown" as const:"arrowUp" as const,
+        color:event.status==="SMT_INVALIDATED"?"#7b8897":event.direction==="bearish"?"#f7a77d":"#93e3b8",
+        size:0.75,text:"SMT close",
+      }];
+    });
+    const plugin=createSeriesMarkers(series,[...markers,...confirmations].sort((a,b)=>a.time-b.time));
     return()=>{if(chartRef.current===chart){plugin.detach();lines.forEach(line=>chart.removeSeries(line));}};
   },[smtEvents,symbol,precision,comparisonSymbol,comparisonPrecision,placement]);
   const snapshot=()=>{
@@ -199,10 +224,13 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   const displayTime=cursorTime ?? commonBar?.time ?? candles.at(-1)?.time;
   const primaryBar=candles.find(bar=>bar.time===displayTime);
   const comparisonBar=displayTime===undefined?undefined:comparisonBars.get(displayTime);
-  const hoveredSmt=smtEvents?.filter(event=>event.primary.current.time===cursorTime||event.comparison.current.time===cursorTime);
+  const hoveredSmt=smtEvents?.filter(event=>
+    event.confirmation_bar_time===cursorTime||
+    [event.primary.previous,event.primary.current,event.comparison.previous,event.comparison.current].some(pivot=>pivot.time===cursorTime));
   const timestamp=useMemo(()=>new Intl.DateTimeFormat("en-GB",{
     timeZone:zone,dateStyle:"medium",timeStyle:"short",
   }),[zone]);
+  const at=(seconds:number)=>timestamp.format(seconds*1000);
   function legendRow(name:string, bar:Candle|undefined, digits:number, compared=false){
     return <div className={compared?"chart-legend-row compared":"chart-legend-row"}>
       <strong>{name}</strong>
@@ -244,9 +272,12 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       </span>}
       {hoveredSmt?.map(event=><div key={event.id} className="chart-legend-meta">
         {event.status} · {event.direction} · {event.leader==="primary"?symbol:comparisonSymbol} broke its prior {event.direction==="bearish"?"high":"low"}
+        <span>Pivot {at(event.primary.current.time)}</span>
+        <span>{event.confirmed_at===null?"Awaiting confirmation":`Confirmed ${at(event.confirmed_at)}`}</span>
         <span>{symbol} {event.primary.previous.price.toFixed(precision)} → {event.primary.current.price.toFixed(precision)}</span>
         <span>{comparisonSymbol} {event.comparison.previous.price.toFixed(comparisonPrecision)} → {event.comparison.current.price.toFixed(comparisonPrecision)}</span>
-        {event.transitions.map(entry=><span key={entry.status}>{entry.status.replace("SMT_","")} {new Date(entry.time*1000).toISOString().slice(0,16).replace("T"," ")} UTC</span>)}
+        {event.timing&&<span>Both pairs’ pivots confirmed {at(event.timing.all_pivots_confirmed_at)} · UTC match window closed {at(event.timing.matching_closed_at)} · {event.timing.required_shared_confirmation_bars} additional shared bars required</span>}
+        {event.transitions.filter(entry=>entry.status==="SMT_INVALIDATED").map(entry=><span key={entry.status}>Invalidated {at(entry.time)}</span>)}
       </div>)}
     </div>}
     <div className="chart-viewport-actions">

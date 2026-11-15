@@ -4,6 +4,7 @@ import { Alert, Box, Button, Chip, CssBaseline, FormControl, InputLabel, MenuIte
 import { CandlestickSeries, ColorType, createChart } from "lightweight-charts";
 import { chartPoints, timeframes, type Dataset, type Series, type Timeframe } from "./series";
 import { chartTimeOptions, TimezoneProvider, useTimezone } from "./timezone";
+import { CandleColorsProvider, useCandleColors } from "./candleColors";
 
 const theme = createTheme({
   palette: { mode: "dark", background: { default: "#101419", paper: "#171d24" }, primary: { main: "#72ddbf" } },
@@ -22,6 +23,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 function Chart({ series }: { series: Series }) {
   const container = useRef<HTMLDivElement>(null);
   const { zone } = useTimezone();
+  const { up, down } = useCandleColors();
   useEffect(() => {
     if (!container.current) return;
     const format = chartTimeOptions(zone);
@@ -34,12 +36,12 @@ function Chart({ series }: { series: Series }) {
     });
     const scale = series.dataset.price_scale;
     chart.addSeries(CandlestickSeries, {
-      upColor: "#54d6ab", downColor: "#f07d86", wickUpColor: "#54d6ab", wickDownColor: "#f07d86", borderVisible: false,
+      upColor: up, downColor: down, wickUpColor: up, wickDownColor: down, borderVisible: false,
       priceFormat: { type: "price", precision: Math.round(Math.log10(scale)), minMove: 1 / scale },
     }).setData(chartPoints(series));
     chart.timeScale().fitContent();
     return () => chart.remove();
-  }, [series, zone]);
+  }, [series, zone, up, down]);
   return <Box ref={container} role="img" aria-label={`${series.dataset.symbol} ${series.dataset.timeframe} candlestick chart`} sx={{ height: "clamp(320px, 60vh, 640px)" }} />;
 }
 
@@ -132,4 +134,4 @@ function Terminal() {
   </Box>;
 }
 
-createRoot(document.getElementById("root")!).render(<ThemeProvider theme={theme}><CssBaseline /><TimezoneProvider><Terminal /></TimezoneProvider></ThemeProvider>);
+createRoot(document.getElementById("root")!).render(<ThemeProvider theme={theme}><CssBaseline /><TimezoneProvider><CandleColorsProvider><Terminal /></CandleColorsProvider></TimezoneProvider></ThemeProvider>);

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from decimal import Decimal
-from typing import Literal
-from pydantic import BaseModel, Field, model_validator
+from typing import Annotated, Literal
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, model_validator
 
 Symbol = Literal['EURUSD','GBPUSD','USDJPY','XAUUSD']
 Direction = Literal['BUY','SELL']
@@ -47,6 +47,7 @@ class JournalInput(BaseModel):
     content: str=Field(min_length=5,max_length=20000)
 
 class ReviewInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     package_id: str
     trade_decision_id: str
     plan_version: int
@@ -54,6 +55,36 @@ class ReviewInput(BaseModel):
     findings: list[dict] = Field(default_factory=list,max_length=30)
     missing_evidence: list[str] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)
+
+
+Reference = Annotated[str, Field(min_length=1, max_length=160)]
+Note = Annotated[str, Field(min_length=1, max_length=4000)]
+References = Annotated[list[Reference], Field(max_length=200)]
+Notes = Annotated[list[Note], Field(max_length=100)]
+
+
+class ReviewFinding(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    summary: Note
+    evidence_refs: Annotated[References, Field(min_length=1)]
+    metric_refs: References
+
+
+class ReviewV1(BaseModel):
+    model_config = ConfigDict(extra="forbid", title="TradeForge AI review v1")
+    schema_version: Literal[1]
+    package_id: str = Field(pattern=r"^PKG-[A-Za-z0-9-]+$", max_length=120)
+    trade_decision_id: Reference
+    plan_version: StrictInt = Field(ge=1)
+    review_type: Literal["PRE_TRADE", "IN_TRADE", "POST_TRADE", "STRATEGY_RESEARCH", "LEARNING_REVIEW"]
+    assessment: Literal["SUPPORTED", "CONDITIONAL", "REJECTED", "INSUFFICIENT_DATA"]
+    findings: list[ReviewFinding] = Field(max_length=100)
+    evidence_refs: References
+    missing_evidence: Notes
+    contradictions: Notes
+    risk_concerns: Notes
+    suggested_actions: Notes
+    limitations: Notes
 
 class RiskInput(BaseModel):
     plan: TradePlan

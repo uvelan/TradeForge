@@ -1,7 +1,7 @@
 import pytest
 
 from research_backend.app.indicators import Bar
-from research_backend.app.smt import detect_smt
+from research_backend.app.smt import confirmation_timing, detect_smt
 
 
 def bars(values):
@@ -77,7 +77,25 @@ def test_either_instrument_can_lead(direction):
         assert (event["direction"], event["leader"]) == (direction, leader)
 
 
-def test_smt_journal_preserves_evidence_and_alerts_once(client):
+def test_default_timing_keeps_confirmation_out_of_earlier_prefixes():
+    first = bars([10, 11, 12, 16, 12, 11, 10, 11, 12, 18, 12, 11, 10, 11, 12, 10, 9])
+    second = bars([30, 31, 32, 36, 32, 31, 30, 31, 32, 35, 32, 31, 30, 31, 32, 30, 29])
+    assert not detect_smt(first[:14], second[:14], 3, 60)
+    candidate, = detect_smt(first[:15], second[:15], 3, 60)
+    assert candidate["status"] == "SMT_CANDIDATE"
+    assert candidate["confirmed_at"] is None
+    confirmed, = detect_smt(first[:16], second[:16], 3, 60)
+    assert confirmed["status"] == "SMT_CONFIRMED"
+    assert confirmed["confirmed_at"] == 16 * 60
+    assert confirmed["confirmed_at"] == confirmed["primary"]["current"]["time"] + 7 * 60
+    assert confirmed == detect_smt(first, second, 3, 60)[0]
+    timing = confirmation_timing(confirmed, {"period": 3, "alignment_bars": 2, "confirmation_bars": 1})
+    assert timing["all_pivots_confirmed_at"] == 13 * 60
+    assert timing["matching_wait_seconds"] == 120
+    assert timing["confirmation_wait_seconds"] == 60
+
+
+def test_unverified_smt_cannot_write_or_alert(client):
     first = [10, 11, 14, 11, 10, 11, 16, 11, 10, 11, 12]
     second = [22, 24, 29, 24, 22, 24, 27, 24, 22, 24, 31]
     original = {
@@ -94,17 +112,39 @@ def test_smt_journal_preserves_evidence_and_alerts_once(client):
 
     assert request(first[:10], second[:10], replay=True).json()["alerts"] == []
     assert client.get("/api/indicators/smt/history").json() == []
-    alert, = request(first[:10], second[:10]).json()["alerts"]
-    assert alert["confirmed_at"] == 600
-    assert alert["provenance"]["comparison"]["feed_id"] == "mt5:example"
-    assert request(first[:10], second[:10]).json()["alerts"] == []
-    assert request(first, second).json()["events"][0]["status"] == "SMT_INVALIDATED"
-    correction = first[:10]
-    correction[6] = 13
-    frozen, = request(correction, second[:10], replay=True).json()["events"]
-    assert frozen["status"] == "SMT_CONFIRMED"
-    assert frozen["primary"]["current"]["price"] == 17
-    assert frozen["confirmed_at"] == 600
-    assert len(client.get("/api/indicators/smt/history").json()) == 3
+    preview = request(first[:10], second[:10]).json()
+    assert preview["authority"] == "CLIENT_SUPPLIED_UNVERIFIED"
+    assert preview["events"][0]["confirmed_at"] == 600 and preview["alerts"] == []
+    assert client.get("/api/indicators/smt/history").json() == []
     incompatible = {**original["comparison_feed"], "price_basis": "LAST_TRADE"}
     assert request(first, second, comparison_feed=incompatible).status_code == 422
+
+
+def test_saved_smt_history_survives_source_mismatch_without_reusing_old_evidence(client):
+    from research_backend.app.storage import write_partition
+
+    first = [bar.model_dump() for bar in bars([10, 11, 14, 11, 10, 11, 16, 11, 10, 11])]
+    second = [bar.model_dump() for bar in bars([22, 24, 29, 24, 22, 24, 27, 24, 22, 24])]
+    request = {"period": 2, "timeframe": "M1", "alignment_bars": 0, "primary": first, "comparison": second}
+    for key, symbol, series in [("primary_feed", "EURUSD", first), ("comparison_feed", "GBPUSD", second)]:
+        saved = write_partition("MT5", "test", symbol, "candles", "M1", "BID", series)
+        request[key] = {"source": "MT5_SAVED", "symbol": symbol, "feed_id": "test",
+                        "price_basis": "BID", "dataset_id": saved["id"]}
+    endpoint = "/api/indicators/smt"
+    history = endpoint + "/history"
+    verified = client.post(endpoint, json=request).json()
+    assert verified["authority"] == "VERIFIED_SAVED_DATASET"
+    assert verified["events"][0]["confirmed_at"] == 600
+    ledger = client.get(history).json()
+    assert len(ledger) == 2
+    assert all(row["provenance"]["primary"]["sha256"] for row in ledger)
+    corrected = [dict(row) for row in first]
+    corrected[6]["high"] = 18
+    mismatch = client.post(endpoint, json={**request, "primary": corrected})
+    assert mismatch.status_code == 409 and "SOURCE_MISMATCH" in mismatch.json()["detail"]
+    assert client.get(history).json() == ledger
+    saved = write_partition("MT5", "test", "EURUSD", "candles", "M1", "BID", corrected)
+    request["primary_feed"]["dataset_id"] = saved["id"]
+    updated = client.post(endpoint, json={**request, "primary": corrected}).json()
+    assert updated["events"][0]["primary"]["current"]["price"] == 18
+    assert len(client.get(history).json()) == 4

@@ -16,7 +16,8 @@ from .db import transaction, utc_now
 
 def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|None,price_basis:str,records:list[dict])->dict:
     if not records: raise ValueError('Empty market dataset cannot be committed')
-    if provider not in ('MT5','DUKASCOPY') or not re.fullmatch(r'[A-Z0-9]{3,12}',symbol):raise ValueError('Unsupported provider or symbol')
+    if provider not in ('MT5','DUKASCOPY') or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._#+-]{0,31}',symbol):
+        raise ValueError('Unsupported provider or symbol')
     if kind not in ('candles','ticks'):raise ValueError('Invalid kind')
     if not re.fullmatch(r'[A-Za-z0-9_-]{1,60}',feed_id):raise ValueError('Invalid feed identifier')
     try:
@@ -32,22 +33,33 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
             raise ValueError('Invalid timeframe')
         folder=folder/f'timeframe={timeframe}'
     folder.mkdir(parents=True,exist_ok=True)
-    new_id=str(uuid.uuid4())
-    path=folder/f'part-{new_id}.parquet'
-    temp=folder/f'.part-{new_id}.pending'
+    temp=folder/f'.part-{uuid.uuid4()}.pending'
     table=pa.Table.from_pylist(records)
     try:
         pq.write_table(table,temp,compression='zstd')
         with temp.open('rb+') as f:
             digest = hashlib.file_digest(f, 'sha256').hexdigest()
             os.fsync(f.fileno())
-        os.replace(temp,path)
+        identity = json.dumps([provider, feed_id, symbol, kind, timeframe, price_basis, digest, 1])
+        new_id = hashlib.sha256(identity.encode()).hexdigest()
+        path=folder/f'part-{new_id}.parquet'
         relative=str(path.relative_to(MARKET_DIR))
         with transaction() as db:
+            db.execute("BEGIN IMMEDIATE")
+            existing = db.execute("""SELECT id, relative_path FROM datasets
+                WHERE provider=? AND feed_id=? AND symbol=? AND kind=? AND timeframe IS ?
+                AND price_basis=? AND sha256=? ORDER BY created_at LIMIT 1""",
+                (provider,feed_id,symbol,kind,timeframe,price_basis,digest)).fetchone()
+            if existing and (MARKET_DIR / existing['relative_path']).is_file():
+                return {'id':existing['id'],'provider':provider,'symbol':symbol,'rows':len(records),
+                        'relative_path':existing['relative_path'],'sha256':digest}
+            if existing:
+                raise RuntimeError("A cataloged copy is missing from disk")
             db.execute('''INSERT INTO datasets(id,provider,feed_id,symbol,kind,timeframe,price_basis,rows_count,first_time,last_time,relative_path,sha256,created_at)
-              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (new_id,provider,feed_id,symbol,kind,timeframe,price_basis,len(records),
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (new_id,provider,feed_id,symbol,kind,timeframe,price_basis,len(records),
               datetime.fromtimestamp(int(records[0]['time']),timezone.utc).isoformat(),
               datetime.fromtimestamp(int(records[-1]['time']),timezone.utc).isoformat(),relative,digest,utc_now()))
+            os.replace(temp,path)
         return {'id':new_id,'provider':provider,'symbol':symbol,'rows':len(records),'relative_path':relative,'sha256':digest}
     finally:
         temp.unlink(missing_ok=True)

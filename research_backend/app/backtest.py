@@ -1,6 +1,5 @@
 """Research-only next-bar breakout simulation. OHLC ambiguity is never guessed."""
 from __future__ import annotations
-from statistics import mean
 
 
 def breakout_backtest(candles:list[dict],target_r:float=2.0,max_bars:int=12):
@@ -35,12 +34,20 @@ def breakout_backtest(candles:list[dict],target_r:float=2.0,max_bars:int=12):
         i=exit_i+1  # No overlapping positions in this laboratory model.
     vals=[x['result_r'] for x in outcomes]
     wins=sum(1 for x in vals if x>0)
+    eligible = len(vals) + ambiguity
+    total = sum(vals)
     return {'strategy':'Previous bar breakout, next-bar entry, fixed RR, conservative OHLC ambiguity',
       'trades':outcomes,'count':len(vals),'ambiguous_excluded':ambiguity,
-      'win_rate':round(wins/len(vals)*100,2) if vals else None,
-      'expectancy_r':round(mean(vals),4) if vals else None,
-      'total_r':round(sum(vals),4),
+      'eligible_signals':eligible,
+      'ambiguous_rate':round(100*ambiguity/eligible,2) if eligible else None,
+      'win_rate':round(wins/eligible*100,2) if eligible and not ambiguity else None,
+      'expectancy_r':round(total/eligible,4) if eligible and not ambiguity else None,
+      'expectancy_bounds_r':{
+          'worst':round((total-ambiguity)/eligible,4),
+          'best':round((total+ambiguity*target_r)/eligible,4),
+      } if eligible else None,
+      'total_r':round(total,4) if not ambiguity else None,
       'data_note':'Uses supplied OHLC with no spread/slippage/commission; not execution-grade. DEMO data is synthetic when source=DEMO.',
-      'limitations':['No tick sequencing; both stop and target touched -> excluded',
+      'limitations':['Tick replay is required to resolve ambiguous stop/target ordering',
                      'No spread, swap, broker commissions, or slippage',
                      'Illustrative mechanical strategy, no demonstrated out-of-sample edge']}

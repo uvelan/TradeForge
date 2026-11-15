@@ -1,7 +1,7 @@
 """TradeForge — localhost-only API, no execution/trading authority."""
 from __future__ import annotations
 from contextlib import asynccontextmanager
-from datetime import datetime,timezone
+from datetime import datetime,timedelta,timezone
 from pathlib import Path
 from hashlib import sha256
 import asyncio
@@ -19,9 +19,10 @@ from .storage import write_partition, decode_bi5, aggregate_ticks,read_partition
 from .domain import create_trade,get_trade,revise,close_trade,list_trades,analytics,export_ai,import_ai,journal_add,journal_list,journal_materialize
 from .risk import evaluate
 from .backtest import breakout_backtest
-from .schemas import TradePlan,Outcome,ReviewInput,JournalInput,RiskInput
+from .schemas import TradePlan,Outcome,ReviewInput,ReviewV1,JournalInput,RiskInput
 from . import domain
 from .indicator_routes import router as indicator_router
+from .saved_history import saved_range
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -47,7 +48,10 @@ def overview():
 def market_status():return {'mt5':mt5_connection(),'dukascopy':{'available':'MANUAL_IMPORT','notice':'Official S3 data can incur requester-pays charges.'},'demo':True}
 
 @app.get('/api/market/candles')
-def market_candles(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',limit:int=Query(180,ge=10,le=1000),include_latest:bool=False):
+def market_candles(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',limit:int=Query(180,ge=10,le=1000),
+                   include_latest:bool=False,start:int|None=None,end:int|None=None):
+    if (start is None) != (end is None) or (start is not None and source not in ("MT5_SAVED", "DUKASCOPY_SAVED")):
+        raise HTTPException(422, "Provide both start and end UTC epoch seconds for a saved source")
     if source == "BINANCE_SPOT":
         if symbol != "BTCUSDT" or timeframe not in binance.INTERVALS:
             raise HTTPException(422, "Binance Spot supports BTCUSDT and the standard chart timeframes")
@@ -67,6 +71,14 @@ def market_candles(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',limi
                 'latest_unconfirmed':include_latest and bool(candles), **provenance}
     if source in ('MT5_SAVED','DUKASCOPY_SAVED'):
         provider=source.split('_')[0]
+        if start is not None and end is not None:
+            try:
+                result = saved_range(provider, symbol, timeframe, start, end, FRAME_MIN[timeframe]*60, limit)
+            except FileNotFoundError as error:
+                raise HTTPException(404, str(error)) from error
+            except (ValueError, RuntimeError, OSError) as error:
+                raise HTTPException(409, str(error)) from error
+            return {"source":source, "synthetic":False, **result}
         dataset=one('''SELECT * FROM datasets WHERE provider=? AND symbol=? AND kind='candles' AND timeframe=? ORDER BY created_at DESC LIMIT 1''',(provider,symbol,timeframe))
         if not dataset:raise HTTPException(404,'No saved candle dataset for this symbol/timeframe')
         try: candles=read_partition(dataset,limit)
@@ -132,7 +144,7 @@ def download_ai(pkg:str):
     return FileResponse(path,media_type='application/zip',filename=f'{pkg}.zip')
 
 @app.post('/api/ai/reviews',status_code=201)
-def import_review(review:ReviewInput):return import_ai(review)
+def import_review(review:ReviewV1 | ReviewInput):return import_ai(review)
 
 @app.get('/api/ai/reviews')
 def reviews():return rows('SELECT id,package_id,assessment,verification,created_at FROM ai_reviews ORDER BY created_at DESC')
@@ -158,12 +170,12 @@ class MT5Import(BaseModel):
 @app.post('/api/market/import/mt5')
 def import_mt5(inp:MT5Import):
     try:
-        rates=mt5_rates(inp.symbol,inp.timeframe,inp.limit)
+        provenance = {}
+        rates=mt5_rates(inp.symbol,inp.timeframe,inp.limit,provenance=provenance)
         if not rates: raise RuntimeError('No completed MT5 bars were returned')
-        source=mt5_connection()
-        if not source['connected']:raise RuntimeError('MT5 is not connected')
-        feed='mt5-'+sha256(source['broker'].encode()).hexdigest()[:12]
-        return write_partition('MT5',feed,inp.symbol,'candles',inp.timeframe,'BROKER_BARS_UNSPECIFIED',rates)
+        if not provenance.get("feed_id"): raise RuntimeError("MT5 feed and price basis are unavailable")
+        feed='mt5-'+sha256(provenance["feed_id"].encode()).hexdigest()[:12]
+        return write_partition('MT5',feed,inp.symbol,'candles',inp.timeframe,provenance["price_basis"],rates)
     except (RuntimeError,ValueError,ImportError) as ex:raise HTTPException(503,str(ex)) from ex
 
 @app.post('/api/market/import/bi5')
@@ -171,15 +183,18 @@ async def import_dukascopy_bi5(symbol:str,day:str,hour:int|None=Query(None,ge=0,
     try:
         if symbol not in BASE:raise ValueError('Unsupported symbol')
         date=datetime.strptime(day,'%Y-%m-%d').replace(tzinfo=timezone.utc)
+        start = date + timedelta(hours=hour or 0)
+        end = start + (timedelta(hours=1) if hour is not None else timedelta(days=1))
+        if end > datetime.now(timezone.utc):
+            raise ValueError("Select a completed UTC hour or day")
         payload=await file.read(40_000_001)
         records=await asyncio.to_thread(decode_bi5,payload,symbol,date,hour)
         if not records:raise ValueError('No ticks present in supplied source file')
         tick_result=await asyncio.to_thread(write_partition,'DUKASCOPY','dukascopy-bi5',symbol,'ticks',None,'BID_ASK_UNITS',records)
-        # Construct only completed candle windows; last partial period is withheld.
         candles=await asyncio.to_thread(aggregate_ticks,records,5)
-        if len(candles)>1:
-            await asyncio.to_thread(write_partition,'DUKASCOPY','dukascopy-bi5',symbol,'candles','M5','BID',candles[:-1])
-        return {'tick_dataset':tick_result,'candle_rows':max(0,len(candles)-1),
+        if candles:
+            await asyncio.to_thread(write_partition,'DUKASCOPY','dukascopy-bi5',symbol,'candles','M5','BID',candles)
+        return {'tick_dataset':tick_result,'candle_rows':len(candles),
           'note':'Imported source file; no guarantee data is exhaustive.'}
     except (RuntimeError,ValueError,ImportError) as ex:raise HTTPException(422,str(ex)) from ex
 
@@ -199,8 +214,14 @@ def import_deals(days:int=Query(30,ge=1,le=365)):
 def imported_deals():return rows('SELECT id,symbol,imported_at FROM imported_fills ORDER BY imported_at DESC LIMIT 200')
 
 @app.get('/api/backtest')
-def backtest(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',target_r:float=Query(2.0,ge=1,le=5)):
-    m=market_candles(symbol,timeframe,source,limit=700)
-    result=breakout_backtest(m['candles'],target_r)
+def backtest(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',target_r:float=Query(2.0,ge=1,le=5),
+             start:int|None=None,end:int|None=None):
+    m=market_candles(symbol,timeframe,source,limit=700,start=start,end=end)
+    if m.get("coverage") and (m["coverage"]["gaps"] or m["coverage"]["truncated"]):
+        raise HTTPException(422, "Select a complete archive range of at most 700 candles for this backtest")
+    try:
+        result=breakout_backtest(m['candles'],target_r)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
     result.update({'source':source,'synthetic':m['synthetic'],'symbol':symbol,'timeframe':timeframe})
     return result
