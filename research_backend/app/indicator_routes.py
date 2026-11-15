@@ -1,14 +1,17 @@
+import asyncio
 import json
+import logging
+from time import time_ns
 from datetime import UTC, datetime
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from .indicators import Bar, REGISTRY, calculate
 from .market import FRAME_MIN, mt5_rates
 from .smt import confirmation_timing, detect_smt
-from .db import one, rows
+from .db import one, rows, transaction
 from .smt_history import record_smt, scope_key
 from .storage import read_partition
 from .saved_history import saved_range
@@ -51,9 +54,13 @@ class SmtCalculation(SmtRules):
     alert_after: int | None = Field(default=None, ge=0)
 
 
-class LiveSmtCalculation(SmtRules):
+class LiveSmtWatch(SmtRules):
     primary_symbol: str = Field(min_length=1, max_length=64)
     comparison_symbol: str = Field(min_length=1, max_length=64)
+    enabled: bool = True
+
+
+class LiveSmtCalculation(LiveSmtWatch):
     available_through: int = Field(ge=0)
     alert_after: int | None = Field(default=None, ge=0)
 
@@ -70,22 +77,30 @@ def rule_parameters(request: SmtRules) -> dict:
     return request.model_dump(include={"period", "alignment_bars", "tolerance_bps", "confirmation_bars"})
 
 
-@router.post("/smt/live")
-def live_smt(request: LiveSmtCalculation):
+def validate_watch(request: LiveSmtWatch):
     if request.timeframe not in FRAME_MIN or request.primary_symbol.casefold() == request.comparison_symbol.casefold():
         raise HTTPException(422, "Use a supported timeframe and two different MT5 instruments")
+
+
+@router.post("/smt/live")
+def live_smt(request: LiveSmtCalculation):
+    return capture_live_smt(request)
+
+
+def capture_live_smt(request: LiveSmtCalculation, monitor_token: int | None = None):
+    validate_watch(request)
     step = FRAME_MIN[request.timeframe] * 60
     now = int(datetime.now(UTC).timestamp())
     cutoff = min(now, request.available_through)
 
     def capture(symbol):
         metadata = {}
-        values = mt5_rates(symbol, request.timeframe, 600, provenance=metadata)
+        values = mt5_rates(symbol, request.timeframe, 600, include_latest=True, provenance=metadata)
         candles = [Bar.model_validate(bar) for bar in values if bar["time"] + step <= cutoff]
         if not metadata.get("feed_id") or metadata.get("price_basis") not in {"BID", "LAST_TRADE"}:
             raise ValueError("MT5 feed or basis unavailable")
-        if any(a.time >= b.time for a, b in zip(candles, candles[1:])):
-            raise ValueError("MT5 returned unordered candles")
+        if not candles or any(a.time >= b.time for a, b in zip(candles, candles[1:])):
+            raise ValueError("MT5 returned no closed candles or unordered candles")
         return candles, {"symbol": symbol, "source": "MT5", **metadata}
 
     try:
@@ -107,11 +122,102 @@ def live_smt(request: LiveSmtCalculation):
             capture_evidence[side] = evidence
         event["capture"] = capture_evidence
     alert_after = max(request.alert_after, now - step * 2) if request.alert_after is not None else None
-    alerts = record_smt(events, scope_key(provenance, rules), provenance, rules,
-                        alert_after=alert_after, capture_step=step) if events else []
+    scope = scope_key(provenance, rules)
+    alerts, corrected = record_smt(
+        events, scope, provenance, rules, alert_after=alert_after, capture_step=step,
+        capture={"primary": [bar.model_dump() for bar in primary],
+                 "comparison": [bar.model_dump() for bar in comparison]}, observed_at=now,
+        monitor_token=monitor_token,
+    )
+    events = [event for event in events if event["id"] not in corrected]
     for event in events + alerts:
         event.pop("capture", None)
-    return response_for(events, alerts, rules, step, provenance["authority"])
+    return {**response_for(events, alerts, rules, step, provenance["authority"]),
+            "scope": scope, "corrected_ids": sorted(corrected)}
+
+
+MONITOR_INTERVAL_SECONDS = 5
+
+
+def monitor_configuration() -> dict | None:
+    row = one("SELECT configuration, enabled_at FROM smt_monitor WHERE id=1")
+    return {**json.loads(row["configuration"]), "enabled_at": row["enabled_at"]} if row else None
+
+
+@router.get("/smt/monitor")
+def monitor_status(request: Request):
+    configuration = monitor_configuration()
+    state = request.app.state.smt_monitor
+    installed = {**configuration, "enabled_at": configuration["enabled_at"] // 1_000_000_000} if configuration else None
+    if configuration is None or state.get("configuration") != configuration:
+        return {"configuration": installed}
+    result = state["result"]
+    scope = result.get("scope")
+    alert = next(iter(active_alerts(1, scope)), None) if scope else None
+    correction = one("SELECT payload FROM smt_source_corrections WHERE scope_key=? ORDER BY event_time DESC, event_key LIMIT 1",
+                     (scope,)) if scope else None
+    return {"configuration": installed, **result, "latest_alert": alert,
+            "latest_correction": json.loads(correction["payload"]) if correction else None}
+
+
+@router.post("/smt/monitor")
+def configure_monitor(watch: LiveSmtWatch):
+    validate_watch(watch)
+    with transaction() as db:
+        if watch.enabled:
+            db.execute(
+                """INSERT INTO smt_monitor VALUES(1, ?, ?) ON CONFLICT(id) DO UPDATE
+                   SET configuration=excluded.configuration, enabled_at=excluded.enabled_at
+                   WHERE smt_monitor.configuration != excluded.configuration""",
+                (watch.model_dump_json(), time_ns()),
+            )
+        else:
+            db.execute("DELETE FROM smt_monitor WHERE id=1")
+    return {"enabled": watch.enabled}
+
+
+def active_alerts(limit: int, scope: str | None = None):
+    query = """SELECT payload FROM smt_alerts AS alerts WHERE NOT EXISTS (
+                   SELECT 1 FROM smt_source_corrections AS correction WHERE correction.event_key=alerts.event_key
+               )"""
+    args = (limit,)
+    if scope is not None:
+        query += " AND scope_key=?"
+        args = (scope, limit)
+    return [json.loads(row["payload"]) for row in rows(query + " ORDER BY event_time DESC, event_key LIMIT ?", args)]
+
+
+@router.get("/smt/alerts")
+def smt_alerts(limit: int = Query(25, ge=1, le=100)):
+    return active_alerts(limit)
+
+
+def poll_monitor(state: dict):
+    configuration = monitor_configuration()
+    if configuration is None:
+        return
+    now = int(datetime.now(UTC).timestamp())
+    try:
+        token = configuration["enabled_at"]
+        capture = LiveSmtCalculation(**{**configuration, "available_through": now,
+                                       "alert_after": token // 1_000_000_000})
+        response = capture_live_smt(capture, monitor_token=token)
+        result = {"last_poll_at": now, "error": None, "scope": response["scope"]}
+    except HTTPException as error:
+        result = {"last_poll_at": now, "error": str(error.detail)}
+    state.update(configuration=configuration, result=result)
+
+
+async def run_smt_monitor(stop: asyncio.Event, state: dict):
+    while not stop.is_set():
+        try:
+            await asyncio.to_thread(poll_monitor, state)
+        except Exception:
+            logging.getLogger(__name__).exception("SMT monitor poll failed")
+        try:
+            await asyncio.wait_for(stop.wait(), MONITOR_INTERVAL_SECONDS)
+        except TimeoutError:
+            continue
 
 
 def resolve_saved_feed(feed: SmtFeed, timeframe: str, supplied: list[Bar], step: int) -> tuple[list[Bar], dict]:
@@ -183,7 +289,11 @@ def smt(request: SmtCalculation):
 @router.get("/smt/history")
 def smt_history(limit: int = Query(100, ge=1, le=500)):
     events = [json.loads(row["payload"]) for row in rows(
-        "SELECT payload FROM smt_event_history ORDER BY event_time DESC, event_key, status LIMIT ?", (limit,)
+        """SELECT payload FROM (
+            SELECT payload, event_time, event_key, status FROM smt_event_history
+            UNION ALL
+            SELECT payload, event_time, event_key, 'SMT_SOURCE_CORRECTED' FROM smt_source_corrections
+        ) ORDER BY event_time DESC, event_key, status LIMIT ?""", (limit,)
     )]
     for event in events:
         event["authority"] = event.get("provenance", {}).get("authority", "CLIENT_SUPPLIED_UNVERIFIED")

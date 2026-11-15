@@ -23,6 +23,24 @@ CREATE TABLE IF NOT EXISTS smt_event_history (
 );
 CREATE INDEX IF NOT EXISTS smt_history_time ON smt_event_history(event_time DESC);
 CREATE INDEX IF NOT EXISTS smt_history_scope ON smt_event_history(scope_key, event_time);
+CREATE TABLE IF NOT EXISTS smt_source_corrections (
+    event_key TEXT PRIMARY KEY,
+    scope_key TEXT NOT NULL,
+    event_time INTEGER NOT NULL,
+    payload TEXT NOT NULL CHECK(json_valid(payload))
+);
+CREATE TABLE IF NOT EXISTS smt_alerts (
+    event_key TEXT PRIMARY KEY,
+    scope_key TEXT NOT NULL,
+    event_time INTEGER NOT NULL,
+    payload TEXT NOT NULL CHECK(json_valid(payload))
+);
+CREATE INDEX IF NOT EXISTS smt_alerts_scope_time ON smt_alerts(scope_key, event_time DESC);
+CREATE TABLE IF NOT EXISTS smt_monitor (
+    id INTEGER PRIMARY KEY CHECK(id=1),
+    configuration TEXT NOT NULL CHECK(json_valid(configuration)),
+    enabled_at INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS trades (
     id TEXT PRIMARY KEY,
     symbol TEXT NOT NULL CHECK(symbol IN ('EURUSD','GBPUSD','USDJPY','XAUUSD')),
@@ -122,7 +140,7 @@ CREATE INDEX IF NOT EXISTS idx_fills_symbol ON imported_fills(symbol);
 CREATE INDEX IF NOT EXISTS idx_journal_time ON journal_entries(created_at DESC);
 '''
 
-IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'imported_fills', 'journal_entries', 'smt_event_history']
+IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts']
 
 
 def connect():

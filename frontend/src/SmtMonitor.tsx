@@ -1,0 +1,71 @@
+import {useEffect, useState} from 'react';
+import type {SmtEvent, SmtRules} from './smt';
+import type {Timeframe} from './types';
+
+const endpoint = '/research/api/indicators/smt/monitor';
+
+type Watch = SmtRules & {primary_symbol:string; comparison_symbol:string; timeframe:Timeframe};
+type MonitorStatus = {
+  configuration: Watch | null;
+  last_poll_at?: number;
+  error?: string | null;
+  latest_alert?: SmtEvent | null;
+  latest_correction?: {source_correction:{observed_at:number; changes:unknown[]}} | null;
+};
+
+export function SmtMonitor({watch}: {watch?:Watch}) {
+  const [status,setStatus] = useState<MonitorStatus>();
+  const [error,setError] = useState('');
+  const [saving,setSaving] = useState(false);
+  const [refresh,setRefresh] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function load() {
+      try {
+        const response = await fetch(endpoint,{signal:controller.signal});
+        if (!response.ok) throw new Error('Background SMT status unavailable');
+        const data:MonitorStatus = await response.json();
+        if (!controller.signal.aborted) setStatus(data);
+      } catch {
+        if (!controller.signal.aborted) setStatus(undefined);
+      }
+    }
+    void load();
+    const timer = window.setInterval(load,5000);
+    return () => {controller.abort(); window.clearInterval(timer);};
+  },[refresh]);
+
+  async function save(config:Watch, enabled:boolean) {
+    setSaving(true);
+    setError('');
+    try {
+      const response = await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({...config,enabled})});
+      if (!response.ok) throw new Error('Could not update background SMT monitoring');
+      setStatus({configuration:enabled ? config : null});
+      setRefresh(previous => previous+1);
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'Background SMT settings unavailable');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const active = status?.configuration;
+  const matches = watch && active && (Object.keys(watch) as (keyof Watch)[]).every(key => watch[key] === active[key]);
+  if (!watch && !active) return null;
+  return <details>
+    <summary>Background SMT</summary>
+    <div className="smt-rules">
+      <small role="status">{error || status?.error || (active
+        ? `${active.primary_symbol} / ${active.comparison_symbol} · ${active.timeframe} · ${status?.last_poll_at ? 'Polling' : 'Starting'}`
+        : status ? 'Monitoring off' : 'Checking monitor status…')}</small>
+      {watch && !matches && <button type="button" className="small-tool" disabled={saving || !status}
+        onClick={()=>void save(watch,true)}>{active?'Use current chart and rules':'Start monitoring'}</button>}
+      {active && <button type="button" className="small-tool" disabled={saving} onClick={()=>void save(active,false)}>Stop monitoring</button>}
+      {status?.latest_alert?.confirmed_at && <small>SMT_CONFIRMED · {status.latest_alert.direction} · {new Date(status.latest_alert.confirmed_at*1000).toISOString()}</small>}
+      {status?.latest_correction && <small>SMT_SOURCE_CORRECTED · {new Date(status.latest_correction.source_correction.observed_at*1000).toISOString()} · {status.latest_correction.source_correction.changes.length} revised or missing candles</small>}
+    </div>
+  </details>;
+}

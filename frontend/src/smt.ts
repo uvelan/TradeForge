@@ -58,11 +58,13 @@ export function useSmt(primary: Candle[], comparison: Candle[] | undefined, time
           const failure=await response.json().catch(()=>null);
           throw new Error(typeof failure?.detail==="string"?failure.detail:"SMT calculation unavailable");
         }
-        const data=await response.json() as {events:SmtEvent[];authority:string;alerts:SmtEvent[]};
+        const data=await response.json() as {events:SmtEvent[];authority:string;alerts:SmtEvent[];corrected_ids?:string[]};
         if(!controller.signal.aborted){
           setResult({body,refresh,events:data.events,authority:data.authority});
           const alert=data.alerts?.at(-1);
           if(alert)setNotice({scope,alert});
+          else if(data.corrected_ids?.length)setNotice(previous=>
+            previous?.scope===scope&&data.corrected_ids?.includes(previous.alert.id)?undefined:previous);
         }
       }catch(error){
         if(!controller.signal.aborted)setResult({body,refresh,error:error instanceof Error?error.message:"SMT calculation unavailable"});

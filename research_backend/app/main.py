@@ -23,14 +23,21 @@ from .backtest import breakout_backtest
 from .tick_replay import replay_breakout
 from .schemas import TradePlan,Outcome,ReviewInput,ReviewV1,JournalInput,RiskInput
 from . import domain
-from .indicator_routes import router as indicator_router
+from .indicator_routes import router as indicator_router, run_smt_monitor
 from .saved_history import recent_archive_range, saved_range
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
     initialize()
     journal_materialize()
-    yield
+    app.state.smt_monitor = {}
+    stop = asyncio.Event()
+    monitor = asyncio.create_task(run_smt_monitor(stop, app.state.smt_monitor))
+    try:
+        yield
+    finally:
+        stop.set()
+        await monitor
 
 app=FastAPI(title='TradeForge Local API',version='0.1.0',lifespan=lifespan)
 app.include_router(indicator_router)
@@ -215,9 +222,12 @@ def imported_deals():return rows('SELECT id,symbol,imported_at FROM imported_fil
 def backtest(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',target_r:float=Query(2.0,ge=1,le=5),
              start:int|None=None,end:int|None=None,tick_dataset_id:str|None=None,
              slippage_bps:Decimal=Query(Decimal(0),ge=0,le=100),
-             commission_bps:Decimal=Query(Decimal(0),ge=0,le=100)):
+             commission_bps:Decimal=Query(Decimal(0),ge=0,le=100),
+             max_quote_gap_seconds:int=Query(60,ge=1,le=60)):
     m=market_candles(symbol,timeframe,source,limit=700,start=start,end=end)
-    if m.get("coverage") and (m["coverage"]["gaps"] or (start is not None and m["coverage"]["truncated"])):
+    coverage = m.get("coverage")
+    if coverage and ((tick_dataset_id is None and coverage["gaps"])
+                     or (start is not None and coverage["truncated"])):
         raise HTTPException(422, "Select a complete archive range of at most 700 candles for this backtest")
     try:
         if tick_dataset_id is None:
@@ -232,7 +242,12 @@ def backtest(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',target_r:f
                 raise ValueError("Tick partition exceeds the 500,000 quote replay limit")
             result = replay_breakout(m["candles"], read_partition(dataset, max_rows=500_000),
                                      FRAME_MIN[timeframe]*60, target_r,
-                                     slip_bps=slippage_bps, commission_bps=commission_bps)
+                                     slip_bps=slippage_bps, commission_bps=commission_bps,
+                                     max_quote_gap_seconds=max_quote_gap_seconds)
+            if coverage and coverage["gaps"]:
+                result["candle_gaps"] = coverage["gaps"]
+                # With no verified calendar, gaps may hide signals even if no open trade spans them.
+                result.update(expectancy_r=None, expectancy_bounds_r=None, total_r=None, win_rate=None)
             result["lineage"] = {"candle_partitions":m["partitions"],
                                  "tick_partition":{"id":dataset["id"],"sha256":dataset["sha256"]}}
     except (ValueError, RuntimeError, OSError, KeyError) as error:

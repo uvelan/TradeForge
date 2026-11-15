@@ -11,11 +11,58 @@ def scope_key(provenance: dict, rules: dict) -> str:
     return sha256(identity.encode()).hexdigest()
 
 
+def record_source_corrections(db, scope: str, capture: dict, observed_at: int) -> set[str]:
+    # Only a revision inside the observed interval is evidence of a correction.
+    indexed = {side: {bar["time"]: bar for bar in bars} for side, bars in capture.items()}
+    if any(not bars for bars in indexed.values()):
+        return set()
+    boundaries = {side: (min(bars), max(bars)) for side, bars in indexed.items()}
+    for row in db.execute(
+        """SELECT event_key, status, payload FROM smt_event_history AS history
+           WHERE scope_key=? AND status IN ('SMT_CANDIDATE', 'SMT_CONFIRMED')
+             AND event_time >= ?
+             AND NOT EXISTS (SELECT 1 FROM smt_source_corrections AS correction
+                             WHERE correction.event_key=history.event_key)
+           ORDER BY CASE status WHEN 'SMT_CONFIRMED' THEN 0 ELSE 1 END""",
+        (scope, min(start for start, _ in boundaries.values())),
+    ).fetchall():
+        prior = json.loads(row["payload"])
+        changes = []
+        for side, saved in prior["capture"].items():
+            start, end = boundaries[side]
+            for old in saved["bars"]:
+                timestamp = old["time"]
+                if start <= timestamp <= end and indexed[side].get(timestamp) != old:
+                    changes.append({"side": side, "time": timestamp, "previous": old,
+                                    "observed": indexed[side].get(timestamp)})
+        if not changes:
+            continue
+        correction = {**prior, "status": "SMT_SOURCE_CORRECTED",
+                      "transitions": [*prior["transitions"], {"status": "SMT_SOURCE_CORRECTED", "time": observed_at}],
+                      "source_correction": {"observed_at": observed_at, "changes": changes,
+                                            "previous_status": row["status"]}}
+        db.execute("INSERT INTO smt_source_corrections VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING",
+                   (row["event_key"], scope, observed_at, json.dumps(correction, sort_keys=True)))
+    return {json.loads(row["payload"])["id"] for row in db.execute(
+        "SELECT payload FROM smt_source_corrections WHERE scope_key=?", (scope,)
+    )}
+
+
 def record_smt(events: list[dict], scope: str, provenance: dict, rules: dict, *,
-               alert_after: int | None = None, capture_step: int | None = None) -> list[dict]:
+               alert_after: int | None = None, capture_step: int | None = None,
+               capture: dict | None = None, observed_at: int | None = None,
+               monitor_token: int | None = None) -> tuple[list[dict], set[str]]:
     alerts = []
     with transaction() as db:
+        db.execute("BEGIN IMMEDIATE")
+        if monitor_token is not None and not db.execute(
+            "SELECT 1 FROM smt_monitor WHERE id=1 AND enabled_at=?", (monitor_token,)
+        ).fetchone():
+            return alerts, set()
+        corrected = record_source_corrections(db, scope, capture, observed_at) if capture is not None else set()
         for event in events:
+            if event["id"] in corrected:
+                continue
             pivots = {side: event[side] for side in ("primary", "comparison")}
             key = sha256(f"{scope}:{event['id']}:{json.dumps(pivots, sort_keys=True)}".encode()).hexdigest()
             existing = {row["status"]: json.loads(row["payload"]) for row in db.execute(
@@ -44,10 +91,19 @@ def record_smt(events: list[dict], scope: str, provenance: dict, rules: dict, *,
                     ):
                         # A revised capture cannot extend the earlier event's verified record.
                         break
-                inserted = db.execute(
+                db.execute(
                     "INSERT INTO smt_event_history VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
                     (key, scope, status, time, json.dumps(evidence, sort_keys=True)),
+                )
+                existing[status] = evidence
+            confirmed = existing.get("SMT_CONFIRMED")
+            if (confirmed and event["status"] == "SMT_CONFIRMED" and alert_after is not None
+                    and confirmed["confirmed_at"] > alert_after):
+                alert = {**confirmed, "alert_recorded_at": observed_at}
+                inserted = db.execute(
+                    "INSERT INTO smt_alerts VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING",
+                    (key, scope, confirmed["confirmed_at"], json.dumps(alert, sort_keys=True)),
                 ).rowcount
-                if inserted and status == "SMT_CONFIRMED" and alert_after is not None and time > alert_after:
-                    alerts.append(evidence)
-    return alerts
+                if inserted:
+                    alerts.append(alert)
+    return alerts, corrected
