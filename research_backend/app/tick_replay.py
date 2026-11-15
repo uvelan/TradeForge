@@ -1,6 +1,6 @@
 """Bid/ask replay for the existing next-bar breakout rule."""
 
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 from decimal import Decimal
 
 from .backtest import breakout_signal
@@ -14,8 +14,8 @@ def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r:
     if step <= 0 or max_bars < 1 or max_quote_gap_seconds < 1:
         raise ValueError("Invalid tick replay coverage parameters")
     candle_times = [candle["time"] for candle in candles]
-    if any(later <= earlier for earlier, later in zip(candle_times, candle_times[1:])):
-        raise ValueError("Tick replay requires chronologically ordered candles")
+    if any(later - earlier < step for earlier, later in zip(candle_times, candle_times[1:])):
+        raise ValueError("Tick replay requires chronological, non-overlapping candle intervals")
 
     # The matching feed's bid candles establish continuous observed intervals.
     # Closures and missing candle intervals both split execution coverage.
@@ -127,14 +127,19 @@ def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r:
 
 def validate_bid_extremes(candles: list[dict], ticks: list[dict], step: int) -> None:
     """Reject a bid outside the matching UTC candle, even when archive coverage is partial."""
-    bounds = {candle["time"]: (Decimal(str(candle["low"])), Decimal(str(candle["high"])))
-              for candle in candles}
+    starts = [candle["time"] * 1000 for candle in candles]
+    bounds = [(Decimal(str(candle["low"])), Decimal(str(candle["high"]))) for candle in candles]
+    if any(later - earlier < step * 1000 for earlier, later in zip(starts, starts[1:])):
+        raise ValueError("Tick replay requires chronological, non-overlapping candle intervals")
     for quote in ticks:
         if quote["scale"] <= 0:
             raise ValueError("UNTRUSTED: invalid quote price scale")
-        timestamp = quote["time_ms"] // (step * 1000) * step
-        if timestamp in bounds:
-            low, high = bounds[timestamp]
+        timestamp = quote["time_ms"]
+        index = bisect_right(starts, timestamp) - 1
+        if index >= 0 and timestamp < starts[index] + step * 1000:
+            low, high = bounds[index]
             bid = Decimal(quote["bid_units"]) / quote["scale"]
             if not low <= bid <= high:
-                raise ValueError(f"UNTRUSTED: bid {bid} contradicts candle [{low}, {high}] at UTC epoch {timestamp}")
+                raise ValueError(
+                    f"UNTRUSTED: bid {bid} contradicts candle [{low}, {high}] at UTC epoch {starts[index] // 1000}"
+                )

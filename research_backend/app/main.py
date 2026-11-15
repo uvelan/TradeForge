@@ -10,8 +10,9 @@ import json
 import uuid
 from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Request, Response
 from fastapi.responses import FileResponse, PlainTextResponse
+from starlette.requests import ClientDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel,Field, model_validator
+from pydantic import BaseModel,Field, TypeAdapter, model_validator
 import httpx
 from . import binance
 from .db import initialize, rows, one, transaction, utc_now
@@ -26,7 +27,7 @@ from . import domain
 from .drawings import router as drawing_router
 from .workspace_routes import router as workspace_router
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
-from .saved_history import recent_archive_range, saved_range, tick_partitions, read_tick_partitions
+from .saved_history import recent_archive_range, saved_range, tick_partitions, read_tick_partitions, saved_quote_path
 
 
 @asynccontextmanager
@@ -180,17 +181,68 @@ def download_ai(pkg:str):
     return FileResponse(path,media_type='application/zip',filename=f'{pkg}.zip')
 
 
-@app.post('/api/ai/reviews',status_code=201)
-async def import_review(review: ReviewV1 | ReviewInput, request: Request):
-    original = await request.body()
-    if len(original) > 1_000_000:
-        raise HTTPException(413, "AI review exceeds 1 MB")
-    return await asyncio.to_thread(import_ai, review, original)
+AI_REVIEW_MAX_BYTES = 1_000_000
+AI_REVIEW_MAX_DEPTH = 64
+REVIEW_ADAPTER = TypeAdapter(ReviewV1 | ReviewInput)
 
 
-@app.get('/api/ai/reviews/{review_id}/original')
-def download_review_original(review_id: str):
-    row = one("SELECT body,sha256 FROM ai_review_originals WHERE review_id=?", (review_id,))
+def unique_review_fields(pairs: list[tuple[str, object]]) -> dict:
+    fields = dict(pairs)
+    if len(fields) != len(pairs):
+        raise ValueError("Duplicate JSON field")
+    return fields
+
+
+def invalid_review_constant(value: str):
+    raise ValueError(f"Invalid JSON constant: {value}")
+
+
+def validate_review_body(body: bytes):
+    depth = 0
+    quoted = escaped = False
+    for char in body:
+        if quoted:
+            if escaped:
+                escaped = False
+            elif char == 92:
+                escaped = True
+            elif char == 34:
+                quoted = False
+        elif char == 34:
+            quoted = True
+        elif char in (91, 123):
+            depth += 1
+            if depth > AI_REVIEW_MAX_DEPTH:
+                raise HTTPException(422, "AI review JSON nesting exceeds 64 levels")
+        elif char in (93, 125):
+            depth -= 1
+    try:
+        document = json.loads(body.decode("utf-8"), object_pairs_hook=unique_review_fields,
+                              parse_constant=invalid_review_constant)
+        # SQLite text and canonical comparison require valid Unicode and finite numbers.
+        json.dumps(document, ensure_ascii=False, allow_nan=False).encode("utf-8")
+        return REVIEW_ADAPTER.validate_python(document)
+    except (ValueError, RecursionError) as error:
+        raise HTTPException(422, "Invalid AI review JSON or schema") from error
+
+
+@app.post('/api/ai/reviews', status_code=201, openapi_extra={"requestBody": {
+    "required": True, "content": {"application/json": {"schema": {"type": "object"}}},
+}})
+async def import_review(request: Request):
+    body = bytearray()
+    try:
+        async for chunk in request.stream():
+            if len(body) + len(chunk) > AI_REVIEW_MAX_BYTES:
+                raise HTTPException(413, "AI review exceeds 1 MB")
+            body.extend(chunk)
+    except ClientDisconnect as error:
+        raise HTTPException(400, "Incomplete AI review request") from error
+    original = bytes(body)
+    return await asyncio.to_thread(lambda: import_ai(validate_review_body(original), original))
+
+
+def original_review_response(row: dict | None):
     if row is None:
         raise HTTPException(404, "Original AI review response unavailable")
     if sha256(row["body"]).hexdigest() != row["sha256"]:
@@ -199,10 +251,31 @@ def download_review_original(review_id: str):
                     headers={"Content-Disposition": 'attachment; filename="ai-review.json"'})
 
 
+@app.get('/api/ai/reviews/{review_id}/original')
+def download_review_original(review_id: str):
+    return original_review_response(one("""SELECT body,sha256 FROM ai_review_submissions WHERE review_id=?
+        ORDER BY rowid LIMIT 1""", (review_id,)))
+
+
+@app.get('/api/ai/reviews/{review_id}/submissions')
+def review_submissions(review_id: str, after: int = Query(0,ge=0), limit: int = Query(25,ge=1,le=100)):
+    items = rows("""SELECT rowid AS cursor,id,sha256,submitted_at,validation,classification
+        FROM ai_review_submissions WHERE review_id=? AND rowid>? ORDER BY rowid LIMIT ?""",
+        (review_id, after, limit + 1))
+    return {"items":items[:limit], "next_cursor":items[limit-1]["cursor"] if len(items)>limit else None}
+
+
+@app.get('/api/ai/reviews/{review_id}/submissions/{submission_id}/original')
+def download_review_submission(review_id: str, submission_id: str):
+    return original_review_response(one("""SELECT body,sha256 FROM ai_review_submissions WHERE review_id=? AND id=?""",
+                                        (review_id, submission_id)))
+
+
 @app.get('/api/ai/reviews')
 def reviews():
     return rows("""SELECT id,package_id,assessment,verification,created_at,
-        EXISTS(SELECT 1 FROM ai_review_originals WHERE review_id=ai_reviews.id) AS has_original
+        EXISTS(SELECT 1 FROM ai_review_submissions WHERE review_id=ai_reviews.id) AS has_original,
+        (SELECT count(*) FROM ai_review_submissions WHERE review_id=ai_reviews.id) AS submission_count
         FROM ai_reviews ORDER BY created_at DESC""")
 
 
@@ -387,7 +460,8 @@ def calculate_backtest(request: BacktestRequest):
                 # With no verified calendar, gaps may hide signals even if no open trade spans them.
                 result.update(expectancy_r=None, expectancy_bounds_r=None, total_r=None, win_rate=None)
             tick_lineage = [{"id": part["id"], "sha256": part["sha256"]} for part in datasets]
-            result["lineage"] = {"candle_partitions": m["partitions"], "tick_partitions": tick_lineage}
+            result["lineage"] = {"candle_partitions": m["partitions"], "tick_partitions": tick_lineage,
+                                 "tick_ordering": "PROVENANCE_V1"}
             if tick_dataset_id is not None:
                 result["lineage"]["tick_partition"] = tick_lineage[0]
     except (ValueError, RuntimeError, OSError, KeyError) as error:
@@ -398,7 +472,10 @@ def calculate_backtest(request: BacktestRequest):
 
 
 def run_summary(row: dict) -> dict:
-    return {"id": row["id"],"created_at":row["created_at"],**json.loads(row["summary"])}
+    summary = {"id": row["id"],"created_at":row["created_at"],**json.loads(row["summary"])}
+    if row.get("legacy_order"):
+        summary["expectancy_r"] = None
+    return summary
 
 
 @app.post('/api/backtest/runs',status_code=201)
@@ -417,7 +494,11 @@ def save_backtest(request:BacktestRequest):
 
 @app.get('/api/backtest/runs')
 def backtest_runs(limit:int=Query(40,ge=1,le=100)):
-    return [run_summary(row) for row in rows("SELECT id,summary,created_at FROM backtest_runs ORDER BY created_at DESC,id LIMIT ?",(limit,))]
+    return [run_summary(row) for row in rows("""SELECT id,summary,created_at,
+        json_array_length(payload,'$.result.lineage.tick_partitions') > 1
+        AND json_extract(payload,'$.result.lineage.tick_ordering') IS NULL AS legacy_order
+        FROM (SELECT id,summary,created_at,payload FROM backtest_runs ORDER BY created_at DESC,id LIMIT ?)
+        ORDER BY created_at DESC,id""", (limit,))]
 
 
 @app.get('/api/backtest/runs/{run_id}')
@@ -427,7 +508,17 @@ def load_backtest(run_id:str):
         raise HTTPException(404,"Backtest run unavailable")
     if sha256(row["payload"].encode()).hexdigest() != run_id:
         raise HTTPException(409,"Saved run checksum mismatch")
-    return {"id":run_id,"created_at":row["created_at"],**json.loads(row["payload"])}
+    snapshot = json.loads(row["payload"])
+    result = snapshot["result"]
+    lineage = result.get("lineage", {})
+    if legacy_multi_tick_order(lineage):
+        result.update(expectancy_r=None, expectancy_bounds_r=None, total_r=None, win_rate=None,
+                      data_note="Legacy multi-partition ordering is unverified. Rerun with verified provenance.")
+    return {"id":run_id,"created_at":row["created_at"],**snapshot}
+
+
+def legacy_multi_tick_order(lineage: dict) -> bool:
+    return len(lineage.get("tick_partitions", [])) > 1 and lineage.get("tick_ordering") != "PROVENANCE_V1"
 
 
 @app.get('/api/backtest/runs/{run_id}/trades/{trade_index}/quotes')
@@ -447,14 +538,18 @@ def run_quotes(run_id:str,trade_index:int,offset:int=Query(0,ge=0,le=500_000),li
         if row is None or row["sha256"] != partition["sha256"]:
             raise HTTPException(409,"Original quote partition unavailable")
         datasets.append(row)
-    try:
-        quotes = read_tick_partitions(datasets)
-    except (RuntimeError,OSError,ValueError,KeyError) as error:
-        raise HTTPException(409,f"Original quote partitions failed verification: {error}") from error
+    if legacy_multi_tick_order(lineage):
+        raise HTTPException(409, "Legacy multi-partition run used file-local ordering. Rerun with verified provenance.")
     start = (trade["entry_time_ms"],trade["entry_source_order"])
     end = (trade["exit_time_ms"],trade["exit_source_order"])
-    path = sorted((q for q in quotes if start <= (q["time_ms"],q["source_order"]) <= end),
-                  key=lambda quote:(quote["time_ms"],quote["source_order"]))
+    try:
+        path = saved_quote_path(datasets, start, end)
+    except (RuntimeError,OSError,ValueError,KeyError) as error:
+        raise HTTPException(409,f"Original quote partitions failed verification: {error}") from error
+    if not path or (path[0]["time_ms"],path[0]["source_order"]) != start or (
+        path[-1]["time_ms"],path[-1]["source_order"]
+    ) != end:
+        raise HTTPException(409, "Saved trade quote boundaries do not match the pinned sources")
     return {"items":path[offset:offset+limit],"total":len(path),
             "next_offset":offset+limit if offset+limit < len(path) else None}
 

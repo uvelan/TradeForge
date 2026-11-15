@@ -53,16 +53,21 @@ def create_app(storage: Path | None = None, broker: MT5Connection | None = None)
         app.mount("/research", research_app)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1"])
 
+    allowed_origins = {
+        "http://127.0.0.1:5173", "http://localhost:5173",
+        "http://127.0.0.1:4180", "http://localhost:4180",
+        "http://127.0.0.1:8000", "http://localhost:8000",
+    }
+    dev_port = os.environ.get("TRADEFORGE_DEV_PORT", "")
+    if len(dev_port) <= 5 and dev_port.isascii() and dev_port.isdecimal() and 0 < int(dev_port) <= 65535:
+        allowed_origins.update({f"http://127.0.0.1:{int(dev_port)}", f"http://localhost:{int(dev_port)}"})
+
     @app.middleware("http")
     async def check_origin(request: Request, call_next):
         from starlette.responses import JSONResponse
 
         origin = request.headers.get("origin")
-        if origin is not None and origin not in {
-            "http://127.0.0.1:5173", "http://localhost:5173",
-            "http://127.0.0.1:4180", "http://localhost:4180",
-            "http://127.0.0.1:8000", "http://localhost:8000",
-        }:
+        if origin is not None and origin not in allowed_origins:
             return JSONResponse({"detail": "Untrusted origin"}, status_code=403)
         return await call_next(request)
 

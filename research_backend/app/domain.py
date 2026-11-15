@@ -286,21 +286,32 @@ def import_ai(data: ReviewV1 | ReviewInput, original: bytes) -> dict:
         if 'metric_claims' in f:
             raise HTTPException(422,'Unverified numerical metric claims are not permitted')
     serialized=_json(data.model_dump())
-    uid = _id('REVIEW')
+    digest = hashlib.sha256(original).hexdigest()
+    submitted_at = utc_now()
+    submission_id = _id("SUBMISSION")
+    verification = "STRUCTURE_VALID_CONTENT_UNVERIFIED"
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
         existing = db.execute(
-            "SELECT id,assessment FROM ai_reviews WHERE package_id=? AND response=?",
+            "SELECT id FROM ai_reviews WHERE package_id=? AND response=? ORDER BY created_at,id LIMIT 1",
             (data.package_id, serialized),
         ).fetchone()
         if existing:
-            return {"id": existing["id"], "assessment": existing["assessment"], "verification": "DUPLICATE_IGNORED"}
-        db.execute('INSERT INTO ai_reviews VALUES(?,?,?,?,?,?)',
-          (uid,data.package_id,data.assessment,serialized,'STRUCTURE_VALID_CONTENT_UNVERIFIED',utc_now()))
-        db.execute("INSERT INTO ai_review_originals VALUES(?,?,?)",
-                   (uid, original, hashlib.sha256(original).hexdigest()))
-    return {'id':uid,'assessment':data.assessment,'verification':'STRUCTURE_VALID_CONTENT_UNVERIFIED',
-      'warning':'Free-text findings are not fact-checked by a model or by this importer.'}
+            uid = existing["id"]
+            exact = db.execute("SELECT 1 FROM ai_review_submissions WHERE review_id=? AND sha256=? AND body=? LIMIT 1",
+                               (uid, digest, original)).fetchone()
+            classification = "EXACT_DUPLICATE" if exact else "EQUIVALENT_JSON"
+            verification = "DUPLICATE_IGNORED"
+        else:
+            uid = _id("REVIEW")
+            classification = "NEW_REVIEW"
+            db.execute("INSERT INTO ai_reviews VALUES(?,?,?,?,?,?)",
+                       (uid, data.package_id, data.assessment, serialized, verification, submitted_at))
+        db.execute("INSERT INTO ai_review_submissions VALUES(?,?,?,?,?,?,?)",
+                   (submission_id, uid, original, digest, submitted_at, "ACCEPTED", classification))
+    return {"id": uid, "assessment": data.assessment, "verification": verification,
+            "submission_id": submission_id, "submission_sha256": digest, "classification": classification,
+            "warning": "Free-text findings require manual verification."}
 
 
 def _render_journal(entries:list[dict])->str:

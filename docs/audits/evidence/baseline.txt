@@ -1,0 +1,14 @@
+Baseline checks captured before code edits
+git fetch origin; git rev-parse HEAD origin/main
+0dcc2156becf58e6f4f571435bf635dc8c7a58f2
+0dcc2156becf58e6f4f571435bf635dc8c7a58f2
+
+.\.venv\Scripts\python.exe -m pytest -q research_backend/tests tests
+77 passed, 1 warning in 7.70s
+
+npm --prefix frontend run build
+✓ built in 418ms
+
+From frontend, .\node_modules\.bin\vitest.cmd run
+Test Files  2 passed (2)
+Tests  4 passed (4)

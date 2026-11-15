@@ -90,6 +90,17 @@ CREATE TABLE IF NOT EXISTS ai_review_originals (
   body BLOB NOT NULL,
   sha256 TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ai_review_submissions (
+  id TEXT PRIMARY KEY,
+  review_id TEXT NOT NULL REFERENCES ai_reviews(id),
+  body BLOB NOT NULL,
+  sha256 TEXT NOT NULL,
+  submitted_at TEXT NOT NULL,
+  validation TEXT NOT NULL CHECK(validation='ACCEPTED'),
+  classification TEXT NOT NULL CHECK(classification IN ('NEW_REVIEW','EXACT_DUPLICATE','EQUIVALENT_JSON','LEGACY_ORIGINAL'))
+);
+CREATE INDEX IF NOT EXISTS ai_review_submission_lookup
+  ON ai_review_submissions(review_id,sha256);
 CREATE TABLE IF NOT EXISTS trade_outcomes (
     trade_id TEXT PRIMARY KEY REFERENCES trades(id),
     pnl_usd TEXT NOT NULL,
@@ -191,7 +202,7 @@ CREATE INDEX IF NOT EXISTS idx_fills_symbol ON imported_fills(symbol);
 CREATE INDEX IF NOT EXISTS idx_journal_time ON journal_entries(created_at DESC);
 '''
 
-IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
+IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_submissions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 
 
 def connect():
@@ -217,6 +228,9 @@ def initialize():
         db.execute('PRAGMA journal_mode=WAL')
         db.execute('PRAGMA synchronous=FULL')
         db.executescript(SCHEMA)
+        db.execute("""INSERT OR IGNORE INTO ai_review_submissions
+            SELECT 'LEGACY-' || r.id,r.id,o.body,o.sha256,r.created_at,'ACCEPTED','LEGACY_ORIGINAL'
+            FROM ai_review_originals o JOIN ai_reviews r ON o.review_id=r.id""")
         for table in IMMUTABLE_TABLES:
             for op in ('UPDATE','DELETE'):
                 name = f'protect_{table}_{op.lower()}'

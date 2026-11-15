@@ -68,14 +68,36 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
         temp.unlink(missing_ok=True)
 
 
+def partition_path(dataset: dict) -> Path:
+    path = (MARKET_DIR / dataset["relative_path"]).resolve()
+    if not path.is_relative_to(MARKET_DIR.resolve()):
+        raise ValueError("Invalid stored dataset path")
+    return path
+
+
+def file_signature(file) -> tuple[int, int, int, int, int]:
+    stat = os.fstat(file.fileno())
+    return stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns
+
+
+def check_partition_digest(file, expected: str) -> None:
+    if hashlib.file_digest(file, "sha256").hexdigest() != expected:
+        raise RuntimeError("Dataset checksum mismatch")
+
+
+def verify_partition(dataset: dict) -> None:
+    with partition_path(dataset).open("rb") as file:
+        signature = file_signature(file)
+        check_partition_digest(file, dataset["sha256"])
+        if file_signature(file) != signature:
+            raise RuntimeError("Dataset changed during verification")
+
+
 def read_partition(dataset:dict,max_rows:int=2000)->list[dict]:
     import pyarrow.parquet as pq
-    path=(MARKET_DIR/dataset['relative_path']).resolve()
-    if not path.is_relative_to(MARKET_DIR.resolve()):raise ValueError('Invalid stored dataset path')
-    if not path.exists():raise FileNotFoundError('Dataset missing from disk')
-    with path.open('rb') as file:
-        if hashlib.file_digest(file, 'sha256').hexdigest() != dataset['sha256']:
-            raise RuntimeError('Dataset checksum mismatch')
+    with partition_path(dataset).open("rb") as file:
+        signature = file_signature(file)
+        check_partition_digest(file, dataset["sha256"])
         file.seek(0)
         parquet = pq.ParquetFile(file)
         groups = []
@@ -86,6 +108,8 @@ def read_partition(dataset:dict,max_rows:int=2000)->list[dict]:
             groups.append(index)
             remaining -= parquet.metadata.row_group(index).num_rows
         table = parquet.read_row_groups(list(reversed(groups)))
+        if file_signature(file) != signature:
+            raise RuntimeError("Dataset changed during read")
         return table.slice(max(0, table.num_rows - max_rows)).to_pylist()
 
 
@@ -111,14 +135,18 @@ def decode_bi5(payload:bytes, symbol:str,day:datetime,hour:int|None=None)->list[
     base=day.replace(hour=hour or 0,minute=0,second=0,microsecond=0,tzinfo=timezone.utc)
     records=[]
     max_ms=3600_000 if hour is not None else 86_400_000
-    for index,(ms,ask,bid,ask_vol,bid_vol) in enumerate(struct.iter_unpack('>IIIff',raw)):
+    source_checksum = hashlib.sha256(payload).hexdigest()
+    for index, offset in enumerate(range(0, len(raw), 20)):
+        ms, ask, bid, ask_vol, bid_vol = struct.unpack_from(">IIIff", raw, offset)
         if ms>=max_ms:raise ValueError('Record outside declared day/hour')
         if not (0<bid<=ask):raise ValueError('Invalid market bid/ask')
         if not all(math.isfinite(volume) and volume >= 0 for volume in (ask_vol, bid_vol)):
             raise ValueError('Invalid market volume')
         records.append({'time':int(base.timestamp())+ms//1000,'time_ms':int(base.timestamp())*1000+ms,
             'bid_units':int(bid),'ask_units':int(ask), 'scale':multiplier,'source_order':index,
-            'ask_volume':float(ask_vol),'bid_volume':float(bid_vol)})
+            'ask_volume':float(ask_vol),'bid_volume':float(bid_vol),
+            'source_sha256':source_checksum, 'source_window_start_ms':int(base.timestamp())*1000,
+            'source_window_end_ms':int(base.timestamp())*1000+max_ms})
     return records
 
 

@@ -647,6 +647,38 @@ function Planner({refresh,incoming,onConsume,onReview,initialLocation,onLesson}:
  </>
 }
 
+type ReviewSubmission = {
+  id:string; sha256:string; submitted_at:string; validation:string; classification:string;
+};
+
+function ReviewSubmissions({reviewId}:{reviewId:string}){
+  const [items,setItems]=useState<ReviewSubmission[]>([]);
+  const [cursor,setCursor]=useState<number|null>(0);
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState("");
+  const formatDate=useTimestampFormat();
+  const path=`/ai/reviews/${encodeURIComponent(reviewId)}/submissions`;
+  async function load(){
+    setBusy(true);setError("");
+    try{
+      const page=await api.get<{items:ReviewSubmission[];next_cursor:number|null}>(`${path}?after=${cursor}`);
+      setItems(previous=>[...previous,...page.items]);setCursor(page.next_cursor);
+    }catch(error){setError((error as Error).message)}
+    finally{setBusy(false)}
+  }
+  return <div>
+    {items.map(item=><div className="small" key={item.id}>
+      <a className="text-button" href={`/research/api${path}/${encodeURIComponent(item.id)}/original`}>Original JSON</a>
+      <span> · {item.classification.replaceAll("_"," ").toLowerCase()} · {formatDate(item.submitted_at)}</span>
+      <div className="evidence-id">{item.sha256}</div>
+    </div>)}
+    {cursor!==null&&<button className="text-button" disabled={busy} onClick={()=>void load()}>
+      {items.length?"Load more submissions":"View submission history"}
+    </button>}
+    {error&&<Notice tone="red">{error}</Notice>}
+  </div>;
+}
+
 function AIPage({refresh,initialTrade}:{refresh:()=>void;initialTrade:string}){
   const formatDate=useTimestampFormat();
  const [trades,setTrades]=useState<Trade[]>([]);const [packages,setPackages]=useState<Package[]>([]);const [reviews,setReviews]=useState<Review[]>([]);const [chosen,setChosen]=useState(initialTrade);const [input,setInput]=useState('');const [busy,setBusy]=useState(false);const [result,setResult]=useState('');const [error,setError]=useState('');
@@ -660,7 +692,7 @@ function AIPage({refresh,initialTrade}:{refresh:()=>void;initialTrade:string}){
   <div className="two-column"><Card><SectionTitle eyebrow="STEP 01" title="Generate review package"/><p className="muted">Choose a plan. The export is frozen at its current version and cutoff.</p><label className="field"><span>Trade decision</span><div className="select-wrap"><select value={chosen} onChange={e=>setChosen(e.target.value)}><option value="">Select trade plan</option>{trades.map(t=><option key={t.id} value={t.id}>{t.id} · {t.symbol} {t.direction} · v{t.version}</option>)}</select></div></label><div className="export-checks"><div><CheckCircle2 size={17}/> Immutable plan snapshot</div><div><CheckCircle2 size={17}/> Local risk calculation</div><div><CheckCircle2 size={17}/> Cutoff-filtered event timeline</div><div><CheckCircle2 size={17}/> Versioned response template</div></div><button className="btn btn-primary full" disabled={!chosen||busy} onClick={()=>void exportPackage()}><Download size={17}/> Generate & Download ZIP</button><Notice tone="blue">Current exports include local plans and risk evidence. Historical analogs are not invented or automatically attached.</Notice></Card>
   <Card><SectionTitle eyebrow="STEP 02 + 03" title="Import frontier AI review"/><p className="muted">Upload the package manually to a chat AI. Paste its structured JSON response here.</p><label className="field"><span>AI response (JSON)</span><textarea className="json-area" value={input} onChange={e=>setInput(e.target.value)} placeholder={'{\n  "package_id": "PKG-...",\n  "assessment": "INSUFFICIENT_DATA",\n  "findings": []\n}'} rows={10}/></label><div className="split-buttons"><button className="btn btn-outline" disabled={!packages.length} onClick={example}>Load example template</button><button className="btn btn-primary" disabled={!input.trim()||busy} onClick={()=>void importResponse()}><Upload size={16}/> Validate & Import</button></div><small className="muted">The importer checks IDs, schema and evidence references, but cannot independently verify free-text claims.</small></Card></div>
   <Card><SectionTitle eyebrow="HISTORY" title="Review packages"/><div className="table-scroll"><table><thead><tr><th>PACKAGE</th><th>TRADE DECISION</th><th>PLAN</th><th>CREATED</th><th>ACTION</th></tr></thead><tbody>{packages.map(p=><tr key={p.id}><td className="mono">{p.id}</td><td className="mono">{p.trade_id}</td><td>v{p.plan_version}</td><td>{formatDate(p.created_at)}</td><td><a className="text-button" href={`/research/api/ai/packages/${p.id}/download`} target="_blank" rel="noreferrer"><Download size={14}/> Download</a></td></tr>)}</tbody></table>{!packages.length&&<Empty icon={<FolderOpen/>} title="No exported packages" body="Export your first trade plan to begin a versioned AI review thread."/>}</div></Card>
-  {reviews.length>0&&<Card><SectionTitle eyebrow="REVIEW RESULTS" title="Imported assessments"/><div className="review-list">{reviews.map(r=><div className="review-item" key={r.id}><div><strong>{r.assessment}</strong><small>{r.id} · {formatDate(r.created_at)}</small></div><Badge tone="amber">CONTENT UNVERIFIED</Badge>{r.has_original&&<a className="text-button" href={`/research/api/ai/reviews/${encodeURIComponent(r.id)}/original`}><Download size={14}/> Original JSON</a>}</div>)}</div></Card>}
+  {reviews.length>0&&<Card><SectionTitle eyebrow="REVIEW RESULTS" title="Imported assessments"/><div className="review-list">{reviews.map(r=><div className="review-item" key={r.id}><div><strong>{r.assessment}</strong><small>{r.id} · {formatDate(r.created_at)}</small></div><Badge tone="amber">CONTENT UNVERIFIED</Badge>{Boolean(r.has_original)&&<ReviewSubmissions key={r.submission_count} reviewId={r.id}/>}</div>)}</div></Card>}
  </>
 }
 

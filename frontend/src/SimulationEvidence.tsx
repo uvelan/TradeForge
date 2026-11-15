@@ -5,7 +5,7 @@ import {frameMinutes} from './chartViews';
 import {ReplayControls,visibleAt} from './ReplayControls';
 import {CandleChart} from './components';
 import {api} from './api';
-type QuotePage={items:{time_ms:number;source_order:number;bid_units:number;ask_units:number;scale:number}[];total:number;next_offset:number|null};
+type QuotePage={items:{time_ms:number;source_order:number;original_source_order?:number;source_partition_id?:string;source_sha256?:string;bid_units:number;ask_units:number;scale:number}[];total:number;next_offset:number|null};
 
 export function SimulationEvidence({result,run}: {result:BacktestResult;run?:BacktestRun}) {
   const format=useTimestampFormat();
@@ -99,9 +99,11 @@ export function SimulationEvidence({result,run}: {result:BacktestResult;run?:Bac
       {offset!==undefined&&!quotes&&!quoteError&&<p role="status">Loading quote path</p>}
       {quoteError&&<p role="alert">{quoteError}</p>}
       {quotes&&<><p>{quotes.total} quotes in execution order</p><div className="table-scroll quote-path">
-        <table><thead><tr><th>UTC</th><th>Source order</th><th>Bid</th><th>Ask</th></tr></thead>
+        <table><thead><tr><th>UTC</th><th>Order</th><th>Source record</th><th>Bid</th><th>Ask</th></tr></thead>
         <tbody>{quotes.items.map(quote=><tr key={`${quote.time_ms}:${quote.source_order}`}>
           <td>{new Date(quote.time_ms).toISOString()}</td><td>{quote.source_order}</td>
+          <td title={quote.source_sha256??quote.source_partition_id}>{quote.original_source_order??quote.source_order}
+            {quote.source_partition_id&&` · ${quote.source_partition_id.slice(0,8)}`}</td>
           <td>{quote.bid_units/quote.scale}</td><td>{quote.ask_units/quote.scale}</td>
         </tr>)}</tbody></table>
         </div><div className="research-controls">

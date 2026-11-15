@@ -71,11 +71,12 @@ def test_archive_tick_run_merges_and_pins_verified_partitions(client):
     for tick in ticks:
         tick["time"] = tick["time_ms"] // 1000
     write_partition("DUKASCOPY", "test", "EURUSD", "candles", "M1", "BID", candles)
-    inputs_by_partition = [ticks[:2], ticks[1:]]
-    shards = [
-        write_partition("DUKASCOPY", "test", "EURUSD", "ticks", None, "BID_ASK_UNITS", quotes)
-        for quotes in inputs_by_partition
-    ]
+    inputs_by_partition = [(ticks[:2], 0, 181_000), (ticks[1:], 180_000, 1_000_000)]
+    shards = []
+    for index, (quotes, start, end) in enumerate(inputs_by_partition):
+        records = [{**quote, "source_sha256": str(index) * 64, "source_window_start_ms": start,
+                    "source_window_end_ms": end, "ask_volume": 1, "bid_volume": 1} for quote in quotes]
+        shards.append(write_partition("DUKASCOPY", "test", "EURUSD", "ticks", None, "BID_ASK_UNITS", records))
     write_partition("DUKASCOPY", "different-feed", "EURUSD", "ticks", None, "BID_ASK_UNITS", ticks)
     path = "/api/backtest/runs"
     payload = {"source": "DUKASCOPY_SAVED", "timeframe": "M1", "tick_archive_range": True}
@@ -87,14 +88,29 @@ def test_archive_tick_run_merges_and_pins_verified_partitions(client):
     ]
     assert snapshot["result"]["trades"][0]["exit_reason"] == "TARGET"
     url = f"{path}/{snapshot['id']}/trades/0/quotes"
-    assert [row["source_order"] for row in client.get(url).json()["items"]] == [1, 2]
+    page = client.get(url, params={"limit": 1}).json()
+    second = client.get(url, params={"limit": 1, "offset": page["next_offset"]}).json()
+    assert [(row["time_ms"], row["source_order"]) for row in page["items"] + second["items"]] == [
+        (180_000, 0), (181_000, 0)
+    ]
+    assert page["total"] == 2 and second["next_offset"] is None
+    assert client.get(url, params={"limit": 1}).json() == page
 
-    conflicting = {**ticks[1], "ask_units": 103}
+    conflicting = {**ticks[1], "ask_units": 103, "source_sha256": "f" * 64,
+                   "source_window_start_ms": 180_000, "source_window_end_ms": 181_000,
+                   "ask_volume": 1, "bid_volume": 1}
     write_partition("DUKASCOPY", "test", "EURUSD", "ticks", None, "BID_ASK_UNITS", [conflicting])
     rejected = client.post(path, json=payload)
     assert rejected.status_code == 422
     assert "Conflicting tick quotes" in rejected.json()["detail"]
-    assert [row["source_order"] for row in client.get(url).json()["items"]] == [1, 2]
+    assert client.get(url, params={"limit": 1}).json() == page
+
+    from research_backend.app.db import one
+    from research_backend.app.storage import partition_path
+    partition = partition_path(one("SELECT * FROM datasets WHERE id=?", (shards[0]["id"],)))
+    with partition.open("ab") as stored:
+        stored.write(b"corruption")
+    assert client.get(url).status_code == 409
 
 
 def test_plan_revisions_check_previous_version_and_no_trade_finalizes(client,plan):

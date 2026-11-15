@@ -1,0 +1,8 @@
+Windows-11-10.0.26200-SP0 / Python 3.13.14
+120000 quotes, 3 Parquet partitions, 717758 bytes on disk; 500 path quotes, 250/page
+Five timed runs per case, warm OS file cache, Python allocation peak measured separately
+Baseline full decode: median=171.606 ms; Python peak=65.037 MiB
+New cold full decode: median=284.820 ms; Python peak=72.423 MiB
+New warm cache + full source SHA-256: median=4.336 ms; Python peak=0.265 MiB
+Baseline legacy overlap produced 2 executable events
+Hardened legacy overlap: Overlapping tick archives lack source provenance; reimport the original BI5 files
