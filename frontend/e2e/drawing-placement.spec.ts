@@ -169,3 +169,331 @@ test("blank chart space and a secondary plot cannot save into the primary scope"
   await page.mouse.click(box.x+box.width*.48,box.y+box.height*.40);
   await expect(page.getByText('Drawing toolbox ('+(prior+1)+')',{exact:true})).toBeVisible();
 });
+
+type AnchorRecord={time:number;price:string};
+type DrawingRecord={id:string;kind:string;anchors:AnchorRecord[]};
+type Scene={revision:number;items:DrawingRecord[]};
+const endpoint=(frame="M5")=>"/research/api/drawings?scope="+encodeURIComponent("DEMO:EURUSD:"+frame);
+const savedScene=async(page:Page,frame?:string):Promise<Scene>=>(await page.request.get(endpoint(frame))).json();
+const postDrawing=(page:Page)=>page.waitForResponse(res=>res.url().includes("/drawings?")&&res.request().method()==="POST");
+
+async function primaryPlot(page:Page){
+  const row=page.locator(".primary-chart .chart-input tr").first();
+  await expect(row.locator("canvas").first()).toBeVisible();
+  const widths=await row.locator("td").evaluateAll(cells=>cells.map(cell=>cell.getBoundingClientRect().width));
+  const plot=row.locator("td").nth(widths.indexOf(Math.max(...widths))).locator("canvas").first();
+  return {plot,leftWidth:widths[0]};
+}
+
+async function plotPoint(page:Page,x:number,y:number){
+  const {plot}=await primaryPlot(page);
+  if(!await plot.evaluate(element=>document.fullscreenElement?.contains(element)??false))
+    await plot.evaluate(element=>element.scrollIntoView({block:"center",inline:"center"}));
+  const box=await plot.boundingBox();
+  if(!box)throw Error("Primary drawing plot unavailable");
+  return {x:box.x+box.width*x,y:box.y+box.height*y};
+}
+
+async function clickPlot(page:Page,x:number,y:number){
+  const p=await plotPoint(page,x,y);
+  await page.mouse.click(p.x,p.y);
+}
+
+async function savedChange(response:ReturnType<typeof postDrawing>):Promise<Scene>{
+  const result=await response;
+  expect(result.status(),await result.text()).toBe(200);
+  return result.json();
+}
+
+const placementCases=[
+  {kind:"trend",points:[[.41,.36],[.62,.64]]},
+  {kind:"rectangle",points:[[.41,.35],[.63,.64]]},
+  {kind:"risk-reward",points:[[.41,.49],[.63,.71],[.63,.26]]},
+];
+
+for(const {kind,points} of placementCases){
+  test("persists in-place edits of every "+kind+" anchor",async ({page},info)=>{
+    await page.setViewportSize({width:1366,height:768});
+    await page.goto("/");
+    await openTool(page,kind);
+    const prior=await savedScene(page);
+    for(const [x,y] of points.slice(0,-1))await clickPlot(page,x,y);
+    const create=postDrawing(page);
+    await clickPlot(page,...points[points.length-1] as [number,number]);
+    const placed=await savedChange(create);
+    expect(placed.items).toHaveLength(prior.items.length+1);
+    const item=placed.items.at(-1)!;
+    expect(item.kind).toBe(kind);
+    expect(item.anchors).toHaveLength(points.length);
+    await expect(page.getByLabel("Select drawing")).toHaveValue(item.id);
+    await page.getByLabel("Select drawing").selectOption("");
+    // The corner/endpoint is on the primitive stroke. Click the visible shape, then use the existing edit control.
+    await clickPlot(page,...points[0] as [number,number]);
+    await expect(page.getByLabel("Select drawing")).toHaveValue(item.id);
+    let previous=placed;
+    for(const [index,[x,y]] of points.entries()){
+      await page.getByRole("button",{name:"Set anchor "+(index+1),exact:true}).click();
+      const response=postDrawing(page);
+      await clickPlot(page,x+.05,y+.035);
+      const revision=await savedChange(response);
+      expect(revision.revision).toBe(previous.revision+1);
+      expect(revision.items.map(row=>row.id)).toEqual(previous.items.map(row=>row.id));
+      const old=previous.items.find(row=>row.id===item.id)!;
+      const current=revision.items.find(row=>row.id===item.id)!;
+      expect(current.anchors[index].time).toBeGreaterThan(old.anchors[index].time);
+      expect(Number(current.anchors[index].price)).toBeLessThan(Number(old.anchors[index].price));
+      expect(current.anchors.filter((_,i)=>i!==index)).toEqual(old.anchors.filter((_,i)=>i!==index));
+      previous=revision;
+      await expect(page.getByRole("button",{name:"Set anchor "+(index+1),exact:true})).toBeEnabled();
+    }
+    await page.screenshot({path:info.outputPath(kind+"-edited.png")});
+    const reloaded=page.waitForResponse(res=>res.url().includes(endpoint())&&res.request().method()==="GET");
+    await page.reload();
+    expect(await (await reloaded).json()).toEqual(previous);
+    await page.getByText(/^Drawing toolbox/).click();
+    await expect(page.getByLabel("Select drawing").locator('option[value="'+item.id+'"]')).toHaveCount(1);
+  });
+}
+
+test("previews and saves both position directions and rejects an invalid edit",async ({page},info)=>{
+  await page.setViewportSize({width:1366,height:768});
+  await page.goto("/");
+  await openTool(page,"risk-reward");
+  const createdIds:string[]=[];
+  let expectedScene:Scene|undefined;
+  for(const direction of ["long","short"]){
+    if(direction==="short")await page.getByRole("button",{name:"Draw",exact:true}).click();
+    const prior=await savedScene(page);
+    const long=direction==="long", stopY=long ? .73 : .25,targetY=long ? .25 : .73;
+    await clickPlot(page,.43,.49);
+    await clickPlot(page,.64,stopY);
+    // Same side as stop: keep the existing scene and continue targeting the third point.
+    await clickPlot(page,.70,stopY);
+    await expect(page.getByText(/Select the target again/)).toBeVisible();
+    await expect(page.getByText(/Risk\/reward.*select 3/)).toBeVisible();
+    expect(await savedScene(page)).toEqual(prior);
+    const target=await plotPoint(page,.67,targetY);
+    await page.mouse.move(target.x,target.y);
+    const {plot}=await primaryPlot(page);
+    await expect.poll(()=>coloredPixels(plot.locator("xpath=following-sibling::canvas[1]"),[255,220,134])).toBeGreaterThan(0);
+    await page.screenshot({path:info.outputPath(direction+"-preview.png")});
+    const response=postDrawing(page);
+    await page.mouse.click(target.x,target.y);
+    const saved=await savedChange(response);
+    expect(saved.items).toHaveLength(prior.items.length+1);
+    const item=saved.items.at(-1)!;
+    createdIds.push(item.id);
+    const [entry,stop,profit]=item.anchors.map(point=>Number(point.price));
+    if(long){expect(stop).toBeLessThan(entry);expect(profit).toBeGreaterThan(entry);}
+    else{expect(stop).toBeGreaterThan(entry);expect(profit).toBeLessThan(entry);}
+    expect(await savedScene(page)).toEqual(saved);
+    if(!long){
+      const writes:string[]=[];
+      page.on("request",request=>{
+        if(request.method()==="POST"&&request.url().includes("/drawings?"))writes.push(request.url());
+      });
+      await page.getByRole("button",{name:"Set anchor 3",exact:true}).click();
+      await clickPlot(page,.70,stopY);
+      await expect(page.getByText(/Stop and target must bracket entry/)).toBeVisible();
+      await expect(page.getByText(/Risk\/reward.*select 3/)).toBeVisible();
+      expect(await savedScene(page)).toEqual(saved);
+      expect(writes).toHaveLength(0);
+      const correction=postDrawing(page);
+      await clickPlot(page,.70,.81);
+      expectedScene=await savedChange(correction);
+      expect(writes).toHaveLength(1);
+      expect(expectedScene.revision).toBe(saved.revision+1);
+      expect(expectedScene.items.map(row=>row.id)).toEqual(saved.items.map(row=>row.id));
+      const corrected=expectedScene.items.at(-1)!;
+      expect(corrected.anchors.slice(0,2)).toEqual(item.anchors.slice(0,2));
+      expect(Number(corrected.anchors[2].price)).toBeLessThan(profit);
+    }
+  }
+  const reloaded=page.waitForResponse(res=>res.url().includes(endpoint())&&res.request().method()==="GET");
+  await page.reload();
+  expect(await (await reloaded).json()).toEqual(expectedScene);
+  await page.getByText(/^Drawing toolbox/).click();
+  for(const id of createdIds)
+    await expect(page.getByLabel("Select drawing").locator('option[value="'+id+'"]')).toHaveCount(1);
+});
+
+test("releases pointer ownership on candle refresh and scope remount",async ({page},info)=>{
+  await page.addInitScript(()=>{
+    const ids=new WeakMap<Element,number>();
+    const listeners=new WeakMap<EventTarget,Set<EventListenerOrEventListenerObject>>();
+    const capture=Element.prototype.setPointerCapture;
+    Element.prototype.setPointerCapture=function(id:number){
+      ids.set(this,id);return capture.call(this,id);
+    };
+    const add=EventTarget.prototype.addEventListener, remove=EventTarget.prototype.removeEventListener;
+    EventTarget.prototype.addEventListener=function(type,listener,options){
+      if(type==="pointercancel"&&listener&&this instanceof Element&&this.classList.contains("chart-input")){
+        const entries=listeners.get(this)??new Set();
+        entries.add(listener);listeners.set(this,entries);
+      }
+      return add.call(this,type,listener,options);
+    };
+    EventTarget.prototype.removeEventListener=function(type,listener,options){
+      if(type==="pointercancel"&&listener)listeners.get(this)?.delete(listener);
+      return remove.call(this,type,listener,options);
+    };
+    Object.assign(window,{inspectDrawingInput:(node:Element)=>{
+      const pointer=ids.get(node);
+      return {connected:node.isConnected,captured:pointer!==undefined&&node.hasPointerCapture(pointer),
+        cancelListeners:listeners.get(node)?.size??0};
+    }});
+  });
+  await page.setViewportSize({width:1366,height:768});
+  await page.goto("/");
+  await openTool(page,"trend");
+  const prior=await savedScene(page), other=await savedScene(page,"M15");
+  const presses:string[]=[];
+  page.on("request",request=>{
+    if(request.method()==="POST"&&request.url().includes("/drawings?"))
+      presses.push(new URL(request.url()).searchParams.get("scope")??"");
+  });
+  const inspect=(input:NonNullable<Awaited<ReturnType<Locator["elementHandle"]>>>)=>input.evaluate(node=>
+    (window as unknown as {inspectDrawingInput:(el:Element)=>{connected:boolean;captured:boolean;cancelListeners:number}}).inspectDrawingInput(node));
+  const input=page.locator(".primary-chart .chart-input");
+  async function beginDrag(){
+    const host=await input.elementHandle();
+    if(!host)throw Error("Chart host missing");
+    const a=await plotPoint(page,.44,.42);
+    await page.mouse.move(a.x,a.y);
+    await page.mouse.down();
+    expect(await inspect(host)).toEqual({connected:true,captured:true,cancelListeners:1});
+    return host;
+  }
+  const scopeIs=(frame:string)=>(res:import("@playwright/test").Response)=>{
+    const url=new URL(res.url());
+    return url.pathname.endsWith("/market/candles")&&url.searchParams.get("source")==="DEMO"&&
+      url.searchParams.get("timeframe")===frame;
+  };
+
+  const stale=await beginDrag();
+  const refreshed=page.waitForResponse(scopeIs("M5"));
+  await page.getByTitle("Refresh candles",{exact:true}).evaluate((button:HTMLButtonElement)=>button.click());
+  await refreshed;
+  await expect.poll(()=>inspect(stale)).toEqual({connected:false,captured:false,cancelListeners:0});
+  const now=await plotPoint(page,.61,.61);
+  await page.mouse.move(now.x,now.y);
+  await page.mouse.up();
+  expect(presses).toEqual([]);
+  expect(await savedScene(page)).toEqual(prior);
+
+  // A new gesture in the same scope saves once after the StrictMode mount/cleanup cycle.
+  const refreshedInput=await beginDrag();
+  const end=await plotPoint(page,.61,.61);
+  const complete=postDrawing(page);
+  await page.mouse.move(end.x,end.y,{steps:8});
+  await page.mouse.up();
+  const saved=await savedChange(complete);
+  expect(saved.revision).toBe(prior.revision+1);
+  expect(saved.items).toHaveLength(prior.items.length+1);
+  expect(await inspect(refreshedInput)).toEqual({connected:true,captured:false,cancelListeners:1});
+
+  await page.getByRole("button",{name:"Draw",exact:true}).click();
+  const oldScope=await beginDrag();
+  const nextCandles=page.waitForResponse(scopeIs("M15"));
+  await page.getByRole("button",{name:"M15",exact:true}).evaluate((button:HTMLButtonElement)=>button.click());
+  await nextCandles;
+  await expect.poll(()=>inspect(oldScope)).toEqual({connected:false,captured:false,cancelListeners:0});
+  const next=await plotPoint(page,.63,.60);
+  await page.mouse.move(next.x,next.y);
+  await page.mouse.up();
+  expect(presses).toEqual(["DEMO:EURUSD:M5"]);
+  expect(await savedScene(page)).toEqual(saved);
+  expect(await savedScene(page,"M15")).toEqual(other);
+
+  await page.getByRole("button",{name:"Draw",exact:true}).click();
+  await clickPlot(page,.40,.36);
+  const nextResponse=postDrawing(page);
+  await clickPlot(page,.62,.64);
+  const nextScene=await savedChange(nextResponse);
+  expect(nextScene.revision).toBe(other.revision+1);
+  expect(presses).toEqual(["DEMO:EURUSD:M5","DEMO:EURUSD:M15"]);
+  await page.screenshot({path:info.outputPath("scope-remount.png")});
+});
+
+test("maps anchors across fullscreen and resized plots with a left comparison scale",async ({page},info)=>{
+  await page.addInitScript(()=>{
+    const proto=CanvasRenderingContext2D.prototype;
+    type XY=[number,number];
+    const points=new WeakMap<CanvasRenderingContext2D,XY[]>();
+    const painted=new WeakMap<HTMLCanvasElement,number[]>();
+    const {beginPath,moveTo,lineTo,stroke}=proto;
+    proto.beginPath=function(){points.set(this,[]);beginPath.call(this);};
+    proto.moveTo=function(x,y){points.get(this)?.push([x,y]);moveTo.call(this,x,y);};
+    proto.lineTo=function(x,y){points.get(this)?.push([x,y]);lineTo.call(this,x,y);};
+    proto.stroke=function(...args:[]|[Path2D]){
+      const path=points.get(this);
+      if(this.strokeStyle==="#55d9b5"&&path?.length===2&&path[0][0]===0&&path[0][1]===path[1][1]){
+        const matrix=this.getTransform();
+        const y=matrix.d*path[0][1]+matrix.f;
+        const rows=painted.get(this.canvas)??[];
+        rows.push(y);painted.set(this.canvas,rows.slice(-32));
+      }
+      if(args.length)stroke.call(this,args[0]);else stroke.call(this);
+    };
+    Object.assign(window,{lastDrawingRows:(canvas:HTMLCanvasElement)=>painted.get(canvas)??[]});
+  });
+  await page.setViewportSize({width:1366,height:768});
+  await page.goto("/");
+  const primaryData=page.waitForResponse(res=>{
+    const url=new URL(res.url());
+    return url.pathname.endsWith("/market/candles")&&url.searchParams.get("source")==="DEMO"&&
+      url.searchParams.get("symbol")==="EURUSD"&&url.searchParams.get("limit")==="600";
+  });
+  await openTool(page,"horizontal");
+  const {candles}=await (await primaryData).json() as {candles:{time:number;open:number;high:number;low:number;close:number}[]};
+  await page.getByLabel("SMT comparison",{exact:true}).selectOption("GBPUSD");
+  await expect(page.getByLabel("Comparison placement")).toHaveValue("Overlay");
+  const surface=page.locator(".primary-chart .chart-surface");
+  const full=surface.getByRole("button",{name:"Fullscreen chart",exact:true});
+  await full.click();
+  await expect(surface.getByRole("button",{name:"Exit fullscreen",exact:true})).toBeVisible();
+  expect(await surface.evaluate(element=>document.fullscreenElement===element)).toBe(true);
+  const sizeBefore=(await primaryPlot(page)).plot;
+  const width=await sizeBefore.evaluate(el=>el.getBoundingClientRect().width);
+
+  for(const state of ["fullscreen","resized"]){
+    if(state==="resized"){
+      await surface.getByRole("button",{name:"Exit fullscreen",exact:true}).click();
+      await expect(full).toBeVisible();
+      expect(await page.evaluate(()=>document.fullscreenElement===null)).toBe(true);
+      await page.setViewportSize({width:1536,height:900});
+      await expect.poll(async()=>Math.round((await (await primaryPlot(page)).plot.boundingBox())!.width)).not.toBe(Math.round(width));
+      await page.getByRole("button",{name:"Draw",exact:true}).click();
+    }
+    expect((await primaryPlot(page)).leftWidth).toBeGreaterThan(0);
+    const expectedRow=state==="fullscreen" ? .63 : .74;
+    const p=await plotPoint(page,.57,expectedRow);
+    // The independently rendered crosshair legend identifies the expected primary candle.
+    await page.mouse.move(p.x-18,p.y);
+    await page.mouse.move(p.x,p.y);
+    const legend=surface.locator(".chart-legend-row").first();
+    await expect(legend).toContainText("EURUSD");
+    const rendered=(await legend.locator("span").allTextContents()).map(value=>Number(value.trim().split(/\s+/).at(-1)));
+    const candle=candles.find(bar=>[bar.open,bar.high,bar.low,bar.close]
+      .every((price,index)=>Number(price.toFixed(5))===rendered[index]));
+    expect(candle,"crosshair should resolve to a primary candle").toBeDefined();
+
+    const prior=await savedScene(page);
+    const response=postDrawing(page);
+    await page.mouse.click(p.x,p.y);
+    const scene=await savedChange(response);
+    expect(scene.items).toHaveLength(prior.items.length+1);
+    const anchor=scene.items.at(-1)!.anchors[0];
+    expect(anchor.time).toBe(candle!.time);
+    expect(Number(anchor.price)).toBeGreaterThan(1.0);
+    expect(Number(anchor.price)).toBeLessThan(1.25);
+    const {plot}=await primaryPlot(page);
+    // Measure a full-width saved primitive on the actual canvas, allowing the effect of price rounding.
+    await expect.poll(()=>plot.evaluate((element:HTMLCanvasElement,relativeY)=>{
+      const rows=(window as unknown as {lastDrawingRows:(canvas:HTMLCanvasElement)=>number[]}).lastDrawingRows(element);
+      // Saving adds toolbox controls above the plot and can shift its screen position.
+      return Math.min(Infinity,...rows.map(row=>Math.abs(row-relativeY*element.height)));
+    },expectedRow)).toBeLessThan(4);
+    await page.screenshot({path:info.outputPath(state+"-placement.png")});
+  }
+});

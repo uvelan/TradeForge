@@ -10,3 +10,5 @@
 | Optimistic conflict | Existing backend revision guard | Browser sees real HTTP 409, reloads, and retains competing scene. |
 | StrictMode, linked charts, replay, saved snapshot and SMT workflows | Six existing Chromium tests pass | Six existing tests pass; application already renders under StrictMode. |
 | Python and frontend | 77 pytest, 4 Vitest, build passed | Same counts and production build passed. No schema or preference changes. |
+
+PR #1 follow-up verifies every golden tool anchor after reload, long and short risk/reward, refresh and chart-scope cleanup, and fullscreen/resize coordinate projection. [Review regression evidence](TF-D01-REVIEW-FOLLOWUP.md)

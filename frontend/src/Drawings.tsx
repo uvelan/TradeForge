@@ -18,6 +18,11 @@ type Version={schema_version:1;revision:number;items:Drawing[]};
 type Edit={kind:DrawingTool;anchors:Anchor[];item?:Drawing;mode?:'move'|number};
 const now=()=>Math.floor(Date.now()/1000);
 
+function bracketsEntry(anchors:Anchor[]){
+  const [entry,stop,target]=anchors.map(point=>Number(point.price));
+  return (stop<entry&&entry<target)||(target<entry&&entry<stop);
+}
+
 export function useDrawingBook(scope:string) {
   const endpoint='/drawings?'+new URLSearchParams({scope});
   const [loaded,setLoaded]=useState<{scope:string;version:Version}>();
@@ -80,6 +85,10 @@ export function useDrawingBook(scope:string) {
         return point;
       });
       if(anchors.some(point=>point.time<0||Number(point.price)<0)){setError('Move would leave the supported time or price range');return;}
+      if(item.kind==='risk-reward'&&!bracketsEntry(anchors)){
+        setError('Stop and target must bracket entry. Select the anchor again.');
+        return;
+      }
       setEdit(undefined);void save(current.items.map(drawing=>drawing.id===item.id?{...item,anchors,updated_at:now()}:drawing));
       return;
     }
@@ -88,12 +97,9 @@ export function useDrawingBook(scope:string) {
     if(anchors.length>tools[edit.kind][1]||
       (additions.length>1&&additions[0].time===next.time&&additions[0].price===next.price))return;
     if(anchors.length<tools[edit.kind][1]){setEdit({...edit,anchors});return;}
-    if(edit.kind==='risk-reward'){
-      const [entry,stop,target]=anchors.map(point=>Number(point.price));
-      if(!((stop<entry&&entry<target)||(target<entry&&entry<stop))){
-        setError('Target and stop must be on opposite sides of entry. Select the target again.');
-        return;
-      }
+    if(edit.kind==='risk-reward'&&!bracketsEntry(anchors)){
+      setError('Target and stop must be on opposite sides of entry. Select the target again.');
+      return;
     }
     const item:Drawing={id:crypto.randomUUID(),kind:edit.kind,anchors,label:edit.kind==='text'?'Annotation':'',
       visible:true,locked:false,color:'#55d9b5',created_at:now(),updated_at:now()};

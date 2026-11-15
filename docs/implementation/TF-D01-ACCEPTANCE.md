@@ -36,3 +36,5 @@ Baseline: 77 Python, 4 Vitest, production build and six pre-existing Chromium te
 Golden tools are horizontal, trendline, rectangle and risk/reward. Selecting a stroke and placing an anchor through the existing toolbox works. Direct dragging/resizing of a saved shape and drawing on secondary panes are outside this task. Touch ran in Chromium emulation; native mobile hardware and fullscreen interactions were not separately exercised. Old chart and drawing schemas, IDs, settings, API, and live-order posture are preserved.
 
 Roll back by reverting the TF-D01 commit on its branch or closing the unmerged PR. If deployed later, redeploy the parent frontend and leave the SQLite, Parquet and browser preference stores in place. Drawings saved by both versions use the same schema. Use the existing isolated restore copy only for recovery after comparing its cutoff and obtaining authorization to replace data.
+
+The PR #1 review follow-up adds persisted anchor, long/short validation, refresh and scope remount, and fullscreen/resize checks. See [review follow-up evidence](TF-D01-REVIEW-FOLLOWUP.md).
