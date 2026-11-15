@@ -2,10 +2,12 @@
 
 ## November 15 audit follow-up
 
-- SMT journal writes now require checksum-verified saved candle partitions and matching source metadata. Unverified live or client-supplied OHLC produces previews. Older records remain accessible as unverified history. Confirmed live alerting needs a server-owned capture path.
+- SMT journal writes now require server-captured MT5 candles or checksum-verified saved candle partitions with matching source metadata. New live confirmations can alert while the chart is monitoring. Raw client-supplied OHLC produces previews. Older records remain accessible as unverified history.
 - The Strategy Lab reports ambiguity bounds over all eligible signals. Journal analytics use all trade outcomes. The published AI review v1 schema is generated from the runtime model, and legacy review payloads remain supported.
-- Saved chart date ranges merge compatible partitions and report gaps, duplicates and truncation. Backtests require complete explicit ranges. Exact duplicate imports reuse the existing partition. A completed BI5 period retains its final observed bar. A user-provided file can still have missing ticks.
-- SMT pivot dots and confirmation-close arrows are separate. Cross-partition authoritative SMT, canonical catalog migration, a full trade-plan revision UI, tick-replay execution, archive reconciliation and live provider acceptance remain open.
+- Saved charts load the recent archive range by default. Explicit date ranges merge compatible partitions and report gaps, duplicates and truncation. Both support verified multi-partition SMT. Exact duplicate imports reuse the existing partition. A completed BI5 period retains its final observed bar. A user-provided file can still have missing ticks.
+- Strategy Lab can replay a single saved bid/ask tick partition against matching saved bid candles. Costs are per-side adverse slippage and commission in basis points. Missing quote windows suppress headline expectancy and win rate. Tick execution currently applies to the sample breakout strategy. Real broker fills and size are outside this model.
+- The AI importer checks structured decimal metric claims against the immutable export. Free-text findings still require manual review.
+- SMT pivot dots and confirmation-close arrows are separate. Canonical catalog migration, continuous monitoring with the browser closed, multi-partition tick replay, a full trade-plan revision UI, archive reconciliation, and execution-grade validation remain open.
 - Windows GitHub Actions workflow added for backend, frontend and Chromium checks. Hosted execution requires pushing this revision.
 
 The Local Research MVP ZIP supplies the default dashboard and its research workflows. The original catalog remains accessible from Data Library and keeps its existing SQLite and Parquet paths. Research records and artifacts use a separate database and directory. Both API surfaces run in the same loopback process and share an MT5 access lock.

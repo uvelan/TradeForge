@@ -2,6 +2,7 @@
 from __future__ import annotations
 from contextlib import asynccontextmanager
 from datetime import datetime,timedelta,timezone
+from decimal import Decimal
 from pathlib import Path
 from hashlib import sha256
 import asyncio
@@ -19,10 +20,11 @@ from .storage import write_partition, decode_bi5, aggregate_ticks,read_partition
 from .domain import create_trade,get_trade,revise,close_trade,list_trades,analytics,export_ai,import_ai,journal_add,journal_list,journal_materialize
 from .risk import evaluate
 from .backtest import breakout_backtest
+from .tick_replay import replay_breakout
 from .schemas import TradePlan,Outcome,ReviewInput,ReviewV1,JournalInput,RiskInput
 from . import domain
 from .indicator_routes import router as indicator_router
-from .saved_history import saved_range
+from .saved_history import recent_archive_range, saved_range
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -71,20 +73,16 @@ def market_candles(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',limi
                 'latest_unconfirmed':include_latest and bool(candles), **provenance}
     if source in ('MT5_SAVED','DUKASCOPY_SAVED'):
         provider=source.split('_')[0]
-        if start is not None and end is not None:
-            try:
-                result = saved_range(provider, symbol, timeframe, start, end, FRAME_MIN[timeframe]*60, limit)
-            except FileNotFoundError as error:
-                raise HTTPException(404, str(error)) from error
-            except (ValueError, RuntimeError, OSError) as error:
-                raise HTTPException(409, str(error)) from error
-            return {"source":source, "synthetic":False, **result}
-        dataset=one('''SELECT * FROM datasets WHERE provider=? AND symbol=? AND kind='candles' AND timeframe=? ORDER BY created_at DESC LIMIT 1''',(provider,symbol,timeframe))
-        if not dataset:raise HTTPException(404,'No saved candle dataset for this symbol/timeframe')
-        try: candles=read_partition(dataset,limit)
-        except (RuntimeError,FileNotFoundError,ImportError) as ex:raise HTTPException(503,str(ex)) from ex
-        return {'source':source,'synthetic':False,'price_basis':dataset['price_basis'],'candles':candles,
-                'dataset_id':dataset['id'],'feed_id':dataset['feed_id']}
+        try:
+            step = FRAME_MIN[timeframe] * 60
+            if start is None or end is None:
+                start, end = recent_archive_range(provider, symbol, timeframe, step)
+            result = saved_range(provider, symbol, timeframe, start, end, step, limit)
+        except FileNotFoundError as error:
+            raise HTTPException(404, str(error)) from error
+        except (ValueError, RuntimeError, OSError) as error:
+            raise HTTPException(409, str(error)) from error
+        return {"source":source, "synthetic":False, **result}
     raise HTTPException(422,'Unsupported source')
 
 @app.get('/api/market/quote')
@@ -215,13 +213,29 @@ def imported_deals():return rows('SELECT id,symbol,imported_at FROM imported_fil
 
 @app.get('/api/backtest')
 def backtest(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',target_r:float=Query(2.0,ge=1,le=5),
-             start:int|None=None,end:int|None=None):
+             start:int|None=None,end:int|None=None,tick_dataset_id:str|None=None,
+             slippage_bps:Decimal=Query(Decimal(0),ge=0,le=100),
+             commission_bps:Decimal=Query(Decimal(0),ge=0,le=100)):
     m=market_candles(symbol,timeframe,source,limit=700,start=start,end=end)
-    if m.get("coverage") and (m["coverage"]["gaps"] or m["coverage"]["truncated"]):
+    if m.get("coverage") and (m["coverage"]["gaps"] or (start is not None and m["coverage"]["truncated"])):
         raise HTTPException(422, "Select a complete archive range of at most 700 candles for this backtest")
     try:
-        result=breakout_backtest(m['candles'],target_r)
-    except ValueError as error:
+        if tick_dataset_id is None:
+            result=breakout_backtest(m['candles'],target_r)
+        else:
+            dataset = one("SELECT * FROM datasets WHERE id=?", (tick_dataset_id,))
+            if (not dataset or dataset["kind"] != "ticks" or dataset["symbol"] != symbol
+                    or dataset["provider"] + "_SAVED" != source or dataset["feed_id"] != m.get("feed_id")
+                    or dataset["price_basis"] != "BID_ASK_UNITS" or m["price_basis"] != "BID"):
+                raise ValueError("Choose saved bid candles and a bid/ask tick partition from the same feed and symbol")
+            if dataset["rows_count"] > 500_000:
+                raise ValueError("Tick partition exceeds the 500,000 quote replay limit")
+            result = replay_breakout(m["candles"], read_partition(dataset, max_rows=500_000),
+                                     FRAME_MIN[timeframe]*60, target_r,
+                                     slip_bps=slippage_bps, commission_bps=commission_bps)
+            result["lineage"] = {"candle_partitions":m["partitions"],
+                                 "tick_partition":{"id":dataset["id"],"sha256":dataset["sha256"]}}
+    except (ValueError, RuntimeError, OSError, KeyError) as error:
         raise HTTPException(422, str(error)) from error
     result.update({'source':source,'synthetic':m['synthetic'],'symbol':symbol,'timeframe':timeframe})
     return result

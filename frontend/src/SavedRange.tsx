@@ -13,6 +13,6 @@ export function SavedRange({onChange,range}:{onChange:(range?:CandleRange)=>void
     <label>From UTC <input type="date" className="archive-date" value={from} onChange={event=>setFrom(event.target.value)}/></label>
     <label>Until UTC (exclusive) <input type="date" className="archive-date" value={until} onChange={event=>setUntil(event.target.value)}/></label>
     <button className="small-tool" type="submit" disabled={!(start<end)}>Load saved range</button>
-    {range&&<button className="small-tool" type="button" onClick={()=>onChange()}>Use latest partition</button>}
+    {range&&<button className="small-tool" type="button" onClick={()=>onChange()}>Use recent archive</button>}
   </form>;
 }

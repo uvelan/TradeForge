@@ -6,7 +6,7 @@ export type ChartSymbol=SymbolName|'BTCUSDT';
 export interface Candle {time:number;open:number;high:number;low:number;close:number;volume?:number}
 export type CandleRange = {start:number;end:number};
 export interface CandleCoverage extends CandleRange {gaps:CandleRange[];duplicate_bars:number;truncated:boolean}
-export interface CandleResponse {source:ChartSource;synthetic:boolean;price_basis:string;candles:Candle[];dataset_id?:string;feed_id?:string;latest_unconfirmed?:boolean;coverage?:CandleCoverage}
+export interface CandleResponse {source:ChartSource;synthetic:boolean;price_basis:string;candles:Candle[];dataset_id?:string;feed_id?:string;latest_unconfirmed?:boolean;coverage?:CandleCoverage;partitions?:{id:string;sha256:string}[]}
 export interface BrokerSymbol {name:string;description:string;digits:number}
 export interface Plan {
  symbol:SymbolName; direction:'BUY'|'SELL';strategy:string;session:'ASIA'|'LONDON'|'NEW_YORK'|'OTHER';timeframe:Timeframe;
@@ -21,4 +21,4 @@ export interface Package {id:string;trade_id:string;plan_version:number;created_
 export interface Review {id:string;package_id:string;assessment:string;verification:string;created_at:string}
 export interface JournalEntry {id:string;kind:string;title:string;content:string;created_at:string}
 export interface Overview {analytics:Analytics;mt5:{connected:boolean;reason?:string;broker?:string;mode?:string};datasets:Dataset[];recent_trades:Trade[];recent_reviews:Review[];journal_count:number}
-export interface BacktestResult {strategy:string;source:string;synthetic:boolean;symbol:string;timeframe:string;count:number;eligible_signals:number;ambiguous_excluded:number;ambiguous_rate:number|null;win_rate:number|null;expectancy_r:number|null;expectancy_bounds_r:{worst:number;best:number}|null;total_r:number|null;data_note:string;trades:{entry_time:number;side:string;entry:number;stop:number;target:number;result_r:number}[]}
+export interface BacktestResult {strategy:string;source:string;synthetic:boolean;symbol:string;timeframe:string;count:number;eligible_signals:number;ambiguous_excluded:number;ambiguous_rate:number|null;missing_tick_windows?:number;win_rate:number|null;expectancy_r:number|null;expectancy_bounds_r:{worst:number;best:number}|null;total_r:number|null;data_note:string;trades:{entry_time:number;side:string;entry:number;stop:number;target:number;result_r:number}[]}

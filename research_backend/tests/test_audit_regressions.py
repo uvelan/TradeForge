@@ -49,6 +49,9 @@ def test_published_review_schema_round_trips_export(client, plan):
     template["findings"][0]["metric_refs"] = ["invented"]
     assert client.post("/api/ai/reviews", json=template).status_code == 422
     template["findings"][0]["metric_refs"] = ["maximum_planned_loss_usd"]
+    template["findings"][0]["metric_claims"] = {"maximum_planned_loss_usd": "51"}
+    assert client.post("/api/ai/reviews", json=template).status_code == 422
+    template["findings"][0]["metric_claims"]["maximum_planned_loss_usd"] = "50"
     assert client.post("/api/ai/reviews", json=template).status_code == 201
 
 
@@ -75,3 +78,6 @@ def test_completed_bi5_final_bar_and_adjacent_partition_range(client):
     assert len(result["partitions"]) == 2
     assert result["coverage"]["gaps"] == []
     assert result["candles"][-1]["time"] == start + 6900
+    recent = client.get("/api/market/candles", params={"source":"DUKASCOPY_SAVED","limit":24}).json()
+    assert recent["partitions"] == result["partitions"]
+    assert recent["candles"] == result["candles"]

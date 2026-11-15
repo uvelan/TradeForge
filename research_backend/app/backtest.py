@@ -2,6 +2,14 @@
 from __future__ import annotations
 
 
+def breakout_signal(previous: dict, current: dict) -> tuple[str, float] | None:
+    if current["close"] > previous["high"]:
+        return "BUY", min(previous["low"], current["low"])
+    if current["close"] < previous["low"]:
+        return "SELL", max(previous["high"], current["high"])
+    return None
+
+
 def breakout_backtest(candles:list[dict],target_r:float=2.0,max_bars:int=12):
     if not 1<=target_r<=5 or not 1<=max_bars<=100:raise ValueError('Invalid backtest parameters')
     if len(candles)<25: raise ValueError('At least 25 complete candles required')
@@ -9,9 +17,10 @@ def breakout_backtest(candles:list[dict],target_r:float=2.0,max_bars:int=12):
     while i < len(candles)-max_bars-1:
         previous=candles[i-1];signal=candles[i]
         # Signal is a completed candle. Entry uses the NEXT bar's open.
-        side='BUY' if signal['close']>previous['high'] else 'SELL' if signal['close']<previous['low'] else None
-        if not side:i+=1;continue
-        entry=float(candles[i+1]['open']);stop=float(min(previous['low'],signal['low']) if side=='BUY' else max(previous['high'],signal['high']))
+        setup=breakout_signal(previous,signal)
+        if not setup:i+=1;continue
+        side, stop=setup
+        entry=float(candles[i+1]['open'])
         risk=abs(entry-stop)
         if risk<=0 or (side=='BUY' and stop>=entry) or (side=='SELL' and stop<=entry):i+=1;continue
         target=entry+(risk*target_r if side=='BUY' else -risk*target_r)

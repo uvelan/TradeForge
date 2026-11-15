@@ -68,6 +68,10 @@ class ReviewFinding(BaseModel):
     summary: Note
     evidence_refs: Annotated[References, Field(min_length=1)]
     metric_refs: References
+    metric_claims: dict[Reference, Annotated[str, Field(pattern=r"^-?[0-9]+(?:\.[0-9]+)?$", max_length=64)]] = Field(
+        default_factory=dict, max_length=100,
+        description="Exact numeric claims keyed by exported metric reference, using decimal strings.",
+    )
 
 
 class ReviewV1(BaseModel):

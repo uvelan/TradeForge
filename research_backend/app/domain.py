@@ -180,6 +180,11 @@ def import_ai(data:ReviewV1 | ReviewInput)->dict:
                 raise HTTPException(422, "Finding references unsupported metrics")
             if finding.metric_refs and "RISK" not in finding.evidence_refs:
                 raise HTTPException(422, "Metric references require RISK evidence")
+            for metric, claimed in finding.metric_claims.items():
+                if metric not in finding.metric_refs or not isinstance(metrics[metric], str):
+                    raise HTTPException(422, "Numeric claims require a referenced numeric metric")
+                if Decimal(claimed) != Decimal(metrics[metric]):
+                    raise HTTPException(422, f"Metric claim differs from the exported value: {metric}")
     for f in data.findings if isinstance(data, ReviewInput) else ():
         if not isinstance(f.get('text'),str) or not f['text'].strip() or len(f['text'])>2500:
             raise HTTPException(422,'Finding must include bounded text')

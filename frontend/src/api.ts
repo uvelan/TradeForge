@@ -31,9 +31,11 @@ export const api={
   journal:()=>request<import('./types').JournalEntry[]>('/journal'),
   addJournal:(kind:string,title:string,content:string)=>post('/journal',{kind,title,content}),
   datasets:()=>request<import('./types').Dataset[]>('/datasets'),
-  backtest:(symbol:SymbolName,timeframe:Timeframe,source:SourceName,range?:CandleRange)=>
+  backtest:(symbol:SymbolName,timeframe:Timeframe,source:SourceName,range?:CandleRange,
+    tick?:{id:string;slippage:string;commission:string})=>
     request<import('./types').BacktestResult>('/backtest?'+new URLSearchParams({
       symbol,timeframe,source,...(range?{start:String(range.start),end:String(range.end)}:{}),
+      ...(tick?{tick_dataset_id:tick.id,slippage_bps:tick.slippage,commission_bps:tick.commission}:{}),
     })),
   importMt5:(symbol:SymbolName,timeframe:Timeframe,limit:number)=>post('/market/import/mt5',{symbol,timeframe,limit}),
   importBi5:async(symbol:SymbolName,day:string,file:File,hour:string)=>{

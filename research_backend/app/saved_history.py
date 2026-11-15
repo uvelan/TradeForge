@@ -4,6 +4,20 @@ from .db import rows
 from .storage import read_partition
 
 
+def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int) -> tuple[int, int]:
+    partitions = rows("""SELECT first_time, last_time, feed_id, price_basis FROM datasets
+        WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles'
+        ORDER BY last_time DESC, created_at DESC LIMIT 50""", (provider, symbol, timeframe))
+    if not partitions:
+        raise FileNotFoundError("No saved candle partitions for this symbol and timeframe")
+    latest = partitions[0]
+    compatible = [part for part in partitions if (part["feed_id"], part["price_basis"]) ==
+                  (latest["feed_id"], latest["price_basis"])]
+    start = min(int(datetime.fromisoformat(part["first_time"]).timestamp()) for part in compatible)
+    end = int(datetime.fromisoformat(latest["last_time"]).timestamp()) + step
+    return start, end
+
+
 def saved_range(provider: str, symbol: str, timeframe: str, start: int, end: int, step: int, limit: int) -> dict:
     def iso(timestamp: int) -> str:
         return datetime.fromtimestamp(timestamp, UTC).isoformat()

@@ -30,6 +30,21 @@
           "maxItems": 200,
           "title": "Metric Refs",
           "type": "array"
+        },
+        "metric_claims": {
+          "additionalProperties": {
+            "maxLength": 64,
+            "pattern": "^-?[0-9]+(?:\\.[0-9]+)?$",
+            "type": "string"
+          },
+          "description": "Exact numeric claims keyed by exported metric reference, using decimal strings.",
+          "maxProperties": 100,
+          "propertyNames": {
+            "maxLength": 160,
+            "minLength": 1
+          },
+          "title": "Metric Claims",
+          "type": "object"
         }
       },
       "required": [
