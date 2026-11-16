@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 from .indicators import Bar, REGISTRY, calculate
 from .market import FRAME_MIN
 from .market_structure import StructureRules, detect_structure
+from .structure_pages import StructureDelivery
 from .indicator_coverage import DAY, WEEK, MarketSchedule, period_start, previous_levels
 
 SESSIONS = {
@@ -44,6 +45,7 @@ class IndicatorSpec(BaseModel):
     session: Window | None = None
     schedule: MarketSchedule | None = None
     structure: StructureRules | None = None
+    structure_delivery: StructureDelivery | None = None
 
 
 class EvidenceBar(Bar):
@@ -118,9 +120,9 @@ def catalog() -> list[IndicatorDefinition]:
         })
     defaults = StructureRules()
     definitions.append({
-        "id": "market_structure", "label": "Confirmed market structure", "version": 1,
+        "id": "market_structure", "label": "Confirmed market structure", "version": 2,
         "render": "markers", "period": None, "warmup_bars": defaults.left+defaults.right+1,
-        "parameters": {"structure": defaults.model_dump()}, "price_source": "wick_or_close",
+        "parameters": {"structure": defaults.model_dump(), "algorithm_versions": [1, 2]}, "price_source": "wick_or_close",
         "required_fields": ["high", "low", "close"], "unit": "price", "timeframes": list(FRAME_MIN),
         "instruments": "any_valid_ohlc",
     })
@@ -222,7 +224,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             raise ValueError("Session options require a session indicator")
         if spec.schedule is not None and spec.id not in PERIODS:
             raise ValueError("Schedule options require a previous-period indicator")
-        if spec.structure is not None and spec.id != "market_structure":
+        if (spec.structure is not None or spec.structure_delivery is not None) and spec.id != "market_structure":
             raise ValueError("Structure options require the market structure indicator")
         if spec.period is not None and spec.id not in REGISTRY:
             raise ValueError("Period is only supported for numerical indicators")
@@ -253,14 +255,16 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             # Retrieval counters describe a request, not event identity.
             event_scope = {key: value for key, value in provenance.items()
                            if key not in {"retrieval", "context_partitions", "partitions"}}
-            detected = detect_structure(structure_rows, step, rules, event_scope)
+            detected = detect_structure(structure_rows, step, rules, event_scope,
+                                        spec.structure_delivery or StructureDelivery(),
+                                        {"cutoff": request.cutoff, "frozen": request.frozen, "provenance": provenance})
             result_warnings = detected.pop("structure_warnings")
             if evidence.get("status"):
                 result_warnings.append(evidence["status"])
             if not detected["pivots"] and len(structure_rows) < rules.left+rules.right+1:
                 result_warnings.append("INSUFFICIENT_WARMUP")
-            result = {"id": spec.id, "version": 1, "render": "markers", "series": {},
-                      "warmup_bars": rules.left+rules.right+1, "parameters": rules.model_dump(),
+            result = {"id": spec.id, "version": rules.algorithm_version, "render": "markers", "series": {},
+                      "warmup_bars": rules.left+rules.right+1, "parameters": rules.identity_parameters(),
                       "provenance": provenance, **detected}
         elif spec.id in PERIODS:
             length = DAY if spec.id == "previous_day" else WEEK
@@ -279,7 +283,9 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             result = {"id": spec.id, "version": 1, "render": "overlay", "warmup_bars": None, "series": series}
             if spec.id in SESSIONS:
                 result["session"] = spec.session.model_dump() if spec.session else definition["parameters"]["session"]
-        results.append({**result, "warnings": sorted((warnings if spec.id not in PERIODS else set()) | set(result_warnings)), "unit": definition["unit"]})
+        include_gaps = spec.id not in PERIODS and not (spec.id == "market_structure" and result["version"] == 2)
+        results.append({**result, "warnings": sorted((warnings if include_gaps else set()) | set(result_warnings)),
+                        "unit": definition["unit"]})
     return {"schema_version": 1, "calculated_at": int(time()), "cutoff": request.cutoff,
             "authority": "CLIENT_SUPPLIED_UNVERIFIED",
             "input": {**input_identity,

@@ -243,3 +243,84 @@ test("a pending market structure result stays tied to the original chart scope",
   if(await library.getAttribute("open")===null)await page.getByText("Indicator library",{exact:true}).click();
   await expect(page.getByRole("group",{name:"Confirmed market structure"}).getByRole("status")).toContainText("Structure");
 });
+
+test("older structure pages are bounded and leave the latest chart and state intact",async ({page},info)=>{
+  const prices=[10,12,10,13,11,14,12,15,13,10,11];
+  const start=Date.parse("2026-11-02T00:00:00Z")/1000;
+  await page.route("**/research/api/indicators/evaluate",route=>{
+    const data=route.request().postDataJSON();
+    return route.continue({postData:JSON.stringify({...data,cutoff:start+250*300,
+      candles:Array.from({length:250},(_,index)=>{
+        const price=prices[index%prices.length];
+        return {time:start+index*300,open:price,close:price,high:price,low:price};
+      })})});
+  });
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"confirmed market structure","market_structure");
+  const group=page.getByRole("group",{name:"Confirmed market structure"});
+  await group.getByLabel("Left bars").fill("1");
+  await group.getByLabel("Right confirmation bars").fill("1");
+  await group.getByRole("combobox",{name:"Structure algorithm"}).selectOption("2");
+  await expect(group.getByText(/Trading hours unknown · Source unverified/)).toBeVisible();
+  const latest=group.getByLabel("Recent structure events");
+  await expect(latest).toBeVisible();
+  const current=await latest.innerText();
+  const pageResponse=page.waitForResponse(response=>response.url().endsWith("/indicators/evaluate")&&
+    response.request().postDataJSON().indicators[0]?.structure_delivery?.pivot_cursor);
+  await group.getByRole("button",{name:/Older pivots/}).click();
+  const first=(await (await pageResponse).json()).results[0];
+  const evidence=group.getByLabel("Historical structure evidence");
+  await expect(evidence.getByRole("listitem")).toHaveCount(40);
+  const label=await evidence.locator("p").innerText();
+  const nextResponse=page.waitForResponse(response=>response.url().endsWith("/indicators/evaluate")&&
+    response.request().postDataJSON().indicators[0]?.structure_delivery?.pivot_cursor===
+      first.event_page.pivots.next_cursor);
+  await evidence.getByRole("button",{name:"Next older page"}).click();
+  const second=(await (await nextResponse).json()).results[0];
+  expect(second.event_page.snapshot).toBe(first.event_page.snapshot);
+  expect(second.event_page.pivots.end).toBe(first.event_page.pivots.start);
+  await expect(evidence.locator("p")).not.toHaveText(label);
+  expect(await latest.innerText()).toBe(current);
+  await evidence.scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("bounded-structure-evidence.png")});
+  await evidence.getByRole("button",{name:"Close evidence"}).click();
+  await expect(evidence).toHaveCount(0);
+});
+
+test("calendar structure confirms a real reopening BOS and removes it on replay rewind",async ({page},info)=>{
+  const close=Date.parse("2026-11-06T22:00:00Z")/1000;
+  const reopen=Date.parse("2026-11-08T22:00:00Z")/1000;
+  const market={source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",
+    candles:[10,12,10,13,11,14,12,15].map((price,index)=>{
+      const time=index<7?close+(index-7)*300:reopen;
+      return {time,available_at:time+300,open:price,high:price,low:price,close:price};
+    })};
+  await page.route("**/research/api/replay/sessions",route=>route.fulfill({status:201,
+    json:{id:"weekend-fixture",market,checkpoint:{position:6,bookmarks:[]},views:{}}}));
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"confirmed market structure","market_structure");
+  const group=page.getByRole("group",{name:"Confirmed market structure"});
+  await group.getByLabel("Left bars").fill("1");
+  await group.getByLabel("Right confirmation bars").fill("1");
+  await group.getByRole("combobox",{name:"Structure algorithm"}).selectOption("2");
+  await group.getByRole("combobox",{name:"Structure market schedule"}).selectOption("forex_weekly");
+  await page.getByRole("button",{name:"Bar replay",exact:true}).click();
+  const replay=page.getByLabel("Historical replay");
+  await expect(replay.getByLabel("Replay timeline")).toHaveValue("6");
+  await expect(group.getByLabel("Recent structure events")).not.toContainText("2026-11-08");
+  const response=page.waitForResponse(res=>res.url().endsWith("/indicators/evaluate")&&
+    res.request().postDataJSON().cutoff===reopen+300);
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  const result=(await (await response).json()).results[0];
+  expect(result.continuity.counts).toEqual({SCHEDULED_CLOSURE:1});
+  expect(result.breaks.at(-1)).toMatchObject({type:"BOS",direction:"BULLISH",level_price:14,
+    break_price:15,break_time:reopen,available_at:reopen+300,opening_status:"CLOSE_CONFIRMED"});
+  await expect(group.getByLabel("Recent structure events")).toContainText("BOS · confirmed · 2026-11-08 22:05 UTC");
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("weekend-structure-replay.png")});
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(group.getByLabel("Recent structure events")).not.toContainText("2026-11-08");
+  await expect(group.getByText(/scheduled closure 1/)).toHaveCount(0);
+});
