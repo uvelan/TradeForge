@@ -1,0 +1,70 @@
+> e2e
+> playwright test --reporter=line
+
+
+[WebServer] INFO:     Started server process [35976]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8098 (Press CTRL+C to quit)
+
+[WebServer] (node:12584) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 46 tests using 1 worker
+
+(node:8640) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/46] e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions
+[2/46] e2e\drawing-edit.spec.ts:176:1 › all four rectangle handles edit only their corresponding boundaries
+[3/46] e2e\drawing-edit.spec.ts:196:3 › long position rejects crossed handles and preserves direction on a valid resize
+[4/46] e2e\drawing-edit.spec.ts:196:3 › short position rejects crossed handles and preserves direction on a valid resize
+[5/46] e2e\drawing-edit.spec.ts:221:1 › vertical horizontal edit works after zoom, resize and fullscreen with left scale and comparison pane
+[6/46] e2e\drawing-edit.spec.ts:248:1 › overlapping strokes prefer the later item; locked and hidden drawings cannot drag
+[7/46] e2e\drawing-edit.spec.ts:273:1 › Escape and pointer cancellation discard edits; a scope change cannot save an obsolete gesture
+[8/46] e2e\drawing-edit.spec.ts:304:1 › a native touchscreen cancel releases the selected drawing without writing
+[9/46] e2e\drawing-edit.spec.ts:319:1 › a real 409 blocks further edits and reload preserves the competing drawing
+[10/46] e2e\drawing-edit.spec.ts:344:1 › a canonical EMA overlay leaves creating and editing a drawing functional
+[11/46] e2e\drawing-edit.spec.ts:356:1 › market structure overlays preserve ownership of a saved drawing handle
+[12/46] e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1366x768
+[13/46] e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1920x1080
+[14/46] e2e\drawing-placement.spec.ts:51:1 › touch places a horizontal drawing and its persisted anchor can be edited
+[15/46] e2e\drawing-placement.spec.ts:78:1 › rejects outside release and Escape then saves a rectangle with two clicks
+[16/46] e2e\drawing-placement.spec.ts:99:1 › risk/reward commits valid prices after zoom and excludes the comparison axis
+[17/46] e2e\drawing-placement.spec.ts:134:1 › a stale drawing save reports 409 and reload preserves the competing scene
+[18/46] e2e\drawing-placement.spec.ts:154:1 › blank chart space and a secondary plot cannot save into the primary scope
+[19/46] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every trend anchor
+[20/46] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every rectangle anchor
+[21/46] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every risk-reward anchor
+[22/46] e2e\drawing-placement.spec.ts:258:1 › previews and saves both position directions and rejects an invalid edit
+[23/46] e2e\drawing-placement.spec.ts:320:1 › releases pointer ownership on candle refresh and scope remount
+[24/46] e2e\drawing-placement.spec.ts:418:1 › maps anchors across fullscreen and resized plots with a left comparison scale
+[25/46] e2e\drawing-placement.spec.ts:505:1 › the horizontal rail takes precedence over an unfinished trendline
+[26/46] e2e\drawing-placement.spec.ts:518:1 › a horizontal drawing drag uses the release candle and price after zoom and resize
+[27/46] e2e\drawing-placement.spec.ts:567:1 › Alt+H and the rail discard rectangle and risk/reward draft anchors
+[28/46] e2e\drawing-placement.spec.ts:588:1 › toolbox activation clears other modes and repeated switches save only the final intended drawing
+[29/46] e2e\drawing-placement.spec.ts:624:1 › Escape cancels all armed modes and an active drag cannot complete in a replacement mode
+[30/46] e2e\drawing-placement.spec.ts:668:1 › horizontal drags reject outside, missing candle and pointer cancellation
+[31/46] e2e\drawing-placement.spec.ts:703:1 › negative chart prices are rejected and navigation still pans and zooms
+
+(node:14588) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[32/46] e2e\indicator-engine.spec.ts:20:1 › multiple canonical indicators persist, update panes and clean up on remount
+[33/46] e2e\indicator-engine.spec.ts:62:1 › replay submits only closed evidence within the visible cutoff
+[34/46] e2e\indicator-engine.spec.ts:85:1 › a session overlay exposes provisional and completed backend values
+[35/46] e2e\indicator-engine.spec.ts:101:1 › previous week requests a bounded M5 reference beyond chart history
+[36/46] e2e\indicator-engine.spec.ts:117:1 › the terminal distinguishes a complete forex week from missing open-market coverage
+[37/46] e2e\indicator-engine.spec.ts:152:1 › structure replay paints CHOCH at the confirming step and removes it on rewind
+[38/46] e2e\indicator-engine.spec.ts:217:1 › a pending market structure result stays tied to the original chart scope
+[39/46] e2e\indicator-engine.spec.ts:247:1 › older structure pages are bounded and leave the latest chart and state intact
+[40/46] e2e\indicator-engine.spec.ts:291:1 › calendar structure confirms a real reopening BOS and removes it on replay rewind
+[41/46] e2e\research.spec.ts:3:1 › opens the research dashboard, replays demo bars, and links to the preserved catalog
+[42/46] e2e\research.spec.ts:22:1 › shows a saved background SMT watch and stops it from Market Terminal
+[43/46] e2e\research.spec.ts:45:1 › navigates by keyboard and moves recorded signal evidence into a persisted draft
+[44/46] e2e\research.spec.ts:95:1 › persists a trendline and resumes a frozen replay checkpoint
+[45/46] e2e\research.spec.ts:135:1 › links four chart views and opens a saved simulation after reload
+[46/46] e2e\terminal.spec.ts:3:1 › generates a simulated dataset and reopens it after reload
+  46 passed (3.3m)
