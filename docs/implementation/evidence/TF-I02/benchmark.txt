@@ -1,0 +1,6 @@
+Windows, Python 3.13, M1, 20 warm samples; peak Python allocation sampled separately; RSS not measured
+2,000 caller bars, many: p50=99.71 ms, p95=135.59 ms, Python peak=2098.7 KiB, 1636 pivots, 908 breaks
+2,000 caller bars, flat: p50=29.20 ms, p95=36.68 ms, Python peak=327.2 KiB, 0 pivots, 0 breaks
+2,000 caller bars, sparse: p50=12.28 ms, p95=18.71 ms, Python peak=327.2 KiB, 0 pivots, 0 breaks
+10,000 archived bars, many, including SHA-256 and Parquet decode: p50=576.65 ms, p95=717.13 ms, Python peak=21843.5 KiB, 8180 pivots, 4544 breaks
+{'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}
