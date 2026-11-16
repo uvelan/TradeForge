@@ -1,6 +1,7 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {IChartApi,IPrimitivePaneRenderer,PrimitiveHoveredItem,ISeriesApi,ISeriesPrimitive,Time,UTCTimestamp} from 'lightweight-charts';
-import {api} from './api';
+import {api,ApiError} from './api';
+import {bodyDistance,handlesFor,sameAnchors,type DrawingHandle} from './drawingGeometry';
 import type {Candle} from './types';
 
 export const tools={
@@ -33,6 +34,7 @@ export function useDrawingBook(scope:string) {
   const [error,setError]=useState('');
   const [refresh,setRefresh]=useState(0);
   const [saving,setSaving]=useState(false);
+  const [conflict,setConflict]=useState(false);
   const [selected,setSelected]=useState('');
   const [interaction,setInteraction]=useState<ChartInteraction>({mode:'navigate'});
   const edit='draft' in interaction?interaction.draft:undefined;
@@ -48,14 +50,14 @@ export function useDrawingBook(scope:string) {
     if(!scope)return;
     const key=Symbol(scope);
     active.current=key;
-    setLoaded(undefined);setError('');setEdit(undefined);setSelected('');setSaving(false);writing.current=false;
+    setLoaded(undefined);setError('');setEdit(undefined);setSelected('');setSaving(false);setConflict(false);writing.current=false;
     setHistory({undo:[],redo:[]});
     api.get<Version>(endpoint).then(version=>{if(active.current===key)setLoaded({scope,version});})
       .catch(reason=>{if(active.current===key)setError(reason.message);});
     return ()=>{if(active.current===key)active.current=undefined;};
   },[scope,endpoint,refresh]);
   async function save(items:Drawing[],mode:'edit'|'undo'|'redo'='edit'){
-    if(!current||writing.current)return;
+    if(!current||writing.current||conflict)return;
     const key=active.current;
     writing.current=true;
     setSaving(true);setError('');
@@ -67,11 +69,16 @@ export function useDrawingBook(scope:string) {
         mode==='redo'?{undo:[...history.undo,current.items],redo:history.redo.slice(0,-1)}:
         {undo:[...history.undo,current.items].slice(-25),redo:[]};
       setHistory(next);
-    }catch(reason){if(active.current===key)setError((reason as Error).message);}
+    }catch(reason){
+      if(active.current===key){
+        setError((reason as Error).message);
+        if(reason instanceof ApiError&&reason.status===409)setConflict(true);
+      }
+    }
     finally{if(active.current===key){writing.current=false;setSaving(false);}}
   }
   function begin(kind:DrawingTool){
-    if(current&&current.items.length<100&&!writing.current)setEdit({kind,anchors:[]});
+    if(current&&current.items.length<100&&!writing.current&&!conflict)setEdit({kind,anchors:[]});
   }
   function point(bar:Candle,price:number,digits:number):Anchor {
     const nearest=snap?(Math.abs(price-bar.high)<Math.abs(price-bar.low)?bar.high:bar.low):price;
@@ -114,7 +121,12 @@ export function useDrawingBook(scope:string) {
     setEdit(undefined);setSelected(item.id);
     void save([...current.items,item]);
   }
-  return {current,error,saving,selected,setSelected,interaction,setInteraction,edit,setEdit,snap,setSnap,history,save,begin,anchor,point,
+  function saveDirect(original:Drawing,anchors:Anchor[]){
+    if(!current||conflict||writing.current||interaction.mode!=='navigate'||selected!==original.id||
+      original.locked||!original.visible||!current.items.includes(original)||sameAnchors(anchors,original.anchors))return;
+    void save(current.items.map(item=>item===original?{...item,anchors,updated_at:now()}:item));
+  }
+  return {current,error,saving,conflict,saveDirect,selected,setSelected,interaction,setInteraction,edit,setEdit,snap,setSnap,history,save,begin,anchor,point,
     reload:()=>setRefresh(value=>value+1)};
 }
 
@@ -123,7 +135,7 @@ export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>})
   const item=book.current?.items.find(drawing=>drawing.id===book.selected);
   const [draft,setDraft]=useState<{id:string;label:string;color:string}>();
   const options=draft?.id===item?.id?draft:undefined;
-  const blocked=book.saving||!book.current;
+  const blocked=book.saving||book.conflict||!book.current;
   const update=(changes:Partial<Drawing>)=>{
     if(item&&book.current)void book.save(book.current.items.map(drawing=>drawing.id===item.id?
       {...drawing,...changes,updated_at:now()}:drawing));
@@ -178,48 +190,59 @@ export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>})
 export class DrawingLayer implements ISeriesPrimitive<Time> {
   items:Drawing[]=[];
   repaint?:()=>void;
+  selected='';
+  editPreview?:Drawing;
+  select(id:string){this.selected=id;this.repaint?.();}
+  showEdit(item?:Drawing){this.editPreview=item;this.repaint?.();}
+
   preview?:{kind:Drawing['kind'];anchors:Anchor[]};
   showPreview(preview?:DrawingLayer['preview']){this.preview=preview;this.repaint?.();}
   constructor(private chart:IChartApi,private series:ISeriesApi<'Candlestick'>){}
   attached({requestUpdate}:{requestUpdate:()=>void}){this.repaint=requestUpdate;}
   detached(){this.repaint=undefined;}
   update(items:Drawing[]){this.items=items;this.repaint?.();}
-  hitTest(x:number,y:number):PrimitiveHoveredItem|null{
+  private geometry(item:Drawing){
+    if(!item.visible||!['horizontal','trend','rectangle','risk-reward'].includes(item.kind))return;
     const scale=this.chart.timeScale();
-    const distance=(ax:number,ay:number,bx:number,by:number)=>{
-      const dx=bx-ax,dy=by-ay;
-      const t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));
-      return Math.hypot(x-ax-t*dx,y-ay-t*dy);
-    };
-    let hit:PrimitiveHoveredItem|null=null;
-    for(const item of this.items){
-      if(!item.visible||!['horizontal','trend','rectangle','risk-reward'].includes(item.kind))continue;
-      const points=item.anchors.map(anchor=>({
-        x:scale.timeToCoordinate(anchor.time as UTCTimestamp),y:this.series.priceToCoordinate(Number(anchor.price)),
-      }));
-      const [a,b,c]=points;
-      if(!a||a.y===null)continue;
-      let d=Infinity;
-      if(item.kind==='horizontal')d=Math.abs(y-a.y);
-      else if(a.x!==null&&b?.x!==null&&b?.x!==undefined&&b.y!==null){
-        if(item.kind==='trend')d=distance(a.x,a.y,b.x,b.y);
-        else{
-          const left=Math.min(a.x,b.x,c?.x??a.x),right=Math.max(a.x,b.x,c?.x??a.x);
-          const top=Math.min(a.y,b.y,c?.y??a.y),bottom=Math.max(a.y,b.y,c?.y??a.y);
-          d=Math.min(distance(left,top,right,top),distance(left,bottom,right,bottom),
-            distance(left,top,left,bottom),distance(right,top,right,bottom));
-          if(item.kind==='risk-reward')d=Math.min(d,distance(left,a.y,right,a.y));
-        }
+    const points=item.anchors.flatMap(anchor=>{
+      const y=this.series.priceToCoordinate(Number(anchor.price));
+      const projected=scale.timeToCoordinate(anchor.time as UTCTimestamp);
+      const x=item.kind==='horizontal'?scale.width()*.5:projected;
+      return x===null||y===null?[]:[{x,y}];
+    });
+    if(points.length===item.anchors.length)return points;
+  }
+  target(x:number,y:number):{item:Drawing;distance:number;handle?:DrawingHandle}|undefined{
+    const selected=this.items.find(item=>item.id===this.selected);
+    const projection=selected&&this.geometry(selected);
+    if(selected&&projection){
+      for(const handle of handlesFor(selected.kind,projection)){
+        const distance=Math.hypot(handle.x-x,handle.y-y);
+        if(distance<=7)return {item:selected,distance,handle:handle.anchor};
       }
-      if(d<=6&&d<=(hit?.distance??Infinity))hit={distance:d,externalId:'drawing:'+item.id,zOrder:'normal'};
+    }
+    let hit:{item:Drawing;distance:number}|undefined;
+    for(const item of this.items){
+      const points=this.geometry(item);
+      if(!points)continue;
+      const distance=bodyDistance(item.kind,{x,y},points);
+      if(distance<=6&&distance<=(hit?.distance??Infinity))hit={item,distance};
     }
     return hit;
+  }
+  hitTest(x:number,y:number):PrimitiveHoveredItem|null{
+    const hit=this.target(x,y);
+    if(!hit)return null;
+    return {distance:hit.distance,externalId:'drawing:'+hit.item.id,zOrder:'normal',
+      hitTestPriority:hit.handle?2:1,cursorStyle:hit.item.locked?'default':hit.handle?'crosshair':
+        hit.item.id===this.selected?'move':'pointer'};
   }
   private renderer(previewOnly:boolean):IPrimitivePaneRenderer{return {draw:target=>target.useMediaCoordinateSpace(({context:ctx,mediaSize})=>{
     const {width,height}=mediaSize;
     const timeScale=this.chart.timeScale();
     const preview=this.preview;
-    const items=previewOnly?(preview?.anchors.length?[{...preview,visible:true,label:'',color:'#ffdc86'}]:[]):this.items;
+    const items=previewOnly?(this.editPreview?[{...this.editPreview,color:'#ffdc86'}]:
+      preview?.anchors.length?[{...preview,visible:true,label:'',color:'#ffdc86'}]:[]):this.items;
     for(const item of items){
       if(!item.visible)continue;
       const [a,b,c]=item.anchors;
@@ -263,11 +286,23 @@ export class DrawingLayer implements ISeriesPrimitive<Time> {
       if(label)ctx.fillText(label,Math.max(4,x??4)+4,Math.min(height-2,Math.max(14,y-5)));
       ctx.restore();
     }
+    if(previewOnly){
+      const selected=this.editPreview??this.items.find(item=>item.id===this.selected);
+      const points=selected&&this.geometry(selected);
+      if(selected&&points){
+        ctx.save();
+        ctx.lineWidth=1.5;ctx.strokeStyle=selected.locked?'#9caab9':'#fff0b8';ctx.fillStyle='#183545';
+        for(const handle of handlesFor(selected.kind,points)){
+          ctx.beginPath();ctx.arc(handle.x,handle.y,5,0,Math.PI*2);ctx.fill();ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
   })};}
   private savedRenderer=this.renderer(false);
   private previewRenderer=this.renderer(true);
   private view={renderer:()=>this.savedRenderer};
   // Chart snapshots omit the top layer unless explicitly requested.
   private previewView={renderer:()=>this.previewRenderer,zOrder:()=>'top' as const};
-  paneViews(){return this.preview?.anchors.length?[this.view,this.previewView]:[this.view];}
+  paneViews(){return this.preview?.anchors.length||this.selected||this.editPreview?[this.view,this.previewView]:[this.view];}
 }
