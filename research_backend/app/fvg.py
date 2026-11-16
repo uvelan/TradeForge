@@ -15,6 +15,7 @@ from .structure_pages import EventPage
 from .indicators import true_range
 
 VERSION = 1
+IDENTITY_POLICY_VERSION = 2
 BPS = D(10_000)
 EPS = D(0)
 
@@ -75,6 +76,7 @@ class Zone:
     formation_available_at: int
     expires: int
     formation_ohlc: tuple
+    formation_fingerprint: str
     depth: D = EPS
     revision: int = 0
     latest: dict | None = None
@@ -98,11 +100,14 @@ def overlap_sample(book, zone):
 
 
 def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen):
-    scope={k:v for k,v in provenance.items() if k not in {"retrieval","partitions","context_partitions"}}
-    config=identity(VERSION,rules.canonical())
-    source=identity(scope)
-    snapshot=sha256(identity(config,cutoff,frozen,provenance,step).encode())
-    prefix=sha256()
+    source_keys = ("source", "symbol", "timeframe", "feed_id", "dataset_id", "price_basis")
+    scope = {key: provenance.get(key) for key in source_keys}
+    parameters = rules.canonical()
+    event_parameters = {key: value for key, value in parameters.items() if key not in {"history_start", "history_bars"}}
+    policy = (VERSION, IDENTITY_POLICY_VERSION)
+    config = identity("fvg-configuration", policy, event_parameters)
+    source = identity("fvg-market", scope, step)
+    snapshot = sha256(identity("fvg-snapshot", policy, parameters, cutoff, frozen, provenance, step).encode())
     formations=EventPage("fvg_formations",delivery.formation_limit,delivery.formation_cursor)
     revisions=EventPage("fvg_revisions",delivery.revision_limit,delivery.revision_cursor)
     current=EventPage("fvg_current",delivery.current_limit,delivery.current_cursor)
@@ -112,6 +117,7 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen):
     window=deque(maxlen=3)
     previous=None
     index=-1
+    atr_evidence = sha256()
     atr_count=0
     atr_total=0.0
     atr_value=0.0
@@ -121,11 +127,16 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen):
     if rules.min_ticks and rules.tick_size is not None:
         warnings.add("FVG_TICK_SIZE_DECLARED")
 
-    def publish(zone,state,reason,bar,available,observed,**extra):
+    def publish(zone,state,reason,bar,available,candle_fingerprint,observed,*,continuity_from=None,**extra):
+        prior = zone.latest
         zone.revision+=1
-        fingerprint=prefix.hexdigest()
-        event={"id":identity(zone.id,zone.revision,state,bar.time,fingerprint),
-               "fvg_id":zone.id,"algorithm_version":VERSION,"configuration_fingerprint":config,
+        fingerprint = zone.formation_fingerprint if prior is None else identity(
+            "fvg-transition-evidence", policy, prior["id"], candle_fingerprint,
+            state, reason, str(zone.depth), observed, continuity_from,
+        )
+        event={"id":identity("fvg-event",policy,zone.id,zone.revision,fingerprint),
+               "fvg_id":zone.id,"algorithm_version":VERSION,"identity_policy_version":IDENTITY_POLICY_VERSION,
+               "configuration_fingerprint":config,
                "input_fingerprint":fingerprint,"provenance_id":source,"direction":zone.side,
                "state":state,"reason":reason,"revision":zone.revision,
                "a_time":zone.dates[0],"b_time":zone.dates[1],"c_time":zone.dates[2],
@@ -148,23 +159,26 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen):
         if previous is not None and bar.time<=previous.time:
             warnings.add("FVG_LATE_CANDLE_IGNORED")
             continue
-        prefix.update(entry)
+        candle_fingerprint = sha256(entry).hexdigest()
         index+=1
         last_close=D(str(bar.close))
         contiguous=previous is not None and bar.time==previous.time+step
         if previous is not None and not contiguous:
             window.clear()
+            atr_evidence = sha256()
             atr_count,atr_total,atr_value=0,0.0,0.0
             reason=continuity_reason(previous.time,bar.time,step,rules.market_schedule)
             if reason!="SCHEDULED_CLOSURE":
                 warnings.add("FVG_CONTINUITY_"+reason)
                 for zone in list(book.values()):
-                    publish(zone,"INVALIDATED",reason,bar,available,None)
+                    publish(zone,"INVALIDATED",reason,bar,available,candle_fingerprint,None,continuity_from=previous.time)
                 for heap in heaps.values():
                     heap.clear()
                 expires.clear()
         if rules.atr_multiple:
             height=true_range(bar,previous.close if contiguous else None)
+            # Wilder ATR depends on the entire uninterrupted range sequence since its seed.
+            atr_evidence.update(json.dumps((bar.time, available, height), separators=(",", ":")).encode())
             if atr_count<rules.atr_period:
                 atr_count+=1
                 atr_total+=height
@@ -175,7 +189,7 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen):
         while expires and expires[0][0]<=index:
             _,id_=heappop(expires)
             if id_ in book:
-                publish(book[id_],"EXPIRED","MAX_AGE",bar,available,None)
+                publish(book[id_],"EXPIRED","MAX_AGE",bar,available,candle_fingerprint,None)
 
         low,high=D(str(bar.low)),D(str(bar.high))
         for side,observed in (("BULLISH",low),("BEARISH",high)):
@@ -196,24 +210,24 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen):
                 far=zone.lower if sign==1 else zone.upper
                 overlap=high>=zone.lower and low<=zone.upper
                 if not overlap:
-                    publish(zone,"INVALIDATED","GAP_THROUGH_UNOBSERVED",bar,available,float(observed))
+                    publish(zone,"INVALIDATED","GAP_THROUGH_UNOBSERVED",bar,available,candle_fingerprint,float(observed))
                     continue
                 penetration=zone.upper-observed if sign==1 else observed-zone.lower
                 zone.depth=max(zone.depth,min(zone.upper-zone.lower,penetration))
                 if sign*last_close<sign*far:
-                    publish(zone,"INVALIDATED","CLOSE_BEYOND_OPPOSITE_BOUNDARY",bar,available,float(observed))
+                    publish(zone,"INVALIDATED","CLOSE_BEYOND_OPPOSITE_BOUNDARY",bar,available,candle_fingerprint,float(observed))
                 elif zone.depth==zone.upper-zone.lower:
-                    publish(zone,"FULLY_MITIGATED","OBSERVED_FULL_DEPTH",bar,available,float(observed))
+                    publish(zone,"FULLY_MITIGATED","OBSERVED_FULL_DEPTH",bar,available,candle_fingerprint,float(observed))
                 else:
-                    publish(zone,"PARTIALLY_MITIGATED","OBSERVED_DEPTH",bar,available,float(observed))
+                    publish(zone,"PARTIALLY_MITIGATED","OBSERVED_DEPTH",bar,available,candle_fingerprint,float(observed))
                     deferred.append((-zone.face,id_))
             for item in deferred:
                 heappush(heap,item)
 
-        window.append(bar)
+        window.append((bar,candle_fingerprint))
         if len(window)!=3:
             continue
-        a,b,c=window
+        a,b,c=(row[0] for row in window)
         if a.high<c.low:
             side,lo,hi="BULLISH",D(str(a.high)),low
         elif a.low>c.high:
@@ -235,14 +249,17 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen):
             if middle<=0 or middle<D(str(b.open))*D(str(rules.min_body_bps))/BPS:
                 continue
         dates=a.time,b.time,c.time
-        zone=Zone(identity(VERSION,config,source,dates,side,prefix.hexdigest()),side,lo,hi,
+        evidence = identity("fvg-formation-evidence", policy,
+                            [fingerprint for _,fingerprint in window],
+                            (atr_evidence.hexdigest(),atr_value) if rules.atr_multiple else None)
+        zone=Zone(identity("fvg-zone",policy,config,source,side,evidence),side,lo,hi,
                   dates,c.time+step,available,index+rules.max_age_bars,
-                  tuple((item.open,item.high,item.low,item.close) for item in window))
+                  tuple((item.open,item.high,item.low,item.close) for item,_ in window),evidence)
         overlaps,truncated=overlap_sample(book,zone)
         book[zone.id]=zone
         heappush(heaps[side],(-zone.face,zone.id))
         heappush(expires,(zone.expires,zone.id))
-        publish(zone,"ACTIVE","THREE_CLOSED_CANDLES",bar,available,None,overlaps=overlaps,
+        publish(zone,"ACTIVE","THREE_CLOSED_CANDLES",bar,available,candle_fingerprint,None,overlaps=overlaps,
                 overlaps_truncated=truncated,atr_at_formation=atr_value if rules.atr_multiple else None)
 
     key=snapshot.hexdigest()
@@ -258,4 +275,5 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen):
             "fvg_page":{"snapshot":key,"formations":formations.finish(key),"revisions":revisions.finish(key)},
             "current_fvgs":{"snapshot":key,"selection":"nearest_close",**current.finish(key),
                             "items":[zone.latest for zone in reversed(current.events)]},
-            "configuration_fingerprint":config,"provenance_id":source,"warnings":sorted(warnings)}
+            "identity_policy_version":IDENTITY_POLICY_VERSION, "configuration_fingerprint":config,
+            "provenance_id":source,"warnings":sorted(warnings)}

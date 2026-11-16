@@ -8,7 +8,7 @@ from research_backend.app.structure_pages import StaleStructureCursor
 ABC = [(99, 100, 98, 99), (100, 106, 100, 105), (105, 110, 105, 108)]
 
 
-def run(values=ABC, *, cutoff=None, times=None, delays=None, rules=None, delivery=None):
+def run(values=ABC, *, cutoff=None, times=None, delays=None, rules=None, delivery=None, provenance=None):
     times = times if times is not None else [60 * i for i in range(len(values))]
     cutoff = times[-1] + 60 if cutoff is None else cutoff
     delays = delays or {}
@@ -18,7 +18,7 @@ def run(values=ABC, *, cutoff=None, times=None, delays=None, rules=None, deliver
         if t + 60 + delays.get(t, 0) <= cutoff
     ]
     return evaluate_fvg(rows, 60, cutoff, FVGRules(**(rules or {})),
-                        FVGDelivery(**(delivery or {})), {"feed_id": "fixture"}, False)
+                        FVGDelivery(**(delivery or {})), provenance or {"feed_id": "fixture"}, False)
 
 
 @pytest.mark.parametrize("bearish", [False, True])

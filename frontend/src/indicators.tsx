@@ -14,7 +14,7 @@ type FvgRules = {min_price:number;min_bps:number;min_ticks:number;tick_size?:num
   mitigation:"wick"|"close";max_age_bars:number;market_schedule:Schedule;history_bars?:2000|10000;history_start?:number|null};
 type FvgVisibility={bullish:boolean;bearish:boolean;active:boolean;partial:boolean;full:boolean;invalidated:boolean;expired:boolean};
 const fvgVisibility:FvgVisibility={bullish:true,bearish:true,active:true,partial:true,full:true,invalidated:true,expired:true};
-export type FvgEvent = {id:string;fvg_id:string;direction:"BULLISH"|"BEARISH";
+export type FvgEvent = {id:string;fvg_id:string;identity_policy_version?:number;direction:"BULLISH"|"BEARISH";
   state:"ACTIVE"|"PARTIALLY_MITIGATED"|"FULLY_MITIGATED"|"INVALIDATED"|"EXPIRED";
   lower:number;upper:number;remaining_lower:number;remaining_upper:number;mitigation_pct:number;
   formation_ohlc?:number[][];
@@ -120,6 +120,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   }, [settings]);
 
   const scheduleScope = JSON.stringify([source, symbol, feed?.feed_id, feed?.price_basis]);
+  const fvgSelectionScope = JSON.stringify([scheduleScope,timeframe,feed?.dataset_id,frozen]);
   const primary = definitions.find(item => item.id === selected && item.period !== null);
   const active = useMemo(() => {
     const config = primary ? [{id: primary.id, period: periodText}, ...settings.filter(item => item.id !== primary.id)] : settings;
@@ -437,7 +438,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
             const history=older?.key===body&&["current_fvgs","formations","revisions"].includes(older.collection)?older:undefined;
             const zoneRows=history?history.events as FvgEvent[]:[...(gap?.current_fvgs?.items??[]),
               ...(gap?.revisions??[]).slice(-6).reverse(),...(gap?.formations??[]).slice(-6).reverse()];
-            const selected=selectedFvg?.key===body?zoneRows.find(event=>event.id===selectedFvg.id):undefined;
+            const selected=selectedFvg?.key===fvgSelectionScope?zoneRows.find(event=>event.id===selectedFvg.id):undefined;
             const values:[keyof Pick<FvgRules,"min_price"|"min_bps"|"min_ticks"|"atr_multiple"|"atr_period"|"min_body_bps"|"max_age_bars">,string,number,number,number][]=[
               ["min_price","Minimum price gap",0,Number.MAX_VALUE,.00001],["min_bps","Minimum gap (bps)",0,10000,.1],
               ["min_ticks","Minimum ticks",0,10000,1],["atr_multiple","ATR multiple",0,100,.1],
@@ -492,7 +493,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                 {!!gap.warnings.length&&<p>{gap.warnings.join(" · ")}</p>}
                 {pageError&&<small role="alert">{pageError}</small>}
                 {[...new Map(zoneRows.map(event=>[event.id,event])).values()].map(event=><button key={event.id} type="button" className="small-tool"
-                  onClick={()=>setSelectedFvg({key:body,id:event.id})}>{event.direction} · {event.state.replaceAll("_"," ")} · {event.mitigation_pct.toFixed(1)}%</button>)}
+                  onClick={()=>setSelectedFvg({key:fvgSelectionScope,id:event.id})}>{event.direction} · {event.state.replaceAll("_"," ")} · {event.mitigation_pct.toFixed(1)}%</button>)}
                 {selected&&<dl aria-label="Selected FVG">
                   <dt>Formation A / B / C</dt><dd>{[selected.a_time,selected.b_time,selected.c_time].map(utc).join(" / ")}</dd>
                   {selected.formation_ohlc?.map((candle,index)=><div key={index}>
@@ -502,7 +503,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                   <dt>Mitigation and reason</dt><dd>{selected.mitigation_pct}% · {selected.reason}</dd>
                   <dt>Formed / observed / confirmed / available</dt><dd>{[selected.formation_confirmation_time,selected.observation_time,selected.confirmation_time,selected.available_at].map(utc).join(" / ")}</dd>
                   <dt>Source authority</dt><dd>{gap.provenance?.context_authority}</dd>
-                  <dt>Algorithm</dt><dd>FVG v1 · {rules.mitigation} · {schedule.kind}</dd>
+                  <dt>Algorithm</dt><dd>FVG v1 · identity policy {selected.identity_policy_version??1} · {rules.mitigation} · {schedule.kind}</dd>
                   {!!selected.warnings.length&&<><dt>Quality warnings</dt><dd>{selected.warnings.join(", ")}</dd></>}
                 </dl>}
               </section>}
