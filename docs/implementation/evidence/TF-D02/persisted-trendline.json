@@ -1,0 +1,54 @@
+{
+  "before": {
+    "schema_version": 1,
+    "revision": 1,
+    "items": [
+      {
+        "id": "0fa6fdbb-b005-4baf-8542-c01e41a41051",
+        "kind": "trend",
+        "anchors": [
+          {
+            "time": 1794592980,
+            "price": "1.08829"
+          },
+          {
+            "time": 1794596040,
+            "price": "1.08720"
+          }
+        ],
+        "label": "",
+        "color": "#55d9b5",
+        "visible": true,
+        "locked": false,
+        "created_at": 1794828441,
+        "updated_at": 1794828441
+      }
+    ]
+  },
+  "after": {
+    "schema_version": 1,
+    "revision": 6,
+    "items": [
+      {
+        "id": "0fa6fdbb-b005-4baf-8542-c01e41a41051",
+        "kind": "trend",
+        "anchors": [
+          {
+            "time": 1794594240,
+            "price": "1.08838"
+          },
+          {
+            "time": 1794597300,
+            "price": "1.08663"
+          }
+        ],
+        "label": "",
+        "color": "#55d9b5",
+        "visible": true,
+        "locked": false,
+        "created_at": 1794828441,
+        "updated_at": 1794828443
+      }
+    ]
+  }
+}

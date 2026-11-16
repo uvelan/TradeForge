@@ -7,8 +7,9 @@ import {chartTimeOptions,useTimezone} from './timezone';
 import {ArrowDownRight,ArrowUpRight,Camera,Check,ChevronDown,LoaderCircle,Maximize,Minimize,SkipForward,TriangleAlert} from 'lucide-react';
 import type {Candle} from './types';
 import type {ChartLink} from './ChartLink';
-import {DrawingLayer,type Drawing} from './Drawings';
+import {DrawingLayer,type Anchor,type Drawing} from './Drawings';
 import {installPlacement,type DrawPoint,type PlacementDrag} from './drawingPlacement';
+import {sameAnchors,transformDrawing} from './drawingGeometry';
 
 export function Badge({children,tone='neutral'}:{children:React.ReactNode;tone?:'neutral'|'green'|'red'|'amber'|'blue'}) {return <span className={`badge badge-${tone}`}>{children}</span>}
 export function SectionTitle({eyebrow,title,action}:{eyebrow?:string;title:string;action?:React.ReactNode}){return <div className="section-title"><div>{eyebrow&&<span className="eyebrow">{eyebrow}</span>}<h2>{title}</h2></div>{action}</div>}
@@ -23,7 +24,7 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicator,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,onSmtSelect,onSaveSnapshot}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicator,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
   onAddLevel?:(price:number)=>void;showSnapshot?:boolean;symbol?:string;precision?:number;indicator?:IndicatorResult
   timeframe?: string;
@@ -33,7 +34,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   drawings?:Drawing[]; onAnchor?:(points:{bar:Candle;price:number}[])=>void;
   placementDraft?:DrawingLayer['preview']; placementInteraction?:object;
   placementDrag?:PlacementDrag; requirePlacementCandle?:boolean;
-  onPlacementPreview?:(points:{bar:Candle;price:number}[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>;
+  onPlacementPreview?:(points:{bar:Candle;price:number}[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void;
+  directEdit?:{selected:string;enabled:boolean;revision?:number;snap:boolean;save:(item:Drawing,anchors:Anchor[])=>void}; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>;
   comparison?: {symbol:string; candles:Candle[]; precision:number; placement:ComparisonPlacement;
     onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]}
 }){
@@ -81,6 +83,9 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   const needsCandle=useRef(requirePlacementCandle);
   needsCandle.current=requirePlacementCandle;
   const placementReset=useRef<(()=>void)|undefined>(undefined);
+  const editReset=useRef<(()=>void)|undefined>(undefined);
+  const editing=useRef(directEdit);
+  editing.current=directEdit;
   const drawingSelection=useRef(onDrawingSelect);
   drawingSelection.current=onDrawingSelect;
   const markerSelection=useRef(onSmtSelect);
@@ -119,9 +124,10 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     paintLayer.current=toolLayer;
     series.attachPrimitive(toolLayer);
     if(drawing.current)toolLayer.showPreview(draft.current);
+    else toolLayer.select(editing.current?.selected??'');
     const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime}):undefined;
     const scale=chart.timeScale();
-    const viewport=()=>{if(linkId)link?.viewport(linkId);};
+    const viewport=()=>{editReset.current?.();if(linkId)link?.viewport(linkId);};
     const activate=()=>{if(linkId)link?.activate(linkId);setMissingLinkedTime(undefined);};
     const leave=()=>{if(linkId)link?.clearCursor(linkId);};
     const container=element.current;
@@ -147,6 +153,35 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       drag:()=>drag.current??'none',
       activate,
       locate:located,
+      select:point=>drawingSelection.current?.(toolLayer.target(point.x,point.y)?.item.id??''),
+      startEdit:start=>{
+        const config=editing.current;
+        if(!config?.enabled||!config.selected)return;
+        const hit=toolLayer.target(start.x,start.y);
+        if(!hit||hit.item.id!==config.selected||hit.item.locked)return;
+        const {item,handle}=hit;
+        // Use the same wick preference as placement, and require primary candle times.
+        function proposal(end?:DrawPoint){
+          if(!end)return;
+          const bar=end.time===undefined?undefined:linkedBars.current.get(end.time);
+          const price=config!.snap&&bar?
+            (Math.abs(end.price-bar.high)<Math.abs(end.price-bar.low)?bar.high:bar.low):end.price;
+          const anchors=transformDrawing(item,handle,start,{...end,price},precision,
+            time=>linkedBars.current.has(time));
+          return anchors&&!sameAnchors(item.anchors,anchors)?anchors:undefined;
+        }
+        return {
+          update:end=>{
+            const anchors=proposal(end);
+            toolLayer.showEdit(anchors?{...item,anchors}:undefined);
+          },
+          commit:end=>{
+            const anchors=proposal(end);
+            if(anchors)editing.current?.save(item,anchors);
+          },
+          cancel:()=>toolLayer.showEdit(),
+        };
+      },
       preview:points=>toolLayer.showPreview(previewHandler.current?.(candlePoints(points))??draft.current),
       commit:points=>{
         if(anchorHandler.current)anchorHandler.current(candlePoints(points));
@@ -154,6 +189,18 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       },
     });
     placementReset.current=input.reset;
+    editReset.current=input.cancelEdit;
+    const cancelOnEscape=(event:KeyboardEvent)=>{if(event.key==='Escape')input.cancelEdit();};
+    const size=()=>[container.clientWidth,container.clientHeight];
+    let dimensions=size();
+    const resize=new ResizeObserver(()=>{
+      const next=size();
+      if(next[0]!==dimensions[0]||next[1]!==dimensions[1])input.cancelEdit();
+      dimensions=next;
+    });
+    resize.observe(container);
+    document.addEventListener('fullscreenchange',input.cancelEdit);
+    window.addEventListener('keydown',cancelOnEscape);
     container.addEventListener('pointerenter',activate);
     container.addEventListener('wheel',activate,{passive:true});
     container.addEventListener('pointerleave',leave);
@@ -164,11 +211,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       if(linkId)link?.cursor(linkId,time);
     });
     chart.subscribeClick(param=>{
-      if(!drawing.current&&typeof param.hoveredObjectId==='string'&&param.hoveredObjectId.startsWith('drawing:')){
-        drawingSelection.current?.(param.hoveredObjectId.slice(8));
-        return;
-      }
-      if(!drawing.current&&typeof param.hoveredObjectId==='string'&&param.hoveredObjectId.startsWith('smt:')){
+      if(drawing.current)return;
+      if(typeof param.hoveredObjectId==='string'&&param.hoveredObjectId.startsWith('smt:')){
         const event=markerEvents.current.find(item=>item.id===param.hoveredObjectId?.toString().slice(4));
         if(event?.event_key)markerSelection.current?.(event);
         return;
@@ -176,7 +220,10 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     });
     return ()=>{
       container.removeEventListener('pointerenter',activate);
-      input.dispose();placementReset.current=undefined;
+      input.dispose();placementReset.current=undefined;editReset.current=undefined;
+      resize.disconnect();
+      document.removeEventListener('fullscreenchange',input.cancelEdit);
+      window.removeEventListener('keydown',cancelOnEscape);
       container.removeEventListener('wheel',activate);
       container.removeEventListener('pointerleave',leave);
       scale.unsubscribeVisibleLogicalRangeChange(viewport);
@@ -186,6 +233,11 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     };
   },[symbol,precision,link,linkId]);
   useLayoutEffect(()=>{placementReset.current?.();paintLayer.current?.showPreview(drawMode?placementDraft:undefined);},[drawMode,placementDraft,placementInteraction,symbol,precision]);
+  useLayoutEffect(()=>{
+    editReset.current?.();
+    paintLayer.current?.select(drawMode?'':directEdit?.selected??'');
+  },[drawMode,directEdit?.selected,directEdit?.enabled,directEdit?.revision,directEdit?.snap,
+    comparison?.symbol,comparison?.placement,height,candles,symbol,precision]);
   useEffect(()=>{paintLayer.current?.update(drawings??[]);},[drawings,symbol,precision]);
   const comparisonSymbol=comparison?.symbol;
   const comparisonPrecision=comparison?.precision;

@@ -323,7 +323,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     ? [...new Map([...historical,...liveRows].map(row=>[row.time,row])).values()].sort((a,b)=>a.time-b.time).slice(-600)
     : historical;
   const replayActive=replayIndex!==null&&Boolean(replayData);
-  const visibleCandles=replayActive?replayData!.candles.slice(0,replayIndex!+1):candles;
+  const visibleCandles=useMemo(()=>replayActive?replayData!.candles.slice(0,replayIndex!+1):candles,
+    [replayActive,replayData,replayIndex,candles]);
   const indicatorCandles=!replayActive&&data?.latest_unconfirmed?visibleCandles.slice(0,-1):visibleCandles;
   const indicator=useChartIndicator(expanded&&!isBinance&&!busy&&!error,indicatorCandles,source,timeframe,initialLocation);
   const last=visibleCandles.at(-1);const first=visibleCandles[0];
@@ -510,7 +511,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             onSmtSelect={!replayActive&&onSignal?event=>{
               if(event.event_key)void onSignal({event_key:event.event_key,status:event.status}).catch(reason=>setPollError(reason.message));
             }:undefined}
-            onDrawingSelect={id=>{if(drawingBook.current?.items.some(item=>item.id===id))drawingBook.setSelected(id);}}
+            onDrawingSelect={id=>{if(!id||drawingBook.current?.items.some(item=>item.visible&&item.id===id))drawingBook.setSelected(id);}}
+            directEdit={{selected:drawingBook.selected,enabled:Boolean(drawingBook.current&&!drawingBook.saving&&!drawingBook.conflict),
+              revision:drawingBook.current?.revision,snap:drawingBook.snap,save:drawingBook.saveDirect}}
             placementDraft={placementDraft}
             requirePlacementCandle={interaction.mode==='level'}
             placementDrag={interaction.mode==='level'||
