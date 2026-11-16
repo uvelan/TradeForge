@@ -364,7 +364,9 @@ test("liquidity replay exposes the sweep only after its closed evidence and keep
   await expect(detail).toHaveCount(0);
 });
 
-test("a pending liquidity request cannot replace another instrument or timeframe",async ({page})=>{
+for(const [title,query,id] of [["Liquidity","liquidity pools","liquidity_sweeps"],
+  ["FVG","fair value gap","fair_value_gap"]]){
+test("a pending "+title+" request cannot replace another instrument or timeframe",async ({page})=>{
   let release!:()=>void;
   const hold=new Promise<void>(resolve=>{release=resolve;});
   let entered!:()=>void;
@@ -376,7 +378,7 @@ test("a pending liquidity request cannot replace another instrument or timeframe
   });
   await terminal(page);
   await page.getByText("Indicator library",{exact:true}).click();
-  await enable(page,"liquidity pools","liquidity_sweeps");
+  await enable(page,query,id);
   await started;
   const current=page.waitForResponse(response=>response.url().endsWith("/indicators/evaluate")&&
     response.request().postDataJSON().timeframe==="H1"&&response.request().postDataJSON().symbol==="GBPUSD");
@@ -388,5 +390,51 @@ test("a pending liquidity request cannot replace another instrument or timeframe
   await expect(page.locator(".primary-chart .pane-label")).toContainText("GBPUSD · H1");
   const library=page.locator("details.indicator-library");
   if(await library.getAttribute("open")===null)await page.getByText("Indicator library",{exact:true}).click();
+  await expect(page.getByLabel(title+" evidence",{exact:true})).toBeVisible();
+});
+}
+
+test("FVG paints a causal zone and updates its remaining depth during replay",async ({page},info)=>{
+  await page.addInitScript(()=>{
+    const fill=CanvasRenderingContext2D.prototype.fillRect;
+    CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){
+      if(typeof this.fillStyle==="string" && /^rgba\(45,\s*212,\s*191,/.test(this.fillStyle)&&w>0&&h>0)
+        this.canvas.dataset.fvgPainted="true";
+      return fill.call(this,x,y,w,h);
+    };
+  });
+  const start=Date.parse("2026-11-02T00:00:00Z")/1000,step=300;
+  const market={source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",
+    candles:[[99,100,98,99],[100,106,100,105],[105,110,105,108],[106,107,103.75,106]].map(
+      ([open,high,low,close],index)=>({open,high,low,close,time:start+index*step,available_at:start+(index+1)*step}))};
+  await page.route("**/research/api/replay/sessions",route=>route.fulfill({status:201,
+    json:{id:"fvg-fixture",market,checkpoint:{position:1,bookmarks:[]},views:{}}}));
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"fair value gap","fair_value_gap");
+  await enable(page,"liquidity pools","liquidity_sweeps");
+  await page.getByRole("button",{name:"Bar replay",exact:true}).click();
+  const replay=page.getByLabel("Historical replay");
+  const evidence=page.getByLabel("FVG evidence",{exact:true});
+  const formed=evidence.getByRole("button",{name:"BULLISH · ACTIVE · 0.0%"});
+  const partial=evidence.getByRole("button",{name:"BULLISH · PARTIALLY MITIGATED · 25.0%"});
+  await expect(evidence).toContainText("Current FVGs 0 / 0");
   await expect(page.getByLabel("Liquidity evidence",{exact:true})).toBeVisible();
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("fvg-before.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  await expect(formed).toBeVisible();
+  await expect(page.locator(primary).locator('canvas[data-fvg-painted="true"]').first()).toBeAttached();
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("fvg-formed.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  await partial.click();
+  await expect(evidence.getByLabel("Selected FVG")).toContainText("100 – 103.75");
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("fvg-mitigated.png")});
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(partial).toHaveCount(0);
+  await expect(formed).toBeVisible();
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(evidence).toContainText("Current FVGs 0 / 0");
 });

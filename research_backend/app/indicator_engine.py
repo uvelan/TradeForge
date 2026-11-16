@@ -13,6 +13,7 @@ from .market import FRAME_MIN
 from .market_structure import StructureRules, detect_structure
 from .structure_pages import StructureDelivery
 from .liquidity import LiquidityDelivery, LiquidityRules, LiquidityStream
+from .fvg import FVGDelivery, FVGRules, evaluate_fvg
 from .indicator_coverage import DAY, WEEK, MarketSchedule, period_start, previous_levels
 
 SESSIONS = {
@@ -49,6 +50,8 @@ class IndicatorSpec(BaseModel):
     structure_delivery: StructureDelivery | None = None
     liquidity: LiquidityRules | None = None
     liquidity_delivery: LiquidityDelivery | None = None
+    fvg: FVGRules | None = None
+    fvg_delivery: FVGDelivery | None = None
 
 
 class EvidenceBar(Bar):
@@ -136,6 +139,13 @@ def catalog() -> list[IndicatorDefinition]:
         "price_source": "wick_or_close", "required_fields": ["open", "high", "low", "close"],
         "unit": "price", "timeframes": list(FRAME_MIN), "instruments": "any_valid_ohlc",
     })
+    definitions.append({
+        "id":"fair_value_gap", "label":"Fair Value Gaps (FVG)", "version":1,
+        "render":"markers", "period":None, "warmup_bars":3,
+        "parameters":{"fvg":FVGRules().canonical()}, "price_source":"wick",
+        "required_fields":["open","high","low","close"], "unit":"price",
+        "timeframes":list(FRAME_MIN), "instruments":"any_valid_ohlc",
+    })
     return definitions
 
 
@@ -191,6 +201,20 @@ def range_series(rows: list[tuple[EvidenceBar, int]], step: int, key: str,
     return series, sorted(warnings)
 
 
+def resolve_history(request, rows, step, rules, history_loader):
+    if rules.history_bars == 2000:
+        return rows, {"context_authority": "CLIENT_SUPPLIED_UNVERIFIED"}
+    if not history_loader:
+        raise ValueError("Extended history requires the server history reader")
+    end = request.cutoff // step * step
+    start = rules.history_start
+    if start is None or start % step or end-start > rules.history_bars*step:
+        raise ValueError("Extended history must be aligned and at most 10,000 slots")
+    context = history_loader(request,start,end,step) if start<end else {
+        "rows":[], "evidence":{"status":"HISTORY_UNAVAILABLE"}}
+    return context["rows"], context["evidence"]
+
+
 def evaluate(request: Evaluation, history_loader=None) -> dict:
     definitions = {item["id"]: item for item in catalog()}
     if len({spec.id for spec in request.indicators}) != len(request.indicators):
@@ -234,6 +258,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             raise ValueError("Session options require a session indicator")
         if spec.schedule is not None and spec.id not in PERIODS:
             raise ValueError("Schedule options require a previous-period indicator")
+        if (spec.fvg is not None or spec.fvg_delivery is not None) and spec.id != "fair_value_gap":
+            raise ValueError("FVG options require the FVG indicator")
         if (spec.liquidity is not None or spec.liquidity_delivery is not None) and spec.id != "liquidity_sweeps":
             raise ValueError("Liquidity options require the liquidity indicator")
         if spec.structure is not None and spec.id not in {"market_structure","liquidity_sweeps"}:
@@ -252,18 +278,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                 result_warnings.append("INSUFFICIENT_WARMUP")
         elif spec.id in {"market_structure","liquidity_sweeps"}:
             rules = spec.structure or StructureRules()
-            evidence = {"context_authority": "CLIENT_SUPPLIED_UNVERIFIED"}
-            structure_rows = rows
-            if rules.history_bars == 10_000:
-                if not history_loader:
-                    raise ValueError("Extended structure history requires the server history reader")
-                end = request.cutoff // step * step
-                start = rules.history_start
-                if start is None or start % step or end - start > rules.history_bars * step:
-                    raise ValueError("Extended structure history must be aligned and at most 10,000 slots")
-                context = history_loader(request, start, end, step) if start < end else {
-                    "rows": [], "evidence": {"status": "HISTORY_UNAVAILABLE"}}
-                structure_rows, evidence = context["rows"], context["evidence"]
+            structure_rows,evidence = resolve_history(request,rows,step,rules,history_loader)
             provenance = {**input_identity, **evidence, "schedule_completeness": "NOT_ESTABLISHED"}
             provenance["partitions"] = sorted(provenance["partitions"], key=lambda item: (item["id"], item["sha256"]))
             # Retrieval counters describe a request, not event identity.
@@ -294,6 +309,19 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                           "schedule_assumption": (detected.get("continuity") or {}).get("schedule"),
                           "provenance": provenance, **liquid.finish(detected["event_page"]["snapshot"],
                                                                     detected["provenance_id"])}
+        elif spec.id == "fair_value_gap":
+            rules = spec.fvg or FVGRules()
+            fvg_rows,evidence = resolve_history(request,rows,step,rules,history_loader)
+            provenance = {**input_identity,**evidence,"schedule_completeness":"NOT_ESTABLISHED"}
+            provenance["partitions"] = sorted(provenance["partitions"], key=lambda item:(item["id"],item["sha256"]))
+            output = evaluate_fvg(fvg_rows,step,request.cutoff,rules,spec.fvg_delivery or FVGDelivery(),
+                                  provenance,request.frozen)
+            result_warnings = output.pop("warnings")
+            if evidence.get("status"):
+                result_warnings.append(evidence["status"])
+            result = {"id":spec.id,"version":1,"render":"markers","series":{},
+                      "warmup_bars":max(3,rules.atr_period if rules.atr_multiple else 0),
+                      "parameters":rules.canonical(),"provenance":provenance,**output}
         elif spec.id in PERIODS:
             length = DAY if spec.id == "previous_day" else WEEK
             schedule = spec.schedule or MarketSchedule(
@@ -311,7 +339,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             result = {"id": spec.id, "version": 1, "render": "overlay", "warmup_bars": None, "series": series}
             if spec.id in SESSIONS:
                 result["session"] = spec.session.model_dump() if spec.session else definition["parameters"]["session"]
-        include_gaps = spec.id not in PERIODS and not (spec.id == "market_structure" and result["version"] == 2) and not (
+        include_gaps = spec.id != "fair_value_gap" and spec.id not in PERIODS and not (spec.id == "market_structure" and result["version"] == 2) and not (
             spec.id == "liquidity_sweeps" and result["structure_version"] == 2)
         results.append({**result, "warnings": sorted((warnings if include_gaps else set()) | set(result_warnings)),
                         "unit": definition["unit"]})

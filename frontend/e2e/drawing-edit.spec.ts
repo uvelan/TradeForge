@@ -373,13 +373,15 @@ test("market structure overlays preserve ownership of a saved drawing handle",as
   expect(itemAt(moved,item.id).anchors[0].price).not.toBe(item.anchors[0].price);
 });
 
-test("liquidity overlays preserve a saved drawing handle gesture",async ({page})=>{
+for(const [title,query,id] of [["Liquidity","liquidity pools","liquidity_sweeps"],
+  ["FVG","fair value gap","fair_value_gap"]]){
+test(title+" overlays preserve a saved drawing handle gesture",async ({page})=>{
   const {created,item}=await setup(page,"horizontal",[[.49,.55]]);
   await page.getByText("Indicator library",{exact:true}).click();
-  await page.getByLabel("Search indicators").fill("liquidity pools");
-  await page.getByRole("combobox",{name:"Add indicator",exact:true}).selectOption("liquidity_sweeps");
+  await page.getByLabel("Search indicators").fill(query);
+  await page.getByRole("combobox",{name:"Add indicator",exact:true}).selectOption(id);
   await page.getByRole("button",{name:"Enable indicator",exact:true}).click();
-  await expect(page.getByLabel("Liquidity evidence",{exact:true})).toBeVisible();
+  await expect(page.getByLabel(title+" evidence",{exact:true})).toBeVisible();
   await page.getByText("Indicator library",{exact:true}).click();
   const [start]=await handles(page,1);
   const postedEdit=posted(page);
@@ -389,3 +391,4 @@ test("liquidity overlays preserve a saved drawing handle gesture",async ({page})
   expect(itemAt(moved,item.id).anchors[0].time).toBe(item.anchors[0].time);
   expect(itemAt(moved,item.id).anchors[0].price).not.toBe(item.anchors[0].price);
 });
+}

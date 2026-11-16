@@ -8,7 +8,18 @@ type Schedule = {kind: "continuous" | "forex_weekly" | "unknown"; timezone?: str
   sunday_open?: string; friday_close?: string};
 type Structure = {algorithm_version?: 1 | 2; market_schedule?: Schedule; left: number; right: number; price_source: "wick" | "close";
   ties: "strict" | "earliest"; tolerance_bps: number; break_bps: number; wick_candidates: boolean};
-type Collection = "pivots" | "breaks" | "pools" | "sweeps" | "current_pools";
+type Collection = "pivots" | "breaks" | "pools" | "sweeps" | "current_pools" | "formations" | "revisions" | "current_fvgs";
+type FvgRules = {min_price:number;min_bps:number;min_ticks:number;tick_size?:number|null;tick_size_reference?:string|null;
+  atr_multiple:number;atr_period:number;displacement:"none"|"directional_body_bps_v1";min_body_bps:number;
+  mitigation:"wick"|"close";max_age_bars:number;market_schedule:Schedule;history_bars?:2000|10000;history_start?:number|null};
+type FvgVisibility={bullish:boolean;bearish:boolean;active:boolean;partial:boolean;full:boolean;invalidated:boolean;expired:boolean};
+const fvgVisibility:FvgVisibility={bullish:true,bearish:true,active:true,partial:true,full:true,invalidated:true,expired:true};
+export type FvgEvent = {id:string;fvg_id:string;direction:"BULLISH"|"BEARISH";
+  state:"ACTIVE"|"PARTIALLY_MITIGATED"|"FULLY_MITIGATED"|"INVALIDATED"|"EXPIRED";
+  lower:number;upper:number;remaining_lower:number;remaining_upper:number;mitigation_pct:number;
+  formation_ohlc?:number[][];
+  a_time:number;b_time:number;c_time:number;observation_time:number;formation_confirmation_time:number;
+  confirmation_time:number;available_at:number;reason:string;warnings:string[]};
 type Liquidity = {equality_bps:number; penetration_bps:number; reclaim_bps:number;
   min_touches:number; max_touches:number; min_separation_bars:number; max_age_bars:number};
 type LiquidityVisibility = {zones:boolean; sweeps:boolean; candidates:boolean; terminal:boolean};
@@ -20,7 +31,7 @@ export type LiquidityEvent = {
   related_structure_ids?:string[]; ohlc?:{open:number; high:number; low:number; close:number};
 };
 type PageInfo = {total: number; returned: number; start: number; end: number; next_cursor: string | null};
-type OlderPage = {key: string; collection: Collection; metadata: PageInfo; events: (StructureEvent | LiquidityEvent)[]};
+type OlderPage = {key: string; collection: Collection; metadata: PageInfo; events: (StructureEvent | LiquidityEvent | FvgEvent)[]};
 export type CurrentLiquidityPool = Omit<LiquidityEvent,"id"> & {revision_id:string; expiry_in_bars:number};
 type StructureVisibility = {swings: boolean; breaks: boolean; candidates: boolean};
 export type StructureEvent = {
@@ -32,8 +43,8 @@ export type StructureEvent = {
 const structureVisibility: StructureVisibility = {swings: true, breaks: true, candidates: true};
 
 type Definition = { id: string; label: string; period: number | null; timeframes: Timeframe[];
-  parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure; liquidity?: Liquidity } };
-type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility; liquidity?: Liquidity; liquidityVisibility?: LiquidityVisibility };
+  parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure; liquidity?: Liquidity; fvg?: FvgRules } };
+type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility; liquidity?: Liquidity; liquidityVisibility?: LiquidityVisibility; fvg?: FvgRules; fvgVisibility?: FvgVisibility; tickSize?: Record<string,{size:number;reference:string}> };
 type Point = { time: number; value: number; pivot_time?: number; status: "confirmed" | "provisional" };
 export type IndicatorResult = {
   id: string;
@@ -49,6 +60,11 @@ export type IndicatorResult = {
   continuity?: {schedule_authority: string; counts: Record<string, number>};
   visibility?: StructureVisibility;
   liquidityVisibility?: LiquidityVisibility;
+  fvgVisibility?: FvgVisibility;
+  formations?: FvgEvent[];
+  revisions?: FvgEvent[];
+  fvg_page?: {formations:PageInfo; revisions:PageInfo};
+  current_fvgs?: PageInfo & {truncated:boolean;items:FvgEvent[]};
   pools?: LiquidityEvent[];
   sweeps?: LiquidityEvent[];
   liquidity_page?: {snapshot:string; pools:PageInfo; sweeps:PageInfo};
@@ -94,6 +110,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   const [older, setOlder] = useState<OlderPage>();
   const [pageRequest, setPageRequest] = useState<{key: string; collection: Collection; cursor: string}>();
   const [pageError, setPageError] = useState("");
+  const [selectedFvg,setSelectedFvg]=useState<{key:string;id:string}>();
   const [selectedLiquidity,setSelectedLiquidity]=useState<{key:string; id:string}>();
   const [response, setResponse] = useState<{key: string; results?: IndicatorResult[]; error?: string}>();
   useEffect(() => { if (request?.indicator) { setSelected(request.indicator); setPeriod(""); } },
@@ -115,7 +132,13 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       if (session && (!session.timezone || !session.start || !session.end || session.start === session.end)) return [];
       const schedule = definition.parameters.schedule ? item.schedules?.[scheduleScope] : undefined;
       return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {}), ...(schedule ? {schedule} : {}), ...(item.structure ? {structure:item.structure.algorithm_version===2?
-        {...item.structure,market_schedule:item.schedules?.[scheduleScope]}:item.structure} : {}), ...(item.liquidity ? {liquidity:item.liquidity} : {})}];
+        {...item.structure,market_schedule:item.schedules?.[scheduleScope]}:item.structure} : {}), ...(item.liquidity ? {liquidity:item.liquidity} : {}),
+        ...(definition.parameters.fvg?{fvg:{...definition.parameters.fvg,...item.fvg,
+          market_schedule:item.schedules?.[scheduleScope]??{kind:"unknown"},
+          ...(item.fvg?.history_bars===10000&&(!source.endsWith("_SAVED")||item.fvg.history_start==null)
+            ?{history_bars:2000,history_start:null}:{}),
+          tick_size:item.tickSize?.[scheduleScope]?.size&&item.tickSize?.[scheduleScope]?.reference?item.tickSize[scheduleScope].size:undefined,
+          tick_size_reference:item.tickSize?.[scheduleScope]?.size&&item.tickSize?.[scheduleScope]?.reference?item.tickSize[scheduleScope].reference:undefined}}:{})}];
     });
   }, [definitions, periodText, primary, scheduleScope, settings, timeframe]);
   const body = useMemo(() => enabled && active.length && (candles.length || active.some(item => item.id.startsWith("previous_")))
@@ -160,16 +183,17 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
     const controller = new AbortController();
     const {collection, cursor}=pageRequest;
     const input=JSON.parse(body);
-    const current=collection==="current_pools";
-    const liquid=current||collection==="pools"||collection==="sweeps";
-    const spec = input.indicators.find((item:{id:string})=>item.id===(liquid?"liquidity_sweeps":"market_structure"));
-    const first=liquid?"pool":"pivot", second=liquid?"sweep":"break";
-    const isFirst=collection==="pivots"||collection==="pools";
-    input.indicators=[{...spec,[liquid?"liquidity_delivery":"structure_delivery"]:current?
-      {pool_limit:0,sweep_limit:0,current_limit:40,current_cursor:cursor}:{
-        [first+"_limit"]:isFirst?40:0,[second+"_limit"]:isFirst?0:40,[(isFirst?first:second)+"_cursor"]:cursor,
-        ...(liquid?{current_limit:0}:{}),
-      }}];
+    const current=collection==="current_pools"||collection==="current_fvgs";
+    const liquid=collection==="current_pools"||collection==="pools"||collection==="sweeps";
+    const fvg=collection==="current_fvgs"||collection==="formations"||collection==="revisions";
+    const spec=input.indicators.find((item:{id:string})=>item.id===(liquid?"liquidity_sweeps":fvg?"fair_value_gap":"market_structure"));
+    const first=liquid?"pool":fvg?"formation":"pivot", second=liquid?"sweep":fvg?"revision":"break";
+    const isFirst=collection==="pivots"||collection==="pools"||collection==="formations";
+    input.indicators=[{...spec,[liquid?"liquidity_delivery":fvg?"fvg_delivery":"structure_delivery"]:{
+      [first+"_limit"]:!current&&isFirst?40:0,[second+"_limit"]:!current&&!isFirst?40:0,
+      ...(liquid||fvg?{current_limit:current?40:0}:{}),
+      [(current?"current":isFirst?first:second)+"_cursor"]:cursor,
+    }}];
     void (async()=>{
       try{
         const response=await fetch("/research/api/indicators/evaluate",{
@@ -178,9 +202,11 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
         const value=await response.json();
         if(!response.ok)throw Error(typeof value.detail==="string"?value.detail:"Historical event page unavailable");
         const result=value.results[0] as IndicatorResult;
-        const metadata=collection==="current_pools"?result.current_pools:
+        const metadata=collection==="current_fvgs"?result.current_fvgs:
+          collection==="formations"||collection==="revisions"?result.fvg_page?.[collection]:
+          collection==="current_pools"?result.current_pools:
           collection==="pools"||collection==="sweeps"?result.liquidity_page?.[collection]:result.event_page?.[collection];
-        const events=collection==="current_pools"?result.current_pools?.items.map(pool=>({...pool,id:pool.revision_id})):
+        const events=collection==="current_fvgs"?result.current_fvgs?.items:collection==="current_pools"?result.current_pools?.items.map(pool=>({...pool,id:pool.revision_id})):
           result[collection];
         if(!metadata)throw Error("Historical event page missing");
         if(!controller.signal.aborted)setOlder({key:body,collection,metadata,events:events??[]});
@@ -196,9 +222,10 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   const current = response?.key === body ? response : undefined;
   const visibility = settings.find(item => item.id === "market_structure")?.visibility ?? structureVisibility;
   const liquidVisibility=settings.find(item=>item.id==="liquidity_sweeps")?.liquidityVisibility??liquidityVisibility;
+  const gapVisibility=settings.find(item=>item.id==="fair_value_gap")?.fvgVisibility??fvgVisibility;
   const data = useMemo(() => current?.results?.map(item => item.id === "market_structure" ?
-    {...item, visibility} : item.id==="liquidity_sweeps"?{...item,liquidityVisibility:liquidVisibility}:item) ?? emptyResults,
-    [current, visibility, liquidVisibility]);
+    {...item, visibility} : item.id==="liquidity_sweeps"?{...item,liquidityVisibility:liquidVisibility}:item.id==="fair_value_gap"?{...item,fvgVisibility:gapVisibility}:item) ?? emptyResults,
+    [current, visibility, liquidVisibility, gapVisibility]);
   const warnings = [...new Set(data.filter(row => !row.coverage).flatMap(row => row.warnings))];
   const choices = definitions.filter(item => item.timeframes.includes(timeframe) && item.id !== selected &&
     !settings.some(config => config.id === item.id) && (item.label + " " + item.id).toLowerCase().includes(search.toLowerCase()));
@@ -395,6 +422,88 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                   {selection.constituents && <><dt>Confirmed pivots</dt><dd>{selection.constituents.map(p=>p.price+" @ "+new Date(p.time*1000).toISOString()).join(", ")}</dd></>}
                   {selection.ohlc && <><dt>Crossing OHLC</dt><dd>{Object.values(selection.ohlc).join(" / ")}</dd></>}
                   {selection.related_structure_ids?.length ? <><dt>Related structure</dt><dd>{selection.related_structure_ids.join(", ")}</dd></>:null}
+                </dl>}
+              </section>}
+            </>;
+          })()}
+          {definition.parameters.fvg && (()=>{
+            const rules=item.fvg??definition.parameters.fvg;
+            const gap=data.find(row=>row.id===item.id);
+            const tick=item.tickSize?.[scheduleScope];
+            const schedule=item.schedules?.[scheduleScope]??{kind:"unknown"};
+            const change=(value:Partial<FvgRules>)=>update(item.id,{fvg:{...rules,...value}});
+            const setSchedule=(value:Partial<Schedule>)=>update(item.id,
+              {schedules:{...item.schedules,[scheduleScope]:{...schedule,...value}}});
+            const history=older?.key===body&&["current_fvgs","formations","revisions"].includes(older.collection)?older:undefined;
+            const zoneRows=history?history.events as FvgEvent[]:[...(gap?.current_fvgs?.items??[]),
+              ...(gap?.revisions??[]).slice(-6).reverse(),...(gap?.formations??[]).slice(-6).reverse()];
+            const selected=selectedFvg?.key===body?zoneRows.find(event=>event.id===selectedFvg.id):undefined;
+            const values:[keyof Pick<FvgRules,"min_price"|"min_bps"|"min_ticks"|"atr_multiple"|"atr_period"|"min_body_bps"|"max_age_bars">,string,number,number,number][]=[
+              ["min_price","Minimum price gap",0,Number.MAX_VALUE,.00001],["min_bps","Minimum gap (bps)",0,10000,.1],
+              ["min_ticks","Minimum ticks",0,10000,1],["atr_multiple","ATR multiple",0,100,.1],
+              ["atr_period","ATR period",2,100,1],["max_age_bars","FVG maximum age",1,500,1],
+              ...(rules.displacement!=="none"?[["min_body_bps","Middle body (bps)",0,10000,.1] as ["min_body_bps",string,number,number,number]]:[]),
+            ];
+            const page=(collection:Collection,cursor:string|null|undefined)=>{
+              if(cursor){setPageError("");setPageRequest({key:body,collection,cursor});}
+            };
+            const utc=(time:number)=>new Date(time*1000).toISOString();
+            return <>
+              {values.map(([key,name,min,max,step])=><label key={key}>{name}<input type="number" min={min} max={max} step={step}
+                value={rules[key]} onChange={event=>{const value=event.target.valueAsNumber;if(value>=min&&value<=max)change({[key]:value});}}/></label>)}
+              {rules.min_ticks>0&&<>
+                <label>Declared tick size <input type="number" min={0} step="any" value={tick?.size||""}
+                  onChange={event=>update(item.id,{tickSize:{...item.tickSize,[scheduleScope]:{
+                    size:event.target.valueAsNumber||0,reference:tick?.reference??""}}})}/></label>
+                <label>Tick source reference <input value={tick?.reference??""} maxLength={120}
+                  onChange={event=>update(item.id,{tickSize:{...item.tickSize,[scheduleScope]:{
+                    size:tick?.size??0,reference:event.target.value}}})}/></label>
+              </>}
+              {source.endsWith("_SAVED")&&<label>FVG archive start (UTC) <input type="datetime-local"
+                value={rules.history_start!=null?new Date(rules.history_start*1000).toISOString().slice(0,16):""}
+                onChange={event=>{const stamp=event.target.valueAsNumber/1000;
+                  change(Number.isFinite(stamp)?{history_bars:10000,history_start:stamp}:{history_bars:2000,history_start:null});}}/></label>}
+              <label>FVG displacement <select value={rules.displacement} onChange={event=>change({displacement:event.target.value as FvgRules["displacement"]})}>
+                <option value="none">None</option><option value="directional_body_bps_v1">Directional body v1</option>
+              </select></label>
+              <label>FVG mitigation <select value={rules.mitigation} onChange={event=>change({mitigation:event.target.value as FvgRules["mitigation"]})}>
+                <option value="wick">Wick</option><option value="close">Close</option>
+              </select></label>
+              <label>FVG market schedule <select value={schedule.kind} onChange={event=>setSchedule({kind:event.target.value as Schedule["kind"]})}>
+                <option value="unknown">Unknown</option><option value="continuous">Continuous</option><option value="forex_weekly">Configured Sunday–Friday</option>
+              </select></label>
+              {schedule.kind==="forex_weekly"&&<>
+                <label>FVG schedule timezone <input value={schedule.timezone??"America/New_York"} onChange={event=>setSchedule({timezone:event.target.value})}/></label>
+                <label>FVG Sunday open <input type="time" value={schedule.sunday_open??"17:00"} onChange={event=>setSchedule({sunday_open:event.target.value})}/></label>
+                <label>FVG Friday close <input type="time" value={schedule.friday_close??"17:00"} onChange={event=>setSchedule({friday_close:event.target.value})}/></label>
+              </>}
+              {(Object.keys(fvgVisibility) as (keyof FvgVisibility)[]).map(key=><label key={key}><input type="checkbox" checked={gapVisibility[key]}
+                onChange={event=>update(item.id,{fvgVisibility:{...gapVisibility,[key]:event.target.checked}})}/> Show FVG {key}</label>)}
+              {gap?.fvg_page && <section aria-label="FVG evidence">
+                <p>Current FVGs {gap.current_fvgs?.returned} / {gap.current_fvgs?.total}
+                  {gap.current_fvgs?.truncated&&" (chart view limited)"} · Source {gap.provenance?.context_authority}</p>
+                <button type="button" className="small-tool" disabled={!gap.current_fvgs?.next_cursor||Boolean(pageRequest)}
+                  onClick={()=>page("current_fvgs",gap.current_fvgs?.next_cursor)}>More current FVGs</button>
+                {(["formations","revisions"] as const).map(key=><button key={key} type="button" className="small-tool"
+                  disabled={!gap.fvg_page?.[key].next_cursor||Boolean(pageRequest)} onClick={()=>page(key,gap.fvg_page?.[key].next_cursor)}>Older FVG {key}</button>)}
+                {history&&<><button type="button" className="small-tool" disabled={!history.metadata.next_cursor||Boolean(pageRequest)}
+                  onClick={()=>page(history.collection,history.metadata.next_cursor)}>Next FVG page</button>
+                  <button type="button" className="small-tool" onClick={()=>{setPageRequest(undefined);setOlder(undefined);}}>Latest FVG evidence</button></>}
+                {!!gap.warnings.length&&<p>{gap.warnings.join(" · ")}</p>}
+                {pageError&&<small role="alert">{pageError}</small>}
+                {[...new Map(zoneRows.map(event=>[event.id,event])).values()].map(event=><button key={event.id} type="button" className="small-tool"
+                  onClick={()=>setSelectedFvg({key:body,id:event.id})}>{event.direction} · {event.state.replaceAll("_"," ")} · {event.mitigation_pct.toFixed(1)}%</button>)}
+                {selected&&<dl aria-label="Selected FVG">
+                  <dt>Formation A / B / C</dt><dd>{[selected.a_time,selected.b_time,selected.c_time].map(utc).join(" / ")}</dd>
+                  {selected.formation_ohlc?.map((candle,index)=><div key={index}>
+                    <dt>{"ABC"[index]} OHLC</dt><dd>{candle.join(" / ")}</dd></div>)}
+                  <dt>Price zone</dt><dd>{selected.lower} – {selected.upper}</dd>
+                  <dt>Remaining</dt><dd>{selected.remaining_lower} – {selected.remaining_upper}</dd>
+                  <dt>Mitigation and reason</dt><dd>{selected.mitigation_pct}% · {selected.reason}</dd>
+                  <dt>Formed / observed / confirmed / available</dt><dd>{[selected.formation_confirmation_time,selected.observation_time,selected.confirmation_time,selected.available_at].map(utc).join(" / ")}</dd>
+                  <dt>Source authority</dt><dd>{gap.provenance?.context_authority}</dd>
+                  <dt>Algorithm</dt><dd>FVG v1 · {rules.mitigation} · {schedule.kind}</dd>
+                  {!!selected.warnings.length&&<><dt>Quality warnings</dt><dd>{selected.warnings.join(", ")}</dd></>}
                 </dl>}
               </section>}
             </>;

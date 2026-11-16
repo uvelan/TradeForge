@@ -1,3 +1,4 @@
+import {FvgLayer} from './FvgLayer';
 import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType, type IChartApi, type ISeriesApi, type IPriceLine, type SeriesMarker, type UTCTimestamp} from 'lightweight-charts';
 import type { IndicatorResult } from './indicators';
@@ -93,6 +94,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   const markerEvents=useRef<SmtEvent[]>([]);
   markerEvents.current=comparison?.smt??[];
   anchorHandler.current=onAnchor;
+  const fvgLayer=useRef<FvgLayer|null>(null);
   const paintLayer=useRef<DrawingLayer|null>(null);
   const drawing=useRef(drawMode);
   clickHandler.current=onAddLevel;
@@ -122,6 +124,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     seriesRef.current=series;
     const toolLayer=new DrawingLayer(chart,series);
     paintLayer.current=toolLayer;
+    fvgLayer.current=new FvgLayer(chart,series);
+    series.attachPrimitive(fvgLayer.current);
     series.attachPrimitive(toolLayer);
     if(drawing.current)toolLayer.showPreview(draft.current);
     else toolLayer.select(editing.current?.selected??'');
@@ -229,6 +233,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       scale.unsubscribeVisibleLogicalRangeChange(viewport);
       release?.();
       paintLayer.current=null;
+      fvgLayer.current=null;
       linesRef.current=[];seriesRef.current=null;chartRef.current=null;didFit.current=false;chart.remove();
     };
   },[symbol,precision,link,linkId]);
@@ -315,7 +320,27 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const displayed=new Set<string>();
     const colors=["#e8bb79","#8ab4ff","#d5a4f8"];
     const markers: SeriesMarker<UTCTimestamp>[]=[];
+    const gap=indicators?.find(indicator=>indicator.id==="fair_value_gap");
+    const gapVisibility=gap?.fvgVisibility;
+    const gapVisible=(event: NonNullable<IndicatorResult["revisions"]>[number])=>{
+      if(!gapVisibility)return true;
+      if(!(event.direction==="BULLISH"?gapVisibility.bullish:gapVisibility.bearish))return false;
+      const states={ACTIVE:"active",PARTIALLY_MITIGATED:"partial",FULLY_MITIGATED:"full",
+        INVALIDATED:"invalidated",EXPIRED:"expired"} as const;
+      return gapVisibility[states[event.state]];
+    };
+    fvgLayer.current?.update((gap?.current_fvgs?.items??[]).filter(gapVisible).slice(0,12),[...linkedBars.current.keys()]);
     for(const [indicatorIndex,indicator] of (indicators??[]).entries()){
+      if(indicator.id==="fair_value_gap"){
+        for(const event of (indicator.revisions??[]).filter(event=>gapVisible(event)&&
+          ["FULLY_MITIGATED","INVALIDATED","EXPIRED"].includes(event.state)).slice(-12)){
+          if(!linkedBars.current.has(event.observation_time))continue;
+          const bullish=event.direction==="BULLISH";
+          markers.push({time:event.observation_time as UTCTimestamp,position:bullish?"belowBar":"aboveBar",
+            shape:"circle",color:bullish?"#5eead4":"#f9a8d4",text:"FVG "+event.state.toLowerCase().replaceAll("_"," ")});
+        }
+        continue;
+      }
       if(indicator.id==="liquidity_sweeps"){
         const visible=indicator.liquidityVisibility;
         const primaryTimes=[...linkedBars.current.keys()];
