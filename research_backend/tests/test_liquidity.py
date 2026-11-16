@@ -203,3 +203,123 @@ def test_later_reclaim_requires_its_own_penetration():
         ("SWEEP_CANDIDATE",360),("SWEPT",480)]
     assert events[-1]["candidate_id"]==events[0]["id"]
     assert result(rows,cutoff=419)["sweeps"]==events[:1]
+
+def crowded_active_fixture():
+    start=1793577600
+    return [dict(time=start+i*60,open=10,high=20 if i in (1,3) else 11+i/100 if i>=5 and i%2 else 10,
+                 low=5 if i in (1,3) else 10,close=10) for i in range(180)]
+
+
+def current_pool_view(value, *, side=None):
+    return [pool for pool in value["current_pools"]["items"]
+            if side is None or pool["liquidity_side"]==side]
+
+
+@pytest.mark.parametrize(("side","level","revision_id"), [
+    ("BSL",20,"5e7bb96c2a535f0433fbabe0a124da7410fc8cc9e6fba573aa6c44b13d7a8912"),
+    ("SSL",5,"4990c65e82668fd4f31847012395592050e93c0c66ad13029584215665c873e7"),
+])
+def test_authoritative_pool_survives_eighty_seven_unrelated_revisions(side,level,revision_id):
+    options={"structure":{"price_source":"wick"},"liquidity":{"equality_bps":0,"min_separation_bars":2}}
+    rows=crowded_active_fixture()
+    latest=result(rows,**options)
+    view=current_pool_view(latest,side=side)
+    target=next(pool for pool in view if pool["state"]=="ACTIVE")
+    assert target["upper"]==target["lower"]==level
+    assert target["activation_observation_time"]==1793577840
+    assert target["activated_at"]==target["available_at"]==1793577900
+    assert latest["liquidity_page"]["pools"]["total"]==91
+    assert not any(pool["pool_id"]==target["pool_id"] for pool in latest["pools"])
+    assert target["revision_id"]==revision_id
+    complete=result(rows,delivery={"pool_limit":500},**options)
+    assert next(row["id"] for row in complete["pools"] if row["pool_id"]==target["pool_id"] and row["state"]=="ACTIVE")==revision_id
+    for limit in (0,1,500):
+        assert result(rows,delivery={"pool_limit":limit},**options)["current_pools"]==latest["current_pools"]
+
+
+def test_current_selection_is_deterministic_pageable_and_snapshot_bound(client):
+    options={"structure":{"price_source":"wick"},"liquidity":{"equality_bps":0}}
+    rows=crowded_active_fixture()
+    first=result(rows,delivery={"current_limit":1,"pool_limit":0},**options)["current_pools"]
+    assert first["truncated"] and first["total"]==89 and first["returned"]==1
+    assert first["items"][0]["liquidity_side"]=="SSL"
+    cursor=first["next_cursor"]
+    second=result(rows,delivery={"current_limit":1,"current_cursor":cursor},**options)["current_pools"]
+    assert second["items"][0]["liquidity_side"]=="BSL" and second["items"][0]["state"]=="ACTIVE"
+    assert first["snapshot"]==second["snapshot"]
+    assert first["items"][0]["pool_id"]!=second["items"][0]["pool_id"]
+    full=result(rows,delivery={"current_limit":100},**options)["current_pools"]
+    assert not full["truncated"] and full["items"][:2]==first["items"]+second["items"]
+    assert len({pool["pool_id"] for pool in full["items"]})==89
+    assert result(rows,delivery={"current_limit":1,"current_cursor":cursor},**options)["current_pools"]==second
+    corrected=[*rows[:-1],{**rows[-1],"open":10.5,"high":10.5,"close":10.5}]
+    assert client.post("/api/indicators/evaluate",json=body(corrected,
+        delivery={"current_cursor":cursor},**options)).status_code==409
+
+
+@pytest.mark.parametrize(("extension","state"), [
+    (dict(open=11,high=13,low=11,close=11),"SWEPT"),
+    (dict(open=13,high=13,low=13,close=13),"BROKEN"),
+    (dict(open=12,high=13,low=12,close=12),"SWEEP_CANDIDATE"),
+])
+def test_current_projection_replay_and_terminal_crossings(extension,state):
+    rows=candles()+[dict(time=300,**extension)]
+    forming=current_pool_view(result(rows,cutoff=299),side="BSL")
+    assert len(forming)==1 and forming[0]["state"]=="FORMING" and forming[0]["status"]=="provisional"
+    ready=result(rows,cutoff=300)
+    assert current_pool_view(ready,side="BSL")[0]["state"]=="ACTIVE"
+    assert result(rows,cutoff=359)["current_pools"]["items"]==ready["current_pools"]["items"]
+    later=result(rows,cutoff=360)
+    assert later["sweeps"][0]["state"]==state
+    now=current_pool_view(later,side="BSL")
+    if state=="SWEEP_CANDIDATE":
+        assert now[0]["state"]==state and now[0]["status"]=="provisional"
+    else:
+        assert now==[]
+    assert result(rows,cutoff=300)==ready
+    assert result(rows,cutoff=360)==later
+
+
+def test_current_expiry_exact_boundary_and_calendar_continuity():
+    rows=candles([10,12,10,12,10,11,11,11])
+    previous=result(rows,cutoff=479,liquidity={"max_age_bars":5})
+    active=current_pool_view(previous,side="BSL")[0]
+    assert active["expiry_in_bars"]==1
+    finished=result(rows,cutoff=480,liquidity={"max_age_bars":5})
+    assert current_pool_view(finished,side="BSL")==[]
+    assert next(p for p in finished["pools"] if p["pool_id"]==active["pool_id"] and p["state"]=="EXPIRED")["available_at"]==480
+    assert result(rows,cutoff=479,liquidity={"max_age_bars":5})==previous
+
+    friday=1794002400
+    sunday=friday+48*3600
+    rows=[{**row,"time":friday-300+row["time"]} for row in candles()]
+    rows.append(dict(time=sunday,open=11,high=11,low=11,close=11))
+    options={"structure":{"algorithm_version":2,"market_schedule":{"kind":"forex_weekly"}}}
+    preserved=result(rows,**options)
+    assert current_pool_view(preserved,side="BSL")[0]["state"]=="ACTIVE"
+    rows[-1]["time"]+=60  # The first scheduled open minute is missing.
+    missing=result(rows,**options)
+    assert current_pool_view(missing,side="BSL")==[]
+    assert any(p["state"]=="INVALIDATED" and p["reason"]=="MISSING_OPEN_CANDLES" for p in missing["pools"])
+
+
+def test_current_projection_refuses_archive_corruption_and_stale_cursor(client):
+    from research_backend.app import storage
+
+    rows=crowded_active_fixture()
+    start=rows[0]["time"]
+    part=storage.write_partition("MT5","liq_current","EURUSD","candles","M1","BID",rows)
+    data=body([],cutoff=start+180*60,source="MT5_SAVED",feed_id="liq_current",price_basis="BID",frozen=True,
+              partitions=[{"id":part["id"],"sha256":part["sha256"]}],
+              structure={"history_bars":10000,"history_start":start,"price_source":"wick"},
+              delivery={"current_limit":1})
+    before=client.post("/api/indicators/evaluate",json=data).json()["results"][0]
+    assert before["current_pools"]["items"][0]["state"]=="ACTIVE"
+    cursor=before["current_pools"]["next_cursor"]
+    path=storage.MARKET_DIR/part["relative_path"]
+    path.write_bytes(path.read_bytes()+b"corrupt")
+    after=client.post("/api/indicators/evaluate",json=data).json()["results"][0]
+    assert after["current_pools"]["total"]==0 and after["current_pools"]["items"]==[]
+    assert "SOURCE_INTEGRITY_FAILURE" in after["warnings"]
+    data["indicators"][0]["liquidity_delivery"]["current_cursor"]=cursor
+    assert client.post("/api/indicators/evaluate",json=data).status_code==409

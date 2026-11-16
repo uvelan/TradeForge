@@ -8,7 +8,7 @@ type Schedule = {kind: "continuous" | "forex_weekly" | "unknown"; timezone?: str
   sunday_open?: string; friday_close?: string};
 type Structure = {algorithm_version?: 1 | 2; market_schedule?: Schedule; left: number; right: number; price_source: "wick" | "close";
   ties: "strict" | "earliest"; tolerance_bps: number; break_bps: number; wick_candidates: boolean};
-type Collection = "pivots" | "breaks" | "pools" | "sweeps";
+type Collection = "pivots" | "breaks" | "pools" | "sweeps" | "current_pools";
 type Liquidity = {equality_bps:number; penetration_bps:number; reclaim_bps:number;
   min_touches:number; max_touches:number; min_separation_bars:number; max_age_bars:number};
 type LiquidityVisibility = {zones:boolean; sweeps:boolean; candidates:boolean; terminal:boolean};
@@ -21,6 +21,7 @@ export type LiquidityEvent = {
 };
 type PageInfo = {total: number; returned: number; start: number; end: number; next_cursor: string | null};
 type OlderPage = {key: string; collection: Collection; metadata: PageInfo; events: (StructureEvent | LiquidityEvent)[]};
+export type CurrentLiquidityPool = Omit<LiquidityEvent,"id"> & {revision_id:string; expiry_in_bars:number};
 type StructureVisibility = {swings: boolean; breaks: boolean; candidates: boolean};
 export type StructureEvent = {
   id: string; type: string; side: "HIGH" | "LOW"; status: "confirmed" | "provisional" | "invalidated";
@@ -51,6 +52,7 @@ export type IndicatorResult = {
   pools?: LiquidityEvent[];
   sweeps?: LiquidityEvent[];
   liquidity_page?: {snapshot:string; pools:PageInfo; sweeps:PageInfo};
+  current_pools?: PageInfo & {snapshot:string; truncated:boolean; items:CurrentLiquidityPool[]};
   coverage?: {status: string; confirmation_status: "confirmed" | "provisional" | "unavailable"};
   series: Record<string, Point[]>;
 };
@@ -158,13 +160,16 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
     const controller = new AbortController();
     const {collection, cursor}=pageRequest;
     const input=JSON.parse(body);
-    const liquid=collection==="pools"||collection==="sweeps";
+    const current=collection==="current_pools";
+    const liquid=current||collection==="pools"||collection==="sweeps";
     const spec = input.indicators.find((item:{id:string})=>item.id===(liquid?"liquidity_sweeps":"market_structure"));
     const first=liquid?"pool":"pivot", second=liquid?"sweep":"break";
     const isFirst=collection==="pivots"||collection==="pools";
-    input.indicators=[{...spec,[liquid?"liquidity_delivery":"structure_delivery"]:{
-      [first+"_limit"]:isFirst?40:0,[second+"_limit"]:isFirst?0:40,[ (isFirst?first:second)+"_cursor"]:cursor,
-    }}];
+    input.indicators=[{...spec,[liquid?"liquidity_delivery":"structure_delivery"]:current?
+      {pool_limit:0,sweep_limit:0,current_limit:40,current_cursor:cursor}:{
+        [first+"_limit"]:isFirst?40:0,[second+"_limit"]:isFirst?0:40,[(isFirst?first:second)+"_cursor"]:cursor,
+        ...(liquid?{current_limit:0}:{}),
+      }}];
     void (async()=>{
       try{
         const response=await fetch("/research/api/indicators/evaluate",{
@@ -173,9 +178,12 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
         const value=await response.json();
         if(!response.ok)throw Error(typeof value.detail==="string"?value.detail:"Historical event page unavailable");
         const result=value.results[0] as IndicatorResult;
-        const metadata=collection==="pools"||collection==="sweeps"?result.liquidity_page?.[collection]:result.event_page?.[collection];
+        const metadata=collection==="current_pools"?result.current_pools:
+          collection==="pools"||collection==="sweeps"?result.liquidity_page?.[collection]:result.event_page?.[collection];
+        const events=collection==="current_pools"?result.current_pools?.items.map(pool=>({...pool,id:pool.revision_id})):
+          result[collection];
         if(!metadata)throw Error("Historical event page missing");
-        if(!controller.signal.aborted)setOlder({key:body,collection,metadata,events:result[collection]??[]});
+        if(!controller.signal.aborted)setOlder({key:body,collection,metadata,events:events??[]});
       }catch(error){
         if(!controller.signal.aborted)setPageError((error as Error).message);
       }finally{
@@ -326,12 +334,15 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
           {definition.parameters.liquidity && (()=>{
             const rules=item.liquidity??definition.parameters.liquidity;
             const result=data.find(row=>row.id===item.id);
-            const history=older?.key===body&&(older.collection==="pools"||older.collection==="sweeps")?older:undefined;
+            const history=older?.key===body&&["pools","sweeps","current_pools"].includes(older.collection)?older:undefined;
+            const projection=result?.current_pools;
             const crossings=result?.sweeps??[];
             const matchingRevisions=new Set(crossings.map(event=>event.pool_revision_id));
             const recent=[...(result?.pools??[]).filter(event=>!matchingRevisions.has(event.id)),...crossings]
               .sort((a,b)=>b.available_at-a.available_at).slice(0,12);
-            const rows=history?(history.events as LiquidityEvent[]).slice().reverse():recent;
+            const rows=history?(history.collection==="current_pools"?history.events as LiquidityEvent[]:
+              (history.events as LiquidityEvent[]).slice().reverse()):
+              [...(projection?.items??[]).map(pool=>({...pool,id:pool.revision_id})),...recent];
             const selection=selectedLiquidity?.key===body?rows.find(event=>event.id===selectedLiquidity.id):undefined;
             const parameters: [keyof Liquidity,string,number,number][]=[
               ["equality_bps","Pool equality (bps)",0,100],["penetration_bps","Penetration (bps)",0,100],
@@ -351,6 +362,13 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                 Show liquidity {key}
               </label>)}
               {result?.liquidity_page && <section aria-label="Liquidity evidence">
+                {projection&&<p role="status">Chart view: {projection.returned} of {projection.total} current pools
+                  {projection.truncated&&" · Limited view, confirmed pools nearest price first"}
+                  {" · Forming pools are provisional"}</p>}
+                {projection?.next_cursor&&<button type="button" className="small-tool" disabled={Boolean(pageRequest)}
+                  onClick={()=>{setPageError("");setPageRequest({key:body,collection:"current_pools",cursor:projection.next_cursor!});}}>
+                  More current pools
+                </button>}
                 <p>{result.liquidity_page.pools.total} pool revisions · {result.liquidity_page.sweeps.total} crossings · {result.provenance?.context_authority?.replaceAll("_"," ")}</p>
                 {(["pools","sweeps"] as const).map(collection=>{
                   const cursor=result.liquidity_page![collection].next_cursor;
@@ -359,12 +377,13 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                 })}
                 {pageError && <small role="alert">{pageError}</small>}
                 {history && <>
-                  <p>{history.collection} {history.metadata.start+1}–{history.metadata.end} of {history.metadata.total}</p>
+                  <p>{history.collection==="current_pools"?<>Current pool page · {history.metadata.returned} of {history.metadata.total}</>:
+                    <>{history.collection} {history.metadata.start+1}–{history.metadata.end} of {history.metadata.total}</>}</p>
                   <button type="button" className="small-tool" disabled={Boolean(pageRequest)||!history.metadata.next_cursor}
-                    onClick={()=>{const cursor=history.metadata.next_cursor;if(cursor)setPageRequest({key:body,collection:history.collection,cursor});}}>Next older liquidity page</button>
+                    onClick={()=>{const cursor=history.metadata.next_cursor;if(cursor)setPageRequest({key:body,collection:history.collection,cursor});}}>{history.collection==="current_pools"?"Next current pool page":"Next older liquidity page"}</button>
                   <button type="button" className="small-tool" onClick={()=>{setPageRequest(undefined);setOlder(undefined);}}>Latest liquidity evidence</button>
                 </>}
-                {rows.map(event=><button type="button" className="small-tool" key={event.id}
+                {[...new Map(rows.map(event=>[event.id,event])).values()].map(event=><button type="button" className="small-tool" key={event.id}
                   onClick={()=>setSelectedLiquidity({key:body,id:event.id})}>
                   {event.liquidity_side} · {event.state.replaceAll("_"," ")} · {new Date(event.available_at*1000).toISOString().slice(11,19)} UTC
                 </button>)}

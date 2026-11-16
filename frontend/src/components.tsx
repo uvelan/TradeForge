@@ -1,6 +1,6 @@
 import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType, type IChartApi, type ISeriesApi, type IPriceLine, type SeriesMarker, type UTCTimestamp} from 'lightweight-charts';
-import type { IndicatorResult, LiquidityEvent } from './indicators';
+import type { IndicatorResult } from './indicators';
 import type { SmtEvent } from './smt';
 import {useCandleColors} from './candleColors';
 import {chartTimeOptions,useTimezone} from './timezone';
@@ -318,21 +318,19 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     for(const [indicatorIndex,indicator] of (indicators??[]).entries()){
       if(indicator.id==="liquidity_sweeps"){
         const visible=indicator.liquidityVisibility;
-        const pools=new Map<string,LiquidityEvent>();
-        for(const event of indicator.pools??[])pools.set(event.pool_id,event);
-        const latestTime=[...linkedBars.current.keys()].at(-1);
-        for(const pool of [...pools.values()].reverse().slice(0,12)){
-          const active=pool.state==="ACTIVE"||pool.state==="SWEEP_CANDIDATE";
-          const terminal=["BROKEN","INVALIDATED","EXPIRED"].includes(pool.state);
+        const primaryTimes=[...linkedBars.current.keys()];
+        const latestTime=primaryTimes.at(-1);
+        for(const pool of (indicator.current_pools?.items??[]).slice(0,12)){
+          if(pool.state==="FORMING"||!visible?.zones||latestTime===undefined)continue;
           const high=pool.liquidity_side==="BSL";
-          const color=terminal?"#9ba7b9":high?"#cf9aff":"#5ed8cf";
-          const start=pool.activation_observation_time;
-          if(((active&&visible?.zones)||(terminal&&visible?.terminal))&&linkedBars.current.has(pool.observation_time)){
-            markers.push({time:pool.observation_time as UTCTimestamp,price:high?pool.upper:pool.lower,
-              position:high?"atPriceTop":"atPriceBottom",shape:"circle",color,
-              text:active?(high?"EQH · BSL":"EQL · SSL"):pool.state});
-          }
-          if(!active||!visible?.zones||start==null||latestTime===undefined||latestTime<=start||!linkedBars.current.has(start))continue;
+          const candidate=pool.state==="SWEEP_CANDIDATE";
+          const color=high?"#cf9aff":"#5ed8cf";
+          const activation=pool.activation_observation_time;
+          markers.push({time:latestTime as UTCTimestamp,price:high?pool.upper:pool.lower,
+            position:high?"atPriceTop":"atPriceBottom",shape:candidate?"square":"circle",color,
+            text:(high?"EQH · BSL":"EQL · SSL")+(candidate?" candidate":"")});
+          const start=activation==null?undefined:primaryTimes.find(time=>time>=activation);
+          if(start===undefined||latestTime<=start)continue;
           const edges:[string,number][]=pool.upper===pool.lower?[["zone",pool.lower]]:[["low",pool.lower],["high",pool.upper]];
           for(const [edge,price] of edges){
             const key="liquidity:"+pool.pool_id+":"+edge;
@@ -345,6 +343,13 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
             }
             line.setData([{time:start as UTCTimestamp,value:price},{time:latestTime as UTCTimestamp,value:price}]);
           }
+        }
+        if(visible?.terminal)for(const pool of (indicator.pools??[]).filter(event=>
+          ["BROKEN","INVALIDATED","EXPIRED"].includes(event.state)).slice(-12)){
+          if(!linkedBars.current.has(pool.observation_time))continue;
+          const high=pool.liquidity_side==="BSL";
+          markers.push({time:pool.observation_time as UTCTimestamp,price:high?pool.upper:pool.lower,
+            position:high?"atPriceTop":"atPriceBottom",shape:"circle",color:"#9ba7b9",text:pool.state});
         }
         for(const event of (indicator.sweeps??[]).slice(-20)){
           if(!linkedBars.current.has(event.observation_time)||event.state==="BROKEN")continue;

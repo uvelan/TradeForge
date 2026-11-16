@@ -37,6 +37,8 @@ class LiquidityRules(BaseModel):
 class LiquidityDelivery(BaseModel):
     pool_limit: int = Field(default=60, ge=0, le=500)
     sweep_limit: int = Field(default=40, ge=0, le=500)
+    current_limit: int = Field(default=12, ge=0, le=100)
+    current_cursor: str | None = Field(default=None, max_length=180)
     pool_cursor: str | None = Field(default=None, max_length=180)
     sweep_cursor: str | None = Field(default=None, max_length=180)
 
@@ -54,6 +56,8 @@ class Pool:
     upper: Decimal
     expires: int
     last_pivot_index: int
+    first_observation_time: int
+    latest_revision: tuple[str, int, int, str, str] | None = None
     members: list[dict] = field(default_factory=list)
     state: str = "FORMING"
     revision: int = 0
@@ -68,6 +72,9 @@ class LiquidityStream:
         self.rules, self.step = rules, step
         self.pools = EventPage("pools", delivery.pool_limit, delivery.pool_cursor)
         self.sweeps = EventPage("sweeps", delivery.sweep_limit, delivery.sweep_cursor)
+        self.current = EventPage("current_pools", delivery.current_limit, delivery.current_cursor)
+        self.observation_index = -1
+        self.last_close = Decimal(0)
         self.active: dict[str, Pool] = {}
         self.buckets: dict[tuple, set[str]] = {}
         self.eq = Decimal(str(rules.equality_bps))/BPS
@@ -110,6 +117,8 @@ class LiquidityStream:
             self.buckets[key].remove(pool.id)
             if not self.buckets[key]:
                 del self.buckets[key]
+        else:
+            pool.latest_revision = (entry["id"], bar.time, available, provenance_id, fingerprint)
         return entry
 
     def index(self,pool):
@@ -131,6 +140,8 @@ class LiquidityStream:
         return touched
 
     def observe(self,bar,available,index,gap,pivots,breaks,fingerprint,provenance_id):
+        self.observation_index = index
+        self.last_close = Decimal(str(bar.close))
         # Decisions use the pools available before this observation.
         if gap:
             for pool in list(self.active.values()):
@@ -198,7 +209,7 @@ class LiquidityStream:
                 continue
             if pool is None:
                 id_=digest(VERSION,self.rules.identity(),pivot["id"])
-                pool=Pool(id_,side,price,price,price,index+self.rules.max_age_bars,pivot_index)
+                pool=Pool(id_,side,price,price,price,index+self.rules.max_age_bars,pivot_index,bar.time)
                 self.active[id_]=pool
                 self.buckets.setdefault(self.bucket(side,price),set()).add(id_)
                 heappush(self.expirations,(pool.expires,id_))
@@ -216,9 +227,39 @@ class LiquidityStream:
             if state!="FORMING":
                 self.index(pool)
 
+    def current_projection(self, snapshot):
+        def priority(pool):
+            distance = max(pool.lower-self.last_close, self.last_close-pool.upper, Decimal(0))
+            return pool.state == "FORMING", distance, pool.id
+
+        # EventPage pages backwards. Insert the least relevant entries first.
+        if self.current.limit:
+            for pool in sorted(self.active.values(), key=priority, reverse=True):
+                self.current.append(pool)
+        else:
+            self.current.total = len(self.active)
+        page = self.current.finish(snapshot)
+        items = []
+        for pool in reversed(self.current.events):
+            revision_id, observation, available, provenance, fingerprint = pool.latest_revision
+            items.append({
+                "pool_id": pool.id, "revision_id": revision_id, "revision": pool.revision,
+                "classification": "EQH" if pool.side == "HIGH" else "EQL",
+                "liquidity_side": "BSL" if pool.side == "HIGH" else "SSL",
+                "lower": float(pool.lower), "upper": float(pool.upper), "touches": len(pool.members),
+                "constituents": list(pool.members), "first_observation_time": pool.first_observation_time,
+                "activated_at": pool.activated_at, "activation_observation_time": pool.activation_observation_time,
+                "observation_time": observation, "confirmation_time": observation+self.step, "available_at": available,
+                "state": pool.state, "status": "confirmed" if pool.state == "ACTIVE" else "provisional",
+                "expiry_in_bars": pool.expires-self.observation_index,
+                "algorithm_version": VERSION, "provenance_id": provenance, "input_fingerprint": fingerprint,
+            })
+        return {"snapshot": snapshot, "selection": "confirmed_then_nearest_close", **page, "items": items}
+
     def finish(self, structure_snapshot, provenance_id):
         snapshot=digest(VERSION,structure_snapshot,self.rules.identity())
         return {"pools":list(self.pools.events),"sweeps":list(self.sweeps.events),
+                "current_pools":self.current_projection(snapshot),
                 "liquidity_page":{"snapshot":snapshot,"pools":self.pools.finish(snapshot),
                                   "sweeps":self.sweeps.finish(snapshot)},
                 "provenance_id":provenance_id}
