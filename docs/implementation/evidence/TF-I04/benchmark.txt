@@ -1,0 +1,11 @@
+Windows Python 3.13, 12 warm samples; Python allocation sampled separately; native RSS not measured
+2,000 dense: calc P50/P95 192.94/248.45 ms; JSON P50/P95 1.13/2.92 ms; 101167 bytes; Python peak 566.0 KiB; {'pools': 1269, 'sweeps': 333}
+2,000 dense, structure-only comparison: calc P50/P95 68.51/96.26 ms; JSON P50/P95 0.31/0.45 ms; 47328 bytes; Python peak 384.8 KiB; {'pivots': 1998, 'breaks': 0}
+2,000 dense, advance/rewind: calc P50/P95 360.07/458.39 ms; JSON P50/P95 1.01/4.11 ms; 101167 bytes; Python peak 823.0 KiB; {'pools': 1269, 'sweeps': 333}
+2,000 sparse: calc P50/P95 48.53/63.46 ms; JSON P50/P95 0.08/0.29 ms; 1133 bytes; Python peak 334.8 KiB; {'pools': 0, 'sweeps': 0}
+2,000 clusters: calc P50/P95 238.98/300.01 ms; JSON P50/P95 1.20/3.51 ms; 102838 bytes; Python peak 562.7 KiB; {'pools': 1670, 'sweeps': 600}
+2,000 flat: calc P50/P95 49.03/70.75 ms; JSON P50/P95 0.05/0.29 ms; 1096 bytes; Python peak 334.7 KiB; {'pools': 0, 'sweeps': 0}
+10,000 clusters archive, first page: calc P50/P95 1110.56/1290.86 ms; JSON P50/P95 1.22/2.32 ms; 104467 bytes; Python peak 15417.6 KiB; {'pools': 8358, 'sweeps': 3000}
+  {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}
+10,000 clusters archive, next page: calc P50/P95 1277.27/1580.31 ms; JSON P50/P95 1.40/2.39 ms; 115417 bytes; Python peak 15420.1 KiB; {'pools': 8358, 'sweeps': 3000}
+  {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}
