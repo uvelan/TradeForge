@@ -180,3 +180,26 @@ def test_liquidity_archive_integrity_and_source_correction(client):
     assert not failed["sweeps"] and not failed["pools"]
     data["indicators"][0]["liquidity_delivery"]["pool_cursor"]=current["liquidity_page"]["pools"]["next_cursor"]
     assert client.post("/api/indicators/evaluate",json=data).status_code==409
+
+def test_overlapping_bands_assign_one_confirmed_pivot_to_nearest_anchor():
+    rows=candles([10]*7)
+    for i,high in ((1,12),(3,12.018),(5,12.010)):
+        rows[i]["high"]=high
+    data=result(rows,structure={"price_source":"wick"},liquidity={"equality_bps":10})
+    high=[p for p in data["pools"] if p["liquidity_side"]=="BSL"]
+    armed=[p for p in high if p["state"]=="ACTIVE"]
+    assert len(armed)==1
+    assert [p["price"] for p in armed[0]["constituents"]]==[12.018,12.010]
+    assert (armed[0]["lower"],armed[0]["upper"],armed[0]["available_at"])==(12.01,12.018,420)
+    assert len({p["pool_id"] for p in high})==2
+
+
+def test_later_reclaim_requires_its_own_penetration():
+    rows=candles()+[dict(time=300,open=12,high=13,low=12,close=12),
+                    dict(time=360,open=11,high=11,low=11,close=11),
+                    dict(time=420,open=11,high=13,low=11,close=11)]
+    events=result(rows)["sweeps"]
+    assert [(event["state"],event["available_at"]) for event in events]==[
+        ("SWEEP_CANDIDATE",360),("SWEPT",480)]
+    assert events[-1]["candidate_id"]==events[0]["id"]
+    assert result(rows,cutoff=419)["sweeps"]==events[:1]
