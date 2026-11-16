@@ -12,6 +12,7 @@ export type IndicatorResult = {
   id: string;
   render: "overlay" | "pane" | "markers";
   warmup_bars: number | null;
+  unit: "price" | "percent";
   warnings: string[];
   series: Record<string, Point[]>;
 };

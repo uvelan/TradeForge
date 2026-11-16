@@ -339,7 +339,9 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
           if(!line){
             const prefix=indicator.id.includes("_")?indicator.id.replaceAll("_"," ")+" ":"";
             pane??=indicator.render==="pane"?chart.addPane(false).paneIndex():0;
+            const digits=indicator.unit==="price"?precision:2;
             line=chart.addSeries(LineSeries,{
+              priceFormat:{type:"price",precision:digits,minMove:10**-digits},
               title:prefix+title+(provisional?" (developing)":""),
               color:colors[(index+indicatorIndex)%colors.length],lineWidth:1,priceLineVisible:false,
               lineType:isRange?LineType.WithSteps:LineType.Simple,

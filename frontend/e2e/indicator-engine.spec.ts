@@ -34,6 +34,7 @@ test("multiple canonical indicators persist, update panes and clean up on remoun
   const body=await response.json();
   expect(body.results.map((result:{id:string})=>result.id)).toEqual(["ema","rsi","atr"]);
   expect(body.results[2].series.ATR.length).toBeGreaterThan(0);
+  expect(body.results[2].unit).toBe("price");
   const panes=page.locator(primary+" tr");
   await expect(panes).toHaveCount(6); // Three panes, two separators and the shared time axis.
   await page.locator(primary).scrollIntoViewIfNeeded();
