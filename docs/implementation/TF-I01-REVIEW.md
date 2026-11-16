@@ -1,6 +1,6 @@
 # TF-I01 review evidence
 
-TF-D02 merged in PR #2 at `9ec151e401a74352c78e77d441ede1dc0ff56f0d`. That is the TF-I01 base. The implementation and test commit is `1a7e1de3909245b4348a20917a526ad36a360bf2`. The evidence follows in a separate commit.
+TF-D02 merged in PR #2 at `9ec151e401a74352c78e77d441ede1dc0ff56f0d`. That is the TF-I01 base. The implementation and test commit is `1a7e1de3909245b4348a20917a526ad36a360bf2`. The initial evidence follows in a separate commit. Follow-up `e9dfcc342fc75fc39557dea159b49315c08d6b06` applies instrument precision to price-based indicators and the final evidence captures the rerun.
 
 ## Architecture and contracts
 
@@ -16,7 +16,7 @@ TF-D02 merged in PR #2 at `9ec151e401a74352c78e77d441ede1dc0ff56f0d`. That is th
 | --- | --- |
 | EMA | Seed from the SMA of the first N closes and update with alpha 2/(N+1). With period 2 and closes 10, 12, 11, 14, 10 the outputs are 11, 11, 13, 11. |
 | RSI | Wilder average on gains and losses. Requires N+1 closes. Flat gives 50, all gains give 100 and all losses give 0. The same period-2 fixture gives 66.6667, 88.8889, 32. |
-| ATR | The first true range is high minus low. Later true ranges use the maximum of high minus low and the two distances from the last observed close. Wilder averaging of true ranges 2, 3, 2, 4, 5 gives 2.5, 2.25, 3.125, 4.0625 for period 2. ATR is in instrument price units. |
+| ATR | The first true range is high minus low. Later true ranges use the maximum of high minus low and the two distances from the last observed close. Wilder averaging of true ranges 2, 3, 2, 4, 5 gives 2.5, 2.25, 3.125, 4.0625 for period 2. ATR is in instrument price units. Forex ATR labels use the same precision as the instrument, so small valid values remain visible. |
 | Previous day/week | Use the wick extremes of the immediately preceding fully covered UTC day or Monday-based UTC week. Each displayed value carries the UTC reference window. |
 | Asia/London/New York | Default to Tokyo 09:00–18:00, London 08:00–17:00, and New York 08:00–17:00 local time. A session can use a custom IANA timezone and an overnight window. Developing values are provisional. A completed value requires all bars in the window and a reached close. Ambiguous or nonexistent local boundary times are rejected for that window. |
 

@@ -2,20 +2,20 @@
 > playwright test --reporter=line
 
 
-[WebServer] INFO:     Started server process [15380]
+[WebServer] INFO:     Started server process [22776]
 [WebServer] INFO:     Waiting for application startup.
 
 [WebServer] INFO:     Application startup complete.
 
 [WebServer] INFO:     Uvicorn running on http://127.0.0.1:8098 (Press CTRL+C to quit)
 
-
-[WebServer] (node:33832) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:19868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
 
 Running 39 tests using 1 worker
 
-(node:22988) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:33364) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 
 (Use `node --trace-warnings ...` to show where the warning was created)
 [1/39] e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions
@@ -49,15 +49,15 @@ Running 39 tests using 1 worker
 [29/39] e2e\drawing-placement.spec.ts:668:1 › horizontal drags reject outside, missing candle and pointer cancellation
 [30/39] e2e\drawing-placement.spec.ts:703:1 › negative chart prices are rejected and navigation still pans and zooms
 
-(node:28064) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:36668) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
 [31/39] e2e\indicator-engine.spec.ts:20:1 › multiple canonical indicators persist, update panes and clean up on remount
-[32/39] e2e\indicator-engine.spec.ts:61:1 › replay submits only closed evidence within the visible cutoff
-[33/39] e2e\indicator-engine.spec.ts:84:1 › a session overlay exposes provisional and completed backend values
+[32/39] e2e\indicator-engine.spec.ts:62:1 › replay submits only closed evidence within the visible cutoff
+[33/39] e2e\indicator-engine.spec.ts:85:1 › a session overlay exposes provisional and completed backend values
 [34/39] e2e\research.spec.ts:3:1 › opens the research dashboard, replays demo bars, and links to the preserved catalog
 [35/39] e2e\research.spec.ts:22:1 › shows a saved background SMT watch and stops it from Market Terminal
 [36/39] e2e\research.spec.ts:45:1 › navigates by keyboard and moves recorded signal evidence into a persisted draft
 [37/39] e2e\research.spec.ts:95:1 › persists a trendline and resumes a frozen replay checkpoint
 [38/39] e2e\research.spec.ts:135:1 › links four chart views and opens a saved simulation after reload
 [39/39] e2e\terminal.spec.ts:3:1 › generates a simulated dataset and reopens it after reload
-  39 passed (2.6m)
+  39 passed (3.0m)
