@@ -90,13 +90,19 @@ async function drag(page:Page,start:Point,end:Point){
 }
 function shifted(start:Point,x:number,y:number){return {x:start.x+x,y:start.y+y};}
 
-async function setup(page:Page,kind:string,points:number[][]){
+async function setup(page:Page,kind:string,points:number[][],withEma=false){
   await instrument(page);
   await page.setViewportSize({width:1536,height:900});
   await page.goto("/");
   await page.getByRole("button",{name:"Market Terminal",exact:true}).click();
   await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
   await page.getByRole("button",{name:"M3",exact:true}).click();
+  if(withEma){
+    const evaluated=page.waitForResponse(res=>res.url().endsWith("/indicators/evaluate"));
+    await page.getByRole("combobox",{name:"Indicator",exact:true}).selectOption("ema");
+    const response=await evaluated;
+    expect((await response.json()).results[0].series.EMA.length).toBeGreaterThan(0);
+  }
   await page.getByText(/^Drawing toolbox/).click();
   await page.getByLabel("Drawing tool").selectOption(kind);
   await page.getByRole("button",{name:"Draw",exact:true}).click();
@@ -333,4 +339,16 @@ test("a real 409 blocks further edits and reload preserves the competing drawing
   await expect(page.getByRole("button",{name:"Draw",exact:true})).toBeEnabled();
   await expect(page.getByLabel("Select drawing").locator('option[value="'+item.id+'"]')).toContainText("Competing edit");
   expect(await scene(page)).toEqual(remote);
+});
+
+test("a canonical EMA overlay leaves creating and editing a drawing functional",async ({page},info)=>{
+  const {created,item}=await setup(page,"horizontal",[[.48,.53]],true);
+  const [handle]=await handles(page,1);
+  const response=posted(page);
+  await drag(page,handle,shifted(handle,0,31));
+  const edited=await saved(response);
+  expect(edited.revision).toBe(created.revision+1);
+  expect(itemAt(edited,item.id).anchors[0].time).toBe(item.anchors[0].time);
+  expect(itemAt(edited,item.id).anchors[0].price).not.toBe(item.anchors[0].price);
+  await page.screenshot({path:info.outputPath("drawing-with-ema.png")});
 });

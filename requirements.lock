@@ -30,4 +30,5 @@ SQLAlchemy==2.1.8
 starlette==1.10.0
 typing-inspection==0.4.5
 typing_extensions==4.16.0
+tzdata==2025.2
 uvicorn==0.54.0

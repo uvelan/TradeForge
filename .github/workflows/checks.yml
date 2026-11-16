@@ -57,3 +57,14 @@ jobs:
           path: frontend/test-results/drawing-edit-*/**
           if-no-files-found: ignore
           retention-days: 14
+
+      - name: Upload TF-I01 browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TF-I01-browser-evidence
+          path: |
+            frontend/test-results/indicator-engine-*/**
+            frontend/test-results/drawing-edit-a-canonical-*/drawing-with-ema.png
+          if-no-files-found: ignore
+          retention-days: 14
