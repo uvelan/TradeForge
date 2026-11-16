@@ -1,0 +1,9 @@
+# PR #6 active-pool projection plan
+
+Reviewed and starting commit a1e57d488aba7465fe578dce8934116da7357fa3. The latest history page is an event log and currently doubles as the chart's live pool inventory. The committed fixture generates 91 revisions. Two pools activate at the fifth candle, and 87 later unrelated revisions evict both activation revisions from the latest 60. Neither pool receives a terminal transition.
+
+Keep a compact latest-revision reference in each live state-machine pool. Project the live book after the evaluation, with metadata and an independent current cursor. Deliver confirmed/candidate pools first, then forming, ordering within each group by distance to the latest accepted close, followed by stable ID. Return 12 by default, and allow independent further pages up to a fixed per-page limit. Preserve the existing provenance and exact historical snapshot, events and IDs.
+
+Use the backend current page for zones and current markers. Keep terminal and crossing markers tied to their own historical observations. A current page GET-equivalent request is sent through the existing evaluator. Older current/detail pages and history are for inspection and never change the chart. Show returned and total current counts and forming status. Clip old activation lines to the available primary chart time range, retaining the actual activation timestamp in evidence.
+
+Review. Scope changes and replay already invalidate prior results by request key. Reuse the cursor implementation with a separate collection name, preserving existing cursor identity. Compute metadata from current state, without editing event records. Test exact event IDs and visibility before/after cutoff, terminal rules, terminal rendering, bounded pages, and drawing interaction. No changes to v1 price or continuity calculations.

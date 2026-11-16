@@ -68,7 +68,7 @@ def initial_direction(pivots):
 
 
 def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
-                     delivery: StructureDelivery, snapshot_scope: dict):
+                     delivery: StructureDelivery, snapshot_scope: dict, consumer=None):
     """Rows contain closed bars and actual UTC availability, already cutoff-filtered."""
     pivots = EventPage("pivots", delivery.limit if delivery.pivot_limit is None else delivery.pivot_limit,
                        delivery.pivot_cursor)
@@ -99,6 +99,14 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
                 "confirmation_time": None if fields.get("status") != "confirmed" else event_time+step,
                 "available_at": available, "input_fingerprint": evidence, "provenance_id": provenance_id, **fields}
 
+    observation_index = -1
+    current_breaks = None
+
+    def publish_break(value):
+        breaks.append(value)
+        if current_breaks is not None:
+            current_breaks.append(value)
+
     for bar, available in sorted(rows, key=lambda row: (row[1], row[0].time)):
         encoded = bar.model_dump_json().encode()
         availability_bytes = f":{available};".encode()
@@ -107,6 +115,9 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
         if last is not None and bar.time <= last:
             warnings.add("LATE_STRUCTURE_CANDLE_IGNORED")
             continue
+        observation_index += 1
+        current_breaks = [] if consumer is not None else None
+        reset_reason = None
         reopening = None
         if last is not None and bar.time != last + step:
             reason = continuity_reason(last, bar.time, step, schedule) if version == 2 else "LEGACY_GAP"
@@ -121,6 +132,7 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
                     record["opening"] = reopening
                 continuity.append(record)
             if reason != "SCHEDULED_CLOSURE":
+                reset_reason = reason
                 warnings.add("STRUCTURE_RESET_AT_GAP")
                 window.clear()
                 active.clear()
@@ -167,20 +179,20 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
             if crossed:
                 kind = "CHOCH" if opposing and protected else "COUNTERTREND_BREAK" if opposing else "BOS"
                 after = "NEUTRAL" if opposing else state
-                breaks.append(event(kind, side, bar.time, available, status="confirmed", break_price=bar.close,
+                publish_break(event(kind, side, bar.time, available, status="confirmed", break_price=bar.close,
                                     state_after=after, candidate_id=candidate, **fields))
                 consumed.add(level["id"])
                 if opposing:
                     reset = True
             elif candidate and not wick_crossed:
-                breaks.append(event("WICK_INVALIDATED", side, bar.time, available, status="invalidated",
+                publish_break(event("WICK_INVALIDATED", side, bar.time, available, status="invalidated",
                                     break_price=bar.close, state_after=state, candidate_id=candidate, **fields))
                 candidates[level["id"]] = None
             elif rules.wick_candidates and wick_crossed and level["id"] not in candidates:
                 kind = "COUNTERTREND_CANDIDATE" if opposing else "WICK_CANDIDATE"
                 wick_event = event(kind, side, bar.time, available, status="provisional", break_price=wick,
                                    state_after=state, candidate_id=None, **fields)
-                breaks.append(wick_event)
+                publish_break(wick_event)
                 candidates[level["id"]] = wick_event["id"]
         if reset:
             state = "NEUTRAL"
@@ -190,6 +202,9 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
             window.clear()
             window.append(bar)
         if len(window) != window.maxlen:
+            if consumer is not None:
+                consumer(bar, available, observation_index, reset_reason, (), current_breaks,
+                         fingerprint.hexdigest(), provenance_id)
             continue
 
         pivot = window[rules.left]
@@ -220,6 +235,10 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
                 state = initial
         for found in batch:
             pivots.append({**found, "state_after": state})
+        if consumer is not None:
+            consumer(bar, available, observation_index, reset_reason,
+                     [(found, observation_index-rules.right) for found in batch], current_breaks,
+                     fingerprint.hexdigest(), provenance_id)
     digest = snapshot.hexdigest()
     metadata = {"snapshot": digest, "pivots": pivots.finish(digest), "breaks": breaks.finish(digest)}
     result = {"pivots": list(pivots.events), "breaks": list(breaks.events), "structure_state": state,

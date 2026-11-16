@@ -316,6 +316,53 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const colors=["#e8bb79","#8ab4ff","#d5a4f8"];
     const markers: SeriesMarker<UTCTimestamp>[]=[];
     for(const [indicatorIndex,indicator] of (indicators??[]).entries()){
+      if(indicator.id==="liquidity_sweeps"){
+        const visible=indicator.liquidityVisibility;
+        const primaryTimes=[...linkedBars.current.keys()];
+        const latestTime=primaryTimes.at(-1);
+        for(const pool of (indicator.current_pools?.items??[]).slice(0,12)){
+          if(pool.state==="FORMING"||!visible?.zones||latestTime===undefined)continue;
+          const high=pool.liquidity_side==="BSL";
+          const candidate=pool.state==="SWEEP_CANDIDATE";
+          const color=high?"#cf9aff":"#5ed8cf";
+          const activation=pool.activation_observation_time;
+          markers.push({time:latestTime as UTCTimestamp,price:high?pool.upper:pool.lower,
+            position:high?"atPriceTop":"atPriceBottom",shape:candidate?"square":"circle",color,
+            text:(high?"EQH · BSL":"EQL · SSL")+(candidate?" candidate":"")});
+          const start=activation==null?undefined:primaryTimes.find(time=>time>=activation);
+          if(start===undefined||latestTime<=start)continue;
+          const edges:[string,number][]=pool.upper===pool.lower?[["zone",pool.lower]]:[["low",pool.lower],["high",pool.upper]];
+          for(const [edge,price] of edges){
+            const key="liquidity:"+pool.pool_id+":"+edge;
+            displayed.add(key);
+            let line=lines.get(key);
+            if(!line){
+              line=chart.addSeries(LineSeries,{color,lineWidth:1,lineStyle:LineStyle.Dashed,
+                priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,autoscaleInfoProvider:()=>null});
+              lines.set(key,line);
+            }
+            line.setData([{time:start as UTCTimestamp,value:price},{time:latestTime as UTCTimestamp,value:price}]);
+          }
+        }
+        if(visible?.terminal)for(const pool of (indicator.pools??[]).filter(event=>
+          ["BROKEN","INVALIDATED","EXPIRED"].includes(event.state)).slice(-12)){
+          if(!linkedBars.current.has(pool.observation_time))continue;
+          const high=pool.liquidity_side==="BSL";
+          markers.push({time:pool.observation_time as UTCTimestamp,price:high?pool.upper:pool.lower,
+            position:high?"atPriceTop":"atPriceBottom",shape:"circle",color:"#9ba7b9",text:pool.state});
+        }
+        for(const event of (indicator.sweeps??[]).slice(-20)){
+          if(!linkedBars.current.has(event.observation_time)||event.state==="BROKEN")continue;
+          const confirmed=event.state==="SWEPT";
+          if(confirmed?!visible?.sweeps:!visible?.candidates)continue;
+          const high=event.liquidity_side==="BSL";
+          markers.push({time:event.observation_time as UTCTimestamp,
+            price:(high?event.ohlc?.high:event.ohlc?.low)??(high?event.upper:event.lower),
+            position:high?"atPriceTop":"atPriceBottom",shape:confirmed?"square":"circle",
+            color:confirmed?"#e8bb79":"#9ba7b9",text:event.liquidity_side+(confirmed?" sweep":" candidate")});
+        }
+        continue;
+      }
       if(indicator.id==="market_structure"){
         if(indicator.visibility?.swings)for(const pivot of (indicator.pivots??[]).slice(-40)){
           if(pivot.price===undefined||pivot.confirmation_bar_time===undefined||!linkedBars.current.has(pivot.confirmation_bar_time))continue;

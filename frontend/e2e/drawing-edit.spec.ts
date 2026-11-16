@@ -372,3 +372,20 @@ test("market structure overlays preserve ownership of a saved drawing handle",as
   expect(itemAt(moved,item.id).anchors[0].time).toBe(item.anchors[0].time);
   expect(itemAt(moved,item.id).anchors[0].price).not.toBe(item.anchors[0].price);
 });
+
+test("liquidity overlays preserve a saved drawing handle gesture",async ({page})=>{
+  const {created,item}=await setup(page,"horizontal",[[.49,.55]]);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await page.getByLabel("Search indicators").fill("liquidity pools");
+  await page.getByRole("combobox",{name:"Add indicator",exact:true}).selectOption("liquidity_sweeps");
+  await page.getByRole("button",{name:"Enable indicator",exact:true}).click();
+  await expect(page.getByLabel("Liquidity evidence",{exact:true})).toBeVisible();
+  await page.getByText("Indicator library",{exact:true}).click();
+  const [start]=await handles(page,1);
+  const postedEdit=posted(page);
+  await drag(page,start,shifted(start,0,30));
+  const moved=await saved(postedEdit);
+  expect(moved.revision).toBe(created.revision+1);
+  expect(itemAt(moved,item.id).anchors[0].time).toBe(item.anchors[0].time);
+  expect(itemAt(moved,item.id).anchors[0].price).not.toBe(item.anchors[0].price);
+});

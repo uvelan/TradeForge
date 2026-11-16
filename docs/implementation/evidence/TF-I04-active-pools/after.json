@@ -1,0 +1,162 @@
+{
+  "current_page": {
+    "snapshot": "4849eb37c4aaa59fb7a316de355da2e79bec0a402e25b14c14d17a6323980463",
+    "selection": "confirmed_then_nearest_close",
+    "total": 89,
+    "returned": 12,
+    "start": 77,
+    "end": 89,
+    "truncated": true,
+    "next_cursor": "WzEsImN1cnJlbnRfcG9vbHMiLCI0ODQ5ZWIzN2M0YWFhNTlmYjdhMzE2ZGUzNTVkYTJlNzliZWMwYTQwMmUyNWIxNGMxNGQxN2E2MzIzOTgwNDYzIiw3N10",
+    "items": [
+      {
+        "pool_id": "41b9bcc62f2513ce7a3bec00ba6d46414f476fb17a7fe0ceb099a321007ce7dc",
+        "revision_id": "4990c65e82668fd4f31847012395592050e93c0c66ad13029584215665c873e7",
+        "revision": 2,
+        "classification": "EQL",
+        "liquidity_side": "SSL",
+        "lower": 5.0,
+        "upper": 5.0,
+        "touches": 2,
+        "constituents": [
+          {
+            "id": "41fc6972fd3056959199093ea16b867a118e338f9e7b78b4b033edf60ed6f456",
+            "price": 5.0,
+            "time": 1793577660,
+            "available_at": 1793577780
+          },
+          {
+            "id": "aefefd97220f44033f3e23fa1d49d35117cec74bb5d986bb7a5b9faf00eb95cc",
+            "price": 5.0,
+            "time": 1793577780,
+            "available_at": 1793577900
+          }
+        ],
+        "first_observation_time": 1793577720,
+        "activated_at": 1793577900,
+        "activation_observation_time": 1793577840,
+        "observation_time": 1793577840,
+        "confirmation_time": 1793577900,
+        "available_at": 1793577900,
+        "state": "ACTIVE",
+        "status": "confirmed",
+        "expiry_in_bars": 73,
+        "algorithm_version": 1,
+        "provenance_id": "317f97bf8bdac472fef99b3a7e0eaf8f9b86dbbdd168c02ac1b1a5c7b93b568f",
+        "input_fingerprint": "8b8178be0163b3b7d0c691e39d42c83b9e0767ef176f08b335216a7f78ae3af3"
+      },
+      {
+        "pool_id": "95acd618d71354361eef18a5b5c23a9338a0888fc914eccb71392f8e20b04bd7",
+        "revision_id": "5e7bb96c2a535f0433fbabe0a124da7410fc8cc9e6fba573aa6c44b13d7a8912",
+        "revision": 2,
+        "classification": "EQH",
+        "liquidity_side": "BSL",
+        "lower": 20.0,
+        "upper": 20.0,
+        "touches": 2,
+        "constituents": [
+          {
+            "id": "d245dac22c16bbb17b6b0088f7204d268835b7132eb83c9931f93f5f5134d3f8",
+            "price": 20.0,
+            "time": 1793577660,
+            "available_at": 1793577780
+          },
+          {
+            "id": "768b0d17a54fdf939d61a0658e8f1752e8323599c1d98b0a76a2c2192aa57c01",
+            "price": 20.0,
+            "time": 1793577780,
+            "available_at": 1793577900
+          }
+        ],
+        "first_observation_time": 1793577720,
+        "activated_at": 1793577900,
+        "activation_observation_time": 1793577840,
+        "observation_time": 1793577840,
+        "confirmation_time": 1793577900,
+        "available_at": 1793577900,
+        "state": "ACTIVE",
+        "status": "confirmed",
+        "expiry_in_bars": 73,
+        "algorithm_version": 1,
+        "provenance_id": "317f97bf8bdac472fef99b3a7e0eaf8f9b86dbbdd168c02ac1b1a5c7b93b568f",
+        "input_fingerprint": "8b8178be0163b3b7d0c691e39d42c83b9e0767ef176f08b335216a7f78ae3af3"
+      }
+    ]
+  },
+  "revision_count": 91,
+  "activation_revisions": [
+    {
+      "id": "5e7bb96c2a535f0433fbabe0a124da7410fc8cc9e6fba573aa6c44b13d7a8912",
+      "pool_id": "95acd618d71354361eef18a5b5c23a9338a0888fc914eccb71392f8e20b04bd7",
+      "revision": 2,
+      "state": "ACTIVE",
+      "reason": "CONFIRMED_PIVOT",
+      "classification": "EQH",
+      "liquidity_side": "BSL",
+      "lower": 20.0,
+      "upper": 20.0,
+      "touches": 2,
+      "constituents": [
+        {
+          "id": "d245dac22c16bbb17b6b0088f7204d268835b7132eb83c9931f93f5f5134d3f8",
+          "price": 20.0,
+          "time": 1793577660,
+          "available_at": 1793577780
+        },
+        {
+          "id": "768b0d17a54fdf939d61a0658e8f1752e8323599c1d98b0a76a2c2192aa57c01",
+          "price": 20.0,
+          "time": 1793577780,
+          "available_at": 1793577900
+        }
+      ],
+      "activated_at": 1793577900,
+      "activation_observation_time": 1793577840,
+      "observation_time": 1793577840,
+      "confirmation_time": 1793577900,
+      "available_at": 1793577900,
+      "evidence_cutoff": 1793577900,
+      "input_fingerprint": "8b8178be0163b3b7d0c691e39d42c83b9e0767ef176f08b335216a7f78ae3af3",
+      "algorithm_version": 1,
+      "provenance_id": "317f97bf8bdac472fef99b3a7e0eaf8f9b86dbbdd168c02ac1b1a5c7b93b568f",
+      "status": "confirmed"
+    },
+    {
+      "id": "4990c65e82668fd4f31847012395592050e93c0c66ad13029584215665c873e7",
+      "pool_id": "41b9bcc62f2513ce7a3bec00ba6d46414f476fb17a7fe0ceb099a321007ce7dc",
+      "revision": 2,
+      "state": "ACTIVE",
+      "reason": "CONFIRMED_PIVOT",
+      "classification": "EQL",
+      "liquidity_side": "SSL",
+      "lower": 5.0,
+      "upper": 5.0,
+      "touches": 2,
+      "constituents": [
+        {
+          "id": "41fc6972fd3056959199093ea16b867a118e338f9e7b78b4b033edf60ed6f456",
+          "price": 5.0,
+          "time": 1793577660,
+          "available_at": 1793577780
+        },
+        {
+          "id": "aefefd97220f44033f3e23fa1d49d35117cec74bb5d986bb7a5b9faf00eb95cc",
+          "price": 5.0,
+          "time": 1793577780,
+          "available_at": 1793577900
+        }
+      ],
+      "activated_at": 1793577900,
+      "activation_observation_time": 1793577840,
+      "observation_time": 1793577840,
+      "confirmation_time": 1793577900,
+      "available_at": 1793577900,
+      "evidence_cutoff": 1793577900,
+      "input_fingerprint": "8b8178be0163b3b7d0c691e39d42c83b9e0767ef176f08b335216a7f78ae3af3",
+      "algorithm_version": 1,
+      "provenance_id": "317f97bf8bdac472fef99b3a7e0eaf8f9b86dbbdd168c02ac1b1a5c7b93b568f",
+      "status": "confirmed"
+    }
+  ],
+  "target_pools_on_latest_page": []
+}

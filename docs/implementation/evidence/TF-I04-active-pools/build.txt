@@ -1,0 +1,5 @@
+> tsc --noEmit && vite build
+vite v8.3.8 building client environment for production...
+✓ built in 10.28s
+[33m[MODULE_LEVEL_DIRECTIVE] [0mThe semantics of the module level directive "use client" in "node_modules/@mui/material/utils/index.mjs" may not be preserved when bundling.
+[257 additional MODULE_LEVEL_DIRECTIVE warnings omitted]

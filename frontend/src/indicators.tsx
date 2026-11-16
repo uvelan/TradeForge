@@ -8,9 +8,20 @@ type Schedule = {kind: "continuous" | "forex_weekly" | "unknown"; timezone?: str
   sunday_open?: string; friday_close?: string};
 type Structure = {algorithm_version?: 1 | 2; market_schedule?: Schedule; left: number; right: number; price_source: "wick" | "close";
   ties: "strict" | "earliest"; tolerance_bps: number; break_bps: number; wick_candidates: boolean};
-type Collection = "pivots" | "breaks";
+type Collection = "pivots" | "breaks" | "pools" | "sweeps" | "current_pools";
+type Liquidity = {equality_bps:number; penetration_bps:number; reclaim_bps:number;
+  min_touches:number; max_touches:number; min_separation_bars:number; max_age_bars:number};
+type LiquidityVisibility = {zones:boolean; sweeps:boolean; candidates:boolean; terminal:boolean};
+const liquidityVisibility: LiquidityVisibility={zones:true,sweeps:true,candidates:true,terminal:true};
+export type LiquidityEvent = {
+  id:string; pool_id:string; pool_revision_id?:string; state:string; lower:number; upper:number; liquidity_side:"BSL"|"SSL";
+  activated_at:number|null; activation_observation_time?:number|null; observation_time:number; confirmation_time:number; available_at:number;
+  status:string; constituents?:{id:string; price:number; time:number; available_at:number}[];
+  related_structure_ids?:string[]; ohlc?:{open:number; high:number; low:number; close:number};
+};
 type PageInfo = {total: number; returned: number; start: number; end: number; next_cursor: string | null};
-type OlderPage = {key: string; collection: Collection; metadata: PageInfo; events: StructureEvent[]};
+type OlderPage = {key: string; collection: Collection; metadata: PageInfo; events: (StructureEvent | LiquidityEvent)[]};
+export type CurrentLiquidityPool = Omit<LiquidityEvent,"id"> & {revision_id:string; expiry_in_bars:number};
 type StructureVisibility = {swings: boolean; breaks: boolean; candidates: boolean};
 export type StructureEvent = {
   id: string; type: string; side: "HIGH" | "LOW"; status: "confirmed" | "provisional" | "invalidated";
@@ -21,8 +32,8 @@ export type StructureEvent = {
 const structureVisibility: StructureVisibility = {swings: true, breaks: true, candidates: true};
 
 type Definition = { id: string; label: string; period: number | null; timeframes: Timeframe[];
-  parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure } };
-type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility };
+  parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure; liquidity?: Liquidity } };
+type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility; liquidity?: Liquidity; liquidityVisibility?: LiquidityVisibility };
 type Point = { time: number; value: number; pivot_time?: number; status: "confirmed" | "provisional" };
 export type IndicatorResult = {
   id: string;
@@ -37,6 +48,11 @@ export type IndicatorResult = {
   provenance?: {context_authority?: string};
   continuity?: {schedule_authority: string; counts: Record<string, number>};
   visibility?: StructureVisibility;
+  liquidityVisibility?: LiquidityVisibility;
+  pools?: LiquidityEvent[];
+  sweeps?: LiquidityEvent[];
+  liquidity_page?: {snapshot:string; pools:PageInfo; sweeps:PageInfo};
+  current_pools?: PageInfo & {snapshot:string; truncated:boolean; items:CurrentLiquidityPool[]};
   coverage?: {status: string; confirmation_status: "confirmed" | "provisional" | "unavailable"};
   series: Record<string, Point[]>;
 };
@@ -78,6 +94,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   const [older, setOlder] = useState<OlderPage>();
   const [pageRequest, setPageRequest] = useState<{key: string; collection: Collection; cursor: string}>();
   const [pageError, setPageError] = useState("");
+  const [selectedLiquidity,setSelectedLiquidity]=useState<{key:string; id:string}>();
   const [response, setResponse] = useState<{key: string; results?: IndicatorResult[]; error?: string}>();
   useEffect(() => { if (request?.indicator) { setSelected(request.indicator); setPeriod(""); } },
     [request, setSelected, setPeriod]);
@@ -98,7 +115,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       if (session && (!session.timezone || !session.start || !session.end || session.start === session.end)) return [];
       const schedule = definition.parameters.schedule ? item.schedules?.[scheduleScope] : undefined;
       return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {}), ...(schedule ? {schedule} : {}), ...(item.structure ? {structure:item.structure.algorithm_version===2?
-        {...item.structure,market_schedule:item.schedules?.[scheduleScope]}:item.structure} : {})}];
+        {...item.structure,market_schedule:item.schedules?.[scheduleScope]}:item.structure} : {}), ...(item.liquidity ? {liquidity:item.liquidity} : {})}];
     });
   }, [definitions, periodText, primary, scheduleScope, settings, timeframe]);
   const body = useMemo(() => enabled && active.length && (candles.length || active.some(item => item.id.startsWith("previous_")))
@@ -143,12 +160,16 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
     const controller = new AbortController();
     const {collection, cursor}=pageRequest;
     const input=JSON.parse(body);
-    const spec = input.indicators.find((item:{id:string})=>item.id==="market_structure");
-    const isPivot=collection==="pivots";
-    input.indicators=[{...spec,structure_delivery:{
-      pivot_limit:isPivot?40:0, break_limit:isPivot?0:40,
-      [isPivot?"pivot_cursor":"break_cursor"]:cursor,
-    }}];
+    const current=collection==="current_pools";
+    const liquid=current||collection==="pools"||collection==="sweeps";
+    const spec = input.indicators.find((item:{id:string})=>item.id===(liquid?"liquidity_sweeps":"market_structure"));
+    const first=liquid?"pool":"pivot", second=liquid?"sweep":"break";
+    const isFirst=collection==="pivots"||collection==="pools";
+    input.indicators=[{...spec,[liquid?"liquidity_delivery":"structure_delivery"]:current?
+      {pool_limit:0,sweep_limit:0,current_limit:40,current_cursor:cursor}:{
+        [first+"_limit"]:isFirst?40:0,[second+"_limit"]:isFirst?0:40,[(isFirst?first:second)+"_cursor"]:cursor,
+        ...(liquid?{current_limit:0}:{}),
+      }}];
     void (async()=>{
       try{
         const response=await fetch("/research/api/indicators/evaluate",{
@@ -157,9 +178,12 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
         const value=await response.json();
         if(!response.ok)throw Error(typeof value.detail==="string"?value.detail:"Historical event page unavailable");
         const result=value.results[0] as IndicatorResult;
-        const metadata=result.event_page?.[collection];
+        const metadata=collection==="current_pools"?result.current_pools:
+          collection==="pools"||collection==="sweeps"?result.liquidity_page?.[collection]:result.event_page?.[collection];
+        const events=collection==="current_pools"?result.current_pools?.items.map(pool=>({...pool,id:pool.revision_id})):
+          result[collection];
         if(!metadata)throw Error("Historical event page missing");
-        if(!controller.signal.aborted)setOlder({key:body,collection,metadata,events:result[collection]??[]});
+        if(!controller.signal.aborted)setOlder({key:body,collection,metadata,events:events??[]});
       }catch(error){
         if(!controller.signal.aborted)setPageError((error as Error).message);
       }finally{
@@ -171,8 +195,10 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
 
   const current = response?.key === body ? response : undefined;
   const visibility = settings.find(item => item.id === "market_structure")?.visibility ?? structureVisibility;
+  const liquidVisibility=settings.find(item=>item.id==="liquidity_sweeps")?.liquidityVisibility??liquidityVisibility;
   const data = useMemo(() => current?.results?.map(item => item.id === "market_structure" ?
-    {...item, visibility} : item) ?? emptyResults, [current, visibility]);
+    {...item, visibility} : item.id==="liquidity_sweeps"?{...item,liquidityVisibility:liquidVisibility}:item) ?? emptyResults,
+    [current, visibility, liquidVisibility]);
   const warnings = [...new Set(data.filter(row => !row.coverage).flatMap(row => row.warnings))];
   const choices = definitions.filter(item => item.timeframes.includes(timeframe) && item.id !== selected &&
     !settings.some(config => config.id === item.id) && (item.label + " " + item.id).toLowerCase().includes(search.toLowerCase()));
@@ -259,14 +285,14 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
               <label>Pivot ties <select value={rules.ties} onChange={event=>patch({ties:event.target.value as Structure["ties"]})}>
                 <option value="strict">Strict</option><option value="earliest">Earliest</option>
               </select></label>
-              <label><input type="checkbox" checked={rules.wick_candidates}
-                onChange={event=>patch({wick_candidates:event.target.checked})}/> Calculate wick candidates</label>
-              {(["swings","breaks","candidates"] as const).map(key=><label key={key}>
+              {!definition.parameters.liquidity && <label><input type="checkbox" checked={rules.wick_candidates}
+                onChange={event=>patch({wick_candidates:event.target.checked})}/> Calculate wick candidates</label>}
+              {!definition.parameters.liquidity && (["swings","breaks","candidates"] as const).map(key=><label key={key}>
                 <input type="checkbox" checked={visibility[key]}
                   onChange={event=>update(item.id,{visibility:{...visibility,[key]:event.target.checked}})}/>
                 Show {key}
               </label>)}
-              {result && <small role="status">Structure {result.structure_state?.toLowerCase()}</small>}
+              {result?.structure_state && <small role="status">Structure {result.structure_state?.toLowerCase()}</small>}
               {result?.continuity && <small>
                 {result.continuity.schedule_authority==="UNKNOWN"?"Trading hours unknown":"Configured trading hours (assumption)"}
                 {result.provenance?.context_authority==="CHECKSUM_VERIFIED_ARCHIVE"?" · Archive checksums verified":
@@ -284,9 +310,9 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                   </button>;
                 })}
                 {pageError && <small role="alert">{pageError}</small>}
-                {older?.key===body && <section aria-label="Historical structure evidence">
+                {older?.key===body && (older.collection==="pivots"||older.collection==="breaks") && <section aria-label="Historical structure evidence">
                   <p>{older.collection} {older.metadata.start+1}–{older.metadata.end} of {older.metadata.total}</p>
-                  <ul>{[...older.events].reverse().map(event=><li key={event.id}>
+                  <ul>{[...older.events as StructureEvent[]].reverse().map(event=><li key={event.id}>
                     {event.classification??event.type.replaceAll("_"," ")} · {event.status} ·{" "}
                     {new Date((event.confirmation_time??event.available_at)*1000).toISOString()} · {event.break_price??event.price}
                     {event.confirmation_time!==null&&event.available_at>event.confirmation_time&&
@@ -303,6 +329,74 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                 {event.confirmation_time!==null&&event.available_at>event.confirmation_time&&
                   " · available "+new Date(event.available_at*1000).toISOString().slice(11,19)+" UTC"}
               </li>)}</ul>}
+            </>;
+          })()}
+          {definition.parameters.liquidity && (()=>{
+            const rules=item.liquidity??definition.parameters.liquidity;
+            const result=data.find(row=>row.id===item.id);
+            const history=older?.key===body&&["pools","sweeps","current_pools"].includes(older.collection)?older:undefined;
+            const projection=result?.current_pools;
+            const crossings=result?.sweeps??[];
+            const matchingRevisions=new Set(crossings.map(event=>event.pool_revision_id));
+            const recent=[...(result?.pools??[]).filter(event=>!matchingRevisions.has(event.id)),...crossings]
+              .sort((a,b)=>b.available_at-a.available_at).slice(0,12);
+            const rows=history?(history.collection==="current_pools"?history.events as LiquidityEvent[]:
+              (history.events as LiquidityEvent[]).slice().reverse()):
+              [...(projection?.items??[]).map(pool=>({...pool,id:pool.revision_id})),...recent];
+            const selection=selectedLiquidity?.key===body?rows.find(event=>event.id===selectedLiquidity.id):undefined;
+            const parameters: [keyof Liquidity,string,number,number][]=[
+              ["equality_bps","Pool equality (bps)",0,100],["penetration_bps","Penetration (bps)",0,100],
+              ["reclaim_bps","Reclaim (bps)",0,100],["min_touches","Minimum touches",2,16],
+              ["max_touches","Maximum touches",2,32],["min_separation_bars","Touch separation",1,200],
+              ["max_age_bars","Maximum age (bars)",2,4000],
+            ];
+            return <>
+              {parameters.map(([key,label,min,max])=><label key={key}>{label}
+                <input type="number" min={min} max={max} step={min===0?0.1:1} value={rules[key]}
+                  onChange={event=>{const value=event.target.valueAsNumber;
+                    if(value>=min&&value<=max)update(item.id,{liquidity:{...rules,[key]:value}});}}/>
+              </label>)}
+              {(["zones","sweeps","candidates","terminal"] as const).map(key=><label key={key}>
+                <input type="checkbox" checked={liquidVisibility[key]}
+                  onChange={event=>update(item.id,{liquidityVisibility:{...liquidVisibility,[key]:event.target.checked}})}/>
+                Show liquidity {key}
+              </label>)}
+              {result?.liquidity_page && <section aria-label="Liquidity evidence">
+                {projection&&<p role="status">Chart view: {projection.returned} of {projection.total} current pools
+                  {projection.truncated&&" · Limited view, confirmed pools nearest price first"}
+                  {" · Forming pools are provisional"}</p>}
+                {projection?.next_cursor&&<button type="button" className="small-tool" disabled={Boolean(pageRequest)}
+                  onClick={()=>{setPageError("");setPageRequest({key:body,collection:"current_pools",cursor:projection.next_cursor!});}}>
+                  More current pools
+                </button>}
+                <p>{result.liquidity_page.pools.total} pool revisions · {result.liquidity_page.sweeps.total} crossings · {result.provenance?.context_authority?.replaceAll("_"," ")}</p>
+                {(["pools","sweeps"] as const).map(collection=>{
+                  const cursor=result.liquidity_page![collection].next_cursor;
+                  return <button type="button" key={collection} className="small-tool" disabled={Boolean(pageRequest)||!cursor}
+                    onClick={()=>{setPageError("");if(cursor)setPageRequest({key:body,collection,cursor});}}>Older liquidity {collection}</button>;
+                })}
+                {pageError && <small role="alert">{pageError}</small>}
+                {history && <>
+                  <p>{history.collection==="current_pools"?<>Current pool page · {history.metadata.returned} of {history.metadata.total}</>:
+                    <>{history.collection} {history.metadata.start+1}–{history.metadata.end} of {history.metadata.total}</>}</p>
+                  <button type="button" className="small-tool" disabled={Boolean(pageRequest)||!history.metadata.next_cursor}
+                    onClick={()=>{const cursor=history.metadata.next_cursor;if(cursor)setPageRequest({key:body,collection:history.collection,cursor});}}>{history.collection==="current_pools"?"Next current pool page":"Next older liquidity page"}</button>
+                  <button type="button" className="small-tool" onClick={()=>{setPageRequest(undefined);setOlder(undefined);}}>Latest liquidity evidence</button>
+                </>}
+                {[...new Map(rows.map(event=>[event.id,event])).values()].map(event=><button type="button" className="small-tool" key={event.id}
+                  onClick={()=>setSelectedLiquidity({key:body,id:event.id})}>
+                  {event.liquidity_side} · {event.state.replaceAll("_"," ")} · {new Date(event.available_at*1000).toISOString().slice(11,19)} UTC
+                </button>)}
+                {selection&&<dl aria-label="Selected liquidity event">
+                  <dt>Pool boundaries</dt><dd>{selection.lower} – {selection.upper}</dd>
+                  <dt>Activated UTC</dt><dd>{selection.activated_at===null?"Forming":new Date(selection.activated_at*1000).toISOString()}</dd>
+                  <dt>Confirmation / availability</dt><dd>{new Date(selection.confirmation_time*1000).toISOString()} / {new Date(selection.available_at*1000).toISOString()}</dd>
+                  <dt>Source</dt><dd>{result.provenance?.context_authority}</dd>
+                  {selection.constituents && <><dt>Confirmed pivots</dt><dd>{selection.constituents.map(p=>p.price+" @ "+new Date(p.time*1000).toISOString()).join(", ")}</dd></>}
+                  {selection.ohlc && <><dt>Crossing OHLC</dt><dd>{Object.values(selection.ohlc).join(" / ")}</dd></>}
+                  {selection.related_structure_ids?.length ? <><dt>Related structure</dt><dd>{selection.related_structure_ids.join(", ")}</dd></>:null}
+                </dl>}
+              </section>}
             </>;
           })()}
           {definition.parameters.schedule && <>
