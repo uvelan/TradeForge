@@ -1,0 +1,7 @@
+Reviewed commit 30212fb553abab152d40112e57e261eb122e692d
+Original horizontal-drag reproduction, Windows Chromium:
+Expected revision: 1
+Received revision: 0
+Timeout 5000ms exceeded while waiting on the predicate
+Test: a horizontal drawing drag uses the release candle instead of cancelling
+Result: failed

@@ -1,0 +1,83 @@
+
+> e2e
+> playwright test --grep rail takes precedence
+
+[WebServer] INFO:     Started server process [11476]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8097 (Press CTRL+C to quit)
+[WebServer] (node:2932) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:25724) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 e2e\drawing-placement.spec.ts:505:1 › the horizontal rail takes precedence over an unfinished trendline (10.6s)
+
+
+  1) e2e\drawing-placement.spec.ts:505:1 › the horizontal rail takes precedence over an unfinished trendline
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  2
+    + Received  + 23
+
+      Object {
+    -   "items": Array [],
+    -   "revision": 0,
+    +   "items": Array [
+    +     Object {
+    +       "anchors": Array [
+    +         Object {
+    +           "price": "1.08845",
+    +           "time": 1794588300,
+    +         },
+    +         Object {
+    +           "price": "1.08694",
+    +           "time": 1794592500,
+    +         },
+    +       ],
+    +       "color": "#55d9b5",
+    +       "created_at": 1794821764,
+    +       "id": "e4feb76a-fd7c-41f0-836b-580e980c9ce9",
+    +       "kind": "trend",
+    +       "label": "",
+    +       "locked": false,
+    +       "updated_at": 1794821764,
+    +       "visible": true,
+    +     },
+    +   ],
+    +   "revision": 1,
+        "schema_version": 1,
+      }
+
+      512 |   await clickPlot(page,.60,.63);
+      513 |   await page.screenshot({path:info.outputPath("rail-mode.png")});
+    > 514 |   expect(await savedScene(page)).toEqual(scene);
+          |                                  ^
+      515 |   expect(await localLevels(page)).toHaveLength(levels.length+1);
+      516 | });
+      517 |
+        at K:\Projects\TradeForge\storage\tf-d01-isolated-repro\frontend\e2e\drawing-placement.spec.ts:514:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\drawing-placement-the-hori-c7372-ver-an-unfinished-trendline\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\drawing-placement-the-hori-c7372-ver-an-unfinished-trendline\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\drawing-placement-the-hori-c7372-ver-an-unfinished-trendline\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\drawing-placement-the-hori-c7372-ver-an-unfinished-trendline\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\drawing-placement-the-hori-c7372-ver-an-unfinished-trendline\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e\drawing-placement.spec.ts:505:1 › the horizontal rail takes precedence over an unfinished trendline
