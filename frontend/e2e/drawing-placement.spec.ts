@@ -497,3 +497,250 @@ test("maps anchors across fullscreen and resized plots with a left comparison sc
     await page.screenshot({path:info.outputPath(state+"-placement.png")});
   }
 });
+
+type LegacyLevel={id:string;price:number};
+const localLevels=(page:Page):Promise<LegacyLevel[]>=>page.evaluate(()=>
+  JSON.parse(localStorage.getItem("tf-levels:DEMO:EURUSD:M5")??"[]"));
+
+test("the horizontal rail takes precedence over an unfinished trendline",async ({page},info)=>{
+  await page.goto("/");
+  await openTool(page,"trend");
+  await clickPlot(page,.40,.34);
+  const scene=await savedScene(page);
+  const levels=await localLevels(page);
+  await page.getByTitle("Place horizontal level (Alt+H)",{exact:true}).click();
+  await clickPlot(page,.60,.63);
+  await page.screenshot({path:info.outputPath("rail-mode.png")});
+  expect(await savedScene(page)).toEqual(scene);
+  expect(await localLevels(page)).toHaveLength(levels.length+1);
+});
+
+test("a horizontal drawing drag uses the release candle and price after zoom and resize",async ({page},info)=>{
+  await page.goto("/");
+  const data=page.waitForResponse(res=>{
+    const url=new URL(res.url());
+    return url.pathname.endsWith("/market/candles")&&url.searchParams.get("source")==="DEMO"&&
+      url.searchParams.get("symbol")==="EURUSD"&&url.searchParams.get("limit")==="600";
+  });
+  await openTool(page,"horizontal");
+  const {candles}=await (await data).json() as {candles:{time:number;open:number;high:number;low:number;close:number}[]};
+  const scene=await savedScene(page);
+  await page.getByLabel("SMT comparison",{exact:true}).selectOption("GBPUSD");
+  await expect(page.getByLabel("Comparison placement")).toHaveValue("Overlay");
+  await page.getByLabel("Chart layout",{exact:true}).selectOption("2");
+  await page.setViewportSize({width:1536,height:900});
+  expect((await primaryPlot(page)).leftWidth).toBeGreaterThan(0);
+  const middle=await plotPoint(page,.55,.48);
+  await page.mouse.move(middle.x,middle.y);
+  await page.mouse.wheel(0,-150);
+  const start=await plotPoint(page,.42,.36), release=await plotPoint(page,.65,.68);
+  await page.mouse.move(release.x,release.y);
+  const legend=page.locator(".primary-chart .chart-legend-row").first();
+  await expect(legend).toContainText("EURUSD");
+  const rendered=(await legend.locator("span").allTextContents()).map(value=>Number(value.trim().split(/\s+/).at(-1)));
+  const candle=candles.find(bar=>[bar.open,bar.high,bar.low,bar.close]
+    .every((price,index)=>Number(price.toFixed(5))===rendered[index]));
+  expect(candle).toBeDefined();
+
+  await page.mouse.move(start.x,start.y);
+  await page.mouse.down();
+  await page.mouse.move(release.x,release.y,{steps:8});
+  const response=postDrawing(page);
+  await page.mouse.up();
+  const after=await savedChange(response);
+  expect(after.revision).toBe(scene.revision+1);
+  expect(after.items).toHaveLength(scene.items.length+1);
+  const item=after.items.at(-1)!;
+  expect(item.anchors[0].time).toBe(candle!.time);
+  // Same plot-relative location by click is the control for the drag's release price.
+  await page.getByRole("button",{name:"Draw",exact:true}).click();
+  const click=postDrawing(page);
+  await clickPlot(page,.65,.68);
+  const clicked=await savedChange(click);
+  expect(clicked.items.at(-1)!.anchors).toEqual(item.anchors);
+  await page.screenshot({path:info.outputPath("horizontal-drag.png")});
+  const fetched=page.waitForResponse(res=>res.url().includes(endpoint())&&res.request().method()==="GET");
+  await page.reload();
+  expect((await (await fetched).json() as Scene).items.find(row=>row.id===item.id)).toEqual(item);
+});
+
+test("Alt+H and the rail discard rectangle and risk/reward draft anchors",async ({page})=>{
+  await page.goto("/");
+  await openTool(page,"rectangle");
+  const before=await savedScene(page);
+  await clickPlot(page,.41,.38);
+  await page.keyboard.press("Alt+h");
+  await clickPlot(page,.59,.63);
+  expect(await savedScene(page)).toEqual(before);
+  expect(await localLevels(page)).toHaveLength(1);
+
+  await page.getByLabel("Drawing tool").selectOption("risk-reward");
+  await page.getByRole("button",{name:"Draw",exact:true}).click();
+  await clickPlot(page,.41,.49);
+  await clickPlot(page,.62,.70);
+  await expect(page.getByText(/Risk\/reward.*select 3/)).toBeVisible();
+  await page.getByTitle("Place horizontal level (Alt+H)",{exact:true}).click();
+  await clickPlot(page,.59,.34);
+  expect(await savedScene(page)).toEqual(before);
+  expect(await localLevels(page)).toHaveLength(2);
+});
+
+test("toolbox activation clears other modes and repeated switches save only the final intended drawing",async ({page},info)=>{
+  await page.goto("/");
+  await openTool(page,"horizontal");
+  const before=await savedScene(page);
+  const rail=page.getByTitle("Place horizontal level (Alt+H)",{exact:true});
+  await rail.click();
+  await page.getByLabel("Drawing tool").selectOption("trend");
+  await page.getByRole("button",{name:"Draw",exact:true}).click();
+  await clickPlot(page,.41,.37);
+  await expect(page.getByText(/Trendline.*select 2/)).toBeVisible();
+
+  await page.getByRole("button",{name:"Select plan levels",exact:true}).click();
+  await clickPlot(page,.51,.43);
+  await expect(page.getByText("Click primary price for stop")).toBeVisible();
+  await page.getByLabel("Drawing tool").selectOption("rectangle");
+  await page.getByRole("button",{name:"Draw",exact:true}).click();
+  await expect(page.getByText("Click primary price for stop")).toHaveCount(0);
+  await clickPlot(page,.42,.35);
+  await page.getByLabel("Drawing tool").selectOption("trend");
+  await page.getByRole("button",{name:"Draw",exact:true}).click();
+  await clickPlot(page,.43,.37);
+  const response=postDrawing(page);
+  await clickPlot(page,.65,.63);
+  const saved=await savedChange(response);
+  expect(saved.revision).toBe(before.revision+1);
+  expect(saved.items.slice(0,-1)).toEqual(before.items);
+  expect(saved.items.at(-1)?.kind).toBe("trend");
+  expect(await localLevels(page)).toEqual([]);
+
+  await page.getByRole("button",{name:"Set anchor 1",exact:true}).click();
+  await page.getByTitle("Crosshair (Esc)",{exact:true}).click();
+  await clickPlot(page,.53,.54);
+  expect(await savedScene(page)).toEqual(saved);
+  await page.screenshot({path:info.outputPath("exclusive-modes.png")});
+});
+
+test("Escape cancels all armed modes and an active drag cannot complete in a replacement mode",async ({page})=>{
+  await page.goto("/");
+  await openTool(page,"trend");
+  const response=postDrawing(page);
+  await clickPlot(page,.39,.35);
+  await clickPlot(page,.62,.59);
+  const saved=await savedChange(response);
+  const modes=[
+    async()=>{await page.getByTitle("Place horizontal level (Alt+H)",{exact:true}).click();},
+    async()=>{await page.getByRole("button",{name:"Draw",exact:true}).click();await clickPlot(page,.43,.4);},
+    async()=>{await page.getByRole("button",{name:"Set anchor 2",exact:true}).click();},
+    async()=>{await page.getByRole("button",{name:"Select plan levels",exact:true}).click();await clickPlot(page,.5,.41);},
+  ];
+  for(const activate of modes){
+    await activate();
+    await page.keyboard.press("Escape");
+    await clickPlot(page,.56,.59);
+    expect(await savedScene(page)).toEqual(saved);
+    expect(await localLevels(page)).toEqual([]);
+  }
+
+  await page.getByRole("button",{name:"Draw",exact:true}).click();
+  const start=await plotPoint(page,.42,.37),end=await plotPoint(page,.66,.63);
+  await page.mouse.move(start.x,start.y);
+  await page.mouse.down();
+  await page.mouse.move(end.x,end.y,{steps:8});
+  const {plot}=await primaryPlot(page);
+  const top=plot.locator("xpath=following-sibling::canvas[1]");
+  await expect.poll(()=>coloredPixels(top,[255,220,134])).toBeGreaterThan(0);
+  await page.keyboard.press("Alt+h");
+  await expect.poll(()=>coloredPixels(top,[255,220,134])).toBe(0);
+  await page.mouse.up();
+  expect(await savedScene(page)).toEqual(saved);
+  expect(await localLevels(page)).toEqual([]);
+  await clickPlot(page,.55,.53);
+  expect(await localLevels(page)).toHaveLength(1);
+});
+
+test("horizontal drags reject outside, missing candle and pointer cancellation",async ({page})=>{
+  // Observe the real browser pointer id before the chart claims the gesture.
+  await page.addInitScript(()=>document.addEventListener("pointerdown",event=>{
+    if((event.target as Element).closest(".primary-chart .chart-input"))
+      Object.assign(window,{drawingTestPointer:event.pointerId});
+  },true));
+  await page.goto("/");
+  await openTool(page,"horizontal");
+  const before=await savedScene(page);
+  const input=page.locator(".primary-chart .chart-input");
+  const start=await plotPoint(page,.44,.38);
+  const {plot}=await primaryPlot(page);
+  const box=(await plot.boundingBox())!;
+  for(const end of [{x:box.x+box.width*.5,y:box.y+box.height+3},{x:box.x+box.width-2,y:box.y+box.height*.62}]){
+    await page.mouse.move(start.x,start.y);
+    await page.mouse.down();
+    await page.mouse.move(end.x,end.y,{steps:6});
+    await page.mouse.up();
+    expect(await savedScene(page)).toEqual(before);
+  }
+
+  await page.mouse.move(start.x,start.y);
+  await page.mouse.down();
+  const pointerId=await page.evaluate(()=>(window as unknown as {drawingTestPointer:number}).drawingTestPointer);
+  expect(await input.evaluate((element,id)=>element.hasPointerCapture(id),pointerId)).toBe(true);
+  await input.dispatchEvent("pointercancel",{pointerId,isPrimary:true,pointerType:"mouse"});
+  expect(await input.evaluate((element,id)=>element.hasPointerCapture(id),pointerId)).toBe(false);
+  await page.mouse.up();
+  expect(await savedScene(page)).toEqual(before);
+
+  const response=postDrawing(page);
+  await clickPlot(page,.56,.63);
+  expect((await savedChange(response)).revision).toBe(before.revision+1);
+});
+
+test("negative chart prices are rejected and navigation still pans and zooms",async ({page})=>{
+  let negative=false;
+  await page.route("**/research/api/market/candles?**",async route=>{
+    const url=new URL(route.request().url());
+    if(!negative||url.searchParams.get("source")!=="DEMO"||url.searchParams.get("symbol")!=="EURUSD")
+      return route.continue();
+    const response=await route.fetch(),payload=await response.json();
+    // Deliberately invalid price domain, but valid chart geometry, to exercise the client guard.
+    payload.candles=payload.candles.map((bar:{open:number;high:number;low:number;close:number})=>({
+      ...bar,open:bar.open-2,high:bar.high-2,low:bar.low-2,close:bar.close-2,
+    }));
+    return route.fulfill({response,json:payload});
+  });
+  await page.goto("/");
+  await openTool(page,"horizontal");
+  const prior=await savedScene(page);
+  await page.getByLabel("Drawing tool").focus();
+  await page.keyboard.press("Escape");
+  await expect(page.getByText(/Horizontal line.*select 1/)).toHaveCount(0);
+  await page.getByLabel("SMT comparison",{exact:true}).selectOption("GBPUSD");
+  await expect(page.getByLabel("Comparison placement")).toHaveValue("Overlay");
+  const legend=page.locator(".primary-chart .chart-legend-row").first();
+  const center=await plotPoint(page,.52,.48);
+  await page.mouse.move(center.x,center.y);
+  await expect(legend.locator("span")).toHaveCount(4);
+  const initial=await legend.innerText();
+  const end=await plotPoint(page,.74,.48);
+  await page.mouse.down();
+  await page.mouse.move(end.x,end.y,{steps:10});
+  await page.mouse.up();
+  await page.mouse.move(center.x,center.y);
+  await expect.poll(()=>legend.innerText()).not.toBe(initial);
+  const afterPan=await legend.innerText();
+  const offCenter=await plotPoint(page,.65,.48);
+  await page.mouse.move(offCenter.x,offCenter.y);
+  await page.mouse.wheel(0,-300);
+  await page.mouse.move(center.x,center.y);
+  await expect.poll(()=>legend.innerText()).not.toBe(afterPan);
+  expect(await savedScene(page)).toEqual(prior);
+
+  negative=true;
+  const refreshed=page.waitForResponse(res=>res.url().includes("/market/candles?")&&new URL(res.url()).searchParams.get("symbol")==="EURUSD");
+  await page.getByTitle("Refresh candles",{exact:true}).click();
+  const invalid=await (await refreshed).json();
+  expect(invalid.candles.at(-1).high).toBeLessThan(0);
+  await page.getByRole("button",{name:"Draw",exact:true}).click();
+  await clickPlot(page,.57,.61);
+  await expect(page.getByText(/Horizontal line.*select 1/)).toBeVisible();
+  expect(await savedScene(page)).toEqual(prior);
+});

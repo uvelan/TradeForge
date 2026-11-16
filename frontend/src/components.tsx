@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode, type IChartApi, type ISeriesApi, type IPriceLine, type UTCTimestamp} from 'lightweight-charts';
 import type { IndicatorResult } from './indicators';
 import type { SmtEvent } from './smt';
@@ -8,7 +8,7 @@ import {ArrowDownRight,ArrowUpRight,Camera,Check,ChevronDown,LoaderCircle,Maximi
 import type {Candle} from './types';
 import type {ChartLink} from './ChartLink';
 import {DrawingLayer,type Drawing} from './Drawings';
-import {installPlacement,type DrawPoint} from './drawingPlacement';
+import {installPlacement,type DrawPoint,type PlacementDrag} from './drawingPlacement';
 
 export function Badge({children,tone='neutral'}:{children:React.ReactNode;tone?:'neutral'|'green'|'red'|'amber'|'blue'}) {return <span className={`badge badge-${tone}`}>{children}</span>}
 export function SectionTitle({eyebrow,title,action}:{eyebrow?:string;title:string;action?:React.ReactNode}){return <div className="section-title"><div>{eyebrow&&<span className="eyebrow">{eyebrow}</span>}<h2>{title}</h2></div>{action}</div>}
@@ -23,7 +23,7 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicator,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,dragPlacement,onPlacementPreview,onDrawingSelect,onSmtSelect,onSaveSnapshot}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicator,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,onSmtSelect,onSaveSnapshot}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
   onAddLevel?:(price:number)=>void;showSnapshot?:boolean;symbol?:string;precision?:number;indicator?:IndicatorResult
   timeframe?: string;
@@ -31,7 +31,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   focus?: {epoch:number;sequence:number};
   link?:ChartLink; linkId?:string;
   drawings?:Drawing[]; onAnchor?:(points:{bar:Candle;price:number}[])=>void;
-  placementDraft?:DrawingLayer['preview']; dragPlacement?:boolean;
+  placementDraft?:DrawingLayer['preview']; placementInteraction?:object;
+  placementDrag?:PlacementDrag; requirePlacementCandle?:boolean;
   onPlacementPreview?:(points:{bar:Candle;price:number}[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>;
   comparison?: {symbol:string; candles:Candle[]; precision:number; placement:ComparisonPlacement;
     onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]}
@@ -75,8 +76,10 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   previewHandler.current=onPlacementPreview;
   const draft=useRef(placementDraft);
   draft.current=placementDraft;
-  const drag=useRef(dragPlacement);
-  drag.current=dragPlacement;
+  const drag=useRef(placementDrag);
+  drag.current=placementDrag;
+  const needsCandle=useRef(requirePlacementCandle);
+  needsCandle.current=requirePlacementCandle;
   const placementReset=useRef<(()=>void)|undefined>(undefined);
   const drawingSelection=useRef(onDrawingSelect);
   drawingSelection.current=onDrawingSelect;
@@ -115,6 +118,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const toolLayer=new DrawingLayer(chart,series);
     paintLayer.current=toolLayer;
     series.attachPrimitive(toolLayer);
+    if(drawing.current)toolLayer.showPreview(draft.current);
     const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime}):undefined;
     const scale=chart.timeScale();
     const viewport=()=>{if(linkId)link?.viewport(linkId);};
@@ -129,7 +133,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       const time=scale.coordinateToTime(x);
       const bar=typeof time==='number'?linkedBars.current.get(time):undefined;
       const price=series.coordinateToPrice(y);
-      if(price===null||!Number.isFinite(price)||(anchorHandler.current&&!bar))return;
+      if(price===null||!Number.isFinite(price)||price<0||((anchorHandler.current||needsCandle.current)&&!bar))return;
       return {x,y,price,time:bar?.time};
     }
     function candlePoints(points:DrawPoint[]){
@@ -140,7 +144,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     }
     const input=installPlacement(container,{
       armed:()=>drawing.current,
-      dragStart:()=>Boolean(drag.current&&anchorHandler.current),
+      drag:()=>drag.current??'none',
       activate,
       locate:located,
       preview:points=>toolLayer.showPreview(previewHandler.current?.(candlePoints(points))??draft.current),
@@ -181,7 +185,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       linesRef.current=[];seriesRef.current=null;chartRef.current=null;didFit.current=false;chart.remove();
     };
   },[symbol,precision,link,linkId]);
-  useEffect(()=>{placementReset.current?.();paintLayer.current?.showPreview(drawMode?placementDraft:undefined);},[drawMode,placementDraft,symbol,precision]);
+  useLayoutEffect(()=>{placementReset.current?.();paintLayer.current?.showPreview(drawMode?placementDraft:undefined);},[drawMode,placementDraft,placementInteraction,symbol,precision]);
   useEffect(()=>{paintLayer.current?.update(drawings??[]);},[drawings,symbol,precision]);
   const comparisonSymbol=comparison?.symbol;
   const comparisonPrecision=comparison?.precision;

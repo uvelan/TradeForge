@@ -1,18 +1,20 @@
+export type PlacementDrag='none'|'release-point'|'two-points';
 export type DrawPoint={x:number;y:number;price:number;time?:number};
 
 // The pointer belongs to the drawing only after a valid primary-plot down.
 export function installPlacement(element:HTMLElement, placement:{
   armed:()=>boolean;
-  dragStart:()=>boolean;
+  drag:()=>PlacementDrag;
   locate:(event:PointerEvent)=>DrawPoint|undefined;
   preview:(points:DrawPoint[])=>void;
   commit:(points:DrawPoint[])=>void;
   activate:()=>void;
 }){
-  let press:{id:number;start:DrawPoint;clientX:number;clientY:number}|undefined;
+  let press:{id:number;start:DrawPoint;clientX:number;clientY:number;drag:PlacementDrag}|undefined;
   let suppressClick=false;
   function reset(){
     const id=press?.id;
+    if(press)suppressClick=true;
     press=undefined;
     if(id!==undefined&&element.hasPointerCapture(id))element.releasePointerCapture(id);
     placement.preview([]);
@@ -23,14 +25,15 @@ export function installPlacement(element:HTMLElement, placement:{
     if(!placement.armed()||!event.isPrimary||event.button!==0||press)return;
     const point=placement.locate(event);
     if(!point)return;
-    press={id:event.pointerId,start:point,clientX:event.clientX,clientY:event.clientY};
+    press={id:event.pointerId,start:point,clientX:event.clientX,clientY:event.clientY,drag:placement.drag()};
     element.setPointerCapture(event.pointerId);
     event.preventDefault();
     event.stopPropagation();
   }
   function endpoints(event:PointerEvent,point:DrawPoint){
     if(!press||Math.hypot(press.clientX-event.clientX,press.clientY-event.clientY)<=6)return [point];
-    return placement.dragStart()?[press.start,point]:[];
+    if(press.drag==='release-point')return [point];
+    return press.drag==='two-points'?[press.start,point]:[];
   }
   function move(event:PointerEvent){
     if(!placement.armed()||!event.isPrimary)return;

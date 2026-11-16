@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import type {IChartApi,IPrimitivePaneRenderer,PrimitiveHoveredItem,ISeriesApi,ISeriesPrimitive,Time,UTCTimestamp} from 'lightweight-charts';
 import {api} from './api';
 import type {Candle} from './types';
@@ -16,6 +16,10 @@ export type Drawing={
 };
 type Version={schema_version:1;revision:number;items:Drawing[]};
 type Edit={kind:DrawingTool;anchors:Anchor[];item?:Drawing;mode?:'move'|number};
+type ChartInteraction=
+  | {mode:'navigate'|'level'}
+  | {mode:'plan';prices:string[]}
+  | {mode:'place'|'edit';draft:Edit};
 const now=()=>Math.floor(Date.now()/1000);
 
 function bracketsEntry(anchors:Anchor[]){
@@ -30,7 +34,11 @@ export function useDrawingBook(scope:string) {
   const [refresh,setRefresh]=useState(0);
   const [saving,setSaving]=useState(false);
   const [selected,setSelected]=useState('');
-  const [edit,setEdit]=useState<Edit>();
+  const [interaction,setInteraction]=useState<ChartInteraction>({mode:'navigate'});
+  const edit='draft' in interaction?interaction.draft:undefined;
+  const setEdit=useCallback((draft?:Edit)=>setInteraction(
+    draft?{mode:draft.item?'edit':'place',draft}:{mode:'navigate'},
+  ),[]);
   const [snap,setSnap]=useState(false);
   const [history,setHistory]=useState<{undo:Drawing[][];redo:Drawing[][]}>({undo:[],redo:[]});
   const current=loaded?.scope===scope?loaded.version:undefined;
@@ -106,11 +114,11 @@ export function useDrawingBook(scope:string) {
     setEdit(undefined);setSelected(item.id);
     void save([...current.items,item]);
   }
-  return {current,error,saving,selected,setSelected,edit,setEdit,snap,setSnap,history,save,begin,anchor,point,
+  return {current,error,saving,selected,setSelected,interaction,setInteraction,edit,setEdit,snap,setSnap,history,save,begin,anchor,point,
     reload:()=>setRefresh(value=>value+1)};
 }
 
-export function DrawingToolbox({book,onBegin}: {book:ReturnType<typeof useDrawingBook>;onBegin:(kind:DrawingTool)=>void}) {
+export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>}) {
   const [tool,setTool]=useState<DrawingTool>('trend');
   const item=book.current?.items.find(drawing=>drawing.id===book.selected);
   const [draft,setDraft]=useState<{id:string;label:string;color:string}>();
@@ -127,7 +135,7 @@ export function DrawingToolbox({book,onBegin}: {book:ReturnType<typeof useDrawin
       <label>Drawing tool<select value={tool} onChange={event=>setTool(event.target.value as DrawingTool)}>
         {Object.entries(tools).map(([value,[label]])=><option key={value} value={value}>{label}</option>)}
       </select></label>
-      <button className="small-tool" disabled={blocked||book.current?.items.length===100} onClick={()=>onBegin(tool)}>Draw</button>
+      <button className="small-tool" disabled={blocked||book.current?.items.length===100} onClick={()=>book.begin(tool)}>Draw</button>
       <label><input type="checkbox" checked={book.snap} onChange={event=>book.setSnap(event.target.checked)}/> Snap to wick</label>
       {book.edit&&<button className="small-tool" onClick={()=>book.setEdit(undefined)}>Cancel drawing</button>}
       <button className="small-tool" disabled={blocked||!book.history.undo.length}
