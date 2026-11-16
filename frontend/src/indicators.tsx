@@ -6,8 +6,11 @@ import { useWorkspacePreference } from "./useWorkspacePreference";
 type Window = { timezone: string; start: string; end: string };
 type Schedule = {kind: "continuous" | "forex_weekly" | "unknown"; timezone?: string;
   sunday_open?: string; friday_close?: string};
-type Structure = {left: number; right: number; price_source: "wick" | "close";
+type Structure = {algorithm_version?: 1 | 2; market_schedule?: Schedule; left: number; right: number; price_source: "wick" | "close";
   ties: "strict" | "earliest"; tolerance_bps: number; break_bps: number; wick_candidates: boolean};
+type Collection = "pivots" | "breaks";
+type PageInfo = {total: number; returned: number; start: number; end: number; next_cursor: string | null};
+type OlderPage = {key: string; collection: Collection; metadata: PageInfo; events: StructureEvent[]};
 type StructureVisibility = {swings: boolean; breaks: boolean; candidates: boolean};
 export type StructureEvent = {
   id: string; type: string; side: "HIGH" | "LOW"; status: "confirmed" | "provisional" | "invalidated";
@@ -30,6 +33,9 @@ export type IndicatorResult = {
   pivots?: StructureEvent[];
   breaks?: StructureEvent[];
   structure_state?: string;
+  event_page?: {snapshot: string; pivots: PageInfo; breaks: PageInfo};
+  provenance?: {context_authority?: string};
+  continuity?: {schedule_authority: string; counts: Record<string, number>};
   visibility?: StructureVisibility;
   coverage?: {status: string; confirmation_status: "confirmed" | "provisional" | "unavailable"};
   series: Record<string, Point[]>;
@@ -69,6 +75,9 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   const [candidate, setCandidate] = useState("");
   const [definitions, setDefinitions] = useState<Definition[]>([]);
   const [libraryError, setLibraryError] = useState("");
+  const [older, setOlder] = useState<OlderPage>();
+  const [pageRequest, setPageRequest] = useState<{key: string; collection: Collection; cursor: string}>();
+  const [pageError, setPageError] = useState("");
   const [response, setResponse] = useState<{key: string; results?: IndicatorResult[]; error?: string}>();
   useEffect(() => { if (request?.indicator) { setSelected(request.indicator); setPeriod(""); } },
     [request, setSelected, setPeriod]);
@@ -87,8 +96,9 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       if (period !== null && !(Number.isInteger(period) && period >= 2 && period <= 200)) return [];
       const session = item.session ?? definition.parameters.session;
       if (session && (!session.timezone || !session.start || !session.end || session.start === session.end)) return [];
-      const schedule = item.schedules?.[scheduleScope];
-      return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {}), ...(schedule ? {schedule} : {}), ...(item.structure ? {structure:item.structure} : {})}];
+      const schedule = definition.parameters.schedule ? item.schedules?.[scheduleScope] : undefined;
+      return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {}), ...(schedule ? {schedule} : {}), ...(item.structure ? {structure:item.structure.algorithm_version===2?
+        {...item.structure,market_schedule:item.schedules?.[scheduleScope]}:item.structure} : {})}];
     });
   }, [definitions, periodText, primary, scheduleScope, settings, timeframe]);
   const body = useMemo(() => enabled && active.length && (candles.length || active.some(item => item.id.startsWith("previous_")))
@@ -108,6 +118,9 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   }, [enabled]);
 
   useEffect(() => {
+    setOlder(undefined);
+    setPageRequest(undefined);
+    setPageError("");
     if (!body) return;
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
@@ -124,6 +137,37 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
     }, 80);
     return () => { window.clearTimeout(timer); controller.abort(); };
   }, [body]);
+
+  useEffect(() => {
+    if (!body || pageRequest?.key !== body) return;
+    const controller = new AbortController();
+    const {collection, cursor}=pageRequest;
+    const input=JSON.parse(body);
+    const spec = input.indicators.find((item:{id:string})=>item.id==="market_structure");
+    const isPivot=collection==="pivots";
+    input.indicators=[{...spec,structure_delivery:{
+      pivot_limit:isPivot?40:0, break_limit:isPivot?0:40,
+      [isPivot?"pivot_cursor":"break_cursor"]:cursor,
+    }}];
+    void (async()=>{
+      try{
+        const response=await fetch("/research/api/indicators/evaluate",{
+          method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(input),signal:controller.signal,
+        });
+        const value=await response.json();
+        if(!response.ok)throw Error(typeof value.detail==="string"?value.detail:"Historical event page unavailable");
+        const result=value.results[0] as IndicatorResult;
+        const metadata=result.event_page?.[collection];
+        if(!metadata)throw Error("Historical event page missing");
+        if(!controller.signal.aborted)setOlder({key:body,collection,metadata,events:result[collection]??[]});
+      }catch(error){
+        if(!controller.signal.aborted)setPageError((error as Error).message);
+      }finally{
+        if(!controller.signal.aborted)setPageRequest(undefined);
+      }
+    })();
+    return ()=>controller.abort();
+  },[body,pageRequest]);
 
   const current = response?.key === body ? response : undefined;
   const visibility = settings.find(item => item.id === "market_structure")?.visibility ?? structureVisibility;
@@ -171,6 +215,10 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
           </>}
           {definition.parameters.structure && (() => {
             const rules=item.structure ?? definition.parameters.structure;
+            const version=rules.algorithm_version??1;
+            const market=item.schedules?.[scheduleScope] ?? {kind:"unknown"} as Schedule;
+            const setMarket=(patch:Partial<Schedule>)=>update(item.id,
+              {schedules:{...item.schedules,[scheduleScope]:{...market,...patch}}});
             const patch=(value: Partial<Structure>)=>update(item.id,{structure:{...rules,...value}});
             const numbers: [keyof Pick<Structure,"left"|"right"|"tolerance_bps"|"break_bps">,string,number,number][]=[
               ["left","Left bars",1,30],["right","Right confirmation bars",1,30],
@@ -180,6 +228,25 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
             const recent=[...(result?.pivots??[]),...(result?.breaks??[])]
               .sort((left,right)=>right.available_at-left.available_at).slice(0,6);
             return <>
+              <label>Structure algorithm <select value={version}
+                onChange={event=>patch({algorithm_version:Number(event.target.value) as 1|2})}>
+                <option value={1}>v1 · reset at every gap</option><option value={2}>v2 · calendar continuity</option>
+              </select></label>
+              {version===2 && <>
+                <label>Structure market schedule <select value={market.kind}
+                  onChange={event=>setMarket({kind:event.target.value as Schedule["kind"]})}>
+                  <option value="unknown">Unknown</option><option value="continuous">Continuous (24/7)</option>
+                  <option value="forex_weekly">Configured Sunday–Friday</option>
+                </select></label>
+                {market.kind==="forex_weekly" && <>
+                  <label>Structure timezone <input value={market.timezone??"America/New_York"}
+                    onChange={event=>setMarket({timezone:event.target.value})}/></label>
+                  <label>Structure Sunday open <input type="time" value={market.sunday_open??"17:00"}
+                    onChange={event=>setMarket({sunday_open:event.target.value})}/></label>
+                  <label>Structure Friday close <input type="time" value={market.friday_close??"17:00"}
+                    onChange={event=>setMarket({friday_close:event.target.value})}/></label>
+                </>}
+              </>}
               {numbers.map(([key,label,min,max])=><label key={key}>{label}
                 <input type="number" min={min} max={max} step={min===1?1:0.1} value={rules[key]}
                   onChange={event=>{const value=event.target.valueAsNumber;
@@ -200,6 +267,36 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                 Show {key}
               </label>)}
               {result && <small role="status">Structure {result.structure_state?.toLowerCase()}</small>}
+              {result?.continuity && <small>
+                {result.continuity.schedule_authority==="UNKNOWN"?"Trading hours unknown":"Configured trading hours (assumption)"}
+                {result.provenance?.context_authority==="CHECKSUM_VERIFIED_ARCHIVE"?" · Archive checksums verified":
+                  result.provenance?.context_authority==="CLIENT_SUPPLIED_UNVERIFIED"?" · Source unverified":""}
+                {Object.entries(result.continuity.counts).map(([reason,count])=>
+                  " · "+reason.toLowerCase().replaceAll("_"," ")+" "+count)}
+              </small>}
+              {result?.event_page && <>
+                {(["pivots","breaks"] as const).map(collection=>{
+                  const page=result.event_page![collection];
+                  return <button key={collection} type="button" className="small-tool"
+                    disabled={Boolean(pageRequest)||!page.next_cursor}
+                    onClick={()=>{setPageError("");setPageRequest({key:body,collection,cursor:page.next_cursor!});}}>
+                    Older {collection} ({page.total})
+                  </button>;
+                })}
+                {pageError && <small role="alert">{pageError}</small>}
+                {older?.key===body && <section aria-label="Historical structure evidence">
+                  <p>{older.collection} {older.metadata.start+1}–{older.metadata.end} of {older.metadata.total}</p>
+                  <ul>{[...older.events].reverse().map(event=><li key={event.id}>
+                    {event.classification??event.type.replaceAll("_"," ")} · {event.status} ·{" "}
+                    {new Date((event.confirmation_time??event.available_at)*1000).toISOString()} · {event.break_price??event.price}
+                    {event.confirmation_time!==null&&event.available_at>event.confirmation_time&&
+                      " · Available "+new Date(event.available_at*1000).toISOString()}
+                  </li>)}</ul>
+                  <button type="button" className="small-tool" disabled={Boolean(pageRequest)||!older.metadata.next_cursor}
+                    onClick={()=>setPageRequest({key:body,collection:older.collection,cursor:older.metadata.next_cursor!})}>Next older page</button>
+                  <button type="button" className="small-tool" onClick={()=>{setPageRequest(undefined);setOlder(undefined);}}>Close evidence</button>
+                </section>}
+              </>}
               {recent.length>0 && <ul aria-label="Recent structure events">{recent.map(event=><li key={event.id}>
                 {event.type==="PIVOT"?event.classification:event.type.replaceAll("_"," ")} · {event.status} ·{" "}
                 {new Date((event.confirmation_time??event.available_at)*1000).toISOString().slice(0,16).replace("T"," ")} UTC

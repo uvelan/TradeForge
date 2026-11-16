@@ -164,9 +164,28 @@ def test_fixed_extended_history_with_verified_partitions(client):
     assert result["provenance"]["context_authority"]=="CHECKSUM_VERIFIED_ARCHIVE"
     assert result["provenance"]["retrieval"]["decoded_candles"]==10_000
     assert result["provenance"]["schedule_completeness"]=="NOT_ESTABLISHED"
-    assert result["breaks"][0]["break_time"]==start+180
+    # Walk all bounded pages to verify the original complete-history assertion.
     earlier=client.post("/api/indicators/evaluate",json={**body,"cutoff":start+600}).json()["results"][0]
-    assert earlier["pivots"]==[p for p in result["pivots"] if p["available_at"] <= start+600]
+    page=result
+    full_pivots=[]
+    oldest_break=None
+    while True:
+        full_pivots[0:0]=page["pivots"]
+        if page["breaks"]:
+            oldest_break=page["breaks"][0]
+        metadata=page["event_page"]
+        pivot_cursor=metadata["pivots"]["next_cursor"]
+        break_cursor=metadata["breaks"]["next_cursor"]
+        if not (pivot_cursor or break_cursor):
+            break
+        spec={**body["indicators"][0],"structure_delivery":{
+            "pivot_limit":500 if pivot_cursor else 0,"break_limit":500 if break_cursor else 0,
+            "pivot_cursor":pivot_cursor,"break_cursor":break_cursor}}
+        status=client.post("/api/indicators/evaluate",json={**body,"indicators":[spec]})
+        assert status.status_code==200
+        page=status.json()["results"][0]
+    assert oldest_break["break_time"]==start+180
+    assert earlier["pivots"]==[p for p in full_pivots if p["available_at"] <= start+600]
     assert client.post("/api/indicators/evaluate",json={**body,"cutoff":start+10_001*60}).status_code==422
 
 def test_unprotected_opposing_close_is_countertrend_not_choch():

@@ -1,5 +1,5 @@
 """Versioned confirmed pivots and price structure over a causal candle stream."""
-from collections import deque
+from collections import Counter, deque
 from hashlib import sha256
 import json
 from typing import Literal
@@ -7,11 +7,14 @@ from typing import Literal
 from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
 from .pivots import pivot_matches
-
-VERSION = 1
+from .indicator_coverage import MarketSchedule
+from .structure_continuity import POLICY_VERSION, continuity_reason
+from .structure_pages import EventPage, StructureDelivery
 
 
 class StructureRules(BaseModel):
+    algorithm_version: Literal[1, 2] = 1
+    market_schedule: MarketSchedule | None = None
     left: int = Field(default=3, ge=1, le=30)
     right: int = Field(default=3, ge=1, le=30)
     price_source: Literal["wick", "close"] = "wick"
@@ -26,7 +29,17 @@ class StructureRules(BaseModel):
     def requires_fixed_history_window(self):
         if (self.history_bars == 10_000) != (self.history_start is not None):
             raise ValueError("Extended structure history requires a fixed history_start")
+        if self.algorithm_version == 1 and self.market_schedule is not None:
+            raise ValueError("Market continuity settings require structure version 2")
         return self
+
+    def identity_parameters(self):
+        if self.algorithm_version == 1:
+            return self.model_dump(exclude={"algorithm_version", "market_schedule"})
+        parameters = self.model_dump()
+        parameters.update(tolerance_bps=float(self.tolerance_bps), break_bps=float(self.break_bps))
+        parameters["market_schedule"] = (self.market_schedule or MarketSchedule(kind="unknown")).model_dump()
+        return parameters
 
 
 def classify(side, price, previous, bps):
@@ -54,9 +67,16 @@ def initial_direction(pivots):
     return "NEUTRAL"
 
 
-def detect_structure(rows, step: int, rules: StructureRules, provenance: dict):
+def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
+                     delivery: StructureDelivery, snapshot_scope: dict):
     """Rows contain closed bars and actual UTC availability, already cutoff-filtered."""
-    pivots, breaks = [], []
+    pivots = EventPage("pivots", delivery.limit if delivery.pivot_limit is None else delivery.pivot_limit,
+                       delivery.pivot_cursor)
+    breaks = EventPage("breaks", delivery.limit if delivery.break_limit is None else delivery.break_limit,
+                       delivery.break_cursor)
+    schedule = rules.market_schedule or MarketSchedule(kind="unknown")
+    continuity = deque(maxlen=40)
+    reasons = Counter()
     active = {}
     consumed, candidates = set(), {}
     window = deque(maxlen=rules.left+rules.right+1)
@@ -64,7 +84,10 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict):
     last = None
     warnings = set()
     fingerprint = sha256()
-    scope = json.dumps([VERSION, provenance, rules.model_dump()], sort_keys=True, separators=(",", ":"))
+    version = rules.algorithm_version
+    scope = json.dumps([version, provenance, rules.identity_parameters()], sort_keys=True, separators=(",", ":"))
+    snapshot = sha256(json.dumps([scope, step, snapshot_scope], sort_keys=True, separators=(",", ":")).encode())
+    last_close = None
 
     provenance_id = sha256(json.dumps(provenance, sort_keys=True).encode()).hexdigest()
 
@@ -72,24 +95,41 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict):
         evidence = fingerprint.hexdigest()
         identity = sha256(json.dumps([scope, kind, side, event_time, evidence],
                                      separators=(",", ":")).encode()).hexdigest()
-        return {"id": identity, "type": kind, "side": side, "algorithm_version": VERSION,
+        return {"id": identity, "type": kind, "side": side, "algorithm_version": version,
                 "confirmation_time": None if fields.get("status") != "confirmed" else event_time+step,
                 "available_at": available, "input_fingerprint": evidence, "provenance_id": provenance_id, **fields}
 
     for bar, available in sorted(rows, key=lambda row: (row[1], row[0].time)):
+        encoded = bar.model_dump_json().encode()
+        availability_bytes = f":{available};".encode()
+        snapshot.update(encoded)
+        snapshot.update(availability_bytes)
         if last is not None and bar.time <= last:
             warnings.add("LATE_STRUCTURE_CANDLE_IGNORED")
             continue
+        reopening = None
         if last is not None and bar.time != last + step:
-            warnings.add("STRUCTURE_RESET_AT_GAP")
-            window.clear()
-            active.clear()
-            candidates.clear()
-            consumed.clear()
-            state = "UNCONFIRMED"
-        last = bar.time
-        fingerprint.update(bar.model_dump_json().encode())
-        fingerprint.update(f":{available};".encode())
+            reason = continuity_reason(last, bar.time, step, schedule) if version == 2 else "LEGACY_GAP"
+            if version == 2:
+                reasons[reason] += 1
+                record = {"reason": reason, "previous_time": last, "time": bar.time,
+                          "available_at": available, "state_before": state,
+                          "state_preserved": reason == "SCHEDULED_CLOSURE"}
+                if reason == "SCHEDULED_CLOSURE":
+                    reopening = {"previous_close": last_close, "open": bar.open, "high": bar.high,
+                                 "low": bar.low, "close": bar.close, "crossings": []}
+                    record["opening"] = reopening
+                continuity.append(record)
+            if reason != "SCHEDULED_CLOSURE":
+                warnings.add("STRUCTURE_RESET_AT_GAP")
+                window.clear()
+                active.clear()
+                candidates.clear()
+                consumed.clear()
+                state = "UNCONFIRMED"
+        last, last_close = bar.time, bar.close
+        fingerprint.update(encoded)
+        fingerprint.update(availability_bytes)
         window.append(bar)
 
         eligible = {side: level for side, level in active.items()
@@ -113,6 +153,16 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict):
                           level_price=price, level_time=level["confirmation_bar_time"],
                           level_available_at=level["available_at"], state_before=state,
                           invalidation="Reclaim before a qualifying close, or a candle continuity gap")
+            if reopening is not None:
+                opening_crossed = sign * (bar.open-price) > tolerance
+                crossing = {"side": side, "pivot_id": level["id"], "level_price": price,
+                            "open_crossed": opening_crossed, "wick_crossed": wick_crossed,
+                            "close_crossed": crossed}
+                opening_status = ("CLOSE_CONFIRMED" if crossed else "OPEN_RECLAIMED" if opening_crossed
+                                  else "WICK_ONLY" if wick_crossed else "INSIDE")
+                crossing["opening_status"] = opening_status
+                reopening["crossings"].append(crossing)
+                fields["opening_status"] = opening_status
             candidate = candidates.get(level["id"])
             if crossed:
                 kind = "CHOCH" if opposing and protected else "COUNTERTREND_BREAK" if opposing else "BOS"
@@ -170,6 +220,14 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict):
                 state = initial
         for found in batch:
             pivots.append({**found, "state_after": state})
-    return {"pivots": pivots, "breaks": breaks, "structure_state": state,
-            "structure_warnings": sorted(warnings), "provenance_id": provenance_id,
-            "structure_input_fingerprint": fingerprint.hexdigest()}
+    digest = snapshot.hexdigest()
+    metadata = {"snapshot": digest, "pivots": pivots.finish(digest), "breaks": breaks.finish(digest)}
+    result = {"pivots": list(pivots.events), "breaks": list(breaks.events), "structure_state": state,
+              "structure_warnings": sorted(warnings), "provenance_id": provenance_id,
+              "structure_input_fingerprint": fingerprint.hexdigest(), "event_page": metadata}
+    if version == 2:
+        result["continuity"] = {"policy_version": POLICY_VERSION, "schedule": schedule.model_dump(),
+                                "schedule_authority": ("UNKNOWN" if schedule.kind == "unknown" else
+                                                       "CONFIGURED_ASSUMPTION"),
+                                "counts": dict(reasons), "recent": list(continuity)}
+    return result
