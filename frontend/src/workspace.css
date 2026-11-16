@@ -104,6 +104,12 @@
   padding: 6px;
 }
 .indicator-controls input { width: 70px; }
+.indicator-library summary { cursor: pointer; }
+.indicator-library[open] { display: grid; gap: 8px; }
+.indicator-library label { margin-block: 4px; }
+.indicator-library input[type="search"],
+.indicator-library input[type="time"] { width: auto; }
+.indicator-library fieldset { border: 1px solid var(--workspace-border); border-radius: 6px; }
 .indicator-controls input.archive-date { width: auto; }
 .indicator-controls .smt-toggle { width: auto; accent-color: var(--workspace-accent); }
 .smt-rules { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 8px; }

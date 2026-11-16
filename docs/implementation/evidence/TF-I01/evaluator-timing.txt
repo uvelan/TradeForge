@@ -1,0 +1,3 @@
+Synthetic M5: 2,000 candles, 8 definitions, 30 warmed calls
+Python evaluation only, input already validated. Excludes JSON, HTTP, and rendering.
+Median 41.10 ms; p95 61.15 ms

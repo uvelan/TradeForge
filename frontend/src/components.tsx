@@ -1,5 +1,5 @@
 import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
-import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode, type IChartApi, type ISeriesApi, type IPriceLine, type UTCTimestamp} from 'lightweight-charts';
+import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType, type IChartApi, type ISeriesApi, type IPriceLine, type UTCTimestamp} from 'lightweight-charts';
 import type { IndicatorResult } from './indicators';
 import type { SmtEvent } from './smt';
 import {useCandleColors} from './candleColors';
@@ -24,9 +24,9 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicator,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
-  onAddLevel?:(price:number)=>void;showSnapshot?:boolean;symbol?:string;precision?:number;indicator?:IndicatorResult
+  onAddLevel?:(price:number)=>void;showSnapshot?:boolean;symbol?:string;precision?:number;indicators?:IndicatorResult[]
   timeframe?: string;
   drawingPrompt?: string;
   focus?: {epoch:number;sequence:number};
@@ -305,29 +305,71 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     scale.setVisibleLogicalRange({from:index-12,to:index+12});
     if(bar)chart.setCrosshairPosition(bar.close,bar.time as UTCTimestamp,series);
   },[focus,candles]);
+  const drawnIndicators=useRef<{chart:IChartApi; lines:Map<string,ISeriesApi<'Line'>>}|undefined>(undefined);
   useEffect(()=>{
     const chart=chartRef.current;
     const series=seriesRef.current;
-    if(!chart||!series||!indicator)return;
-    if(indicator.render==="markers"){
-      const markers=Object.entries(indicator.series).flatMap(([title,points])=>points.map(point=>({
-        time:(point.pivot_time ?? point.time) as UTCTimestamp, price:point.value,
-        position:title==="Swing high"?"atPriceTop" as const:"atPriceBottom" as const,
-        shape:"circle" as const,color:"#e8bb79",text:title,
-      }))).sort((a,b)=>a.time-b.time);
-      const plugin=createSeriesMarkers(series,markers);
-      return ()=>{if(chartRef.current===chart)plugin.detach()};
-    }
+    if(!chart||!series)return;
+    if(drawnIndicators.current?.chart!==chart)drawnIndicators.current={chart,lines:new Map()};
+    const {lines}=drawnIndicators.current;
+    const displayed=new Set<string>();
     const colors=["#e8bb79","#8ab4ff","#d5a4f8"];
-    const pane=indicator.render==="pane"?chart.addPane().paneIndex():0;
-    const drawn=Object.entries(indicator.series).map(([title,points],index)=>{
-      const line=chart.addSeries(LineSeries,{title,color:colors[index % colors.length],
-        lineWidth:1,priceLineVisible:false},pane);
-      line.setData(points.map(point=>({time:point.time as UTCTimestamp,value:point.value})));
-      return line;
-    });
-    return ()=>{if(chartRef.current===chart)drawn.forEach(line=>chart.removeSeries(line))};
-  },[indicator,symbol,precision]);
+    const markers=[];
+    for(const [indicatorIndex,indicator] of (indicators??[]).entries()){
+      if(indicator.render==="markers"){
+        for(const [title,points] of Object.entries(indicator.series)){
+          markers.push(...points.map(point=>({
+            time:(point.pivot_time??point.time) as UTCTimestamp,price:point.value,
+            position:title==="Swing high"?"atPriceTop" as const:"atPriceBottom" as const,
+            shape:"circle" as const,color:"#e8bb79",text:title,
+          })));
+        }
+        continue;
+      }
+      let pane:number|undefined;
+      for(const [index,[title,points]] of Object.entries(indicator.series).entries()){
+        const isSession=indicator.id.startsWith("session_");
+        const isRange=isSession||indicator.id.startsWith("previous_");
+        for(const provisional of isSession?[true,false]:[false]){
+          const key=JSON.stringify([indicator.id,title,provisional]);
+          const visible=points.filter(point=>(point.status==="provisional")===provisional);
+          if(!visible.length)continue;
+          displayed.add(key);
+          let line=lines.get(key);
+          if(!line){
+            const prefix=indicator.id.includes("_")?indicator.id.replaceAll("_"," ")+" ":"";
+            pane??=indicator.render==="pane"?chart.addPane(false).paneIndex():0;
+            const digits=indicator.unit==="price"?precision:2;
+            line=chart.addSeries(LineSeries,{
+              priceFormat:{type:"price",precision:digits,minMove:10**-digits},
+              title:prefix+title+(provisional?" (developing)":""),
+              color:colors[(index+indicatorIndex)%colors.length],lineWidth:1,priceLineVisible:false,
+              lastValueVisible:!indicator.id.startsWith("previous_"),
+              lineType:isRange?LineType.WithSteps:LineType.Simple,
+              lineStyle:provisional?LineStyle.Dashed:LineStyle.Solid,
+              pointMarkersVisible:isSession&&!provisional,
+            },pane);
+            lines.set(key,line);
+          }else pane??=line.getPane().paneIndex();
+          const byTime=new Map(visible.map(point=>[point.time,point.value]));
+          line.setData(linkedBars.current.size&&isRange?[...linkedBars.current.keys()].map(time=>{
+            const value=byTime.get(time);
+            return value===undefined?{time:time as UTCTimestamp}:{time:time as UTCTimestamp,value};
+          }):visible.map(point=>({time:point.time as UTCTimestamp,value:point.value})));
+        }
+      }
+    }
+    for(const [key,line] of lines){
+      if(!displayed.has(key)){
+        chart.removeSeries(line);
+        lines.delete(key);
+      }
+    }
+    if(markers.length){
+      const plugin=createSeriesMarkers(series,markers.sort((a,b)=>a.time-b.time));
+      return ()=>{if(chartRef.current===chart)plugin.detach();};
+    }
+  },[indicators,symbol,precision,link,linkId]);
   const smtEvents=comparison?.smt;
   const markerCandles=useRef(candles);
   markerCandles.current=candles;

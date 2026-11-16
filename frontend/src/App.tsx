@@ -220,6 +220,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const replayScopeRef=useRef(replayScope);
   replayScopeRef.current=replayScope;
   const [quotes,setQuotes]=useState<Record<string,number|null>>({});
+  const indicatorScope=JSON.stringify([source,symbol,timeframe,range]);
+  const [loadedIndicatorScope,setLoadedIndicatorScope]=useState("");
   const refreshCandles=useCallback(()=>setRefreshCount(n=>n+1),[]);
   const live=useBinanceCandles(isBinance,timeframe,refreshCandles);
   useEffect(()=>{
@@ -239,7 +241,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);setReplayBusy(false);setReplayError('');setChartCapture(undefined);setPlanPrices([]);
     setInteraction(current=>current.mode==='plan'?{mode:'navigate'}:current);
     api.candles(symbol,timeframe,source,expanded?600:200,source==='MT5',range)
-      .then(main=>{if(active)setData(main)})
+      .then(main=>{if(active){setData(main);setLoadedIndicatorScope(indicatorScope);}})
       .catch(e=>{if(active){setError(e.message);setData(null)}})
       .finally(()=>{if(active)setBusy(false)});
     return()=>{active=false};
@@ -326,7 +328,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const visibleCandles=useMemo(()=>replayActive?replayData!.candles.slice(0,replayIndex!+1):candles,
     [replayActive,replayData,replayIndex,candles]);
   const indicatorCandles=!replayActive&&data?.latest_unconfirmed?visibleCandles.slice(0,-1):visibleCandles;
-  const indicator=useChartIndicator(expanded&&!isBinance&&!busy&&!error,indicatorCandles,source,timeframe,initialLocation);
   const last=visibleCandles.at(-1);const first=visibleCandles[0];
   const change=last&&first?(last.close-first.open)/first.open*100:0;
   const canReplay=expanded&&!isBinance&&!busy&&!error&&Boolean(data&&closedCandles(data).length>0);
@@ -377,6 +378,11 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   },[expanded,setInteraction,toggleLevel]);
   const boundary=last?.time??0;
   const cutoff=replayActive?(last?.available_at ?? boundary+frameMinutes[timeframe]*60):undefined;
+  const indicatorFeed=replayActive?replayData:data;
+  const indicatorCutoff=cutoff??Math.min(Math.floor(Date.now()/1000),Math.max(
+    (indicatorCandles.at(-1)?.time??0)+frameMinutes[timeframe]*60,indicatorCandles.at(-1)?.available_at??0));
+  const indicator=useChartIndicator(expanded&&!isBinance&&!busy&&!error&&indicatorScope===loadedIndicatorScope,indicatorCandles,source,timeframe,
+    symbol,indicatorCutoff,indicatorFeed??undefined,replayActive,initialLocation);
   const options=[...new Set([symbol,...(isBinance?[]:source==='MT5'?instruments.map(item=>item.name):watchSymbols)])];
   const compare=replaySession?replaySession.views.comparison?.symbol??'':
     expanded&&comparisonSymbol!==symbol&&options.includes(comparisonSymbol)?comparisonSymbol:'';
@@ -501,7 +507,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
           }).catch(reason=>setPollError(reason.message))}>Inspect alert evidence</button>}
         </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(interaction.mode==='navigate'?'active':'')} title="Crosshair (Esc)" onClick={()=>setInteraction({mode:'navigate'})}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
         <div className={'terminal-chart-columns '+(viewCount!=='1'?'multi-chart':'')}>
-          <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events}:undefined} symbol={symbol} precision={digits} indicator={indicator.data || undefined} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
+          <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
               item.anchors.every(anchor=>anchor.time+frameMinutes[timeframe]*60<=cutoff))}
             drawMode={interaction.mode!=='navigate'} placementInteraction={interaction}
             onSaveSnapshot={async png=>{

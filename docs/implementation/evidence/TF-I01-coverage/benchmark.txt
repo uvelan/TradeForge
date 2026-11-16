@@ -1,0 +1,7 @@
+Windows local temp SQLite/Parquet, warm filesystem, 25 repetitions
+One separate tracemalloc sample per operation; RSS and native Arrow memory not measured
+forex_weekly: {'requested_candles': 10080, 'decoded_candles': 7200, 'partitions_examined': 5}; COMPLETE; high=14.0 low=8.0 available_at=1794182400
+  source read p50=107.52ms p95=202.63ms Python_peak=11135.2KiB | calculation only p50=6.22ms p95=10.86ms Python_peak=69.4KiB | combined p50=107.68ms p95=204.02ms Python_peak=11146.7KiB
+  one missing open candle: MISSING_OPEN_CANDLES; observed=7199; confirmed_points=0
+continuous: {'requested_candles': 10080, 'decoded_candles': 10080, 'partitions_examined': 7}; COMPLETE; high=14.0 low=8.0 available_at=1794182400
+  source read p50=116.19ms p95=193.27ms Python_peak=15516.3KiB | calculation only p50=9.42ms p95=21.90ms Python_peak=93.8KiB | combined p50=118.73ms p95=252.38ms Python_peak=15533.3KiB

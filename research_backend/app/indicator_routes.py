@@ -10,6 +10,8 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from .indicators import Bar, REGISTRY, calculate
+from .indicator_engine import Evaluation, catalog, evaluate
+from .indicator_history import load_reference
 from .market import FRAME_MIN, mt5_rates
 from .smt import confirmation_timing, detect_smt
 from .db import one, rows, transaction
@@ -438,9 +440,15 @@ def signal_candles(event_key: str, status: Literal["SMT_CANDIDATE", "SMT_CONFIRM
 
 @router.get("")
 def definitions():
-    return [{"id": key, "label": definition.label, "render": definition.render,
-             "period": definition.period, "version": 1}
-            for key, definition in REGISTRY.items()]
+    return catalog()
+
+
+@router.post("/evaluate")
+def evaluate_indicators(request: Evaluation):
+    try:
+        return evaluate(request, load_reference)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
 
 
 @router.post("/calculate")
