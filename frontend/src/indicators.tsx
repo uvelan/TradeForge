@@ -6,9 +6,20 @@ import { useWorkspacePreference } from "./useWorkspacePreference";
 type Window = { timezone: string; start: string; end: string };
 type Schedule = {kind: "continuous" | "forex_weekly" | "unknown"; timezone?: string;
   sunday_open?: string; friday_close?: string};
+type Structure = {left: number; right: number; price_source: "wick" | "close";
+  ties: "strict" | "earliest"; tolerance_bps: number; break_bps: number; wick_candidates: boolean};
+type StructureVisibility = {swings: boolean; breaks: boolean; candidates: boolean};
+export type StructureEvent = {
+  id: string; type: string; side: "HIGH" | "LOW"; status: "confirmed" | "provisional" | "invalidated";
+  available_at: number; confirmation_time: number | null; confirmation_bar_time?: number;
+  price?: number; classification?: string; direction?: "BULLISH" | "BEARISH";
+  break_time?: number; break_price?: number; level_time?: number; level_price?: number;
+};
+const structureVisibility: StructureVisibility = {swings: true, breaks: true, candidates: true};
+
 type Definition = { id: string; label: string; period: number | null; timeframes: Timeframe[];
-  parameters: { session?: Window; schedule?: Schedule["kind"][] } };
-type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule> };
+  parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure } };
+type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility };
 type Point = { time: number; value: number; pivot_time?: number; status: "confirmed" | "provisional" };
 export type IndicatorResult = {
   id: string;
@@ -16,6 +27,10 @@ export type IndicatorResult = {
   warmup_bars: number | null;
   unit: "price" | "percent";
   warnings: string[];
+  pivots?: StructureEvent[];
+  breaks?: StructureEvent[];
+  structure_state?: string;
+  visibility?: StructureVisibility;
   coverage?: {status: string; confirmation_status: "confirmed" | "provisional" | "unavailable"};
   series: Record<string, Point[]>;
 };
@@ -73,7 +88,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       const session = item.session ?? definition.parameters.session;
       if (session && (!session.timezone || !session.start || !session.end || session.start === session.end)) return [];
       const schedule = item.schedules?.[scheduleScope];
-      return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {}), ...(schedule ? {schedule} : {})}];
+      return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {}), ...(schedule ? {schedule} : {}), ...(item.structure ? {structure:item.structure} : {})}];
     });
   }, [definitions, periodText, primary, scheduleScope, settings, timeframe]);
   const body = useMemo(() => enabled && active.length && (candles.length || active.some(item => item.id.startsWith("previous_")))
@@ -111,7 +126,9 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   }, [body]);
 
   const current = response?.key === body ? response : undefined;
-  const data = current?.results ?? emptyResults;
+  const visibility = settings.find(item => item.id === "market_structure")?.visibility ?? structureVisibility;
+  const data = useMemo(() => current?.results?.map(item => item.id === "market_structure" ?
+    {...item, visibility} : item) ?? emptyResults, [current, visibility]);
   const warnings = [...new Set(data.filter(row => !row.coverage).flatMap(row => row.warnings))];
   const choices = definitions.filter(item => item.timeframes.includes(timeframe) && item.id !== selected &&
     !settings.some(config => config.id === item.id) && (item.label + " " + item.id).toLowerCase().includes(search.toLowerCase()));
@@ -152,6 +169,45 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
             <label>Start <input type="time" value={session.start} onChange={event => update(item.id, {session:{...session, start:event.target.value}})}/></label>
             <label>End <input type="time" value={session.end} onChange={event => update(item.id, {session:{...session, end:event.target.value}})}/></label>
           </>}
+          {definition.parameters.structure && (() => {
+            const rules=item.structure ?? definition.parameters.structure;
+            const patch=(value: Partial<Structure>)=>update(item.id,{structure:{...rules,...value}});
+            const numbers: [keyof Pick<Structure,"left"|"right"|"tolerance_bps"|"break_bps">,string,number,number][]=[
+              ["left","Left bars",1,30],["right","Right confirmation bars",1,30],
+              ["tolerance_bps","Pivot tolerance (bps)",0,100],["break_bps","Break tolerance (bps)",0,100],
+            ];
+            const result=data.find(row=>row.id===item.id);
+            const recent=[...(result?.pivots??[]),...(result?.breaks??[])]
+              .sort((left,right)=>right.available_at-left.available_at).slice(0,6);
+            return <>
+              {numbers.map(([key,label,min,max])=><label key={key}>{label}
+                <input type="number" min={min} max={max} step={min===1?1:0.1} value={rules[key]}
+                  onChange={event=>{const value=event.target.valueAsNumber;
+                    if(value>=min&&value<=max)patch({[key]:value});}}/>
+              </label>)}
+              <label>Pivot price <select value={rules.price_source}
+                onChange={event=>patch({price_source:event.target.value as Structure["price_source"]})}>
+                <option value="wick">Wick</option><option value="close">Close</option>
+              </select></label>
+              <label>Pivot ties <select value={rules.ties} onChange={event=>patch({ties:event.target.value as Structure["ties"]})}>
+                <option value="strict">Strict</option><option value="earliest">Earliest</option>
+              </select></label>
+              <label><input type="checkbox" checked={rules.wick_candidates}
+                onChange={event=>patch({wick_candidates:event.target.checked})}/> Calculate wick candidates</label>
+              {(["swings","breaks","candidates"] as const).map(key=><label key={key}>
+                <input type="checkbox" checked={visibility[key]}
+                  onChange={event=>update(item.id,{visibility:{...visibility,[key]:event.target.checked}})}/>
+                Show {key}
+              </label>)}
+              {result && <small role="status">Structure {result.structure_state?.toLowerCase()}</small>}
+              {recent.length>0 && <ul aria-label="Recent structure events">{recent.map(event=><li key={event.id}>
+                {event.type==="PIVOT"?event.classification:event.type.replaceAll("_"," ")} · {event.status} ·{" "}
+                {new Date((event.confirmation_time??event.available_at)*1000).toISOString().slice(0,16).replace("T"," ")} UTC
+                {event.confirmation_time!==null&&event.available_at>event.confirmation_time&&
+                  " · available "+new Date(event.available_at*1000).toISOString().slice(11,19)+" UTC"}
+              </li>)}</ul>}
+            </>;
+          })()}
           {definition.parameters.schedule && <>
             <label>Market schedule <select value={schedule.kind}
               onChange={event => updateSchedule({kind:event.target.value as Schedule["kind"]})}>

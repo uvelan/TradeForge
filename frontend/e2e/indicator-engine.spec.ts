@@ -148,3 +148,98 @@ test("the terminal distinguishes a complete forex week from missing open-market 
   await expect(page.getByText(/Previous UTC week · Insufficient history: expected market-open candles are missing/)).toBeVisible();
   await page.screenshot({path:info.outputPath("forex-incomplete.png")});
 });
+
+test("structure replay paints CHOCH at the confirming step and removes it on rewind",async ({page},info)=>{
+  await page.addInitScript(()=>{
+    const painted=new WeakMap<HTMLCanvasElement,string[]>();
+    const {fillText,clearRect,fillRect}=CanvasRenderingContext2D.prototype;
+    CanvasRenderingContext2D.prototype.fillText=function(label,x,y,maxWidth){
+      const labels=painted.get(this.canvas)??[];
+      if(label==="CHOCH"||label==="BOS")labels.push(label);
+      painted.set(this.canvas,labels);
+      if(maxWidth===undefined)fillText.call(this,label,x,y);else fillText.call(this,label,x,y,maxWidth);
+    };
+    CanvasRenderingContext2D.prototype.clearRect=function(x,y,w,h){
+      painted.delete(this.canvas);clearRect.call(this,x,y,w,h);
+    };
+    CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){
+      if(x===0&&y===0&&w>=this.canvas.clientWidth&&h>=this.canvas.clientHeight)painted.delete(this.canvas);
+      fillRect.call(this,x,y,w,h);
+    };
+    Object.assign(window,{readStructure:(canvas:HTMLCanvasElement)=>painted.get(canvas)??[]});
+  });
+  const start=Date.parse("2026-11-02T00:00:00Z")/1000, step=300;
+  const market={source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",
+    candles:[10,12,10,13,11,14,12,15,13,10,11].map((price,index)=>({
+      time:start+index*step,available_at:start+(index+1)*step,
+      open:price,high:price,low:price,close:price,
+    }))};
+  await page.route("**/research/api/replay/sessions",route=>route.fulfill({status:201,json:{
+    id:"structure-fixture",market,checkpoint:{position:8,bookmarks:[]},views:{},
+  }}));
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"confirmed market structure","market_structure");
+  const group=page.getByRole("group",{name:"Confirmed market structure"});
+  await group.getByLabel("Left bars").fill("1");
+  await group.getByLabel("Right confirmation bars").fill("1");
+  await group.getByRole("combobox",{name:"Pivot price",exact:true}).selectOption("close");
+  await page.getByRole("button",{name:"Bar replay",exact:true}).click();
+  const replay=page.getByLabel("Historical replay");
+  await expect(replay.getByLabel("Replay timeline")).toHaveValue("8");
+  const rendered=()=>page.locator(primary+" canvas").evaluateAll(canvases=>canvases.flatMap(canvas=>
+    (window as unknown as {readStructure:(node:HTMLCanvasElement)=>string[]}).readStructure(canvas as HTMLCanvasElement)));
+  await expect.poll(rendered).toContain("BOS");
+  expect(await rendered()).not.toContain("CHOCH");
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("structure-before-choch.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  await expect(group.getByLabel("Recent structure events")).toContainText("CHOCH · confirmed · 2026-11-02 00:50 UTC");
+  await expect.poll(rendered).toContain("CHOCH");
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("structure-after-choch.png")});
+  await group.getByLabel("Show breaks",{exact:true}).uncheck();
+  await expect.poll(rendered).not.toContain("CHOCH");
+  await group.getByLabel("Show breaks",{exact:true}).check();
+  await expect.poll(rendered).toContain("CHOCH");
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect.poll(rendered).toContain("BOS");
+  expect(await rendered()).not.toContain("CHOCH");
+  await page.reload();
+  await page.getByText("Indicator library",{exact:true}).click();
+  await expect(group.getByLabel("Right confirmation bars")).toHaveValue("1");
+  await expect(group.getByRole("combobox",{name:"Pivot price",exact:true})).toHaveValue("close");
+  await group.getByRole("button",{name:"Disable Confirmed market structure",exact:true}).click();
+  await expect(group).toHaveCount(0);
+  await expect.poll(rendered).not.toContain("BOS");
+});
+
+test("a pending market structure result stays tied to the original chart scope",async ({page})=>{
+  let release!:()=>void;
+  const hold=new Promise<void>(resolve=>{release=resolve;});
+  let entered!:()=>void;
+  const started=new Promise<void>(resolve=>{entered=resolve;});
+  await page.route("**/research/api/indicators/evaluate",async route=>{
+    const payload=route.request().postDataJSON();
+    if(payload.symbol==="EURUSD"&&payload.timeframe==="M5"){
+      entered();
+      await hold;
+    }
+    try{await route.continue();}catch{ /* The app aborts removed chart scopes. */ }
+  });
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"confirmed market structure","market_structure");
+  await started;
+  const current=page.waitForResponse(response=>response.url().endsWith("/indicators/evaluate")&&
+    response.request().postDataJSON().timeframe==="H1"&&response.request().postDataJSON().symbol==="GBPUSD");
+  await page.getByRole("button",{name:"H1",exact:true}).click();
+  await page.locator(".market-watchlist").getByRole("button",{name:/GBPUSD/}).click();
+  const result=await (await current).json();
+  expect(result.results[0].provenance).toMatchObject({symbol:"GBPUSD",timeframe:"H1"});
+  release();
+  await expect(page.locator(".primary-chart .pane-label")).toContainText("GBPUSD · H1");
+  const library=page.locator("details.indicator-library");
+  if(await library.getAttribute("open")===null)await page.getByText("Indicator library",{exact:true}).click();
+  await expect(page.getByRole("group",{name:"Confirmed market structure"}).getByRole("status")).toContainText("Structure");
+});

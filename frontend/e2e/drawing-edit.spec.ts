@@ -352,3 +352,23 @@ test("a canonical EMA overlay leaves creating and editing a drawing functional",
   expect(itemAt(edited,item.id).anchors[0].price).not.toBe(item.anchors[0].price);
   await page.screenshot({path:info.outputPath("drawing-with-ema.png")});
 });
+
+test("market structure overlays preserve ownership of a saved drawing handle",async ({page})=>{
+  const {created,item}=await setup(page,"horizontal",[[.49,.55]]);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await page.getByLabel("Search indicators").fill("confirmed market structure");
+  await page.getByRole("combobox",{name:"Add indicator",exact:true}).selectOption("market_structure");
+  const calculated=page.waitForResponse(res=>res.url().endsWith("/indicators/evaluate")&&
+    res.request().postDataJSON().indicators.some((entry:{id:string})=>entry.id==="market_structure"));
+  await page.getByRole("button",{name:"Enable indicator",exact:true}).click();
+  expect((await (await calculated).json()).results[0].pivots.length).toBeGreaterThan(0);
+  await expect(page.getByLabel("Recent structure events")).toBeVisible();
+  await page.getByText("Indicator library",{exact:true}).click();
+  const [start]=await handles(page,1);
+  const postedEdit=posted(page);
+  await drag(page,start,shifted(start,0,30));
+  const moved=await saved(postedEdit);
+  expect(moved.revision).toBe(created.revision+1);
+  expect(itemAt(moved,item.id).anchors[0].time).toBe(item.anchors[0].time);
+  expect(itemAt(moved,item.id).anchors[0].price).not.toBe(item.anchors[0].price);
+});

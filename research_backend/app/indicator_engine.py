@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from .indicators import Bar, REGISTRY, calculate
 from .market import FRAME_MIN
+from .market_structure import StructureRules, detect_structure
 from .indicator_coverage import DAY, WEEK, MarketSchedule, period_start, previous_levels
 
 SESSIONS = {
@@ -42,6 +43,7 @@ class IndicatorSpec(BaseModel):
     period: int | None = Field(default=None, ge=2, le=200)
     session: Window | None = None
     schedule: MarketSchedule | None = None
+    structure: StructureRules | None = None
 
 
 class EvidenceBar(Bar):
@@ -114,6 +116,14 @@ def catalog() -> list[IndicatorDefinition]:
             "parameters": {"session": dict(zip(("timezone", "start", "end"), session[1:]))} if session else
             {"schedule": ["continuous", "forex_weekly", "unknown"]},
         })
+    defaults = StructureRules()
+    definitions.append({
+        "id": "market_structure", "label": "Confirmed market structure", "version": 1,
+        "render": "markers", "period": None, "warmup_bars": defaults.left+defaults.right+1,
+        "parameters": {"structure": defaults.model_dump()}, "price_source": "wick_or_close",
+        "required_fields": ["high", "low", "close"], "unit": "price", "timeframes": list(FRAME_MIN),
+        "instruments": "any_valid_ohlc",
+    })
     return definitions
 
 
@@ -201,6 +211,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
         latest = max(latest, available)
         availability[bar.time] = latest
 
+    input_identity = request.model_dump(
+        include={"source", "symbol", "timeframe", "dataset_id", "feed_id", "price_basis", "partitions"})
     results = []
     for spec in request.indicators:
         definition = definitions.get(spec.id)
@@ -210,6 +222,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             raise ValueError("Session options require a session indicator")
         if spec.schedule is not None and spec.id not in PERIODS:
             raise ValueError("Schedule options require a previous-period indicator")
+        if spec.structure is not None and spec.id != "market_structure":
+            raise ValueError("Structure options require the market structure indicator")
         if spec.period is not None and spec.id not in REGISTRY:
             raise ValueError("Period is only supported for numerical indicators")
         if spec.id in REGISTRY:
@@ -220,6 +234,34 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             result_warnings = []
             if len(bars) < result["warmup_bars"]:
                 result_warnings.append("INSUFFICIENT_WARMUP")
+        elif spec.id == "market_structure":
+            rules = spec.structure or StructureRules()
+            evidence = {"context_authority": "CLIENT_SUPPLIED_UNVERIFIED"}
+            structure_rows = rows
+            if rules.history_bars == 10_000:
+                if not history_loader:
+                    raise ValueError("Extended structure history requires the server history reader")
+                end = request.cutoff // step * step
+                start = rules.history_start
+                if start is None or start % step or end - start > rules.history_bars * step:
+                    raise ValueError("Extended structure history must be aligned and at most 10,000 slots")
+                context = history_loader(request, start, end, step) if start < end else {
+                    "rows": [], "evidence": {"status": "HISTORY_UNAVAILABLE"}}
+                structure_rows, evidence = context["rows"], context["evidence"]
+            provenance = {**input_identity, **evidence, "schedule_completeness": "NOT_ESTABLISHED"}
+            provenance["partitions"] = sorted(provenance["partitions"], key=lambda item: (item["id"], item["sha256"]))
+            # Retrieval counters describe a request, not event identity.
+            event_scope = {key: value for key, value in provenance.items()
+                           if key not in {"retrieval", "context_partitions", "partitions"}}
+            detected = detect_structure(structure_rows, step, rules, event_scope)
+            result_warnings = detected.pop("structure_warnings")
+            if evidence.get("status"):
+                result_warnings.append(evidence["status"])
+            if not detected["pivots"] and len(structure_rows) < rules.left+rules.right+1:
+                result_warnings.append("INSUFFICIENT_WARMUP")
+            result = {"id": spec.id, "version": 1, "render": "markers", "series": {},
+                      "warmup_bars": rules.left+rules.right+1, "parameters": rules.model_dump(),
+                      "provenance": provenance, **detected}
         elif spec.id in PERIODS:
             length = DAY if spec.id == "previous_day" else WEEK
             schedule = spec.schedule or MarketSchedule(
@@ -240,6 +282,6 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
         results.append({**result, "warnings": sorted((warnings if spec.id not in PERIODS else set()) | set(result_warnings)), "unit": definition["unit"]})
     return {"schema_version": 1, "calculated_at": int(time()), "cutoff": request.cutoff,
             "authority": "CLIENT_SUPPLIED_UNVERIFIED",
-            "input": {**request.model_dump(include={"source", "symbol", "timeframe", "dataset_id", "feed_id", "price_basis", "partitions"}),
+            "input": {**input_identity,
                       "sha256": fingerprint.hexdigest(), "candles": len(rows)},
             "results": results}
