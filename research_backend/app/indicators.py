@@ -6,6 +6,8 @@ from typing import Callable
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, model_validator
 
+from .pivots import pivot_matches
+
 
 class Bar(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -102,11 +104,11 @@ def swing_points(bars: list[Bar], period: int) -> dict[str, Values]:
     lows = highs.copy()
     for index in range(period, len(bars) - period):
         pivot = bars[index]
-        neighbors = bars[index-period:index] + bars[index+1:index+period+1]
+        window = bars[index-period:index+period+1]
         confirmed = index + period
-        if all(pivot.high > bar.high for bar in neighbors):
+        if pivot_matches([bar.high for bar in window], period, "HIGH"):
             highs[confirmed] = pivot.high
-        if all(pivot.low < bar.low for bar in neighbors):
+        if pivot_matches([bar.low for bar in window], period, "LOW"):
             lows[confirmed] = pivot.low
     return {"Swing high": highs, "Swing low": lows}
 

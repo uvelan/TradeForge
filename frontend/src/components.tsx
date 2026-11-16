@@ -1,5 +1,5 @@
 import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
-import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType, type IChartApi, type ISeriesApi, type IPriceLine, type UTCTimestamp} from 'lightweight-charts';
+import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType, type IChartApi, type ISeriesApi, type IPriceLine, type SeriesMarker, type UTCTimestamp} from 'lightweight-charts';
 import type { IndicatorResult } from './indicators';
 import type { SmtEvent } from './smt';
 import {useCandleColors} from './candleColors';
@@ -314,8 +314,43 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const {lines}=drawnIndicators.current;
     const displayed=new Set<string>();
     const colors=["#e8bb79","#8ab4ff","#d5a4f8"];
-    const markers=[];
+    const markers: SeriesMarker<UTCTimestamp>[]=[];
     for(const [indicatorIndex,indicator] of (indicators??[]).entries()){
+      if(indicator.id==="market_structure"){
+        if(indicator.visibility?.swings)for(const pivot of (indicator.pivots??[]).slice(-40)){
+          if(pivot.price===undefined||pivot.confirmation_bar_time===undefined||!linkedBars.current.has(pivot.confirmation_bar_time))continue;
+          markers.push({
+            time:pivot.confirmation_bar_time as UTCTimestamp,price:pivot.price,
+            position:pivot.side==="HIGH"?"atPriceTop":"atPriceBottom",
+            shape:"circle",color:"#e8bb79",
+            text:pivot.classification==="UNCLASSIFIED"?(pivot.side==="HIGH"?"Swing high":"Swing low"):pivot.classification,
+          });
+        }
+        const events=(indicator.breaks??[]).filter(event=>event.status==="confirmed" ?
+          indicator.visibility?.breaks : indicator.visibility?.candidates).slice(-20);
+        for(const event of events){
+          if(event.break_price===undefined||event.break_time===undefined||event.level_price===undefined||!linkedBars.current.has(event.break_time))continue;
+          const color=event.status!=="confirmed"?"#9ba7b9":event.direction==="BULLISH"?"#70ddb7":"#f29596";
+          const bullish=event.direction==="BULLISH";
+          markers.push({time:event.break_time as UTCTimestamp,price:event.break_price,
+            position:bullish?"atPriceBottom":"atPriceTop",
+            shape:event.status==="confirmed"?(bullish?"arrowUp":"arrowDown"):"circle",color,
+            text:event.type.replaceAll("_"," ")});
+          if(event.status!=="confirmed"||event.level_time===undefined||!linkedBars.current.has(event.level_time))continue;
+          const key="structure:"+event.id;
+          displayed.add(key);
+          let line=lines.get(key);
+          if(!line){
+            line=chart.addSeries(LineSeries,{color,lineWidth:1,
+              lineStyle:event.type==="CHOCH"?LineStyle.Dashed:LineStyle.Solid,
+              priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,autoscaleInfoProvider:()=>null});
+            lines.set(key,line);
+          }
+          line.setData([{time:event.level_time as UTCTimestamp,value:event.level_price},
+                        {time:event.break_time as UTCTimestamp,value:event.level_price}]);
+        }
+        continue;
+      }
       if(indicator.render==="markers"){
         for(const [title,points] of Object.entries(indicator.series)){
           markers.push(...points.map(point=>({
