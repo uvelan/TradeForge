@@ -1,0 +1,11 @@
+# TF-I04 plan
+
+Base 2aed3936e233677c523a84943fa0dc84958e8c7a is merged PR #5. Reuse the canonical structure detector, calendar, archive resolution and snapshot-bound event pages. Add an optional per-observation consumer to structure. It receives only accepted closed bars, confirmed pivots, same-observation structure events and gap resets. Preserve structure event identities and API behavior.
+
+Pool v1 uses actual confirmed high or low pivots separately. Equality is within a configurable inclusive basis-point band of the first pivot. Group by nearest eligible fixed anchor with deterministic ties and one owner per pivot. Touch spacing and age use real accepted observations. Activate at the configured touch count, and record immutable revisions for accepted additional touches. Expire by age. An unknown continuity gap invalidates open pools. Use price buckets for matching and ordered thresholds for crossing so dense series do not repeatedly scan every active price.
+
+An already available pool can sweep after strict penetration beyond the outer boundary and a strict close beyond the opposite reclaim boundary, with separate basis-point margins. A close outside the outward boundary is a break. A closed wick penetration with a close inside the unreclaimed band can emit one candidate. A later candle must independently meet both sweep conditions. Incomplete candles supply no evidence. Evaluate the old pool before adding new same-observation confirmed pivots. Preserve only structure-approved calendar continuity. Attach related structure events only when observed on the same candle and across the pool's price band.
+
+Use separate bounded pool revision and crossing pages. Preserve event IDs across page size and replay advance, and include rules, input provenance and cutoff in cursor snapshot identity. A changed source invalidates the cursor. No new persistence or order-book interpretation. Render only recent zones/markers with bounded chart resources and provide evidence selection and paging in the indicator library.
+
+Review decisions. Exact threshold equality uses decimal representations of supplied prices. Same-timestamp duplicate candles remain invalid upstream. A forming group is explicitly provisional, and terminal pools cannot reactivate under the existing ID. A close outside never retroactively becomes a same-candle sweep.

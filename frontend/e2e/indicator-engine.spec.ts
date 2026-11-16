@@ -324,3 +324,69 @@ test("calendar structure confirms a real reopening BOS and removes it on replay 
   await expect(group.getByLabel("Recent structure events")).not.toContainText("2026-11-08");
   await expect(group.getByText(/scheduled closure 1/)).toHaveCount(0);
 });
+
+test("liquidity replay exposes the sweep only after its closed evidence and keeps it inspectable",async ({page},info)=>{
+  const start=Date.parse("2026-11-02T00:00:00Z")/1000, step=300;
+  const market={source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",
+    candles:[10,12,10,12,10,11].map((price,index)=>({
+      time:start+index*step,available_at:start+(index+1)*step,
+      open:price,high:index===5?13:price,low:price,close:price,
+    }))};
+  await page.route("**/research/api/replay/sessions",route=>route.fulfill({status:201,
+    json:{id:"liquidity-fixture",market,checkpoint:{position:4,bookmarks:[]},views:{}}}));
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"liquidity pools","liquidity_sweeps");
+  const group=page.getByRole("group",{name:"Liquidity pools and sweeps"});
+  await group.getByLabel("Left bars").fill("1");
+  await group.getByLabel("Right confirmation bars").fill("1");
+  await page.getByRole("button",{name:"Bar replay",exact:true}).click();
+  const replay=page.getByLabel("Historical replay");
+  const evidence=group.getByLabel("Liquidity evidence",{exact:true});
+  await expect(evidence.getByRole("button",{name:/BSL · ACTIVE/})).toBeVisible();
+  await expect(evidence.getByRole("button",{name:/BSL · SWEPT/})).toHaveCount(0);
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("liquidity-before.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  const hit=evidence.getByRole("button",{name:/BSL · SWEPT/}).first();
+  await expect(hit).toBeVisible();
+  await hit.click();
+  const detail=evidence.getByLabel("Selected liquidity event");
+  await expect(detail).toContainText("12 – 12");
+  await expect(detail).toContainText("11 / 13 / 11 / 11");
+  await expect(detail).toContainText("00:30:00");
+  await expect(detail).toContainText("Confirmed pivots");
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("liquidity-after.png")});
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(evidence.getByRole("button",{name:/BSL · ACTIVE/})).toBeVisible();
+  await expect(hit).toHaveCount(0);
+  await expect(detail).toHaveCount(0);
+});
+
+test("a pending liquidity request cannot replace another instrument or timeframe",async ({page})=>{
+  let release!:()=>void;
+  const hold=new Promise<void>(resolve=>{release=resolve;});
+  let entered!:()=>void;
+  const started=new Promise<void>(resolve=>{entered=resolve;});
+  await page.route("**/research/api/indicators/evaluate",async route=>{
+    const payload=route.request().postDataJSON();
+    if(payload.symbol==="EURUSD"&&payload.timeframe==="M5"){entered();await hold;}
+    try{await route.continue();}catch{ /* The app aborts old scopes. */ }
+  });
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"liquidity pools","liquidity_sweeps");
+  await started;
+  const current=page.waitForResponse(response=>response.url().endsWith("/indicators/evaluate")&&
+    response.request().postDataJSON().timeframe==="H1"&&response.request().postDataJSON().symbol==="GBPUSD");
+  await page.getByRole("button",{name:"H1",exact:true}).click();
+  await page.locator(".market-watchlist").getByRole("button",{name:/GBPUSD/}).click();
+  const result=await (await current).json();
+  expect(result.results[0].provenance).toMatchObject({symbol:"GBPUSD",timeframe:"H1"});
+  release();
+  await expect(page.locator(".primary-chart .pane-label")).toContainText("GBPUSD · H1");
+  const library=page.locator("details.indicator-library");
+  if(await library.getAttribute("open")===null)await page.getByText("Indicator library",{exact:true}).click();
+  await expect(page.getByLabel("Liquidity evidence",{exact:true})).toBeVisible();
+});
