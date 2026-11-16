@@ -631,7 +631,13 @@ test("Escape cancels all armed modes and an active drag cannot complete in a rep
   const modes=[
     async()=>{await page.getByTitle("Place horizontal level (Alt+H)",{exact:true}).click();},
     async()=>{await page.getByRole("button",{name:"Draw",exact:true}).click();await clickPlot(page,.43,.4);},
-    async()=>{await page.getByRole("button",{name:"Set anchor 2",exact:true}).click();},
+    async()=>{
+      // The preceding empty chart click now deliberately deselects the drawing.
+      const select=page.getByLabel("Select drawing");
+      await expect(select).toHaveValue("");
+      await select.selectOption(saved.items.at(-1)!.id);
+      await page.getByRole("button",{name:"Set anchor 2",exact:true}).click();
+    },
     async()=>{await page.getByRole("button",{name:"Select plan levels",exact:true}).click();await clickPlot(page,.5,.41);},
   ];
   for(const activate of modes){

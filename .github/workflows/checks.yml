@@ -47,7 +47,8 @@ jobs:
         with:
           name: TF-D01-browser-evidence
           path: frontend/test-results/drawing-placement-*/**
-          if-no-files-found: warn
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Upload TF-D02 browser evidence
         if: always()
         uses: actions/upload-artifact@v4
