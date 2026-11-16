@@ -1,0 +1,11 @@
+> test
+> vitest run
+
+
+ RUN  v5.1.0 K:/Projects/TradeForge/frontend
+
+
+ Test Files  3 passed (3)
+      Tests  8 passed (8)
+   Start at  21:34:55
+   Duration  1.29s (transform 55%, import 32%, worker 8%, tests 5%)
