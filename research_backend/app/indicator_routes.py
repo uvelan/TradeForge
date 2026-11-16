@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from .indicators import Bar, REGISTRY, calculate
 from .indicator_engine import Evaluation, catalog, evaluate
+from .indicator_history import load_reference
 from .market import FRAME_MIN, mt5_rates
 from .smt import confirmation_timing, detect_smt
 from .db import one, rows, transaction
@@ -445,7 +446,7 @@ def definitions():
 @router.post("/evaluate")
 def evaluate_indicators(request: Evaluation):
     try:
-        return evaluate(request)
+        return evaluate(request, load_reference)
     except ValueError as error:
         raise HTTPException(422, str(error)) from error
 

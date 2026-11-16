@@ -382,7 +382,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const indicatorCutoff=cutoff??Math.min(Math.floor(Date.now()/1000),Math.max(
     (indicatorCandles.at(-1)?.time??0)+frameMinutes[timeframe]*60,indicatorCandles.at(-1)?.available_at??0));
   const indicator=useChartIndicator(expanded&&!isBinance&&!busy&&!error&&indicatorScope===loadedIndicatorScope,indicatorCandles,source,timeframe,
-    symbol,indicatorCutoff,indicatorFeed??undefined,initialLocation);
+    symbol,indicatorCutoff,indicatorFeed??undefined,replayActive,initialLocation);
   const options=[...new Set([symbol,...(isBinance?[]:source==='MT5'?instruments.map(item=>item.name):watchSymbols)])];
   const compare=replaySession?replaySession.views.comparison?.symbol??'':
     expanded&&comparisonSymbol!==symbol&&options.includes(comparisonSymbol)?comparisonSymbol:'';

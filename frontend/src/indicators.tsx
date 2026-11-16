@@ -4,9 +4,11 @@ import type { Candle, CandleResponse, ChartSource, Timeframe } from "./types";
 import { useWorkspacePreference } from "./useWorkspacePreference";
 
 type Window = { timezone: string; start: string; end: string };
+type Schedule = {kind: "continuous" | "forex_weekly" | "unknown"; timezone?: string;
+  sunday_open?: string; friday_close?: string};
 type Definition = { id: string; label: string; period: number | null; timeframes: Timeframe[];
-  parameters: { session?: Window } };
-type Settings = { id: string; period?: string; session?: Window };
+  parameters: { session?: Window; schedule?: Schedule["kind"][] } };
+type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule> };
 type Point = { time: number; value: number; pivot_time?: number; status: "confirmed" | "provisional" };
 export type IndicatorResult = {
   id: string;
@@ -14,7 +16,22 @@ export type IndicatorResult = {
   warmup_bars: number | null;
   unit: "price" | "percent";
   warnings: string[];
+  coverage?: {status: string; confirmation_status: "confirmed" | "provisional" | "unavailable"};
   series: Record<string, Point[]>;
+};
+
+const coverageLabels: Record<string, string> = {
+  COMPLETE: "Confirmed previous range",
+  UNKNOWN_SCHEDULE: "Unknown trading schedule",
+  SOURCE_INTEGRITY_FAILURE: "Source integrity failure",
+  SOURCE_MISMATCH: "Source identity mismatch",
+  MISSING_OPEN_CANDLES: "Insufficient history: expected market-open candles are missing",
+  REFERENCE_ABSENT: "Insufficient history: reference period absent",
+  MARKET_CLOSED: "Market closed throughout reference period",
+  HISTORY_UNAVAILABLE: "Historical context unavailable",
+  HISTORY_LIMIT: "Historical context exceeds read limits",
+  UNALIGNED_MARKET_BOUNDARY: "Timeframe crosses a market boundary",
+  SCHEDULE_MISMATCH: "Observed bars conflict with the selected schedule",
 };
 
 const preference = "tradeforge.workspace.indicators-v1";
@@ -29,7 +46,7 @@ function stored(): Settings[] {
 }
 
 export function useChartIndicator(enabled: boolean, candles: Candle[], source: ChartSource, timeframe: Timeframe,
-  symbol: string, cutoff: number, feed?: CandleResponse, request?: {indicator?: string; sequence: number}) {
+  symbol: string, cutoff: number, feed?: CandleResponse, frozen = false, request?: {indicator?: string; sequence: number}) {
   const [selected, setSelected] = useWorkspacePreference<string>("indicator", "none");
   const [periodText, setPeriod] = useWorkspacePreference<string>("indicator-period", "");
   const [settings, setSettings] = useState(stored);
@@ -44,6 +61,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
     try { localStorage.setItem(preference, JSON.stringify(settings)); } catch { /* Keep editing in memory. */ }
   }, [settings]);
 
+  const scheduleScope = JSON.stringify([source, symbol, feed?.feed_id, feed?.price_basis]);
   const primary = definitions.find(item => item.id === selected && item.period !== null);
   const active = useMemo(() => {
     const config = primary ? [{id: primary.id, period: periodText}, ...settings.filter(item => item.id !== primary.id)] : settings;
@@ -54,13 +72,14 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       if (period !== null && !(Number.isInteger(period) && period >= 2 && period <= 200)) return [];
       const session = item.session ?? definition.parameters.session;
       if (session && (!session.timezone || !session.start || !session.end || session.start === session.end)) return [];
-      return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {})}];
+      const schedule = item.schedules?.[scheduleScope];
+      return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {}), ...(schedule ? {schedule} : {})}];
     });
-  }, [definitions, periodText, primary, settings, timeframe]);
-  const body = useMemo(() => enabled && active.length && candles.length
-    ? JSON.stringify({source, timeframe, symbol, cutoff, feed_id: feed?.feed_id,
+  }, [definitions, periodText, primary, scheduleScope, settings, timeframe]);
+  const body = useMemo(() => enabled && active.length && (candles.length || active.some(item => item.id.startsWith("previous_")))
+    ? JSON.stringify({source, timeframe, symbol, cutoff, frozen, load_reference: true, feed_id: feed?.feed_id,
         dataset_id: feed?.dataset_id, partitions: feed?.partitions, price_basis: feed?.price_basis, indicators: active, candles: candles.slice(-2000)})
-    : "", [active, candles, cutoff, enabled, feed?.dataset_id, feed?.feed_id, feed?.price_basis, feed?.partitions, source, symbol, timeframe]);
+    : "", [active, candles, cutoff, enabled, frozen, feed?.dataset_id, feed?.feed_id, feed?.price_basis, feed?.partitions, source, symbol, timeframe]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -93,7 +112,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
 
   const current = response?.key === body ? response : undefined;
   const data = current?.results ?? emptyResults;
-  const warnings = [...new Set(data.flatMap(row => row.warnings))];
+  const warnings = [...new Set(data.filter(row => !row.coverage).flatMap(row => row.warnings))];
   const choices = definitions.filter(item => item.timeframes.includes(timeframe) && item.id !== selected &&
     !settings.some(config => config.id === item.id) && (item.label + " " + item.id).toLowerCase().includes(search.toLowerCase()));
   function update(id: string, patch: Partial<Settings>) {
@@ -121,6 +140,9 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
         const definition = definitions.find(row => row.id === item.id);
         if (!definition) return null;
         const session = item.session ?? definition.parameters.session;
+        const schedule: Schedule = item.schedules?.[scheduleScope] ?? {kind: source === "DEMO" || source === "BINANCE_SPOT" ? "continuous" : "unknown"};
+        const updateSchedule = (patch: Partial<Schedule>) => update(item.id,
+          {schedules:{...item.schedules,[scheduleScope]:{...schedule,...patch}}});
         return <fieldset key={item.id}>
           <legend>{definition.label}</legend>
           {definition.period !== null && <label>Period <input type="number" min={2} max={200} step={1}
@@ -130,11 +152,34 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
             <label>Start <input type="time" value={session.start} onChange={event => update(item.id, {session:{...session, start:event.target.value}})}/></label>
             <label>End <input type="time" value={session.end} onChange={event => update(item.id, {session:{...session, end:event.target.value}})}/></label>
           </>}
+          {definition.parameters.schedule && <>
+            <label>Market schedule <select value={schedule.kind}
+              onChange={event => updateSchedule({kind:event.target.value as Schedule["kind"]})}>
+              <option value="unknown">Unknown</option>
+              <option value="continuous">Continuous (24/7)</option>
+              <option value="forex_weekly">Configured Sunday–Friday</option>
+            </select></label>
+            {schedule.kind === "forex_weekly" && <>
+              <label>Market timezone <input value={schedule.timezone ?? "America/New_York"}
+                onChange={event => updateSchedule({timezone:event.target.value})} /></label>
+              <label>Sunday open <input type="time" value={schedule.sunday_open ?? "17:00"}
+                onChange={event => updateSchedule({sunday_open:event.target.value})} /></label>
+              <label>Friday close <input type="time" value={schedule.friday_close ?? "17:00"}
+                onChange={event => updateSchedule({friday_close:event.target.value})} /></label>
+            </>}
+          </>}
           {!definition.timeframes.includes(timeframe) && <small>Unavailable on {timeframe}</small>}
           <button className="small-tool" type="button" onClick={() => setSettings(items => items.filter(row => row.id !== item.id))}>Disable {definition.label}</button>
         </fieldset>;
       })}
     </details>
+    {data.flatMap(row => {
+      if (!row.coverage) return [];
+      const label = definitions.find(item => item.id === row.id)?.label ?? row.id;
+      const status = coverageLabels[row.coverage.status] ?? row.coverage.status;
+      return <small key={row.id} role="status">{label} · {status}
+        {row.coverage.confirmation_status === "provisional" && " · provisional evidence"}</small>;
+    })}
     <small role="status">{libraryError || current?.error || (warnings.length ? warnings.map(value => value.toLowerCase().replaceAll("_", " ")).join(" · ") :
       selected === "swings" ? "Markers appear at the pivot after confirmation" : active.length ? "Closed candles · dashed session levels are developing" : "")}</small>
   </div>;

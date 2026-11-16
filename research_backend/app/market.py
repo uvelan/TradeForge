@@ -31,6 +31,31 @@ def demo_candles(symbol:Symbol, timeframe:str='M5', limit:int=180):
     return bars
 
 
+def demo_reference_candles(symbol, timeframe, start, end):
+    # Keep the expanded chart's published 600-bar path and extend it backwards
+    # using the same deterministic model. Existing chart responses stay fixed.
+    recent = demo_candles(symbol, timeframe, 600)
+    step = FRAME_MIN[timeframe] * 60
+    first = recent[0]["time"]
+    if start < first - 20_160 * step:
+        return []
+    decimal_places = 3 if symbol in {"USDJPY", "XAUUSD"} else 5
+    close = recent[0]["open"]
+    earlier = []
+    for stamp in range(first - step, start - 1, -step):
+        index = (stamp - first) // step
+        change = (sin(index * .36 + len(symbol)) * 1.3 + cos(index * .11) * .9
+                  + sin(index * .057) * 1.8) * STEP[symbol]
+        opening = round(close - change, decimal_places)
+        wick = (.7 + index % 5 * .2) * STEP[symbol]
+        if stamp < end:
+            earlier.append({"time": stamp, "open": opening, "close": close,
+                            "high": round(max(opening, close) + wick, 5),
+                            "low": round(min(opening, close) - wick, 5)})
+        close = opening
+    return list(reversed(earlier)) + [bar for bar in recent if start <= bar["time"] < end]
+
+
 def mt5_connection():
     try:
         import MetaTrader5 as mt5
@@ -69,7 +94,7 @@ def mt5_symbols():
         )
 
 
-def mt5_rates(symbol:str,timeframe:str,limit:int=300,*,include_latest:bool=False,provenance:dict | None=None):
+def mt5_rates(symbol:str,timeframe:str,limit:int=300,*,include_latest:bool=False,provenance:dict | None=None, window:tuple[int,int] | None=None):
     try:
         import MetaTrader5 as mt5
     except ImportError as exc:
@@ -79,7 +104,13 @@ def mt5_rates(symbol:str,timeframe:str,limit:int=300,*,include_latest:bool=False
     with _LOCK:
         if not mt5.initialize(): raise RuntimeError(f'MT5 initialization failed: {mt5.last_error()}')
         if not mt5.symbol_select(symbol, True): raise RuntimeError('Symbol unavailable in MT5 terminal')
-        rates=mt5.copy_rates_from_pos(symbol,getattr(mt5,'TIMEFRAME_'+timeframe),0,limit if include_latest else limit+1)
+        interval = getattr(mt5, 'TIMEFRAME_' + timeframe)
+        if window is None:
+            rates = mt5.copy_rates_from_pos(symbol, interval, 0, limit if include_latest else limit + 1)
+        else:
+            start, end = window
+            rates = mt5.copy_rates_range(symbol, interval, datetime.fromtimestamp(start, timezone.utc),
+                                        datetime.fromtimestamp(end - 1, timezone.utc))
         if rates is None: raise RuntimeError(f'MT5 bar request failed: {mt5.last_error()}')
         if provenance is not None:
             account = mt5.account_info()
@@ -90,7 +121,11 @@ def mt5_rates(symbol:str,timeframe:str,limit:int=300,*,include_latest:bool=False
         # Exclude the newest bar, which may be incomplete.
         candles=[{'time':int(r['time']),'open':float(r['open']),'high':float(r['high']),
                   'low':float(r['low']),'close':float(r['close']),'volume':int(r['tick_volume'])} for r in rates]
-        return candles if include_latest else candles[:-1]
+        return candles if include_latest or window is not None else candles[:-1]
+
+
+def mt5_reference_candles(symbol, timeframe, start, end, provenance):
+    return mt5_rates(symbol, timeframe, provenance=provenance, window=(start, end))
 
 
 def mt5_recent_deals(days:int=30):

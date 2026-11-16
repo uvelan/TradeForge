@@ -344,6 +344,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
               priceFormat:{type:"price",precision:digits,minMove:10**-digits},
               title:prefix+title+(provisional?" (developing)":""),
               color:colors[(index+indicatorIndex)%colors.length],lineWidth:1,priceLineVisible:false,
+              lastValueVisible:!indicator.id.startsWith("previous_"),
               lineType:isRange?LineType.WithSteps:LineType.Simple,
               lineStyle:provisional?LineStyle.Dashed:LineStyle.Solid,
               pointMarkersVisible:isSession&&!provisional,

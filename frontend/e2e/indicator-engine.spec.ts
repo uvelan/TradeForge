@@ -97,3 +97,54 @@ test("a session overlay exposes provisional and completed backend values",async 
   await page.locator(primary).scrollIntoViewIfNeeded();
   await page.screenshot({path:info.outputPath("session-overlay.png")});
 });
+
+test("previous week requests a bounded M5 reference beyond chart history",async ({page},info)=>{
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  const next=page.waitForResponse(res=>res.url().endsWith("/indicators/evaluate")&&
+    res.request().postDataJSON().indicators[0]?.id==="previous_week");
+  await enable(page,"previous utc week","previous_week");
+  const response=await next;
+  expect(response.ok()).toBe(true);
+  const data=await response.json();
+  expect(data.input.candles).toBeLessThan(2016);
+  expect(data.results[0].coverage.retrieval.requested_candles).toBe(2016);
+  expect(data.results[0].coverage.status).toBe("COMPLETE");
+  await expect(page.getByText("Previous UTC week · Confirmed previous range",{exact:true})).toBeVisible();
+  await page.screenshot({path:info.outputPath("continuous-week.png")});
+});
+
+test("the terminal distinguishes a complete forex week from missing open-market coverage",async ({page},info)=>{
+  // Supply an independently constructed H1 feed fixture to the real evaluator.
+  const start=Date.parse("2026-11-02T00:00:00Z")/1000, next=start+7*86400;
+  const bars=Array.from({length:168},(_,i)=>i).filter(i=>i<118||i>=166).map(i=>({
+    time:start+i*3600,open:10,close:10,high:i===166?14:12,low:i===117?8:9,
+  }));
+  let incomplete=false;
+  await page.route("**/research/api/indicators/evaluate",route=>{
+    const data=route.request().postDataJSON();
+    return route.continue({postData:JSON.stringify({...data,source:"MT5_SAVED",timeframe:"H1",cutoff:next+3600,
+      load_reference:false, candles:[...bars.filter((_,index)=>!incomplete||index!==10),
+        {time:next,open:10,close:10,high:40,low:1}]})});
+  });
+  await terminal(page);
+  await page.getByRole("button",{name:"H1",exact:true}).click();
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"previous utc week","previous_week");
+  const group=page.getByRole("group",{name:"Previous UTC week"});
+  const market=group.getByRole("combobox",{name:"Market schedule",exact:true});
+  const check=page.waitForResponse(res=>res.url().endsWith("/indicators/evaluate")&&
+    res.request().postDataJSON().indicators[0]?.schedule?.kind==="forex_weekly");
+  await market.selectOption("forex_weekly");
+  const ready=(await (await check).json()).results[0];
+  expect(ready.coverage).toMatchObject({status:"COMPLETE",expected_candles:120,observed_candles:120,
+    candidate_high:14,candidate_low:8,available_at:next});
+  expect(ready.series.High[0].value).toBe(14);
+  await expect(page.getByText("Previous UTC week · Confirmed previous range",{exact:true})).toBeVisible();
+  await page.screenshot({path:info.outputPath("forex-confirmed.png")});
+  incomplete=true;
+  await market.selectOption("continuous");
+  await market.selectOption("forex_weekly");
+  await expect(page.getByText(/Previous UTC week · Insufficient history: expected market-open candles are missing/)).toBeVisible();
+  await page.screenshot({path:info.outputPath("forex-incomplete.png")});
+});

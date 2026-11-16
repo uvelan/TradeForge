@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from .indicators import Bar, REGISTRY, calculate
 from .market import FRAME_MIN
+from .indicator_coverage import DAY, WEEK, MarketSchedule, period_start, previous_levels
 
 SESSIONS = {
     "session_asia": ("Asia session range", "Asia/Tokyo", "09:00", "18:00"),
@@ -40,6 +41,7 @@ class IndicatorSpec(BaseModel):
     id: str = Field(max_length=40)
     period: int | None = Field(default=None, ge=2, le=200)
     session: Window | None = None
+    schedule: MarketSchedule | None = None
 
 
 class EvidenceBar(Bar):
@@ -60,6 +62,8 @@ class Evaluation(BaseModel):
     dataset_id: str | None = Field(default=None, max_length=200)
     price_basis: str | None = Field(default=None, max_length=40)
     partitions: list[Partition] = Field(default_factory=list, max_length=500)
+    load_reference: bool = False
+    frozen: bool = False
     cutoff: int = Field(ge=0, le=32_503_680_000)
     indicators: list[IndicatorSpec] = Field(min_length=1, max_length=8)
     candles: list[EvidenceBar] = Field(max_length=2000)
@@ -102,12 +106,13 @@ def catalog() -> list[IndicatorDefinition]:
     for key, label in {**PERIODS, **{key: item[0] for key, item in SESSIONS.items()}}.items():
         session = SESSIONS.get(key)
         definitions.append({
-            "id": key, "label": label, "version": 1, "render": "overlay",
+            "id": key, "label": label, "version": 1 if session else 2, "render": "overlay",
             "period": None, "warmup_bars": None, "price_source": "wick",
             "required_fields": ["high", "low"], "unit": "price",
             "timeframes": [name for name, minutes in FRAME_MIN.items() if not session or minutes < 1440],
             "instruments": "any_valid_ohlc",
-            "parameters": {"session": dict(zip(("timezone", "start", "end"), session[1:]))} if session else {},
+            "parameters": {"session": dict(zip(("timezone", "start", "end"), session[1:]))} if session else
+            {"schedule": ["continuous", "forex_weekly", "unknown"]},
         })
     return definitions
 
@@ -125,29 +130,22 @@ def boundary(day: date, clock: str, zone: ZoneInfo) -> int | None:
 def range_series(rows: list[tuple[EvidenceBar, int]], step: int, key: str,
                  spec: IndicatorSpec, cutoff: int) -> tuple[dict, list[str]]:
     session = SESSIONS.get(key)
-    window = (spec.session or Window(timezone=session[1], start=session[2], end=session[3])) if session else None
-    zone = ZoneInfo(window.timezone) if window else None
+    window = spec.session or Window(timezone=session[1], start=session[2], end=session[3])
+    zone = ZoneInfo(window.timezone)
     windows = {}
     boundaries = {}
     warnings = set()
     for bar, available in rows:
         instant = datetime.fromtimestamp(bar.time, UTC)
-        if window:
-            local = instant.astimezone(zone)
-            overnight = window.end < window.start
-            day = local.date()
-            if overnight and local.strftime("%H:%M") < window.end:
-                day -= timedelta(days=1)
-            if day not in boundaries:
-                boundaries[day] = (boundary(day, window.start, zone),
-                                   boundary(day + timedelta(days=overnight), window.end, zone))
-            start, end = boundaries[day]
-        else:
-            day = instant.date()
-            length = 1 if key == "previous_day" else 7
-            day -= timedelta(days=day.weekday() if length == 7 else 0)
-            start = int(datetime.combine(day, wall_time(), UTC).timestamp())
-            end = start + length * 86400
+        local = instant.astimezone(zone)
+        overnight = window.end < window.start
+        day = local.date()
+        if overnight and local.strftime("%H:%M") < window.end:
+            day -= timedelta(days=1)
+        if day not in boundaries:
+            boundaries[day] = (boundary(day, window.start, zone),
+                               boundary(day + timedelta(days=overnight), window.end, zone))
+        start, end = boundaries[day]
         if start is None or end is None:
             warnings.add("AMBIGUOUS_OR_NONEXISTENT_SESSION_BOUNDARY")
             continue
@@ -161,34 +159,17 @@ def range_series(rows: list[tuple[EvidenceBar, int]], step: int, key: str,
         # Strictly nonoverlapping bars and the containment check prove full coverage.
         if not complete and end <= cutoff:
             warnings.add("INCOMPLETE_RANGE_COVERAGE")
-        if session:
-            for index, (bar, available) in enumerate(members):
-                high, low = max(high, bar.high), min(low, bar.low)
-                confirmed = complete and index == len(members) - 1
-                for label, value in (("High", high), ("Low", low)):
-                    series[label].append({"time": bar.time, "value": value, "available_at": available,
-                                          "status": "confirmed" if confirmed else "provisional",
-                                          "reference_start": start, "reference_end": end})
-        elif (end, end + (end-start)) not in windows:
-            continue
-        elif complete:
-            high = max(bar.high for bar, _ in members)
-            low = min(bar.low for bar, _ in members)
-            first = windows[(end, end + (end-start))]
-            reference_available = max(available for _, available in members)
-            for bar, available in first:
-                if reference_available > available:
-                    continue
-                for label, value in (("High", high), ("Low", low)):
-                    series[label].append({"time": bar.time, "value": value, "available_at": available,
-                                          "status": "confirmed",
-                                          "reference_start": start, "reference_end": end})
-    if not session and (not series["High"] or len(series["High"]) < len(rows)):
-        warnings.add("PREVIOUS_PERIOD_UNAVAILABLE")
+        for index, (bar, available) in enumerate(members):
+            high, low = max(high, bar.high), min(low, bar.low)
+            confirmed = complete and index == len(members) - 1
+            for label, value in (("High", high), ("Low", low)):
+                series[label].append({"time": bar.time, "value": value, "available_at": available,
+                                      "status": "confirmed" if confirmed else "provisional",
+                                      "reference_start": start, "reference_end": end})
     return series, sorted(warnings)
 
 
-def evaluate(request: Evaluation) -> dict:
+def evaluate(request: Evaluation, history_loader=None) -> dict:
     definitions = {item["id"]: item for item in catalog()}
     if len({spec.id for spec in request.indicators}) != len(request.indicators):
         raise ValueError("Duplicate indicator IDs")
@@ -227,6 +208,8 @@ def evaluate(request: Evaluation) -> dict:
             raise ValueError(f"Unsupported indicator or timeframe for {spec.id}")
         if spec.session is not None and spec.id not in SESSIONS:
             raise ValueError("Session options require a session indicator")
+        if spec.schedule is not None and spec.id not in PERIODS:
+            raise ValueError("Schedule options require a previous-period indicator")
         if spec.period is not None and spec.id not in REGISTRY:
             raise ValueError("Period is only supported for numerical indicators")
         if spec.id in REGISTRY:
@@ -237,12 +220,24 @@ def evaluate(request: Evaluation) -> dict:
             result_warnings = []
             if len(bars) < result["warmup_bars"]:
                 result_warnings.append("INSUFFICIENT_WARMUP")
+        elif spec.id in PERIODS:
+            length = DAY if spec.id == "previous_day" else WEEK
+            schedule = spec.schedule or MarketSchedule(
+                kind="continuous" if request.source in {"DEMO", "BINANCE_SPOT"} else "unknown")
+            context = None
+            if request.load_reference and history_loader and schedule.kind != "unknown":
+                end = period_start(request.cutoff, length)
+                if end >= length:
+                    context = history_loader(request, end-length, end, step)
+            series, result_warnings, coverage = previous_levels(rows, step, length, schedule, request.cutoff, context)
+            result = {"id": spec.id, "version": 2, "render": "overlay", "warmup_bars": None, "series": series,
+                      "coverage": coverage, "schedule": schedule.model_dump(), "coverage_policy_version": 1}
         else:
             series, result_warnings = range_series([(bar, availability[bar.time]) for bar in bars], step, spec.id, spec, request.cutoff)
             result = {"id": spec.id, "version": 1, "render": "overlay", "warmup_bars": None, "series": series}
             if spec.id in SESSIONS:
                 result["session"] = spec.session.model_dump() if spec.session else definition["parameters"]["session"]
-        results.append({**result, "warnings": sorted(warnings | set(result_warnings)), "unit": definition["unit"]})
+        results.append({**result, "warnings": sorted((warnings if spec.id not in PERIODS else set()) | set(result_warnings)), "unit": definition["unit"]})
     return {"schema_version": 1, "calculated_at": int(time()), "cutoff": request.cutoff,
             "authority": "CLIENT_SUPPLIED_UNVERIFIED",
             "input": {**request.model_dump(include={"source", "symbol", "timeframe", "dataset_id", "feed_id", "price_basis", "partitions"}),
