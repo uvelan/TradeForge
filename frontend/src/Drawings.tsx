@@ -1,5 +1,5 @@
-import {useEffect,useRef,useState} from 'react';
-import type {IChartApi,IPrimitivePaneRenderer,ISeriesApi,ISeriesPrimitive,Time,UTCTimestamp} from 'lightweight-charts';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import type {IChartApi,IPrimitivePaneRenderer,PrimitiveHoveredItem,ISeriesApi,ISeriesPrimitive,Time,UTCTimestamp} from 'lightweight-charts';
 import {api} from './api';
 import type {Candle} from './types';
 
@@ -16,7 +16,16 @@ export type Drawing={
 };
 type Version={schema_version:1;revision:number;items:Drawing[]};
 type Edit={kind:DrawingTool;anchors:Anchor[];item?:Drawing;mode?:'move'|number};
+type ChartInteraction=
+  | {mode:'navigate'|'level'}
+  | {mode:'plan';prices:string[]}
+  | {mode:'place'|'edit';draft:Edit};
 const now=()=>Math.floor(Date.now()/1000);
+
+function bracketsEntry(anchors:Anchor[]){
+  const [entry,stop,target]=anchors.map(point=>Number(point.price));
+  return (stop<entry&&entry<target)||(target<entry&&entry<stop);
+}
 
 export function useDrawingBook(scope:string) {
   const endpoint='/drawings?'+new URLSearchParams({scope});
@@ -25,21 +34,25 @@ export function useDrawingBook(scope:string) {
   const [refresh,setRefresh]=useState(0);
   const [saving,setSaving]=useState(false);
   const [selected,setSelected]=useState('');
-  const [edit,setEdit]=useState<Edit>();
+  const [interaction,setInteraction]=useState<ChartInteraction>({mode:'navigate'});
+  const edit='draft' in interaction?interaction.draft:undefined;
+  const setEdit=useCallback((draft?:Edit)=>setInteraction(
+    draft?{mode:draft.item?'edit':'place',draft}:{mode:'navigate'},
+  ),[]);
   const [snap,setSnap]=useState(false);
   const [history,setHistory]=useState<{undo:Drawing[][];redo:Drawing[][]}>({undo:[],redo:[]});
   const current=loaded?.scope===scope?loaded.version:undefined;
-  const active=useRef('');
+  const active=useRef<symbol|undefined>(undefined);
   const writing=useRef(false);
   useEffect(()=>{
     if(!scope)return;
-    const key=scope+':'+refresh;
+    const key=Symbol(scope);
     active.current=key;
     setLoaded(undefined);setError('');setEdit(undefined);setSelected('');setSaving(false);writing.current=false;
     setHistory({undo:[],redo:[]});
     api.get<Version>(endpoint).then(version=>{if(active.current===key)setLoaded({scope,version});})
       .catch(reason=>{if(active.current===key)setError(reason.message);});
-    return ()=>{if(active.current===key)active.current='';};
+    return ()=>{if(active.current===key)active.current=undefined;};
   },[scope,endpoint,refresh]);
   async function save(items:Drawing[],mode:'edit'|'undo'|'redo'='edit'){
     if(!current||writing.current)return;
@@ -60,10 +73,15 @@ export function useDrawingBook(scope:string) {
   function begin(kind:DrawingTool){
     if(current&&current.items.length<100&&!writing.current)setEdit({kind,anchors:[]});
   }
-  function anchor(bar:Candle,price:number,digits:number) {
-    if(!edit||!current||writing.current||price<0)return;
+  function point(bar:Candle,price:number,digits:number):Anchor {
     const nearest=snap?(Math.abs(price-bar.high)<Math.abs(price-bar.low)?bar.high:bar.low):price;
-    const next={time:bar.time,price:nearest.toFixed(Math.min(digits,10))};
+    return {time:bar.time,price:nearest.toFixed(Math.min(digits,10))};
+  }
+  function anchor(points:{bar:Candle;price:number}[],digits:number) {
+    if(!edit||!current||writing.current||!points.length||points.some(point=>point.price<0))return;
+    const last=points[points.length-1];
+    const next=point(last.bar,last.price,digits);
+    const nearest=Number(next.price);
     if(edit.item&&edit.mode!==undefined){
       const item=edit.item;
       const anchors=item.anchors.map((point,index)=>{
@@ -75,28 +93,32 @@ export function useDrawingBook(scope:string) {
         return point;
       });
       if(anchors.some(point=>point.time<0||Number(point.price)<0)){setError('Move would leave the supported time or price range');return;}
+      if(item.kind==='risk-reward'&&!bracketsEntry(anchors)){
+        setError('Stop and target must bracket entry. Select the anchor again.');
+        return;
+      }
       setEdit(undefined);void save(current.items.map(drawing=>drawing.id===item.id?{...item,anchors,updated_at:now()}:drawing));
       return;
     }
-    const anchors=[...edit.anchors,next];
+    const additions=points.map(({bar,price})=>point(bar,price,digits));
+    const anchors=[...edit.anchors,...additions];
+    if(anchors.length>tools[edit.kind][1]||
+      (additions.length>1&&additions[0].time===next.time&&additions[0].price===next.price))return;
     if(anchors.length<tools[edit.kind][1]){setEdit({...edit,anchors});return;}
-    if(edit.kind==='risk-reward'){
-      const [entry,stop,target]=anchors.map(point=>Number(point.price));
-      if(!((stop<entry&&entry<target)||(target<entry&&entry<stop))){
-        setError('Target and stop must be on opposite sides of entry. Select the target again.');
-        return;
-      }
+    if(edit.kind==='risk-reward'&&!bracketsEntry(anchors)){
+      setError('Target and stop must be on opposite sides of entry. Select the target again.');
+      return;
     }
     const item:Drawing={id:crypto.randomUUID(),kind:edit.kind,anchors,label:edit.kind==='text'?'Annotation':'',
       visible:true,locked:false,color:'#55d9b5',created_at:now(),updated_at:now()};
     setEdit(undefined);setSelected(item.id);
     void save([...current.items,item]);
   }
-  return {current,error,saving,selected,setSelected,edit,setEdit,snap,setSnap,history,save,begin,anchor,
+  return {current,error,saving,selected,setSelected,interaction,setInteraction,edit,setEdit,snap,setSnap,history,save,begin,anchor,point,
     reload:()=>setRefresh(value=>value+1)};
 }
 
-export function DrawingToolbox({book,onBegin}: {book:ReturnType<typeof useDrawingBook>;onBegin:(kind:DrawingTool)=>void}) {
+export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>}) {
   const [tool,setTool]=useState<DrawingTool>('trend');
   const item=book.current?.items.find(drawing=>drawing.id===book.selected);
   const [draft,setDraft]=useState<{id:string;label:string;color:string}>();
@@ -113,7 +135,7 @@ export function DrawingToolbox({book,onBegin}: {book:ReturnType<typeof useDrawin
       <label>Drawing tool<select value={tool} onChange={event=>setTool(event.target.value as DrawingTool)}>
         {Object.entries(tools).map(([value,[label]])=><option key={value} value={value}>{label}</option>)}
       </select></label>
-      <button className="small-tool" disabled={blocked||book.current?.items.length===100} onClick={()=>onBegin(tool)}>Draw</button>
+      <button className="small-tool" disabled={blocked||book.current?.items.length===100} onClick={()=>book.begin(tool)}>Draw</button>
       <label><input type="checkbox" checked={book.snap} onChange={event=>book.setSnap(event.target.checked)}/> Snap to wick</label>
       {book.edit&&<button className="small-tool" onClick={()=>book.setEdit(undefined)}>Cancel drawing</button>}
       <button className="small-tool" disabled={blocked||!book.history.undo.length}
@@ -156,14 +178,49 @@ export function DrawingToolbox({book,onBegin}: {book:ReturnType<typeof useDrawin
 export class DrawingLayer implements ISeriesPrimitive<Time> {
   items:Drawing[]=[];
   repaint?:()=>void;
+  preview?:{kind:Drawing['kind'];anchors:Anchor[]};
+  showPreview(preview?:DrawingLayer['preview']){this.preview=preview;this.repaint?.();}
   constructor(private chart:IChartApi,private series:ISeriesApi<'Candlestick'>){}
   attached({requestUpdate}:{requestUpdate:()=>void}){this.repaint=requestUpdate;}
   detached(){this.repaint=undefined;}
   update(items:Drawing[]){this.items=items;this.repaint?.();}
-  private renderer:IPrimitivePaneRenderer={draw:target=>target.useMediaCoordinateSpace(({context:ctx,mediaSize})=>{
+  hitTest(x:number,y:number):PrimitiveHoveredItem|null{
+    const scale=this.chart.timeScale();
+    const distance=(ax:number,ay:number,bx:number,by:number)=>{
+      const dx=bx-ax,dy=by-ay;
+      const t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));
+      return Math.hypot(x-ax-t*dx,y-ay-t*dy);
+    };
+    let hit:PrimitiveHoveredItem|null=null;
+    for(const item of this.items){
+      if(!item.visible||!['horizontal','trend','rectangle','risk-reward'].includes(item.kind))continue;
+      const points=item.anchors.map(anchor=>({
+        x:scale.timeToCoordinate(anchor.time as UTCTimestamp),y:this.series.priceToCoordinate(Number(anchor.price)),
+      }));
+      const [a,b,c]=points;
+      if(!a||a.y===null)continue;
+      let d=Infinity;
+      if(item.kind==='horizontal')d=Math.abs(y-a.y);
+      else if(a.x!==null&&b?.x!==null&&b?.x!==undefined&&b.y!==null){
+        if(item.kind==='trend')d=distance(a.x,a.y,b.x,b.y);
+        else{
+          const left=Math.min(a.x,b.x,c?.x??a.x),right=Math.max(a.x,b.x,c?.x??a.x);
+          const top=Math.min(a.y,b.y,c?.y??a.y),bottom=Math.max(a.y,b.y,c?.y??a.y);
+          d=Math.min(distance(left,top,right,top),distance(left,bottom,right,bottom),
+            distance(left,top,left,bottom),distance(right,top,right,bottom));
+          if(item.kind==='risk-reward')d=Math.min(d,distance(left,a.y,right,a.y));
+        }
+      }
+      if(d<=6&&d<=(hit?.distance??Infinity))hit={distance:d,externalId:'drawing:'+item.id,zOrder:'normal'};
+    }
+    return hit;
+  }
+  private renderer(previewOnly:boolean):IPrimitivePaneRenderer{return {draw:target=>target.useMediaCoordinateSpace(({context:ctx,mediaSize})=>{
     const {width,height}=mediaSize;
     const timeScale=this.chart.timeScale();
-    for(const item of this.items){
+    const preview=this.preview;
+    const items=previewOnly?(preview?.anchors.length?[{...preview,visible:true,label:'',color:'#ffdc86'}]:[]):this.items;
+    for(const item of items){
       if(!item.visible)continue;
       const [a,b,c]=item.anchors;
       const x=timeScale.timeToCoordinate(a.time as UTCTimestamp),y=this.series.priceToCoordinate(Number(a.price));
@@ -171,6 +228,7 @@ export class DrawingLayer implements ISeriesPrimitive<Time> {
       if(y===null)continue;
       ctx.save();
       ctx.strokeStyle=item.color;ctx.fillStyle=item.color;ctx.lineWidth=1.5;ctx.font='11px system-ui';
+      if(previewOnly){ctx.setLineDash([5,4]);if(x!==null){ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();}}
       function line(x1:number,y1:number,x2:number,y2:number){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
       function box(x1:number,y1:number,x2:number,y2:number,fill:string){
         ctx.fillStyle=fill;ctx.fillRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1));
@@ -194,7 +252,8 @@ export class DrawingLayer implements ISeriesPrimitive<Time> {
             const risk=Math.abs(Number(a.price)-Number(b.price));
             label||=risk?`${(Math.abs(Number(c.price)-Number(a.price))/risk).toFixed(2)} R`:'';
           }
-        }else box(x,y,xx,yy,item.color+'26');
+        }else if(item.kind==='risk-reward'){box(x,y,xx,yy,'#e86a752f');}
+        else box(x,y,xx,yy,item.color+'26');
         if(item.kind==='measure'||item.kind==='price-range'){
           const decimals=Math.max(a.price.split('.')[1]?.length??0,b.price.split('.')[1]?.length??0);
           label||=`${(Number(b.price)-Number(a.price)).toFixed(decimals)} · ${Math.abs(b.time-a.time)}s`;
@@ -204,7 +263,11 @@ export class DrawingLayer implements ISeriesPrimitive<Time> {
       if(label)ctx.fillText(label,Math.max(4,x??4)+4,Math.min(height-2,Math.max(14,y-5)));
       ctx.restore();
     }
-  })};
-  private view={renderer:()=>this.renderer};
-  paneViews(){return [this.view];}
+  })};}
+  private savedRenderer=this.renderer(false);
+  private previewRenderer=this.renderer(true);
+  private view={renderer:()=>this.savedRenderer};
+  // Chart snapshots omit the top layer unless explicitly requested.
+  private previewView={renderer:()=>this.previewRenderer,zOrder:()=>'top' as const};
+  paneViews(){return this.preview?.anchors.length?[this.view,this.previewView]:[this.view];}
 }

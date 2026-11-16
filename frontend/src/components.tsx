@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode, type IChartApi, type ISeriesApi, type IPriceLine, type UTCTimestamp} from 'lightweight-charts';
 import type { IndicatorResult } from './indicators';
 import type { SmtEvent } from './smt';
@@ -8,6 +8,7 @@ import {ArrowDownRight,ArrowUpRight,Camera,Check,ChevronDown,LoaderCircle,Maximi
 import type {Candle} from './types';
 import type {ChartLink} from './ChartLink';
 import {DrawingLayer,type Drawing} from './Drawings';
+import {installPlacement,type DrawPoint,type PlacementDrag} from './drawingPlacement';
 
 export function Badge({children,tone='neutral'}:{children:React.ReactNode;tone?:'neutral'|'green'|'red'|'amber'|'blue'}) {return <span className={`badge badge-${tone}`}>{children}</span>}
 export function SectionTitle({eyebrow,title,action}:{eyebrow?:string;title:string;action?:React.ReactNode}){return <div className="section-title"><div>{eyebrow&&<span className="eyebrow">{eyebrow}</span>}<h2>{title}</h2></div>{action}</div>}
@@ -22,14 +23,17 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicator,comparison,timeframe,focus,link,linkId,drawings,onAnchor,onSmtSelect,onSaveSnapshot}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicator,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,onSmtSelect,onSaveSnapshot}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
   onAddLevel?:(price:number)=>void;showSnapshot?:boolean;symbol?:string;precision?:number;indicator?:IndicatorResult
   timeframe?: string;
   drawingPrompt?: string;
   focus?: {epoch:number;sequence:number};
   link?:ChartLink; linkId?:string;
-  drawings?:Drawing[]; onAnchor?:(bar:Candle,price:number)=>void; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>;
+  drawings?:Drawing[]; onAnchor?:(points:{bar:Candle;price:number}[])=>void;
+  placementDraft?:DrawingLayer['preview']; placementInteraction?:object;
+  placementDrag?:PlacementDrag; requirePlacementCandle?:boolean;
+  onPlacementPreview?:(points:{bar:Candle;price:number}[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>;
   comparison?: {symbol:string; candles:Candle[]; precision:number; placement:ComparisonPlacement;
     onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]}
 }){
@@ -68,6 +72,17 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   const didFit=useRef(false);
   const clickHandler=useRef(onAddLevel);
   const anchorHandler=useRef(onAnchor);
+  const previewHandler=useRef(onPlacementPreview);
+  previewHandler.current=onPlacementPreview;
+  const draft=useRef(placementDraft);
+  draft.current=placementDraft;
+  const drag=useRef(placementDrag);
+  drag.current=placementDrag;
+  const needsCandle=useRef(requirePlacementCandle);
+  needsCandle.current=requirePlacementCandle;
+  const placementReset=useRef<(()=>void)|undefined>(undefined);
+  const drawingSelection=useRef(onDrawingSelect);
+  drawingSelection.current=onDrawingSelect;
   const markerSelection=useRef(onSmtSelect);
   markerSelection.current=onSmtSelect;
   const markerEvents=useRef<SmtEvent[]>([]);
@@ -103,20 +118,14 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const toolLayer=new DrawingLayer(chart,series);
     paintLayer.current=toolLayer;
     series.attachPrimitive(toolLayer);
+    if(drawing.current)toolLayer.showPreview(draft.current);
     const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime}):undefined;
     const scale=chart.timeScale();
     const viewport=()=>{if(linkId)link?.viewport(linkId);};
     const activate=()=>{if(linkId)link?.activate(linkId);setMissingLinkedTime(undefined);};
     const leave=()=>{if(linkId)link?.clearCursor(linkId);};
     const container=element.current;
-    let anchorStart:{x:number;y:number}|undefined;
-    const startAnchor=(event:PointerEvent)=>{
-      activate();
-      anchorStart=event.isPrimary?{x:event.clientX,y:event.clientY}:undefined;
-    };
-    const placeAnchor=(event:MouseEvent)=>{
-      if(!drawing.current||!anchorHandler.current||!anchorStart||
-        Math.hypot(event.clientX-anchorStart.x,event.clientY-anchorStart.y)>6)return;
+    function located(event:PointerEvent):DrawPoint|undefined{
       const bounds=container.getBoundingClientRect();
       const x=event.clientX-bounds.left-chart.priceScale('left').width();
       const y=event.clientY-bounds.top;
@@ -124,11 +133,28 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       const time=scale.coordinateToTime(x);
       const bar=typeof time==='number'?linkedBars.current.get(time):undefined;
       const price=series.coordinateToPrice(y);
-      if(bar&&price!==null&&Number.isFinite(price))anchorHandler.current(bar,price);
-    };
+      if(price===null||!Number.isFinite(price)||price<0||((anchorHandler.current||needsCandle.current)&&!bar))return;
+      return {x,y,price,time:bar?.time};
+    }
+    function candlePoints(points:DrawPoint[]){
+      return points.flatMap(point=>{
+        const bar=point.time===undefined?undefined:linkedBars.current.get(point.time);
+        return bar?[{bar,price:point.price}]:[];
+      });
+    }
+    const input=installPlacement(container,{
+      armed:()=>drawing.current,
+      drag:()=>drag.current??'none',
+      activate,
+      locate:located,
+      preview:points=>toolLayer.showPreview(previewHandler.current?.(candlePoints(points))??draft.current),
+      commit:points=>{
+        if(anchorHandler.current)anchorHandler.current(candlePoints(points));
+        else clickHandler.current?.(points[0].price);
+      },
+    });
+    placementReset.current=input.reset;
     container.addEventListener('pointerenter',activate);
-    container.addEventListener('pointerdown',startAnchor);
-    container.addEventListener('click',placeAnchor);
     container.addEventListener('wheel',activate,{passive:true});
     container.addEventListener('pointerleave',leave);
     scale.subscribeVisibleLogicalRangeChange(viewport);
@@ -138,20 +164,19 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       if(linkId)link?.cursor(linkId,time);
     });
     chart.subscribeClick(param=>{
+      if(!drawing.current&&typeof param.hoveredObjectId==='string'&&param.hoveredObjectId.startsWith('drawing:')){
+        drawingSelection.current?.(param.hoveredObjectId.slice(8));
+        return;
+      }
       if(!drawing.current&&typeof param.hoveredObjectId==='string'&&param.hoveredObjectId.startsWith('smt:')){
         const event=markerEvents.current.find(item=>item.id===param.hoveredObjectId?.toString().slice(4));
         if(event?.event_key)markerSelection.current?.(event);
         return;
       }
-      if(!drawing.current||!param.point||(param.paneIndex!==undefined&&param.paneIndex!==0))return;
-      const price=series.coordinateToPrice(param.point.y);
-      if(price===null||!Number.isFinite(price))return;
-      if(!anchorHandler.current)clickHandler.current?.(price);
     });
     return ()=>{
       container.removeEventListener('pointerenter',activate);
-      container.removeEventListener('pointerdown',startAnchor);
-      container.removeEventListener('click',placeAnchor);
+      input.dispose();placementReset.current=undefined;
       container.removeEventListener('wheel',activate);
       container.removeEventListener('pointerleave',leave);
       scale.unsubscribeVisibleLogicalRangeChange(viewport);
@@ -160,6 +185,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       linesRef.current=[];seriesRef.current=null;chartRef.current=null;didFit.current=false;chart.remove();
     };
   },[symbol,precision,link,linkId]);
+  useLayoutEffect(()=>{placementReset.current?.();paintLayer.current?.showPreview(drawMode?placementDraft:undefined);},[drawMode,placementDraft,placementInteraction,symbol,precision]);
   useEffect(()=>{paintLayer.current?.update(drawings??[]);},[drawings,symbol,precision]);
   const comparisonSymbol=comparison?.symbol;
   const comparisonPrecision=comparison?.precision;
@@ -323,7 +349,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     </div>;
   }
   return <div ref={surface} className={'chart-container chart-surface '+(drawMode?'drawing-enabled':'')} style={{height}}>
-    <div ref={element} style={{height:'100%',width:'100%'}} aria-label="Interactive market candlestick chart"
+    <div ref={element} className="chart-input" style={{height:'100%',width:'100%'}} aria-label="Interactive market candlestick chart"
       onPointerMove={event=>{
         const chart=chartRef.current;
         const guide=pointerGuide.current;

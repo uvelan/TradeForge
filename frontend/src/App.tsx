@@ -152,9 +152,8 @@ const chartTimeframes:Timeframe[]=['M1','M3','M5','M15','M30','H1','H4','D1'];
 type ChartLevel=import('./components').ChartLevel;
 function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}:{expanded?:boolean;onPlan?:(seed:Partial<Plan>)=>void;
   onSignal?:(reference:import('./types').SignalReference)=>Promise<void>; initialLocation?:{symbol?:SymbolName;indicator?:string;sequence:number};onChartLesson?:(snapshot:string)=>void}){
-  const [picked,setPicked]=useState<string[]>([]);
+  const [planPrices,setPlanPrices]=useState<string[]>([]);
   const [chartCapture,setChartCapture]=useState<string>();
-  const [picking,setPicking]=useState(false);
   const {zone}=useTimezone();
   const [forexSymbol,setSymbol]=useWorkspacePreference<SymbolName>('forex-symbol','EURUSD',watchSymbols);
   const [timeframe,setTimeframe]=useWorkspacePreference<Timeframe>('timeframe','M5',chartTimeframes);
@@ -176,6 +175,10 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [pollError,setPollError]=useState('');
   const symbol=isBinance?'BTCUSDT':source==='MT5'?brokerSymbol:forexSymbol;
   const drawingBook=useDrawingBook(expanded?`${source}:${symbol}:${timeframe}`:"");
+  const {interaction,setInteraction}=drawingBook;
+  const picking=interaction.mode==='plan';
+  const picked=picking?interaction.prices:planPrices;
+  const placementDraft=useMemo(()=>drawingBook.edit?{kind:drawingBook.edit.kind,anchors:drawingBook.edit.anchors}:undefined,[drawingBook.edit]);
   const [sessionZones,setSessionZones]=useState<Record<string,Drawing>>({});
   const updateZone=useCallback((id:string,drawing?:Drawing)=>{
     setSessionZones(current=>{
@@ -205,7 +208,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [smtTolerance,setSmtTolerance]=useWorkspacePreference<string>('smt-tolerance','0.5');
   const [smtConfirmation,setSmtConfirmation]=useWorkspacePreference<string>('smt-confirmation','1');
   const [placement,setPlacement]=useWorkspacePreference<ComparisonPlacement>('comparison-placement','Overlay',['Overlay','New pane']);
-  const [drawMode,setDrawMode]=useState(false);
   const [levels,setLevels]=useState<ChartLevel[]>([]);
   const [levelHistory,setLevelHistory]=useState<{undo:ChartLevel[][];redo:ChartLevel[][]}>({undo:[],redo:[]});
   const [replayIndex,setReplayIndex]=useState<number|null>(null);
@@ -234,7 +236,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   },[source,refreshCount]);
   useEffect(()=>{
     let active=true;
-    setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);setReplayBusy(false);setReplayError('');setChartCapture(undefined);setPicked([]);setPicking(false);
+    setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);setReplayBusy(false);setReplayError('');setChartCapture(undefined);setPlanPrices([]);
+    setInteraction(current=>current.mode==='plan'?{mode:'navigate'}:current);
     api.candles(symbol,timeframe,source,expanded?600:200,source==='MT5',range)
       .then(main=>{if(active)setData(main)})
       .catch(e=>{if(active){setError(e.message);setData(null)}})
@@ -297,10 +300,13 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     setLevelHistory({undo:[...levelHistory.undo,levels].slice(-25),redo:[]});
     writeLevels(next);
   };
+  const toggleLevel=useCallback(()=>{
+    if(levels.length<50)setInteraction(current=>({mode:current.mode==='level'?'navigate':'level'}));
+  },[levels.length,setInteraction]);
   const addLevel=(price:number)=>{
     if(!Number.isFinite(price)||levels.length>=50)return;
     changeLevels([...levels,{id:crypto.randomUUID(),price:Number(price.toFixed(digits))}]);
-    setDrawMode(false);
+    setInteraction({mode:'navigate'});
   };
   const clearLevels=()=>{if(window.confirm('Remove all horizontal levels from this chart?'))changeLevels([]);};
   const undoLevels=()=>{
@@ -358,13 +364,16 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   useEffect(()=>{
     if(!expanded)return;
     const onKey=(e:KeyboardEvent)=>{
+      if(e.key==='Escape'){
+        setInteraction(current=>current.mode==='navigate'?current:{mode:'navigate'});
+        return;
+      }
       const target=e.target as HTMLElement|null;
       if(target?.closest('input,textarea,select,[contenteditable="true"]'))return;
-      if(e.altKey&&e.key.toLowerCase()==='h'){e.preventDefault();setDrawMode(v=>!v)}
-      if(e.key==='Escape'){setDrawMode(false);setPicking(false);drawingBook.setEdit(undefined);}
+      if(e.altKey&&e.key.toLowerCase()==='h'){e.preventDefault();if(!e.repeat)toggleLevel();}
     };
     window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
-  },[expanded,drawingBook.setEdit]);
+  },[expanded,setInteraction,toggleLevel]);
   const boundary=last?.time??0;
   const cutoff=replayActive?(last?.available_at ?? boundary+frameMinutes[timeframe]*60):undefined;
   const options=[...new Set([symbol,...(isBinance?[]:source==='MT5'?instruments.map(item=>item.name):watchSymbols)])];
@@ -442,7 +451,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
         <DataTrust data={replayData?{...replayData,candles:visibleCandles,coverage:undefined}:data} symbol={symbol} timeframe={timeframe} error={error||pollError}/>
         {onPlan&&watchSymbols.includes(symbol as SymbolName)&&<div className="research-controls">
           <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>{
-            setPicked([]);setDrawMode(false);drawingBook.setEdit(undefined);setPicking(!picking);
+            setPlanPrices([]);setInteraction(picking?{mode:'navigate'}:{mode:'plan',prices:[]});
           }}>{picking?'Cancel level selection':'Select plan levels'}</button>
           {picking&&<span role="status">Click primary price for {['entry','stop','target'][picked.length]}</span>}
           <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>onPlan({
@@ -458,7 +467,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             {levels.map(level=><button className="small-tool" key={level.id}
               onClick={()=>changeLevels(levels.filter(item=>item.id!==level.id))}>Remove {level.price.toFixed(digits)}</button>)}
           </div></details>:null}
-        <DrawingToolbox book={drawingBook} onBegin={kind=>{setPicking(false);setDrawMode(false);drawingBook.begin(kind);}}/>
+        <DrawingToolbox book={drawingBook}/>
         {viewCount!=='1'&&<details className="data-trust"><summary>Chart synchronization</summary>
           <div className="research-controls">{([
             ['Crosshair',linkCrosshair,setLinkCrosshair],['Time range',linkRange,setLinkRange],['Zoom',linkZoom,setLinkZoom],
@@ -489,11 +498,11 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
           {smt.alert?.event_key&&onSignal&&<button className="small-tool" onClick={()=>void onSignal({
             event_key:smt.alert!.event_key!,status:'SMT_CONFIRMED'
           }).catch(reason=>setPollError(reason.message))}>Inspect alert evidence</button>}
-        </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(!drawMode?'active':'')} title="Crosshair (Esc)" onClick={()=>setDrawMode(false)}><Crosshair size={18}/></button><button className={'rail-tool '+(drawMode?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={()=>setDrawMode(v=>!v)}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
+        </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(interaction.mode==='navigate'?'active':'')} title="Crosshair (Esc)" onClick={()=>setInteraction({mode:'navigate'})}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
         <div className={'terminal-chart-columns '+(viewCount!=='1'?'multi-chart':'')}>
           <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events}:undefined} symbol={symbol} precision={digits} indicator={indicator.data || undefined} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
               item.anchors.every(anchor=>anchor.time+frameMinutes[timeframe]*60<=cutoff))}
-            drawMode={drawMode||picking||Boolean(drawingBook.edit)}
+            drawMode={interaction.mode!=='navigate'} placementInteraction={interaction}
             onSaveSnapshot={async png=>{
               const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff);
               setChartCapture(saved.id);
@@ -501,12 +510,25 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             onSmtSelect={!replayActive&&onSignal?event=>{
               if(event.event_key)void onSignal({event_key:event.event_key,status:event.status}).catch(reason=>setPollError(reason.message));
             }:undefined}
-            onAnchor={drawingBook.edit?(bar,price)=>drawingBook.anchor(bar,price,digits):undefined}
+            onDrawingSelect={id=>{if(drawingBook.current?.items.some(item=>item.id===id))drawingBook.setSelected(id);}}
+            placementDraft={placementDraft}
+            requirePlacementCandle={interaction.mode==='level'}
+            placementDrag={interaction.mode==='level'||
+              (interaction.mode==='place'&&tools[interaction.draft.kind][1]===1)?'release-point':
+              interaction.mode==='place'&&!interaction.draft.anchors.length&&
+              ['trend','rectangle','risk-reward'].includes(interaction.draft.kind)?'two-points':'none'}
+            onAnchor={drawingBook.edit?points=>drawingBook.anchor(points,digits):undefined}
+            onPlacementPreview={drawingBook.edit?points=>{
+              const edit=drawingBook.edit!;
+              return {kind:edit.kind,anchors:[...edit.anchors,...points.map(({bar,price})=>drawingBook.point(bar,price,digits))]};
+            }:undefined}
             drawingPrompt={drawingBook.edit?`${tools[drawingBook.edit.kind][0]} · select ${drawingBook.edit.mode==='move'?'new origin':typeof drawingBook.edit.mode==='number'?drawingBook.edit.mode+1:drawingBook.edit.anchors.length+1}`:
               picking?`Select ${['entry','stop','target'][picked.length]}`:undefined}
-            onAddLevel={picking?price=>{
-              setPicked([...picked,price.toFixed(digits)]);if(picked.length===2)setPicking(false);
-            }:addLevel} showSnapshot/>:<Empty title="Market data unavailable" body="Connect MetaTrader 5 or import saved MT5 / Dukascopy candles."/>}</div>
+            onAddLevel={interaction.mode==='plan'?price=>{
+              const prices=[...interaction.prices,price.toFixed(digits)];
+              if(prices.length===3){setPlanPrices(prices);setInteraction({mode:'navigate'});}
+              else setInteraction({mode:'plan',prices});
+            }:interaction.mode==='level'?addLevel:undefined} showSnapshot/>:<Empty title="Market data unavailable" body="Connect MetaTrader 5 or import saved MT5 / Dukascopy candles."/>}</div>
           {Array.from({length:Number(viewCount)-1},(_,index)=><ChartView key={index+2} number={index+2}
             mainSymbol={symbol} source={source} options={options} refresh={refreshCount} cutoff={linkReplay==='on'?cutoff:undefined} precision={precisionFor} range={range}
             frozen={replayActive&&linkReplay==='on'?(replaySession?.views[String(index+2)]??

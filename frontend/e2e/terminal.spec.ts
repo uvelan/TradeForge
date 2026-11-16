@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("generates a simulated dataset and reopens it after reload", async ({ page }) => {
   const pageErrors: string[] = [];
   page.on("pageerror", error => pageErrors.push(error.message));
-  await page.goto("http://127.0.0.1:4180/catalog.html");
+  await page.goto("/catalog.html");
   await page.getByRole("button", { name: "Generate EURUSD simulation" }).click();
   const chart = page.getByRole("img", { name: "EURUSD M15 candlestick chart" });
   await expect(chart.locator("canvas").first()).toBeVisible();
