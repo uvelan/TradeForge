@@ -1,0 +1,360 @@
+> e2e
+> playwright test --reporter=line
+
+
+[WebServer] INFO:     Started server process [9348]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8098 (Press CTRL+C to quit)
+
+[WebServer] (node:11816) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 57 tests using 1 worker
+
+
+(node:696) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/57] e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions
+  1) e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Browser logs:
+
+    <launched> pid=10508
+    [pid=10508][err] [1117/153750.330:INFO:CONSOLE:934] "[vite] connecting...", source: http://127.0.0.1:4198/@vite/client (934)
+    [pid=10508][err] [1117/153750.363:INFO:CONSOLE:15802] "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold", source: http://127.0.0.1:4198/node_modules/.vite/deps/react-dom_client.js?v=f09c47b9 (15802)
+    [pid=10508][err] [1117/153750.594:INFO:CONSOLE:1043] "[vite] connected.", source: http://127.0.0.1:4198/@vite/client (1043)
+    [pid=10508] <gracefully close start>
+    Call log:
+      - waiting for getByRole('button', { name: 'Draw', exact: true })
+        - locator resolved to <button disabled class="small-tool">Draw</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        55 × waiting for element to be visible, enabled and stable
+           - element is not enabled
+         - retrying click action
+           - waiting 500ms
+        - waiting for element to be visible, enabled and stable
+
+
+      106 |   await page.getByText(/^Drawing toolbox/).click();
+      107 |   await page.getByLabel("Drawing tool").selectOption(kind);
+    > 108 |   await page.getByRole("button",{name:"Draw",exact:true}).click();
+          |                                                           ^
+      109 |   for(const [x,y] of points.slice(0,-1))await clickAt(page,x,y);
+      110 |   const response=posted(page);
+      111 |   const [x,y]=points.at(-1)!;
+        at setup (K:\Projects\TradeForge\frontend\e2e\drawing-edit.spec.ts:108:59)
+        at K:\Projects\TradeForge\frontend\e2e\drawing-edit.spec.ts:126:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\drawing-edit-select-move-a-df245-d-undo-redo-exact-revisions\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\drawing-edit-select-move-a-df245-d-undo-redo-exact-revisions\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\drawing-edit-select-move-a-df245-d-undo-redo-exact-revisions\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\drawing-edit-select-move-a-df245-d-undo-redo-exact-revisions\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\drawing-edit-select-move-a-df245-d-undo-redo-exact-revisions\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:2424) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2/57] e2e\drawing-edit.spec.ts:176:1 › all four rectangle handles edit only their corresponding boundaries
+  2) e2e\drawing-edit.spec.ts:176:1 › all four rectangle handles edit only their corresponding boundaries
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Browser logs:
+
+    <launched> pid=31088
+    [pid=31088][err] [1117/153821.587:INFO:CONSOLE:934] "[vite] connecting...", source: http://127.0.0.1:4198/@vite/client (934)
+    [pid=31088][err] [1117/153821.716:INFO:CONSOLE:1043] "[vite] connected.", source: http://127.0.0.1:4198/@vite/client (1043)
+    [pid=31088][err] [1117/153821.752:INFO:CONSOLE:15802] "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold", source: http://127.0.0.1:4198/node_modules/.vite/deps/react-dom_client.js?v=f09c47b9 (15802)
+    [pid=31088] <gracefully close start>
+    Call log:
+      - waiting for getByRole('button', { name: 'Draw', exact: true })
+        - locator resolved to <button disabled class="small-tool">Draw</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        55 × waiting for element to be visible, enabled and stable
+           - element is not enabled
+         - retrying click action
+           - waiting 500ms
+        - waiting for element to be visible, enabled and stable
+
+
+      106 |   await page.getByText(/^Drawing toolbox/).click();
+      107 |   await page.getByLabel("Drawing tool").selectOption(kind);
+    > 108 |   await page.getByRole("button",{name:"Draw",exact:true}).click();
+          |                                                           ^
+      109 |   for(const [x,y] of points.slice(0,-1))await clickAt(page,x,y);
+      110 |   const response=posted(page);
+      111 |   const [x,y]=points.at(-1)!;
+        at setup (K:\Projects\TradeForge\frontend\e2e\drawing-edit.spec.ts:108:59)
+        at K:\Projects\TradeForge\frontend\e2e\drawing-edit.spec.ts:177:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\drawing-edit-all-four-rect-a8c13-ir-corresponding-boundaries\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\drawing-edit-all-four-rect-a8c13-ir-corresponding-boundaries\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\drawing-edit-all-four-rect-a8c13-ir-corresponding-boundaries\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\drawing-edit-all-four-rect-a8c13-ir-corresponding-boundaries\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\drawing-edit-all-four-rect-a8c13-ir-corresponding-boundaries\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:25292) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[3/57] e2e\drawing-edit.spec.ts:196:3 › long position rejects crossed handles and preserves direction on a valid resize
+  3) e2e\drawing-edit.spec.ts:196:3 › long position rejects crossed handles and preserves direction on a valid resize
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Browser logs:
+
+    <launched> pid=29740
+    [pid=29740][err] [1117/153852.991:INFO:CONSOLE:934] "[vite] connecting...", source: http://127.0.0.1:4198/@vite/client (934)
+    [pid=29740][err] [1117/153853.114:INFO:CONSOLE:1043] "[vite] connected.", source: http://127.0.0.1:4198/@vite/client (1043)
+    [pid=29740][err] [1117/153853.146:INFO:CONSOLE:15802] "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold", source: http://127.0.0.1:4198/node_modules/.vite/deps/react-dom_client.js?v=f09c47b9 (15802)
+    [pid=29740] <gracefully close start>
+    Call log:
+      - waiting for getByRole('button', { name: 'Draw', exact: true })
+        - locator resolved to <button disabled class="small-tool">Draw</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        55 × waiting for element to be visible, enabled and stable
+           - element is not enabled
+         - retrying click action
+           - waiting 500ms
+        - waiting for element to be visible, enabled and stable
+
+
+      106 |   await page.getByText(/^Drawing toolbox/).click();
+      107 |   await page.getByLabel("Drawing tool").selectOption(kind);
+    > 108 |   await page.getByRole("button",{name:"Draw",exact:true}).click();
+          |                                                           ^
+      109 |   for(const [x,y] of points.slice(0,-1))await clickAt(page,x,y);
+      110 |   const response=posted(page);
+      111 |   const [x,y]=points.at(-1)!;
+        at setup (K:\Projects\TradeForge\frontend\e2e\drawing-edit.spec.ts:108:59)
+        at K:\Projects\TradeForge\frontend\e2e\drawing-edit.spec.ts:198:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\drawing-edit-long-position-2b0de-direction-on-a-valid-resize\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\drawing-edit-long-position-2b0de-direction-on-a-valid-resize\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\drawing-edit-long-position-2b0de-direction-on-a-valid-resize\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\drawing-edit-long-position-2b0de-direction-on-a-valid-resize\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\drawing-edit-long-position-2b0de-direction-on-a-valid-resize\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:29684) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[4/57] e2e\drawing-edit.spec.ts:196:3 › short position rejects crossed handles and preserves direction on a valid resize
+  4) e2e\drawing-edit.spec.ts:196:3 › short position rejects crossed handles and preserves direction on a valid resize
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Browser logs:
+
+    <launched> pid=3116
+    [pid=3116][err] [1117/153924.427:INFO:CONSOLE:934] "[vite] connecting...", source: http://127.0.0.1:4198/@vite/client (934)
+    [pid=3116][err] [1117/153924.551:INFO:CONSOLE:1043] "[vite] connected.", source: http://127.0.0.1:4198/@vite/client (1043)
+    [pid=3116][err] [1117/153924.584:INFO:CONSOLE:15802] "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold", source: http://127.0.0.1:4198/node_modules/.vite/deps/react-dom_client.js?v=f09c47b9 (15802)
+    [pid=3116] <gracefully close start>
+    Call log:
+      - waiting for getByRole('button', { name: 'Draw', exact: true })
+        - locator resolved to <button disabled class="small-tool">Draw</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        55 × waiting for element to be visible, enabled and stable
+           - element is not enabled
+         - retrying click action
+           - waiting 500ms
+        - waiting for element to be visible, enabled and stable
+
+
+      106 |   await page.getByText(/^Drawing toolbox/).click();
+      107 |   await page.getByLabel("Drawing tool").selectOption(kind);
+    > 108 |   await page.getByRole("button",{name:"Draw",exact:true}).click();
+          |                                                           ^
+      109 |   for(const [x,y] of points.slice(0,-1))await clickAt(page,x,y);
+      110 |   const response=posted(page);
+      111 |   const [x,y]=points.at(-1)!;
+        at setup (K:\Projects\TradeForge\frontend\e2e\drawing-edit.spec.ts:108:59)
+        at K:\Projects\TradeForge\frontend\e2e\drawing-edit.spec.ts:198:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\drawing-edit-short-positio-e776f-direction-on-a-valid-resize\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\drawing-edit-short-positio-e776f-direction-on-a-valid-resize\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\drawing-edit-short-positio-e776f-direction-on-a-valid-resize\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\drawing-edit-short-positio-e776f-direction-on-a-valid-resize\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\drawing-edit-short-positio-e776f-direction-on-a-valid-resize\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:23412) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[5/57] e2e\drawing-edit.spec.ts:221:1 › vertical horizontal edit works after zoom, resize and fullscreen with left scale and comparison pane
+
+[WebServer] Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+[WebServer] handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+[WebServer] Traceback (most recent call last):
+[WebServer]   File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0\Lib\asyncio\events.py", line 89, in _run
+[WebServer]     self._context.run(self._callback, *self._args)
+[WebServer]     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+[WebServer]     self._sock.shutdown(socket.SHUT_RDWR)
+[WebServer]     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+[WebServer] ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+[WebServer] Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+[WebServer] handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+[WebServer] Traceback (most recent call last):
+[WebServer]   File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0\Lib\asyncio\events.py", line 89, in _run
+[WebServer]     self._context.run(self._callback, *self._args)
+[WebServer]     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[WebServer]   File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3824.0_x64__qbz5n2kfra8p0\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+[WebServer]     self._sock.shutdown(socket.SHUT_RDWR)
+[WebServer]     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+[WebServer] ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+[6/57] e2e\drawing-edit.spec.ts:248:1 › overlapping strokes prefer the later item; locked and hidden drawings cannot drag
+[7/57] e2e\drawing-edit.spec.ts:273:1 › Escape and pointer cancellation discard edits; a scope change cannot save an obsolete gesture
+[8/57] e2e\drawing-edit.spec.ts:304:1 › a native touchscreen cancel releases the selected drawing without writing
+[9/57] e2e\drawing-edit.spec.ts:319:1 › a real 409 blocks further edits and reload preserves the competing drawing
+[10/57] e2e\drawing-edit.spec.ts:344:1 › a canonical EMA overlay leaves creating and editing a drawing functional
+[11/57] e2e\drawing-edit.spec.ts:356:1 › market structure overlays preserve ownership of a saved drawing handle
+[12/57] e2e\drawing-edit.spec.ts:378:1 › Liquidity overlays preserve a saved drawing handle gesture
+[13/57] e2e\drawing-edit.spec.ts:378:1 › FVG overlays preserve a saved drawing handle gesture
+[14/57] e2e\drawing-edit.spec.ts:378:1 › Order block overlays preserve a saved drawing handle gesture
+[15/57] e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1366x768
+[16/57] e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1920x1080
+[17/57] e2e\drawing-placement.spec.ts:51:1 › touch places a horizontal drawing and its persisted anchor can be edited
+[18/57] e2e\drawing-placement.spec.ts:78:1 › rejects outside release and Escape then saves a rectangle with two clicks
+[19/57] e2e\drawing-placement.spec.ts:99:1 › risk/reward commits valid prices after zoom and excludes the comparison axis
+[20/57] e2e\drawing-placement.spec.ts:134:1 › a stale drawing save reports 409 and reload preserves the competing scene
+[21/57] e2e\drawing-placement.spec.ts:154:1 › blank chart space and a secondary plot cannot save into the primary scope
+[22/57] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every trend anchor
+[23/57] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every rectangle anchor
+[24/57] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every risk-reward anchor
+[25/57] e2e\drawing-placement.spec.ts:258:1 › previews and saves both position directions and rejects an invalid edit
+[26/57] e2e\drawing-placement.spec.ts:320:1 › releases pointer ownership on candle refresh and scope remount
+[27/57] e2e\drawing-placement.spec.ts:418:1 › maps anchors across fullscreen and resized plots with a left comparison scale
+[28/57] e2e\drawing-placement.spec.ts:505:1 › the horizontal rail takes precedence over an unfinished trendline
+[29/57] e2e\drawing-placement.spec.ts:518:1 › a horizontal drawing drag uses the release candle and price after zoom and resize
+[30/57] e2e\drawing-placement.spec.ts:567:1 › Alt+H and the rail discard rectangle and risk/reward draft anchors
+[31/57] e2e\drawing-placement.spec.ts:588:1 › toolbox activation clears other modes and repeated switches save only the final intended drawing
+[32/57] e2e\drawing-placement.spec.ts:624:1 › Escape cancels all armed modes and an active drag cannot complete in a replacement mode
+[33/57] e2e\drawing-placement.spec.ts:668:1 › horizontal drags reject outside, missing candle and pointer cancellation
+[34/57] e2e\drawing-placement.spec.ts:703:1 › negative chart prices are rejected and navigation still pans and zooms
+
+(node:21768) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[35/57] e2e\indicator-engine.spec.ts:20:1 › multiple canonical indicators persist, update panes and clean up on remount
+[36/57] e2e\indicator-engine.spec.ts:62:1 › replay submits only closed evidence within the visible cutoff
+[37/57] e2e\indicator-engine.spec.ts:85:1 › a session overlay exposes provisional and completed backend values
+[38/57] e2e\indicator-engine.spec.ts:101:1 › previous week requests a bounded M5 reference beyond chart history
+[39/57] e2e\indicator-engine.spec.ts:117:1 › the terminal distinguishes a complete forex week from missing open-market coverage
+[40/57] e2e\indicator-engine.spec.ts:152:1 › structure replay paints CHOCH at the confirming step and removes it on rewind
+[41/57] e2e\indicator-engine.spec.ts:217:1 › a pending market structure result stays tied to the original chart scope
+[42/57] e2e\indicator-engine.spec.ts:247:1 › older structure pages are bounded and leave the latest chart and state intact
+[43/57] e2e\indicator-engine.spec.ts:291:1 › calendar structure confirms a real reopening BOS and removes it on replay rewind
+[44/57] e2e\indicator-engine.spec.ts:328:1 › liquidity replay exposes the sweep only after its closed evidence and keeps it inspectable
+[45/57] e2e\indicator-engine.spec.ts:369:1 › a pending Liquidity request cannot replace another instrument or timeframe
+[46/57] e2e\indicator-engine.spec.ts:369:1 › a pending FVG request cannot replace another instrument or timeframe
+[47/57] e2e\indicator-engine.spec.ts:369:1 › a pending Order block request cannot replace another instrument or timeframe
+[48/57] e2e\indicator-engine.spec.ts:397:1 › FVG paints a causal zone and updates its remaining depth during replay
+[49/57] e2e\indicator-engine.spec.ts:442:1 › FVG selection survives a rolling MT5 refresh and drops corrected evidence
+[50/57] e2e\indicator-engine.spec.ts:490:1 › order block appears at BOS availability and rewinds independently of FVG and liquidity
+[51/57] e2e\liquidity-active.spec.ts:3:1 › unchanged live liquidity remains on chart beyond the revision page
+[52/57] e2e\research.spec.ts:3:1 › opens the research dashboard, replays demo bars, and links to the preserved catalog
+[53/57] e2e\research.spec.ts:22:1 › shows a saved background SMT watch and stops it from Market Terminal
+[54/57] e2e\research.spec.ts:45:1 › navigates by keyboard and moves recorded signal evidence into a persisted draft
+[55/57] e2e\research.spec.ts:95:1 › persists a trendline and resumes a frozen replay checkpoint
+[56/57] e2e\research.spec.ts:135:1 › links four chart views and opens a saved simulation after reload
+[57/57] e2e\terminal.spec.ts:3:1 › generates a simulated dataset and reopens it after reload
+  4 failed
+    e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions
+    e2e\drawing-edit.spec.ts:176:1 › all four rectangle handles edit only their corresponding boundaries
+    e2e\drawing-edit.spec.ts:196:3 › long position rejects crossed handles and preserves direction on a valid resize
+    e2e\drawing-edit.spec.ts:196:3 › short position rejects crossed handles and preserves direction on a valid resize
+  53 passed (5.8m)

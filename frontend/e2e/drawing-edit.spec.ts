@@ -374,14 +374,33 @@ test("market structure overlays preserve ownership of a saved drawing handle",as
 });
 
 for(const [title,query,id] of [["Liquidity","liquidity pools","liquidity_sweeps"],
-  ["FVG","fair value gap","fair_value_gap"]]){
+  ["FVG","fair value gap","fair_value_gap"],["Order block","order blocks","order_blocks"]]){
 test(title+" overlays preserve a saved drawing handle gesture",async ({page})=>{
+  if(id==="order_blocks"){
+    const start=1793577600,step=180;
+    const candles=Array.from({length:100},(_,i)=>{
+      const [open,high,low,close]=i<90?[9,10,8,9]:
+        ([[9,10,8,9],[11,13,10,12],[11,12,9,10],[12,15,11,14]][i-90]??[14,15,13,14]);
+      return {time:start+i*step,open,high,low,close};
+    });
+    await page.route("**/research/api/market/candles?**",route=>route.fulfill({json:{
+      source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",candles,
+    }}));
+  }
   const {created,item}=await setup(page,"horizontal",[[.49,.55]]);
   await page.getByText("Indicator library",{exact:true}).click();
   await page.getByLabel("Search indicators").fill(query);
   await page.getByRole("combobox",{name:"Add indicator",exact:true}).selectOption(id);
   await page.getByRole("button",{name:"Enable indicator",exact:true}).click();
-  await expect(page.getByLabel(title+" evidence",{exact:true})).toBeVisible();
+  const evidence=page.getByLabel(title+" evidence",{exact:true});
+  if(id==="order_blocks"){
+    const group=page.getByRole("group",{name:"Confirmed Order Blocks (OB)"});
+    await group.getByLabel("Left bars").fill("1");
+    await group.getByLabel("Right confirmation bars").fill("1");
+    await expect(evidence.getByRole("button",{name:"BULLISH · ACTIVE · 0.0%"})).toBeVisible();
+  }else{
+    await expect(evidence).toBeVisible();
+  }
   await page.getByText("Indicator library",{exact:true}).click();
   const [start]=await handles(page,1);
   const postedEdit=posted(page);

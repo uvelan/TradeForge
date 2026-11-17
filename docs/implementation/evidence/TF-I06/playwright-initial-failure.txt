@@ -1,0 +1,28 @@
+Initial full browser run, implementation commit a9c7b63196f547deba0214a3e0ec3bf2133c283d.
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 4
+    + Received  + 1
+
+    - Array [
+    -   "EQH · BSL",
+    -   "EQL · SSL",
+    - ]
+    + Array []
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      44 |   expect(result.current_pools.items.filter((pool:{state:string})=>pool.state==="ACTIVE")
+      45 |     .map((pool:{liquidity_side:string})=>pool.liquidity_side)).toEqual(["SSL","BSL"]);
+    > 46 |   await expect.poll(async()=>[...new Set(await visible())].sort()).toEqual(["EQH \u00b7 BSL","EQL \u00b7 SSL"]);
+         |                                                                    ^
+      47 |   await page.screenshot({path:info.outputPath("active-pools-after.png")});
+      48 |   await page.getByText("Indicator library",{exact:true}).click();
+      49 |   const evidence=page.getByLabel("Liquidity evidence",{exact:true});
+        at K:\Projects\TradeForge\frontend\e2e\liquidity-active.spec.ts:46:68
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+  1 failed
+    e2e\liquidity-active.spec.ts:3:1 › unchanged live liquidity remains on chart beyond the revision page
+  56 passed (4.3m)

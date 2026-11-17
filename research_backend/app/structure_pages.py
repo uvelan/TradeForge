@@ -20,7 +20,7 @@ class StructureDelivery(BaseModel):
 
 
 class EventPage:
-    def __init__(self, kind: str, limit: int, cursor: str | None):
+    def __init__(self, kind: str, limit: int, cursor: str | None, *, max_before: int = 40_000):
         self.kind = kind
         self.limit = limit
         self.total = 0
@@ -35,7 +35,7 @@ class EventPage:
                     urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4)))
                 if (version != 1 or expected_kind != kind or
                     not isinstance(snapshot, str) or not re.fullmatch(r"[a-f0-9]{64}", snapshot) or
-                    type(before) is not int or not 0 < before <= 40_000):
+                    type(before) is not int or not 0 < before <= max_before):
                     raise ValueError
                 self.expected_snapshot, self.before = snapshot, before
             except (TypeError, ValueError, UnicodeError) as error:

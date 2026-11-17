@@ -365,7 +365,7 @@ test("liquidity replay exposes the sweep only after its closed evidence and keep
 });
 
 for(const [title,query,id] of [["Liquidity","liquidity pools","liquidity_sweeps"],
-  ["FVG","fair value gap","fair_value_gap"]]){
+  ["FVG","fair value gap","fair_value_gap"],["Order block","order blocks","order_blocks"]]){
 test("a pending "+title+" request cannot replace another instrument or timeframe",async ({page})=>{
   let release!:()=>void;
   const hold=new Promise<void>(resolve=>{release=resolve;});
@@ -485,4 +485,57 @@ test("FVG selection survives a rolling MT5 refresh and drops corrected evidence"
   expect(corrected[0].id).not.toBe(original[0].id);
   await expect(detail).toHaveCount(0);
   await expect(row).toBeVisible();
+});
+
+test("order block appears at BOS availability and rewinds independently of FVG and liquidity",async ({page},info)=>{
+  await page.addInitScript(()=>{
+    const fill=CanvasRenderingContext2D.prototype.fillRect;
+    CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){
+      if(typeof this.fillStyle==="string"&&/^rgba\(96,\s*165,\s*250,/.test(this.fillStyle)&&w>0&&h>0)
+        this.canvas.dataset.obPainted="true";
+      return fill.call(this,x,y,w,h);
+    };
+  });
+  const start=1793577600,step=300;
+  const market={source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",
+    candles:[[9,10,8,9],[11,13,10,12],[11,12,9,10],[12,15,11,14],[13,14,11.25,13]].map(
+      ([open,high,low,close],i)=>({open,high,low,close,time:start+i*step,available_at:start+(i+1)*step}))};
+  await page.route("**/research/api/replay/sessions",route=>route.fulfill({status:201,
+    json:{id:"ob-fixture",market,checkpoint:{position:2,bookmarks:[]},views:{}}}));
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"order blocks","order_blocks");
+  const group=page.getByRole("group",{name:"Confirmed Order Blocks (OB)"});
+  await group.getByLabel("Left bars").fill("1");
+  await group.getByLabel("Right confirmation bars").fill("1");
+  await enable(page,"fair value gap","fair_value_gap");
+  await enable(page,"liquidity pools","liquidity_sweeps");
+  await page.getByRole("button",{name:"Bar replay",exact:true}).click();
+  const replay=page.getByLabel("Historical replay");
+  const evidence=group.getByLabel("Order block evidence");
+  await expect(evidence).toContainText("Current order blocks 0 / 0");
+  await expect(page.getByLabel("FVG evidence",{exact:true})).toBeVisible();
+  await expect(page.getByLabel("Liquidity evidence",{exact:true})).toBeVisible();
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("ob-before-bos.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  const active=evidence.getByRole("button",{name:"BULLISH · ACTIVE · 0.0%"});
+  await active.click();
+  const detail=evidence.getByLabel("Selected order block");
+  await expect(detail).toContainText("11 / 12 / 9 / 10");
+  await expect(detail).toContainText("BOS and broken pivot");
+  await expect(page.locator(primary).locator('canvas[data-ob-painted="true"]').first()).toBeAttached();
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("ob-after-bos.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  const partial=evidence.getByRole("button",{name:"BULLISH · PARTIALLY MITIGATED · 25.0%"});
+  await partial.click();
+  await expect(detail).toContainText("9 – 11.25");
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("ob-partial.png")});
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(partial).toHaveCount(0);
+  await expect(active).toBeVisible();
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(evidence).toContainText("Current order blocks 0 / 0");
 });

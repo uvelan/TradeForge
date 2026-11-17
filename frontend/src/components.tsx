@@ -329,8 +329,32 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
         INVALIDATED:"invalidated",EXPIRED:"expired"} as const;
       return gapVisibility[states[event.state]];
     };
-    fvgLayer.current?.update((gap?.current_fvgs?.items??[]).filter(gapVisible).slice(0,12),[...linkedBars.current.keys()]);
+    const blocks=indicators?.find(indicator=>indicator.id==="order_blocks");
+    const blockVisible=(event:NonNullable<IndicatorResult["ob_revisions"]>[number])=>{
+      const visibility=blocks?.obVisibility;
+      if(!visibility)return true;
+      const states={ACTIVE:"active",TOUCHED:"touched",PARTIALLY_MITIGATED:"partial",FULLY_MITIGATED:"full",
+        INVALIDATED:"invalidated",EXPIRED:"expired"} as const;
+      return visibility[event.direction==="BULLISH"?"bullish":"bearish"]&&visibility[states[event.state]];
+    };
+    const blockZones=(blocks?.current_obs?.items??[]).filter(blockVisible).slice(0,12).map(
+      event=>({...event,c_time:event.candidate_time,kind:"ob" as const}));
+    fvgLayer.current?.update([...(gap?.current_fvgs?.items??[]).filter(gapVisible).slice(0,12),...blockZones],
+      [...linkedBars.current.keys()]);
     for(const [indicatorIndex,indicator] of (indicators??[]).entries()){
+      if(indicator.id==="order_blocks"){
+        const live=(indicator.current_obs?.items??[]).filter(blockVisible).slice(0,12);
+        const terminal=(indicator.ob_revisions??[]).filter(event=>blockVisible(event)&&
+          ["FULLY_MITIGATED","INVALIDATED","EXPIRED"].includes(event.state)).slice(-12);
+        for(const event of [...live,...terminal]){
+          if(!linkedBars.current.has(event.observation_time))continue;
+          const bullish=event.direction==="BULLISH";
+          const state=event.state.toLowerCase().replaceAll("_"," ");
+          markers.push({time:event.observation_time as UTCTimestamp,position:bullish?"belowBar":"aboveBar",
+            shape:"circle",color:bullish?"#60a5fa":"#fb923c",text:"OB "+state});
+        }
+        continue;
+      }
       if(indicator.id==="fair_value_gap"){
         for(const event of (indicator.revisions??[]).filter(event=>gapVisible(event)&&
           ["FULLY_MITIGATED","INVALIDATED","EXPIRED"].includes(event.state)).slice(-12)){
