@@ -1,0 +1,2 @@
+overlapping archive windows | baseline | physical verified reads 3 | {}
+overlapping archive windows | final | physical verified reads 2 | {'checksum_attempts': 2, 'partition_decodes': 2, 'decoded_records': 432, 'partition_reuses': 1}

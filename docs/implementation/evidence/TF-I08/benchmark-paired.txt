@@ -1,0 +1,19 @@
+Windows, same process, alternating run order. 12 samples per version, P50/P95 in milliseconds.
+2,000 standalone CRT | baseline | calc 36.39/37.43 | JSON 0.49/0.54 | API 50.63/70.25 | bytes 71623 | peak 451.5 KiB | {} | {}
+2,000 standalone CRT | final | calc 36.48/38.62 | JSON 0.53/0.63 | API 52.65/78.08 | bytes 73407 | peak 455.6 KiB | {'crt': 1} | {}
+2,000 standalone market_structure | baseline | calc 37.27/41.70 | JSON 0.32/0.37 | API 52.69/79.90 | bytes 48061 | peak 394.0 KiB | {} | {}
+2,000 standalone market_structure | final | calc 39.36/42.73 | JSON 0.33/0.60 | API 52.35/59.48 | bytes 49353 | peak 397.4 KiB | {'structure': 1} | {}
+2,000 standalone liquidity_sweeps | baseline | calc 63.02/66.21 | JSON 0.86/1.00 | API 81.73/89.67 | bytes 124228 | peak 463.9 KiB | {} | {}
+2,000 standalone liquidity_sweeps | final | calc 63.16/65.02 | JSON 0.85/1.08 | API 79.85/105.85 | bytes 125732 | peak 470.4 KiB | {'liquidity': 1, 'structure': 1} | {}
+2,000 standalone fair_value_gap | baseline | calc 37.13/45.30 | JSON 0.85/1.19 | API 52.79/58.54 | bytes 110510 | peak 495.4 KiB | {} | {}
+2,000 standalone fair_value_gap | final | calc 38.38/58.93 | JSON 0.88/1.59 | API 52.74/56.16 | bytes 111851 | peak 525.2 KiB | {'fvg': 1} | {}
+2,000 standalone order_blocks | baseline | calc 67.61/72.36 | JSON 0.03/0.05 | API 78.47/99.41 | bytes 1776 | peak 340.7 KiB | {} | {}
+2,000 standalone order_blocks | final | calc 69.32/72.39 | JSON 0.05/0.06 | API 79.71/84.35 | bytes 3353 | peak 349.4 KiB | {'order_blocks': 1, 'structure': 1} | {}
+2,000 five compatible | baseline | calc 220.92/266.87 | JSON 2.65/3.23 | API 252.00/264.18 | bytes 354790 | peak 830.4 KiB | {} | {}
+2,000 five compatible | final | calc 144.08/156.06 | JSON 2.73/4.57 | API 174.58/246.21 | bytes 361405 | peak 2092.2 KiB | {'crt': 1, 'structure': 1, 'liquidity': 1, 'fvg': 1, 'order_blocks': 1} | {}
+2,000 context enabled | baseline | calc 399.86/416.29 | JSON 2.67/3.31 | API 436.43/503.18 | bytes 354788 | peak 2168.8 KiB | {} | {}
+2,000 context enabled | final | calc 168.03/249.11 | JSON 2.86/4.47 | API 199.78/214.40 | bytes 368888 | peak 4549.3 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 2, 'levels': 5, 'crt': 1} | {}
+10,000 archive CRT | baseline | calc 196.43/312.76 | JSON 0.52/0.74 | API 205.54/340.24 | bytes 73987 | peak 15422.7 KiB | {} | {}
+10,000 archive CRT | final | calc 198.51/263.94 | JSON 0.51/0.60 | API 204.17/264.82 | bytes 77521 | peak 15915.9 KiB | {'requested_slots': 10000, 'history_reads': 1, 'normalized_records': 10000, 'crt': 1} | {'checksum_attempts': 5, 'partition_decodes': 5, 'decoded_records': 10000}
+10,000 archive five compatible | baseline | calc 1104.54/1196.66 | JSON 2.82/3.06 | API 1115.43/1224.90 | bytes 361754 | peak 15421.7 KiB | {} | {}
+10,000 archive five compatible | final | calc 728.78/793.52 | JSON 2.97/4.39 | API 756.95/837.09 | bytes 376587 | peak 22949.7 KiB | {'requested_slots': 10000, 'history_reads': 1, 'normalized_records': 10000, 'crt': 1, 'history_reuses': 7, 'structure': 1, 'liquidity': 1, 'fvg': 1, 'order_blocks': 1} | {'checksum_attempts': 5, 'partition_decodes': 5, 'decoded_records': 10000}

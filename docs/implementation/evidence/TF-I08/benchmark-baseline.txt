@@ -1,0 +1,12 @@
+Windows, ten samples. API uses ASGI TestClient with the actual route; network latency excluded.
+One shared price-zone primitive, zero added series; maximum eight CRT ranges. Native RSS unmeasured.
+2,000 H1/M5 | calc 64.38/74.26 ms | JSON 1.13/5.81 ms | API 106.02/138.66 | 132295 bytes | peak 521.9 KiB | {'formations': 166, 'sweeps': 166, 'revisions': 440} | {}
+2,000 H1/M5 combined | calc 209.69/311.13 ms | JSON 3.30/11.28 ms | API 233.39/276.11 | 282950 bytes | peak 712.2 KiB | {'formations': 166, 'sweeps': 166, 'revisions': 440} | {}
+2,000 H1/M5 CRT contextual | calc 179.95/222.96 ms | JSON 2.54/3.31 ms | API not measured | 302772 bytes | peak 1896.6 KiB | {'formations': 166, 'sweeps': 166, 'revisions': 440} | {}
+2,000 H1/M5 no sweep | calc 49.69/51.33 ms | JSON 0.71/1.17 ms | API not measured | 77720 bytes | peak 459.7 KiB | {'formations': 166, 'sweeps': 0, 'revisions': 158} | {}
+2,000 H1/M5 advance + rewind calc 129.44/180.51 ms
+2,000 H4/M15 | calc 62.63/66.54 ms | JSON 1.18/1.42 ms | API 79.40/90.13 | 133241 bytes | peak 511.1 KiB | {'formations': 125, 'sweeps': 124, 'revisions': 328} | {}
+2,000 D1/H1 | calc 55.50/67.86 ms | JSON 1.18/1.52 ms | API 81.80/103.37 | 132288 bytes | peak 500.1 KiB | {'formations': 83, 'sweeps': 83, 'revisions': 219} | {}
+10,000 archive first | calc 437.99/605.14 ms | JSON 1.32/5.12 ms | API 288.58/471.60 | 134664 bytes | peak 15423.5 KiB | {'formations': 833, 'sweeps': 833, 'revisions': 2219} | {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}
+10,000 archive next | calc 256.81/275.61 ms | JSON 0.94/1.03 ms | API 263.07/299.84 | 134664 bytes | peak 15422.5 KiB | {'formations': 833, 'sweeps': 833, 'revisions': 2219} | {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}
+10,000 archive combined | calc 732.80/760.95 ms | JSON 2.09/2.62 ms | API 762.44/792.77 | 305174 bytes | peak 15421.5 KiB | {'formations': 833, 'sweeps': 833, 'revisions': 2219} | {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}

@@ -1,0 +1,13 @@
+Eight samples, Windows. Milliseconds. ASGI TestClient route latency excludes network.
+market_structure | calc 78.37/88.91 | JSON 0.59/1.03 | API 82.43/125.92 | bytes 49264 | peak 521.3 KiB | {'structure': 1, 'fvg': 0, 'liquidity': 0, 'order_blocks': 0} | reuse {}
+liquidity_sweeps | calc 169.38/420.56 | JSON 1.73/5.16 | API 255.26/435.79 | bytes 125646 | peak 596.1 KiB | {'structure': 1, 'fvg': 0, 'liquidity': 1, 'order_blocks': 0} | reuse {}
+fair_value_gap | calc 144.52/301.51 | JSON 2.75/6.40 | API 291.67/416.57 | bytes 111763 | peak 649.5 KiB | {'structure': 0, 'fvg': 1, 'liquidity': 0, 'order_blocks': 0} | reuse {}
+order_blocks | calc 262.22/563.08 | JSON 0.17/1.57 | API 226.95/250.06 | bytes 3267 | peak 474.2 KiB | {'structure': 1, 'fvg': 0, 'liquidity': 0, 'order_blocks': 1} | reuse {}
+candle_range_theory | calc 123.23/212.95 | JSON 1.25/5.70 | API 171.32/502.66 | bytes 73319 | peak 583.5 KiB | {'structure': 0, 'fvg': 0, 'liquidity': 0, 'order_blocks': 0} | reuse {}
+candle_range_theory context | calc 511.24/858.20 | JSON 1.50/2.32 | API 520.89/1681.62 | bytes 78963 | peak 4370.1 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 1} | reuse {'structure': 2}
+order_blocks context | calc 265.76/369.16 | JSON 0.17/4.33 | API 324.69/1036.95 | bytes 5297 | peak 2454.6 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 1} | reuse {'structure': 1}
+structure + liquidity + OB | calc 477.95/805.27 | JSON 5.32/14.05 | API 446.56/718.47 | bytes 177002 | peak 1928.5 KiB | {'structure': 1, 'fvg': 0, 'liquidity': 1, 'order_blocks': 1} | reuse {'structure': 2}
+five engines compatible | calc 426.07/1362.70 | JSON 8.58/22.04 | API 517.28/1019.13 | bytes 360969 | peak 2231.4 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 1} | reuse {'structure': 2}
+five engines differing | calc 495.53/1063.33 | JSON 6.07/10.02 | API 520.55/1254.59 | bytes 360969 | peak 3641.6 KiB | {'structure': 2, 'fvg': 1, 'liquidity': 1, 'order_blocks': 1} | reuse {'structure': 1}
+five engines context enabled | calc 368.78/599.63 | JSON 6.52/15.20 | API 530.56/1039.51 | bytes 368451 | peak 4535.6 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 2} | reuse {'structure': 4, 'fvg': 2, 'liquidity': 2}
+Three forward steps plus two rewinds with starting evaluation, calculation P50/P95 2031.53/3207.95

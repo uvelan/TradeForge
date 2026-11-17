@@ -1,0 +1,12 @@
+Windows, ten samples. API uses ASGI TestClient with the actual route; network latency excluded.
+One shared price-zone primitive, zero added series; maximum eight CRT ranges. Native RSS unmeasured.
+2,000 H1/M5 | calc 157.69/266.36 ms | JSON 1.89/8.85 ms | API 338.01/627.65 | 133993 bytes | peak 652.6 KiB | {'formations': 166, 'sweeps': 166, 'revisions': 440} | {}
+2,000 H1/M5 combined | calc 212.35/425.68 ms | JSON 5.13/12.84 ms | API 433.86/785.92 | 289125 bytes | peak 1593.8 KiB | {'formations': 166, 'sweeps': 166, 'revisions': 440} | {}
+2,000 H1/M5 CRT contextual | calc 468.02/936.67 ms | JSON 13.04/59.18 ms | API not measured | 787350 bytes | peak 3030.3 KiB | {'formations': 166, 'sweeps': 166, 'revisions': 440} | {}
+2,000 H1/M5 no sweep | calc 80.54/573.62 ms | JSON 1.18/3.55 ms | API not measured | 79417 bytes | peak 590.5 KiB | {'formations': 166, 'sweeps': 0, 'revisions': 158} | {}
+2,000 H1/M5 advance + rewind calc 236.75/362.41 ms
+2,000 H4/M15 | calc 133.80/214.86 ms | JSON 2.19/3.51 ms | API 193.29/393.09 | 134940 bytes | peak 641.8 KiB | {'formations': 125, 'sweeps': 124, 'revisions': 328} | {}
+2,000 D1/H1 | calc 119.49/182.96 ms | JSON 1.67/1.99 ms | API 141.29/278.47 | 133988 bytes | peak 630.7 KiB | {'formations': 83, 'sweeps': 83, 'revisions': 219} | {}
+10,000 archive first | calc 751.24/1555.25 ms | JSON 2.05/6.46 ms | API 881.93/1976.44 | 138115 bytes | peak 15991.4 KiB | {'formations': 833, 'sweeps': 833, 'revisions': 2219} | {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}
+10,000 archive next | calc 979.16/1600.11 ms | JSON 2.19/2.70 ms | API 908.13/1397.82 | 138115 bytes | peak 15918.2 KiB | {'formations': 833, 'sweeps': 833, 'revisions': 2219} | {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}
+10,000 archive combined | calc 1748.53/2386.48 ms | JSON 5.38/10.76 ms | API 1551.66/2172.33 | 319589 bytes | peak 20315.5 KiB | {'formations': 833, 'sweeps': 833, 'revisions': 2219} | {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}
