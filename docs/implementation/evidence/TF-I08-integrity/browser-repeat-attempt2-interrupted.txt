@@ -1,0 +1,20 @@
+[WebServer] INFO:     Started server process [40924]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8167 (Press CTRL+C to quit)
+[WebServer] (node:37008) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 20 tests using 1 worker
+
+(node:29676) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   1 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (30.7s)
+(node:7384) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   2 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (30.6s)
+(node:28872) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   3 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (30.9s)
+(node:18568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)

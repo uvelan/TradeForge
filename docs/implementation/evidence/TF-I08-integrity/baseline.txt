@@ -1,0 +1,4 @@
+shared session configuration equality: False
+shared session snapshot equality: False
+external high 1.105 snapshot a066868f8787b2a7bc132ba05c635245cfdae892ab11d8323cd27113ed92dc99
+external high 1.107 snapshot a066868f8787b2a7bc132ba05c635245cfdae892ab11d8323cd27113ed92dc99

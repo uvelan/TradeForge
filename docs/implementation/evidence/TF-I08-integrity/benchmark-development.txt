@@ -1,0 +1,35 @@
+K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+Windows, same process, alternating run order. 12 samples per version, P50/P95 in milliseconds.
+2,000 standalone CRT | baseline | calc 47.82/68.67 | JSON 0.69/0.95 | API 87.66/138.07 | bytes 73407 | peak 457.3 KiB | {'crt': 1} | {}
+2,000 standalone CRT | final | calc 50.96/63.91 | JSON 0.74/1.13 | API 81.67/168.44 | bytes 73407 | peak 861.1 KiB | {'crt': 1} | {}
+2,000 standalone market_structure | baseline | calc 49.15/56.93 | JSON 0.46/0.58 | API 84.39/142.92 | bytes 49353 | peak 395.7 KiB | {'structure': 1} | {}
+2,000 standalone market_structure | final | calc 56.17/102.39 | JSON 0.50/0.82 | API 81.42/153.37 | bytes 49353 | peak 800.6 KiB | {'structure': 1} | {}
+2,000 standalone liquidity_sweeps | baseline | calc 109.11/138.69 | JSON 1.55/9.36 | API 181.03/273.12 | bytes 125734 | peak 470.9 KiB | {'liquidity': 1, 'structure': 1} | {}
+2,000 standalone liquidity_sweeps | final | calc 111.26/138.07 | JSON 1.67/2.83 | API 167.81/393.74 | bytes 125790 | peak 876.8 KiB | {'liquidity': 1, 'structure': 1} | {}
+2,000 standalone fair_value_gap | baseline | calc 67.97/146.57 | JSON 1.54/3.95 | API 114.11/148.73 | bytes 111851 | peak 516.0 KiB | {'fvg': 1} | {}
+2,000 standalone fair_value_gap | final | calc 61.29/138.00 | JSON 1.60/1.88 | API 101.94/187.43 | bytes 111851 | peak 927.0 KiB | {'fvg': 1} | {}
+2,000 standalone order_blocks | baseline | calc 94.98/123.17 | JSON 0.07/0.09 | API 117.90/184.50 | bytes 3353 | peak 349.3 KiB | {'order_blocks': 1, 'structure': 1} | {}
+2,000 standalone order_blocks | final | calc 97.44/110.42 | JSON 0.10/0.17 | API 130.77/268.07 | bytes 3412 | peak 752.8 KiB | {'order_blocks': 1, 'structure': 1} | {}
+2,000 five compatible | baseline | calc 255.02/441.33 | JSON 5.36/16.60 | API 329.45/595.26 | bytes 361406 | peak 2001.4 KiB | {'crt': 1, 'structure': 1, 'liquidity': 1, 'fvg': 1, 'order_blocks': 1} | {}
+2,000 five compatible | final | calc 228.44/348.29 | JSON 4.93/7.73 | API 307.91/401.09 | bytes 361524 | peak 2311.7 KiB | {'crt': 1, 'structure': 1, 'liquidity': 1, 'fvg': 1, 'order_blocks': 1} | {}
+2,000 context enabled | baseline | calc 316.23/639.80 | JSON 4.72/8.75 | API 377.16/549.46 | bytes 368890 | peak 4540.2 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 2, 'levels': 5, 'crt': 1} | {}
+2,000 context enabled | final | calc 294.78/387.90 | JSON 5.15/9.79 | API 326.36/765.65 | bytes 369252 | peak 4989.6 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 2, 'levels': 5, 'crt': 1} | {}
+2,000 standalone previous_day | baseline | calc 20.99/381.88 | JSON 7.25/36.19 | API 111.67/255.95 | bytes 469343 | peak 1260.6 KiB | {'levels': 1} | {}
+2,000 standalone previous_day | final | calc 28.66/40.51 | JSON 9.44/67.63 | API 131.43/372.09 | bytes 486960 | peak 1671.7 KiB | {'levels': 1} | {}
+2,000 standalone previous_week | baseline | calc 17.38/21.65 | JSON 0.07/0.13 | API 50.15/162.52 | bytes 2020 | peak 320.0 KiB | {'levels': 1} | {}
+2,000 standalone previous_week | final | calc 18.27/29.45 | JSON 0.10/0.20 | API 61.46/116.43 | bytes 2670 | peak 724.6 KiB | {'levels': 1} | {}
+2,000 standalone session_asia | baseline | calc 20.40/32.64 | JSON 3.10/5.91 | API 82.62/227.42 | bytes 210970 | peak 678.5 KiB | {'levels': 1} | {}
+2,000 standalone session_asia | final | calc 26.91/63.85 | JSON 4.32/17.41 | API 105.06/276.32 | bytes 230414 | peak 1100.3 KiB | {'levels': 1} | {}
+2,000 standalone session_london | baseline | calc 18.33/21.68 | JSON 2.66/3.78 | API 74.54/130.53 | bytes 210980 | peak 672.5 KiB | {'levels': 1} | {}
+2,000 standalone session_london | final | calc 21.80/25.85 | JSON 3.18/3.91 | API 81.19/178.79 | bytes 230452 | peak 1096.2 KiB | {'levels': 1} | {}
+2,000 standalone session_new_york | baseline | calc 15.58/29.08 | JSON 2.33/4.10 | API 54.63/71.85 | bytes 211004 | peak 675.3 KiB | {'levels': 1} | {}
+2,000 standalone session_new_york | final | calc 21.36/95.58 | JSON 2.85/3.95 | API 65.69/88.52 | bytes 230502 | peak 1101.1 KiB | {'levels': 1} | {}
+2,000 shared selected levels | baseline | calc 274.22/380.94 | JSON 12.98/66.61 | API 367.87/588.68 | bytes 1180442 | peak 6400.8 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 1, 'levels': 10, 'crt': 1} | {}
+2,000 shared selected levels | final | calc 284.12/461.01 | JSON 13.41/24.60 | API 431.76/1069.51 | bytes 1257367 | peak 6939.2 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 1, 'levels': 10, 'crt': 1} | {}
+overlapping archive windows | baseline | physical verified reads 2 | {'checksum_attempts': 2, 'partition_decodes': 2, 'decoded_records': 432, 'partition_reuses': 1}
+overlapping archive windows | final | physical verified reads 2 | {'checksum_attempts': 2, 'partition_decodes': 2, 'decoded_records': 432, 'partition_reuses': 1}
+10,000 archive CRT | baseline | calc 534.45/876.21 | JSON 0.98/9.51 | API 594.42/1041.57 | bytes 77521 | peak 15916.3 KiB | {'requested_slots': 10000, 'history_reads': 1, 'normalized_records': 10000, 'crt': 1} | {'checksum_attempts': 5, 'partition_decodes': 5, 'decoded_records': 10000}
+10,000 archive CRT | final | calc 510.20/1080.63 | JSON 0.93/24.39 | API 574.23/1152.14 | bytes 77521 | peak 15919.1 KiB | {'requested_slots': 10000, 'history_reads': 1, 'normalized_records': 10000, 'crt': 1} | {'checksum_attempts': 5, 'partition_decodes': 5, 'decoded_records': 10000}
+10,000 archive five compatible | baseline | calc 2122.92/2590.10 | JSON 6.60/11.00 | API 1521.57/2789.72 | bytes 376585 | peak 23055.1 KiB | {'requested_slots': 10000, 'history_reads': 1, 'normalized_records': 10000, 'crt': 1, 'history_reuses': 7, 'structure': 1, 'liquidity': 1, 'fvg': 1, 'order_blocks': 1} | {'checksum_attempts': 5, 'partition_decodes': 5, 'decoded_records': 10000}
+10,000 archive five compatible | final | calc 2164.02/2630.21 | JSON 5.39/60.65 | API 1573.27/1986.94 | bytes 376705 | peak 22879.2 KiB | {'requested_slots': 10000, 'history_reads': 1, 'normalized_records': 10000, 'crt': 1, 'history_reuses': 7, 'structure': 1, 'liquidity': 1, 'fvg': 1, 'order_blocks': 1} | {'checksum_attempts': 5, 'partition_decodes': 5, 'decoded_records': 10000}

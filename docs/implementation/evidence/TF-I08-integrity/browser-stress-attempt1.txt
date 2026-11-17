@@ -1,0 +1,68 @@
+[WebServer] INFO:     Started server process [11140]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8171 (Press CTRL+C to quit)
+[WebServer] (node:35232) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:30168) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses (16.5s)
+
+
+  1) e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator: getByLabel('Select drawing')
+    Expected: ""
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveValue" getByLabel('Select drawing') with timeout 5000ms
+      - waiting for getByLabel('Select drawing')
+
+
+      157 |   if(stressed){
+      158 |     await saveReady.promise;
+    > 159 |     await expect(page.getByLabel("Select drawing")).toHaveValue("");
+          |                                                     ^
+      160 |     persisted.resolve();
+      161 |   }
+      162 |   const drawing=await drawingResponse;
+        at K:\Projects\TradeForge\frontend\e2e\research.spec.ts:159:53
+
+    Error: page.waitForResponse: Test ended.
+
+      153 |     await expect(page.getByText(/Trendline.*select 2/)).toBeVisible();
+      154 |   }
+    > 155 |   const drawingResponse=page.waitForResponse(response=>response.request().method()==="POST"&&response.url().includes("/drawings?"));
+          |                              ^
+      156 |   await clickPlot(.62,.31);
+      157 |   if(stressed){
+      158 |     await saveReady.promise;
+        at K:\Projects\TradeForge\frontend\e2e\research.spec.ts:155:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\tf-i08-stress-final\research-persists-a-trendl-e8929-l-and-persistence-responses\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\tf-i08-stress-final\research-persists-a-trendl-e8929-l-and-persistence-responses\error-context.md
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\tf-i08-stress-final\research-persists-a-trendl-e8929-l-and-persistence-responses\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\tf-i08-stress-final\research-persists-a-trendl-e8929-l-and-persistence-responses\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\tf-i08-stress-final\research-persists-a-trendl-e8929-l-and-persistence-responses\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses
