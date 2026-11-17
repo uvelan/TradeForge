@@ -1,0 +1,29 @@
+> e2e
+> playwright test --reporter=line --output test-results/TF-I06-retry -g select, move and resize a trendline|all four rectangle handles|position rejects crossed handles|unchanged live liquidity
+
+
+[WebServer] INFO:     Started server process [12952]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8108 (Press CTRL+C to quit)
+
+[WebServer] (node:25512) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 5 tests using 1 worker
+
+
+(node:27564) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/5] e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions
+[2/5] e2e\drawing-edit.spec.ts:176:1 › all four rectangle handles edit only their corresponding boundaries
+[3/5] e2e\drawing-edit.spec.ts:196:3 › long position rejects crossed handles and preserves direction on a valid resize
+[4/5] e2e\drawing-edit.spec.ts:196:3 › short position rejects crossed handles and preserves direction on a valid resize
+(node:12160) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[5/5] e2e\liquidity-active.spec.ts:3:1 › unchanged live liquidity remains on chart beyond the revision page
+  5 passed (44.4s)
