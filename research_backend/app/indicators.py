@@ -47,12 +47,16 @@ def moving(kind: str):
     return lambda bars, period: {kind: average([bar.close for bar in bars], period, kind)}
 
 
+def true_range(bar: Bar, previous: float | None) -> float:
+    return bar.high - bar.low if previous is None else max(
+        bar.high - bar.low, abs(bar.high - previous), abs(bar.low - previous))
+
+
 def atr(bars: list[Bar], period: int) -> dict[str, Values]:
     ranges = []
     previous = None
     for bar in bars:
-        ranges.append(bar.high - bar.low if previous is None else
-                      max(bar.high - bar.low, abs(bar.high - previous), abs(bar.low - previous)))
+        ranges.append(true_range(bar, previous))
         previous = bar.close
     return {"ATR": average(ranges, period, "WILDER")}
 

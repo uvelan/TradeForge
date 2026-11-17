@@ -1,0 +1,16 @@
+Windows Python 3.13, 12 warm samples, tracemalloc separate. RSS not measured.
+FVG uses one attached primitive and zero additional chart series.
+2,000 flat FVG: calc P50/P95 18.59/25.57 ms; JSON P50/P95 0.04/0.10 ms; 1432 bytes; Python peak 334.0 KiB; {'formations': 0, 'revisions': 0}
+2,000 flat TF-I04: calc P50/P95 38.37/51.35 ms; JSON P50/P95 0.04/0.06 ms; 1324 bytes; Python peak 337.4 KiB; {'pools': 0, 'sweeps': 0}
+2,000 dense FVG: calc P50/P95 235.29/257.05 ms; JSON P50/P95 1.33/3.03 ms; 129066 bytes; Python peak 1546.2 KiB; {'formations': 1998, 'revisions': 1748}
+2,000 dense TF-I04: calc P50/P95 35.42/54.18 ms; JSON P50/P95 0.04/0.08 ms; 1324 bytes; Python peak 337.4 KiB; {'pools': 0, 'sweeps': 0}
+2,000 dense FVG, current projection disabled: calc P50/P95 202.32/263.01 ms; JSON P50/P95 1.00/1.71 ms; 114094 bytes; Python peak 1515.9 KiB; {'formations': 1998, 'revisions': 1748}
+2,000 dense FVG, advance/rewind: calc P50/P95 366.52/384.87 ms; JSON P50/P95 0.97/1.18 ms; 129066 bytes; Python peak 1857.8 KiB; {'formations': 1997, 'revisions': 1747}
+2,000 partial FVG: calc P50/P95 74.48/78.31 ms; JSON P50/P95 0.81/0.94 ms; 109090 bytes; Python peak 502.0 KiB; {'formations': 666, 'revisions': 1332}
+2,000 partial TF-I04: calc P50/P95 65.38/77.09 ms; JSON P50/P95 0.80/2.16 ms; 123636 bytes; Python peak 457.1 KiB; {'pools': 270, 'sweeps': 0}
+10,000 partial archive FVG, first page: calc P50/P95 390.81/431.34 ms; JSON P50/P95 0.90/1.00 ms; 111768 bytes; Python peak 15417.8 KiB; {'formations': 3333, 'revisions': 6665}
+  {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}
+10,000 partial archive FVG, next page: calc P50/P95 388.51/435.83 ms; JSON P50/P95 0.94/1.09 ms; 111768 bytes; Python peak 15420.0 KiB; {'formations': 3333, 'revisions': 6665}
+  {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}
+10,000 partial archive TF-I04: calc P50/P95 357.30/561.04 ms; JSON P50/P95 0.91/1.43 ms; 125265 bytes; Python peak 15418.9 KiB; {'pools': 1358, 'sweeps': 0}
+  {'requested_candles': 10000, 'decoded_candles': 10000, 'partitions_examined': 5}

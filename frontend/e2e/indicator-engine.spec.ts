@@ -364,7 +364,9 @@ test("liquidity replay exposes the sweep only after its closed evidence and keep
   await expect(detail).toHaveCount(0);
 });
 
-test("a pending liquidity request cannot replace another instrument or timeframe",async ({page})=>{
+for(const [title,query,id] of [["Liquidity","liquidity pools","liquidity_sweeps"],
+  ["FVG","fair value gap","fair_value_gap"]]){
+test("a pending "+title+" request cannot replace another instrument or timeframe",async ({page})=>{
   let release!:()=>void;
   const hold=new Promise<void>(resolve=>{release=resolve;});
   let entered!:()=>void;
@@ -376,7 +378,7 @@ test("a pending liquidity request cannot replace another instrument or timeframe
   });
   await terminal(page);
   await page.getByText("Indicator library",{exact:true}).click();
-  await enable(page,"liquidity pools","liquidity_sweeps");
+  await enable(page,query,id);
   await started;
   const current=page.waitForResponse(response=>response.url().endsWith("/indicators/evaluate")&&
     response.request().postDataJSON().timeframe==="H1"&&response.request().postDataJSON().symbol==="GBPUSD");
@@ -388,5 +390,99 @@ test("a pending liquidity request cannot replace another instrument or timeframe
   await expect(page.locator(".primary-chart .pane-label")).toContainText("GBPUSD · H1");
   const library=page.locator("details.indicator-library");
   if(await library.getAttribute("open")===null)await page.getByText("Indicator library",{exact:true}).click();
+  await expect(page.getByLabel(title+" evidence",{exact:true})).toBeVisible();
+});
+}
+
+test("FVG paints a causal zone and updates its remaining depth during replay",async ({page},info)=>{
+  await page.addInitScript(()=>{
+    const fill=CanvasRenderingContext2D.prototype.fillRect;
+    CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){
+      if(typeof this.fillStyle==="string" && /^rgba\(45,\s*212,\s*191,/.test(this.fillStyle)&&w>0&&h>0)
+        this.canvas.dataset.fvgPainted="true";
+      return fill.call(this,x,y,w,h);
+    };
+  });
+  const start=Date.parse("2026-11-02T00:00:00Z")/1000,step=300;
+  const market={source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",
+    candles:[[99,100,98,99],[100,106,100,105],[105,110,105,108],[106,107,103.75,106]].map(
+      ([open,high,low,close],index)=>({open,high,low,close,time:start+index*step,available_at:start+(index+1)*step}))};
+  await page.route("**/research/api/replay/sessions",route=>route.fulfill({status:201,
+    json:{id:"fvg-fixture",market,checkpoint:{position:1,bookmarks:[]},views:{}}}));
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"fair value gap","fair_value_gap");
+  await enable(page,"liquidity pools","liquidity_sweeps");
+  await page.getByRole("button",{name:"Bar replay",exact:true}).click();
+  const replay=page.getByLabel("Historical replay");
+  const evidence=page.getByLabel("FVG evidence",{exact:true});
+  const formed=evidence.getByRole("button",{name:"BULLISH · ACTIVE · 0.0%"});
+  const partial=evidence.getByRole("button",{name:"BULLISH · PARTIALLY MITIGATED · 25.0%"});
+  await expect(evidence).toContainText("Current FVGs 0 / 0");
   await expect(page.getByLabel("Liquidity evidence",{exact:true})).toBeVisible();
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("fvg-before.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  await expect(formed).toBeVisible();
+  await expect(page.locator(primary).locator('canvas[data-fvg-painted="true"]').first()).toBeAttached();
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("fvg-formed.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  await partial.click();
+  await expect(evidence.getByLabel("Selected FVG")).toContainText("100 – 103.75");
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("fvg-mitigated.png")});
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(partial).toHaveCount(0);
+  await expect(formed).toBeVisible();
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(evidence).toContainText("Current FVGs 0 / 0");
+});
+
+test("FVG selection survives a rolling MT5 refresh and drops corrected evidence",async ({page},info)=>{
+  const start=1793577600,step=300;
+  const candles=Array.from({length:601},(_,index)=>{
+    const [open,high,low,close]=index<588?[99,100,98,99]:
+      ([[99,100,98,99],[100,106,100,105],[105,110,105,108],[106,107,103.75,106]][index-588]??[106,107,106,106]);
+    return {open,high,low,close,time:start+index*step,available_at:start+(index+1)*step};
+  });
+  let phase=0;
+  await page.route("**/research/api/market/candles?**",route=>{
+    const window=phase===0?candles.slice(0,600):candles.slice(1);
+    const rows=phase===2?window.map(row=>row.time===candles[589].time?{...row,close:104}:row):window;
+    return route.fulfill({json:{source:"MT5",synthetic:false,price_basis:"BID",feed_id:"identity-fixture",candles:rows}});
+  });
+  const calculated=(match:(bars:typeof candles)=>boolean)=>page.waitForResponse(response=>
+    response.url().endsWith("/indicators/evaluate")&&match(response.request().postDataJSON().candles));
+  const result=async(response:Awaited<ReturnType<typeof calculated>>)=>
+    (await response.json()).results[0].current_fvgs.items.filter((event:{c_time:number})=>event.c_time===candles[590].time);
+  await page.goto("/");
+  await page.getByRole("button",{name:"Market Terminal",exact:true}).click();
+  await page.getByRole("combobox",{name:"Market data source"}).selectOption("MT5");
+  await page.getByText("Indicator library",{exact:true}).click();
+  const first=calculated(bars=>bars[0]?.time===start);
+  await enable(page,"fair value gap","fair_value_gap");
+  const original=await result(await first);
+  expect(original).toHaveLength(1);
+  const evidence=page.getByLabel("FVG evidence",{exact:true});
+  const row=evidence.getByRole("button",{name:"BULLISH · PARTIALLY MITIGATED · 25.0%"});
+  const detail=evidence.getByLabel("Selected FVG");
+  await row.click();
+  await expect(detail).toContainText("100 – 103.75");
+  const refresh=calculated(bars=>bars[0]?.time===start+step);
+  phase=1;
+  const refreshed=await result(await refresh);
+  expect(refreshed).toHaveLength(1);
+  expect(refreshed[0].id).toBe(original[0].id);
+  await expect(detail).toContainText("identity policy 2");
+  await expect(row).toHaveCount(1);
+  await detail.scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("fvg-selection-rolling.png")});
+  const correction=calculated(bars=>bars.some(bar=>bar.time===candles[589].time&&bar.close===104));
+  phase=2;
+  const corrected=await result(await correction);
+  expect(corrected).toHaveLength(1);
+  expect(corrected[0].id).not.toBe(original[0].id);
+  await expect(detail).toHaveCount(0);
+  await expect(row).toBeVisible();
 });
