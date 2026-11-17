@@ -1,0 +1,4 @@
+Windows local environment
+Python 3.13.14
+v24.14.0
+11.1.0
