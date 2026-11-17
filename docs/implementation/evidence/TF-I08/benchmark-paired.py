@@ -1,4 +1,7 @@
 """Interleave approved and candidate measurements in one process. Pass the baseline worktree path."""
+from ctypes import WinDLL, Structure, byref, sizeof
+from ctypes import POINTER, c_size_t
+from ctypes.wintypes import DWORD, HANDLE
 from datetime import UTC, datetime
 from importlib import import_module
 import json
@@ -43,6 +46,22 @@ def specifications(context=False,archive=False,combined=True):
     ] if combined else [])
 
 
+def working_set():
+    class Counters(Structure):
+        _fields_=[("size",DWORD),("page_faults",DWORD),("peak",c_size_t),("current",c_size_t),
+                  ("paged_peak",c_size_t),("paged",c_size_t),("nonpaged_peak",c_size_t),("nonpaged",c_size_t),
+                  ("pagefile",c_size_t),("pagefile_peak",c_size_t)]
+
+    process=WinDLL("kernel32").GetCurrentProcess
+    process.restype=HANDLE
+    query=WinDLL("psapi").GetProcessMemoryInfo
+    query.argtypes=[HANDLE,POINTER(Counters),DWORD]
+    counters=Counters()
+    if not query(process(),byref(counters),sizeof(counters)):
+        raise OSError("GetProcessMemoryInfo failed")
+    return counters.current/1024
+
+
 def pair(label, versions, args):
     contexts=[]
     for name,engine,loader,http in versions:
@@ -68,14 +87,16 @@ def pair(label, versions, args):
             assert response.status_code==200,response.text
             results[name]=size,result.get("diagnostics",{})
     for name,calc,_,_ in contexts:
+        rss_before=working_set()
         tracemalloc.start()
         calc()
         _,peak=tracemalloc.get_traced_memory()
         tracemalloc.stop()
+        rss_after=working_set()
         stats=["{:.2f}/{:.2f}".format(median(x),sorted(x)[ceil(len(x)*.95)-1]) for x in timings[name]]
         size,diag=results[name]
         print(f"{label} | {name} | calc {stats[0]} | JSON {stats[1]} | API {stats[2]} | "
-              f"bytes {size} | peak {peak/1024:.1f} KiB | {diag.get('executions',{})} | {diag.get('archive',{})}",flush=True)
+              f"bytes {size} | peak {peak/1024:.1f} KiB | RSS {rss_before:.0f}->{rss_after:.0f} KiB | {diag.get('executions',{})} | {diag.get('archive',{})}",flush=True)
 
 
 def overlap_fixture(versions, storage):
@@ -126,6 +147,15 @@ def main():
             pair("2,000 standalone "+isolated["id"],versions,{**common,"indicators":[isolated]})
         pair("2,000 five compatible",versions,{**common,"indicators":specifications()})
         pair("2,000 context enabled",versions,{**common,"indicators":specifications(context=True)})
+        if "--integrity" in sys.argv:
+            levels=[{"id":"previous_day"},{"id":"previous_week"},{"id":"session_asia"},
+                    {"id":"session_london"},{"id":"session_new_york"}]
+            for level in levels:
+                pair("2,000 standalone "+level["id"],versions,{**common,"load_reference":True,"indicators":[level]})
+            crt=specifications(context=True,combined=False)[0]
+            pair("2,000 shared selected levels",versions,
+                 {**common,"indicators":[{**crt,"context":{"policy":"shared"}},*levels]})
+            overlap_fixture(versions,stores[-1])
         records=dataset(10000)
         manifest=[]
         for offset in range(0,len(records),2000):

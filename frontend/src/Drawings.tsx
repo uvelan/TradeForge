@@ -56,7 +56,7 @@ export function useDrawingBook(scope:string) {
       .catch(reason=>{if(active.current===key)setError(reason.message);});
     return ()=>{if(active.current===key)active.current=undefined;};
   },[scope,endpoint,refresh]);
-  async function save(items:Drawing[],mode:'edit'|'undo'|'redo'='edit'){
+  async function save(items:Drawing[],mode:'edit'|'undo'|'redo'='edit',selectAfter?:string){
     if(!current||writing.current||conflict)return;
     const key=active.current;
     writing.current=true;
@@ -65,6 +65,7 @@ export function useDrawingBook(scope:string) {
       const version=await api.post<Version>(endpoint,{...current,items});
       if(active.current!==key)return;
       setLoaded({scope,version});
+      if(selectAfter&&version.items.some(item=>item.id===selectAfter))setSelected(selectAfter);
       const next=mode==='undo'?{undo:history.undo.slice(0,-1),redo:[...history.redo,current.items]}:
         mode==='redo'?{undo:[...history.undo,current.items],redo:history.redo.slice(0,-1)}:
         {undo:[...history.undo,current.items].slice(-25),redo:[]};
@@ -118,8 +119,8 @@ export function useDrawingBook(scope:string) {
     }
     const item:Drawing={id:crypto.randomUUID(),kind:edit.kind,anchors,label:edit.kind==='text'?'Annotation':'',
       visible:true,locked:false,color:'#55d9b5',created_at:now(),updated_at:now()};
-    setEdit(undefined);setSelected(item.id);
-    void save([...current.items,item]);
+    setEdit(undefined);
+    void save([...current.items,item],'edit',item.id);
   }
   function saveDirect(original:Drawing,anchors:Anchor[]){
     if(!current||conflict||writing.current||interaction.mode!=='navigate'||selected!==original.id||
@@ -177,7 +178,7 @@ export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>})
       <button className="small-tool" disabled={blocked||book.current?.items.length===100} onClick={()=>{
         if(!book.current)return;
         const copy={...item,id:crypto.randomUUID(),locked:false,created_at:now(),updated_at:now()};
-        book.setSelected(copy.id);void book.save([...book.current.items,copy]);
+        void book.save([...book.current.items,copy],'edit',copy.id);
       }}>Duplicate drawing</button>
       <button className="small-tool" disabled={blocked||item.locked} onClick={()=>{
         if(book.current)void book.save(book.current.items.filter(drawing=>drawing.id!==item.id));

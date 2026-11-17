@@ -220,7 +220,11 @@ def test_optional_dependency_failure_is_explicit_and_preserves_reference():
     result=by_id(evaluate(request,failed))
     assert result["fair_value_gap"]["formations"]==[]
     crt=result["candle_range_theory"]
-    assert crt["context_configuration"]["failures"]=={"fvg":"SOURCE_INTEGRITY_FAILURE"}
+    assert crt["context_configuration"]["failures"]=={
+        "fvg":"SOURCE_INTEGRITY_FAILURE",
+        "previous_day":{"reason":None,"status":"UNKNOWN_SCHEDULE"},
+        "previous_week":{"reason":None,"status":"UNKNOWN_SCHEDULE"},
+    }
     assert crt["crt_sweeps"][0]["state"]=="HIGH_SWEPT_RECLAIMED"
     assert "fvg" not in crt["crt_sweeps"][0]["context"]
 

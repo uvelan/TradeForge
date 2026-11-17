@@ -21,7 +21,7 @@ export type FvgEvent = {id:string;fvg_id:string;identity_policy_version?:number;
   a_time:number;b_time:number;c_time:number;observation_time:number;formation_confirmation_time:number;
   confirmation_time:number;available_at:number;reason:string;warnings:string[]};
 type ContextPolicy = "shared" | "independent";
-type ContextConfiguration = {policy:ContextPolicy;status:string;failures:Record<string,string>};
+type ContextConfiguration = {policy:ContextPolicy;status:string;failures:Record<string,string|{status:string;reason:string|null}>};
 type CrtRules = {reference_frame:"H1"|"H4"|"D1"|null;reference_mode:"aggregated"|"native";
   daily_timezone:string;daily_boundary:string;market_schedule:Schedule;reference_start:number|null;
   history_bars:2000|10000;history_start:number|null;max_ranges:number;max_age:number;candidate_age:number;

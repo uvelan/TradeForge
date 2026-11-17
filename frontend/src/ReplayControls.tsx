@@ -41,6 +41,7 @@ export function ReplayControls({candles,index,onSeek,onExit,step,initialBookmark
     window.addEventListener('keydown',shortcut);
     return ()=>window.removeEventListener('keydown',shortcut);
   },[index,last,onSeek]);
+  const canBookmark = Number.isInteger(index)&&index>=0&&index<=last;
   const cutoff = candles[index] && (candles[index].available_at ?? candles[index].time+step);
   return <div className="research-controls" aria-label="Historical replay">
     {onExit && <button className="small-tool" onClick={onExit}>Exit replay</button>}
@@ -73,7 +74,9 @@ export function ReplayControls({candles,index,onSeek,onExit,step,initialBookmark
         .catch(reason=>setCheckpointStatus(reason.message)).finally(()=>setSaving(false));
     }}>Save replay position</button>}
     {checkpointStatus&&<span role="status">{checkpointStatus}</span>}
-    <button className="small-tool" disabled={bookmarks.includes(index)||bookmarks.length>=50} onClick={()=>setBookmarks([...bookmarks,index].sort((a,b)=>a-b))}>Bookmark candle</button>
+    <button className="small-tool" disabled={!canBookmark||bookmarks.includes(index)||bookmarks.length>=50}
+      onClick={()=>setBookmarks(current=>!canBookmark||current.includes(index)||current.length>=50
+        ?current:[...current,index].sort((a,b)=>a-b))}>Bookmark candle</button>
     {bookmarks.length>0&&<label>Bookmarks <select value="" onChange={event=>{if(event.target.value)seek(Number(event.target.value)-1);}}>
       <option value="">Choose candle</option>{bookmarks.map(value=><option key={value} value={value+1}>{new Date(candles[value].time*1000).toISOString()}</option>)}
     </select></label>}

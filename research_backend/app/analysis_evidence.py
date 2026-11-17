@@ -78,6 +78,7 @@ class EvidenceIndex:
             while index>=0:
                 _,stamp,_,item=rows[index]
                 if (stamp<=observed and
+                    ("valid_until" not in item or observed < item["valid_until"]) and
                     (configuration is None or item["configuration_fingerprint"]==configuration) and
                     (source_identity is None or item["source_identity"]==source_identity)):
                     result[name]=item

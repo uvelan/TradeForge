@@ -237,7 +237,9 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       linesRef.current=[];seriesRef.current=null;chartRef.current=null;didFit.current=false;chart.remove();
     };
   },[symbol,precision,link,linkId]);
-  useLayoutEffect(()=>{placementReset.current?.();paintLayer.current?.showPreview(drawMode?placementDraft:undefined);},[drawMode,placementDraft,placementInteraction,symbol,precision]);
+  useLayoutEffect(()=>{placementReset.current?.();},[drawMode,placementInteraction,symbol,precision]);
+  useLayoutEffect(()=>{paintLayer.current?.showPreview(drawMode?placementDraft:undefined);},
+    [drawMode,placementInteraction,placementDraft,symbol,precision]);
   useLayoutEffect(()=>{
     editReset.current?.();
     paintLayer.current?.select(drawMode?'':directEdit?.selected??'');

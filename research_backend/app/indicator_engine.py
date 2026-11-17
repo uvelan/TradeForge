@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from .indicators import Bar, REGISTRY, calculate
 from .market import FRAME_MIN
-from .analysis_evidence import AnalysisCoordinator, AnalysisKey, EvidenceIndex, SCOPE_FIELDS, canonical, digest
+from .analysis_evidence import AnalysisCoordinator, AnalysisKey, EvidenceIndex, ResourceLimit, SCOPE_FIELDS, canonical, digest
 from .market_structure import StructureRules, detect_structure
 from .structure_pages import StructureDelivery
 from .liquidity import LiquidityDelivery, LiquidityRules, LiquidityStream
@@ -199,7 +199,7 @@ def boundary(day: date, clock: str, zone: ZoneInfo) -> int | None:
 
 
 def range_series(rows: list[tuple[EvidenceBar, int]], step: int, key: str,
-                 spec: IndicatorSpec, cutoff: int) -> tuple[dict, list[str]]:
+                 spec: IndicatorSpec, cutoff: int, *, on_reference=None) -> tuple[dict, list[str]]:
     session = SESSIONS.get(key)
     window = spec.session or Window(timezone=session[1], start=session[2], end=session[3])
     zone = ZoneInfo(window.timezone)
@@ -230,6 +230,13 @@ def range_series(rows: list[tuple[EvidenceBar, int]], step: int, key: str,
         # Strictly nonoverlapping bars and the containment check prove full coverage.
         if not complete and end <= cutoff:
             warnings.add("INCOMPLETE_RANGE_COVERAGE")
+        if on_reference is not None:
+            on_reference({"reference_start": start, "reference_end": end,
+                          "status": "COMPLETE" if complete else "INCOMPLETE_RANGE_COVERAGE",
+                          "expected_candles": (end-start)//step, "observed_candles": len(members),
+                          "candidate_high": max(bar.high for bar, _ in members),
+                          "candidate_low": min(bar.low for bar, _ in members),
+                          "available_at": max(stamp for _, stamp in members)}, members, False)
         for index, (bar, available) in enumerate(members):
             high, low = max(high, bar.high), min(low, bar.low)
             confirmed = complete and index == len(members) - 1
@@ -290,9 +297,19 @@ def structure_scope(provenance):
             if key not in {"retrieval","context_partitions","partitions"}}
 
 
+def level_rows_fingerprint(rows, encode):
+    fingerprint=sha256()
+    for bar,stamp in rows:
+        fingerprint.update(encode(bar))
+        fingerprint.update(f":{stamp};".encode())
+    return fingerprint.hexdigest()
+
+
 def contextual_reference(indicator,event,observed,provenance,configuration,snapshot,*,witness=None):
     stamp=event["available_at"]
     return {
+        **({"strategy_eligibility":"RESEARCH_ONLY_WHOLE_CANDLE_TIMING"}
+           if indicator in {"liquidity_sweeps","order_blocks"} else {}),
         "contract_version":1,"indicator":indicator,"id":event["id"],"observation_id":event["id"],
         "witness_id":witness or event["id"],"algorithm_version":event.get("algorithm_version",1),
         "identity_policy_version":event.get("identity_policy_version",1),
@@ -306,7 +323,7 @@ def contextual_reference(indicator,event,observed,provenance,configuration,snaps
     }
 
 
-def build_crt_context(cutoff,structure_events,products,level_sets):
+def build_crt_context(structure_events,products,level_sets):
     index=EvidenceIndex()
     names={"fvg":"fair_value_gap","liquidity_sweep":"liquidity_sweeps","order_block":"order_blocks"}
     for category,events,source,configuration,snapshot in products:
@@ -323,19 +340,9 @@ def build_crt_context(cutoff,structure_events,products,level_sets):
         item["price"]=event.get("price",event.get("level_price"))
         index.add(category,item)
 
-    for name,(series,parameters,source,source_snapshot) in level_sets.items():
-        configuration=digest(parameters)
-        for label,points in series.items():
-            for point in points:
-                if point["status"]!="confirmed" or point["available_at"]>cutoff:
-                    continue
-                witness=digest([name,label,tuple(source.get(key) for key in SCOPE_FIELDS),
-                                point["reference_start"],point["reference_end"],point["value"]])
-                raw={**point,"id":digest([witness,point["time"],point["available_at"]]),
-                     "confirmation_time":point["reference_end"],"algorithm_version":2 if name in PERIODS else 1}
-                reference=contextual_reference(name,raw,point["time"],source,configuration,
-                                               source_snapshot,witness=witness)
-                index.add(name+"_"+label.lower(),{**reference,"price":point["value"]})
+    for name, product in level_sets.items():
+        for reference in product["level_observations"]:
+            index.add(name+"_"+reference["label"].lower(),reference)
     return index.finish().as_of
 
 
@@ -368,9 +375,15 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
     bars = [bar for bar, _ in rows]
     availability = {bar.time: instant for bar, instant in rows}
     fingerprint = sha256()
+    serialized_bars = {}
+    uses_levels = any(spec.id in SESSIONS or spec.id in PERIODS or spec.crt and spec.crt.include_context
+                      for spec in request.indicators)
     latest = 0
     for bar, available in rows:
-        fingerprint.update(bar.model_dump_json().encode())
+        encoded = bar.model_dump_json().encode()
+        if uses_levels:
+            serialized_bars[id(bar)] = encoded
+        fingerprint.update(encoded)
         latest = max(latest, available)
         availability[bar.time] = latest
 
@@ -517,26 +530,98 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
     caller_effective=rows if all(stamp==availability[bar.time] for bar,stamp in rows) else tuple(
         (bar,availability[bar.time]) for bar in bars)
 
-    def level_product(spec,history,observed,load_external):
+    level_inputs = {}
+
+    def encode_level_bar(bar):
+        key = id(bar)
+        if key not in serialized_bars:
+            serialized_bars[key] = bar.model_dump_json().encode()
+        return serialized_bars[key]
+
+    def level_product(spec,history,observed,origin,load_external):
         schedule=spec.schedule or MarketSchedule(
             kind="continuous" if request.source in {"DEMO","BINANCE_SPOT"} else "unknown")
         params=({"schedule":schedule.model_dump()} if spec.id in PERIODS else
                 {"session":spec.session.model_dump() if spec.session else definitions[spec.id]["parameters"]["session"]})
-        key=(spec.id,id(history),id(observed),load_external,canonical(params))
+        key=(spec.id,id(history),id(observed),load_external,canonical(params),canonical(origin))
 
         def calculate_level():
+            references={}
+            length=None
+            scope={name:origin.get(name) for name in SCOPE_FIELDS}
+            observation_authority=origin.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")
+            version=2 if spec.id in PERIODS else 1
+            configuration=digest([spec.id,version,2,params])
+
+            def record_reference(report, members, historical):
+                evidence={name:value for name,value in report.items() if name!="retrieval"}
+                if "context_partitions" in evidence:
+                    evidence["context_partitions"]=sorted(evidence["context_partitions"],key=lambda part:part["id"])
+                authority=evidence.get("context_authority","UNAVAILABLE") if historical else observation_authority
+                evidence["reference_authority"]=authority
+                evidence["bars_fingerprint"]=level_rows_fingerprint(members, encode_level_bar)
+                references[evidence["reference_end"]]=evidence
+
             if spec.id in PERIODS:
                 length=DAY if spec.id=="previous_day" else WEEK
                 anchor=None
                 if load_external and request.load_reference and history_loader and schedule.kind!="unknown":
                     end=period_start(request.cutoff,length)
                     if end>=length:
-                        anchor=history_loader(request,end-length,end,step)
-                series,notes,coverage=previous_levels(history,step,length,schedule,request.cutoff,anchor)
+                        try:
+                            anchor=history_loader(request,end-length,end,step)
+                        except ResourceLimit:
+                            anchor={"rows":(),"evidence":{"status":"HISTORY_LIMIT",
+                                    "reason":"AGGREGATE_ARCHIVE_BUDGET_EXCEEDED","context_authority":"UNAVAILABLE"}}
+                series,notes,coverage=previous_levels(history,step,length,schedule,request.cutoff,anchor,
+                                                      on_reference=record_reference)
             else:
-                series,notes=range_series(observed,step,spec.id,spec,request.cutoff)
+                series,notes=range_series(observed,step,spec.id,spec,request.cutoff,on_reference=record_reference)
                 coverage=None
-            return series,notes,coverage,params
+            manifest=sorted(origin.get("partitions",[]),key=lambda part:part["id"])
+            history_identity={name:value for name,value in origin.items()
+                              if name not in {"retrieval","partitions"}}
+            history_identity["partitions"]=manifest
+            if id(observed) not in level_inputs:
+                level_inputs[id(observed)] = level_rows_fingerprint(observed, encode_level_bar)
+            snapshot=digest([configuration,history_identity,request.cutoff,request.frozen,
+                             level_inputs[id(observed)],references])
+            reference_fingerprints={end:digest(evidence) for end,evidence in references.items()}
+            observations=[]
+            for end, evidence in sorted(references.items()):
+                if evidence["status"]!="COMPLETE" or evidence["available_at"]>request.cutoff:
+                    continue
+                available=evidence["available_at"]
+                observed_at=end if length is not None else end-step
+                evidence_id=reference_fingerprints[end]
+                for label in ("High","Low"):
+                    value=evidence["candidate_"+label.lower()]
+                    witness=digest([scope,configuration,label,evidence_id,value])
+                    raw={"available_at":available,"id":digest([witness,observed_at,available]),
+                         "confirmation_time":end,"algorithm_version":version,"identity_policy_version":2,
+                         "evidence_fingerprint":evidence_id}
+                    reference=contextual_reference(spec.id,raw,observed_at,origin,configuration,snapshot,witness=witness)
+                    reference.update(label=label,price=value,reference_start=evidence["reference_start"],
+                                     reference_end=end,observation_authority=observation_authority,
+                                     reference_authority=evidence["reference_authority"],
+                                     context_partitions=evidence.get("context_partitions",[]))
+                    if evidence["reference_authority"]!=observation_authority:
+                        reference["authority"]="MIXED_OBSERVATION_AND_REFERENCE"
+                    if length is not None:
+                        reference["valid_until"]=end+length
+                    observations.append(reference)
+            reference_authorities=sorted({ref["reference_authority"] for ref in references.values()})
+            product={"version":1,"indicator":spec.id,"parameters":params,"source_identity":scope,
+                     "cutoff":request.cutoff,"frozen":request.frozen,"algorithm_version":version,"identity_policy_version":2,
+                     "dependencies":["candles","reference_windows"],"history":history_identity,
+                     "authority":"MIXED_OBSERVATION_AND_REFERENCE" if any(
+                         authority!=observation_authority for authority in reference_authorities) else observation_authority,
+                     "observation_authority":observation_authority,"reference_authorities":reference_authorities,
+                     "reference_windows":[{**evidence,"evidence_fingerprint":reference_fingerprints[end]}
+                                          for end,evidence in sorted(references.items())],
+                     "configuration_fingerprint":configuration,"calculation_snapshot":snapshot,
+                     "calculation_id":snapshot,"level_observations":observations}
+            return series,notes,coverage,params,product
         return coordinator.run("levels",key,history,calculate_level)
 
     def crt_context(spec,rules,crt_rows,provenance):
@@ -581,22 +666,24 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
         effective=tuple(normalized)
         levels={}
         choices={}
-        context_digest=sha256()
-        for bar,stamp in crt_rows:
-            context_digest.update(bar.model_dump_json().encode()+f":{stamp};".encode())
-        levels_fingerprint=context_digest.hexdigest()
         for name in (*SESSIONS,*PERIODS):
             public=selected.get(name) if policy=="shared" else None
             level_spec=public or IndicatorSpec(id=name,schedule=rules.market_schedule if name in PERIODS else None)
-            origin={**input_identity,"context_authority":"CLIENT_SUPPLIED_UNVERIFIED"} if public else provenance
+            origin=input_identity if public else provenance
             history=rows if public else effective
-            series,_,coverage,params=level_product(level_spec,history,caller_effective if public else effective,bool(public))
-            source_snapshot=digest([origin,request.cutoff,name,params,coverage,fingerprint.hexdigest() if public else levels_fingerprint])
-            levels[name]=(series,params,origin,source_snapshot)
+            _,notes,coverage,params,product=level_product(
+                level_spec,history,caller_effective if public else effective,origin,bool(public))
+            levels[name]=product
             choices[name]={"origin":"selected" if public else "baseline",**params}
+            if coverage is not None and coverage["status"]!="COMPLETE":
+                failures[name]={"status":coverage["status"],"reason":coverage.get("reason")}
+            elif notes:
+                failures[name]={"status":notes[0],"reason":None}
+        metadata["status"]="DEPENDENCY_UNAVAILABLE" if failures else "EVALUATED"
         metadata["levels"]=choices
-        metadata["dependency_snapshots"].update({name:item[3] for name,item in levels.items()})
-        return build_crt_context(request.cutoff,s_refs,products,levels),metadata
+        metadata["strategy_eligibility"]="RESEARCH_ONLY_OPTIONAL_CONTEXT"
+        metadata["dependency_snapshots"].update({name:item["calculation_snapshot"] for name,item in levels.items()})
+        return build_crt_context(s_refs,products,levels),metadata
 
     results = []
     for spec in request.indicators:
@@ -702,9 +789,9 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                     "parameters":rules.canonical(),"provenance":provenance,
                     **{key:value for key,value in output.items() if key!="warnings"}}
         else:
-            series,result_warnings,coverage,parameters=level_product(spec,rows,caller_effective,True)
+            series,result_warnings,coverage,parameters,product=level_product(spec,rows,caller_effective,input_identity,True)
             result={"id":spec.id,"version":2 if spec.id in PERIODS else 1,
-                    "render":"overlay","series":series,"warmup_bars":None,**parameters}
+                    "render":"overlay","series":series,"warmup_bars":None,"analysis":product,**parameters}
             if coverage is not None:
                 result.update(coverage=coverage,coverage_policy_version=1)
         include_gaps = spec.id != "fair_value_gap" and spec.id not in PERIODS and not (spec.id == "market_structure" and result["version"] == 2) and not (
@@ -715,6 +802,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                   "order_blocks":("candles","market_structure"),"fair_value_gap":("candles",),
                   "candle_range_theory":("candles","higher_timeframe")}
     for result,spec in zip(results,request.indicators):
+        if "analysis" in result:
+            continue
         provenance=result.get("provenance",input_identity)
         parameters={key:result[key] for key in ("parameters","structure_parameters","schedule","session") if key in result}
         if "period" in result:
@@ -753,6 +842,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
         result["analysis"]={**contract,"calculation_id":calculation_id,
                             "configuration_fingerprint":configured,
                             "calculation_snapshot":snapshot or calculation_id}
+        if spec.id in {"liquidity_sweeps","order_blocks"}:
+            result["analysis"]["strategy_eligibility"]="RESEARCH_ONLY_WHOLE_CANDLE_TIMING"
         if spec.id=="candle_range_theory":
             settings=spec.crt or CRTRules()
             result["analysis"]["timeframe_evidence"]={
