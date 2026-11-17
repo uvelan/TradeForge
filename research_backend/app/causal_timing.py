@@ -41,10 +41,12 @@ class TemporalEvidence:
                 decision = "UNVERIFIED_SOURCE"
             elif not self.recorded:
                 decision = "UNVERIFIED_AVAILABILITY"
+        basis = ("UNVERIFIED_CANDLE_CLOSE_OR_DECLARED" if self.authority != "CHECKSUM_VERIFIED_ARCHIVE"
+                 else "RECORDED" if self.recorded else "ASSUMED_CANDLE_CLOSE_OR_DEPENDENCY")
         return {"timing_policy":"STRICT_CAUSAL", "timing_policy_version":2,
                 "observation_start":self.start, "observation_end":self.end,
                 "nominal_confirmation_time":self.end, "actual_availability":self.available,
-                "availability_basis":"RECORDED" if self.recorded else "ASSUMED_CANDLE_CLOSE_OR_DEPENDENCY",
+                "availability_basis":basis,
                 "dependency_available_at":self.dependency, "first_eligible_interaction_time":self.available,
                 "evaluation_cutoff":self.cutoff, "source_correction_time":self.correction,
                 "source_authority":self.authority, "required_dependencies":list(references),
