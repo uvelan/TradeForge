@@ -11,7 +11,7 @@ MAX_PARTITIONS = 50
 MAX_DECODED = 30_000
 
 
-def load_reference(request, start, end, step):
+def load_reference(request, start, end, step, *, archive_limits=None):
     measurements = {"requested_candles": (end-start)//step, "decoded_candles": 0,
                     "partitions_examined": 0}
     evidence = {"context_authority": "UNAVAILABLE", "context_partitions": [], "retrieval": measurements}
@@ -45,17 +45,18 @@ def load_reference(request, start, end, step):
             start_iso = datetime.fromtimestamp(start, UTC).isoformat()
             end_iso = datetime.fromtimestamp(end, UTC).isoformat()
             selection = " AND id IN (" + ",".join("?" for _ in manifest) + ")" if request.frozen else ""
+            max_parts,max_decoded=archive_limits or (MAX_PARTITIONS,MAX_DECODED)
             parts = rows("""SELECT * FROM datasets
                 WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles'
                 AND feed_id=? AND price_basis=? AND last_time>=? AND first_time<?""" + selection +
                 " ORDER BY first_time, id LIMIT ?", (provider, request.symbol, request.timeframe,
                 request.feed_id, request.price_basis, start_iso, end_iso,
-                *(manifest if request.frozen else ()), MAX_PARTITIONS+1))
+                *(manifest if request.frozen else ()), max_parts+1))
             measurements["partitions_examined"] = len(parts)
             if not parts:
                 return refused("REFERENCE_ABSENT", "NO_MATCHING_ARCHIVE_PARTITIONS")
-            if (len(parts) > MAX_PARTITIONS or any(part["rows_count"] > 2000 for part in parts)
-                    or sum(part["rows_count"] for part in parts) > MAX_DECODED):
+            if (len(parts) > max_parts or any(part["rows_count"] > 2000 for part in parts)
+                    or sum(part["rows_count"] for part in parts) > max_decoded):
                 return refused("HISTORY_LIMIT", "ARCHIVE_READ_BUDGET_EXCEEDED")
             bars = []
             for part in parts:

@@ -1,5 +1,7 @@
 """Versioned, causal calculations over a single identified candle series."""
 
+from bisect import bisect_right
+from collections import defaultdict
 from datetime import UTC, date, datetime, time as wall_time, timedelta
 from hashlib import sha256
 from time import time
@@ -13,6 +15,7 @@ from .market import FRAME_MIN
 from .market_structure import StructureRules, detect_structure
 from .structure_pages import StructureDelivery
 from .liquidity import LiquidityDelivery, LiquidityRules, LiquidityStream
+from .crt import COMBINATIONS, FRAMES, CRTDelivery, CRTRules, evaluate_crt
 from .order_blocks import OrderBlockRules, OrderBlockDelivery, OrderBlockStream
 from .fvg import FVGDelivery, FVGRules, evaluate_fvg
 from .indicator_coverage import DAY, WEEK, MarketSchedule, period_start, previous_levels
@@ -55,6 +58,8 @@ class IndicatorSpec(BaseModel):
     fvg_delivery: FVGDelivery | None = None
     ob: OrderBlockRules | None = None
     ob_delivery: OrderBlockDelivery | None = None
+    crt: CRTRules | None = None
+    crt_delivery: CRTDelivery | None = None
 
 
 class EvidenceBar(Bar):
@@ -157,6 +162,13 @@ def catalog() -> list[IndicatorDefinition]:
         "price_source":"wick_or_close", "required_fields":["open","high","low","close"],
         "unit":"price", "timeframes":list(FRAME_MIN), "instruments":"any_valid_ohlc",
     })
+    definitions.append({
+        "id":"candle_range_theory","label":"Candle Range Theory (CRT) · Baseline","version":1,
+        "render":"markers","period":None,"warmup_bars":None,"timeframes":list(COMBINATIONS),
+        "price_source":"wick_and_close","required_fields":["open","high","low","close"],
+        "unit":"price","instruments":"any_valid_ohlc",
+        "parameters":{"crt":CRTRules().model_dump(),"crt_frames":COMBINATIONS},
+    })
     return definitions
 
 
@@ -226,7 +238,125 @@ def resolve_history(request, rows, step, rules, history_loader):
     return context["rows"], context["evidence"]
 
 
+def crt_history(request, rows, step, frame, rules, history_loader):
+    crt_rows, provenance = resolve_history(request, rows, step, rules, history_loader)
+    native_rows = ()
+    if rules.reference_mode == "native":
+        if rules.history_start is None or history_loader is None:
+            raise ValueError("Native CRT requires extended same-source history")
+        if frame == "D1" and (rules.daily_timezone,rules.daily_boundary)!=("UTC","00:00"):
+            raise ValueError("Native CRT supports UTC boundaries only")
+        stride = FRAMES[frame]
+        start = rules.history_start//stride*stride
+        end = request.cutoff//stride*stride
+        if (request.cutoff//step*step-rules.history_start)//step+(end-start)//stride > 10000:
+            raise ValueError("Combined CRT history exceeds 10,000 slots")
+        if not provenance.get("status") and end>start:
+            budget=provenance.get("retrieval",{})
+            native_limits=(50-budget.get("partitions_examined",0),30000-budget.get("decoded_candles",0))
+            native=history_loader(request.model_copy(update={"timeframe":frame}),start,end,stride,
+                                  archive_limits=native_limits)
+            evidence=native["evidence"]
+            retrieval=[provenance.get("retrieval",{}),evidence.get("retrieval",{})]
+            if (sum(r.get("partitions_examined",0) for r in retrieval)>50 or
+                    sum(r.get("decoded_candles",0) for r in retrieval)>30000):
+                raise ValueError("Combined CRT archive read budget exceeded")
+            provenance={**provenance,"native_reference":evidence}
+            if evidence.get("status"):
+                provenance["status"]=evidence["status"]
+            else:
+                native_rows=native["rows"]
+    return crt_rows, native_rows, provenance
+
+
+def build_crt_context(rows, step, cutoff, provenance, frozen, rules):
+    streams=defaultdict(list)
+    market=sha256(str(tuple(provenance.get(key) for key in
+                           ("source","symbol","timeframe","feed_id","dataset_id","price_basis"))).encode()).hexdigest()
+
+    def record(kind, raw, available, observed, witness=None, **details):
+        item={"id":raw,"witness_id":witness or raw,"available_at":available,
+              "timeframe":provenance["timeframe"],"observation_time":observed,**details}
+        streams[kind].append((available,observed,item))
+
+    def sweep(event):
+        components=[(p["time"],p["price"],p["available_at"]) for p in event["constituents"]]
+        witness=sha256(str((market,event["liquidity_side"],components,event["observation_time"],
+                            event["available_at"],event["ohlc"])).encode()).hexdigest()
+        record("liquidity_sweep",event["id"],event["available_at"],event["observation_time"],witness)
+
+    structure=StructureRules(algorithm_version=2,market_schedule=rules.market_schedule)
+    liquid=LiquidityStream(LiquidityRules(),LiquidityDelivery(),step,on_confirmed_sweep=sweep)
+    blocks=OrderBlockStream(OrderBlockRules(),structure,provenance,step,OrderBlockDelivery(),
+                            on_formation=lambda e:record("order_block",e["ob_id"],e["available_at"],e["observation_time"]))
+
+    def observe(*args):
+        bar,available,_,_,pivots,breaks_,_,_=args
+        liquid.observe(*args)
+        blocks.observe(*args)
+        for event,_ in pivots:
+            record("market_structure",event["id"],available,bar.time,event["local_witness"],price=event["price"])
+        for event in breaks_:
+            if event["status"]=="confirmed" and event["type"] in {"BOS","CHOCH"}:
+                record(event["type"],event["id"],available,bar.time,event["local_witness"],price=event["level_price"])
+
+    scope={key:value for key,value in provenance.items()
+           if key in {"source","symbol","timeframe","feed_id","dataset_id","price_basis"}}
+    detect_structure(rows,step,structure,scope,StructureDelivery(pivot_limit=0,break_limit=0),
+                     {"cutoff":cutoff},observe,local_witness=True)
+    evaluate_fvg(rows,step,cutoff,FVGRules(market_schedule=rules.market_schedule),
+                 FVGDelivery(formation_limit=0,revision_limit=0,current_limit=0),provenance,frozen,
+                 on_formation=lambda e:record("fvg",e["fvg_id"],e["available_at"],e["c_time"]))
+    effective=[]
+    known=0
+    for bar,stamp in rows:
+        known=max(known,stamp)
+        effective.append((bar,known))
+    windows={key:range_series(effective,step,key,IndicatorSpec(id=key),cutoff)[0] for key in SESSIONS}
+    windows.update({"previous_day":previous_levels(effective,step,DAY,rules.market_schedule,cutoff)[0],
+                    "previous_week":previous_levels(effective,step,WEEK,rules.market_schedule,cutoff)[0]})
+    for name,series in windows.items():
+        for label,points in series.items():
+            for event in points:
+                if event["status"]!="confirmed":
+                    continue
+                stamp=event["available_at"]
+                if stamp>cutoff:
+                    continue
+                witness=sha256(str((market,name,label,event["reference_start"],event["reference_end"],
+                                    event["value"])).encode()).hexdigest()
+                record(name+"_"+label.lower(),witness,stamp,event["time"],price=event["value"])
+    lookup={}
+    for kind,events in streams.items():
+        events.sort(key=lambda item:item[:2])
+        lookup[kind]=([(stamp,bar) for stamp,bar,_ in events],events)
+
+    def at(available, observation_time):
+        found={}
+        for kind,(keys,events) in lookup.items():
+            index=bisect_right(keys,(available,observation_time))-1
+            while index>=0 and events[index][1]>observation_time:
+                index-=1
+            if index>=0:
+                found[kind]=events[index][2]
+        return found
+
+    return at
+
+
 def evaluate(request: Evaluation, history_loader=None) -> dict:
+    if history_loader is not None:
+        read_history=history_loader
+        cache={}
+
+        def history_loader(current,start,end,step,*,archive_limits=None):
+            # Internal callers vary only timeframe within a single source/manifest request.
+            key=(current.timeframe,start,end,step,archive_limits)
+            if key not in cache:
+                options={} if archive_limits is None else {"archive_limits":archive_limits}
+                cache[key]=read_history(current,start,end,step,**options)
+            return cache[key]
+
     definitions = {item["id"]: item for item in catalog()}
     if len({spec.id for spec in request.indicators}) != len(request.indicators):
         raise ValueError("Duplicate indicator IDs")
@@ -273,6 +403,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             raise ValueError("FVG options require the FVG indicator")
         if (spec.liquidity is not None or spec.liquidity_delivery is not None) and spec.id != "liquidity_sweeps":
             raise ValueError("Liquidity options require the liquidity indicator")
+        if (spec.crt is not None or spec.crt_delivery is not None) and spec.id!="candle_range_theory":
+            raise ValueError("CRT options require the CRT indicator")
         if (spec.ob is not None or spec.ob_delivery is not None) and spec.id != "order_blocks":
             raise ValueError("OB options require the Order Blocks indicator")
         if spec.structure is not None and spec.id not in {"market_structure","liquidity_sweeps","order_blocks"}:
@@ -322,6 +454,24 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                           "schedule_assumption": (detected.get("continuity") or {}).get("schedule"),
                           "provenance": provenance, **liquid.finish(detected["event_page"]["snapshot"],
                                                                     detected["provenance_id"])}
+        elif spec.id == "candle_range_theory":
+            rules=spec.crt or CRTRules()
+            allowed=COMBINATIONS[request.timeframe]
+            frame=rules.reference_frame or allowed[0]
+            if frame not in allowed:
+                raise ValueError("Unsupported CRT timeframe combination")
+            crt_rows,native,evidence=crt_history(request,rows,step,frame,rules,history_loader)
+            provenance={**input_identity,**evidence}
+            provenance["partitions"]=sorted(provenance["partitions"],key=lambda p:(p["id"],p["sha256"]))
+            failed=bool(evidence.get("status"))
+            context=build_crt_context(crt_rows,step,request.cutoff,provenance,request.frozen,rules) if rules.include_context and not failed else None
+            result={"id":spec.id,"version":1,"render":"markers","series":{},"warmup_bars":None,
+                    "parameters":rules.model_dump(),"provenance":provenance,
+                    **evaluate_crt([] if failed else crt_rows,step,request.cutoff,frame,rules,
+                                   spec.crt_delivery or CRTDelivery(),provenance,native,context=context)}
+            result_warnings=list(result["quality"])
+            if failed:
+                result_warnings.append(evidence["status"])
         elif spec.id == "order_blocks":
             structure = spec.structure or StructureRules(algorithm_version=2)
             rules = spec.ob or OrderBlockRules()
