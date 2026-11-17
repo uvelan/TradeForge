@@ -68,7 +68,7 @@ def initial_direction(pivots):
 
 
 def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
-                     delivery: StructureDelivery, snapshot_scope: dict, consumer=None, *, local_witness=False):
+                     delivery: StructureDelivery, snapshot_scope: dict, consumer=None, *, local_witness=False, public_event=None):
     """Rows contain closed bars and actual UTC availability, already cutoff-filtered."""
     pivots = EventPage("pivots", delivery.limit if delivery.pivot_limit is None else delivery.pivot_limit,
                        delivery.pivot_cursor)
@@ -107,7 +107,10 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
     current_breaks = None
 
     def publish_break(value):
-        breaks.append(value)
+        projected={key:item for key,item in value.items() if key!="local_witness"} if local_witness else value
+        breaks.append(projected)
+        if public_event is not None:
+            public_event("breaks",projected)
         if current_breaks is not None:
             current_breaks.append(value)
 
@@ -248,7 +251,11 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
             if state != "NEUTRAL" or initial != "UNCONFIRMED":
                 state = initial
         for found in batch:
-            pivots.append({**found, "state_after": state})
+            projected={**found,"state_after":state}
+            projected.pop("local_witness",None)
+            pivots.append(projected)
+            if public_event is not None:
+                public_event("pivots",projected)
         if consumer is not None:
             consumer(bar, available, observation_index, reset_reason,
                      [(found, observation_index-rules.right) for found in batch], current_breaks,

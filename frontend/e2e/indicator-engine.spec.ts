@@ -597,3 +597,60 @@ test("CRT delays the H1 range, excludes a straddling sweep and rewinds cleanly",
   await replay.getByRole("button",{name:"Previous candle"}).click();
   await expect(swept).toHaveCount(0);
 });
+
+test("shared context follows chart structure settings and visibility changes send no request",async ({page},info)=>{
+  const start=1793577600,step=300;
+  const center=[102,103,101,102];
+  const values=[[102,105,100,103],...Array.from({length:8},()=>center),
+    [102,104,101,103],[103,103.5,102,102.5],center,[104,106,103.5,104.5],center];
+  const candles=values.map(([open,high,low,close],i)=>({time:start+i*step,open,high,low,close}));
+  await page.addInitScript(()=>{
+    const structure={algorithm_version:2,left:1,right:1,price_source:"wick",ties:"strict",
+      tolerance_bps:0,break_bps:0,wick_candidates:false};
+    localStorage.setItem("tradeforge.workspace.indicators-v1",JSON.stringify([
+      {id:"market_structure",structure},{id:"liquidity_sweeps",structure},
+      {id:"order_blocks",structure},{id:"fair_value_gap"},{id:"candle_range_theory"},
+    ]));
+  });
+  await page.route("**/research/api/market/candles?**",route=>route.fulfill({json:{
+    source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",candles,
+  }}));
+  let requests=0;
+  page.on("request",request=>{if(request.url().endsWith("/indicators/evaluate"))requests++;});
+  const shared=(left:number)=>page.waitForResponse(response=>{
+    if(!response.url().endsWith("/indicators/evaluate"))return false;
+    const body=response.request().postDataJSON();
+    return body.indicators?.some((item:{id:string;context?:{policy:string}})=>
+      item.id==="candle_range_theory"&&item.context?.policy==="shared")
+      &&body.indicators.find((item:{id:string})=>item.id==="market_structure")?.structure?.left===left;
+  });
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  const crt=page.getByRole("group",{name:/Candle Range Theory/});
+  await crt.getByLabel("Include CRT context").check();
+  const response=shared(1);
+  await crt.getByLabel("CRT context policy").selectOption("shared");
+  const first=await (await response).json();
+  expect(first.diagnostics.executions.structure).toBe(1);
+  const crtResult=first.results.find((item:{id:string})=>item.id==="candle_range_theory");
+  const structure=first.results.find((item:{id:string})=>item.id==="market_structure");
+  const observation=crtResult.crt_sweeps[0];
+  expect(observation.context.BOS.observation_id).toBe(structure.breaks.at(-1).id);
+  await crt.getByText(/CRT effective context/).click();
+  await expect(crt.locator("pre")).toContainText('"left": 1');
+  const before=requests;
+  const unexpected=page.waitForRequest(request=>request.url().endsWith("/indicators/evaluate"),
+    {timeout:600}).then(()=>true,()=>false);
+  await crt.getByLabel("Show CRT midpoint").uncheck();
+  await expect(crt.getByLabel("Show CRT midpoint")).not.toBeChecked();
+  expect(await unexpected).toBe(false);
+  expect(requests).toBe(before);
+  await crt.getByRole("button",{name:/^HIGH SWEPT RECLAIMED/}).click();
+  await expect(crt.getByLabel("Selected CRT event")).toContainText("BOS");
+  await page.screenshot({path:info.outputPath("shared-context.png")});
+  const updated=shared(2);
+  await page.getByRole("group",{name:"Confirmed market structure"}).getByLabel("Left bars").fill("2");
+  const changed=await (await updated).json();
+  expect(changed.diagnostics.executions.structure).toBe(2);
+  await expect(crt.locator("pre")).toContainText('"left": 2');
+});

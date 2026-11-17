@@ -1,7 +1,5 @@
 """Versioned, causal calculations over a single identified candle series."""
 
-from bisect import bisect_right
-from collections import defaultdict
 from datetime import UTC, date, datetime, time as wall_time, timedelta
 from hashlib import sha256
 from time import time
@@ -12,6 +10,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from .indicators import Bar, REGISTRY, calculate
 from .market import FRAME_MIN
+from .analysis_evidence import AnalysisCoordinator, AnalysisKey, EvidenceIndex, ResourceLimit, SCOPE_FIELDS, canonical, digest
 from .market_structure import StructureRules, detect_structure
 from .structure_pages import StructureDelivery
 from .liquidity import LiquidityDelivery, LiquidityRules, LiquidityStream
@@ -45,6 +44,20 @@ class Window(BaseModel):
         return self
 
 
+class ContextOptions(BaseModel):
+    policy: Literal["shared", "independent"] = "independent"
+    structure: StructureRules | None = None
+    liquidity: LiquidityRules | None = None
+    fvg: FVGRules | None = None
+    order_blocks: OrderBlockRules | None = None
+
+    @model_validator(mode="after")
+    def validate_policy(self):
+        if self.policy=="shared" and any((self.structure,self.liquidity,self.fvg,self.order_blocks)):
+            raise ValueError("Shared context takes rules from the selected indicator configurations")
+        return self
+
+
 class IndicatorSpec(BaseModel):
     id: str = Field(max_length=40)
     period: int | None = Field(default=None, ge=2, le=200)
@@ -60,11 +73,14 @@ class IndicatorSpec(BaseModel):
     ob_delivery: OrderBlockDelivery | None = None
     crt: CRTRules | None = None
     crt_delivery: CRTDelivery | None = None
+    context: ContextOptions | None = None
 
 
 class EvidenceBar(Bar):
     available_at: int | None = Field(default=None, ge=0)
     closed: bool = True
+
+    model_config = {"frozen":True,"extra":"ignore"}
 
 
 class Partition(BaseModel):
@@ -183,7 +199,7 @@ def boundary(day: date, clock: str, zone: ZoneInfo) -> int | None:
 
 
 def range_series(rows: list[tuple[EvidenceBar, int]], step: int, key: str,
-                 spec: IndicatorSpec, cutoff: int) -> tuple[dict, list[str]]:
+                 spec: IndicatorSpec, cutoff: int, *, on_reference=None) -> tuple[dict, list[str]]:
     session = SESSIONS.get(key)
     window = spec.session or Window(timezone=session[1], start=session[2], end=session[3])
     zone = ZoneInfo(window.timezone)
@@ -214,6 +230,13 @@ def range_series(rows: list[tuple[EvidenceBar, int]], step: int, key: str,
         # Strictly nonoverlapping bars and the containment check prove full coverage.
         if not complete and end <= cutoff:
             warnings.add("INCOMPLETE_RANGE_COVERAGE")
+        if on_reference is not None:
+            on_reference({"reference_start": start, "reference_end": end,
+                          "status": "COMPLETE" if complete else "INCOMPLETE_RANGE_COVERAGE",
+                          "expected_candles": (end-start)//step, "observed_candles": len(members),
+                          "candidate_high": max(bar.high for bar, _ in members),
+                          "candidate_low": min(bar.low for bar, _ in members),
+                          "available_at": max(stamp for _, stamp in members)}, members, False)
         for index, (bar, available) in enumerate(members):
             high, low = max(high, bar.high), min(low, bar.low)
             confirmed = complete and index == len(members) - 1
@@ -269,94 +292,63 @@ def crt_history(request, rows, step, frame, rules, history_loader):
     return crt_rows, native_rows, provenance
 
 
-def build_crt_context(rows, step, cutoff, provenance, frozen, rules):
-    streams=defaultdict(list)
-    market=sha256(str(tuple(provenance.get(key) for key in
-                           ("source","symbol","timeframe","feed_id","dataset_id","price_basis"))).encode()).hexdigest()
+def structure_scope(provenance):
+    return {key:value for key,value in provenance.items()
+            if key not in {"retrieval","context_partitions","partitions"}}
 
-    def record(kind, raw, available, observed, witness=None, **details):
-        item={"id":raw,"witness_id":witness or raw,"available_at":available,
-              "timeframe":provenance["timeframe"],"observation_time":observed,**details}
-        streams[kind].append((available,observed,item))
 
-    def sweep(event):
-        components=[(p["time"],p["price"],p["available_at"]) for p in event["constituents"]]
-        witness=sha256(str((market,event["liquidity_side"],components,event["observation_time"],
-                            event["available_at"],event["ohlc"])).encode()).hexdigest()
-        record("liquidity_sweep",event["id"],event["available_at"],event["observation_time"],witness)
-
-    structure=StructureRules(algorithm_version=2,market_schedule=rules.market_schedule)
-    liquid=LiquidityStream(LiquidityRules(),LiquidityDelivery(),step,on_confirmed_sweep=sweep)
-    blocks=OrderBlockStream(OrderBlockRules(),structure,provenance,step,OrderBlockDelivery(),
-                            on_formation=lambda e:record("order_block",e["ob_id"],e["available_at"],e["observation_time"]))
-
-    def observe(*args):
-        bar,available,_,_,pivots,breaks_,_,_=args
-        liquid.observe(*args)
-        blocks.observe(*args)
-        for event,_ in pivots:
-            record("market_structure",event["id"],available,bar.time,event["local_witness"],price=event["price"])
-        for event in breaks_:
-            if event["status"]=="confirmed" and event["type"] in {"BOS","CHOCH"}:
-                record(event["type"],event["id"],available,bar.time,event["local_witness"],price=event["level_price"])
-
-    scope={key:value for key,value in provenance.items()
-           if key in {"source","symbol","timeframe","feed_id","dataset_id","price_basis"}}
-    detect_structure(rows,step,structure,scope,StructureDelivery(pivot_limit=0,break_limit=0),
-                     {"cutoff":cutoff},observe,local_witness=True)
-    evaluate_fvg(rows,step,cutoff,FVGRules(market_schedule=rules.market_schedule),
-                 FVGDelivery(formation_limit=0,revision_limit=0,current_limit=0),provenance,frozen,
-                 on_formation=lambda e:record("fvg",e["fvg_id"],e["available_at"],e["c_time"]))
-    effective=[]
-    known=0
+def level_rows_fingerprint(rows, encode):
+    fingerprint=sha256()
     for bar,stamp in rows:
-        known=max(known,stamp)
-        effective.append((bar,known))
-    windows={key:range_series(effective,step,key,IndicatorSpec(id=key),cutoff)[0] for key in SESSIONS}
-    windows.update({"previous_day":previous_levels(effective,step,DAY,rules.market_schedule,cutoff)[0],
-                    "previous_week":previous_levels(effective,step,WEEK,rules.market_schedule,cutoff)[0]})
-    for name,series in windows.items():
-        for label,points in series.items():
-            for event in points:
-                if event["status"]!="confirmed":
-                    continue
-                stamp=event["available_at"]
-                if stamp>cutoff:
-                    continue
-                witness=sha256(str((market,name,label,event["reference_start"],event["reference_end"],
-                                    event["value"])).encode()).hexdigest()
-                record(name+"_"+label.lower(),witness,stamp,event["time"],price=event["value"])
-    lookup={}
-    for kind,events in streams.items():
-        events.sort(key=lambda item:item[:2])
-        lookup[kind]=([(stamp,bar) for stamp,bar,_ in events],events)
+        fingerprint.update(encode(bar))
+        fingerprint.update(f":{stamp};".encode())
+    return fingerprint.hexdigest()
 
-    def at(available, observation_time):
-        found={}
-        for kind,(keys,events) in lookup.items():
-            index=bisect_right(keys,(available,observation_time))-1
-            while index>=0 and events[index][1]>observation_time:
-                index-=1
-            if index>=0:
-                found[kind]=events[index][2]
-        return found
 
-    return at
+def contextual_reference(indicator,event,observed,provenance,configuration,snapshot,*,witness=None):
+    stamp=event["available_at"]
+    return {
+        **({"strategy_eligibility":"RESEARCH_ONLY_WHOLE_CANDLE_TIMING"}
+           if indicator in {"liquidity_sweeps","order_blocks"} else {}),
+        "contract_version":1,"indicator":indicator,"id":event["id"],"observation_id":event["id"],
+        "witness_id":witness or event["id"],"algorithm_version":event.get("algorithm_version",1),
+        "identity_policy_version":event.get("identity_policy_version",1),
+        "configuration_fingerprint":configuration,"evidence_fingerprint":event.get(
+            "evidence_fingerprint",event.get("input_fingerprint",event["id"])),
+        "source_identity":{key:provenance.get(key) for key in SCOPE_FIELDS},
+        "authority":provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED"),
+        "timeframe":provenance["timeframe"],"observation_time":observed,
+        "confirmation_time":event.get("confirmation_time"),"available_at":stamp,
+        "first_eligible_at":stamp,"source_correction_time":None,"calculation_snapshot":snapshot,
+    }
+
+
+def build_crt_context(structure_events,products,level_sets):
+    index=EvidenceIndex()
+    names={"fvg":"fair_value_gap","liquidity_sweep":"liquidity_sweeps","order_block":"order_blocks"}
+    for category,events,source,configuration,snapshot in products:
+        for event in events:
+            observed=event.get("observation_time",event.get("c_time"))
+            witness=event.get("local_witness") or event.get("fvg_id") or event.get("ob_id")
+            if category=="liquidity_sweep":
+                witness=digest([tuple(source.get(key) for key in SCOPE_FIELDS),event["liquidity_side"],
+                                [(p["time"],p["price"],p["available_at"]) for p in event["constituents"]],
+                                observed,event["available_at"],event["ohlc"]])
+            index.add(category,contextual_reference(names[category],event,observed,source,configuration,snapshot,witness=witness))
+    for category,event,observed,source,configuration,snapshot in structure_events:
+        item=contextual_reference("market_structure",event,observed,source,configuration,snapshot,witness=event["local_witness"])
+        item["price"]=event.get("price",event.get("level_price"))
+        index.add(category,item)
+
+    for name, product in level_sets.items():
+        for reference in product["level_observations"]:
+            index.add(name+"_"+reference["label"].lower(),reference)
+    return index.finish().as_of
 
 
 def evaluate(request: Evaluation, history_loader=None) -> dict:
-    if history_loader is not None:
-        read_history=history_loader
-        cache={}
-
-        def history_loader(current,start,end,step,*,archive_limits=None):
-            # Internal callers vary only timeframe within a single source/manifest request.
-            key=(current.timeframe,start,end,step,archive_limits)
-            if key not in cache:
-                options={} if archive_limits is None else {"archive_limits":archive_limits}
-                cache[key]=read_history(current,start,end,step,**options)
-            return cache[key]
-
+    coordinator=AnalysisCoordinator(request,history_loader)
+    history_loader=coordinator.history if history_loader is not None else None
     definitions = {item["id"]: item for item in catalog()}
     if len({spec.id for spec in request.indicators}) != len(request.indicators):
         raise ValueError("Duplicate indicator IDs")
@@ -379,17 +371,320 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                 warnings.add("CANDLE_GAP")
         rows.append((bar, available))
         previous = bar.time
+    rows=tuple(rows)
     bars = [bar for bar, _ in rows]
     availability = {bar.time: instant for bar, instant in rows}
     fingerprint = sha256()
+    serialized_bars = {}
+    uses_levels = any(spec.id in SESSIONS or spec.id in PERIODS or spec.crt and spec.crt.include_context
+                      for spec in request.indicators)
     latest = 0
     for bar, available in rows:
-        fingerprint.update(bar.model_dump_json().encode())
+        encoded = bar.model_dump_json().encode()
+        if uses_levels:
+            serialized_bars[id(bar)] = encoded
+        fingerprint.update(encoded)
         latest = max(latest, available)
         availability[bar.time] = latest
 
     input_identity = request.model_dump(
         include={"source", "symbol", "timeframe", "dataset_id", "feed_id", "price_basis", "partitions"})
+    selected={spec.id:spec for spec in request.indicators}
+
+    def resolved(rule):
+        history,evidence=resolve_history(request,rows,step,rule,history_loader)
+        provenance={**input_identity,**evidence,"schedule_completeness":"NOT_ESTABLISHED"}
+        provenance["partitions"]=sorted(provenance["partitions"],key=lambda item:(item["id"],item["sha256"]))
+        return history or (),provenance
+
+    def structure_result(history,rule,provenance,delivery,consumer=None):
+        return coordinator.structure(detect_structure,history,step,rule,structure_scope(provenance),
+            {"cutoff":request.cutoff,"frozen":request.frozen,"provenance":provenance},delivery,consumer)
+
+    def structure_key(rule):
+        return [rule.algorithm_version,rule.identity_parameters()]
+
+    def product_key(history,provenance,*rules):
+        return (id(history),canonical(provenance),*(canonical(rule) for rule in rules))
+
+    track_context=any(s.crt and s.crt.include_context or s.ob and s.ob.include_context for s in request.indicators)
+    zero_fvg=FVGDelivery(current_limit=0,formation_limit=0,revision_limit=0)
+
+    def fvg_product(history,provenance,rules):
+        key=product_key(history,provenance,rules.canonical())
+
+        def calculate_fvg():
+            public=selected.get("fair_value_gap")
+            delivery=zero_fvg
+            if public and (public.fvg or FVGRules()).canonical()==rules.canonical():
+                public_history,public_provenance=resolved(public.fvg or FVGRules())
+                if key==product_key(public_history,public_provenance,rules.canonical()):
+                    delivery=public.fvg_delivery or FVGDelivery()
+            formations=[]
+            result=evaluate_fvg(history,step,request.cutoff,rules,delivery,provenance,request.frozen,
+                                on_formation=formations.append if track_context else None)
+            return result,formations
+        return coordinator.run("fvg",key,history,calculate_fvg)
+
+    def liquidity_product(history,provenance,structure,rules):
+        key=product_key(history,provenance,structure_key(structure),rules.identity())
+
+        def calculate_liquidity():
+            sweeps=[]
+            public=selected.get("liquidity_sweeps")
+            delivery=LiquidityDelivery(pool_limit=0,sweep_limit=0,current_limit=0)
+            if public:
+                public_structure=public.structure or StructureRules()
+                public_history,public_provenance=resolved(public_structure)
+                if key==product_key(public_history,public_provenance,structure_key(public_structure),
+                                    (public.liquidity or LiquidityRules()).identity()):
+                    delivery=public.liquidity_delivery or LiquidityDelivery()
+            liquid=LiquidityStream(rules,delivery,step,on_confirmed_sweep=sweeps.append if track_context else None)
+            detected=structure_result(history,structure,provenance,StructureDelivery(pivot_limit=0,break_limit=0),liquid.observe)
+            return liquid.finish(detected["event_page"]["snapshot"],detected["provenance_id"]),sweeps,detected
+        return coordinator.run("liquidity",key,history,calculate_liquidity)
+
+    def history_options(rule):
+        return {"history_bars":rule.history_bars,"history_start":rule.history_start}
+
+    def effective_context(spec,parent,parent_structure,schedule):
+        options=spec.context or ContextOptions()
+        def selected_child(name):
+            return selected.get(name) if options.policy=="shared" else None
+        structure_spec=selected_child("market_structure")
+        chart_liquidity=selected_child("liquidity_sweeps")
+        chart_fvg=selected_child("fair_value_gap")
+        chart_ob=selected_child("order_blocks")
+        default_structure=parent_structure or StructureRules(algorithm_version=2,market_schedule=schedule,
+                                                              **history_options(parent))
+        structure=(structure_spec.structure or StructureRules()) if structure_spec else options.structure or default_structure
+        liquidity_structure=(chart_liquidity.structure or StructureRules()) if chart_liquidity else structure
+        fvg=(chart_fvg.fvg or FVGRules()) if chart_fvg else options.fvg or FVGRules(
+            market_schedule=schedule,**history_options(parent))
+        liquid=(chart_liquidity.liquidity or LiquidityRules()) if chart_liquidity else options.liquidity or LiquidityRules()
+        ob=(chart_ob.ob or OrderBlockRules()) if chart_ob else options.order_blocks or OrderBlockRules()
+        ob_structure=(chart_ob.structure or StructureRules(algorithm_version=2)) if chart_ob else structure
+        return options.policy,structure,liquidity_structure,liquid,fvg,ob_structure,ob,chart_ob
+
+    def ob_product(history,provenance,structure,rules,spec):
+        options=spec.context or ContextOptions()
+        key=product_key(history,provenance,structure_key(structure),rules.model_dump(),options.model_dump())
+
+        def calculate_blocks():
+            public=selected.get("order_blocks")
+            delivery=OrderBlockDelivery(formation_limit=0,revision_limit=0,current_limit=0)
+            if public:
+                public_structure=public.structure or StructureRules(algorithm_version=2)
+                public_history,public_provenance=resolved(public_structure)
+                if key==product_key(public_history,public_provenance,structure_key(public_structure),
+                                    (public.ob or OrderBlockRules()).model_dump(),
+                                    (public.context or ContextOptions()).model_dump()):
+                    delivery=public.ob_delivery or OrderBlockDelivery()
+            forms=[]
+            stream=OrderBlockStream(rules,structure,provenance,step,delivery,
+                                    on_formation=forms.append if track_context else None)
+            consumer=stream.observe
+            metadata=None
+            if rules.include_context:
+                schedule=structure.market_schedule or MarketSchedule(kind="unknown")
+                policy,_,liquid_structure,liquid,fvg,_,_,_=effective_context(spec,structure,structure,schedule)
+                f_rows,f_source=resolved(fvg)
+                f_result, f_events=fvg_product(f_rows,f_source,fvg)
+                l_rows,l_source=resolved(liquid_structure)
+                l_result,l_events,l_detected=liquidity_product(l_rows,l_source,liquid_structure,liquid)
+                f_config=f_result["configuration_fingerprint"]
+                l_config=digest([structure_key(liquid_structure),liquid.identity()])
+                f_index=EvidenceIndex()
+                l_index=EvidenceIndex()
+                for event in f_events:
+                    f_index.add("fvg",contextual_reference("fair_value_gap",event,event["c_time"],f_source,
+                                      f_config,f_result["fvg_page"]["snapshot"],witness=event["fvg_id"]))
+                for event in l_events:
+                    ref=contextual_reference("liquidity_sweeps",event,event["observation_time"],l_source,
+                                              l_config,l_result["liquidity_page"]["snapshot"])
+                    ref["witness_id"]=digest([ref["source_identity"],event["liquidity_side"],
+                        [(p["time"],p["price"],p["available_at"]) for p in event["constituents"]],
+                        event["observation_time"],event["available_at"],event["ohlc"]])
+                    l_index.add("sweep",ref)
+                f_index.finish()
+                l_index.finish()
+                failures={name:value["status"] for name,value in (("fvg",f_source),("liquidity",l_source)) if value.get("status")}
+                metadata={"policy":policy,"status":"DEPENDENCY_UNAVAILABLE" if failures else "EVALUATED",
+                          "failures":failures,"fvg":fvg.canonical(),"liquidity":liquid.identity(),
+                          "liquidity_structure":liquid_structure.identity_parameters(),
+                          "dependency_snapshots":{"fvg":f_result["fvg_page"]["snapshot"],
+                                                  "liquidity":l_result["liquidity_page"]["snapshot"]}}
+                def context_at(available,observed):
+                    f=f_index.as_of(available,observed).get("fvg")
+                    l=l_index.as_of(available,observed).get("sweep")
+                    return {"fvg":{**f,"id":f["witness_id"]} if f else None,"liquidity_sweep":l,
+                            "status":"AVAILABLE" if f or l else "DEPENDENCY_UNAVAILABLE" if failures else "NO_AVAILABLE_CONTEXT"}
+                stream.context_lookup=context_at
+            detected=structure_result(history,structure,provenance,StructureDelivery(pivot_limit=0,break_limit=0),consumer)
+            result=stream.finish(detected["event_page"]["snapshot"],context_snapshot=digest(metadata) if metadata is not None else None)
+            if metadata is not None:
+                result["context_configuration"]=metadata
+            return result,forms,detected
+        return coordinator.run("order_blocks",key,history,calculate_blocks)
+
+    caller_effective=rows if all(stamp==availability[bar.time] for bar,stamp in rows) else tuple(
+        (bar,availability[bar.time]) for bar in bars)
+
+    level_inputs = {}
+
+    def encode_level_bar(bar):
+        key = id(bar)
+        if key not in serialized_bars:
+            serialized_bars[key] = bar.model_dump_json().encode()
+        return serialized_bars[key]
+
+    def level_product(spec,history,observed,origin,load_external):
+        schedule=spec.schedule or MarketSchedule(
+            kind="continuous" if request.source in {"DEMO","BINANCE_SPOT"} else "unknown")
+        params=({"schedule":schedule.model_dump()} if spec.id in PERIODS else
+                {"session":spec.session.model_dump() if spec.session else definitions[spec.id]["parameters"]["session"]})
+        key=(spec.id,id(history),id(observed),load_external,canonical(params),canonical(origin))
+
+        def calculate_level():
+            references={}
+            length=None
+            scope={name:origin.get(name) for name in SCOPE_FIELDS}
+            observation_authority=origin.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")
+            version=2 if spec.id in PERIODS else 1
+            configuration=digest([spec.id,version,2,params])
+
+            def record_reference(report, members, historical):
+                evidence={name:value for name,value in report.items() if name!="retrieval"}
+                if "context_partitions" in evidence:
+                    evidence["context_partitions"]=sorted(evidence["context_partitions"],key=lambda part:part["id"])
+                authority=evidence.get("context_authority","UNAVAILABLE") if historical else observation_authority
+                evidence["reference_authority"]=authority
+                evidence["bars_fingerprint"]=level_rows_fingerprint(members, encode_level_bar)
+                references[evidence["reference_end"]]=evidence
+
+            if spec.id in PERIODS:
+                length=DAY if spec.id=="previous_day" else WEEK
+                anchor=None
+                if load_external and request.load_reference and history_loader and schedule.kind!="unknown":
+                    end=period_start(request.cutoff,length)
+                    if end>=length:
+                        try:
+                            anchor=history_loader(request,end-length,end,step)
+                        except ResourceLimit:
+                            anchor={"rows":(),"evidence":{"status":"HISTORY_LIMIT",
+                                    "reason":"AGGREGATE_ARCHIVE_BUDGET_EXCEEDED","context_authority":"UNAVAILABLE"}}
+                series,notes,coverage=previous_levels(history,step,length,schedule,request.cutoff,anchor,
+                                                      on_reference=record_reference)
+            else:
+                series,notes=range_series(observed,step,spec.id,spec,request.cutoff,on_reference=record_reference)
+                coverage=None
+            manifest=sorted(origin.get("partitions",[]),key=lambda part:part["id"])
+            history_identity={name:value for name,value in origin.items()
+                              if name not in {"retrieval","partitions"}}
+            history_identity["partitions"]=manifest
+            if id(observed) not in level_inputs:
+                level_inputs[id(observed)] = level_rows_fingerprint(observed, encode_level_bar)
+            snapshot=digest([configuration,history_identity,request.cutoff,request.frozen,
+                             level_inputs[id(observed)],references])
+            reference_fingerprints={end:digest(evidence) for end,evidence in references.items()}
+            observations=[]
+            for end, evidence in sorted(references.items()):
+                if evidence["status"]!="COMPLETE" or evidence["available_at"]>request.cutoff:
+                    continue
+                available=evidence["available_at"]
+                observed_at=end if length is not None else end-step
+                evidence_id=reference_fingerprints[end]
+                for label in ("High","Low"):
+                    value=evidence["candidate_"+label.lower()]
+                    witness=digest([scope,configuration,label,evidence_id,value])
+                    raw={"available_at":available,"id":digest([witness,observed_at,available]),
+                         "confirmation_time":end,"algorithm_version":version,"identity_policy_version":2,
+                         "evidence_fingerprint":evidence_id}
+                    reference=contextual_reference(spec.id,raw,observed_at,origin,configuration,snapshot,witness=witness)
+                    reference.update(label=label,price=value,reference_start=evidence["reference_start"],
+                                     reference_end=end,observation_authority=observation_authority,
+                                     reference_authority=evidence["reference_authority"],
+                                     context_partitions=evidence.get("context_partitions",[]))
+                    if evidence["reference_authority"]!=observation_authority:
+                        reference["authority"]="MIXED_OBSERVATION_AND_REFERENCE"
+                    if length is not None:
+                        reference["valid_until"]=end+length
+                    observations.append(reference)
+            reference_authorities=sorted({ref["reference_authority"] for ref in references.values()})
+            product={"version":1,"indicator":spec.id,"parameters":params,"source_identity":scope,
+                     "cutoff":request.cutoff,"frozen":request.frozen,"algorithm_version":version,"identity_policy_version":2,
+                     "dependencies":["candles","reference_windows"],"history":history_identity,
+                     "authority":"MIXED_OBSERVATION_AND_REFERENCE" if any(
+                         authority!=observation_authority for authority in reference_authorities) else observation_authority,
+                     "observation_authority":observation_authority,"reference_authorities":reference_authorities,
+                     "reference_windows":[{**evidence,"evidence_fingerprint":reference_fingerprints[end]}
+                                          for end,evidence in sorted(references.items())],
+                     "configuration_fingerprint":configuration,"calculation_snapshot":snapshot,
+                     "calculation_id":snapshot,"level_observations":observations}
+            return series,notes,coverage,params,product
+        return coordinator.run("levels",key,history,calculate_level)
+
+    def crt_context(spec,rules,crt_rows,provenance):
+        policy,structure,liquid_structure,liquid,fvg,ob_structure,ob,ob_spec=effective_context(
+            spec,rules,None,rules.market_schedule)
+        s_rows,s_source=resolved(structure)
+        canonical_events=[]
+        def capture(bar,stamp,idx,gap,pivots,breaks,fp,authority):
+            canonical_events.extend(("market_structure",event,bar.time) for event,_ in pivots)
+            canonical_events.extend((event["type"],event,bar.time) for event in breaks
+                                    if event["status"]=="confirmed" and event["type"] in {"BOS","CHOCH"})
+        detection=structure_result(s_rows,structure,s_source,StructureDelivery(pivot_limit=0,break_limit=0),capture)
+        s_config=digest(structure_key(structure))
+        s_snapshot=detection["event_page"]["snapshot"]
+        s_refs=[(*event,s_source,s_config,s_snapshot) for event in canonical_events]
+        f_rows,f_source=resolved(fvg)
+        f_result,f_events=fvg_product(f_rows,f_source,fvg)
+        l_rows,l_source=resolved(liquid_structure)
+        l_result,l_events,l_detected=liquidity_product(l_rows,l_source,liquid_structure,liquid)
+        o_rows,o_source=resolved(ob_structure)
+        o_result,o_events,_=ob_product(o_rows,o_source,ob_structure,ob,ob_spec or IndicatorSpec(id="order_blocks"))
+        products=[("fvg",f_events,f_source,f_result["configuration_fingerprint"],f_result["fvg_page"]["snapshot"]),
+                  ("liquidity_sweep",l_events,l_source,digest([structure_key(liquid_structure),liquid.identity()]),
+                   l_result["liquidity_page"]["snapshot"]),
+                  ("order_block",o_events,o_source,digest([structure_key(ob_structure),ob.model_dump()]),
+                   o_result["ob_page"]["snapshot"])]
+        failures={name:source["status"] for name,source in
+                  (("structure",s_source),("liquidity",l_source),("fvg",f_source),("order_blocks",o_source))
+                  if source.get("status")}
+        metadata={"policy":policy,"status":"DEPENDENCY_UNAVAILABLE" if failures else "EVALUATED",
+                  "failures":failures,"structure":structure.identity_parameters(),
+                  "liquidity_structure":liquid_structure.identity_parameters(),"liquidity":liquid.identity(),
+                  "fvg":fvg.canonical(),"order_block_structure":ob_structure.identity_parameters(),
+                  "order_blocks":ob.model_dump(),
+                  "dependency_snapshots":{"structure":s_snapshot,"fvg":f_result["fvg_page"]["snapshot"],
+                         "liquidity":l_result["liquidity_page"]["snapshot"],"order_blocks":o_result["ob_page"]["snapshot"]}}
+        known=0
+        normalized=[]
+        for bar,available in crt_rows:
+            known=max(known,available)
+            normalized.append((bar,known))
+        effective=tuple(normalized)
+        levels={}
+        choices={}
+        for name in (*SESSIONS,*PERIODS):
+            public=selected.get(name) if policy=="shared" else None
+            level_spec=public or IndicatorSpec(id=name,schedule=rules.market_schedule if name in PERIODS else None)
+            origin=input_identity if public else provenance
+            history=rows if public else effective
+            _,notes,coverage,params,product=level_product(
+                level_spec,history,caller_effective if public else effective,origin,bool(public))
+            levels[name]=product
+            choices[name]={"origin":"selected" if public else "baseline",**params}
+            if coverage is not None and coverage["status"]!="COMPLETE":
+                failures[name]={"status":coverage["status"],"reason":coverage.get("reason")}
+            elif notes:
+                failures[name]={"status":notes[0],"reason":None}
+        metadata["status"]="DEPENDENCY_UNAVAILABLE" if failures else "EVALUATED"
+        metadata["levels"]=choices
+        metadata["strategy_eligibility"]="RESEARCH_ONLY_OPTIONAL_CONTEXT"
+        metadata["dependency_snapshots"].update({name:item["calculation_snapshot"] for name,item in levels.items()})
+        return build_crt_context(s_refs,products,levels),metadata
+
     results = []
     for spec in request.indicators:
         definition = definitions.get(spec.id)
@@ -403,6 +698,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             raise ValueError("FVG options require the FVG indicator")
         if (spec.liquidity is not None or spec.liquidity_delivery is not None) and spec.id != "liquidity_sweeps":
             raise ValueError("Liquidity options require the liquidity indicator")
+        if spec.context is not None and spec.id not in {"order_blocks","candle_range_theory"}:
+            raise ValueError("Context options require Order Blocks or CRT")
         if (spec.crt is not None or spec.crt_delivery is not None) and spec.id!="candle_range_theory":
             raise ValueError("CRT options require the CRT indicator")
         if (spec.ob is not None or spec.ob_delivery is not None) and spec.id != "order_blocks":
@@ -422,39 +719,27 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             if len(bars) < result["warmup_bars"]:
                 result_warnings.append("INSUFFICIENT_WARMUP")
         elif spec.id in {"market_structure","liquidity_sweeps"}:
-            rules = spec.structure or StructureRules()
-            structure_rows,evidence = resolve_history(request,rows,step,rules,history_loader)
-            provenance = {**input_identity, **evidence, "schedule_completeness": "NOT_ESTABLISHED"}
-            provenance["partitions"] = sorted(provenance["partitions"], key=lambda item: (item["id"], item["sha256"]))
-            # Retrieval counters describe a request, not event identity.
-            event_scope = {key: value for key, value in provenance.items()
-                           if key not in {"retrieval", "context_partitions", "partitions"}}
-            liquid = None
-            structure_delivery = spec.structure_delivery or StructureDelivery()
-            if spec.id == "liquidity_sweeps":
-                liquid = LiquidityStream(spec.liquidity or LiquidityRules(),
-                                         spec.liquidity_delivery or LiquidityDelivery(), step)
-                structure_delivery = StructureDelivery(pivot_limit=0, break_limit=0)
-            detected = detect_structure(structure_rows, step, rules, event_scope,
-                                        structure_delivery,
-                                        {"cutoff": request.cutoff, "frozen": request.frozen, "provenance": provenance},
-                                        liquid.observe if liquid else None)
-            result_warnings = detected.pop("structure_warnings")
-            if evidence.get("status"):
-                result_warnings.append(evidence["status"])
-            if not detected["pivots"] and len(structure_rows) < rules.left+rules.right+1:
+            rules=spec.structure or StructureRules()
+            history,provenance=resolved(rules)
+            if spec.id=="market_structure":
+                detected=structure_result(history,rules,provenance,spec.structure_delivery or StructureDelivery())
+                result={"id":spec.id,"version":rules.algorithm_version,"render":"markers","series":{},
+                        "warmup_bars":rules.left+rules.right+1,"parameters":rules.identity_parameters(),
+                        "provenance":provenance,**{key:value for key,value in detected.items() if key!="structure_warnings"}}
+            else:
+                liquid=spec.liquidity or LiquidityRules()
+                output,_,detected=liquidity_product(history,provenance,rules,liquid)
+                result={"id":spec.id,"version":1,"render":"markers","series":{},
+                        "warmup_bars":rules.left+rules.right+1,"parameters":liquid.identity(),
+                        "structure_version":rules.algorithm_version,"structure_parameters":rules.identity_parameters(),
+                        "schedule_assumption":(detected.get("continuity") or {}).get("schedule"),
+                        "provenance":provenance,**output}
+            result_warnings=list(detected["structure_warnings"])
+            if provenance.get("status"):
+                result_warnings.append(provenance["status"])
+            if not detected["pivots"] and len(history)<rules.left+rules.right+1:
                 result_warnings.append("INSUFFICIENT_WARMUP")
-            result = {"id": spec.id, "version": rules.algorithm_version, "render": "markers", "series": {},
-                      "warmup_bars": rules.left+rules.right+1, "parameters": rules.identity_parameters(),
-                      "provenance": provenance, **detected}
-            if liquid:
-                result = {"id": spec.id, "version": 1, "render": "markers", "series": {},
-                          "warmup_bars": rules.left+rules.right+1, "parameters": liquid.rules.identity(),
-                          "structure_version": rules.algorithm_version, "structure_parameters": rules.identity_parameters(),
-                          "schedule_assumption": (detected.get("continuity") or {}).get("schedule"),
-                          "provenance": provenance, **liquid.finish(detected["event_page"]["snapshot"],
-                                                                    detected["provenance_id"])}
-        elif spec.id == "candle_range_theory":
+        elif spec.id=="candle_range_theory":
             rules=spec.crt or CRTRules()
             allowed=COMBINATIONS[request.timeframe]
             frame=rules.reference_frame or allowed[0]
@@ -464,82 +749,112 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             provenance={**input_identity,**evidence}
             provenance["partitions"]=sorted(provenance["partitions"],key=lambda p:(p["id"],p["sha256"]))
             failed=bool(evidence.get("status"))
-            context=build_crt_context(crt_rows,step,request.cutoff,provenance,request.frozen,rules) if rules.include_context and not failed else None
+            context,metadata=None,None
+            if rules.include_context:
+                if failed:
+                    metadata={"policy":(spec.context or ContextOptions()).policy,"status":"DEPENDENCY_UNAVAILABLE",
+                              "failures":{"reference":evidence["status"]}}
+                else:
+                    context,metadata=crt_context(spec,rules,crt_rows,provenance)
+            output=coordinator.run("crt",spec.id,crt_rows,lambda:evaluate_crt(
+                [] if failed else crt_rows,step,request.cutoff,frame,rules,spec.crt_delivery or CRTDelivery(),
+                provenance,native,context=context,context_snapshot=digest(metadata) if metadata is not None else None))
             result={"id":spec.id,"version":1,"render":"markers","series":{},"warmup_bars":None,
-                    "parameters":rules.model_dump(),"provenance":provenance,
-                    **evaluate_crt([] if failed else crt_rows,step,request.cutoff,frame,rules,
-                                   spec.crt_delivery or CRTDelivery(),provenance,native,context=context)}
+                    "parameters":rules.model_dump(),"provenance":provenance,**output}
+            if metadata is not None:
+                result["context_configuration"]=metadata
             result_warnings=list(result["quality"])
             if failed:
                 result_warnings.append(evidence["status"])
-        elif spec.id == "order_blocks":
-            structure = spec.structure or StructureRules(algorithm_version=2)
-            rules = spec.ob or OrderBlockRules()
-            ob_rows, evidence = resolve_history(request,rows,step,structure,history_loader)
-            provenance = {**input_identity, **evidence, "schedule_completeness":"NOT_ESTABLISHED"}
-            provenance["partitions"] = sorted(provenance["partitions"],key=lambda part:(part["id"],part["sha256"]))
-            scope = {key:value for key,value in provenance.items()
-                     if key not in {"retrieval","partitions","context_partitions"}}
-            stream = OrderBlockStream(rules,structure,provenance,step,spec.ob_delivery or OrderBlockDelivery())
-            consumer = stream.observe
-            if rules.include_context:
-                fvg_rules = FVGRules(market_schedule=structure.market_schedule or MarketSchedule(kind="unknown"))
-                evaluate_fvg(ob_rows,step,request.cutoff,fvg_rules,
-                             FVGDelivery(current_limit=0,formation_limit=0,revision_limit=0),
-                             provenance,request.frozen,on_formation=stream.record_fvg)
-                liquidity = LiquidityStream(LiquidityRules(),LiquidityDelivery(),step,
-                                            on_confirmed_sweep=stream.record_sweep)
-
-                def consumer(*observation):
-                    liquidity.observe(*observation)
-                    stream.observe(*observation)
-
-            detected = detect_structure(ob_rows,step,structure,scope,
-                                        StructureDelivery(pivot_limit=0,break_limit=0),
-                                        {"cutoff":request.cutoff,"frozen":request.frozen,"provenance":provenance},
-                                        consumer,local_witness=True)
-            result_warnings = detected["structure_warnings"]
-            if evidence.get("status"):
-                result_warnings.append(evidence["status"])
-            result = {"id":spec.id,"version":1,"render":"markers","series":{},
-                      "warmup_bars":structure.left+structure.right+1,"parameters":rules.model_dump(),
-                      "structure_parameters":structure.identity_parameters(),"provenance":provenance,
-                      **stream.finish(detected["event_page"]["snapshot"])}
-        elif spec.id == "fair_value_gap":
-            rules = spec.fvg or FVGRules()
-            fvg_rows,evidence = resolve_history(request,rows,step,rules,history_loader)
-            provenance = {**input_identity,**evidence,"schedule_completeness":"NOT_ESTABLISHED"}
-            provenance["partitions"] = sorted(provenance["partitions"], key=lambda item:(item["id"],item["sha256"]))
-            output = evaluate_fvg(fvg_rows,step,request.cutoff,rules,spec.fvg_delivery or FVGDelivery(),
-                                  provenance,request.frozen)
-            result_warnings = output.pop("warnings")
-            if evidence.get("status"):
-                result_warnings.append(evidence["status"])
-            result = {"id":spec.id,"version":1,"render":"markers","series":{},
-                      "warmup_bars":max(3,rules.atr_period if rules.atr_multiple else 0),
-                      "parameters":rules.canonical(),"provenance":provenance,**output}
-        elif spec.id in PERIODS:
-            length = DAY if spec.id == "previous_day" else WEEK
-            schedule = spec.schedule or MarketSchedule(
-                kind="continuous" if request.source in {"DEMO", "BINANCE_SPOT"} else "unknown")
-            context = None
-            if request.load_reference and history_loader and schedule.kind != "unknown":
-                end = period_start(request.cutoff, length)
-                if end >= length:
-                    context = history_loader(request, end-length, end, step)
-            series, result_warnings, coverage = previous_levels(rows, step, length, schedule, request.cutoff, context)
-            result = {"id": spec.id, "version": 2, "render": "overlay", "warmup_bars": None, "series": series,
-                      "coverage": coverage, "schedule": schedule.model_dump(), "coverage_policy_version": 1}
+        elif spec.id=="order_blocks":
+            structure=spec.structure or StructureRules(algorithm_version=2)
+            rules=spec.ob or OrderBlockRules()
+            history,provenance=resolved(structure)
+            output,_,detected=ob_product(history,provenance,structure,rules,spec)
+            result_warnings=list(detected["structure_warnings"])
+            if provenance.get("status"):
+                result_warnings.append(provenance["status"])
+            result={"id":spec.id,"version":1,"render":"markers","series":{},
+                    "warmup_bars":structure.left+structure.right+1,"parameters":rules.model_dump(),
+                    "structure_parameters":structure.identity_parameters(),"provenance":provenance,**output}
+        elif spec.id=="fair_value_gap":
+            rules=spec.fvg or FVGRules()
+            history,provenance=resolved(rules)
+            output,_=fvg_product(history,provenance,rules)
+            result_warnings=list(output["warnings"])
+            if provenance.get("status"):
+                result_warnings.append(provenance["status"])
+            result={"id":spec.id,"version":1,"render":"markers","series":{},
+                    "warmup_bars":max(3,rules.atr_period if rules.atr_multiple else 0),
+                    "parameters":rules.canonical(),"provenance":provenance,
+                    **{key:value for key,value in output.items() if key!="warnings"}}
         else:
-            series, result_warnings = range_series([(bar, availability[bar.time]) for bar in bars], step, spec.id, spec, request.cutoff)
-            result = {"id": spec.id, "version": 1, "render": "overlay", "warmup_bars": None, "series": series}
-            if spec.id in SESSIONS:
-                result["session"] = spec.session.model_dump() if spec.session else definition["parameters"]["session"]
+            series,result_warnings,coverage,parameters,product=level_product(spec,rows,caller_effective,input_identity,True)
+            result={"id":spec.id,"version":2 if spec.id in PERIODS else 1,
+                    "render":"overlay","series":series,"warmup_bars":None,"analysis":product,**parameters}
+            if coverage is not None:
+                result.update(coverage=coverage,coverage_policy_version=1)
         include_gaps = spec.id != "fair_value_gap" and spec.id not in PERIODS and not (spec.id == "market_structure" and result["version"] == 2) and not (
             spec.id == "liquidity_sweeps" and result["structure_version"] == 2)
         results.append({**result, "warnings": sorted((warnings if include_gaps else set()) | set(result_warnings)),
                         "unit": definition["unit"]})
-    return {"schema_version": 1, "calculated_at": int(time()), "cutoff": request.cutoff,
+    dependencies={"market_structure":("candles",),"liquidity_sweeps":("candles","market_structure"),
+                  "order_blocks":("candles","market_structure"),"fair_value_gap":("candles",),
+                  "candle_range_theory":("candles","higher_timeframe")}
+    for result,spec in zip(results,request.indicators):
+        if "analysis" in result:
+            continue
+        provenance=result.get("provenance",input_identity)
+        parameters={key:result[key] for key in ("parameters","structure_parameters","schedule","session") if key in result}
+        if "period" in result:
+            parameters["period"]=result["period"]
+        dep=dependencies.get(result["id"],("candles",))
+        if "context_configuration" in result:
+            parameters["context"]={key:value for key,value in result["context_configuration"].items()
+                                   if key not in {"status","failures","dependency_snapshots"}}
+            dep+=("context",)
+        window={key:provenance[key] for key in ("partitions","context_partitions","native_reference","retrieval")
+                if key in provenance}
+        history_rules=result.get("structure_parameters",result.get("parameters",{}))
+        window.update({"mode":"extended" if history_rules.get("history_bars")==10000 else "caller",
+                       "history_start":history_rules.get("history_start"),
+                       "caller_first":bars[0].time if bars else None,
+                       "caller_last":bars[-1].time if bars else None})
+        key=AnalysisKey(result["id"],tuple(input_identity.get(name) for name in SCOPE_FIELDS),canonical(window),
+                        request.cutoff,request.frozen,result.get("version",1),
+                        result.get("identity_policy_version",2 if result["id"]=="fair_value_gap" else 1),
+                        canonical(parameters),dep,provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED"))
+        contract=key.contract()
+        snapshot=next((result[page]["snapshot"] for page in
+                       ("event_page","liquidity_page","fvg_page","ob_page","crt_page")
+                       if page in result and "snapshot" in result[page]),None)
+        if spec.id=="market_structure":
+            configured=digest(structure_key(spec.structure or StructureRules()))
+        elif spec.id in {"liquidity_sweeps","order_blocks"}:
+            structure=spec.structure or StructureRules(algorithm_version=2 if spec.id=="order_blocks" else 1)
+            configured=digest([structure_key(structure),result["parameters"]])
+        else:
+            configured=result.get("configuration_fingerprint") or digest(
+                [contract["indicator"],contract["algorithm_version"],contract["identity_policy_version"],
+                 contract["parameters"]])
+        # Context-only settings must not alter stable engine reference fingerprints.
+        calculation_id=digest([contract,snapshot or fingerprint.hexdigest()])
+        result["analysis"]={**contract,"calculation_id":calculation_id,
+                            "configuration_fingerprint":configured,
+                            "calculation_snapshot":snapshot or calculation_id}
+        if spec.id in {"liquidity_sweeps","order_blocks"}:
+            result["analysis"]["strategy_eligibility"]="RESEARCH_ONLY_WHOLE_CANDLE_TIMING"
+        if spec.id=="candle_range_theory":
+            settings=spec.crt or CRTRules()
+            result["analysis"]["timeframe_evidence"]={
+                "version":1,"observation_frame":request.timeframe,"reference_frame":result["reference_frame"],
+                "mode":settings.reference_mode,"boundary_timezone":settings.daily_timezone if result["reference_frame"]=="D1" else "UTC",
+                "daily_boundary":settings.daily_boundary if result["reference_frame"]=="D1" else None,
+                "calendar":settings.market_schedule.model_dump(),
+                "reference_authority":provenance.get("native_reference",provenance).get("context_authority"),
+                "eligibility":"closed_and_available_before_interaction",
+            }
+    return {"schema_version": 1, "diagnostics":coordinator.diagnostics(results), "calculated_at": int(time()), "cutoff": request.cutoff,
             "authority": "CLIENT_SUPPLIED_UNVERIFIED",
             "input": {**input_identity,
                       "sha256": fingerprint.hexdigest(), "candles": len(rows)},

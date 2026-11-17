@@ -1,6 +1,7 @@
 """Bounded and independently resolved historical context for previous-period levels."""
 from datetime import UTC, datetime
 
+from .analysis_evidence import ResourceLimit
 from .db import rows
 from .indicator_engine import EvidenceBar
 from .market import demo_reference_candles, mt5_reference_candles
@@ -11,7 +12,7 @@ MAX_PARTITIONS = 50
 MAX_DECODED = 30_000
 
 
-def load_reference(request, start, end, step, *, archive_limits=None):
+def load_reference(request, start, end, step, *, archive_limits=None, archive_session=None):
     measurements = {"requested_candles": (end-start)//step, "decoded_candles": 0,
                     "partitions_examined": 0}
     evidence = {"context_authority": "UNAVAILABLE", "context_partitions": [], "retrieval": measurements}
@@ -62,7 +63,7 @@ def load_reference(request, start, end, step, *, archive_limits=None):
             for part in parts:
                 if part["id"] in manifest and manifest[part["id"]] != part["sha256"]:
                     return refused("SOURCE_INTEGRITY_FAILURE", "PARTITION_MANIFEST_MISMATCH")
-                decoded = read_partition(part)
+                decoded = read_partition(part) if archive_session is None else archive_session.read(part,read_partition)
                 measurements["decoded_candles"] += len(decoded)
                 if len(decoded) != part["rows_count"]:
                     return refused("SOURCE_INTEGRITY_FAILURE", "PARTITION_ROW_COUNT_MISMATCH")
@@ -75,7 +76,7 @@ def load_reference(request, start, end, step, *, archive_limits=None):
         for raw in bars:
             if not start <= raw["time"] < end:
                 continue
-            bar = EvidenceBar.model_validate(raw)
+            bar = EvidenceBar.model_validate(dict(raw))
             available = max(bar.time + step, bar.available_at or 0)
             if bar.time in observed:
                 return refused("SOURCE_INTEGRITY_FAILURE", "DUPLICATE_ARCHIVE_CANDLE")
@@ -85,6 +86,8 @@ def load_reference(request, start, end, step, *, archive_limits=None):
             return refused("SOURCE_INTEGRITY_FAILURE", "OVERLAPPING_ARCHIVE_CANDLE")
         return {"rows": [(bar, available) for bar, available in ordered if bar.closed and available <= request.cutoff],
                 "evidence": evidence}
+    except ResourceLimit:
+        raise
     except (OSError, RuntimeError, ValueError):
         if request.source.endswith("_SAVED"):
             return refused("SOURCE_INTEGRITY_FAILURE", "ARCHIVE_READ_FAILED")

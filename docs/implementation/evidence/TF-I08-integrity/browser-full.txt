@@ -1,0 +1,129 @@
+[WebServer] INFO:     Started server process [31752]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8168 (Press CTRL+C to quit)
+[WebServer] (node:37824) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 62 tests using 1 worker
+
+(node:10508) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions (5.4s)
+  ok  2 e2e\drawing-edit.spec.ts:176:1 › all four rectangle handles edit only their corresponding boundaries (3.8s)
+  ok  3 e2e\drawing-edit.spec.ts:196:3 › long position rejects crossed handles and preserves direction on a valid resize (4.3s)
+  ok  4 e2e\drawing-edit.spec.ts:196:3 › short position rejects crossed handles and preserves direction on a valid resize (4.5s)
+  ok  5 e2e\drawing-edit.spec.ts:221:1 › vertical horizontal edit works after zoom, resize and fullscreen with left scale and comparison pane (4.5s)
+  ok  6 e2e\drawing-edit.spec.ts:248:1 › overlapping strokes prefer the later item; locked and hidden drawings cannot drag (3.9s)
+  ok  7 e2e\drawing-edit.spec.ts:273:1 › Escape and pointer cancellation discard edits; a scope change cannot save an obsolete gesture (4.3s)
+  ok  8 e2e\drawing-edit.spec.ts:304:1 › a native touchscreen cancel releases the selected drawing without writing (3.1s)
+  ok  9 e2e\drawing-edit.spec.ts:319:1 › a real 409 blocks further edits and reload preserves the competing drawing (4.2s)
+  ok 10 e2e\drawing-edit.spec.ts:344:1 › a canonical EMA overlay leaves creating and editing a drawing functional (3.8s)
+  ok 11 e2e\drawing-edit.spec.ts:356:1 › market structure overlays preserve ownership of a saved drawing handle (5.1s)
+  ok 12 e2e\drawing-edit.spec.ts:378:1 › Liquidity overlays preserve a saved drawing handle gesture (4.1s)
+  ok 13 e2e\drawing-edit.spec.ts:378:1 › FVG overlays preserve a saved drawing handle gesture (4.4s)
+  ok 14 e2e\drawing-edit.spec.ts:378:1 › Order block overlays preserve a saved drawing handle gesture (4.4s)
+  ok 15 e2e\drawing-edit.spec.ts:378:1 › CRT overlays preserve a saved drawing handle gesture (4.4s)
+  ok 16 e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1366x768 (3.2s)
+  ok 17 e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1920x1080 (3.3s)
+  ok 18 e2e\drawing-placement.spec.ts:51:1 › touch places a horizontal drawing and its persisted anchor can be edited (4.9s)
+  ok 19 e2e\drawing-placement.spec.ts:78:1 › rejects outside release and Escape then saves a rectangle with two clicks (5.0s)
+  ok 20 e2e\drawing-placement.spec.ts:99:1 › risk/reward commits valid prices after zoom and excludes the comparison axis (4.2s)
+  ok 21 e2e\drawing-placement.spec.ts:134:1 › a stale drawing save reports 409 and reload preserves the competing scene (3.5s)
+  ok 22 e2e\drawing-placement.spec.ts:154:1 › blank chart space and a secondary plot cannot save into the primary scope (3.6s)
+  ok 23 e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every trend anchor (4.8s)
+  ok 24 e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every rectangle anchor (4.4s)
+  ok 25 e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every risk-reward anchor (7.1s)
+  ok 26 e2e\drawing-placement.spec.ts:258:1 › previews and saves both position directions and rejects an invalid edit (9.1s)
+  ok 27 e2e\drawing-placement.spec.ts:320:1 › releases pointer ownership on candle refresh and scope remount (5.0s)
+  ok 28 e2e\drawing-placement.spec.ts:418:1 › maps anchors across fullscreen and resized plots with a left comparison scale (3.5s)
+  ok 29 e2e\drawing-placement.spec.ts:505:1 › the horizontal rail takes precedence over an unfinished trendline (2.1s)
+  ok 30 e2e\drawing-placement.spec.ts:518:1 › a horizontal drawing drag uses the release candle and price after zoom and resize (4.3s)
+  ok 31 e2e\drawing-placement.spec.ts:567:1 › Alt+H and the rail discard rectangle and risk/reward draft anchors (3.1s)
+  ok 32 e2e\drawing-placement.spec.ts:588:1 › toolbox activation clears other modes and repeated switches save only the final intended drawing (5.5s)
+  ok 33 e2e\drawing-placement.spec.ts:624:1 › Escape cancels all armed modes and an active drag cannot complete in a replacement mode (6.8s)
+  ok 34 e2e\drawing-placement.spec.ts:668:1 › horizontal drags reject outside, missing candle and pointer cancellation (4.7s)
+  ok 35 e2e\drawing-placement.spec.ts:703:1 › negative chart prices are rejected and navigation still pans and zooms (6.4s)
+(node:28360) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 36 e2e\indicator-engine.spec.ts:20:1 › multiple canonical indicators persist, update panes and clean up on remount (8.8s)
+  ok 37 e2e\indicator-engine.spec.ts:62:1 › replay submits only closed evidence within the visible cutoff (4.5s)
+  ok 38 e2e\indicator-engine.spec.ts:85:1 › a session overlay exposes provisional and completed backend values (5.1s)
+  ok 39 e2e\indicator-engine.spec.ts:101:1 › previous week requests a bounded M5 reference beyond chart history (4.6s)
+  ok 40 e2e\indicator-engine.spec.ts:117:1 › the terminal distinguishes a complete forex week from missing open-market coverage (6.6s)
+  ok 41 e2e\indicator-engine.spec.ts:152:1 › structure replay paints CHOCH at the confirming step and removes it on rewind (10.4s)
+  ok 42 e2e\indicator-engine.spec.ts:217:1 › a pending market structure result stays tied to the original chart scope (8.1s)
+  ok 43 e2e\indicator-engine.spec.ts:247:1 › older structure pages are bounded and leave the latest chart and state intact (6.4s)
+  ok 44 e2e\indicator-engine.spec.ts:291:1 › calendar structure confirms a real reopening BOS and removes it on replay rewind (7.9s)
+  ok 45 e2e\indicator-engine.spec.ts:328:1 › liquidity replay exposes the sweep only after its closed evidence and keeps it inspectable (6.5s)
+  ok 46 e2e\indicator-engine.spec.ts:369:1 › a pending Liquidity request cannot replace another instrument or timeframe (6.9s)
+  ok 47 e2e\indicator-engine.spec.ts:369:1 › a pending FVG request cannot replace another instrument or timeframe (5.5s)
+  ok 48 e2e\indicator-engine.spec.ts:369:1 › a pending Order block request cannot replace another instrument or timeframe (6.9s)
+  ok 49 e2e\indicator-engine.spec.ts:369:1 › a pending CRT request cannot replace another instrument or timeframe (5.2s)
+  ok 50 e2e\indicator-engine.spec.ts:397:1 › FVG paints a causal zone and updates its remaining depth during replay (8.1s)
+  ok 51 e2e\indicator-engine.spec.ts:442:1 › FVG selection survives a rolling MT5 refresh and drops corrected evidence (11.9s)
+  ok 52 e2e\indicator-engine.spec.ts:490:1 › order block appears at BOS availability and rewinds independently of FVG and liquidity (7.8s)
+  ok 53 e2e\indicator-engine.spec.ts:543:1 › CRT delays the H1 range, excludes a straddling sweep and rewinds cleanly (11.3s)
+  ok 54 e2e\indicator-engine.spec.ts:601:1 › shared context follows chart structure settings and visibility changes send no request (8.0s)
+  ok 55 e2e\liquidity-active.spec.ts:3:1 › unchanged live liquidity remains on chart beyond the revision page (6.9s)
+  ok 56 e2e\research.spec.ts:3:1 › opens the research dashboard, replays demo bars, and links to the preserved catalog (5.9s)
+  ok 57 e2e\research.spec.ts:22:1 › shows a saved background SMT watch and stops it from Market Terminal (2.4s)
+  ok 58 e2e\research.spec.ts:45:1 › navigates by keyboard and moves recorded signal evidence into a persisted draft (4.7s)
+  ok 59 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (7.6s)
+  ok 60 e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses (12.7s)
+  x  61 e2e\research.spec.ts:197:1 › links four chart views and opens a saved simulation after reload (7.4s)
+(node:16280) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 62 e2e\terminal.spec.ts:3:1 › generates a simulated dataset and reopens it after reload (7.9s)
+
+
+  1) e2e\research.spec.ts:197:1 › links four chart views and opens a saved simulation after reload ─
+
+    Error: "route.fetch: Test ended.
+    Call log:
+      - → POST http://127.0.0.1:4268/research/api/indicators/evaluate
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/159.0.8154.6 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - accept-language: en-US
+        - content-type: application/json
+        - origin: http://127.0.0.1:4268
+        - referer: http://127.0.0.1:4268/
+        - sec-ch-ua: "HeadlessChrome";v="159", "Not/A)Brand";v="8", "Chromium";v="159"
+        - sec-ch-ua-mobile: ?0
+        - sec-ch-ua-platform: "Windows"
+        - content-length: 56285
+    " while running route callback.
+    Consider awaiting `await page.unrouteAll({ behavior: 'ignoreErrors' })`
+    before the end of the test to ignore remaining routes in flight.
+
+      112 |   if(stressed){
+      113 |     await page.route("**/indicators/evaluate",async route=>{
+    > 114 |       const response=await route.fetch();
+          |                                  ^
+      115 |       if(route.request().postDataJSON().indicators.length===8){
+      116 |         evaluationReady.resolve();
+      117 |         await analytical.promise;
+        at K:\Projects\TradeForge\frontend\e2e\research.spec.ts:114:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\tf-i08-integrity-full\research-links-four-chart--40b95-ved-simulation-after-reload\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\tf-i08-integrity-full\research-links-four-chart--40b95-ved-simulation-after-reload\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\tf-i08-integrity-full\research-links-four-chart--40b95-ved-simulation-after-reload\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\tf-i08-integrity-full\research-links-four-chart--40b95-ved-simulation-after-reload\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\tf-i08-integrity-full\research-links-four-chart--40b95-ved-simulation-after-reload\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e\research.spec.ts:197:1 › links four chart views and opens a saved simulation after reload ──
+  61 passed (6.2m)

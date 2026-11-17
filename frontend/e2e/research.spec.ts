@@ -92,46 +92,177 @@ test("navigates by keyboard and moves recorded signal evidence into a persisted 
 });
 
 
-test("persists a trendline and resumes a frozen replay checkpoint", async ({page})=>{
+for(const stressed of [false,true])test(
+  stressed?"persists a trendline and resumes replay during delayed analytical and persistence responses":
+    "persists a trendline and resumes a frozen replay checkpoint", async ({page})=>{
+  const errors:string[]=[];
+  page.on("pageerror",error=>errors.push(error.message));
   await page.setViewportSize({width:1366,height:768});
   await page.goto("/");
   await page.getByRole("button",{name:"Market Terminal",exact:true}).click();
   await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
-  const chart=page.locator(".primary-chart canvas").first();
-  await expect(chart).toBeVisible();
+  const row=page.locator(".primary-chart .chart-input tr").first();
+  await expect(row.locator("canvas").first()).toBeVisible();
+  const widths=await row.locator("td").evaluateAll(cells=>cells.map(cell=>cell.getBoundingClientRect().width));
+  const chart=row.locator("td").nth(widths.indexOf(Math.max(...widths)));
+  const analytical=Promise.withResolvers<void>();
+  const evaluationReady=Promise.withResolvers<void>();
+  const persisted=Promise.withResolvers<void>();
+  const saveReady=Promise.withResolvers<void>();
+  if(stressed){
+    await page.route("**/indicators/evaluate",async route=>{
+      const response=await route.fetch();
+      if(route.request().postDataJSON().indicators.length===8){
+        evaluationReady.resolve();
+        await analytical.promise;
+      }
+      await route.fulfill({response});
+    });
+    await page.route("**/drawings?*",async route=>{
+      if(route.request().method()!=="POST")return route.continue();
+      const response=await route.fetch();
+      saveReady.resolve();
+      await persisted.promise;
+      await route.fulfill({response});
+    });
+    const library=page.getByText("Indicator library",{exact:true});
+    await library.click();
+    const ids=["ema","session_asia","session_london","previous_day","market_structure","fair_value_gap",
+      "liquidity_sweeps","order_blocks"];
+    for(const id of ids){
+      await page.getByLabel("Add indicator").selectOption(id);
+      await page.getByRole("button",{name:"Enable indicator"}).click();
+    }
+    await library.click();
+    await evaluationReady.promise;
+  }
   await page.getByText(/^Drawing toolbox/).click();
   await page.getByRole("button",{name:"Draw",exact:true}).click();
-  await chart.evaluate(element=>element.scrollIntoView({block:"center",inline:"center"}));
-  const box=await chart.boundingBox();
-  if(!box)throw Error("Primary chart has no bounds");
-  await page.mouse.click(box.x+box.width*.45,box.y+box.height*.38);
+  async function clickPlot(x:number,y:number){
+    const position=await chart.evaluate((canvas,[xFraction,yFraction])=>({
+      x:canvas.clientWidth*xFraction,y:canvas.clientHeight*yFraction,
+    }),[x,y]);
+    await chart.click({position});
+  }
+  await clickPlot(.45,.38);
   await expect(page.getByText(/Trendline.*select 2/)).toBeVisible();
-  const second=await chart.boundingBox();
-  if(!second)throw Error("Primary chart moved off screen");
-  await page.mouse.click(second.x+second.width*.62,second.y+second.height*.31);
+  if(stressed){
+    const refreshed=page.waitForResponse(response=>response.url().endsWith("/indicators/evaluate")&&
+      response.request().postDataJSON().indicators.length===8);
+    analytical.resolve();
+    const response=await refreshed;
+    expect(response.ok()).toBeTruthy();
+    expect((await response.json()).results).toHaveLength(8);
+    await expect(page.getByText(/Trendline.*select 2/)).toBeVisible();
+  }
+  const drawingResponse=page.waitForResponse(response=>response.request().method()==="POST"&&response.url().includes("/drawings?"));
+  await clickPlot(.62,.31);
+  if(stressed){
+    await saveReady.promise;
+    await expect(page.getByRole("button",{name:"Draw",exact:true})).toBeDisabled();
+    expect(await page.getByLabel("Select drawing").evaluateAll(selects=>
+      selects.every(item=>(item as HTMLSelectElement).value===""))).toBeTruthy();
+    persisted.resolve();
+  }
+  const drawing=await drawingResponse;
+  expect(drawing.ok()).toBeTruthy();
   await page.getByText(/^Drawing toolbox/).scrollIntoViewIfNeeded();
   await expect(page.getByLabel("Select drawing")).toHaveValue(/^[a-f0-9-]{36}$/);
   const id=await page.getByLabel("Select drawing").inputValue();
+  expect((await drawing.json()).items.some((item:{id:string})=>item.id===id)).toBe(true);
   await page.getByRole("button",{name:"Save chart evidence"}).click();
   await expect(page.getByText("Chart capture saved")).toBeVisible();
   await page.reload();
   await page.getByText(/^Drawing toolbox/).click();
   await expect(page.getByLabel("Select drawing").locator(`option[value="${id}"]`)).toHaveCount(1);
+  const replayBuilt=Promise.withResolvers<void>();
+  const publishReplay=Promise.withResolvers<void>();
+  if(stressed){
+    await page.route("**/replay/sessions",async route=>{
+      if(route.request().method()!=="POST")return route.continue();
+      const response=await route.fetch();
+      replayBuilt.resolve();
+      await publishReplay.promise;
+      await route.fulfill({response});
+    });
+  }
+  const replayResponse=page.waitForResponse(response=>response.request().method()==="POST"&&response.url().endsWith("/replay/sessions"));
   await page.getByRole("button",{name:"Bar replay",exact:true}).click();
+  if(stressed){
+    await replayBuilt.promise;
+    await expect(page.getByLabel("Historical replay")).toHaveCount(0);
+    await expect(page.getByRole("button",{name:"Bar replay",exact:true})).toBeDisabled();
+    publishReplay.resolve();
+  }
+  const replay=await replayResponse;
+  expect(replay.ok()).toBeTruthy();
+  const session=await replay.json();
+  const bookmarks:number[]=session.checkpoint?.bookmarks??[];
   const controls=page.getByLabel("Historical replay");
+  const timeline=controls.getByLabel("Replay timeline");
   await expect(controls).toBeVisible();
-  await controls.getByRole("button",{name:"Restart"}).click();
-  await controls.getByRole("button",{name:"Next candle"}).click();
-  await controls.getByRole("button",{name:"Bookmark candle"}).click();
+  if(await timeline.inputValue()!=="0")await controls.getByRole("button",{name:"Restart"}).click();
+  let position=0;
+  do{
+    await controls.getByRole("button",{name:"Next candle"}).click();
+    await expect(timeline).toHaveValue(String(++position));
+  }while(bookmarks.includes(position));
+  const bookmark=controls.getByRole("button",{name:"Bookmark candle"});
+  await expect(bookmark).toBeEnabled();
+  await bookmark.click();
+  const checkpointResponse=page.waitForResponse(response=>response.request().method()==="POST"&&response.url().endsWith("/checkpoint"));
   await controls.getByRole("button",{name:"Save replay position"}).click();
+  const checkpoint=await checkpointResponse;
+  expect(checkpoint.ok()).toBeTruthy();
+  const expected=[...bookmarks,position].sort((left,right)=>left-right);
+  expect(checkpoint.request().postDataJSON()).toEqual({position,bookmarks:expected});
   await expect(page.getByText("Replay position saved")).toBeVisible();
   await page.reload();
-  await page.getByLabel("Resume saved replay").selectOption({index:1});
-  await expect(page.getByLabel("Replay timeline")).toHaveValue("1");
-  await expect(page.getByLabel("Bookmarks").locator("option")).toHaveCount(2);
+  await page.getByLabel("Resume saved replay").selectOption(session.id);
+  await expect(page.getByLabel("Replay timeline")).toHaveValue(String(position));
+  expect(await page.getByLabel("Bookmarks").locator("option").evaluateAll(options=>
+    options.slice(1).map(option=>Number((option as HTMLOptionElement).value)-1))).toEqual(expected);
+  if(stressed)await page.unrouteAll({behavior:"wait"});
+  expect(errors).toEqual([]);
 });
 
 
+test("a delayed drawing save cannot select a drawing in a different chart scope",async ({page})=>{
+  await page.setViewportSize({width:1366,height:768});
+  await page.goto("/");
+  await page.getByRole("button",{name:"Market Terminal",exact:true}).click();
+  await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
+  await page.getByRole("button",{name:"M1",exact:true}).click();
+  const toolbox=page.getByText(/^Drawing toolbox/);
+  await toolbox.click();
+  await page.getByLabel("Drawing tool").selectOption("horizontal");
+  const completed=Promise.withResolvers<string>();
+  const release=Promise.withResolvers<void>();
+  await page.route("**/drawings?*",async route=>{
+    if(route.request().method()!=="POST")return route.continue();
+    const response=await route.fetch();
+    expect(response.ok()).toBeTruthy();
+    const pending=route.request().postDataJSON().items.at(-1);
+    completed.resolve(pending.id);
+    await release.promise;
+    await route.fulfill({response});
+  });
+  await page.getByRole("button",{name:"Draw",exact:true}).click();
+  const plot=page.locator(".primary-chart .chart-input tr").first().locator("td").nth(1);
+  await plot.click({position:{x:320,y:145}});
+  const id=await completed.promise;
+  await page.getByRole("button",{name:"M5",exact:true}).click();
+  const selected=page.getByLabel("Select drawing");
+  await expect(page.locator(".primary-chart .pane-label")).toContainText("M5");
+  const written=page.waitForResponse(res=>res.request().method()==="POST"&&res.url().includes("/drawings?"));
+  release.resolve();
+  expect((await written).ok()).toBeTruthy();
+  await expect(selected.locator(`option[value="${id}"]`)).toHaveCount(0);
+  expect(await selected.evaluateAll(selects=>
+    selects.every(item=>(item as HTMLSelectElement).value===""))).toBeTruthy();
+  await page.getByRole("button",{name:"M1",exact:true}).click();
+  await expect(selected.locator(`option[value="${id}"]`)).toHaveCount(1);
+});
 test("links four chart views and opens a saved simulation after reload",async ({page})=>{
   await page.setViewportSize({width:1920,height:1080});
   const errors:string[]=[];

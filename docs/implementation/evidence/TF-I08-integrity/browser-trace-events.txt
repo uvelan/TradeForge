@@ -1,0 +1,119 @@
+research-a-delayed-drawing-a0ace--in-a-different-chart-scope
+  click .primary-chart .chart-input tr >> nth=0 >> td >> nth=1
+  expect internal:label="Select drawing"i >> option[value="28b8c5c7-594a-4a58-b34c-cf5051479526"] {'value': {'v': 'undefined'}, 'handles': []}
+  expect internal:label="Select drawing"i >> option[value="28b8c5c7-594a-4a58-b34c-cf5051479526"] {'value': {'v': 'undefined'}, 'handles': []}
+  HTTP /research/api/drawings 200 None
+  HTTP /research/api/drawings 200 None
+research-persists-a-trendl-e8929-l-and-persistence-responses
+  expect .primary-chart .chart-input tr >> nth=0 >> canvas >> nth=0 {'value': {'v': 'undefined'}, 'handles': []}
+  actionability   <select>�</select> from <label>�</label> subtree intercepts pointer events
+  click .primary-chart .chart-input tr >> nth=0 >> td >> nth=1
+  click .primary-chart .chart-input tr >> nth=0 >> td >> nth=1
+  expect internal:label="Select drawing"i {'value': {'v': 'undefined'}, 'handles': []}
+  expect internal:label="Select drawing"i >> option[value="153ee917-d2f0-4bbe-892c-89ca338a93c8"] {'value': {'v': 'undefined'}, 'handles': []}
+  expect internal:label="Historical replay"i {'value': {'v': 'undefined'}, 'handles': []}
+  expect internal:label="Historical replay"i {'value': {'v': 'undefined'}, 'handles': []}
+  click internal:label="Historical replay"i >> internal:role=button[name="Restart"i]
+  click internal:label="Historical replay"i >> internal:role=button[name="Next candle"i]
+  expect internal:label="Historical replay"i >> internal:label="Replay timeline"i {'value': {'v': 'undefined'}, 'handles': []}
+  expect internal:label="Historical replay"i >> internal:role=button[name="Bookmark candle"i] {'value': {'v': 'undefined'}, 'handles': []}
+  click internal:label="Historical replay"i >> internal:role=button[name="Bookmark candle"i]
+  click internal:label="Historical replay"i >> internal:role=button[name="Save replay position"i]
+  expect internal:label="Replay timeline"i {'value': {'v': 'undefined'}, 'handles': []}
+  HTTP /research/api/indicators/evaluate -1 None
+  HTTP /research/api/indicators/evaluate -1 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate -1 None
+  HTTP /research/api/indicators/evaluate -1 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/drawings 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/replay/sessions 201 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/replay/sessions/24bef56353280a4349bcf79762ba52ac6ccc92363139eb8377464ce0b3cc2e6d/checkpoint 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/drawings 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/replay/sessions 201 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate 200 None
+  HTTP /research/api/indicators/evaluate -1 None
+research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat11
+  expect .primary-chart .chart-input tr >> nth=0 >> canvas >> nth=0 {'value': {'v': 'undefined'}, 'handles': []}
+  pointer {'x': 658.6, 'y': 326.40999999999997} in a 1366x768 viewport
+  pointer {'x': 778.96, 'y': 805.716875} in a 1366x768 viewport
+research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint
+  expect .primary-chart .chart-input tr >> nth=0 >> canvas >> nth=0 {'value': {'v': 'undefined'}, 'handles': []}
+  click .primary-chart .chart-input tr >> nth=0 >> td >> nth=1 >> canvas >> nth=0
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events
+  actionability   <canvas width="708" height="482"></canvas> intercepts pointer events

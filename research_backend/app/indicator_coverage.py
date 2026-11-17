@@ -88,7 +88,7 @@ def inspect_window(start, end, step, observations, schedule, cutoff):
             "candidate_low": min((bar.low for bar, _ in observations), default=None)}
 
 
-def previous_levels(rows, step, length, schedule, cutoff, context=None):
+def previous_levels(rows, step, length, schedule, cutoff, context=None, *, on_reference=None):
     grouped = {}
     for bar, available in rows:
         grouped.setdefault(period_start(bar.time, length), []).append((bar, available))
@@ -102,6 +102,8 @@ def previous_levels(rows, step, length, schedule, cutoff, context=None):
         report = inspect_window(start, end, step, observed, schedule, cutoff)
         if historical:
             report.update(context["evidence"])
+        if on_reference is not None:
+            on_reference(report, observed, historical)
         coverage[end] = report
         if report["status"] != "COMPLETE":
             continue

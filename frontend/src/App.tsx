@@ -546,7 +546,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             link={link} linkedFrame={linkTimeframe==='on'?timeframe:undefined} linkedSymbol={linkInstrument==='on'?symbol:undefined}/>)}
         </div></div>
         <div className="terminal-replay">
-          {replayActive&&replayData ? <ReplayControls candles={replayData.candles} index={replayIndex!}
+          {replayActive&&replayData ? <ReplayControls key={replaySession?.id??replayScope} candles={replayData.candles} index={replayIndex!}
             onSeek={setReplayIndex} onExit={()=>{setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);}}
             onCheckpoint={replaySession?async(position,bookmarks)=>{
               await api.saveCheckpoint(replaySession.id,position,bookmarks);replayOptions();
