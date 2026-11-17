@@ -374,7 +374,7 @@ test("market structure overlays preserve ownership of a saved drawing handle",as
 });
 
 for(const [title,query,id] of [["Liquidity","liquidity pools","liquidity_sweeps"],
-  ["FVG","fair value gap","fair_value_gap"]]){
+  ["FVG","fair value gap","fair_value_gap"],["Order block","order blocks","order_blocks"]]){
 test(title+" overlays preserve a saved drawing handle gesture",async ({page})=>{
   const {created,item}=await setup(page,"horizontal",[[.49,.55]]);
   await page.getByText("Indicator library",{exact:true}).click();

@@ -99,7 +99,7 @@ def overlap_sample(book, zone):
     return matches, False
 
 
-def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen):
+def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen, *, on_formation=None):
     source_keys = ("source", "symbol", "timeframe", "feed_id", "dataset_id", "price_basis")
     scope = {key: provenance.get(key) for key in source_keys}
     parameters = rules.canonical()
@@ -152,6 +152,8 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen):
         if state in {"FULLY_MITIGATED","INVALIDATED","EXPIRED"}:
             del book[zone.id]
         (formations if state=="ACTIVE" else revisions).append(event)
+        if state=="ACTIVE" and on_formation is not None:
+            on_formation(event)
 
     for bar,available in sorted(rows,key=lambda row:(row[1],row[0].time)):
         entry=bar.model_dump_json().encode()+f":{available};".encode()

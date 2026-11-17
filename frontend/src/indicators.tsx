@@ -7,8 +7,8 @@ type Window = { timezone: string; start: string; end: string };
 type Schedule = {kind: "continuous" | "forex_weekly" | "unknown"; timezone?: string;
   sunday_open?: string; friday_close?: string};
 type Structure = {algorithm_version?: 1 | 2; market_schedule?: Schedule; left: number; right: number; price_source: "wick" | "close";
-  ties: "strict" | "earliest"; tolerance_bps: number; break_bps: number; wick_candidates: boolean};
-type Collection = "pivots" | "breaks" | "pools" | "sweeps" | "current_pools" | "formations" | "revisions" | "current_fvgs";
+  ties: "strict" | "earliest"; tolerance_bps: number; break_bps: number; wick_candidates: boolean; history_bars?:2000|10000;history_start?:number|null};
+type Collection = "pivots" | "breaks" | "pools" | "sweeps" | "current_pools" | "formations" | "revisions" | "current_fvgs" | "ob_formations" | "ob_revisions" | "current_obs";
 type FvgRules = {min_price:number;min_bps:number;min_ticks:number;tick_size?:number|null;tick_size_reference?:string|null;
   atr_multiple:number;atr_period:number;displacement:"none"|"directional_body_bps_v1";min_body_bps:number;
   mitigation:"wick"|"close";max_age_bars:number;market_schedule:Schedule;history_bars?:2000|10000;history_start?:number|null};
@@ -20,6 +20,18 @@ export type FvgEvent = {id:string;fvg_id:string;identity_policy_version?:number;
   formation_ohlc?:number[][];
   a_time:number;b_time:number;c_time:number;observation_time:number;formation_confirmation_time:number;
   confirmation_time:number;available_at:number;reason:string;warnings:string[]};
+type ObRules = {lookback:number;candidate_age:number;min_body:number;min_break:number;min_displacement:number;
+  geometry:"wick"|"body";allow_choch:boolean;include_context:boolean;mitigation:"wick"|"close";
+  min_penetration_pct:number;max_age_bars:number};
+const obVisibility={...fvgVisibility,touched:true};
+type ObVisibility=typeof obVisibility;
+export type ObEvent = {id:string;ob_id:string;direction:FvgEvent["direction"];state:FvgEvent["state"]|"TOUCHED";
+  candidate_time:number;candidate_available_at:number;candidate_ohlc:number[];geometry:string;lower:number;upper:number;
+  remaining_lower:number;remaining_upper:number;mitigation_pct:number;break_type:string;break_time:number;bos_id:string;
+  broken_pivot_id:string;bos_confirmation_time:number;bos_available_at:number;first_visibility_time:number;
+  observation_time:number;confirmation_time:number;available_at:number;reason:string;
+  structure_version:number;structure_witness_id:string;identity_policy_version:number;
+  context:{status:string;fvg:{id:string;available_at:number}|null;liquidity_sweep:{id:string;available_at:number}|null}};
 type Liquidity = {equality_bps:number; penetration_bps:number; reclaim_bps:number;
   min_touches:number; max_touches:number; min_separation_bars:number; max_age_bars:number};
 type LiquidityVisibility = {zones:boolean; sweeps:boolean; candidates:boolean; terminal:boolean};
@@ -31,7 +43,7 @@ export type LiquidityEvent = {
   related_structure_ids?:string[]; ohlc?:{open:number; high:number; low:number; close:number};
 };
 type PageInfo = {total: number; returned: number; start: number; end: number; next_cursor: string | null};
-type OlderPage = {key: string; collection: Collection; metadata: PageInfo; events: (StructureEvent | LiquidityEvent | FvgEvent)[]};
+type OlderPage = {key: string; collection: Collection; metadata: PageInfo; events: (StructureEvent | LiquidityEvent | FvgEvent | ObEvent)[]};
 export type CurrentLiquidityPool = Omit<LiquidityEvent,"id"> & {revision_id:string; expiry_in_bars:number};
 type StructureVisibility = {swings: boolean; breaks: boolean; candidates: boolean};
 export type StructureEvent = {
@@ -43,8 +55,8 @@ export type StructureEvent = {
 const structureVisibility: StructureVisibility = {swings: true, breaks: true, candidates: true};
 
 type Definition = { id: string; label: string; period: number | null; timeframes: Timeframe[];
-  parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure; liquidity?: Liquidity; fvg?: FvgRules } };
-type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility; liquidity?: Liquidity; liquidityVisibility?: LiquidityVisibility; fvg?: FvgRules; fvgVisibility?: FvgVisibility; tickSize?: Record<string,{size:number;reference:string}> };
+  parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure; liquidity?: Liquidity; fvg?: FvgRules; ob?: ObRules } };
+type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility; liquidity?: Liquidity; liquidityVisibility?: LiquidityVisibility; fvg?: FvgRules; fvgVisibility?: FvgVisibility; ob?: ObRules; obVisibility?:ObVisibility; tickSize?: Record<string,{size:number;reference:string}> };
 type Point = { time: number; value: number; pivot_time?: number; status: "confirmed" | "provisional" };
 export type IndicatorResult = {
   id: string;
@@ -61,6 +73,12 @@ export type IndicatorResult = {
   visibility?: StructureVisibility;
   liquidityVisibility?: LiquidityVisibility;
   fvgVisibility?: FvgVisibility;
+  obVisibility?:ObVisibility;
+  ob_formations?:ObEvent[];
+  ob_revisions?:ObEvent[];
+  current_obs?:PageInfo & {items:ObEvent[]};
+  ob_page?:{formations:PageInfo;revisions:PageInfo};
+  rejections?:Record<string,number>;
   formations?: FvgEvent[];
   revisions?: FvgEvent[];
   fvg_page?: {formations:PageInfo; revisions:PageInfo};
@@ -110,6 +128,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   const [older, setOlder] = useState<OlderPage>();
   const [pageRequest, setPageRequest] = useState<{key: string; collection: Collection; cursor: string}>();
   const [pageError, setPageError] = useState("");
+  const [selectedOb,setSelectedOb]=useState<{key:string;id:string}>();
   const [selectedFvg,setSelectedFvg]=useState<{key:string;id:string}>();
   const [selectedLiquidity,setSelectedLiquidity]=useState<{key:string; id:string}>();
   const [response, setResponse] = useState<{key: string; results?: IndicatorResult[]; error?: string}>();
@@ -132,8 +151,15 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       const session = item.session ?? definition.parameters.session;
       if (session && (!session.timezone || !session.start || !session.end || session.start === session.end)) return [];
       const schedule = definition.parameters.schedule ? item.schedules?.[scheduleScope] : undefined;
-      return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {}), ...(schedule ? {schedule} : {}), ...(item.structure ? {structure:item.structure.algorithm_version===2?
-        {...item.structure,market_schedule:item.schedules?.[scheduleScope]}:item.structure} : {}), ...(item.liquidity ? {liquidity:item.liquidity} : {}),
+      const structure=item.structure??(definition.parameters.ob?definition.parameters.structure:undefined);
+      const structureInput=structure?{...structure,
+        ...(structure.algorithm_version===2?{market_schedule:item.schedules?.[scheduleScope]}:{}),
+        ...(definition.parameters.ob&&!source.endsWith("_SAVED")?{history_bars:2000 as const,history_start:null}:{}),
+      }:undefined;
+      return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {}),
+        ...(schedule ? {schedule} : {}), ...(structureInput?{structure:structureInput}:{}),
+        ...(item.liquidity ? {liquidity:item.liquidity} : {}),
+        ...(definition.parameters.ob?{ob:{...definition.parameters.ob,...item.ob}}:{}),
         ...(definition.parameters.fvg?{fvg:{...definition.parameters.fvg,...item.fvg,
           market_schedule:item.schedules?.[scheduleScope]??{kind:"unknown"},
           ...(item.fvg?.history_bars===10000&&(!source.endsWith("_SAVED")||item.fvg.history_start==null)
@@ -141,7 +167,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
           tick_size:item.tickSize?.[scheduleScope]?.size&&item.tickSize?.[scheduleScope]?.reference?item.tickSize[scheduleScope].size:undefined,
           tick_size_reference:item.tickSize?.[scheduleScope]?.size&&item.tickSize?.[scheduleScope]?.reference?item.tickSize[scheduleScope].reference:undefined}}:{})}];
     });
-  }, [definitions, periodText, primary, scheduleScope, settings, timeframe]);
+  }, [definitions, periodText, primary, scheduleScope, settings, source, timeframe]);
   const body = useMemo(() => enabled && active.length && (candles.length || active.some(item => item.id.startsWith("previous_")))
     ? JSON.stringify({source, timeframe, symbol, cutoff, frozen, load_reference: true, feed_id: feed?.feed_id,
         dataset_id: feed?.dataset_id, partitions: feed?.partitions, price_basis: feed?.price_basis, indicators: active, candles: candles.slice(-2000)})
@@ -184,15 +210,16 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
     const controller = new AbortController();
     const {collection, cursor}=pageRequest;
     const input=JSON.parse(body);
-    const current=collection==="current_pools"||collection==="current_fvgs";
+    const current=collection==="current_pools"||collection==="current_fvgs"||collection==="current_obs";
     const liquid=collection==="current_pools"||collection==="pools"||collection==="sweeps";
+    const ob=collection==="current_obs"||collection==="ob_formations"||collection==="ob_revisions";
     const fvg=collection==="current_fvgs"||collection==="formations"||collection==="revisions";
-    const spec=input.indicators.find((item:{id:string})=>item.id===(liquid?"liquidity_sweeps":fvg?"fair_value_gap":"market_structure"));
-    const first=liquid?"pool":fvg?"formation":"pivot", second=liquid?"sweep":fvg?"revision":"break";
-    const isFirst=collection==="pivots"||collection==="pools"||collection==="formations";
-    input.indicators=[{...spec,[liquid?"liquidity_delivery":fvg?"fvg_delivery":"structure_delivery"]:{
+    const spec=input.indicators.find((item:{id:string})=>item.id===(liquid?"liquidity_sweeps":fvg?"fair_value_gap":ob?"order_blocks":"market_structure"));
+    const first=liquid?"pool":fvg||ob?"formation":"pivot", second=liquid?"sweep":fvg||ob?"revision":"break";
+    const isFirst=collection==="pivots"||collection==="pools"||collection==="formations"||collection==="ob_formations";
+    input.indicators=[{...spec,[liquid?"liquidity_delivery":fvg?"fvg_delivery":ob?"ob_delivery":"structure_delivery"]:{
       [first+"_limit"]:!current&&isFirst?40:0,[second+"_limit"]:!current&&!isFirst?40:0,
-      ...(liquid||fvg?{current_limit:current?40:0}:{}),
+      ...(liquid||fvg||ob?{current_limit:current?40:0}:{}),
       [(current?"current":isFirst?first:second)+"_cursor"]:cursor,
     }}];
     void (async()=>{
@@ -203,11 +230,13 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
         const value=await response.json();
         if(!response.ok)throw Error(typeof value.detail==="string"?value.detail:"Historical event page unavailable");
         const result=value.results[0] as IndicatorResult;
-        const metadata=collection==="current_fvgs"?result.current_fvgs:
+        const metadata=collection==="current_obs"?result.current_obs:
+          collection==="ob_formations"?result.ob_page?.formations:collection==="ob_revisions"?result.ob_page?.revisions:
+          collection==="current_fvgs"?result.current_fvgs:
           collection==="formations"||collection==="revisions"?result.fvg_page?.[collection]:
           collection==="current_pools"?result.current_pools:
           collection==="pools"||collection==="sweeps"?result.liquidity_page?.[collection]:result.event_page?.[collection];
-        const events=collection==="current_fvgs"?result.current_fvgs?.items:collection==="current_pools"?result.current_pools?.items.map(pool=>({...pool,id:pool.revision_id})):
+        const events=collection==="current_obs"?result.current_obs?.items:collection==="current_fvgs"?result.current_fvgs?.items:collection==="current_pools"?result.current_pools?.items.map(pool=>({...pool,id:pool.revision_id})):
           result[collection];
         if(!metadata)throw Error("Historical event page missing");
         if(!controller.signal.aborted)setOlder({key:body,collection,metadata,events:events??[]});
@@ -223,10 +252,11 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   const current = response?.key === body ? response : undefined;
   const visibility = settings.find(item => item.id === "market_structure")?.visibility ?? structureVisibility;
   const liquidVisibility=settings.find(item=>item.id==="liquidity_sweeps")?.liquidityVisibility??liquidityVisibility;
+  const blockVisibility=settings.find(item=>item.id==="order_blocks")?.obVisibility??obVisibility;
   const gapVisibility=settings.find(item=>item.id==="fair_value_gap")?.fvgVisibility??fvgVisibility;
   const data = useMemo(() => current?.results?.map(item => item.id === "market_structure" ?
-    {...item, visibility} : item.id==="liquidity_sweeps"?{...item,liquidityVisibility:liquidVisibility}:item.id==="fair_value_gap"?{...item,fvgVisibility:gapVisibility}:item) ?? emptyResults,
-    [current, visibility, liquidVisibility, gapVisibility]);
+    {...item, visibility} : item.id==="liquidity_sweeps"?{...item,liquidityVisibility:liquidVisibility}:item.id==="fair_value_gap"?{...item,fvgVisibility:gapVisibility}:item.id==="order_blocks"?{...item,obVisibility:blockVisibility}:item) ?? emptyResults,
+    [current, visibility, liquidVisibility, gapVisibility,blockVisibility]);
   const warnings = [...new Set(data.filter(row => !row.coverage).flatMap(row => row.warnings))];
   const choices = definitions.filter(item => item.timeframes.includes(timeframe) && item.id !== selected &&
     !settings.some(config => config.id === item.id) && (item.label + " " + item.id).toLowerCase().includes(search.toLowerCase()));
@@ -306,6 +336,10 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                   onChange={event=>{const value=event.target.valueAsNumber;
                     if(value>=min&&value<=max)patch({[key]:value});}}/>
               </label>)}
+              {definition.parameters.ob&&source.endsWith("_SAVED")&&<label>OB archive start (UTC) <input type="datetime-local"
+                value={rules.history_start!=null?new Date(rules.history_start*1000).toISOString().slice(0,16):""}
+                onChange={event=>{const start=event.target.valueAsNumber/1000;patch(Number.isFinite(start)?
+                  {history_bars:10000,history_start:start}:{history_bars:2000,history_start:null});}}/></label>}
               <label>Pivot price <select value={rules.price_source}
                 onChange={event=>patch({price_source:event.target.value as Structure["price_source"]})}>
                 <option value="wick">Wick</option><option value="close">Close</option>
@@ -315,7 +349,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
               </select></label>
               {!definition.parameters.liquidity && <label><input type="checkbox" checked={rules.wick_candidates}
                 onChange={event=>patch({wick_candidates:event.target.checked})}/> Calculate wick candidates</label>}
-              {!definition.parameters.liquidity && (["swings","breaks","candidates"] as const).map(key=><label key={key}>
+              {!definition.parameters.liquidity && !definition.parameters.ob && (["swings","breaks","candidates"] as const).map(key=><label key={key}>
                 <input type="checkbox" checked={visibility[key]}
                   onChange={event=>update(item.id,{visibility:{...visibility,[key]:event.target.checked}})}/>
                 Show {key}
@@ -423,6 +457,76 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                   {selection.constituents && <><dt>Confirmed pivots</dt><dd>{selection.constituents.map(p=>p.price+" @ "+new Date(p.time*1000).toISOString()).join(", ")}</dd></>}
                   {selection.ohlc && <><dt>Crossing OHLC</dt><dd>{Object.values(selection.ohlc).join(" / ")}</dd></>}
                   {selection.related_structure_ids?.length ? <><dt>Related structure</dt><dd>{selection.related_structure_ids.join(", ")}</dd></>:null}
+                </dl>}
+              </section>}
+            </>;
+          })()}
+          {definition.parameters.ob && (() => {
+            const rules=item.ob??definition.parameters.ob;
+            const result=data.find(row=>row.id===item.id);
+            const history=older?.key===body&&["current_obs","ob_formations","ob_revisions"].includes(older.collection)?older:undefined;
+            const rows=history?history.events as ObEvent[]:[...(result?.current_obs?.items??[]),
+              ...(result?.ob_revisions??[]).slice(-6).reverse(),...(result?.ob_formations??[]).slice(-6).reverse()];
+            const selected=selectedOb?.key===fvgSelectionScope?rows.find(event=>event.id===selectedOb.id):undefined;
+            const patch=(value:Partial<ObRules>)=>update(item.id,{ob:{...rules,...value}});
+            const numeric:[keyof Pick<ObRules,"lookback"|"candidate_age"|"min_body"|"min_break"|"min_displacement"|
+              "min_penetration_pct"|"max_age_bars">,string,number,number,number][]=[
+              ["lookback","OB candidate lookback",1,100,1],["candidate_age","OB maximum candidate age",1,100,1],
+              ["min_body","OB minimum body",0,Infinity,.00001],["min_break","OB minimum break distance",0,Infinity,.00001],
+              ["min_displacement","OB minimum displacement",0,Infinity,.00001],["min_penetration_pct","OB minimum penetration (%)",0,100,.1],
+              ["max_age_bars","OB maximum age",1,500,1],
+            ];
+            const page=(collection:Collection,cursor:string|null|undefined)=>{
+              if(cursor){setPageError("");setPageRequest({key:body,collection,cursor});}
+            };
+            const utc=(time:number)=>new Date(time*1000).toISOString();
+            return <>
+              {numeric.map(([key,label,min,max,step])=><label key={key}>{label}<input type="number" min={min}
+                max={Number.isFinite(max)?max:undefined} step={step} value={rules[key]} onChange={event=>{
+                  const value=event.target.valueAsNumber;
+                  if(value>=min&&value<=max&&(step!==1||Number.isInteger(value)))patch({[key]:value});
+                }}/></label>)}
+              <label>OB geometry <select value={rules.geometry} onChange={event=>patch({geometry:event.target.value as ObRules["geometry"]})}>
+                <option value="wick">Wick</option><option value="body">Body</option></select></label>
+              <label>OB mitigation <select value={rules.mitigation} onChange={event=>patch({mitigation:event.target.value as ObRules["mitigation"]})}>
+                <option value="wick">Wick</option><option value="close">Close</option></select></label>
+              <label><input type="checkbox" checked={rules.allow_choch}
+                onChange={event=>patch({allow_choch:event.target.checked})}/> Allow confirmed CHOCH</label>
+              <label><input type="checkbox" checked={rules.include_context}
+                onChange={event=>patch({include_context:event.target.checked})}/> Include FVG and liquidity context</label>
+              {(Object.keys(obVisibility) as (keyof ObVisibility)[]).map(key=><label key={key}>
+                <input type="checkbox" checked={blockVisibility[key]}
+                  onChange={event=>update(item.id,{obVisibility:{...blockVisibility,[key]:event.target.checked}})}/> Show OB {key}</label>)}
+              {result?.ob_page&&<section aria-label="Order block evidence">
+                <p>Current order blocks {result.current_obs?.returned} / {result.current_obs?.total} · {result.provenance?.context_authority}</p>
+                {!!result.warnings.length&&<p>{result.warnings.join(" · ")}</p>}
+                <button type="button" className="small-tool" disabled={!result.current_obs?.next_cursor||Boolean(pageRequest)}
+                  onClick={()=>page("current_obs",result.current_obs?.next_cursor)}>More current order blocks</button>
+                <button type="button" className="small-tool" disabled={!result.ob_page.formations.next_cursor||Boolean(pageRequest)}
+                  onClick={()=>page("ob_formations",result.ob_page?.formations.next_cursor)}>Older OB formations</button>
+                <button type="button" className="small-tool" disabled={!result.ob_page.revisions.next_cursor||Boolean(pageRequest)}
+                  onClick={()=>page("ob_revisions",result.ob_page?.revisions.next_cursor)}>Older OB revisions</button>
+                {history&&<>
+                  <button type="button" className="small-tool" disabled={!history.metadata.next_cursor||Boolean(pageRequest)}
+                    onClick={()=>page(history.collection,history.metadata.next_cursor)}>Next OB page</button>
+                  <button type="button" className="small-tool" onClick={()=>{setPageRequest(undefined);setOlder(undefined);}}>Latest OB evidence</button>
+                </>}
+                {pageError&&<small role="alert">{pageError}</small>}
+                {!!Object.keys(result.rejections??{}).length&&<p>{Object.entries(result.rejections??{}).map(
+                  ([reason,count])=>reason.replaceAll("_"," ").toLowerCase()+" "+count).join(" · ")}</p>}
+                {[...new Map(rows.map(event=>[event.id,event])).values()].map(event=><button key={event.id}
+                  type="button" className="small-tool" onClick={()=>setSelectedOb({key:fvgSelectionScope,id:event.id})}>
+                  {event.direction} · {event.state.replaceAll("_"," ")} · {event.mitigation_pct.toFixed(1)}%</button>)}
+                {selected&&<dl aria-label="Selected order block">
+                  <dt>Candidate and availability</dt><dd>{utc(selected.candidate_time)} / {utc(selected.candidate_available_at)}</dd>
+                  <dt>Candidate OHLC</dt><dd>{selected.candidate_ohlc.join(" / ")}</dd>
+                  <dt>Zone ({selected.geometry})</dt><dd>{selected.lower} – {selected.upper}</dd>
+                  <dt>Remaining</dt><dd>{selected.remaining_lower} – {selected.remaining_upper} · {selected.mitigation_pct}%</dd>
+                  <dt>{selected.break_type} and broken pivot</dt><dd>{selected.bos_id} / {selected.broken_pivot_id}</dd>
+                  <dt>Break, confirmed, first visible</dt><dd>{[selected.break_time,selected.bos_confirmation_time,selected.first_visibility_time].map(utc).join(" / ")}</dd>
+                  <dt>Revision observation and availability</dt><dd>{utc(selected.observation_time)} / {utc(selected.available_at)} · {selected.reason}</dd>
+                  <dt>Source and versions</dt><dd>{result.provenance?.context_authority} · OB v1 · structure v{selected.structure_version} · identity v{selected.identity_policy_version}</dd>
+                  {rules.include_context&&<><dt>Context at formation</dt><dd>{selected.context.status} · FVG {selected.context.fvg?.id??"unavailable"} · Sweep {selected.context.liquidity_sweep?.id??"unavailable"}</dd></>}
                 </dl>}
               </section>}
             </>;

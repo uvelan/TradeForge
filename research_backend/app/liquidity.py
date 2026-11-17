@@ -68,7 +68,8 @@ class Pool:
 
 
 class LiquidityStream:
-    def __init__(self, rules: LiquidityRules, delivery: LiquidityDelivery, step: int):
+    def __init__(self, rules: LiquidityRules, delivery: LiquidityDelivery, step: int, *, on_confirmed_sweep=None):
+        self.on_confirmed_sweep = on_confirmed_sweep
         self.rules, self.step = rules, step
         self.pools = EventPage("pools", delivery.pool_limit, delivery.pool_cursor)
         self.sweeps = EventPage("sweeps", delivery.sweep_limit, delivery.sweep_cursor)
@@ -192,6 +193,8 @@ class LiquidityStream:
                               "algorithm_version":VERSION,"provenance_id":provenance_id,
                               "input_fingerprint":fingerprint}
                     self.sweeps.append(crossing)
+                    if event_state == "SWEPT" and self.on_confirmed_sweep is not None:
+                        self.on_confirmed_sweep(crossing)
                     if event_state=="SWEEP_CANDIDATE":
                         pool.candidate_id=crossing["id"]
                 if id_ in self.active:

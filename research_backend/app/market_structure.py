@@ -68,7 +68,7 @@ def initial_direction(pivots):
 
 
 def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
-                     delivery: StructureDelivery, snapshot_scope: dict, consumer=None):
+                     delivery: StructureDelivery, snapshot_scope: dict, consumer=None, *, local_witness=False):
     """Rows contain closed bars and actual UTC availability, already cutoff-filtered."""
     pivots = EventPage("pivots", delivery.limit if delivery.pivot_limit is None else delivery.pivot_limit,
                        delivery.pivot_cursor)
@@ -98,6 +98,10 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
         return {"id": identity, "type": kind, "side": side, "algorithm_version": version,
                 "confirmation_time": None if fields.get("status") != "confirmed" else event_time+step,
                 "available_at": available, "input_fingerprint": evidence, "provenance_id": provenance_id, **fields}
+
+    def witness(*values):
+        payload = json.dumps(values, sort_keys=True, separators=(",", ":")).encode()
+        return sha256(payload).hexdigest()
 
     observation_index = -1
     current_breaks = None
@@ -179,6 +183,11 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
             if crossed:
                 kind = "CHOCH" if opposing and protected else "COUNTERTREND_BREAK" if opposing else "BOS"
                 after = "NEUTRAL" if opposing else state
+                if local_witness:
+                    fields["local_witness"] = witness(
+                        "structure-break", version, kind, side, level["local_witness"],
+                        state, after, bar.model_dump(), available,
+                    )
                 publish_break(event(kind, side, bar.time, available, status="confirmed", break_price=bar.close,
                                     state_after=after, candidate_id=candidate, **fields))
                 consumed.add(level["id"])
@@ -220,6 +229,11 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
                           pivot_time=pivot.time, confirmation_bar_time=bar.time,
                           previous_pivot_id=previous["id"] if previous else None,
                           classification=classify(side, price, previous, rules.tolerance_bps))
+            if local_witness:
+                found["local_witness"] = witness(
+                    "structure-pivot", version, side, pivot.time, available,
+                    [item.model_dump() for item in window],
+                )
             batch.append(found)
         for found in batch:
             previous = active.get(found["side"])

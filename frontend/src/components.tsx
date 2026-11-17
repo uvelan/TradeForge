@@ -15,7 +15,7 @@ import {sameAnchors,transformDrawing} from './drawingGeometry';
 export function Badge({children,tone='neutral'}:{children:React.ReactNode;tone?:'neutral'|'green'|'red'|'amber'|'blue'}) {return <span className={`badge badge-${tone}`}>{children}</span>}
 export function SectionTitle({eyebrow,title,action}:{eyebrow?:string;title:string;action?:React.ReactNode}){return <div className="section-title"><div>{eyebrow&&<span className="eyebrow">{eyebrow}</span>}<h2>{title}</h2></div>{action}</div>}
 export function Card({children,className=''}:{children:React.ReactNode;className?:string}){return <div className={'card '+className}>{children}</div>}
-export function Metric({title,value,change,icon}:{title:string;value:string;change?:string;icon?:React.ReactNode}) {return <div className="metric card"><div className="metric-top"><span>{title}</span><div className="metric-icon">{icon}</div></div><div className="metric-number">{value}</div><div className="metric-bottom">{change?<span className="subtle">{change}</span>:<span className="muted">Real records only · no estimates</span>}</div></div>}
+export function Metric({title,value,change,icon}:{title:string;value:string;change?:string;icon?:React.ReactNode}) {return <div className="metric card"><div className="metric-top"><span>{title}</span><div className="metric-icon">{icon}</div></div><div className="metric-number">{value}</div><div className="metric-bottom">{change?<span className="subtle">{change}</span>:<span className="muted">Real records only Â· no estimates</span>}</div></div>}
 export function Empty({icon,title,body}:{icon?:React.ReactNode;title:string;body:string}){return <div className="empty-state">{icon&&<div className="empty-icon">{icon}</div>}<strong>{title}</strong><p>{body}</p></div>}
 export function Spinner(){return <LoaderCircle className="spinning" size={19}/>}
 export function Notice({children,tone='amber'}:{children:React.ReactNode;tone?:'amber'|'blue'|'red'}){return <div className={`notice notice-${tone}`}><TriangleAlert size={17}/><span>{children}</span></div>}
@@ -329,8 +329,32 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
         INVALIDATED:"invalidated",EXPIRED:"expired"} as const;
       return gapVisibility[states[event.state]];
     };
-    fvgLayer.current?.update((gap?.current_fvgs?.items??[]).filter(gapVisible).slice(0,12),[...linkedBars.current.keys()]);
+    const blocks=indicators?.find(indicator=>indicator.id==="order_blocks");
+    const blockVisible=(event:NonNullable<IndicatorResult["ob_revisions"]>[number])=>{
+      const visibility=blocks?.obVisibility;
+      if(!visibility)return true;
+      const states={ACTIVE:"active",TOUCHED:"touched",PARTIALLY_MITIGATED:"partial",FULLY_MITIGATED:"full",
+        INVALIDATED:"invalidated",EXPIRED:"expired"} as const;
+      return visibility[event.direction==="BULLISH"?"bullish":"bearish"]&&visibility[states[event.state]];
+    };
+    const blockZones=(blocks?.current_obs?.items??[]).filter(blockVisible).slice(0,12).map(
+      event=>({...event,c_time:event.candidate_time,kind:"ob" as const}));
+    fvgLayer.current?.update([...(gap?.current_fvgs?.items??[]).filter(gapVisible).slice(0,12),...blockZones],
+      [...linkedBars.current.keys()]);
     for(const [indicatorIndex,indicator] of (indicators??[]).entries()){
+      if(indicator.id==="order_blocks"){
+        const live=(indicator.current_obs?.items??[]).filter(blockVisible).slice(0,12);
+        const terminal=(indicator.ob_revisions??[]).filter(event=>blockVisible(event)&&
+          ["FULLY_MITIGATED","INVALIDATED","EXPIRED"].includes(event.state)).slice(-12);
+        for(const event of [...live,...terminal]){
+          if(!linkedBars.current.has(event.observation_time))continue;
+          const bullish=event.direction==="BULLISH";
+          const state=event.state.toLowerCase().replaceAll("_"," ");
+          markers.push({time:event.observation_time as UTCTimestamp,position:bullish?"belowBar":"aboveBar",
+            shape:"circle",color:bullish?"#60a5fa":"#fb923c",text:"OB "+state});
+        }
+        continue;
+      }
       if(indicator.id==="fair_value_gap"){
         for(const event of (indicator.revisions??[]).filter(event=>gapVisible(event)&&
           ["FULLY_MITIGATED","INVALIDATED","EXPIRED"].includes(event.state)).slice(-12)){
@@ -353,7 +377,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
           const activation=pool.activation_observation_time;
           markers.push({time:latestTime as UTCTimestamp,price:high?pool.upper:pool.lower,
             position:high?"atPriceTop":"atPriceBottom",shape:candidate?"square":"circle",color,
-            text:(high?"EQH · BSL":"EQL · SSL")+(candidate?" candidate":"")});
+            text:(high?"EQH Â· BSL":"EQL Â· SSL")+(candidate?" candidate":"")});
           const start=activation==null?undefined:primaryTimes.find(time=>time>=activation);
           if(start===undefined||latestTime<=start)continue;
           const edges:[string,number][]=pool.upper===pool.lower?[["zone",pool.lower]]:[["low",pool.lower],["high",pool.upper]];
@@ -572,22 +596,22 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     {(fullscreen||comparison)&&<div className="chart-data-legend" aria-label="Chart data">
       <div className="chart-legend-meta">
         {timeframe&&<strong>{timeframe}</strong>}
-        {displayTime!==undefined&&<span>{timestamp.format(displayTime*1000)} · {zone}</span>}
+        {displayTime!==undefined&&<span>{timestamp.format(displayTime*1000)} Â· {zone}</span>}
         {comparison&&!comparison.fixedPlacement&&<Select label="Comparison placement" value={comparison.placement}
           options={['Overlay','New pane']} onChange={value=>comparison.onPlacementChange(value as ComparisonPlacement)}/>}
       </div>
       {legendRow(symbol,primaryBar,precision)}
       {comparison&&legendRow(comparison.symbol,comparisonBar,comparison.precision,true)}
       {comparison&&smtEvents&&<span className="chart-legend-meta">
-        {smtEvents.filter(event=>event.status==="SMT_CONFIRMED").length} confirmed · {smtEvents.filter(event=>event.status==="SMT_CANDIDATE").length} candidates · {smtEvents.filter(event=>event.status==="SMT_INVALIDATED").length} invalidated
+        {smtEvents.filter(event=>event.status==="SMT_CONFIRMED").length} confirmed Â· {smtEvents.filter(event=>event.status==="SMT_CANDIDATE").length} candidates Â· {smtEvents.filter(event=>event.status==="SMT_INVALIDATED").length} invalidated
       </span>}
       {hoveredSmt?.map(event=><div key={event.id} className="chart-legend-meta">
-        {event.status} · {event.direction} · {event.leader==="primary"?symbol:comparisonSymbol} broke its prior {event.direction==="bearish"?"high":"low"}
+        {event.status} Â· {event.direction} Â· {event.leader==="primary"?symbol:comparisonSymbol} broke its prior {event.direction==="bearish"?"high":"low"}
         <span>Pivot {at(event.primary.current.time)}</span>
         <span>{event.confirmed_at===null?"Awaiting confirmation":`Confirmed ${at(event.confirmed_at)}`}</span>
-        <span>{symbol} {event.primary.previous.price.toFixed(precision)} → {event.primary.current.price.toFixed(precision)}</span>
-        <span>{comparisonSymbol} {event.comparison.previous.price.toFixed(comparisonPrecision)} → {event.comparison.current.price.toFixed(comparisonPrecision)}</span>
-        {event.timing&&<span>Both pairs’ pivots confirmed {at(event.timing.all_pivots_confirmed_at)} · UTC match window closed {at(event.timing.matching_closed_at)} · {event.timing.required_shared_confirmation_bars} additional shared bars required</span>}
+        <span>{symbol} {event.primary.previous.price.toFixed(precision)} â†’ {event.primary.current.price.toFixed(precision)}</span>
+        <span>{comparisonSymbol} {event.comparison.previous.price.toFixed(comparisonPrecision)} â†’ {event.comparison.current.price.toFixed(comparisonPrecision)}</span>
+        {event.timing&&<span>Both pairsâ€™ pivots confirmed {at(event.timing.all_pivots_confirmed_at)} Â· UTC match window closed {at(event.timing.matching_closed_at)} Â· {event.timing.required_shared_confirmation_bars} additional shared bars required</span>}
         {event.transitions.filter(entry=>entry.status==="SMT_INVALIDATED").map(entry=><span key={entry.status}>Invalidated {at(entry.time)}</span>)}
       </div>)}
     </div>}

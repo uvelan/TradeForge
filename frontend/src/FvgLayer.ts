@@ -1,8 +1,9 @@
 import type {IChartApi, ISeriesApi, ISeriesPrimitive, UTCTimestamp} from 'lightweight-charts';
-import type {FvgEvent} from './indicators';
+type PriceZone = {c_time:number;remaining_lower:number;remaining_upper:number;
+  direction:'BULLISH'|'BEARISH'; kind?:'ob'};
 
 export class FvgLayer implements ISeriesPrimitive {
-  private zones: FvgEvent[] = [];
+  private zones: PriceZone[] = [];
   private times: number[] = [];
   private repaint?: () => void;
 
@@ -16,7 +17,7 @@ export class FvgLayer implements ISeriesPrimitive {
     this.repaint = undefined;
   }
 
-  update(zones: FvgEvent[], times: number[]) {
+  update(zones: PriceZone[], times: number[]) {
     this.zones = zones;
     this.times = times;
     this.repaint?.();
@@ -42,7 +43,9 @@ export class FvgLayer implements ISeriesPrimitive {
             const left = Math.max(0, x - 3);
             const right = Math.min(mediaSize.width, end + 6);
             if (right <= left) continue;
-            context.fillStyle = zone.direction === 'BULLISH' ? 'rgba(45,212,191,0.23)' : 'rgba(244,114,182,0.23)';
+            context.fillStyle = zone.kind === 'ob'
+              ? (zone.direction === 'BULLISH' ? 'rgba(96,165,250,0.25)' : 'rgba(251,146,60,0.25)')
+              : (zone.direction === 'BULLISH' ? 'rgba(45,212,191,0.23)' : 'rgba(244,114,182,0.23)');
             context.fillRect(left, top, right - left, Math.max(1, bottom - top));
           }
         }),

@@ -13,6 +13,7 @@ from .market import FRAME_MIN
 from .market_structure import StructureRules, detect_structure
 from .structure_pages import StructureDelivery
 from .liquidity import LiquidityDelivery, LiquidityRules, LiquidityStream
+from .order_blocks import OrderBlockRules, OrderBlockDelivery, OrderBlockStream
 from .fvg import FVGDelivery, FVGRules, evaluate_fvg
 from .indicator_coverage import DAY, WEEK, MarketSchedule, period_start, previous_levels
 
@@ -52,6 +53,8 @@ class IndicatorSpec(BaseModel):
     liquidity_delivery: LiquidityDelivery | None = None
     fvg: FVGRules | None = None
     fvg_delivery: FVGDelivery | None = None
+    ob: OrderBlockRules | None = None
+    ob_delivery: OrderBlockDelivery | None = None
 
 
 class EvidenceBar(Bar):
@@ -145,6 +148,14 @@ def catalog() -> list[IndicatorDefinition]:
         "parameters":{"fvg":FVGRules().canonical()}, "price_source":"wick",
         "required_fields":["open","high","low","close"], "unit":"price",
         "timeframes":list(FRAME_MIN), "instruments":"any_valid_ohlc",
+    })
+    ob_structure = StructureRules(algorithm_version=2)
+    definitions.append({
+        "id":"order_blocks", "label":"Confirmed Order Blocks (OB)", "version":1,
+        "render":"markers", "period":None, "warmup_bars":ob_structure.left+ob_structure.right+1,
+        "parameters":{"ob":OrderBlockRules().model_dump(),"structure":ob_structure.model_dump()},
+        "price_source":"wick_or_close", "required_fields":["open","high","low","close"],
+        "unit":"price", "timeframes":list(FRAME_MIN), "instruments":"any_valid_ohlc",
     })
     return definitions
 
@@ -262,7 +273,9 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             raise ValueError("FVG options require the FVG indicator")
         if (spec.liquidity is not None or spec.liquidity_delivery is not None) and spec.id != "liquidity_sweeps":
             raise ValueError("Liquidity options require the liquidity indicator")
-        if spec.structure is not None and spec.id not in {"market_structure","liquidity_sweeps"}:
+        if (spec.ob is not None or spec.ob_delivery is not None) and spec.id != "order_blocks":
+            raise ValueError("OB options require the Order Blocks indicator")
+        if spec.structure is not None and spec.id not in {"market_structure","liquidity_sweeps","order_blocks"}:
             raise ValueError("Structure settings require structure or liquidity")
         if spec.structure_delivery is not None and spec.id != "market_structure":
             raise ValueError("Structure options require the market structure indicator")
@@ -309,6 +322,39 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                           "schedule_assumption": (detected.get("continuity") or {}).get("schedule"),
                           "provenance": provenance, **liquid.finish(detected["event_page"]["snapshot"],
                                                                     detected["provenance_id"])}
+        elif spec.id == "order_blocks":
+            structure = spec.structure or StructureRules(algorithm_version=2)
+            rules = spec.ob or OrderBlockRules()
+            ob_rows, evidence = resolve_history(request,rows,step,structure,history_loader)
+            provenance = {**input_identity, **evidence, "schedule_completeness":"NOT_ESTABLISHED"}
+            provenance["partitions"] = sorted(provenance["partitions"],key=lambda part:(part["id"],part["sha256"]))
+            scope = {key:value for key,value in provenance.items()
+                     if key not in {"retrieval","partitions","context_partitions"}}
+            stream = OrderBlockStream(rules,structure,provenance,step,spec.ob_delivery or OrderBlockDelivery())
+            consumer = stream.observe
+            if rules.include_context:
+                fvg_rules = FVGRules(market_schedule=structure.market_schedule or MarketSchedule(kind="unknown"))
+                evaluate_fvg(ob_rows,step,request.cutoff,fvg_rules,
+                             FVGDelivery(current_limit=0,formation_limit=0,revision_limit=0),
+                             provenance,request.frozen,on_formation=stream.record_fvg)
+                liquidity = LiquidityStream(LiquidityRules(),LiquidityDelivery(),step,
+                                            on_confirmed_sweep=stream.record_sweep)
+
+                def consumer(*observation):
+                    liquidity.observe(*observation)
+                    stream.observe(*observation)
+
+            detected = detect_structure(ob_rows,step,structure,scope,
+                                        StructureDelivery(pivot_limit=0,break_limit=0),
+                                        {"cutoff":request.cutoff,"frozen":request.frozen,"provenance":provenance},
+                                        consumer,local_witness=True)
+            result_warnings = detected["structure_warnings"]
+            if evidence.get("status"):
+                result_warnings.append(evidence["status"])
+            result = {"id":spec.id,"version":1,"render":"markers","series":{},
+                      "warmup_bars":structure.left+structure.right+1,"parameters":rules.model_dump(),
+                      "structure_parameters":structure.identity_parameters(),"provenance":provenance,
+                      **stream.finish(detected["event_page"]["snapshot"])}
         elif spec.id == "fair_value_gap":
             rules = spec.fvg or FVGRules()
             fvg_rows,evidence = resolve_history(request,rows,step,rules,history_loader)
