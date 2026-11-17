@@ -69,6 +69,7 @@ class Block:
 class OrderBlockStream:
     def __init__(self, rules, structure, provenance, step, delivery, *, on_formation=None):
         self.on_formation = on_formation
+        self.context_lookup = None
         self.rules = rules
         self.structure = structure
         self.step = step
@@ -109,6 +110,8 @@ class OrderBlockStream:
         self.latest_sweep = {"id":event["id"], "witness_id":witness, "available_at":event["available_at"]}
 
     def context(self, bar, available):
+        if self.context_lookup is not None:
+            return self.context_lookup(available,bar.time)
         if not self.rules.include_context:
             return {"fvg":None,"liquidity_sweep":None,"status":"NOT_REQUESTED"}
         index = bisect_right(self.fvg_times, (available,bar.time))-1
@@ -269,8 +272,10 @@ class OrderBlockStream:
         self.candidates.append((bar, available))
         self.previous_time, self.latest_price = bar.time, price(bar.close)
 
-    def finish(self, structure_snapshot):
+    def finish(self, structure_snapshot, *, context_snapshot=None):
         snapshot = identity("ob-snapshot", POLICY, self.config, self.rules.include_context, structure_snapshot)
+        if context_snapshot is not None:
+            snapshot=identity("ob-context-snapshot",snapshot,context_snapshot)
         if self.current.limit:
             def priority(zone):
                 return max(zone.lower-self.latest_price,self.latest_price-zone.upper,ZERO),zone.id

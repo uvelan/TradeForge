@@ -1,0 +1,11 @@
+# TF-I08 plan
+
+Base 2f5b76e9774bdd2ea20d989edc42d46809696bee. Capture the approved numerical and event outputs before changing code.
+
+Current graph: caller/archive evidence → standalone structure; the same evidence → liquidity (structure replay); → OB (structure replay); → CRT context (structure, liquidity, OB and FVG replay). Identical retrievals already share one read. Partly overlapping requests may verify the same Parquet partition twice. CRT context uses separate provenance and defaults, producing different raw structure references.
+
+Proposed graph: scoped retrieval and verified partition store → frozen validated candle evidence → canonical structure observation stream → independent structure, liquidity and OB projections. The same candle evidence drives independent FVG and CRT calculations. Compatible FVG, liquidity and OB calculations publish causal references for CRT or OB context. The optional context graph stays directed from CRT to OB and from either to FVG/liquidity; active keys guard recursion. Delivery is excluded from computation identities. Public indicator defaults and hashes stay unchanged; context receives additional reference metadata.
+
+Prefer a bounded observation transcript to a second pivot implementation or implicit shared mutable state. Reuse strict full-scope keys and preserve existing snapshot serialization. Request-local partition cache stores independently verified immutable rows; existing callers outside analysis keep their contracts. Bound distinct requested slots, verified partitions, decoded records and calculation/consumer work. Use frozen source manifests, separate authority and stable local witnesses from snapshot-specific IDs, and require both observation time and actual availability in as-of lookup.
+
+Baseline is the TF-I07 benchmark plus reproduction artifacts. Acceptance gates are golden equality, compatible structure fanout, explicit shared versus independent context, archive budgets and checksum failure, replay causal filtering, checked execution counts, and at least 20% median combined calculation improvement where supported by measured representative workload. Do not change SMT or indicator formulas to reach a performance target.

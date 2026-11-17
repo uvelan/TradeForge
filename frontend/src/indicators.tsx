@@ -20,6 +20,8 @@ export type FvgEvent = {id:string;fvg_id:string;identity_policy_version?:number;
   formation_ohlc?:number[][];
   a_time:number;b_time:number;c_time:number;observation_time:number;formation_confirmation_time:number;
   confirmation_time:number;available_at:number;reason:string;warnings:string[]};
+type ContextPolicy = "shared" | "independent";
+type ContextConfiguration = {policy:ContextPolicy;status:string;failures:Record<string,string>};
 type CrtRules = {reference_frame:"H1"|"H4"|"D1"|null;reference_mode:"aggregated"|"native";
   daily_timezone:string;daily_boundary:string;market_schedule:Schedule;reference_start:number|null;
   history_bars:2000|10000;history_start:number|null;max_ranges:number;max_age:number;candidate_age:number;
@@ -67,7 +69,7 @@ const structureVisibility: StructureVisibility = {swings: true, breaks: true, ca
 
 type Definition = { id: string; label: string; period: number | null; timeframes: Timeframe[];
   parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure; liquidity?: Liquidity; fvg?: FvgRules; ob?: ObRules; crt?:CrtRules;crt_frames?:Partial<Record<Timeframe,NonNullable<CrtRules['reference_frame']>[]>> } };
-type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility; liquidity?: Liquidity; liquidityVisibility?: LiquidityVisibility; fvg?: FvgRules; fvgVisibility?: FvgVisibility; ob?: ObRules; obVisibility?:ObVisibility; crt?:CrtRules;crtVisibility?:CrtVisibility; tickSize?: Record<string,{size:number;reference:string}> };
+type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility; liquidity?: Liquidity; liquidityVisibility?: LiquidityVisibility; fvg?: FvgRules; fvgVisibility?: FvgVisibility; ob?: ObRules; obVisibility?:ObVisibility; crt?:CrtRules;crtVisibility?:CrtVisibility; contextPolicy?:ContextPolicy; tickSize?: Record<string,{size:number;reference:string}> };
 type Point = { time: number; value: number; pivot_time?: number; status: "confirmed" | "provisional" };
 export type IndicatorResult = {
   id: string;
@@ -93,6 +95,7 @@ export type IndicatorResult = {
   crt_page?:{formations:PageInfo;sweeps:PageInfo;revisions:PageInfo};
   quality?:Record<string,number>;
   reference_frame?:string;
+  context_configuration?:ContextConfiguration;
   ob_formations?:ObEvent[];
   ob_revisions?:ObEvent[];
   current_obs?:PageInfo & {items:ObEvent[]};
@@ -187,10 +190,11 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
           crt.reference_mode="aggregated";
         }
       }
-      return [{id: item.id,...(crt?{crt}:{}), ...(period !== null ? {period} : {}), ...(session ? {session} : {}),
+      const ob=definition.parameters.ob?{...definition.parameters.ob,...item.ob}:undefined;
+      const context=crt?.include_context||ob?.include_context?{policy:item.contextPolicy??"independent"}:undefined;
+      return [{id: item.id,...(crt?{crt}:{}),...(ob?{ob}:{}),...(context?{context}:{}), ...(period !== null ? {period} : {}), ...(session ? {session} : {}),
         ...(schedule ? {schedule} : {}), ...(structureInput?{structure:structureInput}:{}),
         ...(item.liquidity ? {liquidity:item.liquidity} : {}),
-        ...(definition.parameters.ob?{ob:{...definition.parameters.ob,...item.ob}}:{}),
         ...(definition.parameters.fvg?{fvg:{...definition.parameters.fvg,...item.fvg,
           market_schedule:item.schedules?.[scheduleScope]??{kind:"unknown"},
           ...(item.fvg?.history_bars===10000&&(!source.endsWith("_SAVED")||item.fvg.history_start==null)
@@ -250,6 +254,8 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
     const spec=input.indicators.find((item:{id:string})=>item.id===(liquid?"liquidity_sweeps":fvg?"fair_value_gap":ob?"order_blocks":crt?"candle_range_theory":"market_structure"));
     const first=liquid?"pool":fvg||ob?"formation":"pivot", second=liquid?"sweep":fvg||ob?"revision":"break";
     const isFirst=collection==="pivots"||collection==="pools"||collection==="formations"||collection==="ob_formations";
+    const compatibleContext=spec?.context?.policy==="shared"
+      ?input.indicators.filter((item:{id:string})=>item.id!==spec.id):[];
     input.indicators=crt?[{...spec,crt_delivery:{
       formation_limit:0,sweep_limit:0,revision_limit:0,current_limit:0,
       [crtKind+"_limit"]:crtKind==="current"?8:24,[crtKind+"_cursor"]:cursor,
@@ -258,6 +264,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       ...(liquid||fvg||ob?{current_limit:current?40:0}:{}),
       [(current?"current":isFirst?first:second)+"_cursor"]:cursor,
     }}];
+    input.indicators.push(...compatibleContext);
     void (async()=>{
       try{
         const response=await fetch("/research/api/indicators/evaluate",{
@@ -299,6 +306,19 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   const warnings = [...new Set(data.filter(row => !row.coverage).flatMap(row => row.warnings))];
   const choices = definitions.filter(item => item.timeframes.includes(timeframe) && item.id !== selected &&
     !settings.some(config => config.id === item.id) && (item.label + " " + item.id).toLowerCase().includes(search.toLowerCase()));
+  function contextSettings(item:Settings,result:IndicatorResult|undefined,label:string) {
+    return <>
+      <label>{label} context policy <select value={item.contextPolicy??"independent"}
+        onChange={e=>update(item.id,{contextPolicy:e.target.value as ContextPolicy})}>
+        <option value="independent">Independent documented rules</option>
+        <option value="shared">Share selected indicator settings</option>
+      </select></label>
+      {result?.context_configuration&&<details>
+        <summary>{label} effective context · {result.context_configuration.status.replaceAll("_"," ").toLowerCase()}</summary>
+        <pre style={{maxHeight:"14rem",overflow:"auto"}}>{JSON.stringify(result.context_configuration,null,2)}</pre>
+      </details>}
+    </>;
+  }
   function update(id: string, patch: Partial<Settings>) {
     setSettings(items => items.map(item => item.id === id ? {...item, ...patch} : item));
   }
@@ -556,6 +576,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                 <option value="sweep_extreme">Beyond sweep extreme</option><option value="reference_boundary">Beyond reference boundary</option>
                 <option value="none">Disabled</option></select></label>
               <label><input type="checkbox" checked={rules.include_context} onChange={e=>patch({include_context:e.target.checked})}/> Include CRT context</label>
+              {rules.include_context&&contextSettings(item,result,"CRT")}
               {(Object.keys(crtVisibility) as (keyof CrtVisibility)[]).map(key=><label key={key}><input type="checkbox"
                 checked={rangeVisibility[key]} onChange={e=>update(item.id,{crtVisibility:{...rangeVisibility,[key]:e.target.checked}})}/> Show CRT {key}</label>)}
               {result?.crt_page&&<section aria-label="CRT evidence">
@@ -619,6 +640,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                 onChange={event=>patch({allow_choch:event.target.checked})}/> Allow confirmed CHOCH</label>
               <label><input type="checkbox" checked={rules.include_context}
                 onChange={event=>patch({include_context:event.target.checked})}/> Include FVG and liquidity context</label>
+              {rules.include_context&&contextSettings(item,result,"OB")}
               {(Object.keys(obVisibility) as (keyof ObVisibility)[]).map(key=><label key={key}>
                 <input type="checkbox" checked={blockVisibility[key]}
                   onChange={event=>update(item.id,{obVisibility:{...blockVisibility,[key]:event.target.checked}})}/> Show OB {key}</label>)}

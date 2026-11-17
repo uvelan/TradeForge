@@ -128,13 +128,15 @@ def references(rows, cutoff, step, frame, rules, native, quality):
 TERMINAL={"AMBIGUOUS","INVALIDATED","EXPIRED","OPPOSITE_BOUNDARY_REACHED"}
 
 
-def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_rows=(), *, context=None):
+def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_rows=(), *, context=None, context_snapshot=None):
     scope={key:provenance.get(key) for key in ("source","symbol","timeframe","feed_id","dataset_id","price_basis")}
     market=identity("crt-market",scope,frame,step)
     policy=(VERSION,IDENTITY_VERSION)
     config=identity("crt-rules",policy,rules.model_dump(exclude={
         "history_bars","history_start","reference_start","include_context"}),frame)
     snapshot=sha256(identity("crt-snapshot",policy,rules.model_dump(),cutoff,provenance).encode())
+    if context_snapshot is not None:
+        snapshot.update(context_snapshot.encode())
     for label, data in ((b"ltf",rows),(b"htf",native_rows)):
         snapshot.update(label)
         for bar,stamp in data:
