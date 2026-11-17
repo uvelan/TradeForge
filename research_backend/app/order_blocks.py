@@ -67,7 +67,8 @@ class Block:
 
 
 class OrderBlockStream:
-    def __init__(self, rules, structure, provenance, step, delivery):
+    def __init__(self, rules, structure, provenance, step, delivery, *, on_formation=None):
+        self.on_formation = on_formation
         self.rules = rules
         self.structure = structure
         self.step = step
@@ -244,6 +245,8 @@ class OrderBlockStream:
         self.put(zone)
         heappush(self.expiry,(zone.expires,key))
         self.publish(zone, "ACTIVE", "CONFIRMED_"+event["type"], bar, available)
+        if self.on_formation is not None:
+            self.on_formation(zone.latest)
 
     def observe(self, bar, available, index, gap, _pivots, breaks, _fingerprint, _provenance):
         if self.previous_time is not None and self.previous_time+self.step != bar.time:

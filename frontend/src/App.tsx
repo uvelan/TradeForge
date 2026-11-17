@@ -377,7 +377,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
   },[expanded,setInteraction,toggleLevel]);
   const boundary=last?.time??0;
-  const cutoff=replayActive?(last?.available_at ?? boundary+frameMinutes[timeframe]*60):undefined;
+  const cutoff=replayActive?visibleCandles.reduce((known,bar)=>
+    Math.max(known,bar.time+frameMinutes[timeframe]*60,bar.available_at??0),boundary):undefined;
   const indicatorFeed=replayActive?replayData:data;
   const indicatorCutoff=cutoff??Math.min(Math.floor(Date.now()/1000),Math.max(
     (indicatorCandles.at(-1)?.time??0)+frameMinutes[timeframe]*60,indicatorCandles.at(-1)?.available_at??0));

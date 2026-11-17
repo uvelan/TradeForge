@@ -365,7 +365,7 @@ test("liquidity replay exposes the sweep only after its closed evidence and keep
 });
 
 for(const [title,query,id] of [["Liquidity","liquidity pools","liquidity_sweeps"],
-  ["FVG","fair value gap","fair_value_gap"],["Order block","order blocks","order_blocks"]]){
+  ["FVG","fair value gap","fair_value_gap"],["Order block","order blocks","order_blocks"],["CRT","candle range theory","candle_range_theory"]]){
 test("a pending "+title+" request cannot replace another instrument or timeframe",async ({page})=>{
   let release!:()=>void;
   const hold=new Promise<void>(resolve=>{release=resolve;});
@@ -538,4 +538,62 @@ test("order block appears at BOS availability and rewinds independently of FVG a
   await expect(active).toBeVisible();
   await replay.getByRole("button",{name:"Previous candle"}).click();
   await expect(evidence).toContainText("Current order blocks 0 / 0");
+});
+
+test("CRT delays the H1 range, excludes a straddling sweep and rewinds cleanly",async ({page},info)=>{
+  await page.addInitScript(()=>{
+    const fill=CanvasRenderingContext2D.prototype.fillRect;
+    CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){
+      if(typeof this.fillStyle==="string"&&/^rgba\(250,\s*204,\s*21,/.test(this.fillStyle)&&w>0&&h>0)
+        this.canvas.dataset.crtPainted="true";
+      return fill.call(this,x,y,w,h);
+    };
+  });
+  const start=Date.parse("2026-11-02T10:00:00Z")/1000,step=300;
+  const values=[...Array.from({length:12},()=>[102,105,100,103]),
+    [104,106,103,104],[104,106,103,104],[104,104,102,103]];
+  const candles=values.map(([open,high,low,close],i)=>({
+    open,high,low,close,time:start+i*step,available_at:start+(i+1)*step+(i===11?120:0),
+  }));
+  const market={source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",candles};
+  await page.route("**/research/api/replay/sessions",route=>route.fulfill({status:201,
+    json:{id:"crt-fixture",market,checkpoint:{position:10,bookmarks:[]},views:{}}}));
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  await enable(page,"candle range theory","candle_range_theory");
+  await enable(page,"order blocks","order_blocks");
+  await enable(page,"fair value gap","fair_value_gap");
+  await enable(page,"liquidity","liquidity_sweeps");
+  await enable(page,"confirmed market structure","market_structure");
+  await page.getByRole("button",{name:"Bar replay",exact:true}).click();
+  const replay=page.getByLabel("Historical replay");
+  const evidence=page.getByLabel("CRT evidence",{exact:true});
+  const active=evidence.getByRole("button",{name:/^ACTIVE/});
+  const swept=evidence.getByRole("button",{name:/^HIGH SWEPT RECLAIMED/});
+  await expect(evidence).toContainText("Current ranges 0 / 0");
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("crt-before-reference.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  await active.click();
+  const selected=evidence.getByLabel("Selected CRT event");
+  await expect(selected).toContainText("100 / 102.5 / 105");
+  await expect(selected).toContainText("11:02:00.000Z");
+  await expect(page.locator(primary).locator('canvas[data-crt-painted="true"]').first()).toBeAttached();
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("crt-reference-available.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  await expect(active).toBeVisible();
+  await expect(swept).toHaveCount(0);
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  await swept.click();
+  await expect(selected).toContainText("105 / 1 / 104");
+  await expect(selected).toContainText("11:10:00.000Z");
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("crt-reclaimed.png")});
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  await expect(evidence.getByRole("button",{name:/^EXPANSION OBSERVED/})).toBeVisible();
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(evidence.getByRole("button",{name:/^EXPANSION OBSERVED/})).toHaveCount(0);
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(swept).toHaveCount(0);
 });

@@ -8,7 +8,7 @@ type Schedule = {kind: "continuous" | "forex_weekly" | "unknown"; timezone?: str
   sunday_open?: string; friday_close?: string};
 type Structure = {algorithm_version?: 1 | 2; market_schedule?: Schedule; left: number; right: number; price_source: "wick" | "close";
   ties: "strict" | "earliest"; tolerance_bps: number; break_bps: number; wick_candidates: boolean; history_bars?:2000|10000;history_start?:number|null};
-type Collection = "pivots" | "breaks" | "pools" | "sweeps" | "current_pools" | "formations" | "revisions" | "current_fvgs" | "ob_formations" | "ob_revisions" | "current_obs";
+type Collection = "pivots" | "breaks" | "pools" | "sweeps" | "current_pools" | "formations" | "revisions" | "current_fvgs" | "ob_formations" | "ob_revisions" | "current_obs" | "crt_formations" | "crt_sweeps" | "crt_revisions" | "current_crt";
 type FvgRules = {min_price:number;min_bps:number;min_ticks:number;tick_size?:number|null;tick_size_reference?:string|null;
   atr_multiple:number;atr_period:number;displacement:"none"|"directional_body_bps_v1";min_body_bps:number;
   mitigation:"wick"|"close";max_age_bars:number;market_schedule:Schedule;history_bars?:2000|10000;history_start?:number|null};
@@ -20,6 +20,17 @@ export type FvgEvent = {id:string;fvg_id:string;identity_policy_version?:number;
   formation_ohlc?:number[][];
   a_time:number;b_time:number;c_time:number;observation_time:number;formation_confirmation_time:number;
   confirmation_time:number;available_at:number;reason:string;warnings:string[]};
+type CrtRules = {reference_frame:"H1"|"H4"|"D1"|null;reference_mode:"aggregated"|"native";
+  daily_timezone:string;daily_boundary:string;market_schedule:Schedule;reference_start:number|null;
+  history_bars:2000|10000;history_start:number|null;max_ranges:number;max_age:number;candidate_age:number;
+  min_penetration:number;min_reclaim:number;invalidate:"sweep_extreme"|"reference_boundary"|"none";include_context:boolean};
+const crtVisibility={ranges:true,midpoint:true,high:true,low:true,expansion:true,ambiguous:true,terminal:true};
+type CrtVisibility=typeof crtVisibility;
+export type CrtEvent={id:string;range_id:string;state:string;reason:string;reference_frame:string;reference_mode:string;
+  reference_start:number;reference_end:number;reference_available_at:number;reference_ohlc:number[];constituents:number;
+  high:number;low:number;midpoint:number;observation_time:number;confirmation_time:number;available_at:number;
+  sweep_side?:"HIGH"|"LOW";swept_boundary?:number;sweep_extreme?:number;penetration?:number;reclaim_close?:number|null;
+  context:Record<string,{id:string;witness_id:string;timeframe:string;available_at:number}>};
 type ObRules = {lookback:number;candidate_age:number;min_body:number;min_break:number;min_displacement:number;
   geometry:"wick"|"body";allow_choch:boolean;include_context:boolean;mitigation:"wick"|"close";
   min_penetration_pct:number;max_age_bars:number};
@@ -43,7 +54,7 @@ export type LiquidityEvent = {
   related_structure_ids?:string[]; ohlc?:{open:number; high:number; low:number; close:number};
 };
 type PageInfo = {total: number; returned: number; start: number; end: number; next_cursor: string | null};
-type OlderPage = {key: string; collection: Collection; metadata: PageInfo; events: (StructureEvent | LiquidityEvent | FvgEvent | ObEvent)[]};
+type OlderPage = {key: string; collection: Collection; metadata: PageInfo; events: (StructureEvent | LiquidityEvent | FvgEvent | ObEvent | CrtEvent)[]};
 export type CurrentLiquidityPool = Omit<LiquidityEvent,"id"> & {revision_id:string; expiry_in_bars:number};
 type StructureVisibility = {swings: boolean; breaks: boolean; candidates: boolean};
 export type StructureEvent = {
@@ -55,8 +66,8 @@ export type StructureEvent = {
 const structureVisibility: StructureVisibility = {swings: true, breaks: true, candidates: true};
 
 type Definition = { id: string; label: string; period: number | null; timeframes: Timeframe[];
-  parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure; liquidity?: Liquidity; fvg?: FvgRules; ob?: ObRules } };
-type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility; liquidity?: Liquidity; liquidityVisibility?: LiquidityVisibility; fvg?: FvgRules; fvgVisibility?: FvgVisibility; ob?: ObRules; obVisibility?:ObVisibility; tickSize?: Record<string,{size:number;reference:string}> };
+  parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure; liquidity?: Liquidity; fvg?: FvgRules; ob?: ObRules; crt?:CrtRules;crt_frames?:Partial<Record<Timeframe,NonNullable<CrtRules['reference_frame']>[]>> } };
+type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility; liquidity?: Liquidity; liquidityVisibility?: LiquidityVisibility; fvg?: FvgRules; fvgVisibility?: FvgVisibility; ob?: ObRules; obVisibility?:ObVisibility; crt?:CrtRules;crtVisibility?:CrtVisibility; tickSize?: Record<string,{size:number;reference:string}> };
 type Point = { time: number; value: number; pivot_time?: number; status: "confirmed" | "provisional" };
 export type IndicatorResult = {
   id: string;
@@ -74,6 +85,14 @@ export type IndicatorResult = {
   liquidityVisibility?: LiquidityVisibility;
   fvgVisibility?: FvgVisibility;
   obVisibility?:ObVisibility;
+  crtVisibility?:CrtVisibility;
+  crt_formations?:CrtEvent[];
+  crt_sweeps?:CrtEvent[];
+  crt_revisions?:CrtEvent[];
+  current_crt?:PageInfo & {items:CrtEvent[]};
+  crt_page?:{formations:PageInfo;sweeps:PageInfo;revisions:PageInfo};
+  quality?:Record<string,number>;
+  reference_frame?:string;
   ob_formations?:ObEvent[];
   ob_revisions?:ObEvent[];
   current_obs?:PageInfo & {items:ObEvent[]};
@@ -128,6 +147,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   const [older, setOlder] = useState<OlderPage>();
   const [pageRequest, setPageRequest] = useState<{key: string; collection: Collection; cursor: string}>();
   const [pageError, setPageError] = useState("");
+  const [selectedCrt,setSelectedCrt]=useState<{key:string;id:string}>();
   const [selectedOb,setSelectedOb]=useState<{key:string;id:string}>();
   const [selectedFvg,setSelectedFvg]=useState<{key:string;id:string}>();
   const [selectedLiquidity,setSelectedLiquidity]=useState<{key:string; id:string}>();
@@ -156,7 +176,18 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
         ...(structure.algorithm_version===2?{market_schedule:item.schedules?.[scheduleScope]}:{}),
         ...(definition.parameters.ob&&!source.endsWith("_SAVED")?{history_bars:2000 as const,history_start:null}:{}),
       }:undefined;
-      return [{id: item.id, ...(period !== null ? {period} : {}), ...(session ? {session} : {}),
+      const crt=definition.parameters.crt?{...definition.parameters.crt,...item.crt}:undefined;
+      if(crt){
+        const frames=definition.parameters.crt_frames?.[timeframe]??[];
+        if(crt.reference_frame&&!frames.includes(crt.reference_frame))crt.reference_frame=null;
+        crt.market_schedule=item.schedules?.[scheduleScope]??{kind:"unknown"};
+        if(!source.endsWith("_SAVED")||crt.history_start===null){
+          crt.history_start=null;
+          crt.history_bars=2000;
+          crt.reference_mode="aggregated";
+        }
+      }
+      return [{id: item.id,...(crt?{crt}:{}), ...(period !== null ? {period} : {}), ...(session ? {session} : {}),
         ...(schedule ? {schedule} : {}), ...(structureInput?{structure:structureInput}:{}),
         ...(item.liquidity ? {liquidity:item.liquidity} : {}),
         ...(definition.parameters.ob?{ob:{...definition.parameters.ob,...item.ob}}:{}),
@@ -210,14 +241,19 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
     const controller = new AbortController();
     const {collection, cursor}=pageRequest;
     const input=JSON.parse(body);
+    const crt=collection==="current_crt"||collection.startsWith("crt_");
+    const crtKind=collection==="current_crt"?"current":collection.slice(4,-1);
     const current=collection==="current_pools"||collection==="current_fvgs"||collection==="current_obs";
     const liquid=collection==="current_pools"||collection==="pools"||collection==="sweeps";
     const ob=collection==="current_obs"||collection==="ob_formations"||collection==="ob_revisions";
     const fvg=collection==="current_fvgs"||collection==="formations"||collection==="revisions";
-    const spec=input.indicators.find((item:{id:string})=>item.id===(liquid?"liquidity_sweeps":fvg?"fair_value_gap":ob?"order_blocks":"market_structure"));
+    const spec=input.indicators.find((item:{id:string})=>item.id===(liquid?"liquidity_sweeps":fvg?"fair_value_gap":ob?"order_blocks":crt?"candle_range_theory":"market_structure"));
     const first=liquid?"pool":fvg||ob?"formation":"pivot", second=liquid?"sweep":fvg||ob?"revision":"break";
     const isFirst=collection==="pivots"||collection==="pools"||collection==="formations"||collection==="ob_formations";
-    input.indicators=[{...spec,[liquid?"liquidity_delivery":fvg?"fvg_delivery":ob?"ob_delivery":"structure_delivery"]:{
+    input.indicators=crt?[{...spec,crt_delivery:{
+      formation_limit:0,sweep_limit:0,revision_limit:0,current_limit:0,
+      [crtKind+"_limit"]:crtKind==="current"?8:24,[crtKind+"_cursor"]:cursor,
+    }}]:[{...spec,[liquid?"liquidity_delivery":fvg?"fvg_delivery":ob?"ob_delivery":"structure_delivery"]:{
       [first+"_limit"]:!current&&isFirst?40:0,[second+"_limit"]:!current&&!isFirst?40:0,
       ...(liquid||fvg||ob?{current_limit:current?40:0}:{}),
       [(current?"current":isFirst?first:second)+"_cursor"]:cursor,
@@ -230,13 +266,15 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
         const value=await response.json();
         if(!response.ok)throw Error(typeof value.detail==="string"?value.detail:"Historical event page unavailable");
         const result=value.results[0] as IndicatorResult;
-        const metadata=collection==="current_obs"?result.current_obs:
+        const metadata=collection==="current_crt"?result.current_crt:
+          collection==="crt_formations"?result.crt_page?.formations:collection==="crt_sweeps"?result.crt_page?.sweeps:
+          collection==="crt_revisions"?result.crt_page?.revisions:collection==="current_obs"?result.current_obs:
           collection==="ob_formations"?result.ob_page?.formations:collection==="ob_revisions"?result.ob_page?.revisions:
           collection==="current_fvgs"?result.current_fvgs:
           collection==="formations"||collection==="revisions"?result.fvg_page?.[collection]:
           collection==="current_pools"?result.current_pools:
           collection==="pools"||collection==="sweeps"?result.liquidity_page?.[collection]:result.event_page?.[collection];
-        const events=collection==="current_obs"?result.current_obs?.items:collection==="current_fvgs"?result.current_fvgs?.items:collection==="current_pools"?result.current_pools?.items.map(pool=>({...pool,id:pool.revision_id})):
+        const events=collection==="current_crt"?result.current_crt?.items:collection==="current_obs"?result.current_obs?.items:collection==="current_fvgs"?result.current_fvgs?.items:collection==="current_pools"?result.current_pools?.items.map(pool=>({...pool,id:pool.revision_id})):
           result[collection];
         if(!metadata)throw Error("Historical event page missing");
         if(!controller.signal.aborted)setOlder({key:body,collection,metadata,events:events??[]});
@@ -252,11 +290,12 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   const current = response?.key === body ? response : undefined;
   const visibility = settings.find(item => item.id === "market_structure")?.visibility ?? structureVisibility;
   const liquidVisibility=settings.find(item=>item.id==="liquidity_sweeps")?.liquidityVisibility??liquidityVisibility;
+  const rangeVisibility=settings.find(item=>item.id==="candle_range_theory")?.crtVisibility??crtVisibility;
   const blockVisibility=settings.find(item=>item.id==="order_blocks")?.obVisibility??obVisibility;
   const gapVisibility=settings.find(item=>item.id==="fair_value_gap")?.fvgVisibility??fvgVisibility;
   const data = useMemo(() => current?.results?.map(item => item.id === "market_structure" ?
-    {...item, visibility} : item.id==="liquidity_sweeps"?{...item,liquidityVisibility:liquidVisibility}:item.id==="fair_value_gap"?{...item,fvgVisibility:gapVisibility}:item.id==="order_blocks"?{...item,obVisibility:blockVisibility}:item) ?? emptyResults,
-    [current, visibility, liquidVisibility, gapVisibility,blockVisibility]);
+    {...item, visibility} : item.id==="liquidity_sweeps"?{...item,liquidityVisibility:liquidVisibility}:item.id==="fair_value_gap"?{...item,fvgVisibility:gapVisibility}:item.id==="order_blocks"?{...item,obVisibility:blockVisibility}:item.id==="candle_range_theory"?{...item,crtVisibility:rangeVisibility}:item) ?? emptyResults,
+    [current, visibility, liquidVisibility, gapVisibility,blockVisibility,rangeVisibility]);
   const warnings = [...new Set(data.filter(row => !row.coverage).flatMap(row => row.warnings))];
   const choices = definitions.filter(item => item.timeframes.includes(timeframe) && item.id !== selected &&
     !settings.some(config => config.id === item.id) && (item.label + " " + item.id).toLowerCase().includes(search.toLowerCase()));
@@ -457,6 +496,92 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                   {selection.constituents && <><dt>Confirmed pivots</dt><dd>{selection.constituents.map(p=>p.price+" @ "+new Date(p.time*1000).toISOString()).join(", ")}</dd></>}
                   {selection.ohlc && <><dt>Crossing OHLC</dt><dd>{Object.values(selection.ohlc).join(" / ")}</dd></>}
                   {selection.related_structure_ids?.length ? <><dt>Related structure</dt><dd>{selection.related_structure_ids.join(", ")}</dd></>:null}
+                </dl>}
+              </section>}
+            </>;
+          })()}
+          {definition.parameters.crt && (() => {
+            const rules=item.crt??definition.parameters.crt;
+            const frames=definition.parameters.crt_frames?.[timeframe]??[];
+            const result=data.find(row=>row.id===item.id);
+            const schedule=item.schedules?.[scheduleScope]??{kind:"unknown"};
+            const patch=(value:Partial<CrtRules>)=>update(item.id,{crt:{...rules,...value}});
+            const setSchedule=(value:Partial<Schedule>)=>update(item.id,
+              {schedules:{...item.schedules,[scheduleScope]:{...schedule,...value}}});
+            const history=older?.key===body&&(older.collection.startsWith("crt_")||older.collection==="current_crt")?older:undefined;
+            const rows=history?history.events as CrtEvent[]:[...(result?.current_crt?.items??[]),
+              ...(result?.crt_sweeps??[]).slice(-6).reverse(),...(result?.crt_revisions??[]).slice(-6).reverse(),
+              ...(result?.crt_formations??[]).slice(-6).reverse()];
+            const event=selectedCrt?.key===fvgSelectionScope?rows.find(row=>row.id===selectedCrt.id):undefined;
+            const utc=(stamp:number)=>new Date(stamp*1000).toISOString();
+            const page=(collection:Collection,cursor:string|null|undefined)=>{
+              if(cursor){setPageError("");setPageRequest({key:body,collection,cursor});}
+            };
+            const nums:[keyof Pick<CrtRules,"max_ranges"|"max_age"|"candidate_age"|"min_penetration"|"min_reclaim">,
+              string,number,number,boolean][]=[
+              ["max_ranges","CRT concurrent ranges",1,8,true],["max_age","CRT maximum reference age",1,500,true],
+              ["candidate_age","CRT maximum candidate age",1,40,true],["min_penetration","CRT minimum penetration",0,Infinity,false],
+              ["min_reclaim","CRT minimum reclaim",0,Infinity,false],
+            ];
+            return <>
+              <label>CRT reference timeframe <select value={rules.reference_frame&&frames.includes(rules.reference_frame)?rules.reference_frame:""}
+                onChange={e=>patch({reference_frame:(e.target.value||null) as CrtRules["reference_frame"]})}>
+                <option value="">Default ({frames[0]})</option>{frames.map(frame=><option key={frame}>{frame}</option>)}</select></label>
+              {source.endsWith("_SAVED")&&<>
+                <label>CRT archive start (UTC) <input type="datetime-local" value={rules.history_start===null?"":utc(rules.history_start).slice(0,16)}
+                  onChange={e=>{const stamp=e.target.valueAsNumber/1000;patch(Number.isFinite(stamp)?
+                    {history_start:stamp,history_bars:10000}:{history_start:null,history_bars:2000,reference_mode:"aggregated"});}}/></label>
+                {rules.history_start!==null&&<label>CRT reference source <select value={rules.reference_mode}
+                  onChange={e=>patch({reference_mode:e.target.value as CrtRules["reference_mode"]})}>
+                  <option value="aggregated">Aggregate observations</option><option value="native">Match provider-native reference</option></select></label>}
+              </>}
+              <label>CRT fixed reference start (UTC) <input type="datetime-local" value={rules.reference_start===null?"":utc(rules.reference_start).slice(0,16)}
+                onChange={e=>{const stamp=e.target.valueAsNumber/1000;patch({reference_start:Number.isFinite(stamp)?stamp:null});}}/></label>
+              {(rules.reference_frame??frames[0])==="D1"&&<>
+                <label>CRT daily timezone <input value={rules.daily_timezone} onChange={e=>patch({daily_timezone:e.target.value})}/></label>
+                <label>CRT daily boundary <input type="time" value={rules.daily_boundary} onChange={e=>patch({daily_boundary:e.target.value})}/></label>
+              </>}
+              <label>CRT market schedule <select value={schedule.kind} onChange={e=>setSchedule({kind:e.target.value as Schedule["kind"]})}>
+                <option value="unknown">Unknown</option><option value="continuous">Continuous</option><option value="forex_weekly">Configured Sunday–Friday</option>
+              </select></label>
+              {schedule.kind==="forex_weekly"&&<>
+                <label>CRT schedule timezone <input value={schedule.timezone??"America/New_York"} onChange={e=>setSchedule({timezone:e.target.value})}/></label>
+                <label>CRT Sunday open <input type="time" value={schedule.sunday_open??"17:00"} onChange={e=>setSchedule({sunday_open:e.target.value})}/></label>
+                <label>CRT Friday close <input type="time" value={schedule.friday_close??"17:00"} onChange={e=>setSchedule({friday_close:e.target.value})}/></label>
+              </>}
+              {nums.map(([key,label,min,max,integer])=><label key={key}>{label}<input type="number" min={min}
+                max={Number.isFinite(max)?max:undefined} step={integer?1:"any"} value={rules[key]}
+                onChange={e=>{const value=e.target.valueAsNumber;if(value>=min&&value<=max&&(!integer||Number.isInteger(value)))patch({[key]:value});}}/></label>)}
+              <label>CRT close invalidation <select value={rules.invalidate} onChange={e=>patch({invalidate:e.target.value as CrtRules["invalidate"]})}>
+                <option value="sweep_extreme">Beyond sweep extreme</option><option value="reference_boundary">Beyond reference boundary</option>
+                <option value="none">Disabled</option></select></label>
+              <label><input type="checkbox" checked={rules.include_context} onChange={e=>patch({include_context:e.target.checked})}/> Include CRT context</label>
+              {(Object.keys(crtVisibility) as (keyof CrtVisibility)[]).map(key=><label key={key}><input type="checkbox"
+                checked={rangeVisibility[key]} onChange={e=>update(item.id,{crtVisibility:{...rangeVisibility,[key]:e.target.checked}})}/> Show CRT {key}</label>)}
+              {result?.crt_page&&<section aria-label="CRT evidence">
+                <p>{result.reference_frame} → {timeframe} · Current ranges {result.current_crt?.returned} / {result.current_crt?.total} · {result.provenance?.context_authority}</p>
+                {!!result.warnings.length&&<p>{result.warnings.join(" · ")}</p>}
+                {(["formations","sweeps","revisions"] as const).map(key=><button key={key} type="button" className="small-tool"
+                  disabled={!result.crt_page?.[key].next_cursor||Boolean(pageRequest)}
+                  onClick={()=>page(("crt_"+key) as Collection,result.crt_page?.[key].next_cursor)}>Older CRT {key}</button>)}
+                {history&&<><button type="button" className="small-tool" disabled={!history.metadata.next_cursor||Boolean(pageRequest)}
+                  onClick={()=>page(history.collection,history.metadata.next_cursor)}>Next CRT page</button>
+                  <button type="button" className="small-tool" onClick={()=>{setPageRequest(undefined);setOlder(undefined);}}>Latest CRT evidence</button></>}
+                {pageError&&<small role="alert">{pageError}</small>}
+                {[...new Map(rows.map(row=>[row.id,row])).values()].map(row=><button key={row.id} type="button" className="small-tool"
+                  onClick={()=>setSelectedCrt({key:fvgSelectionScope,id:row.id})}>{row.state.replaceAll("_"," ")} · {utc(row.available_at)}</button>)}
+                {event&&<dl aria-label="Selected CRT event">
+                  <dt>Reference OHLC and inputs</dt><dd>{event.reference_ohlc.join(" / ")} · {event.constituents} candles · {event.reference_mode}</dd>
+                  <dt>Reference low / midpoint / high</dt><dd>{event.low} / {event.midpoint} / {event.high}</dd>
+                  <dt>Origin / closed / available</dt><dd>{[event.reference_start,event.reference_end,event.reference_available_at].map(utc).join(" / ")}</dd>
+                  <dt>Observed / confirmed / available</dt><dd>{[event.observation_time,event.confirmation_time,event.available_at].map(utc).join(" / ")}</dd>
+                  <dt>State and reason</dt><dd>{event.state.replaceAll("_"," ")} · {event.reason.replaceAll("_"," ")}</dd>
+                  {event.swept_boundary!==undefined&&<><dt>Swept boundary / penetration / reclaim close</dt>
+                    <dd>{event.swept_boundary} / {event.penetration} / {event.reclaim_close??"unconfirmed"}</dd></>}
+                  <dt>Source</dt><dd>{result.provenance?.context_authority}</dd>
+                  {rules.include_context&&<><dt>Available context</dt><dd>{Object.keys(event.context).length?
+                    Object.entries(event.context).map(([kind,link])=><div key={kind}>{kind} · {link.timeframe} · {utc(link.available_at)} · {link.witness_id}</div>)
+                    :"No matching evidence"}</dd></>}
                 </dl>}
               </section>}
             </>;

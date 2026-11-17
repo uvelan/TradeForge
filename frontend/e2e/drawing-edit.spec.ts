@@ -90,13 +90,13 @@ async function drag(page:Page,start:Point,end:Point){
 }
 function shifted(start:Point,x:number,y:number){return {x:start.x+x,y:start.y+y};}
 
-async function setup(page:Page,kind:string,points:number[][],withEma=false){
+async function setup(page:Page,kind:string,points:number[][],withEma=false,frame="M3"){
   await instrument(page);
   await page.setViewportSize({width:1536,height:900});
   await page.goto("/");
   await page.getByRole("button",{name:"Market Terminal",exact:true}).click();
   await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
-  await page.getByRole("button",{name:"M3",exact:true}).click();
+  await page.getByRole("button",{name:frame,exact:true}).click();
   if(withEma){
     const evaluated=page.waitForResponse(res=>res.url().endsWith("/indicators/evaluate"));
     await page.getByRole("combobox",{name:"Indicator",exact:true}).selectOption("ema");
@@ -374,7 +374,7 @@ test("market structure overlays preserve ownership of a saved drawing handle",as
 });
 
 for(const [title,query,id] of [["Liquidity","liquidity pools","liquidity_sweeps"],
-  ["FVG","fair value gap","fair_value_gap"],["Order block","order blocks","order_blocks"]]){
+  ["FVG","fair value gap","fair_value_gap"],["Order block","order blocks","order_blocks"],["CRT","candle range theory","candle_range_theory"]]){
 test(title+" overlays preserve a saved drawing handle gesture",async ({page})=>{
   if(id==="order_blocks"){
     const start=1793577600,step=180;
@@ -387,7 +387,16 @@ test(title+" overlays preserve a saved drawing handle gesture",async ({page})=>{
       source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",candles,
     }}));
   }
-  const {created,item}=await setup(page,"horizontal",[[.49,.55]]);
+  if(id==="candle_range_theory"){
+    const start=1793577600,step=300;
+    const candles=Array.from({length:100},(_,i)=>({
+      time:start+i*step,open:102,high:105,low:100,close:103,
+    }));
+    await page.route("**/research/api/market/candles?**",route=>route.fulfill({json:{
+      source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",candles,
+    }}));
+  }
+  const {created,item}=await setup(page,"horizontal",[[.49,.55]],false,id==="candle_range_theory"?"M5":"M3");
   await page.getByText("Indicator library",{exact:true}).click();
   await page.getByLabel("Search indicators").fill(query);
   await page.getByRole("combobox",{name:"Add indicator",exact:true}).selectOption(id);
@@ -398,6 +407,8 @@ test(title+" overlays preserve a saved drawing handle gesture",async ({page})=>{
     await group.getByLabel("Left bars").fill("1");
     await group.getByLabel("Right confirmation bars").fill("1");
     await expect(evidence.getByRole("button",{name:"BULLISH · ACTIVE · 0.0%"})).toBeVisible();
+  }else if(id==="candle_range_theory"){
+    await expect(evidence.getByRole("button",{name:/^ACTIVE/}).first()).toBeVisible();
   }else{
     await expect(evidence).toBeVisible();
   }

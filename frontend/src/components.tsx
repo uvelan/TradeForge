@@ -339,9 +339,30 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     };
     const blockZones=(blocks?.current_obs?.items??[]).filter(blockVisible).slice(0,12).map(
       event=>({...event,c_time:event.candidate_time,kind:"ob" as const}));
-    fvgLayer.current?.update([...(gap?.current_fvgs?.items??[]).filter(gapVisible).slice(0,12),...blockZones],
+    const crt=indicators?.find(indicator=>indicator.id==="candle_range_theory");
+    const crtVisibility=crt?.crtVisibility;
+    const crtZones=crtVisibility?.ranges!==false||crtVisibility?.midpoint!==false
+      ?(crt?.current_crt?.items??[]).slice(0,8).map(event=>({
+        kind:"crt" as const,direction:"BULLISH" as const,c_time:event.reference_start,
+        remaining_lower:event.low,remaining_upper:event.high,fill:crtVisibility?.ranges!==false,
+        midpoint:crtVisibility?.midpoint!==false?event.midpoint:undefined,
+      })):[];
+    fvgLayer.current?.update([...(gap?.current_fvgs?.items??[]).filter(gapVisible).slice(0,12),...blockZones,...crtZones],
       [...linkedBars.current.keys()]);
     for(const [indicatorIndex,indicator] of (indicators??[]).entries()){
+      if(indicator.id==="candle_range_theory"){
+        for(const event of [...(indicator.crt_sweeps??[]).slice(-16),...(indicator.crt_revisions??[]).slice(-16)]){
+          if(!linkedBars.current.has(event.observation_time)||event.reason==="REFERENCE_CAP_REPLACEMENT")continue;
+          const display=event.state==="AMBIGUOUS"?crtVisibility?.ambiguous:
+            ["EXPANSION_OBSERVED","OPPOSITE_BOUNDARY_REACHED"].includes(event.state)?crtVisibility?.expansion:
+            ["INVALIDATED","EXPIRED"].includes(event.state)?crtVisibility?.terminal:
+            event.sweep_side==="HIGH"?crtVisibility?.high:crtVisibility?.low;
+          if(display===false)continue;
+          markers.push({time:event.observation_time as UTCTimestamp,shape:"circle",color:"#eabf52",
+            position:event.sweep_side==="LOW"?"belowBar":"aboveBar",text:"CRT "+event.state.toLowerCase().replaceAll("_"," ")});
+        }
+        continue;
+      }
       if(indicator.id==="order_blocks"){
         const live=(indicator.current_obs?.items??[]).filter(blockVisible).slice(0,12);
         const terminal=(indicator.ob_revisions??[]).filter(event=>blockVisible(event)&&
