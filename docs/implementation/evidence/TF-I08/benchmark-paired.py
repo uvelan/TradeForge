@@ -65,7 +65,8 @@ def working_set():
 def pair(label, versions, args):
     contexts=[]
     for name,engine,loader,http in versions:
-        request=engine.Evaluation.model_validate(args)
+        params={**args,"timing_policy":"STRICT_CAUSAL"} if name=="strict" else args
+        request=engine.Evaluation.model_validate(params)
         contexts.append((name,lambda e=engine,r=request,l=loader:e.evaluate(r,l),
                          http,request.model_dump_json(exclude_unset=True)))
     timings={name:[[],[],[]] for name,*_ in contexts}
@@ -142,6 +143,9 @@ def main():
         print("Windows, same process, alternating run order. 12 samples per version, P50/P95 in milliseconds.",flush=True)
         common={"symbol":"EURUSD","timeframe":"M5","feed_id":"demo-v1","price_basis":"SIMULATED",
                 "source":"DEMO","cutoff":START+600000,"candles":dataset(2000)}
+        if "--causal" in sys.argv:
+            causal_bench(versions,stores[-1],common)
+            return
         pair("2,000 standalone CRT",versions,{**common,"indicators":specifications(combined=False)})
         for isolated in specifications()[1:]:
             pair("2,000 standalone "+isolated["id"],versions,{**common,"indicators":[isolated]})
@@ -165,6 +169,34 @@ def main():
                "cutoff":START+3000000,"candles":[],"partitions":manifest}
         pair("10,000 archive CRT",versions,{**saved,"indicators":specifications(archive=True,combined=False)})
         pair("10,000 archive five compatible",versions,{**saved,"indicators":specifications(archive=True)})
+
+
+def causal_bench(versions,storage,common):
+    versions=[*versions,("strict",*versions[-1][1:])]
+    combined=specifications()
+    pair("2,000 caller combined",versions,{**common,"indicators":combined})
+    pair("2,000 caller context",versions,{**common,"indicators":specifications(context=True)})
+    pair("2,000 standalone previous-day",versions[:2],{**common,"load_reference":True,
+         "indicators":[{"id":"previous_day"}]})
+    delayed=[{**bar,"available_at":bar["time"]+300+(750 if i%11==0 else 120 if i%2 else 0)}
+             for i,bar in enumerate(common["candles"])]
+    pair("2,000 delayed and out-of-order",versions,{**common,"candles":delayed,"indicators":combined})
+    for count,label in ((1300,"rewind"),(1320,"advance")):
+        pair("Replay "+label,versions,{**common,"candles":delayed[:count],
+             "cutoff":START+count*300,"frozen":True,"indicators":combined})
+    records=[{**bar,"available_at":bar["time"]+300} for bar in dataset(10000)]
+    manifest=[]
+    for offset in range(0,len(records),2000):
+        item=storage.write_partition("MT5","causal-bench","EURUSD","candles","M5","BID",records[offset:offset+2000])
+        manifest.append({key:item[key] for key in ("id","sha256")})
+    specs=specifications(archive=True)
+    for spec in specs:
+        for field in ("crt","fvg","structure"):
+            if field in spec:
+                spec[field]["market_schedule"]={"kind":"continuous"}
+    pair("10,000 archive combined",versions,{**common,"source":"MT5_SAVED","feed_id":"causal-bench",
+         "price_basis":"BID","frozen":True,"cutoff":START+3000000,"candles":[],"partitions":manifest,
+         "indicators":specs})
 
 
 if __name__=="__main__":

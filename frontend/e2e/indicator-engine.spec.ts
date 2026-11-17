@@ -654,3 +654,45 @@ test("shared context follows chart structure settings and visibility changes sen
   expect(changed.diagnostics.executions.structure).toBe(2);
   await expect(crt.locator("pre")).toContainText('"left": 2');
 });
+
+test("strict FVG timing exposes a straddling replay observation and rewinds",async ({page},info)=>{
+  const start=Date.parse("2026-11-02T00:00:00Z")/1000;
+  const market={source:"DEMO",synthetic:true,price_basis:"SIMULATED",feed_id:"demo-v1",
+    candles:[[99,100,98,99],[100,106,100,105],[105,110,105,108],[106,107,103.75,106]].map(
+      ([open,high,low,close],index)=>({open,high,low,close,time:start+index*300,
+        available_at:start+(index+1)*300+(index===2?120:0)}))};
+  await page.route("**/research/api/replay/sessions",route=>route.fulfill({status:201,
+    json:{id:"strict-timing-fixture",market,checkpoint:{position:1,bookmarks:[]},views:{}}}));
+  await terminal(page);
+  await page.getByText("Indicator library",{exact:true}).click();
+  const policy=page.getByLabel("Evidence timing policy");
+  await expect(policy).toHaveValue("LEGACY_RESEARCH");
+  await expect(page.getByText("Research-only evidence",{exact:true})).toBeVisible();
+  await enable(page,"fair value gap","fair_value_gap");
+  await policy.selectOption("STRICT_CAUSAL");
+  await expect(page.getByText(/^Strict causal evidence/)).toBeVisible();
+  await page.getByRole("button",{name:"Bar replay",exact:true}).click();
+  const replay=page.getByLabel("Historical replay");
+  const evidence=page.getByLabel("FVG evidence",{exact:true});
+  const formed=evidence.getByRole("button",{name:"BULLISH · ACTIVE · 0.0%"});
+  const uncertain=evidence.getByRole("button",{name:"BULLISH · UNCERTAIN · 0.0%"});
+  await expect(formed).toHaveCount(0);
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  await expect(formed).toBeVisible();
+  const observed=page.waitForResponse(res=>res.url().endsWith("/indicators/evaluate")&&
+    res.request().postDataJSON().timing_policy==="STRICT_CAUSAL"&&
+    res.request().postDataJSON().cutoff===start+1200);
+  await replay.getByRole("button",{name:"Next candle"}).click();
+  const result=(await (await observed).json()).results[0];
+  expect(result.revisions[0].timing).toMatchObject({observation_start:start+900,observation_end:start+1200,
+    dependency_available_at:start+1020,strategy_eligibility:"STRADDLING_OBSERVATION"});
+  await uncertain.click();
+  await expect(evidence.getByLabel("Selected FVG")).toContainText("STRADDLING OBSERVATION");
+  await evidence.getByLabel("Selected FVG").screenshot({path:info.outputPath("strict-straddling-replay.png")});
+  await replay.getByRole("button",{name:"Previous candle"}).click();
+  await expect(uncertain).toHaveCount(0);
+  await expect(formed).toBeVisible();
+  await page.reload();
+  await page.getByText("Indicator library",{exact:true}).click();
+  await expect(policy).toHaveValue("STRICT_CAUSAL");
+});

@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
+from .causal_timing import TemporalEvidence, evidence as timing_evidence
 from .fvg import identity
 from .indicator_coverage import MarketSchedule, inspect_window
 from .structure_continuity import continuity_reason
@@ -80,7 +81,7 @@ def ohlc(bar):
     return [bar.open,bar.high,bar.low,bar.close]
 
 
-def references(rows, cutoff, step, frame, rules, native, quality):
+def references(rows, cutoff, step, frame, rules, native, quality, *, strict=False):
     grouped=defaultdict(list)
     htf=FRAMES[frame]
     for row in rows:
@@ -121,17 +122,25 @@ def references(rows, cutoff, step, frame, rules, native, quality):
                 continue
             available=max(available,stamp)
             raw=[bar.model_dump(),stamp]
-        yield available,start,end,values,len(members),identity(
-            "crt-reference",[(bar.model_dump(),stamp) for bar,stamp in members],raw)
+        ref=(available,start,end,values,len(members),identity(
+            "crt-reference",[(bar.model_dump(),stamp) for bar,stamp in members],raw))
+        recorded=strict and all(bar.available_at==stamp for bar,stamp in members) and (
+            raw is None or native_row[0].available_at==native_row[1])
+        yield (*ref,recorded) if strict else ref
 
 
-TERMINAL={"AMBIGUOUS","INVALIDATED","EXPIRED","OPPOSITE_BOUNDARY_REACHED"}
+TERMINAL={"AMBIGUOUS","INVALIDATED","EXPIRED","OPPOSITE_BOUNDARY_REACHED","UNCERTAIN"}
 
 
 def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_rows=(), *, context=None, context_snapshot=None):
     scope={key:provenance.get(key) for key in ("source","symbol","timeframe","feed_id","dataset_id","price_basis")}
     market=identity("crt-market",scope,frame,step)
-    policy=(VERSION,IDENTITY_VERSION)
+    strict=provenance.get("timing_policy")=="STRICT_CAUSAL"
+    authority=provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")
+    if strict and rules.reference_mode=="native" and provenance.get(
+            "native_reference",{}).get("context_authority")!="CHECKSUM_VERIFIED_ARCHIVE":
+        authority="MIXED_OBSERVATION_AND_REFERENCE"
+    policy=(VERSION,IDENTITY_VERSION,"STRICT_CAUSAL",2) if strict else (VERSION,IDENTITY_VERSION)
     config=identity("crt-rules",policy,rules.model_dump(exclude={
         "history_bars","history_start","reference_start","include_context"}),frame)
     snapshot=sha256(identity("crt-snapshot",policy,rules.model_dump(),cutoff,provenance).encode())
@@ -146,7 +155,7 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
     quality=Counter()
     if rules.market_schedule.kind=="unknown":
         quality["UNVERIFIED_MARKET_SCHEDULE"]+=1
-    refs=iter(sorted(references(rows,cutoff,step,frame,rules,{bar.time:(bar,stamp) for bar,stamp in native_rows},quality)))
+    refs=iter(sorted(references(rows,cutoff,step,frame,rules,{bar.time:(bar,stamp) for bar,stamp in native_rows},quality,strict=strict)))
     pending=next(refs,None)
     book={}
     index=0
@@ -166,8 +175,20 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
                "observation_time":observed,"available_at":available,
                "confirmation_time":confirmed,
                "observation_ohlc":ohlc(bar) if bar else None,
-               "context":context(available,observed) if context and bar else {},
+               "context":context(bar.time if strict else available,observed) if context and bar else {},
                **(zone.get("sweep_evidence",{}) if state!="AMBIGUOUS" else {}),**details}
+        if strict:
+            barrier=zone.get("interaction_barrier",zone["base"]["reference_available_at"]) if bar else 0
+            eligible_reason=("STRADDLING_OBSERVATION" if state=="UNCERTAIN" else
+                 "AMBIGUOUS_INTRABAR_ORDER" if state=="AMBIGUOUS" or reason=="UNOBSERVED_OPPOSITE_GAP" else
+                 "EXPIRED_REFERENCE" if state=="EXPIRED" else
+                 "RESEARCH_ONLY" if state.endswith("_CANDIDATE") or state=="INVALIDATED" else
+                 "UNKNOWN_COVERAGE" if rules.market_schedule.kind=="unknown" else
+                 "UNVERIFIED_AVAILABILITY" if not zone.get("recorded") else None)
+            timing=timing_evidence(bar,step,available,barrier,cutoff,authority) if bar else TemporalEvidence(
+                observed,confirmed,available,0,cutoff,zone.get("recorded",False),authority)
+            event["timing"]=timing.contract(reason=eligible_reason,
+                references=[prior["id"]] if prior else [])
         zone["latest"]=event
         if state in TERMINAL:
             del book[zone["range_id"]]
@@ -177,7 +198,7 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
         pages[collection].append(event)
 
     def release(ref):
-        available,start,end,values,count,fingerprint=ref
+        available,start,end,values,count,fingerprint=ref[:6]
         candle=identity("crt-reference-candle",policy,market,frame,rules.reference_mode,start,end,available,fingerprint)
         key=identity("crt-range",policy,config,candle)
         if len(book)>=rules.max_ranges:
@@ -192,6 +213,8 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
               "identity_policy_version":IDENTITY_VERSION,"provenance_id":market,"configuration_fingerprint":config}
         zone={"base":base,"range_id":key,"reference_start":start,"reference_end":end,
               "high":high,"low":low,"age":0,"latest":None,"sweep":None,"candidate_due":None}
+        if strict:
+            zone["recorded"]=ref[6]
         book[key]=zone
         publish(zone,"ACTIVE","CLOSED_REFERENCE",available)
 
@@ -215,9 +238,11 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
             pending=next(refs,None)
         high,low,close=map(lambda v:Decimal(str(v)),(bar.high,bar.low,bar.close))
         for zone in list(book.values()):
-            if bar.time<zone["base"]["reference_available_at"]:
-                continue
             h,l=zone["high"],zone["low"]
+            if bar.time<zone["base"]["reference_available_at"]:
+                if strict and bar.time+step>zone["base"]["reference_available_at"] and (high>h or low<l):
+                    publish(zone,"UNCERTAIN","STRADDLING_OBSERVATION",available,bar)
+                continue
             zone["age"]+=1
             if zone["age"]>=rules.max_age or (zone["candidate_due"] is not None and index>=zone["candidate_due"]):
                 publish(zone,"EXPIRED","CANDIDATE_AGE" if zone["candidate_due"] is not None and index>=zone["candidate_due"]
@@ -225,6 +250,8 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
                 continue
             tracked=zone["sweep"]
             if tracked and bar.time<tracked[2]:
+                if strict and bar.time+step>tracked[2] and (low<=(h+l)/2<=high or high>h or low<l):
+                    publish(zone,"UNCERTAIN","STRADDLING_OBSERVATION",available,bar)
                 continue
             breach_high=high>h and high-h>=minimum
             breach_low=low<l and l-low>=minimum
@@ -269,6 +296,9 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
                 details["reclaim_id"]=identity("crt-reclaim",policy,details["sweep_id"],str(close),available)
                 zone["sweep_evidence"]=details
                 publish(zone,side+"_SWEPT_RECLAIMED","SAME_CANDLE_RECLAIM",available,bar,**details)
+                if strict:
+                    zone["interaction_barrier"]=available
+                    zone["recorded"] &= bar.available_at==available
             else:
                 zone["candidate_due"]=index+rules.candidate_age
                 zone["candidate_side"]=side

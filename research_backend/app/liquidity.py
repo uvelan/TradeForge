@@ -8,6 +8,7 @@ from math import floor, log, log1p
 
 from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
+from .causal_timing import evidence as timing_evidence
 from .structure_pages import EventPage
 
 VERSION = 1
@@ -65,11 +66,14 @@ class Pool:
     activation_observation_time: int | None = None
     price_generation: int = 0
     candidate_id: str | None = None
+    recorded_dependencies: bool = True
+    latest_timing: dict | None = None
 
 
 class LiquidityStream:
-    def __init__(self, rules: LiquidityRules, delivery: LiquidityDelivery, step: int, *, on_confirmed_sweep=None):
+    def __init__(self, rules: LiquidityRules, delivery: LiquidityDelivery, step: int, *, on_confirmed_sweep=None, timing=None):
         self.on_confirmed_sweep = on_confirmed_sweep
+        self.timing = timing
         self.rules, self.step = rules, step
         self.pools = EventPage("pools", delivery.pool_limit, delivery.pool_cursor)
         self.sweeps = EventPage("sweeps", delivery.sweep_limit, delivery.sweep_cursor)
@@ -97,10 +101,13 @@ class LiquidityStream:
         return min((pool for pool in matches if abs(price-pool.anchor)<=pool.anchor*self.eq),
                    key=lambda pool: (abs(price-pool.anchor), pool.id), default=None)
 
-    def transition(self, pool, state, bar, available, fingerprint, provenance_id, reason):
+    def transition(self, pool, state, bar, available, fingerprint, provenance_id, reason, *, timing=None):
         pool.state = state
         pool.revision += 1
-        entry = {"id":digest(VERSION,pool.id,pool.revision,state,bar.time,fingerprint),
+        event_id=digest(VERSION,pool.id,pool.revision,state,bar.time,fingerprint) if not self.timing else digest(
+            VERSION,"STRICT_CAUSAL",2,pool.id,pool.revision,state,bar.model_dump(),available,
+            pool.members,pool.latest_revision[0] if pool.latest_revision else None)
+        entry = {"id":event_id,
                  "pool_id":pool.id,"revision":pool.revision,"state":state,"reason":reason,
                  "classification":"EQH" if pool.side=="HIGH" else "EQL",
                  "liquidity_side":"BSL" if pool.side=="HIGH" else "SSL",
@@ -111,16 +118,33 @@ class LiquidityStream:
                  "evidence_cutoff":available,"input_fingerprint":fingerprint,"algorithm_version":VERSION,
                  "provenance_id":provenance_id,"status":"provisional" if state in {"FORMING","SWEEP_CANDIDATE"} else
                  "invalidated" if state in {"INVALIDATED","EXPIRED"} else "confirmed"}
+        if self.timing:
+            entry["timing"]=timing or self.timing_contract(pool,bar,available,
+                reason="EXPIRED_REFERENCE" if state=="EXPIRED" else
+                "INSUFFICIENT_HISTORY" if state=="INVALIDATED" else "RESEARCH_ONLY")
         self.pools.append(entry)
-        if state in {"SWEPT","BROKEN","EXPIRED","INVALIDATED"}:
+        if state in {"SWEPT","BROKEN","EXPIRED","INVALIDATED","UNCERTAIN"}:
             self.active.pop(pool.id)
             key = self.bucket(pool.side,pool.anchor)
             self.buckets[key].remove(pool.id)
             if not self.buckets[key]:
                 del self.buckets[key]
         else:
+            pool.latest_timing=entry.get("timing")
             pool.latest_revision = (entry["id"], bar.time, available, provenance_id, fingerprint)
         return entry
+
+    def timing_contract(self,pool,bar,available,*,reason=None,close_only=False):
+        cutoff,provenance,schedule=self.timing
+        dependency=pool.latest_revision[2] if pool.latest_revision else 0
+        references=[pool.latest_revision[0]] if pool.latest_revision else []
+        if reason is None and (schedule is None or schedule.kind=="unknown"):
+            reason="UNKNOWN_COVERAGE"
+        if reason is None and not pool.recorded_dependencies:
+            reason="UNVERIFIED_AVAILABILITY"
+        return timing_evidence(bar,self.step,available,dependency,cutoff,
+            provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")).contract(
+                reason=reason,close_only=close_only,references=references)
 
     def index(self,pool):
         pool.price_generation+=1
@@ -173,10 +197,25 @@ class LiquidityStream:
                         event_state="SWEPT"
                     elif id_ in wick_hits and pool.state=="ACTIVE":
                         event_state="SWEEP_CANDIDATE"
+                timing=None
+                if self.timing and pool.activated_at is not None and pool.latest_revision is not None:
+                    dependency=pool.latest_revision[2]
+                    close_only=id_ in close_hits
+                    decision=timing_evidence(bar,self.step,available,dependency,self.timing[0],"").interaction(
+                        close_only=close_only)
+                    if decision!="ELIGIBLE":
+                        if bar.time+self.step>pool.activated_at:
+                            reason=decision if bar.time+self.step>dependency else "AMBIGUOUS_INTRABAR_ORDER"
+                            self.transition(pool,"UNCERTAIN",bar,available,fingerprint,provenance_id,reason,
+                                            timing=self.timing_contract(pool,bar,available,reason=reason))
+                            continue
+                        event_state=None
+                    elif event_state:
+                        timing=self.timing_contract(pool,bar,available,close_only=close_only)
                 if event_state:
                     related=[event["id"] for event in breaks
                              if event["side"]==side and pool.lower<=Decimal(str(event["level_price"]))<=pool.upper]
-                    revision=self.transition(pool,event_state,bar,available,fingerprint,provenance_id,"CLOSED_CANDLE")
+                    revision=self.transition(pool,event_state,bar,available,fingerprint,provenance_id,"CLOSED_CANDLE",timing=timing)
                     crossing={"id":digest(VERSION,revision["id"],"CROSSING"),"pool_id":pool.id,
                               "pool_revision_id":revision["id"],"state":event_state,
                               "status":"provisional" if event_state=="SWEEP_CANDIDATE" else "confirmed",
@@ -192,11 +231,15 @@ class LiquidityStream:
                               "related_structure_ids":related,"candidate_id":pool.candidate_id,
                               "algorithm_version":VERSION,"provenance_id":provenance_id,
                               "input_fingerprint":fingerprint}
+                    if timing:
+                        crossing["timing"]=timing
                     self.sweeps.append(crossing)
                     if event_state == "SWEPT" and self.on_confirmed_sweep is not None:
                         self.on_confirmed_sweep(crossing)
                     if event_state=="SWEEP_CANDIDATE":
                         pool.candidate_id=crossing["id"]
+                        if self.timing:
+                            pool.recorded_dependencies &= bar.available_at == available
                 if id_ in self.active:
                     # Reinsert only the thresholds removed by this observation.
                     if id_ in wick_hits:
@@ -216,6 +259,8 @@ class LiquidityStream:
                 self.active[id_]=pool
                 self.buckets.setdefault(self.bucket(side,price),set()).add(id_)
                 heappush(self.expirations,(pool.expires,id_))
+            if self.timing:
+                pool.recorded_dependencies &= pivot.get("timing_recorded",False)
             pool.last_pivot_index=pivot_index
             pool.members.append({"id":pivot["id"],"price":pivot["price"],"time":pivot["pivot_time"],
                                  "available_at":pivot["available_at"]})
@@ -256,6 +301,7 @@ class LiquidityStream:
                 "state": pool.state, "status": "confirmed" if pool.state == "ACTIVE" else "provisional",
                 "expiry_in_bars": pool.expires-self.observation_index,
                 "algorithm_version": VERSION, "provenance_id": provenance, "input_fingerprint": fingerprint,
+                **({"timing":pool.latest_timing} if self.timing else {}),
             })
         return {"snapshot": snapshot, "selection": "confirmed_then_nearest_close", **page, "items": items}
 

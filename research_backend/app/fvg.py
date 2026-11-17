@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
 from .indicator_coverage import MarketSchedule
 from .structure_continuity import continuity_reason
+from .causal_timing import evidence as timing_evidence
 from .structure_pages import EventPage
 from .indicators import true_range
 
@@ -80,6 +81,7 @@ class Zone:
     depth: D = EPS
     revision: int = 0
     latest: dict | None = None
+    recorded_dependencies: bool = False
 
     @property
     def face(self):
@@ -104,7 +106,9 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen, *, on_
     scope = {key: provenance.get(key) for key in source_keys}
     parameters = rules.canonical()
     event_parameters = {key: value for key, value in parameters.items() if key not in {"history_start", "history_bars"}}
-    policy = (VERSION, IDENTITY_POLICY_VERSION)
+    strict=provenance.get("timing_policy")=="STRICT_CAUSAL"
+    authority=provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")
+    policy = (VERSION, IDENTITY_POLICY_VERSION, "STRICT_CAUSAL", 2) if strict else (VERSION, IDENTITY_POLICY_VERSION)
     config = identity("fvg-configuration", policy, event_parameters)
     source = identity("fvg-market", scope, step)
     snapshot = sha256(identity("fvg-snapshot", policy, parameters, cutoff, frozen, provenance, step).encode())
@@ -148,8 +152,19 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen, *, on_
                "formation_available_at":zone.formation_available_at,"observation_time":bar.time,
                "confirmation_time":bar.time+step,"available_at":available,"evidence_cutoff":available,
                "observed_price":observed,"warnings":sorted(warnings),**extra}
+        if strict:
+            decision=("STRADDLING_OBSERVATION" if state=="UNCERTAIN" else
+                      "EXPIRED_REFERENCE" if state=="EXPIRED" else
+                      "AMBIGUOUS_INTRABAR_ORDER" if reason=="GAP_THROUGH_UNOBSERVED" else
+                      "INSUFFICIENT_HISTORY" if continuity_from is not None else
+                      "UNKNOWN_COVERAGE" if rules.market_schedule.kind=="unknown" else
+                      "UNVERIFIED_AVAILABILITY" if not zone.recorded_dependencies or rules.atr_multiple else None)
+            event["timing"]=timing_evidence(bar,step,available,zone.formation_available_at if prior else 0,
+                cutoff,authority).contract(reason=decision,references=[prior["id"]] if prior else [])
+        if strict and prior:
+            zone.recorded_dependencies &= bar.available_at == available
         zone.latest=event
-        if state in {"FULLY_MITIGATED","INVALIDATED","EXPIRED"}:
+        if state in {"FULLY_MITIGATED","INVALIDATED","EXPIRED","UNCERTAIN"}:
             del book[zone.id]
         (formations if state=="ACTIVE" else revisions).append(event)
         if state=="ACTIVE" and on_formation is not None:
@@ -209,6 +224,12 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen, *, on_
                     deferred.append((-zone.face,id_))
                     # No older zone can be blocked at the same price threshold.
                     continue
+                if strict and bar.time<zone.formation_available_at:
+                    if bar.time+step>zone.formation_available_at:
+                        publish(zone,"UNCERTAIN","STRADDLING_OBSERVATION",bar,available,candle_fingerprint,float(observed))
+                    else:
+                        deferred.append((-zone.face,id_))
+                    continue
                 far=zone.lower if sign==1 else zone.upper
                 overlap=high>=zone.lower and low<=zone.upper
                 if not overlap:
@@ -257,6 +278,9 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen, *, on_
         zone=Zone(identity("fvg-zone",policy,config,source,side,evidence),side,lo,hi,
                   dates,c.time+step,available,index+rules.max_age_bars,
                   tuple((item.open,item.high,item.low,item.close) for item,_ in window),evidence)
+        if strict:
+            zone.recorded_dependencies=all(item.available_at is not None and item.available_at>=item.time+step
+                                           for item,_ in window)
         overlaps,truncated=overlap_sample(book,zone)
         book[zone.id]=zone
         heappush(heaps[side],(-zone.face,zone.id))

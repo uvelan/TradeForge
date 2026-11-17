@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, FiniteFloat
 
+from .causal_timing import evidence as timing_evidence, strategy_eligible
 from .fvg import identity
 from .structure_pages import EventPage
 
@@ -67,8 +68,11 @@ class Block:
 
 
 class OrderBlockStream:
-    def __init__(self, rules, structure, provenance, step, delivery, *, on_formation=None):
+    def __init__(self, rules, structure, provenance, step, delivery, *, on_formation=None, timing_cutoff=None):
         self.on_formation = on_formation
+        self.timing_cutoff = timing_cutoff
+        self.timing_authority = provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")
+        self.policy = (*POLICY,"STRICT_CAUSAL",2) if timing_cutoff is not None else POLICY
         self.context_lookup = None
         self.rules = rules
         self.structure = structure
@@ -79,7 +83,7 @@ class OrderBlockStream:
         structure_params = structure.identity_parameters()
         for key in ("history_start", "history_bars"):
             structure_params.pop(key, None)
-        self.config = identity("ob-config", POLICY, rules.model_dump(exclude={"include_context"}),
+        self.config = identity("ob-config", self.policy, rules.model_dump(exclude={"include_context"}),
                                structure.algorithm_version, structure_params)
         self.formations = EventPage("ob_formations", delivery.formation_limit, delivery.formation_cursor)
         self.revisions = EventPage("ob_revisions", delivery.revision_limit, delivery.revision_cursor, max_before=10_000*500)
@@ -128,7 +132,7 @@ class OrderBlockStream:
             inclusive = True
         heappush(self.by_price[zone.sign], (threshold-zone.face, not inclusive, zone.id))
 
-    def publish(self, zone, state, reason, bar, available, *, observed=None, previous_time=None):
+    def publish(self, zone, state, reason, bar, available, *, observed=None, previous_time=None, timing_reason=None):
         prior = zone.latest
         evidence = zone.formation["formation_fingerprint"] if prior is None else identity(
             "ob-transition", POLICY, prior["id"], state, reason, bar.model_dump(),
@@ -136,15 +140,24 @@ class OrderBlockStream:
         )
         revision = 1 if prior is None else prior["revision"] + 1
         event = {**zone.formation,
-                 "id": identity("ob-event", POLICY, zone.id, revision, evidence),
+                 "id": identity("ob-event", self.policy, zone.id, revision, evidence),
                  "evidence_fingerprint": evidence, "state": state, "reason": reason, "revision": revision,
                  "observation_time": bar.time, "confirmation_time": bar.time+self.step,
                  "available_at": available, "observed_price": observed,
                  "mitigation_pct": float(100*zone.depth/zone.width),
                  "remaining_lower": float(zone.lower if zone.sign == 1 else zone.lower+zone.depth),
                  "remaining_upper": float(zone.upper-zone.depth if zone.sign == 1 else zone.upper)}
+        if self.timing_cutoff is not None:
+            decision=timing_reason or ("EXPIRED_REFERENCE" if state=="EXPIRED" else
+                "INSUFFICIENT_HISTORY" if state=="INVALIDATED" else
+                "UNVERIFIED_AVAILABILITY" if not zone.formation["timing_recorded"] else None)
+            barrier=zone.formation["first_visibility_time"] if prior else 0
+            event["timing"]=timing_evidence(bar,self.step,available,barrier,self.timing_cutoff,
+                self.timing_authority).contract(reason=decision,references=[prior["id"]] if prior else [zone.formation["bos_id"]])
+        if self.timing_cutoff is not None and prior:
+            zone.formation["timing_recorded"] &= bar.available_at == available
         zone.latest = event
-        if state in {"FULLY_MITIGATED", "INVALIDATED", "EXPIRED"}:
+        if state in {"FULLY_MITIGATED", "INVALIDATED", "EXPIRED", "UNCERTAIN"}:
             del self.book[zone.id]
         (self.formations if prior is None else self.revisions).append(event)
 
@@ -155,7 +168,7 @@ class OrderBlockStream:
             zone = self.book.get(key)
             if zone is None:
                 continue
-            if available <= zone.formation["first_visibility_time"]:
+            if self.timing_cutoff is None and available <= zone.formation["first_visibility_time"]:
                 pending_expiry.append((deadline,key))
             else:
                 self.publish(zone, "EXPIRED", "MAX_AGE", bar, available)
@@ -174,6 +187,13 @@ class OrderBlockStream:
                     continue
                 if available <= zone.formation["first_visibility_time"]:
                     deferred.append(item)
+                    continue
+                if self.timing_cutoff is not None and bar.time < zone.formation["first_visibility_time"]:
+                    if bar.time+self.step > zone.formation["first_visibility_time"]:
+                        self.publish(zone,"UNCERTAIN","STRADDLING_OBSERVATION",bar,available,
+                                     timing_reason="STRADDLING_OBSERVATION")
+                    else:
+                        deferred.append(item)
                     continue
                 if high < zone.lower or low > zone.upper:
                     self.publish(zone, "INVALIDATED", "GAP_THROUGH_UNOBSERVED", bar, available,
@@ -207,6 +227,10 @@ class OrderBlockStream:
     def form(self, event, bar, available, index):
         if event["status"] != "confirmed" or event["type"] not in {"BOS", "CHOCH"}:
             return
+        if self.timing_cutoff is not None and (not strategy_eligible(event, self.timing_cutoff) or
+                self.minimum_displacement and bar.time<event["level_available_at"]):
+            self.rejections["INELIGIBLE_STRUCTURAL_DEPENDENCY"] += 1
+            return
         if event["type"] == "CHOCH" and not self.rules.allow_choch:
             self.rejections["CHOCH_DISABLED"] += 1
             return
@@ -219,7 +243,8 @@ class OrderBlockStream:
             return
         for candidate, stamp in reversed(self.candidates):
             body = sign*(price(candidate.open)-price(candidate.close))
-            if body > 0 and body >= self.minimum_body and stamp <= available:
+            if body > 0 and body >= self.minimum_body and stamp <= (
+                    available if self.timing_cutoff is None else bar.time):
                 break
         else:
             self.rejections["NO_ELIGIBLE_OPPOSING_CANDLE"] += 1
@@ -228,8 +253,8 @@ class OrderBlockStream:
             min(candidate.open, candidate.close), max(candidate.open, candidate.close))
         captured = candidate.model_dump()
         candle_id = identity("ob-candle", self.source, captured, stamp)
-        evidence = identity("ob-formation", POLICY, candle_id, event["local_witness"])
-        key = identity("ob-zone", POLICY, self.config, self.source, event["direction"], evidence)
+        evidence = identity("ob-formation", self.policy, candle_id, event["local_witness"])
+        key = identity("ob-zone", self.policy, self.config, self.source, event["direction"], evidence)
         formation = {"ob_id":key, "direction":event["direction"], "break_direction":event["direction"],
                      "algorithm_version":ALGORITHM_VERSION, "identity_policy_version":IDENTITY_VERSION,
                      "structure_version":self.structure.algorithm_version, "configuration_fingerprint":self.config,
@@ -243,6 +268,8 @@ class OrderBlockStream:
                      "level_price":event["level_price"], "bos_confirmation_time":event["confirmation_time"],
                      "bos_available_at":available, "first_visibility_time":available,
                      "context":self.context(bar,available)}
+        if self.timing_cutoff is not None:
+            formation["timing_recorded"]=candidate.available_at==stamp
         zone = Block(key, sign, price(lower), price(upper), index+self.rules.max_age_bars, formation)
         self.book[key] = zone
         self.put(zone)
@@ -273,7 +300,7 @@ class OrderBlockStream:
         self.previous_time, self.latest_price = bar.time, price(bar.close)
 
     def finish(self, structure_snapshot, *, context_snapshot=None):
-        snapshot = identity("ob-snapshot", POLICY, self.config, self.rules.include_context, structure_snapshot)
+        snapshot = identity("ob-snapshot", self.policy, self.config, self.rules.include_context, structure_snapshot)
         if context_snapshot is not None:
             snapshot=identity("ob-context-snapshot",snapshot,context_snapshot)
         if self.current.limit:

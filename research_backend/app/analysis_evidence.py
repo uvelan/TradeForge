@@ -8,6 +8,7 @@ import json
 from time import perf_counter
 from types import MappingProxyType
 
+from .causal_timing import STRICT
 from .structure_pages import EventPage, StructureDelivery
 
 CONTRACT_VERSION = 1
@@ -131,7 +132,7 @@ class AnalysisCoordinator:
         self.timings=Counter()
         self.work=0
         # Witnesses are side-channel evidence and must not alter public legacy events.
-        self.witness=any(s.id=="order_blocks" or s.crt and s.crt.include_context for s in request.indicators)
+        self.witness=request.timing_policy==STRICT or any(s.id=="order_blocks" or s.crt and s.crt.include_context for s in request.indicators)
 
     def reserve(self,amount):
         if self.reserved_bytes+amount>96*1024*1024:
