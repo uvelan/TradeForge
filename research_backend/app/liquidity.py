@@ -149,7 +149,10 @@ class LiquidityStream:
     def index(self,pool):
         pool.price_generation+=1
         high=pool.side=="HIGH"
-        boundary=pool.upper if high else -pool.lower
+        # Strict mode also watches the original (narrowest) boundary so a delayed
+        # widening cannot hide an interaction against the prior boundary.
+        boundary=(pool.anchor if high else -pool.anchor) if self.timing else (
+            pool.upper if high else -pool.lower)
         threshold=boundary+abs(boundary)*self.penetration
         heappush(self.wick[pool.side],(threshold,pool.id,pool.price_generation))
         heappush(self.close[pool.side],(boundary,pool.id,pool.price_generation))
@@ -190,17 +193,22 @@ class LiquidityStream:
                 signed_outer=pool.upper if sign==1 else -pool.lower
                 reclaim=signed_inner-abs(signed_inner)*self.reclaim
                 event_state=None
+                close_hit=id_ in close_hits
+                wick_hit=id_ in wick_hits
+                if self.timing:
+                    close_hit=close>signed_outer
+                    wick_hit=wick>signed_outer+abs(signed_outer)*self.penetration
                 if pool.activated_at is not None and pool.activated_at<available:
-                    if id_ in close_hits:
+                    if close_hit:
                         event_state="BROKEN"
-                    elif id_ in wick_hits and close<reclaim:
+                    elif wick_hit and close<reclaim:
                         event_state="SWEPT"
-                    elif id_ in wick_hits and pool.state=="ACTIVE":
+                    elif wick_hit and pool.state=="ACTIVE":
                         event_state="SWEEP_CANDIDATE"
                 timing=None
                 if self.timing and pool.activated_at is not None and pool.latest_revision is not None:
                     dependency=pool.latest_revision[2]
-                    close_only=id_ in close_hits
+                    close_only=close_hit
                     decision=timing_evidence(bar,self.step,available,dependency,self.timing[0],"").interaction(
                         close_only=close_only)
                     if decision!="ELIGIBLE":
@@ -242,10 +250,11 @@ class LiquidityStream:
                             pool.recorded_dependencies &= bar.available_at == available
                 if id_ in self.active:
                     # Reinsert only the thresholds removed by this observation.
+                    heap_boundary=sign*pool.anchor if self.timing else signed_outer
                     if id_ in wick_hits:
-                        heappush(self.wick[side],(signed_outer+abs(signed_outer)*self.penetration,id_,pool.price_generation))
+                        heappush(self.wick[side],(heap_boundary+abs(heap_boundary)*self.penetration,id_,pool.price_generation))
                     if id_ in close_hits:
-                        heappush(self.close[side],(signed_outer,id_,pool.price_generation))
+                        heappush(self.close[side],(heap_boundary,id_,pool.price_generation))
         for pivot,pivot_index in pivots:
             price=Decimal(str(pivot["price"]))
             side=pivot["side"]

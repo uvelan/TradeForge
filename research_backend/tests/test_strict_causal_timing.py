@@ -294,3 +294,18 @@ def test_strict_shared_context_filters_unverified_structure():
     assert "BOS" in legacy["crt_sweeps"][0]["context"]
     assert "BOS" not in strict["crt_sweeps"][0]["context"]
     assert strict["context_configuration"]["strategy_context_policy"]=="ONLY_ELIGIBLE_AT_OBSERVATION_OPEN"
+
+
+def test_wider_late_boundary_cannot_hide_possible_interaction_with_old_boundary():
+    stream=LiquidityStream(LiquidityRules(),LiquidityDelivery(),300,timing=(3000,ARCHIVE,OPEN))
+    pool=Pool("pool","HIGH",Decimal(100),Decimal(100),Decimal(104),9,0,600,state="ACTIVE",activated_at=750)
+    pool.latest_revision=("wider-boundary",600,1020,"p","e")
+    stream.active[pool.id]=pool
+    stream.buckets[stream.bucket(pool.side,pool.anchor)]={pool.id}
+    stream.index(pool)
+    candle,stamp=bar(900,(99,102,98,99))
+    stream.observe(candle,stamp,2,None,[],[],"input","fixture")
+    event,=stream.pools.events
+    assert event["state"]=="UNCERTAIN"
+    assert event["timing"]["eligibility_reason"]=="STRADDLING_OBSERVATION"
+    assert not stream.sweeps.events
