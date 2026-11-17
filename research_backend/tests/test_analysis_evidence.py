@@ -223,3 +223,12 @@ def test_optional_dependency_failure_is_explicit_and_preserves_reference():
     assert crt["context_configuration"]["failures"]=={"fvg":"SOURCE_INTEGRITY_FAILURE"}
     assert crt["crt_sweeps"][0]["state"]=="HIGH_SWEPT_RECLAIMED"
     assert "fvg" not in crt["crt_sweeps"][0]["context"]
+
+
+def test_versioned_analysis_reports_effective_default_period_and_history():
+    data=payload([(102,105,100,103)])
+    data["indicators"]=[{"id":"ema"}]
+    result=by_id(evaluate(Evaluation.model_validate(data)))["ema"]
+    assert result["analysis"]["parameters"]["period"]==result["period"]
+    assert result["analysis"]["history"]["caller_first"]==START
+    assert result["analysis"]["history"]["caller_last"]==START

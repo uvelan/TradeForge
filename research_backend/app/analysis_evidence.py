@@ -209,8 +209,11 @@ class AnalysisCoordinator:
         for name,limit,cursor in (("pivots",delivery.pivot_limit,delivery.pivot_cursor),
                                   ("breaks",delivery.break_limit,delivery.break_cursor)):
             projection=EventPage(name,delivery.limit if limit is None else limit,cursor)
-            for event in public[name]:
-                projection.append(event)
+            if projection.limit:
+                for event in public[name]:
+                    projection.append(event)
+            else:
+                projection.total=len(public[name])
             page[name]=projection.finish(page["snapshot"])
             output[name]=list(projection.events)
         return {**output,"event_page":page}

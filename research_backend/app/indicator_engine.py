@@ -514,7 +514,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             return result,forms,detected
         return coordinator.run("order_blocks",key,history,calculate_blocks)
 
-    caller_effective=tuple((bar,availability[bar.time]) for bar in bars)
+    caller_effective=rows if all(stamp==availability[bar.time] for bar,stamp in rows) else tuple(
+        (bar,availability[bar.time]) for bar in bars)
 
     def level_product(spec,history,observed,load_external):
         schedule=spec.schedule or MarketSchedule(
@@ -716,8 +717,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
     for result,spec in zip(results,request.indicators):
         provenance=result.get("provenance",input_identity)
         parameters={key:result[key] for key in ("parameters","structure_parameters","schedule","session") if key in result}
-        if spec.period is not None:
-            parameters["period"]=spec.period
+        if "period" in result:
+            parameters["period"]=result["period"]
         dep=dependencies.get(result["id"],("candles",))
         if "context_configuration" in result:
             parameters["context"]={key:value for key,value in result["context_configuration"].items()
@@ -725,6 +726,11 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             dep+=("context",)
         window={key:provenance[key] for key in ("partitions","context_partitions","native_reference","retrieval")
                 if key in provenance}
+        history_rules=result.get("structure_parameters",result.get("parameters",{}))
+        window.update({"mode":"extended" if history_rules.get("history_bars")==10000 else "caller",
+                       "history_start":history_rules.get("history_start"),
+                       "caller_first":bars[0].time if bars else None,
+                       "caller_last":bars[-1].time if bars else None})
         key=AnalysisKey(result["id"],tuple(input_identity.get(name) for name in SCOPE_FIELDS),canonical(window),
                         request.cutoff,request.frozen,result.get("version",1),
                         result.get("identity_policy_version",2 if result["id"]=="fair_value_gap" else 1),
