@@ -1,0 +1,71 @@
+[WebServer] INFO:     Started server process [20156]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8176 (Press CTRL+C to quit)
+[WebServer] (node:39364) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 20 tests using 1 worker
+
+(node:15128) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (5.6s)
+(node:36856) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  2 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (4.6s)
+(node:19316) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  3 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (4.5s)
+(node:34176) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  4 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (4.8s)
+(node:34432) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  5 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (5.1s)
+(node:24148) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  6 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (4.6s)
+(node:33240) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  7 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (5.0s)
+(node:13248) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  8 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (6.1s)
+(node:27724) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  9 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (5.9s)
+(node:40024) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 10 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (6.0s)
+(node:44408) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 11 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (6.5s)
+(node:3692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 12 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (5.8s)
+(node:46868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 13 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (6.4s)
+(node:30448) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 14 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (9.7s)
+(node:43132) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 15 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (10.4s)
+(node:46256) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 16 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (10.6s)
+(node:22568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 17 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (13.0s)
+(node:34820) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 18 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (12.5s)
+(node:38844) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 19 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (13.0s)
+(node:15900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 20 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (10.7s)
+
+  20 passed (2.9m)

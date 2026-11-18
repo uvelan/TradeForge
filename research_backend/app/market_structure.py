@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
+from .strategy_evidence import EvidenceRegistry
+from .causal_timing import evidence
 from .pivots import pivot_matches
 from .indicator_coverage import MarketSchedule
 from .structure_continuity import POLICY_VERSION, continuity_reason
@@ -68,7 +70,7 @@ def initial_direction(pivots):
 
 
 def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
-                     delivery: StructureDelivery, snapshot_scope: dict, consumer=None, *, local_witness=False, public_event=None):
+                     delivery: StructureDelivery, snapshot_scope: dict, consumer=None, *, local_witness=False, public_event=None, registry=None):
     """Rows contain closed bars and actual UTC availability, already cutoff-filtered."""
     pivots = EventPage("pivots", delivery.limit if delivery.pivot_limit is None else delivery.pivot_limit,
                        delivery.pivot_cursor)
@@ -79,7 +81,16 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
     reasons = Counter()
     active = {}
     consumed, candidates = set(), {}
+    candidate_stamps = {}
     window = deque(maxlen=rules.left+rules.right+1)
+    recorded_window = deque(maxlen=window.maxlen)
+    strict = provenance.get("timing_policy") == "STRICT_CAUSAL"
+    local_witness = local_witness or strict
+    if strict and registry is None:
+        registry = EvidenceRegistry()
+    authority = provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")
+    segment_recorded = True
+    cutoff = snapshot_scope["cutoff"] if strict else 0
     state = "UNCONFIRMED"
     last = None
     warnings = set()
@@ -87,13 +98,17 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
     version = rules.algorithm_version
     scope = json.dumps([version, provenance, rules.identity_parameters()], sort_keys=True, separators=(",", ":"))
     snapshot = sha256(json.dumps([scope, step, snapshot_scope], sort_keys=True, separators=(",", ":")).encode())
+    timing_config = sha256(scope.encode()).hexdigest() if strict else None
+    if strict:
+        snapshot.update(b"calculation-evidence-reference-v1")
     last_close = None
 
     provenance_id = sha256(json.dumps(provenance, sort_keys=True).encode()).hexdigest()
 
     def event(kind, side, event_time, available, **fields):
         evidence = fingerprint.hexdigest()
-        identity = sha256(json.dumps([scope, kind, side, event_time, evidence],
+        identity_evidence = fields.get("local_witness", evidence) if strict else evidence
+        identity = sha256(json.dumps([scope, kind, side, event_time, identity_evidence],
                                      separators=(",", ":")).encode()).hexdigest()
         return {"id": identity, "type": kind, "side": side, "algorithm_version": version,
                 "confirmation_time": None if fields.get("status") != "confirmed" else event_time+step,
@@ -107,6 +122,9 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
     current_breaks = None
 
     def publish_break(value):
+        if strict:
+            registry.publish(value,'structure',provenance,timing_config,predicate='CLOSE_ONLY',
+                             coverage=schedule.kind!='unknown')
         projected={key:item for key,item in value.items() if key!="local_witness"} if local_witness else value
         breaks.append(projected)
         if public_event is not None:
@@ -127,8 +145,8 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
         reset_reason = None
         reopening = None
         if last is not None and bar.time != last + step:
-            reason = continuity_reason(last, bar.time, step, schedule) if version == 2 else "LEGACY_GAP"
-            if version == 2:
+            reason = continuity_reason(last, bar.time, step, schedule) if strict or version == 2 else "LEGACY_GAP"
+            if strict or version == 2:
                 reasons[reason] += 1
                 record = {"reason": reason, "previous_time": last, "time": bar.time,
                           "available_at": available, "state_before": state,
@@ -142,14 +160,20 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
                 reset_reason = reason
                 warnings.add("STRUCTURE_RESET_AT_GAP")
                 window.clear()
+                recorded_window.clear()
+                segment_recorded = True
                 active.clear()
                 candidates.clear()
+                candidate_stamps.clear()
                 consumed.clear()
                 state = "UNCONFIRMED"
         last, last_close = bar.time, bar.close
         fingerprint.update(encoded)
         fingerprint.update(availability_bytes)
         window.append(bar)
+        if strict:
+            recorded_window.append(bar.available_at == available)
+            segment_recorded &= bar.available_at == available
 
         eligible = {side: level for side, level in active.items()
                     if level["available_at"] < available and level["id"] not in consumed}
@@ -183,6 +207,26 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
                 reopening["crossings"].append(crossing)
                 fields["opening_status"] = opening_status
             candidate = candidates.get(level["id"])
+            if strict:
+                barrier=level["available_at"]
+                references=[level["id"]]
+                if candidate and not crossed and not wick_crossed:
+                    barrier=max(barrier,candidate_stamps[candidate])
+                    references.append(candidate)
+                if candidate and crossed and candidate_stamps[candidate]>=bar.time+step:
+                    candidate=None
+                timing = evidence(bar,step,available,barrier,cutoff,authority)
+                decision = timing.interaction(close_only=crossed)
+                if decision != "ELIGIBLE":
+                    if crossed or wick_crossed:
+                        rejected = timing.contract(reason=decision,close_only=crossed,references=references)
+                        publish_break(event("TIMING_REJECTED",side,bar.time,available,status="provisional",
+                                            break_price=bar.close if crossed else wick,state_after=state,
+                                            candidate_id=None,timing=rejected,**fields))
+                    continue
+                reason = "UNKNOWN_COVERAGE" if schedule.kind=="unknown" else (
+                    "UNVERIFIED_AVAILABILITY" if not level["timing_recorded"] or not segment_recorded else None)
+                fields["timing"] = timing.contract(reason=reason,close_only=crossed,references=references)
             if crossed:
                 kind = "CHOCH" if opposing and protected else "COUNTERTREND_BREAK" if opposing else "BOS"
                 after = "NEUTRAL" if opposing else state
@@ -190,6 +234,7 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
                     fields["local_witness"] = witness(
                         "structure-break", version, kind, side, level["local_witness"],
                         state, after, bar.model_dump(), available,
+                        *(("STRICT_CAUSAL",3) if strict else ()),
                     )
                 publish_break(event(kind, side, bar.time, available, status="confirmed", break_price=bar.close,
                                     state_after=after, candidate_id=candidate, **fields))
@@ -206,13 +251,19 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
                                    state_after=state, candidate_id=None, **fields)
                 publish_break(wick_event)
                 candidates[level["id"]] = wick_event["id"]
+                if strict:
+                    candidate_stamps[wick_event["id"]]=available
         if reset:
             state = "NEUTRAL"
             active.clear()
             consumed.clear()
             candidates.clear()
+            candidate_stamps.clear()
             window.clear()
             window.append(bar)
+            if strict:
+                recorded_window.clear()
+                recorded_window.append(bar.available_at == available)
         if len(window) != window.maxlen:
             if consumer is not None:
                 consumer(bar, available, observation_index, reset_reason, (), current_breaks,
@@ -232,11 +283,19 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
                           pivot_time=pivot.time, confirmation_bar_time=bar.time,
                           previous_pivot_id=previous["id"] if previous else None,
                           classification=classify(side, price, previous, rules.tolerance_bps))
+            if strict:
+                found["timing_recorded"]=segment_recorded and all(recorded_window)
+                reason="UNKNOWN_COVERAGE" if schedule.kind=="unknown" else (
+                    "UNVERIFIED_AVAILABILITY" if not found["timing_recorded"] else None)
+                found["timing"]=evidence(bar,step,available,0,cutoff,authority).contract(reason=reason)
             if local_witness:
                 found["local_witness"] = witness(
                     "structure-pivot", version, side, pivot.time, available,
                     [item.model_dump() for item in window],
+                    *(("STRICT_CAUSAL",3) if strict else ()),
                 )
+            if strict:
+                found["id"]=witness("strict-pivot-id",scope,found["local_witness"])
             batch.append(found)
         for found in batch:
             previous = active.get(found["side"])
@@ -251,6 +310,11 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
             if state != "NEUTRAL" or initial != "UNCONFIRMED":
                 state = initial
         for found in batch:
+            if strict:
+                found["state_after"]=state
+                registry.publish(found,"structure",provenance,timing_config,predicate="FORMATION",
+                    dependencies=[found["previous_pivot_id"]] if found["previous_pivot_id"] else [],
+                    coverage=schedule.kind!="unknown")
             projected={**found,"state_after":state}
             projected.pop("local_witness",None)
             pivots.append(projected)

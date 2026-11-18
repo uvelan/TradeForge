@@ -328,7 +328,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       if(!gapVisibility)return true;
       if(!(event.direction==="BULLISH"?gapVisibility.bullish:gapVisibility.bearish))return false;
       const states={ACTIVE:"active",PARTIALLY_MITIGATED:"partial",FULLY_MITIGATED:"full",
-        INVALIDATED:"invalidated",EXPIRED:"expired"} as const;
+        INVALIDATED:"invalidated",EXPIRED:"expired",UNCERTAIN:"invalidated"} as const;
       return gapVisibility[states[event.state]];
     };
     const blocks=indicators?.find(indicator=>indicator.id==="order_blocks");
@@ -336,7 +336,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       const visibility=blocks?.obVisibility;
       if(!visibility)return true;
       const states={ACTIVE:"active",TOUCHED:"touched",PARTIALLY_MITIGATED:"partial",FULLY_MITIGATED:"full",
-        INVALIDATED:"invalidated",EXPIRED:"expired"} as const;
+        INVALIDATED:"invalidated",EXPIRED:"expired",UNCERTAIN:"invalidated"} as const;
       return visibility[event.direction==="BULLISH"?"bullish":"bearish"]&&visibility[states[event.state]];
     };
     const blockZones=(blocks?.current_obs?.items??[]).filter(blockVisible).slice(0,12).map(
@@ -355,7 +355,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       if(indicator.id==="candle_range_theory"){
         for(const event of [...(indicator.crt_sweeps??[]).slice(-16),...(indicator.crt_revisions??[]).slice(-16)]){
           if(!linkedBars.current.has(event.observation_time)||event.reason==="REFERENCE_CAP_REPLACEMENT")continue;
-          const display=event.state==="AMBIGUOUS"?crtVisibility?.ambiguous:
+          const display=(event.state==="AMBIGUOUS"||event.state==="UNCERTAIN")?crtVisibility?.ambiguous:
             ["EXPANSION_OBSERVED","OPPOSITE_BOUNDARY_REACHED"].includes(event.state)?crtVisibility?.expansion:
             ["INVALIDATED","EXPIRED"].includes(event.state)?crtVisibility?.terminal:
             event.sweep_side==="HIGH"?crtVisibility?.high:crtVisibility?.low;

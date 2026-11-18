@@ -1,0 +1,14 @@
+[WebServer] INFO:     Started server process [38080]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8183 (Press CTRL+C to quit)
+[WebServer] (node:41160) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:40176) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses (7.7s)
+
+  1 passed (11.6s)

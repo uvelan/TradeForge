@@ -15,11 +15,21 @@ type FvgRules = {min_price:number;min_bps:number;min_ticks:number;tick_size?:num
 type FvgVisibility={bullish:boolean;bearish:boolean;active:boolean;partial:boolean;full:boolean;invalidated:boolean;expired:boolean};
 const fvgVisibility:FvgVisibility={bullish:true,bearish:true,active:true,partial:true,full:true,invalidated:true,expired:true};
 export type FvgEvent = {id:string;fvg_id:string;identity_policy_version?:number;direction:"BULLISH"|"BEARISH";
-  state:"ACTIVE"|"PARTIALLY_MITIGATED"|"FULLY_MITIGATED"|"INVALIDATED"|"EXPIRED";
+  state:"ACTIVE"|"PARTIALLY_MITIGATED"|"FULLY_MITIGATED"|"INVALIDATED"|"EXPIRED"|"UNCERTAIN";
   lower:number;upper:number;remaining_lower:number;remaining_upper:number;mitigation_pct:number;
   formation_ohlc?:number[][];
   a_time:number;b_time:number;c_time:number;observation_time:number;formation_confirmation_time:number;
-  confirmation_time:number;available_at:number;reason:string;warnings:string[]};
+  confirmation_time:number;available_at:number;reason:string;warnings:string[];timing?:EventTiming};
+type TimingPolicy = "LEGACY_RESEARCH" | "STRICT_CAUSAL";
+type EventTiming = {strategy_eligibility:string;eligibility_reason:string;observation_start:number;
+  observation_end:number;actual_availability:number;dependency_available_at:number};
+function timingLabel(timing?:EventTiming) {
+  if(!timing)return "Research only";
+  const utc=(stamp:number)=>new Date(stamp*1000).toISOString();
+  return [timing.eligibility_reason.replaceAll("_"," "),`Observation ${utc(timing.observation_start)} – ${utc(timing.observation_end)}`,
+    `Available ${utc(timing.actual_availability)}`,timing.dependency_available_at
+      ?`Reference available ${utc(timing.dependency_available_at)}`:null].filter(Boolean).join(" · ");
+}
 type ContextPolicy = "shared" | "independent";
 type ContextConfiguration = {policy:ContextPolicy;status:string;failures:Record<string,string|{status:string;reason:string|null}>};
 type CrtRules = {reference_frame:"H1"|"H4"|"D1"|null;reference_mode:"aggregated"|"native";
@@ -29,7 +39,7 @@ type CrtRules = {reference_frame:"H1"|"H4"|"D1"|null;reference_mode:"aggregated"
 const crtVisibility={ranges:true,midpoint:true,high:true,low:true,expansion:true,ambiguous:true,terminal:true};
 type CrtVisibility=typeof crtVisibility;
 export type CrtEvent={id:string;range_id:string;state:string;reason:string;reference_frame:string;reference_mode:string;
-  reference_start:number;reference_end:number;reference_available_at:number;reference_ohlc:number[];constituents:number;
+  timing?:EventTiming;reference_start:number;reference_end:number;reference_available_at:number;reference_ohlc:number[];constituents:number;
   high:number;low:number;midpoint:number;observation_time:number;confirmation_time:number;available_at:number;
   sweep_side?:"HIGH"|"LOW";swept_boundary?:number;sweep_extreme?:number;penetration?:number;reclaim_close?:number|null;
   context:Record<string,{id:string;witness_id:string;timeframe:string;available_at:number}>};
@@ -42,7 +52,7 @@ export type ObEvent = {id:string;ob_id:string;direction:FvgEvent["direction"];st
   candidate_time:number;candidate_available_at:number;candidate_ohlc:number[];geometry:string;lower:number;upper:number;
   remaining_lower:number;remaining_upper:number;mitigation_pct:number;break_type:string;break_time:number;bos_id:string;
   broken_pivot_id:string;bos_confirmation_time:number;bos_available_at:number;first_visibility_time:number;
-  observation_time:number;confirmation_time:number;available_at:number;reason:string;
+  observation_time:number;confirmation_time:number;available_at:number;reason:string;timing?:EventTiming;
   structure_version:number;structure_witness_id:string;identity_policy_version:number;
   context:{status:string;fvg:{id:string;available_at:number}|null;liquidity_sweep:{id:string;available_at:number}|null}};
 type Liquidity = {equality_bps:number; penetration_bps:number; reclaim_bps:number;
@@ -52,7 +62,7 @@ const liquidityVisibility: LiquidityVisibility={zones:true,sweeps:true,candidate
 export type LiquidityEvent = {
   id:string; pool_id:string; pool_revision_id?:string; state:string; lower:number; upper:number; liquidity_side:"BSL"|"SSL";
   activated_at:number|null; activation_observation_time?:number|null; observation_time:number; confirmation_time:number; available_at:number;
-  status:string; constituents?:{id:string; price:number; time:number; available_at:number}[];
+  status:string; timing?:EventTiming; constituents?:{id:string; price:number; time:number; available_at:number}[];
   related_structure_ids?:string[]; ohlc?:{open:number; high:number; low:number; close:number};
 };
 type PageInfo = {total: number; returned: number; start: number; end: number; next_cursor: string | null};
@@ -61,7 +71,7 @@ export type CurrentLiquidityPool = Omit<LiquidityEvent,"id"> & {revision_id:stri
 type StructureVisibility = {swings: boolean; breaks: boolean; candidates: boolean};
 export type StructureEvent = {
   id: string; type: string; side: "HIGH" | "LOW"; status: "confirmed" | "provisional" | "invalidated";
-  available_at: number; confirmation_time: number | null; confirmation_bar_time?: number;
+  timing?:EventTiming; available_at: number; confirmation_time: number | null; confirmation_bar_time?: number;
   price?: number; classification?: string; direction?: "BULLISH" | "BEARISH";
   break_time?: number; break_price?: number; level_time?: number; level_price?: number;
 };
@@ -140,6 +150,8 @@ function stored(): Settings[] {
 
 export function useChartIndicator(enabled: boolean, candles: Candle[], source: ChartSource, timeframe: Timeframe,
   symbol: string, cutoff: number, feed?: CandleResponse, frozen = false, request?: {indicator?: string; sequence: number}) {
+  const [timingPreference,setTimingPreference]=useWorkspacePreference<TimingPolicy>("analytical-timing","LEGACY_RESEARCH");
+  const timingPolicy:TimingPolicy=timingPreference==="STRICT_CAUSAL"?"STRICT_CAUSAL":"LEGACY_RESEARCH";
   const [selected, setSelected] = useWorkspacePreference<string>("indicator", "none");
   const [periodText, setPeriod] = useWorkspacePreference<string>("indicator-period", "");
   const [settings, setSettings] = useState(stored);
@@ -162,7 +174,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   }, [settings]);
 
   const scheduleScope = JSON.stringify([source, symbol, feed?.feed_id, feed?.price_basis]);
-  const fvgSelectionScope = JSON.stringify([scheduleScope,timeframe,feed?.dataset_id,frozen]);
+  const fvgSelectionScope = JSON.stringify([scheduleScope,timeframe,feed?.dataset_id,frozen,timingPolicy]);
   const primary = definitions.find(item => item.id === selected && item.period !== null);
   const active = useMemo(() => {
     const config = primary ? [{id: primary.id, period: periodText}, ...settings.filter(item => item.id !== primary.id)] : settings;
@@ -204,9 +216,9 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
     });
   }, [definitions, periodText, primary, scheduleScope, settings, source, timeframe]);
   const body = useMemo(() => enabled && active.length && (candles.length || active.some(item => item.id.startsWith("previous_")))
-    ? JSON.stringify({source, timeframe, symbol, cutoff, frozen, load_reference: true, feed_id: feed?.feed_id,
+    ? JSON.stringify({source, timeframe, symbol, cutoff, frozen, timing_policy:timingPolicy, load_reference: true, feed_id: feed?.feed_id,
         dataset_id: feed?.dataset_id, partitions: feed?.partitions, price_basis: feed?.price_basis, indicators: active, candles: candles.slice(-2000)})
-    : "", [active, candles, cutoff, enabled, frozen, feed?.dataset_id, feed?.feed_id, feed?.price_basis, feed?.partitions, source, symbol, timeframe]);
+    : "", [active, candles, cutoff, enabled, frozen, feed?.dataset_id, feed?.feed_id, feed?.price_basis, feed?.partitions, source, symbol, timeframe,timingPolicy]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -333,6 +345,13 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       value={periodText} placeholder={String(primary.period)} onChange={event => setPeriod(event.target.value)}/></label>}
     <details className="indicator-library">
       <summary>Indicator library</summary>
+      <label>Evidence timing policy <select value={timingPolicy}
+        onChange={event=>setTimingPreference(event.target.value as TimingPolicy)}>
+        <option value="LEGACY_RESEARCH">Legacy research</option>
+        <option value="STRICT_CAUSAL">Strict causal</option>
+      </select></label>
+      <p role="status">{timingPolicy==="LEGACY_RESEARCH"?"Research-only evidence":
+        "Strict causal evidence · eligibility is evaluated per observation"}</p>
       <label>Search indicators <input type="search" value={search} onChange={event => {setSearch(event.target.value); setCandidate("");}} /></label>
       <label>Add indicator <select value={candidate} onChange={event => setCandidate(event.target.value)}>
         <option value="">Choose indicator</option>
@@ -436,6 +455,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                   <ul>{[...older.events as StructureEvent[]].reverse().map(event=><li key={event.id}>
                     {event.classification??event.type.replaceAll("_"," ")} · {event.status} ·{" "}
                     {new Date((event.confirmation_time??event.available_at)*1000).toISOString()} · {event.break_price??event.price}
+                    {event.timing&&" · "+timingLabel(event.timing)}
                     {event.confirmation_time!==null&&event.available_at>event.confirmation_time&&
                       " · Available "+new Date(event.available_at*1000).toISOString()}
                   </li>)}</ul>
@@ -511,6 +531,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                 {selection&&<dl aria-label="Selected liquidity event">
                   <dt>Pool boundaries</dt><dd>{selection.lower} – {selection.upper}</dd>
                   <dt>Activated UTC</dt><dd>{selection.activated_at===null?"Forming":new Date(selection.activated_at*1000).toISOString()}</dd>
+                  <dt>Evidence eligibility</dt><dd>{timingLabel(selection.timing)}</dd>
                   <dt>Confirmation / availability</dt><dd>{new Date(selection.confirmation_time*1000).toISOString()} / {new Date(selection.available_at*1000).toISOString()}</dd>
                   <dt>Source</dt><dd>{result.provenance?.context_authority}</dd>
                   {selection.constituents && <><dt>Confirmed pivots</dt><dd>{selection.constituents.map(p=>p.price+" @ "+new Date(p.time*1000).toISOString()).join(", ")}</dd></>}
@@ -594,6 +615,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                 {event&&<dl aria-label="Selected CRT event">
                   <dt>Reference OHLC and inputs</dt><dd>{event.reference_ohlc.join(" / ")} · {event.constituents} candles · {event.reference_mode}</dd>
                   <dt>Reference low / midpoint / high</dt><dd>{event.low} / {event.midpoint} / {event.high}</dd>
+                  <dt>Evidence eligibility</dt><dd>{timingLabel(event.timing)}</dd>
                   <dt>Origin / closed / available</dt><dd>{[event.reference_start,event.reference_end,event.reference_available_at].map(utc).join(" / ")}</dd>
                   <dt>Observed / confirmed / available</dt><dd>{[event.observation_time,event.confirmation_time,event.available_at].map(utc).join(" / ")}</dd>
                   <dt>State and reason</dt><dd>{event.state.replaceAll("_"," ")} · {event.reason.replaceAll("_"," ")}</dd>
@@ -665,6 +687,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                   type="button" className="small-tool" onClick={()=>setSelectedOb({key:fvgSelectionScope,id:event.id})}>
                   {event.direction} · {event.state.replaceAll("_"," ")} · {event.mitigation_pct.toFixed(1)}%</button>)}
                 {selected&&<dl aria-label="Selected order block">
+                  <dt>Evidence eligibility</dt><dd>{timingLabel(selected.timing)}</dd>
                   <dt>Candidate and availability</dt><dd>{utc(selected.candidate_time)} / {utc(selected.candidate_available_at)}</dd>
                   <dt>Candidate OHLC</dt><dd>{selected.candidate_ohlc.join(" / ")}</dd>
                   <dt>Zone ({selected.geometry})</dt><dd>{selected.lower} – {selected.upper}</dd>
@@ -752,6 +775,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
                   <dt>Price zone</dt><dd>{selected.lower} – {selected.upper}</dd>
                   <dt>Remaining</dt><dd>{selected.remaining_lower} – {selected.remaining_upper}</dd>
                   <dt>Mitigation and reason</dt><dd>{selected.mitigation_pct}% · {selected.reason}</dd>
+                  <dt>Evidence eligibility</dt><dd>{timingLabel(selected.timing)}</dd>
                   <dt>Formed / observed / confirmed / available</dt><dd>{[selected.formation_confirmation_time,selected.observation_time,selected.confirmation_time,selected.available_at].map(utc).join(" / ")}</dd>
                   <dt>Source authority</dt><dd>{gap.provenance?.context_authority}</dd>
                   <dt>Algorithm</dt><dd>FVG v1 · identity policy {selected.identity_policy_version??1} · {rules.mitigation} · {schedule.kind}</dd>

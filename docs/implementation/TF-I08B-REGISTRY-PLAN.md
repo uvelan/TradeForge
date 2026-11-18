@@ -1,0 +1,3 @@
+# TF-I08B registry correction plan
+
+Reviewed and starting head ad94bd22e7c31685a78e448cacfcbb1eb3f0fa90. Reproduce the conflict on overlapping verified archive histories in both orders and through the indicator endpoint. Keep stable event IDs. Bind producer publications to deterministic configuration, source, history and cutoff identities. Scope gaps and lifecycle timelines with the same calculation identity. Resolve local dependencies inside their calculation and pin cross-engine dependencies at the producer handoff. Version public references and cursors. Run regression, browser and paired performance verification before publishing the correction to PR #11.

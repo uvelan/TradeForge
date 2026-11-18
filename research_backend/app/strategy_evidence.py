@@ -1,0 +1,253 @@
+"""Canonical request-scoped evidence issued by the analytical engines."""
+from bisect import bisect_right, insort_right
+from collections import Counter, defaultdict
+from dataclasses import dataclass
+from hashlib import sha256
+import json
+from typing import TypedDict
+
+VERSION = 3
+REFERENCE_VERSION = 1
+SOURCE_FIELDS = ("source", "symbol", "timeframe", "feed_id", "price_basis", "dataset_id")
+ACTIVATION = {"WHOLE_CANDLE", "CLOSE_ONLY", "FORMATION", "AGGREGATED_REFERENCE"}
+STRUCTURE = {"PIVOT", "BOS", "CHOCH", "COUNTERTREND_BREAK"}
+STATES = {
+    "liquidity": {"SWEPT", "BROKEN"},
+    "pool": {"ACTIVE", "SWEPT", "BROKEN"},
+    "order_block": {"ACTIVE", "TOUCHED", "PARTIALLY_MITIGATED", "FULLY_MITIGATED"},
+    "fvg": {"ACTIVE", "PARTIALLY_MITIGATED", "FULLY_MITIGATED"},
+    "crt": {"ACTIVE", "HIGH_SWEPT_RECLAIMED", "LOW_SWEPT_RECLAIMED",
+            "EXPANSION_OBSERVED", "OPPOSITE_BOUNDARY_REACHED"},
+}
+LINEAGE = {"pool": {"FORMING", "SWEEP_CANDIDATE"}}
+
+
+def fingerprint(payload):
+    return sha256(json.dumps(payload,sort_keys=True,separators=(",",":"),allow_nan=False).encode()).hexdigest()
+
+
+def history_fingerprint(rows):
+    digest=sha256()
+    for bar,stamp in rows:
+        digest.update(bar.model_dump_json().encode())
+        digest.update(f":{stamp};".encode())
+    return digest.hexdigest()
+
+
+class EvidenceReference(TypedDict):
+    version: int
+    category: str
+    event_id: str
+    calculation_id: str
+    calculation_snapshot: str
+    configuration: str
+    source: list[str | None]
+    available_at: int
+    source_authority: str
+
+
+@dataclass(frozen=True,slots=True)
+class Summary:
+    signature: str
+    scope: tuple
+    config: str
+    category: str
+    family: str | None
+    available: int
+    attested: bool
+    eligible: bool
+    reference: EvidenceReference | None = None
+
+
+class EvidenceRegistry:
+    def __init__(self, reserve=None, *, root=None, calculation_id=None, snapshot=None):
+        self.root = root if root is not None else self
+        self.calculation_id = calculation_id
+        self.snapshot = snapshot
+        self.calculations = {} if root is None else root.calculations
+        self.reserve = reserve
+        self.records = {}
+        self.current = defaultdict(list)
+        self.counts = Counter() if root is None else root.counts
+        self.gaps = defaultdict(list)
+        self.producer_snapshots = {}
+
+    def calculation(self, engine, configuration, source, history_fingerprint, cutoff):
+        calculation_id = fingerprint([REFERENCE_VERSION,engine,configuration,source])
+        snapshot = fingerprint([calculation_id,history_fingerprint,cutoff])
+        if snapshot not in self.calculations:
+            self.calculations[snapshot] = EvidenceRegistry(
+                self.reserve,root=self.root,calculation_id=calculation_id,snapshot=snapshot)
+        return self.calculations[snapshot]
+
+    def pin_producer(self, category, producer):
+        existing=self.producer_snapshots.setdefault(category,producer.snapshot)
+        if existing != producer.snapshot:
+            raise ValueError("Multiple producer calculations for one evidence dependency category")
+
+    def resolve(self, reference):
+        if not isinstance(reference,dict):
+            return None
+        snapshot,event_id=reference.get("calculation_snapshot"),reference.get("event_id")
+        if not isinstance(snapshot,str) or not isinstance(event_id,str):
+            return None
+        producer=self.calculations.get(snapshot)
+        record=producer.records.get(event_id) if producer is not None else None
+        return record if record is not None and record.reference==reference else None
+
+    @staticmethod
+    def signature(event):
+        timing = event.get("timing")
+        if not isinstance(timing, dict):
+            return None
+        payload = {key:value for key,value in event.items() if key != "local_witness"}
+        try:
+            return fingerprint(payload)
+        except (ValueError, TypeError):
+            return None
+
+    def publish(self, event, category, scope, config, *, family=None, active=False,
+                predicate, dependencies=(), coverage=True, lineage=False, producer_references=()):
+        timing = event["timing"]
+        version_valid = timing.get("timing_policy") == "STRICT_CAUSAL" and timing.get("timing_policy_version") == VERSION
+        dependencies = tuple(dependencies)
+        timing.update(evidence_category=category, configuration_fingerprint=config,
+                      predicate=predicate, lineage_dependencies=list(dependencies),
+                      timing_policy_version=VERSION, coverage="ESTABLISHED" if coverage else "UNKNOWN")
+        event_id = event["id"]
+        source = tuple(scope.get(key) for key in SOURCE_FIELDS)
+        available = timing["actual_availability"]
+        start, end = timing["observation_start"], timing["observation_end"]
+        barrier = timing["dependency_available_at"]
+        kind, state = event.get("type"), event.get("state")
+        supported = ((kind in STRUCTURE and event.get("status") == "confirmed") if category == "structure"
+                     else state in STATES.get(category, ()) and
+                     (category not in {"liquidity","pool"} or event.get("status") == "confirmed"))
+        supported_lineage = lineage and state in LINEAGE.get(category, ())
+        expected = (
+            ("FORMATION" if kind == "PIVOT" else "CLOSE_ONLY") if category == "structure" else
+            "CLOSE_ONLY" if category in {"liquidity","pool"} and state == "BROKEN" else
+            "AGGREGATED_REFERENCE" if category == "crt" and state == "ACTIVE" else
+            "FORMATION" if category == "pool" and state in {"ACTIVE","FORMING"} or
+                          category in {"order_block","fvg"} and state == "ACTIVE" else "WHOLE_CANDLE")
+        shape = (version_valid and isinstance(event_id,str) and bool(event_id) and predicate in ACTIVATION and predicate == expected and isinstance(config,str) and bool(config)
+                 and all(isinstance(value,str) and value for value in source[:-1]) and (source[-1] is None or isinstance(source[-1],str))
+                 and type(event.get("algorithm_version")) is int
+                 and event.get("algorithm_version") in ({1,2} if category == "structure" else {1})
+                 and all(type(value) is int for value in (available,start,end,barrier,timing.get("evaluation_cutoff")))
+                 and 0 <= start < end <= available <= timing["evaluation_cutoff"]
+                 and event.get("available_at") == available and event.get("confirmation_time") == end)
+        temporal = ((barrier <= start) if predicate == "WHOLE_CANDLE" else
+                    (barrier < end) if predicate == "CLOSE_ONLY" else barrier <= available)
+        required = tuple(dict.fromkeys((*timing["required_dependencies"], *dependencies)))
+        pinned={}
+        for reference in producer_references:
+            if isinstance(reference,dict) and isinstance(reference.get("event_id"),str):
+                pinned.setdefault(reference["event_id"], []).append(reference)
+        resolved={}
+        ambiguous=set()
+        for dependency in required:
+            references=pinned.get(dependency, ())
+            if references:
+                if any(ref != references[0] for ref in references[1:]):
+                    ambiguous.add(dependency)
+                reference=references[0]
+                category_snapshot=self.producer_snapshots.get(reference.get("category"))
+                resolved[dependency]=(self.resolve(reference) if
+                    reference.get("calculation_snapshot") in {self.snapshot,category_snapshot}
+                    else None)
+            else:
+                resolved[dependency]=self.records.get(dependency)
+        compatible = not ambiguous
+        allowed_parents = {"order_block":{"structure"}, "pool":{"structure"}, "liquidity":{"pool"}}
+        activation = timing["required_dependencies"]
+        if supported and predicate in {"WHOLE_CANDLE","CLOSE_ONLY"}:
+            compatible = compatible and bool(activation) and max(
+                (resolved[key].available if resolved.get(key) else -1 for key in activation), default=-1
+            ) == barrier
+        for dependency in required:
+            self.counts["dependency_lookups"] += 1
+            known = resolved.get(dependency)
+            # Parent engine configurations may differ from a dependent engine. The edge
+            # explicitly pins the resolved configuration for such cross-engine dependencies.
+            compatible &= bool(dependency != event_id and known and known.attested and
+                               known.available <= available and known.scope == source and
+                               (known.category in allowed_parents.get(category, ())
+                                or known.category == category and known.config == config))
+        if self.snapshot is None:
+            timing["dependency_configurations"] = {
+                key:record.config for key,record in resolved.items() if record
+            }
+        else:
+            timing["dependency_references"] = {
+                key:{**record.reference,"source":list(record.scope)}
+                for key,record in resolved.items() if record and record.reference
+            }
+        direct = (shape and temporal and coverage and timing["availability_basis"] == "RECORDED" and
+                  timing["source_authority"] == "CHECKSUM_VERIFIED_ARCHIVE")
+        claimed = timing["strategy_eligibility"]
+        attested = direct and compatible and (supported and claimed == "ELIGIBLE" or
+                                              supported_lineage and claimed in {"RESEARCH_ONLY","ELIGIBLE"})
+        eligible = attested and supported
+        if attested and supported_lineage and not supported:
+            timing.update(strategy_eligibility="RESEARCH_ONLY", eligibility_reason="RESEARCH_ONLY")
+        elif claimed == "ELIGIBLE" and not eligible:
+            reason = ("DEPENDENCY_UNAVAILABLE" if not compatible else "INVALID_TEMPORAL_EVIDENCE")
+            timing.update(strategy_eligibility=reason, eligibility_reason=reason)
+        reference=None
+        if self.snapshot is not None:
+            reference={"version":REFERENCE_VERSION,"category":category,"event_id":event_id,
+                       "calculation_id":self.calculation_id,"calculation_snapshot":self.snapshot,
+                       "configuration":config,"source":list(source),"available_at":available,
+                       "source_authority":timing["source_authority"]}
+            event["evidence_reference"]=reference
+        summary = Summary(self.signature(event),source,config,category,family,available,attested,eligible,reference)
+        if reference is not None:
+            # Registry state must not alias mutable response projections.
+            reference={**reference,"source":list(source)}
+            summary=Summary(summary.signature,source,config,category,family,available,attested,eligible,reference)
+        existing = self.records.get(event_id)
+        if existing is not None:
+            if existing != summary:
+                raise ValueError("Conflicting canonical strategy evidence publication")
+            self.counts["publication_reuses"] += 1
+            return
+        if summary.signature is None:
+            return
+        if self.reserve is not None:
+            self.reserve(512)
+        self.records[event_id] = summary
+        self.counts["publications"] += 1
+        if family is not None:
+            insort_right(self.current[family],(available,event_id if active and attested else None),key=lambda item:item[0])
+
+    def gap(self, category, config, scope, available):
+        source = tuple(scope.get(key) for key in SOURCE_FIELDS)
+        history = self.gaps[category,config,source]
+        if not history or history[-1] != available:
+            insort_right(history,available)
+
+    def current_at(self, event_id, cutoff):
+        if isinstance(event_id,dict):
+            record=self.resolve(event_id)
+            return record is not None and self.calculations[event_id["calculation_snapshot"]].current_at(
+                record.reference["event_id"],cutoff)
+        record = self.records.get(event_id)
+        if not record or not record.eligible or record.available > cutoff:
+            return False
+        history = self.current.get(record.family, ())
+        index = bisect_right(history,cutoff,key=lambda item:item[0])-1
+        gaps = self.gaps.get((record.category,record.config,record.scope), ())
+        gap = bisect_right(gaps,cutoff)-1
+        return (index >= 0 and history[index][1] == event_id
+                and (gap < 0 or gaps[gap] < record.available))
+
+    def eligible(self, event, cutoff, *, current=False):
+        self.counts["consumer_lookups"] += 1
+        if not isinstance(event,dict) or not isinstance(event.get("id"),str) or type(cutoff) is not int:
+            return False
+        reference=event.get("evidence_reference")
+        record=self.resolve(reference) if reference is not None else self.records.get(event["id"])
+        if not record or not record.eligible or record.available > cutoff or record.signature != self.signature(event):
+            return False
+        return not current or self.current_at(reference if reference is not None else event["id"],cutoff)
