@@ -1,0 +1,62 @@
+explicit_without_marker market_structure None ['UNKNOWN_COVERAGE']
+explicit_without_marker liquidity_sweeps RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+explicit_without_marker fair_value_gap None ['AMBIGUOUS_INTRABAR_ORDER', 'UNKNOWN_COVERAGE']
+explicit_without_marker order_blocks RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+explicit_without_marker candle_range_theory None ['EXPIRED_REFERENCE', 'RESEARCH_ONLY', 'UNKNOWN_COVERAGE']
+explicit_without_marker SMT UNVERIFIED_AVAILABILITY
+F
+================================== FAILURES ===================================
+___________________ test_report_archived_arrival_admission ____________________
+
+client = <starlette.testclient.TestClient object at 0x0000020A02B35FD0>
+
+    def test_report_archived_arrival_admission(client):
+        from research_backend.app.indicator_engine import Evaluation
+        from research_backend.app.indicator_history import load_reference
+
+        values = [100, 101, 110, 104, 105, 102, 109, 103, 104, 117, 118, 107, 118, 104, 93, 111] * 5
+        def candles(offset, timing):
+            return [dict(time=START+i*STEP, open=x+offset, high=x+offset+2, low=x+offset-2, close=x+offset,
+                         closed=True, **({"available_at": START+(i+1)*STEP+timing} if timing is not None else {}))
+                    for i, x in enumerate(values)]
+
+        end = START+len(values)*STEP
+        for label, delay in (("explicit_without_marker", 0), ("assumed_close", None), ("invalid_early", -1)):
+            scopes = {}
+            for side, symbol, offset in (("primary", "EURUSD", 0), ("comparison", "GBPUSD", 10)):
+                part = write_partition("MT5", label, symbol, "candles", "M5", "BID", candles(offset, delay))
+                scopes[side] = dict(source="MT5_SAVED", symbol=symbol, timeframe="M5", feed_id=label,
+                                    price_basis="BID", partitions=[{k:part[k] for k in ("id","sha256")}])
+            request = dict(**scopes["primary"], cutoff=end, frozen=True, load_reference=True, timing_policy="STRICT_CAUSAL",
+                           candles=[], indicators=[dict(id=engine, **{key: dict(history_bars=10_000, history_start=START)})
+                                                   for engine, key in ENGINES])
+            response = client.post(URL,json=request)
+            assert response.is_success, response.text
+            for result in response.json()["results"]:
+                timing = [entry["timing"] for value in result.values() if isinstance(value,list)
+                          for entry in value if isinstance(entry,dict) and isinstance(entry.get("timing"),dict)]
+                print(label, result["id"], result.get("analysis",{}).get("strategy_eligibility"),
+                      sorted({item["strategy_eligibility"] for item in timing}))
+            smt = client.post("/api/indicators/smt/strict", json={
+                **{side:dict(**scope,start=START,end=end,calendar={"kind":"continuous"}) for side,scope in scopes.items()},
+                "cutoff":end,
+            })
+            assert smt.is_success, smt.text
+            print(label, "SMT", smt.json().get("reason"))
+            request["candles"] = [dict(**bar, availability_policy="SERVER_RECORDED_ARRIVAL_V1")
+                                  for bar in candles(0,0)]
+            request["indicators"] = [{"id":"fair_value_gap"}]
+>           print(label, "client_forgery", client.post(URL,json=request).json()["results"][0]["analysis"]["strategy_eligibility"])
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'strategy_eligibility'
+
+research_backend\tests\test_arrival_baseline.py:49: KeyError
+============================== warnings summary ===============================
+research_backend/tests/test_arrival_baseline.py::test_report_archived_arrival_admission
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_arrival_baseline.py::test_report_archived_arrival_admission
+1 failed, 1 warning in 1.23s

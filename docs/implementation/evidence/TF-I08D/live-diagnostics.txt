@@ -1,0 +1,2 @@
+server_utc 2026-11-18T16:29:43+00:00
+[["EURUSD", [[-6857, 0, "int", true], [-6917, 0, "int", true], [-6977, 0, "int", true], [-7037, 0, "int", true], [-7097, 0, "int", true]]], ["GBPUSD", [[-6857, 0, "int", true], [-6917, 0, "int", true], [-6977, 0, "int", true], [-7037, 0, "int", true], [-7097, 0, "int", true]]]]

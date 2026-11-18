@@ -1,0 +1,2 @@
+{"scopes": {"EURUSD": {"state": "DEGRADED", "warning": "PROVIDER_NOMINAL_CLOSE_IN_FUTURE"}, "GBPUSD": {"state": "DEGRADED", "warning": "PROVIDER_NOMINAL_CLOSE_IN_FUTURE"}}, "state": "STOPPED"}
+FAIL: terminal was available but a recorded pair did not complete
