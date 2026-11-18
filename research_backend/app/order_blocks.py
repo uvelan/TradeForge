@@ -164,6 +164,7 @@ class OrderBlockStream:
                 active=state in {"ACTIVE","TOUCHED","PARTIALLY_MITIGATED"},
                 predicate="WHOLE_CANDLE" if prior else "FORMATION",
                 dependencies=[prior["id"]] if prior else [],
+                producer_references=[zone.formation.get("structure_evidence_reference")] if not prior else [],
                 coverage=self.structure.market_schedule is not None and self.structure.market_schedule.kind!="unknown")
         if self.timing_cutoff is not None and prior:
             zone.formation["timing_recorded"] &= bar.available_at == available
@@ -281,6 +282,8 @@ class OrderBlockStream:
                      "context":self.context(bar,available)}
         if self.timing_cutoff is not None:
             formation["timing_recorded"]=candidate.available_at==stamp
+            if "evidence_reference" in event:
+                formation["structure_evidence_reference"]=event["evidence_reference"]
         zone = Block(key, sign, price(lower), price(upper), index+self.rules.max_age_bars, formation)
         self.book[key] = zone
         self.put(zone)

@@ -310,6 +310,7 @@ def level_rows_fingerprint(rows, encode):
 def contextual_reference(indicator,event,observed,provenance,configuration,snapshot,*,witness=None):
     stamp=event["available_at"]
     return {
+        **({"evidence_reference":event["evidence_reference"]} if "evidence_reference" in event else {}),
         **({"timing":event["timing"],"strategy_eligibility":event["timing"]["strategy_eligibility"]}
            if "timing" in event else {"strategy_eligibility":"RESEARCH_ONLY_WHOLE_CANDLE_TIMING"}
            if indicator in {"liquidity_sweeps","order_blocks"} else {}),
@@ -351,7 +352,7 @@ def build_crt_context(structure_events,products,level_sets,registry=None):
         return index.as_of
     def current_context(cutoff, observed):
         return {key:event for key,event in index.as_of(cutoff,observed).items()
-                if key not in {"order_block","fvg"} or registry.current_at(event["id"],cutoff)}
+                if key not in {"order_block","fvg"} or registry.current_at(event.get("evidence_reference"),cutoff)}
     return current_context
 
 
@@ -411,9 +412,9 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
         provenance["partitions"]=sorted(provenance["partitions"],key=lambda item:(item["id"],item["sha256"]))
         return history or (),provenance
 
-    def structure_result(history,rule,provenance,delivery,consumer=None):
+    def structure_result(history,rule,provenance,delivery,consumer=None,consumer_registry=None):
         return coordinator.structure(detect_structure,history,step,rule,structure_scope(provenance),
-            {"cutoff":request.cutoff,"frozen":request.frozen,"provenance":provenance},delivery,consumer)
+            {"cutoff":request.cutoff,"frozen":request.frozen,"provenance":provenance},delivery,consumer,consumer_registry)
 
     def structure_key(rule):
         key=[rule.algorithm_version,rule.identity_parameters()]
@@ -437,7 +438,9 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                     delivery=public.fvg_delivery or FVGDelivery()
             formations=[]
             result=evaluate_fvg(history,step,request.cutoff,rules,delivery,provenance,request.frozen,
-                                on_formation=formations.append if track_context else None, registry=coordinator.evidence)
+                                on_formation=formations.append if track_context else None,
+                                registry=coordinator.evidence_for("fvg",history,provenance,
+                                    [step,rules.canonical(),request.frozen]))
             return result,formations
         return coordinator.run("fvg",key,history,calculate_fvg)
 
@@ -455,8 +458,9 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                                     (public.liquidity or LiquidityRules()).identity()):
                     delivery=public.liquidity_delivery or LiquidityDelivery()
             liquid=LiquidityStream(rules,delivery,step,on_confirmed_sweep=sweeps.append if track_context else None,
-                                   timing=(request.cutoff,provenance,structure.market_schedule) if strict else None, registry=coordinator.evidence)
-            detected=structure_result(history,structure,provenance,StructureDelivery(pivot_limit=0,break_limit=0),liquid.observe)
+                                   timing=(request.cutoff,provenance,structure.market_schedule) if strict else None, registry=coordinator.evidence_for(
+                                       "liquidity",history,provenance,[step,structure_key(structure),rules.identity(),request.frozen]))
+            detected=structure_result(history,structure,provenance,StructureDelivery(pivot_limit=0,break_limit=0),liquid.observe,liquid.registry if strict else None)
             return liquid.finish(detected["event_page"]["snapshot"],detected["provenance_id"]),sweeps,detected
         return coordinator.run("liquidity",key,history,calculate_liquidity)
 
@@ -539,12 +543,15 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                     limit=observed if strict else available
                     f=f_index.as_of(limit,observed).get("fvg")
                     l=l_index.as_of(limit,observed).get("sweep")
-                    if strict and f and not coordinator.evidence.current_at(f["id"],limit):
+                    if strict and f and not coordinator.evidence.current_at(f.get("evidence_reference"),limit):
                         f=None
-                    return {"fvg":{**f,"id":f["witness_id"]} if f else None,"liquidity_sweep":l,
+                    return {"fvg":f if strict else {**f,"id":f["witness_id"]} if f else None,"liquidity_sweep":l,
                             "status":"AVAILABLE" if f or l else "DEPENDENCY_UNAVAILABLE" if failures else "NO_AVAILABLE_CONTEXT"}
                 stream.context_lookup=context_at
-            detected=structure_result(history,structure,provenance,StructureDelivery(pivot_limit=0,break_limit=0),consumer)
+            if strict:
+                stream.registry=coordinator.evidence_for("order_blocks",history,provenance,
+                    [step,structure_key(structure),rules.model_dump(),options.model_dump(),metadata,request.frozen])
+            detected=structure_result(history,structure,provenance,StructureDelivery(pivot_limit=0,break_limit=0),consumer,stream.registry if strict else None)
             result=stream.finish(detected["event_page"]["snapshot"],context_snapshot=digest(metadata) if metadata is not None else None)
             if metadata is not None:
                 result["context_configuration"]=metadata
@@ -790,7 +797,9 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                     context,metadata=crt_context(spec,rules,crt_rows,provenance)
             output=coordinator.run("crt",spec.id,crt_rows,lambda:evaluate_crt(
                 [] if failed else crt_rows,step,request.cutoff,frame,rules,spec.crt_delivery or CRTDelivery(),
-                provenance,native,context=context,context_snapshot=digest(metadata) if metadata is not None else None, registry=coordinator.evidence))
+                provenance,native,context=context,context_snapshot=digest(metadata) if metadata is not None else None,
+                registry=coordinator.evidence_for("crt",crt_rows,provenance,
+                    [step,frame,rules.model_dump(),metadata,request.frozen],native=native)))
             result={"id":spec.id,"version":1,"render":"markers","series":{},"warmup_bars":None,
                     "parameters":rules.model_dump(),"provenance":provenance,**output}
             if metadata is not None:

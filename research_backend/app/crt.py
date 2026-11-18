@@ -147,6 +147,8 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
     config=identity("crt-rules",policy,rules.model_dump(exclude={
         "history_bars","history_start","reference_start","include_context"}),frame)
     snapshot=sha256(identity("crt-snapshot",policy,rules.model_dump(),cutoff,provenance).encode())
+    if strict:
+        snapshot.update(b"calculation-evidence-reference-v1")
     if context_snapshot is not None:
         snapshot.update(context_snapshot.encode())
     for label, data in ((b"ltf",rows),(b"htf",native_rows)):

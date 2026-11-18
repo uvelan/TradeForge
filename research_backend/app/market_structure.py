@@ -99,6 +99,8 @@ def detect_structure(rows, step: int, rules: StructureRules, provenance: dict,
     scope = json.dumps([version, provenance, rules.identity_parameters()], sort_keys=True, separators=(",", ":"))
     snapshot = sha256(json.dumps([scope, step, snapshot_scope], sort_keys=True, separators=(",", ":")).encode())
     timing_config = sha256(scope.encode()).hexdigest() if strict else None
+    if strict:
+        snapshot.update(b"calculation-evidence-reference-v1")
     last_close = None
 
     provenance_id = sha256(json.dumps(provenance, sort_keys=True).encode()).hexdigest()

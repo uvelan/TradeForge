@@ -63,17 +63,21 @@ def working_set():
 
 
 def pair(label, versions, args):
+    samples=30 if "--causal-registry" in sys.argv else 12
     contexts=[]
     for name,engine,loader,http in versions:
-        params={**args,"timing_policy":"STRICT_CAUSAL"} if name=="strict" or "--causal-integrity" in sys.argv else args
+        params={**args,"timing_policy":"STRICT_CAUSAL"} if name=="strict" or "--causal-integrity" in sys.argv or "--causal-registry" in sys.argv else args
         request=engine.Evaluation.model_validate(params)
         contexts.append((name,lambda e=engine,r=request,l=loader:e.evaluate(r,l),
                          http,request.model_dump_json(exclude_unset=True)))
     timings={name:[[],[],[]] for name,*_ in contexts}
     results={}
-    for _,calc,_,_ in contexts:
+    for _,calc,http,body in contexts:
         calc()
-    for i in range(12):
+        if "--causal-registry" in sys.argv:
+            response=http.post("/api/indicators/evaluate",content=body,headers={"content-type":"application/json"})
+            assert response.status_code==200,response.text
+    for i in range(samples):
         order=contexts if i%2==0 else list(reversed(contexts))
         for name,calc,http,body in order:
             start=perf_counter()
@@ -88,6 +92,14 @@ def pair(label, versions, args):
             assert response.status_code==200,response.text
             results[name]=size,result.get("diagnostics",{})
     for name,calc,_,_ in contexts:
+        if "--causal-registry" in sys.argv:
+            import cProfile
+            import pstats
+            profile=cProfile.Profile()
+            profile.runcall(calc)
+            print(f"{label} | {name} | registry profile, seconds",flush=True)
+            pstats.Stats(profile).strip_dirs().sort_stats("cumulative").print_stats(
+                "strategy_evidence|evidence_for|encoder.py|sha256",30)
         rss_before=working_set()
         tracemalloc.start()
         calc()
@@ -140,10 +152,11 @@ def main():
         if "--overlap-only" in sys.argv:
             overlap_fixture(versions,stores[-1])
             return
-        print("Windows, same process, alternating run order. 12 samples per version, P50/P95 in milliseconds.",flush=True)
+        samples=30 if "--causal-registry" in sys.argv else 12
+        print(f"Windows, same process, alternating run order. {samples} samples per version, P50/P95 in milliseconds.",flush=True)
         common={"symbol":"EURUSD","timeframe":"M5","feed_id":"demo-v1","price_basis":"SIMULATED",
                 "source":"DEMO","cutoff":START+600000,"candles":dataset(2000)}
-        if "--causal" in sys.argv or "--causal-integrity" in sys.argv:
+        if "--causal" in sys.argv or "--causal-integrity" in sys.argv or "--causal-registry" in sys.argv:
             causal_bench(versions,stores[-1],common)
             return
         pair("2,000 standalone CRT",versions,{**common,"indicators":specifications(combined=False)})
@@ -172,7 +185,7 @@ def main():
 
 
 def causal_bench(versions,storage,common):
-    if "--causal-integrity" in sys.argv:
+    if "--causal-integrity" in sys.argv or "--causal-registry" in sys.argv:
         pair("2,000 strict caller context",versions,{**common,"indicators":specifications(context=True)})
     else:
         versions=[*versions,("strict",*versions[-1][1:])]

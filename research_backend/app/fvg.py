@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
 from .indicator_coverage import MarketSchedule
 from .structure_continuity import continuity_reason
-from .strategy_evidence import EvidenceRegistry
+from .strategy_evidence import EvidenceRegistry, history_fingerprint
 from .causal_timing import evidence as timing_evidence
 from .structure_pages import EventPage
 from .indicators import true_range
@@ -117,6 +117,12 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen, *, on_
     config = identity("fvg-configuration", policy, event_parameters)
     source = identity("fvg-market", scope, step)
     snapshot = sha256(identity("fvg-snapshot", policy, parameters, cutoff, frozen, provenance, step).encode())
+    if strict:
+        if registry.snapshot is None:
+            origin={key:value for key,value in provenance.items() if key != "retrieval"}
+            registry=registry.calculation("fvg",[step,parameters,frozen],origin,
+                [history_fingerprint(rows),history_fingerprint(())],cutoff)
+        snapshot.update(b"calculation-evidence-reference-v1")
     formations=EventPage("fvg_formations",delivery.formation_limit,delivery.formation_cursor)
     revisions=EventPage("fvg_revisions",delivery.revision_limit,delivery.revision_cursor)
     current=EventPage("fvg_current",delivery.current_limit,delivery.current_cursor)

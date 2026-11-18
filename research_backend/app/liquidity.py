@@ -67,6 +67,7 @@ class Pool:
     activation_observation_time: int | None = None
     price_generation: int = 0
     candidate_id: str | None = None
+    producer_references: list = field(default_factory=list)
     recorded_dependencies: bool = True
     latest_timing: dict | None = None
 
@@ -75,6 +76,7 @@ class LiquidityStream:
     def __init__(self, rules: LiquidityRules, delivery: LiquidityDelivery, step: int, *, on_confirmed_sweep=None, timing=None, registry=None):
         self.on_confirmed_sweep = on_confirmed_sweep
         self.timing = timing
+        self.timing_config = digest(rules.identity()) if timing else None
         self.registry = registry if registry is not None else EvidenceRegistry()
         self.segment_recorded = True
         self.rules, self.step = rules, step
@@ -127,11 +129,12 @@ class LiquidityStream:
                 "INSUFFICIENT_HISTORY" if state=="INVALIDATED" else "RESEARCH_ONLY" if state=="FORMING" else None,formation=reason=="CONFIRMED_PIVOT")
             predicate=("FORMATION" if reason=="CONFIRMED_PIVOT" else
                        "CLOSE_ONLY" if state=="BROKEN" else "WHOLE_CANDLE")
-            self.registry.publish(entry,"pool",self.timing[1],digest(self.rules.identity()),
+            self.registry.publish(entry,"pool",self.timing[1],self.timing_config,
                 family=pool.id,active=state=="ACTIVE",predicate=predicate,
                 dependencies=[item["id"] for item in pool.members]+
                     ([pool.latest_revision[0]] if reason=="CONFIRMED_PIVOT" and pool.latest_revision else []),
-                coverage=self.timing[2] is not None and self.timing[2].kind!="unknown",lineage=True)
+                coverage=self.timing[2] is not None and self.timing[2].kind!="unknown",lineage=True,
+                producer_references=pool.producer_references)
         self.pools.append(entry)
         if state in {"SWEPT","BROKEN","EXPIRED","INVALIDATED","UNCERTAIN"}:
             self.active.pop(pool.id)
@@ -181,7 +184,7 @@ class LiquidityStream:
         if self.timing:
             self.segment_recorded=(self.segment_recorded or bool(gap)) and bar.available_at==available
             if bar.available_at!=available:
-                self.registry.gap("pool",digest(self.rules.identity()),self.timing[1],available)
+                self.registry.gap("pool",self.timing_config,self.timing[1],available)
         self.observation_index = index
         self.last_close = Decimal(str(bar.close))
         # Decisions use the pools available before this observation.
@@ -255,7 +258,7 @@ class LiquidityStream:
                               "input_fingerprint":fingerprint}
                     if timing:
                         crossing["timing"]=dict(timing)
-                        self.registry.publish(crossing,"liquidity",self.timing[1],digest(self.rules.identity()),
+                        self.registry.publish(crossing,"liquidity",self.timing[1],self.timing_config,
                             predicate="CLOSE_ONLY" if event_state=="BROKEN" else "WHOLE_CANDLE",
                             coverage=self.timing[2] is not None and self.timing[2].kind!="unknown")
                     self.sweeps.append(crossing)
@@ -290,6 +293,8 @@ class LiquidityStream:
             pool.last_pivot_index=pivot_index
             pool.members.append({"id":pivot["id"],"price":pivot["price"],"time":pivot["pivot_time"],
                                  "available_at":pivot["available_at"]})
+            if self.timing and "evidence_reference" in pivot:
+                pool.producer_references.append(pivot["evidence_reference"])
             pool.lower=min(pool.lower,price)
             pool.upper=max(pool.upper,price)
             state=pool.state
