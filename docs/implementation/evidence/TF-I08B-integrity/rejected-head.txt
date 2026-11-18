@@ -1,0 +1,24 @@
+[('HIGH_SWEPT_RECLAIMED', 'e8e0b66ec88eaf749349d32c47bda52fbb38b4d85b1b876998a4a938575be1d1', 39900, 'ELIGIBLE'), ('EXPANSION_OBSERVED', '48a23e1b24151f2c068903537b6840b724fbd2add38fe2a3779b0d3b545f39c8', 40200, 'UNVERIFIED_AVAILABILITY'), ('OPPOSITE_BOUNDARY_REACHED', '25b609ce7350a06be6147f327d06426c859de450d7683299b6980d21b1c0a279', 40500, 'ELIGIBLE')]
+F
+================================== FAILURES ===================================
+______________ test_unrecorded_midpoint_taints_opposite_boundary ______________
+
+    def test_unrecorded_midpoint_taints_opposite_boundary():
+        rows = [bar(t, (103,105,100,103)) for t in range(36000,39600,300)]
+        midpoint, stamp = bar(39900, (104,104.5,102,103))
+        rows += [bar(39600,(104,106,103,104)), (midpoint.model_copy(update={"available_at":None}),stamp),
+                 bar(40200,(103,104,100,101))]
+        result = evaluate_crt(rows,300,40500,"H1",CRTRules(market_schedule=OPEN),CRTDelivery(),ARCHIVE)
+        events = sorted(result["crt_sweeps"] + result["crt_revisions"], key=lambda event:event["available_at"])
+        assert [e["state"] for e in events] == ["HIGH_SWEPT_RECLAIMED","EXPANSION_OBSERVED","OPPOSITE_BOUNDARY_REACHED"]
+        print([(e["state"],e["id"],e["available_at"],e["timing"]["strategy_eligibility"]) for e in events])
+>       assert events[-1]["timing"]["strategy_eligibility"] == "UNVERIFIED_AVAILABILITY"
+E       AssertionError: assert 'ELIGIBLE' == 'UNVERIFIED_AVAILABILITY'
+E
+E         - UNVERIFIED_AVAILABILITY
+E         + ELIGIBLE
+
+research_backend\tests\test_causal_evidence_integrity.py:15: AssertionError
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_causal_evidence_integrity.py::test_unrecorded_midpoint_taints_opposite_boundary
+1 failed in 1.22s

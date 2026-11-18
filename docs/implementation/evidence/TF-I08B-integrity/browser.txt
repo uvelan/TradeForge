@@ -1,0 +1,144 @@
+[WebServer] INFO:     Started server process [16992]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8178 (Press CTRL+C to quit)
+[WebServer] (node:12736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 64 tests using 1 worker
+
+(node:20328) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   1 e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions (31.9s)
+(node:28436) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  2 e2e\drawing-edit.spec.ts:176:1 › all four rectangle handles edit only their corresponding boundaries (9.0s)
+  ok  3 e2e\drawing-edit.spec.ts:196:3 › long position rejects crossed handles and preserves direction on a valid resize (7.1s)
+  ok  4 e2e\drawing-edit.spec.ts:196:3 › short position rejects crossed handles and preserves direction on a valid resize (5.9s)
+  ok  5 e2e\drawing-edit.spec.ts:221:1 › vertical horizontal edit works after zoom, resize and fullscreen with left scale and comparison pane (7.6s)
+  ok  6 e2e\drawing-edit.spec.ts:248:1 › overlapping strokes prefer the later item; locked and hidden drawings cannot drag (9.8s)
+  ok  7 e2e\drawing-edit.spec.ts:273:1 › Escape and pointer cancellation discard edits; a scope change cannot save an obsolete gesture (8.5s)
+  ok  8 e2e\drawing-edit.spec.ts:304:1 › a native touchscreen cancel releases the selected drawing without writing (4.6s)
+  ok  9 e2e\drawing-edit.spec.ts:319:1 › a real 409 blocks further edits and reload preserves the competing drawing (7.0s)
+  ok 10 e2e\drawing-edit.spec.ts:344:1 › a canonical EMA overlay leaves creating and editing a drawing functional (5.2s)
+  ok 11 e2e\drawing-edit.spec.ts:356:1 › market structure overlays preserve ownership of a saved drawing handle (6.3s)
+  ok 12 e2e\drawing-edit.spec.ts:378:1 › Liquidity overlays preserve a saved drawing handle gesture (6.3s)
+  ok 13 e2e\drawing-edit.spec.ts:378:1 › FVG overlays preserve a saved drawing handle gesture (6.4s)
+  ok 14 e2e\drawing-edit.spec.ts:378:1 › Order block overlays preserve a saved drawing handle gesture (8.0s)
+  ok 15 e2e\drawing-edit.spec.ts:378:1 › CRT overlays preserve a saved drawing handle gesture (6.0s)
+  ok 16 e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1366x768 (5.0s)
+  ok 17 e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1920x1080 (4.8s)
+  ok 18 e2e\drawing-placement.spec.ts:51:1 › touch places a horizontal drawing and its persisted anchor can be edited (7.3s)
+  ok 19 e2e\drawing-placement.spec.ts:78:1 › rejects outside release and Escape then saves a rectangle with two clicks (4.5s)
+  ok 20 e2e\drawing-placement.spec.ts:99:1 › risk/reward commits valid prices after zoom and excludes the comparison axis (7.5s)
+  ok 21 e2e\drawing-placement.spec.ts:134:1 › a stale drawing save reports 409 and reload preserves the competing scene (4.5s)
+  ok 22 e2e\drawing-placement.spec.ts:154:1 › blank chart space and a secondary plot cannot save into the primary scope (6.7s)
+  ok 23 e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every trend anchor (7.5s)
+  ok 24 e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every rectangle anchor (8.1s)
+  ok 25 e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every risk-reward anchor (8.3s)
+  ok 26 e2e\drawing-placement.spec.ts:258:1 › previews and saves both position directions and rejects an invalid edit (9.4s)
+  ok 27 e2e\drawing-placement.spec.ts:320:1 › releases pointer ownership on candle refresh and scope remount (9.3s)
+  ok 28 e2e\drawing-placement.spec.ts:418:1 › maps anchors across fullscreen and resized plots with a left comparison scale (7.6s)
+  ok 29 e2e\drawing-placement.spec.ts:505:1 › the horizontal rail takes precedence over an unfinished trendline (5.7s)
+  ok 30 e2e\drawing-placement.spec.ts:518:1 › a horizontal drawing drag uses the release candle and price after zoom and resize (8.1s)
+  ok 31 e2e\drawing-placement.spec.ts:567:1 › Alt+H and the rail discard rectangle and risk/reward draft anchors (4.5s)
+  ok 32 e2e\drawing-placement.spec.ts:588:1 › toolbox activation clears other modes and repeated switches save only the final intended drawing (4.6s)
+  ok 33 e2e\drawing-placement.spec.ts:624:1 › Escape cancels all armed modes and an active drag cannot complete in a replacement mode (5.7s)
+  ok 34 e2e\drawing-placement.spec.ts:668:1 › horizontal drags reject outside, missing candle and pointer cancellation (3.2s)
+  ok 35 e2e\drawing-placement.spec.ts:703:1 › negative chart prices are rejected and navigation still pans and zooms (4.1s)
+(node:41944) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 36 e2e\indicator-engine.spec.ts:20:1 › multiple canonical indicators persist, update panes and clean up on remount (7.2s)
+  ok 37 e2e\indicator-engine.spec.ts:62:1 › replay submits only closed evidence within the visible cutoff (3.1s)
+  ok 38 e2e\indicator-engine.spec.ts:85:1 › a session overlay exposes provisional and completed backend values (3.5s)
+  ok 39 e2e\indicator-engine.spec.ts:101:1 › previous week requests a bounded M5 reference beyond chart history (3.5s)
+  ok 40 e2e\indicator-engine.spec.ts:117:1 › the terminal distinguishes a complete forex week from missing open-market coverage (5.1s)
+  ok 41 e2e\indicator-engine.spec.ts:152:1 › structure replay paints CHOCH at the confirming step and removes it on rewind (7.6s)
+  ok 42 e2e\indicator-engine.spec.ts:217:1 › a pending market structure result stays tied to the original chart scope (4.6s)
+  ok 43 e2e\indicator-engine.spec.ts:247:1 › older structure pages are bounded and leave the latest chart and state intact (5.2s)
+  ok 44 e2e\indicator-engine.spec.ts:291:1 › calendar structure confirms a real reopening BOS and removes it on replay rewind (5.3s)
+  ok 45 e2e\indicator-engine.spec.ts:328:1 › liquidity replay exposes the sweep only after its closed evidence and keeps it inspectable (5.3s)
+  ok 46 e2e\indicator-engine.spec.ts:369:1 › a pending Liquidity request cannot replace another instrument or timeframe (4.8s)
+  ok 47 e2e\indicator-engine.spec.ts:369:1 › a pending FVG request cannot replace another instrument or timeframe (4.6s)
+  ok 48 e2e\indicator-engine.spec.ts:369:1 › a pending Order block request cannot replace another instrument or timeframe (4.1s)
+  ok 49 e2e\indicator-engine.spec.ts:369:1 › a pending CRT request cannot replace another instrument or timeframe (4.2s)
+  ok 50 e2e\indicator-engine.spec.ts:397:1 › FVG paints a causal zone and updates its remaining depth during replay (5.6s)
+  ok 51 e2e\indicator-engine.spec.ts:442:1 › FVG selection survives a rolling MT5 refresh and drops corrected evidence (11.6s)
+  ok 52 e2e\indicator-engine.spec.ts:490:1 › order block appears at BOS availability and rewinds independently of FVG and liquidity (6.0s)
+  ok 53 e2e\indicator-engine.spec.ts:543:1 › CRT delays the H1 range, excludes a straddling sweep and rewinds cleanly (7.7s)
+  ok 54 e2e\indicator-engine.spec.ts:601:1 › shared context follows chart structure settings and visibility changes send no request (4.0s)
+  ok 55 e2e\indicator-engine.spec.ts:658:1 › strict FVG timing exposes a straddling replay observation and rewinds (4.9s)
+  ok 56 e2e\liquidity-active.spec.ts:3:1 › unchanged live liquidity remains on chart beyond the revision page (2.9s)
+  ok 57 e2e\research.spec.ts:3:1 › opens the research dashboard, replays demo bars, and links to the preserved catalog (3.7s)
+  ok 58 e2e\research.spec.ts:22:1 › shows a saved background SMT watch and stops it from Market Terminal (1.2s)
+  ok 59 e2e\research.spec.ts:45:1 › navigates by keyboard and moves recorded signal evidence into a persisted draft (2.9s)
+  ok 60 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (5.2s)
+  ok 61 e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses (8.2s)
+  ok 62 e2e\research.spec.ts:230:1 › a delayed drawing save cannot select a drawing in a different chart scope (3.2s)
+  ok 63 e2e\research.spec.ts:266:1 › links four chart views and opens a saved simulation after reload (4.1s)
+  ok 64 e2e\terminal.spec.ts:3:1 › generates a simulated dataset and reopens it after reload (1.8s)
+
+
+  1) e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Browser logs:
+
+    <launching> C:\Users\Uday\AppData\Local\ms-playwright\chromium_headless_shell-1255\chrome-headless-shell-win64\chrome-headless-shell.exe --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,HttpsUpgrades,HttpsFirstBalancedModeAutoEnable,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,AvoidCorsURLLoaderRestartOnRedirect,TcpPortRandomizationWin,OptimizationHints,NetworkTimeServiceQuerying,AimEnabled,PreconnectToSearch,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface,SkipListAccountsWithoutGaiaCookies --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --enable-unsafe-swiftshader --edge-skip-compat-layer-relaunch --disable-stack-profiler --disable-infobars --disable-sync --do-not-de-elevate --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=C:\Users\Uday\AppData\Local\Temp\playwright_chromiumdev_profile-e6620b --remote-debugging-pipe --no-startup-window
+    <launched> pid=9580
+    [pid=9580][err] [1118/162215.841:INFO:CONSOLE:934] "[vite] connecting...", source: http://127.0.0.1:4278/@vite/client (934)
+    [pid=9580][err] [1118/162215.845:INFO:CONSOLE:15802] "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold", source: http://127.0.0.1:4278/node_modules/.vite/deps/react-dom_client.js?v=f09c47b9 (15802)
+    [pid=9580][err] [1118/162216.250:INFO:CONSOLE:1043] "[vite] connected.", source: http://127.0.0.1:4278/@vite/client (1043)
+    [pid=9580] <gracefully close start>
+    Call log:
+      - waiting for getByRole('button', { name: 'Draw', exact: true })
+        - locator resolved to <button disabled class="small-tool">Draw</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        51 × waiting for element to be visible, enabled and stable
+           - element is not enabled
+         - retrying click action
+           - waiting 500ms
+        - waiting for element to be visible, enabled and stable
+
+
+      106 |   await page.getByText(/^Drawing toolbox/).click();
+      107 |   await page.getByLabel("Drawing tool").selectOption(kind);
+    > 108 |   await page.getByRole("button",{name:"Draw",exact:true}).click();
+          |                                                           ^
+      109 |   for(const [x,y] of points.slice(0,-1))await clickAt(page,x,y);
+      110 |   const response=posted(page);
+      111 |   const [x,y]=points.at(-1)!;
+        at setup (K:\Projects\TradeForge\frontend\e2e\drawing-edit.spec.ts:108:59)
+        at K:\Projects\TradeForge\frontend\e2e\drawing-edit.spec.ts:126:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\drawing-edit-select-move-a-df245-d-undo-redo-exact-revisions\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\drawing-edit-select-move-a-df245-d-undo-redo-exact-revisions\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\drawing-edit-select-move-a-df245-d-undo-redo-exact-revisions\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\drawing-edit-select-move-a-df245-d-undo-redo-exact-revisions\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\drawing-edit-select-move-a-df245-d-undo-redo-exact-revisions\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions
+  63 passed (7.2m)

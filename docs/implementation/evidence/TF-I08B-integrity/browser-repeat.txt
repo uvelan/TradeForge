@@ -1,0 +1,199 @@
+[WebServer] INFO:     Started server process [23568]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8179 (Press CTRL+C to quit)
+[WebServer] (node:14460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 20 tests using 1 worker
+
+(node:14688) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   1 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (8.7s)
+(node:18796) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   2 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (8.7s)
+(node:29892) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   3 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (8.5s)
+(node:30772) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  4 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (9.0s)
+(node:31488) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  5 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (10.1s)
+(node:19320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  6 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (8.3s)
+(node:32608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  7 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (9.8s)
+(node:30536) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  8 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (10.2s)
+(node:33036) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  9 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (8.9s)
+(node:34584) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 10 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (9.6s)
+(node:35144) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 11 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (10.4s)
+(node:27248) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 12 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (11.1s)
+(node:2724) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 13 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (11.1s)
+(node:35252) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 14 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (10.4s)
+(node:33796) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 15 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (11.3s)
+(node:36292) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 16 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (12.2s)
+(node:38716) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 17 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (12.3s)
+(node:34516) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 18 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (11.7s)
+(node:39508) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 19 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (12.7s)
+(node:28688) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 20 e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint (13.3s)
+
+
+  1) e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint ──────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.primary-chart .chart-input tr').first().locator('canvas').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.primary-chart .chart-input tr').first().locator('canvas').first() with timeout 5000ms
+      - waiting for locator('.primary-chart .chart-input tr').first().locator('canvas').first()
+
+
+      103 |   await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
+      104 |   const row=page.locator(".primary-chart .chart-input tr").first();
+    > 105 |   await expect(row.locator("canvas").first()).toBeVisible();
+          |                                               ^
+      106 |   const widths=await row.locator("td").evaluateAll(cells=>cells.map(cell=>cell.getBoundingClientRect().width));
+      107 |   const chart=row.locator("td").nth(widths.indexOf(Math.max(...widths)));
+      108 |   const analytical=Promise.withResolvers<void>();
+        at K:\Projects\TradeForge\frontend\e2e\research.spec.ts:105:47
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint ──────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.primary-chart .chart-input tr').first().locator('canvas').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.primary-chart .chart-input tr').first().locator('canvas').first() with timeout 5000ms
+      - waiting for locator('.primary-chart .chart-input tr').first().locator('canvas').first()
+
+
+      103 |   await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
+      104 |   const row=page.locator(".primary-chart .chart-input tr").first();
+    > 105 |   await expect(row.locator("canvas").first()).toBeVisible();
+          |                                               ^
+      106 |   const widths=await row.locator("td").evaluateAll(cells=>cells.map(cell=>cell.getBoundingClientRect().width));
+      107 |   const chart=row.locator("td").nth(widths.indexOf(Math.max(...widths)));
+      108 |   const analytical=Promise.withResolvers<void>();
+        at K:\Projects\TradeForge\frontend\e2e\research.spec.ts:105:47
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint ──────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.primary-chart .chart-input tr').first().locator('canvas').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.primary-chart .chart-input tr').first().locator('canvas').first() with timeout 5000ms
+      - waiting for locator('.primary-chart .chart-input tr').first().locator('canvas').first()
+
+
+      103 |   await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
+      104 |   const row=page.locator(".primary-chart .chart-input tr").first();
+    > 105 |   await expect(row.locator("canvas").first()).toBeVisible();
+          |                                               ^
+      106 |   const widths=await row.locator("td").evaluateAll(cells=>cells.map(cell=>cell.getBoundingClientRect().width));
+      107 |   const chart=row.locator("td").nth(widths.indexOf(Math.max(...widths)));
+      108 |   const analytical=Promise.withResolvers<void>();
+        at K:\Projects\TradeForge\frontend\e2e\research.spec.ts:105:47
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat2\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat2\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat2\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat2\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\integrity-repeat\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat2\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint ───────
+    e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint ───────
+    e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint ───────
+  17 passed (4.4m)
