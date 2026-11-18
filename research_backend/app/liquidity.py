@@ -8,6 +8,7 @@ from math import floor, log, log1p
 
 from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
+from .strategy_evidence import EvidenceRegistry
 from .causal_timing import evidence as timing_evidence
 from .structure_pages import EventPage
 
@@ -71,9 +72,11 @@ class Pool:
 
 
 class LiquidityStream:
-    def __init__(self, rules: LiquidityRules, delivery: LiquidityDelivery, step: int, *, on_confirmed_sweep=None, timing=None):
+    def __init__(self, rules: LiquidityRules, delivery: LiquidityDelivery, step: int, *, on_confirmed_sweep=None, timing=None, registry=None):
         self.on_confirmed_sweep = on_confirmed_sweep
         self.timing = timing
+        self.registry = registry if registry is not None else EvidenceRegistry()
+        self.segment_recorded = True
         self.rules, self.step = rules, step
         self.pools = EventPage("pools", delivery.pool_limit, delivery.pool_cursor)
         self.sweeps = EventPage("sweeps", delivery.sweep_limit, delivery.sweep_cursor)
@@ -105,7 +108,7 @@ class LiquidityStream:
         pool.state = state
         pool.revision += 1
         event_id=digest(VERSION,pool.id,pool.revision,state,bar.time,fingerprint) if not self.timing else digest(
-            VERSION,"STRICT_CAUSAL",2,pool.id,pool.revision,state,bar.model_dump(),available,
+            VERSION,"STRICT_CAUSAL",3,pool.id,pool.revision,state,bar.model_dump(),available,
             pool.members,pool.latest_revision[0] if pool.latest_revision else None)
         entry = {"id":event_id,
                  "pool_id":pool.id,"revision":pool.revision,"state":state,"reason":reason,
@@ -121,7 +124,14 @@ class LiquidityStream:
         if self.timing:
             entry["timing"]=timing or self.timing_contract(pool,bar,available,
                 reason="EXPIRED_REFERENCE" if state=="EXPIRED" else
-                "INSUFFICIENT_HISTORY" if state=="INVALIDATED" else "RESEARCH_ONLY")
+                "INSUFFICIENT_HISTORY" if state=="INVALIDATED" else "RESEARCH_ONLY" if state=="FORMING" else None,formation=reason=="CONFIRMED_PIVOT")
+            predicate=("FORMATION" if reason=="CONFIRMED_PIVOT" else
+                       "CLOSE_ONLY" if state=="BROKEN" else "WHOLE_CANDLE")
+            self.registry.publish(entry,"pool",self.timing[1],digest(self.rules.identity()),
+                family=pool.id,active=state=="ACTIVE",predicate=predicate,
+                dependencies=[item["id"] for item in pool.members]+
+                    ([pool.latest_revision[0]] if reason=="CONFIRMED_PIVOT" and pool.latest_revision else []),
+                coverage=self.timing[2] is not None and self.timing[2].kind!="unknown",lineage=True)
         self.pools.append(entry)
         if state in {"SWEPT","BROKEN","EXPIRED","INVALIDATED","UNCERTAIN"}:
             self.active.pop(pool.id)
@@ -134,13 +144,13 @@ class LiquidityStream:
             pool.latest_revision = (entry["id"], bar.time, available, provenance_id, fingerprint)
         return entry
 
-    def timing_contract(self,pool,bar,available,*,reason=None,close_only=False):
+    def timing_contract(self,pool,bar,available,*,reason=None,close_only=False, formation=False):
         cutoff,provenance,schedule=self.timing
-        dependency=pool.latest_revision[2] if pool.latest_revision else 0
-        references=[pool.latest_revision[0]] if pool.latest_revision else []
+        dependency=pool.latest_revision[2] if pool.latest_revision and not formation else 0
+        references=[pool.latest_revision[0]] if pool.latest_revision and not formation else []
         if reason is None and (schedule is None or schedule.kind=="unknown"):
             reason="UNKNOWN_COVERAGE"
-        if reason is None and not pool.recorded_dependencies:
+        if reason is None and (not pool.recorded_dependencies or not self.segment_recorded):
             reason="UNVERIFIED_AVAILABILITY"
         return timing_evidence(bar,self.step,available,dependency,cutoff,
             provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")).contract(
@@ -168,6 +178,10 @@ class LiquidityStream:
         return touched
 
     def observe(self,bar,available,index,gap,pivots,breaks,fingerprint,provenance_id):
+        if self.timing:
+            self.segment_recorded=(self.segment_recorded or bool(gap)) and bar.available_at==available
+            if bar.available_at!=available:
+                self.registry.gap("pool",digest(self.rules.identity()),self.timing[1],available)
         self.observation_index = index
         self.last_close = Decimal(str(bar.close))
         # Decisions use the pools available before this observation.
@@ -240,7 +254,10 @@ class LiquidityStream:
                               "algorithm_version":VERSION,"provenance_id":provenance_id,
                               "input_fingerprint":fingerprint}
                     if timing:
-                        crossing["timing"]=timing
+                        crossing["timing"]=dict(timing)
+                        self.registry.publish(crossing,"liquidity",self.timing[1],digest(self.rules.identity()),
+                            predicate="CLOSE_ONLY" if event_state=="BROKEN" else "WHOLE_CANDLE",
+                            coverage=self.timing[2] is not None and self.timing[2].kind!="unknown")
                     self.sweeps.append(crossing)
                     if event_state == "SWEPT" and self.on_confirmed_sweep is not None:
                         self.on_confirmed_sweep(crossing)

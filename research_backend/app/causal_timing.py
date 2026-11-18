@@ -43,7 +43,7 @@ class TemporalEvidence:
                 decision = "UNVERIFIED_AVAILABILITY"
         basis = ("UNVERIFIED_CANDLE_CLOSE_OR_DECLARED" if self.authority != "CHECKSUM_VERIFIED_ARCHIVE"
                  else "RECORDED" if self.recorded else "ASSUMED_CANDLE_CLOSE_OR_DEPENDENCY")
-        return {"timing_policy":"STRICT_CAUSAL", "timing_policy_version":2,
+        return {"timing_policy":"STRICT_CAUSAL", "timing_policy_version":3,
                 "observation_start":self.start, "observation_end":self.end,
                 "nominal_confirmation_time":self.end, "actual_availability":self.available,
                 "availability_basis":basis,
@@ -59,26 +59,7 @@ def evidence(bar, step, available, dependency, cutoff, authority):
                             dependency, cutoff, recorded, authority)
 
 
-def strategy_eligible(event, cutoff):
-    """Require known strict, complete, verified evidence at the consumer's own cutoff."""
-    if not isinstance(event, dict):
-        return False
-    timing = event.get("timing")
-    if not isinstance(timing, dict):
-        return False
-    available = timing.get("actual_availability")
-    state = event.get("state","")
-    if not isinstance(state,str):
-        return False
-    start,end,dependency=(timing.get(key) for key in
-        ("observation_start","observation_end","dependency_available_at"))
-    return (timing.get("timing_policy") == STRICT and timing.get("timing_policy_version") == 2
-            and timing.get("strategy_eligibility") == "ELIGIBLE"
-            and timing.get("availability_basis") == "RECORDED"
-            and timing.get("source_authority") == "CHECKSUM_VERIFIED_ARCHIVE"
-            and all(type(stamp) is int for stamp in (start,end,available,dependency,cutoff))
-            and 0 <= start <= end <= available <= cutoff and 0 <= dependency <= available
-            and timing.get("eligibility_reason") == "ELIGIBLE"
-            and event.get("status") not in {"provisional","invalidated"}
-            and state not in {"AMBIGUOUS","UNCERTAIN","EXPIRED","INVALIDATED","FORMING"}
-            and not state.endswith("_CANDIDATE"))
+
+def strategy_eligible(event, cutoff, *, registry=None, current=False):
+    """Only a publication in the current analytical request can satisfy eligibility."""
+    return registry is not None and registry.eligible(event, cutoff, current=current)

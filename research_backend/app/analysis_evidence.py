@@ -9,6 +9,7 @@ from time import perf_counter
 from types import MappingProxyType
 
 from .causal_timing import STRICT
+from .strategy_evidence import EvidenceRegistry
 from .structure_pages import EventPage, StructureDelivery
 
 CONTRACT_VERSION = 1
@@ -132,6 +133,7 @@ class AnalysisCoordinator:
         self.timings=Counter()
         self.work=0
         # Witnesses are side-channel evidence and must not alter public legacy events.
+        self.evidence = EvidenceRegistry(self.reserve) if request.timing_policy == STRICT else None
         self.witness=request.timing_policy==STRICT or any(s.id=="order_blocks" or s.crt and s.crt.include_context for s in request.indicators)
 
     def reserve(self,amount):
@@ -193,7 +195,7 @@ class AnalysisCoordinator:
             public=defaultdict(list)
             result=detector(rows,step,rules,scope,ZERO_STRUCTURE,snapshot_scope,
                             lambda *event:observations.append(event),local_witness=self.witness,
-                            public_event=lambda kind,event:public[kind].append(event))
+                            public_event=lambda kind,event:public[kind].append(event), registry=self.evidence)
             return result,observations,public
 
         key=(id(rows),step,rules.algorithm_version,canonical(rules.identity_parameters()),
@@ -201,7 +203,7 @@ class AnalysisCoordinator:
         spec=self.request.indicators[0]
         if len(self.request.indicators)==1 and not (spec.crt and spec.crt.include_context or spec.ob and spec.ob.include_context):
             return self.run("structure",key,rows,lambda:detector(
-                rows,step,rules,scope,delivery,snapshot_scope,consumer,local_witness=self.witness))
+                rows,step,rules,scope,delivery,snapshot_scope,consumer,local_witness=self.witness, registry=self.evidence))
         result, observations, public=self.run("structure",key,rows,calculate)
         if consumer is not None:
             for event in observations:
@@ -222,6 +224,7 @@ class AnalysisCoordinator:
 
     def diagnostics(self, results):
         return {"version":CONTRACT_VERSION,"executions":dict(self.counts),"reuse":dict(self.reuses),
+                "strategy_evidence":dict(self.evidence.counts) if self.evidence else {},
                 "archive":dict(self.archive.counts),"observation_work":self.work,
                 "estimated_evidence_bytes":self.reserved_bytes,
                 "calculation_ms":{key:round(value,3) for key,value in self.timings.items()},

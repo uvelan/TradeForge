@@ -326,7 +326,7 @@ def contextual_reference(indicator,event,observed,provenance,configuration,snaps
     }
 
 
-def build_crt_context(structure_events,products,level_sets):
+def build_crt_context(structure_events,products,level_sets,registry=None):
     index=EvidenceIndex()
     names={"fvg":"fair_value_gap","liquidity_sweep":"liquidity_sweeps","order_block":"order_blocks"}
     for category,events,source,configuration,snapshot in products:
@@ -346,7 +346,13 @@ def build_crt_context(structure_events,products,level_sets):
     for name, product in level_sets.items():
         for reference in product["level_observations"]:
             index.add(name+"_"+reference["label"].lower(),reference)
-    return index.finish().as_of
+    index.finish()
+    if registry is None:
+        return index.as_of
+    def current_context(cutoff, observed):
+        return {key:event for key,event in index.as_of(cutoff,observed).items()
+                if key not in {"order_block","fvg"} or registry.current_at(event["id"],cutoff)}
+    return current_context
 
 
 def evaluate(request: Evaluation, history_loader=None) -> dict:
@@ -397,7 +403,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
         include={"source", "symbol", "timeframe", "dataset_id", "feed_id", "price_basis", "partitions"})
     selected={spec.id:spec for spec in request.indicators}
     strict=request.timing_policy==STRICT
-    timing_provenance={"timing_policy":STRICT,"timing_policy_version":2} if strict else {}
+    timing_provenance={"timing_policy":STRICT,"timing_policy_version":3} if strict else {}
 
     def resolved(rule):
         history,evidence=resolve_history(request,rows,step,rule,history_loader)
@@ -411,7 +417,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
 
     def structure_key(rule):
         key=[rule.algorithm_version,rule.identity_parameters()]
-        return [STRICT,2,*key] if strict else key
+        return [STRICT,3,*key] if strict else key
 
     def product_key(history,provenance,*rules):
         return (id(history),canonical(provenance),*(canonical(rule) for rule in rules))
@@ -431,7 +437,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                     delivery=public.fvg_delivery or FVGDelivery()
             formations=[]
             result=evaluate_fvg(history,step,request.cutoff,rules,delivery,provenance,request.frozen,
-                                on_formation=formations.append if track_context else None)
+                                on_formation=formations.append if track_context else None, registry=coordinator.evidence)
             return result,formations
         return coordinator.run("fvg",key,history,calculate_fvg)
 
@@ -449,7 +455,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                                     (public.liquidity or LiquidityRules()).identity()):
                     delivery=public.liquidity_delivery or LiquidityDelivery()
             liquid=LiquidityStream(rules,delivery,step,on_confirmed_sweep=sweeps.append if track_context else None,
-                                   timing=(request.cutoff,provenance,structure.market_schedule) if strict else None)
+                                   timing=(request.cutoff,provenance,structure.market_schedule) if strict else None, registry=coordinator.evidence)
             detected=structure_result(history,structure,provenance,StructureDelivery(pivot_limit=0,break_limit=0),liquid.observe)
             return liquid.finish(detected["event_page"]["snapshot"],detected["provenance_id"]),sweeps,detected
         return coordinator.run("liquidity",key,history,calculate_liquidity)
@@ -493,7 +499,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             forms=[]
             stream=OrderBlockStream(rules,structure,provenance,step,delivery,
                                     on_formation=forms.append if track_context else None,
-                                    timing_cutoff=request.cutoff if strict else None)
+                                    timing_cutoff=request.cutoff if strict else None, registry=coordinator.evidence)
             consumer=stream.observe
             metadata=None
             if rules.include_context:
@@ -508,12 +514,12 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                 f_index=EvidenceIndex()
                 l_index=EvidenceIndex()
                 for event in f_events:
-                    if strict and not strategy_eligible(event,request.cutoff):
+                    if strict and not strategy_eligible(event,request.cutoff,registry=coordinator.evidence):
                         continue
                     f_index.add("fvg",contextual_reference("fair_value_gap",event,event["c_time"],f_source,
                                       f_config,f_result["fvg_page"]["snapshot"],witness=event["fvg_id"]))
                 for event in l_events:
-                    if strict and not strategy_eligible(event,request.cutoff):
+                    if strict and not strategy_eligible(event,request.cutoff,registry=coordinator.evidence):
                         continue
                     ref=contextual_reference("liquidity_sweeps",event,event["observation_time"],l_source,
                                               l_config,l_result["liquidity_page"]["snapshot"])
@@ -533,6 +539,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                     limit=observed if strict else available
                     f=f_index.as_of(limit,observed).get("fvg")
                     l=l_index.as_of(limit,observed).get("sweep")
+                    if strict and f and not coordinator.evidence.current_at(f["id"],limit):
+                        f=None
                     return {"fvg":{**f,"id":f["witness_id"]} if f else None,"liquidity_sweep":l,
                             "status":"AVAILABLE" if f or l else "DEPENDENCY_UNAVAILABLE" if failures else "NO_AVAILABLE_CONTEXT"}
                 stream.context_lookup=context_at
@@ -702,12 +710,12 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
         if strict:
             metadata["strategy_context_policy"]="ONLY_ELIGIBLE_AT_OBSERVATION_OPEN"
             metadata["excluded_unattested_levels"]=list(levels)
-            s_refs=[item for item in s_refs if strategy_eligible(item[1],request.cutoff)]
-            products=[(name,[event for event in events if strategy_eligible(event,request.cutoff)],source,config,snapshot)
+            s_refs=[item for item in s_refs if strategy_eligible(item[1],request.cutoff,registry=coordinator.evidence)]
+            products=[(name,[event for event in events if strategy_eligible(event,request.cutoff,registry=coordinator.evidence)],source,config,snapshot)
                       for name,events,source,config,snapshot in products]
             # Level observations lack trusted availability attestations for the caller input.
             levels={}
-        return build_crt_context(s_refs,products,levels),metadata
+        return build_crt_context(s_refs,products,levels,coordinator.evidence),metadata
 
     results = []
     for spec in request.indicators:
@@ -782,7 +790,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                     context,metadata=crt_context(spec,rules,crt_rows,provenance)
             output=coordinator.run("crt",spec.id,crt_rows,lambda:evaluate_crt(
                 [] if failed else crt_rows,step,request.cutoff,frame,rules,spec.crt_delivery or CRTDelivery(),
-                provenance,native,context=context,context_snapshot=digest(metadata) if metadata is not None else None))
+                provenance,native,context=context,context_snapshot=digest(metadata) if metadata is not None else None, registry=coordinator.evidence))
             result={"id":spec.id,"version":1,"render":"markers","series":{},"warmup_bars":None,
                     "parameters":rules.model_dump(),"provenance":provenance,**output}
             if metadata is not None:
@@ -834,7 +842,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
             parameters["period"]=result["period"]
         dep=dependencies.get(result["id"],("candles",))
         if strict and result["id"] in dependencies:
-            parameters["timing_policy"]={"mode":STRICT,"version":2}
+            parameters["timing_policy"]={"mode":STRICT,"version":3}
         if "context_configuration" in result:
             parameters["context"]={key:value for key,value in result["context_configuration"].items()
                                    if key not in {"status","failures","dependency_snapshots"}}
@@ -881,7 +889,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                 "eligibility":"closed_and_available_before_interaction",
             }
     for result in results:
-        result["analysis"].update(timing_policy=request.timing_policy,timing_policy_version=2 if strict else 1)
+        result["analysis"].update(timing_policy=request.timing_policy,timing_policy_version=3 if strict else 1)
         if strict and result.get("provenance",{}).get("status"):
             result["analysis"]["strategy_eligibility"]=result["provenance"]["status"]
         if not strict:

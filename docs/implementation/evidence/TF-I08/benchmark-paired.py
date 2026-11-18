@@ -65,7 +65,7 @@ def working_set():
 def pair(label, versions, args):
     contexts=[]
     for name,engine,loader,http in versions:
-        params={**args,"timing_policy":"STRICT_CAUSAL"} if name=="strict" else args
+        params={**args,"timing_policy":"STRICT_CAUSAL"} if name=="strict" or "--causal-integrity" in sys.argv else args
         request=engine.Evaluation.model_validate(params)
         contexts.append((name,lambda e=engine,r=request,l=loader:e.evaluate(r,l),
                          http,request.model_dump_json(exclude_unset=True)))
@@ -97,7 +97,7 @@ def pair(label, versions, args):
         stats=["{:.2f}/{:.2f}".format(median(x),sorted(x)[ceil(len(x)*.95)-1]) for x in timings[name]]
         size,diag=results[name]
         print(f"{label} | {name} | calc {stats[0]} | JSON {stats[1]} | API {stats[2]} | "
-              f"bytes {size} | peak {peak/1024:.1f} KiB | RSS {rss_before:.0f}->{rss_after:.0f} KiB | {diag.get('executions',{})} | {diag.get('archive',{})}",flush=True)
+              f"bytes {size} | peak {peak/1024:.1f} KiB | RSS {rss_before:.0f}->{rss_after:.0f} KiB | {diag.get('executions',{})} | {diag.get('archive',{})} | evidence {diag.get('strategy_evidence',{})}",flush=True)
 
 
 def overlap_fixture(versions, storage):
@@ -143,7 +143,7 @@ def main():
         print("Windows, same process, alternating run order. 12 samples per version, P50/P95 in milliseconds.",flush=True)
         common={"symbol":"EURUSD","timeframe":"M5","feed_id":"demo-v1","price_basis":"SIMULATED",
                 "source":"DEMO","cutoff":START+600000,"candles":dataset(2000)}
-        if "--causal" in sys.argv:
+        if "--causal" in sys.argv or "--causal-integrity" in sys.argv:
             causal_bench(versions,stores[-1],common)
             return
         pair("2,000 standalone CRT",versions,{**common,"indicators":specifications(combined=False)})
@@ -172,18 +172,21 @@ def main():
 
 
 def causal_bench(versions,storage,common):
-    versions=[*versions,("strict",*versions[-1][1:])]
-    combined=specifications()
-    pair("2,000 caller combined",versions,{**common,"indicators":combined})
-    pair("2,000 caller context",versions,{**common,"indicators":specifications(context=True)})
-    pair("2,000 standalone previous-day",versions[:2],{**common,"load_reference":True,
-         "indicators":[{"id":"previous_day"}]})
-    delayed=[{**bar,"available_at":bar["time"]+300+(750 if i%11==0 else 120 if i%2 else 0)}
-             for i,bar in enumerate(common["candles"])]
-    pair("2,000 delayed and out-of-order",versions,{**common,"candles":delayed,"indicators":combined})
-    for count,label in ((1300,"rewind"),(1320,"advance")):
-        pair("Replay "+label,versions,{**common,"candles":delayed[:count],
-             "cutoff":START+count*300,"frozen":True,"indicators":combined})
+    if "--causal-integrity" in sys.argv:
+        pair("2,000 strict caller context",versions,{**common,"indicators":specifications(context=True)})
+    else:
+        versions=[*versions,("strict",*versions[-1][1:])]
+        combined=specifications()
+        pair("2,000 caller combined",versions,{**common,"indicators":combined})
+        pair("2,000 caller context",versions,{**common,"indicators":specifications(context=True)})
+        pair("2,000 standalone previous-day",versions[:2],{**common,"load_reference":True,
+             "indicators":[{"id":"previous_day"}]})
+        delayed=[{**bar,"available_at":bar["time"]+300+(750 if i%11==0 else 120 if i%2 else 0)}
+                 for i,bar in enumerate(common["candles"])]
+        pair("2,000 delayed and out-of-order",versions,{**common,"candles":delayed,"indicators":combined})
+        for count,label in ((1300,"rewind"),(1320,"advance")):
+            pair("Replay "+label,versions,{**common,"candles":delayed[:count],
+                 "cutoff":START+count*300,"frozen":True,"indicators":combined})
     records=[{**bar,"available_at":bar["time"]+300} for bar in dataset(10000)]
     manifest=[]
     for offset in range(0,len(records),2000):

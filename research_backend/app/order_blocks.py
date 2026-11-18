@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, FiniteFloat
 
+from .strategy_evidence import EvidenceRegistry
 from .causal_timing import evidence as timing_evidence, strategy_eligible
 from .fvg import identity
 from .structure_pages import EventPage
@@ -68,11 +69,14 @@ class Block:
 
 
 class OrderBlockStream:
-    def __init__(self, rules, structure, provenance, step, delivery, *, on_formation=None, timing_cutoff=None):
+    def __init__(self, rules, structure, provenance, step, delivery, *, on_formation=None, timing_cutoff=None, registry=None):
         self.on_formation = on_formation
         self.timing_cutoff = timing_cutoff
+        self.registry = registry if registry is not None else EvidenceRegistry()
+        self.timing_scope = provenance
+        self.segment_recorded = True
         self.timing_authority = provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")
-        self.policy = (*POLICY,"STRICT_CAUSAL",2) if timing_cutoff is not None else POLICY
+        self.policy = (*POLICY,"STRICT_CAUSAL",3) if timing_cutoff is not None else POLICY
         self.context_lookup = None
         self.rules = rules
         self.structure = structure
@@ -150,10 +154,17 @@ class OrderBlockStream:
         if self.timing_cutoff is not None:
             decision=timing_reason or ("EXPIRED_REFERENCE" if state=="EXPIRED" else
                 "INSUFFICIENT_HISTORY" if state=="INVALIDATED" else
-                "UNVERIFIED_AVAILABILITY" if not zone.formation["timing_recorded"] else None)
+                "UNVERIFIED_AVAILABILITY" if not zone.formation["timing_recorded"] or not self.segment_recorded else None)
             barrier=zone.formation["first_visibility_time"] if prior else 0
             event["timing"]=timing_evidence(bar,self.step,available,barrier,self.timing_cutoff,
-                self.timing_authority).contract(reason=decision,references=[prior["id"]] if prior else [zone.formation["bos_id"]])
+                self.timing_authority).contract(reason=decision,references=[zone.formation["activation_id"]] if prior else [zone.formation["bos_id"]])
+            if not prior:
+                zone.formation["activation_id"]=event["id"]
+            self.registry.publish(event,"order_block",self.timing_scope,self.config,family=zone.id,
+                active=state in {"ACTIVE","TOUCHED","PARTIALLY_MITIGATED"},
+                predicate="WHOLE_CANDLE" if prior else "FORMATION",
+                dependencies=[prior["id"]] if prior else [],
+                coverage=self.structure.market_schedule is not None and self.structure.market_schedule.kind!="unknown")
         if self.timing_cutoff is not None and prior:
             zone.formation["timing_recorded"] &= bar.available_at == available
         zone.latest = event
@@ -227,7 +238,7 @@ class OrderBlockStream:
     def form(self, event, bar, available, index):
         if event["status"] != "confirmed" or event["type"] not in {"BOS", "CHOCH"}:
             return
-        if self.timing_cutoff is not None and (not strategy_eligible(event, self.timing_cutoff) or
+        if self.timing_cutoff is not None and (not strategy_eligible(event, self.timing_cutoff, registry=self.registry) or
                 self.minimum_displacement and bar.time<event["level_available_at"]):
             self.rejections["INELIGIBLE_STRUCTURAL_DEPENDENCY"] += 1
             return
@@ -287,6 +298,10 @@ class OrderBlockStream:
             for heap in self.by_price.values():
                 heap.clear()
             self.expiry.clear()
+        if self.timing_cutoff is not None:
+            self.segment_recorded = (self.segment_recorded or bool(gap)) and bar.available_at==available
+            if bar.available_at!=available:
+                self.registry.gap("order_block",self.config,self.timing_scope,available)
         self.advance(bar, available, index)
         for event in breaks:
             self.form(event, bar, available, index)

@@ -8,14 +8,22 @@ from research_backend.app.crt import CRTRules, CRTDelivery, evaluate_crt
 from research_backend.app.fvg import FVGDelivery, FVGRules, evaluate_fvg
 from research_backend.app.indicator_coverage import MarketSchedule
 from research_backend.app.indicator_engine import EvidenceBar, Evaluation, evaluate
-from research_backend.app.liquidity import LiquidityDelivery, LiquidityRules, LiquidityStream, Pool
+from research_backend.app.liquidity import digest, LiquidityDelivery, LiquidityRules, LiquidityStream, Pool
 from research_backend.app.market_structure import StructureRules, detect_structure
 from research_backend.app.order_blocks import Block, OrderBlockDelivery, OrderBlockRules, OrderBlockStream
+from research_backend.app.strategy_evidence import EvidenceRegistry
 from research_backend.app.structure_pages import StructureDelivery
 
-ARCHIVE={"source":"MT5_SAVED","symbol":"EURUSD","price_basis":"BID","feed_id":"fixture",
-         "context_authority":"CHECKSUM_VERIFIED_ARCHIVE","timing_policy":"STRICT_CAUSAL","timing_policy_version":2}
+ARCHIVE={"source":"MT5_SAVED","symbol":"EURUSD","timeframe":"M5","price_basis":"BID","feed_id":"fixture",
+         "context_authority":"CHECKSUM_VERIFIED_ARCHIVE","timing_policy":"STRICT_CAUSAL","timing_policy_version":3}
 OPEN=MarketSchedule(kind="continuous")
+
+
+def canonical_seed(event_id,available,*,kind=None,state=None,dependency=0,refs=(),recorded=True):
+    timing=TemporalEvidence(available-300,available,available,dependency,3000,recorded,
+                            "CHECKSUM_VERIFIED_ARCHIVE").contract(close_only=kind=="BOS",references=refs)
+    return {"id":event_id,"type":kind,"state":state,"status":"confirmed","algorithm_version":1,
+            "confirmation_time":available,"available_at":available,"timing":timing}
 
 
 def bar(start, values=(100,101,99,100), available=None):
@@ -35,7 +43,8 @@ def test_temporal_boundaries(start,dependency,available,cutoff,close_only,expect
     time=TemporalEvidence(start,start+300,available,dependency,cutoff,True,"CHECKSUM_VERIFIED_ARCHIVE")
     assert time.interaction(close_only=close_only)==expected
     item={"timing":time.contract(close_only=close_only),"status":"confirmed"}
-    assert strategy_eligible(item,cutoff) == (expected=="ELIGIBLE")
+    assert item["timing"]["strategy_eligibility"] == expected
+    assert not strategy_eligible(item,cutoff)
     assert not strategy_eligible({**item,"status":"provisional"},cutoff)
     assert not strategy_eligible(item,available-1)
 
@@ -53,9 +62,9 @@ def test_consumer_fails_closed_for_unknown_unrecorded_and_legacy():
         TemporalEvidence(0,300,299,0,300,True,"CHECKSUM_VERIFIED_ARCHIVE")
 
 
-def structure(rows, cutoff=3000, scope=ARCHIVE):
+def structure(rows, cutoff=3000, scope=ARCHIVE, registry=None):
     return detect_structure(rows,300,StructureRules(left=1,right=1,algorithm_version=2,
-        market_schedule=OPEN),scope,StructureDelivery(),{"cutoff":cutoff},local_witness=True)
+        market_schedule=OPEN),scope,StructureDelivery(),{"cutoff":cutoff},local_witness=True,registry=registry)
 
 
 @pytest.mark.parametrize("availability,candle,expected", [
@@ -65,10 +74,11 @@ def structure(rows, cutoff=3000, scope=ARCHIVE):
 def test_structural_close_and_wick_have_distinct_time_boundaries(availability,candle,expected):
     rows=[bar(0),bar(300,(102,105,100,103)),bar(600,available=availability),
           bar(900,candle,available=max(1200,availability+1))]
-    result=structure(rows)
+    registry=EvidenceRegistry()
+    result=structure(rows,registry=registry)
     observation,=result["breaks"]
     assert (observation["type"],observation["break_time"],observation["level_price"])==(expected,900,105)
-    assert strategy_eligible(observation,3000)==(expected=="BOS")
+    assert strategy_eligible(observation,3000,registry=registry)==(expected=="BOS")
     if expected!="BOS":
         assert observation["state_after"]==observation["state_before"]
 
@@ -92,6 +102,8 @@ def test_liquidity_uses_latest_boundary_revision(start,close,expiry,expected,rea
     number=Decimal(100)
     pool=Pool("pool","HIGH",number,number,number,expiry,0,600,state="ACTIVE",activated_at=750)
     pool.latest_revision=("boundary-revision",600,1020,"p","e")
+    stream.registry.publish(canonical_seed("boundary-revision",1020,state="ACTIVE"),"pool",ARCHIVE,
+        digest(stream.rules.identity()),predicate="FORMATION")
     stream.active[pool.id]=pool
     stream.buckets[stream.bucket(pool.side,pool.anchor)]={pool.id}
     stream.index(pool)
@@ -107,7 +119,7 @@ def test_liquidity_uses_latest_boundary_revision(start,close,expiry,expected,rea
 
 
 def make_block():
-    return OrderBlockStream(OrderBlockRules(),StructureRules(),ARCHIVE,300,OrderBlockDelivery(),timing_cutoff=3000)
+    return OrderBlockStream(OrderBlockRules(),StructureRules(algorithm_version=2,market_schedule=OPEN),ARCHIVE,300,OrderBlockDelivery(),timing_cutoff=3000)
 
 
 @pytest.mark.parametrize("start,values,expiry,state,eligible", [
@@ -119,17 +131,20 @@ def make_block():
 def test_order_block_wick_lifecycle(start,values,expiry,state,eligible):
     engine=make_block()
     zone=Block("block",1,Decimal(95),Decimal(100),expiry,{"first_visibility_time":1020,
-        "formation_fingerprint":"fixture","timing_recorded":True,"bos_id":"break"})
+        "formation_fingerprint":"fixture","timing_recorded":True,"bos_id":"break","algorithm_version":1})
     engine.book[zone.id]=zone
     engine.put(zone)
-    engine.publish(zone,"ACTIVE","CONFIRMED_BOS",bar(600)[0],1020)
+    engine.registry.publish(canonical_seed("pivot",600,kind="PIVOT"),"structure",ARCHIVE,"test-structure",predicate="FORMATION")
+    engine.registry.publish(canonical_seed("break",1020,kind="BOS",dependency=600,refs=["pivot"]),
+        "structure",ARCHIVE,"test-structure",predicate="CLOSE_ONLY")
+    engine.publish(zone,"ACTIVE","CONFIRMED_BOS",bar(600,available=1020)[0],1020)
     heappush(engine.expiry,(expiry,zone.id))
     candle,stamp=bar(start,values)
     engine.advance(candle,stamp,2)
     event,=engine.revisions.events
     assert event["state"]==state
     assert event["timing"]["dependency_available_at"]==1020
-    assert strategy_eligible(event,3000)==eligible
+    assert strategy_eligible(event,3000,registry=engine.registry)==eligible
 
 
 def test_order_block_rejects_unattested_structural_dependency():
@@ -198,7 +213,7 @@ def test_strict_api_caller_cannot_claim_verified_availability():
     legacy=evaluate(Evaluation.model_validate(data))["results"][0]
     assert strict["formations"][0]["timing"]["strategy_eligibility"]=="UNVERIFIED_SOURCE"
     assert legacy["analysis"]["strategy_eligibility"]=="RESEARCH_ONLY"
-    assert strict["analysis"]["timing_policy_version"]==2
+    assert strict["analysis"]["timing_policy_version"]==3
     assert legacy["analysis"]["timing_policy_version"]==1
     assert strict["analysis"]["configuration_fingerprint"]!=legacy["analysis"]["configuration_fingerprint"]
 
@@ -208,12 +223,12 @@ def test_complete_eligible_structure_can_form_order_block():
           bar(900,(100,108,99,107))]
     engine=make_block()
     detect_structure(rows,300,StructureRules(left=1,right=1,algorithm_version=2,market_schedule=OPEN),
-                     ARCHIVE,StructureDelivery(),{"cutoff":3000},engine.observe,local_witness=True)
+                     ARCHIVE,StructureDelivery(),{"cutoff":3000},engine.observe,local_witness=True, registry=engine.registry)
     event,=engine.formations.events
     assert (event["candidate_time"],event["lower"],event["upper"])==(300,100,105)
     assert event["timing"]["required_dependencies"]==[event["bos_id"]]
-    assert strategy_eligible(event,1199) is False
-    assert strategy_eligible(event,1200) is True
+    assert strategy_eligible(event,1199,registry=engine.registry) is False
+    assert strategy_eligible(event,1200,registry=engine.registry) is True
 
 
 def test_strict_forex_closure_preserves_state_across_missing_weekend_slots():

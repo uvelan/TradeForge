@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
+from .strategy_evidence import EvidenceRegistry
 from .causal_timing import TemporalEvidence, evidence as timing_evidence
 from .fvg import identity
 from .indicator_coverage import MarketSchedule, inspect_window
@@ -132,15 +133,17 @@ def references(rows, cutoff, step, frame, rules, native, quality, *, strict=Fals
 TERMINAL={"AMBIGUOUS","INVALIDATED","EXPIRED","OPPOSITE_BOUNDARY_REACHED","UNCERTAIN"}
 
 
-def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_rows=(), *, context=None, context_snapshot=None):
+def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_rows=(), *, context=None, context_snapshot=None, registry=None):
     scope={key:provenance.get(key) for key in ("source","symbol","timeframe","feed_id","dataset_id","price_basis")}
     market=identity("crt-market",scope,frame,step)
     strict=provenance.get("timing_policy")=="STRICT_CAUSAL"
+    if strict and registry is None:
+        registry=EvidenceRegistry()
     authority=provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")
     if strict and rules.reference_mode=="native" and provenance.get(
             "native_reference",{}).get("context_authority")!="CHECKSUM_VERIFIED_ARCHIVE":
         authority="MIXED_OBSERVATION_AND_REFERENCE"
-    policy=(VERSION,IDENTITY_VERSION,"STRICT_CAUSAL",2) if strict else (VERSION,IDENTITY_VERSION)
+    policy=(VERSION,IDENTITY_VERSION,"STRICT_CAUSAL",3) if strict else (VERSION,IDENTITY_VERSION)
     config=identity("crt-rules",policy,rules.model_dump(exclude={
         "history_bars","history_start","reference_start","include_context"}),frame)
     snapshot=sha256(identity("crt-snapshot",policy,rules.model_dump(),cutoff,provenance).encode())
@@ -188,7 +191,14 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
             timing=timing_evidence(bar,step,available,barrier,cutoff,authority) if bar else TemporalEvidence(
                 observed,confirmed,available,0,cutoff,zone.get("recorded",False),authority)
             event["timing"]=timing.contract(reason=eligible_reason,
-                references=[prior["id"]] if prior else [])
+                references=[zone["activation_id"]] if bar else [])
+            if not prior:
+                zone["activation_id"]=event["id"]
+            registry.publish(event,"crt",provenance,config,family=zone["range_id"],
+                             active=state not in TERMINAL,predicate="WHOLE_CANDLE" if bar else "AGGREGATED_REFERENCE",
+                             dependencies=[prior["id"]] if prior else [],coverage=rules.market_schedule.kind!="unknown")
+            if bar:
+                zone["recorded"] &= bar.available_at==available
         zone["latest"]=event
         if state in TERMINAL:
             del book[zone["range_id"]]
@@ -243,6 +253,9 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
                 if strict and bar.time+step>zone["base"]["reference_available_at"] and (high>h or low<l):
                     publish(zone,"UNCERTAIN","STRADDLING_OBSERVATION",available,bar)
                 continue
+            if strict and bar.available_at!=available:
+                zone["recorded"]=False
+                registry.gap("crt",config,provenance,available)
             zone["age"]+=1
             if zone["age"]>=rules.max_age or (zone["candidate_due"] is not None and index>=zone["candidate_due"]):
                 publish(zone,"EXPIRED","CANDIDATE_AGE" if zone["candidate_due"] is not None and index>=zone["candidate_due"]
@@ -298,6 +311,7 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
                 publish(zone,side+"_SWEPT_RECLAIMED","SAME_CANDLE_RECLAIM",available,bar,**details)
                 if strict:
                     zone["interaction_barrier"]=available
+                    zone["activation_id"]=zone["latest"]["id"]
                     zone["recorded"] &= bar.available_at==available
             else:
                 zone["candidate_due"]=index+rules.candidate_age
