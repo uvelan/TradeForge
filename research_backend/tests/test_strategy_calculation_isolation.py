@@ -147,3 +147,39 @@ def test_v3_fvg_cursor_is_stale_for_reference_v1():
     rules=FVGRules(market_schedule=OPEN,history_bars=10000,history_start=36000)
     with pytest.raises(StaleStructureCursor):
         evaluate_fvg(unrecorded_rows(),300,39900,rules,FVGDelivery(formation_cursor=cursor),ARCHIVE,True)
+
+
+@pytest.mark.parametrize("policy,executions",[("independent",2),("shared",1)])
+def test_archived_standalone_ob_and_crt_are_order_independent(client,policy,executions):
+    history=[unrecorded_rows()[0],bar(36300),bar(36600,(104,105,100,102)),
+             bar(36900,available=37320),bar(37200,(100,108,99,107)),
+             *[bar(t,(104,106,102,104)) for t in range(37500,39900,300)]]
+    archive=storage.write_partition("MT5","overlap-ob","EURUSD","candles","M5","BID",
+                                    [c.model_dump() for c,_ in history])
+    schedule={"kind":"continuous"}
+    late={"history_bars":10000,"history_start":36300,"market_schedule":schedule,
+          "algorithm_version":2,"left":1,"right":1}
+    early={**late,"history_start":36000}
+    context={"policy":policy}
+    if policy=="independent":
+        context["structure"]=early
+    indicators=[{"id":"order_blocks","structure":late},
+                {"id":"candle_range_theory","context":context,"crt":{
+                    "include_context":True,"history_bars":10000,"history_start":36000,"market_schedule":schedule}}]
+    request=dict(source="MT5_SAVED",symbol="EURUSD",feed_id="overlap-ob",timeframe="M5",
+                 price_basis="BID",cutoff=39900,frozen=True,candles=[],timing_policy="STRICT_CAUSAL",
+                 partitions=[{k:archive[k] for k in ("id","sha256")}])
+    results=[]
+    for ordering in (indicators,indicators[::-1]):
+        response=client.post("/api/indicators/evaluate",json={**request,"indicators":ordering})
+        assert response.status_code==200,response.text
+        result=response.json()
+        assert result["diagnostics"]["executions"]["order_blocks"]==executions
+        items={item["id"]:item for item in result["results"]}
+        results.append(items)
+        event=next(e for e in items["order_blocks"]["ob_formations"] if e["available_at"]==37500)
+        assert (event["lower"],event["upper"])==(100,105)
+        assert event["timing"]["strategy_eligibility"]=="ELIGIBLE"
+        assert event["timing"]["dependency_references"][event["bos_id"]]==event["structure_evidence_reference"]
+        assert event["structure_evidence_reference"]["calculation_snapshot"]!=event["evidence_reference"]["calculation_snapshot"]
+    assert results[0]==results[1]
