@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from hashlib import sha256
 import json
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 VERSION = 3
 REFERENCE_VERSION = 1
@@ -18,8 +18,11 @@ STATES = {
     "fvg": {"ACTIVE", "PARTIALLY_MITIGATED", "FULLY_MITIGATED"},
     "crt": {"ACTIVE", "HIGH_SWEPT_RECLAIMED", "LOW_SWEPT_RECLAIMED",
             "EXPANSION_OBSERVED", "OPPOSITE_BOUNDARY_REACHED"},
+    "smt_pivot": {"CONFIRMED"},
+    "smt": {"SMT_CONFIRMED"},
 }
-LINEAGE = {"pool": {"FORMING", "SWEEP_CANDIDATE"}}
+LINEAGE = {"pool": {"FORMING", "SWEEP_CANDIDATE"}, "smt": {"SMT_CANDIDATE"}}
+SMT_SIDES = ("primary", "comparison")
 
 
 def fingerprint(payload):
@@ -44,6 +47,7 @@ class EvidenceReference(TypedDict):
     source: list[str | None]
     available_at: int
     source_authority: str
+    participants: NotRequired[dict[str, list[str | None]]]
 
 
 @dataclass(frozen=True,slots=True)
@@ -71,6 +75,7 @@ class EvidenceRegistry:
         self.counts = Counter() if root is None else root.counts
         self.gaps = defaultdict(list)
         self.producer_snapshots = {}
+        self.smt_producers = None
 
     def calculation(self, engine, configuration, source, history_fingerprint, cutoff):
         calculation_id = fingerprint([REFERENCE_VERSION,engine,configuration,source])
@@ -84,6 +89,19 @@ class EvidenceRegistry:
         existing=self.producer_snapshots.setdefault(category,producer.snapshot)
         if existing != producer.snapshot:
             raise ValueError("Multiple producer calculations for one evidence dependency category")
+
+    def pin_smt_producers(self, primary, comparison, participants):
+        sources = {side: tuple(participants[side].get(key) for key in SOURCE_FIELDS) for side in SMT_SIDES}
+        if (not self.snapshot or primary.root is not self.root or comparison.root is not self.root
+                or len({self.snapshot, primary.snapshot, comparison.snapshot}) != 3
+                or not primary.snapshot or not comparison.snapshot
+                or sources["primary"][1] == sources["comparison"][1]):
+            raise ValueError("SMT requires two independent producer calculations")
+        binding = {side: (producer.snapshot, sources[side])
+                   for side, producer in zip(SMT_SIDES, (primary, comparison))}
+        if self.smt_producers is not None and self.smt_producers != binding:
+            raise ValueError("Conflicting SMT producer binding")
+        self.smt_producers = binding
 
     def resolve(self, reference):
         if not isinstance(reference,dict):
@@ -128,7 +146,9 @@ class EvidenceRegistry:
             ("FORMATION" if kind == "PIVOT" else "CLOSE_ONLY") if category == "structure" else
             "CLOSE_ONLY" if category in {"liquidity","pool"} and state == "BROKEN" else
             "AGGREGATED_REFERENCE" if category == "crt" and state == "ACTIVE" else
-            "FORMATION" if category == "pool" and state in {"ACTIVE","FORMING"} or
+            "FORMATION" if category == "smt_pivot" or category == "smt" and state == "SMT_CANDIDATE" or
+                          category == "smt" and state == "SMT_CONFIRMED" and event.get("confirmation_bars") == 0 or
+                          category == "pool" and state in {"ACTIVE","FORMING"} or
                           category in {"order_block","fvg"} and state == "ACTIVE" else "WHOLE_CANDLE")
         shape = (version_valid and isinstance(event_id,str) and bool(event_id) and predicate in ACTIVATION and predicate == expected and isinstance(config,str) and bool(config)
                  and all(isinstance(value,str) and value for value in source[:-1]) and (source[-1] is None or isinstance(source[-1],str))
@@ -146,7 +166,16 @@ class EvidenceRegistry:
                 pinned.setdefault(reference["event_id"], []).append(reference)
         resolved={}
         ambiguous=set()
-        for dependency in required:
+        smt_binding = self.smt_producers if category == "smt" else None
+        if smt_binding:
+            for reference in producer_references:
+                record = self.resolve(reference)
+                if record is None or record.category != "smt_pivot" or not record.eligible:
+                    continue
+                for side, binding in smt_binding.items():
+                    if (reference["calculation_snapshot"], record.scope) == binding:
+                        resolved[f"{side}:{reference['event_id']}"] = record
+        for dependency in (() if smt_binding else required):
             references=pinned.get(dependency, ())
             if references:
                 if any(ref != references[0] for ref in references[1:]):
@@ -159,9 +188,16 @@ class EvidenceRegistry:
             else:
                 resolved[dependency]=self.records.get(dependency)
         compatible = not ambiguous
+        if category == "smt":
+            compatible = bool(smt_binding and len(required) == len(producer_references) == 4
+                              and set(required) == set(resolved)
+                              and all(sum(key.startswith(side + ":") for key in required) == 2
+                                      for side in SMT_SIDES))
+        elif category == "smt_pivot":
+            compatible = not required and not producer_references
         allowed_parents = {"order_block":{"structure"}, "pool":{"structure"}, "liquidity":{"pool"}}
         activation = timing["required_dependencies"]
-        if supported and predicate in {"WHOLE_CANDLE","CLOSE_ONLY"}:
+        if supported and predicate in {"WHOLE_CANDLE","CLOSE_ONLY"} and category != "smt":
             compatible = compatible and bool(activation) and max(
                 (resolved[key].available if resolved.get(key) else -1 for key in activation), default=-1
             ) == barrier
@@ -171,9 +207,10 @@ class EvidenceRegistry:
             # Parent engine configurations may differ from a dependent engine. The edge
             # explicitly pins the resolved configuration for such cross-engine dependencies.
             compatible &= bool(dependency != event_id and known and known.attested and
-                               known.available <= available and known.scope == source and
-                               (known.category in allowed_parents.get(category, ())
-                                or known.category == category and known.config == config))
+                               (known.available <= barrier if smt_binding else known.available <= available) and
+                               (smt_binding or known.scope == source and
+                                (known.category in allowed_parents.get(category, ())
+                                 or known.category == category and known.config == config)))
         if self.snapshot is None:
             timing["dependency_configurations"] = {
                 key:record.config for key,record in resolved.items() if record
@@ -200,11 +237,15 @@ class EvidenceRegistry:
                        "calculation_id":self.calculation_id,"calculation_snapshot":self.snapshot,
                        "configuration":config,"source":list(source),"available_at":available,
                        "source_authority":timing["source_authority"]}
+            if smt_binding:
+                reference["participants"] = {side: list(source) for side, (_, source) in smt_binding.items()}
             event["evidence_reference"]=reference
         summary = Summary(self.signature(event),source,config,category,family,available,attested,eligible,reference)
         if reference is not None:
             # Registry state must not alias mutable response projections.
             reference={**reference,"source":list(source)}
+            if smt_binding:
+                reference["participants"] = {side: list(source) for side, (_, source) in smt_binding.items()}
             summary=Summary(summary.signature,source,config,category,family,available,attested,eligible,reference)
         existing = self.records.get(event_id)
         if existing is not None:

@@ -500,7 +500,11 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             <RefreshCw size={15}/> Refresh SMT data
           </button>}
           <SmtMonitor watch={source==='MT5'&&compare&&validRules&&!replayActive
-            ? {primary_symbol:symbol,comparison_symbol:compare,timeframe,...rules} : undefined}/>
+            ? {primary_symbol:symbol,comparison_symbol:compare,timeframe,...rules} : undefined}
+            strict={compare&&validRules&&(source==='MT5_SAVED'||source==='DUKASCOPY_SAVED')
+              ? {primary:replayActive||!busy&&indicatorScope===loadedIndicatorScope ? firstFeed : undefined,
+                comparison:replayActive&&!replaySession?.views.comparison ? undefined : secondFeed,
+                timeframe,cutoff:indicatorCutoff,rules} : undefined}/>
           <small role="status">{smt.error || comparison.error || (smt.authority==='VERIFIED_MT5_CAPTURE'?'SMT · verified MT5 candles':smt.authority==='VERIFIED_SAVED_DATASET'?'SMT · verified archive evidence':smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
           {smt.alert?.confirmed_at&&<strong role="status">SMT_CONFIRMED · {smt.alert.direction} · {symbol} / {compare} · {new Date(smt.alert.confirmed_at*1000).toISOString()}</strong>}
           {smt.alert?.event_key&&onSignal&&<button className="small-tool" onClick={()=>void onSignal({

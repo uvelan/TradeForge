@@ -42,6 +42,26 @@ def pivots(bars, values, period, step):
     return result
 
 
+def signed_change(price, reference, sign):
+    return sign * (price - reference) / reference * 10_000
+
+
+def divergence_leader(primary, comparison, tolerance):
+    if primary > tolerance and comparison < -tolerance:
+        return "primary"
+    if comparison > tolerance and primary < -tolerance:
+        return "comparison"
+    return None
+
+
+def nearest_peer(times, target, window, next_peer):
+    lo = bisect_left(times, target - window, lo=next_peer)
+    hi = bisect_right(times, target + window, lo=lo)
+    if lo < hi:
+        return min(range(lo, hi), key=lambda index: (abs(times[index] - target), times[index]))
+    return None
+
+
 def detect_smt(primary: list[Bar], comparison: list[Bar], period: int, step: int, *,
                alignment_bars: int = 2, tolerance_bps: float = 0.5, confirmation_bars: int = 1) -> list[dict]:
     if not primary or not comparison:
@@ -66,11 +86,9 @@ def detect_smt(primary: list[Bar], comparison: list[Bar], period: int, step: int
             candidate_at = pivot.confirmed_at + window
             if candidate_at > cutoff:
                 break
-            lo = bisect_left(times, pivot.time - window, lo=next_peer)
-            hi = bisect_right(times, pivot.time + window, lo=lo)
-            if lo == hi:
+            match = nearest_peer(times, pivot.time, window, next_peer)
+            if match is None:
                 continue
-            match = min(range(lo, hi), key=lambda i: (abs(times[i] - pivot.time), times[i]))
             peer = peers[match]
             next_peer = match + 1
             prior = previous
@@ -78,17 +96,18 @@ def detect_smt(primary: list[Bar], comparison: list[Bar], period: int, step: int
             if prior is None:
                 continue
             prior_left, prior_right = prior
-            a = sign * (pivot.price - prior_left.price) / prior_left.price * 10_000
-            b = sign * (peer.price - prior_right.price) / prior_right.price * 10_000
-            if not (a > tolerance_bps and b < -tolerance_bps or b > tolerance_bps and a < -tolerance_bps):
+            a = signed_change(pivot.price, prior_left.price, sign)
+            b = signed_change(peer.price, prior_right.price, sign)
+            leader = divergence_leader(a, b, tolerance_bps)
+            if leader is None:
                 continue
-            primary_leads = a > tolerance_bps
+            primary_leads = leader == "primary"
             laggard_series, reference = (right, prior_right.price) if primary_leads else (left, prior_left.price)
             laggard_pivot = peer if primary_leads else pivot
 
             def broke_reference(bar: Bar) -> bool:
                 extreme = bar.high if high else bar.low
-                return sign * (extreme - reference) / reference * 10_000 > tolerance_bps
+                return signed_change(extreme, reference, sign) > tolerance_bps
 
             if any(broke_reference(bar) for timestamp, bar in laggard_series.items()
                    if laggard_pivot.time < timestamp < candidate_at):
@@ -106,7 +125,7 @@ def detect_smt(primary: list[Bar], comparison: list[Bar], period: int, step: int
                     transitions.append({"status": "SMT_CONFIRMED", "time": confirmed_at})
             events.append({
                 "id": f"{direction}:{prior_left.time}:{pivot.time}:{prior_right.time}:{peer.time}",
-                "direction": direction, "leader": "primary" if primary_leads else "comparison",
+                "direction": direction, "leader": leader,
                 "primary": {"previous": asdict(prior_left), "current": asdict(pivot)},
                 "comparison": {"previous": asdict(prior_right), "current": asdict(peer)},
                 "confirmed_at": confirmed_at, "status": transitions[-1]["status"], "transitions": transitions,
