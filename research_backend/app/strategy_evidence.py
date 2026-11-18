@@ -23,6 +23,14 @@ STATES = {
 }
 LINEAGE = {"pool": {"FORMING", "SWEEP_CANDIDATE"}, "smt": {"SMT_CANDIDATE"}}
 SMT_SIDES = ("primary", "comparison")
+SMT_CATEGORIES = {"smt_pivot", "smt_match", "smt"}
+SMT_ALGORITHM_VERSION = 2
+SMT_LINEAGE = {
+    "SMT_CANDIDATE": {None},
+    "SMT_CONFIRMED": {"SMT_CANDIDATE"},
+    "SMT_INVALIDATED": {"SMT_CANDIDATE", "SMT_CONFIRMED"},
+    "EXPIRED": {"SMT_CANDIDATE", "SMT_CONFIRMED"},
+}
 
 
 def fingerprint(payload):
@@ -61,13 +69,24 @@ class Summary:
     attested: bool
     eligible: bool
     reference: EvidenceReference | None = None
+    state: str | None = None
+    match: str | None = None
+    pivot_edges: tuple = ()
+
+
+@dataclass(frozen=True, slots=True)
+class SmtUncertainty:
+    start: int
+    reason: str
+    recovered_at: int | None = None
 
 
 class EvidenceRegistry:
-    def __init__(self, reserve=None, *, root=None, calculation_id=None, snapshot=None):
+    def __init__(self, reserve=None, *, root=None, calculation_id=None, snapshot=None, cutoff=None):
         self.root = root if root is not None else self
         self.calculation_id = calculation_id
         self.snapshot = snapshot
+        self.cutoff = cutoff
         self.calculations = {} if root is None else root.calculations
         self.reserve = reserve
         self.records = {}
@@ -76,13 +95,15 @@ class EvidenceRegistry:
         self.gaps = defaultdict(list)
         self.producer_snapshots = {}
         self.smt_producers = None
+        self.smt_lifecycle = defaultdict(list)
+        self.smt_uncertainty = {}
 
     def calculation(self, engine, configuration, source, history_fingerprint, cutoff):
         calculation_id = fingerprint([REFERENCE_VERSION,engine,configuration,source])
         snapshot = fingerprint([calculation_id,history_fingerprint,cutoff])
         if snapshot not in self.calculations:
             self.calculations[snapshot] = EvidenceRegistry(
-                self.reserve,root=self.root,calculation_id=calculation_id,snapshot=snapshot)
+                self.reserve,root=self.root,calculation_id=calculation_id,snapshot=snapshot,cutoff=cutoff)
         return self.calculations[snapshot]
 
     def pin_producer(self, category, producer):
@@ -113,6 +134,69 @@ class EvidenceRegistry:
         record=producer.records.get(event_id) if producer is not None else None
         return record if record is not None and record.reference==reference else None
 
+    def record_smt_uncertainty(self, family, boundaries):
+        if not self.smt_lifecycle.get(family) or any(
+            type(edge.start) is not int or not 0 <= edge.start <= self.cutoff or
+            edge.recovered_at is not None and (type(edge.recovered_at) is not int or
+                                              not edge.start < edge.recovered_at <= self.cutoff)
+            for edge in boundaries):
+            raise ValueError("Invalid SMT uncertainty boundary")
+        canonical = tuple(sorted(boundaries, key=lambda edge: (edge.start, edge.reason)))
+        if family in self.smt_uncertainty:
+            if self.smt_uncertainty[family] != canonical:
+                raise ValueError("Conflicting SMT uncertainty boundaries")
+        else:
+            if self.reserve is not None:
+                self.reserve(128*len(canonical))
+            self.smt_uncertainty[family] = canonical
+
+    def smt_state(self, family, cutoff):
+        if self.cutoff is None or cutoff > self.cutoff:
+            return None, "OUTSIDE_EVALUATED_SNAPSHOT"
+        history = self.smt_lifecycle.get(family, ())
+        index = bisect_right(history, cutoff, key=lambda row: row[0])-1
+        if index < 0:
+            return None, None
+        state = self.records[history[index][1]].state
+        if state in {"SMT_CANDIDATE", "SMT_CONFIRMED"}:
+            for edge in self.smt_uncertainty.get(family, ()):
+                if edge.start <= cutoff and (edge.recovered_at is None or cutoff < edge.recovered_at):
+                    return "UNCERTAIN", edge.reason
+            if state == "SMT_CANDIDATE":
+                return state, "PENDING_SHARED_CONFIRMATION"
+        return state, None
+
+    def _smt_lineage(self, family, state, scope, config, barrier, available, pivot_edges, links):
+        if state not in SMT_LINEAGE:
+            return False, {}
+        expected = {"match"} if state == "SMT_CANDIDATE" else {"match", "previous"}
+        if not family or set(links) != expected:
+            return False, {}
+        resolved = {}
+        for role, ref in links.items():
+            self.counts["dependency_lookups"] += 1
+            row = self.resolve(ref)
+            if (row is None or ref["calculation_snapshot"] != self.snapshot or not row.attested
+                    or (row.family, row.scope, row.config) != (family, scope, config)):
+                return False, {}
+            resolved["smt:" + role] = row
+        match = resolved["smt:match"]
+        if match.category != "smt_match" or match.available > barrier or match.pivot_edges != pivot_edges:
+            return False, {}
+        history = self.smt_lifecycle.get(family, ())
+        prior_ref = links.get("previous")
+        prior_id = prior_ref["event_id"] if prior_ref else None
+        if prior_id != (history[-1][1] if history else None):
+            return False, {}
+        prior = resolved.get("smt:previous")
+        prior_state = prior.state if prior else None
+        if prior_state not in SMT_LINEAGE[state] or (prior and (
+            prior.category != "smt" or prior.match != links["match"]["event_id"] or prior.available > available
+            or state == "SMT_CONFIRMED" and prior.available != barrier
+        )):
+            return False, {}
+        return True, resolved
+
     @staticmethod
     def signature(event):
         timing = event.get("timing")
@@ -125,7 +209,7 @@ class EvidenceRegistry:
             return None
 
     def publish(self, event, category, scope, config, *, family=None, active=False,
-                predicate, dependencies=(), coverage=True, lineage=False, producer_references=()):
+                predicate, dependencies=(), coverage=True, lineage=False, producer_references=(), smt_links=None):
         timing = event["timing"]
         version_valid = timing.get("timing_policy") == "STRICT_CAUSAL" and timing.get("timing_policy_version") == VERSION
         dependencies = tuple(dependencies)
@@ -141,22 +225,32 @@ class EvidenceRegistry:
         supported = ((kind in STRUCTURE and event.get("status") == "confirmed") if category == "structure"
                      else state in STATES.get(category, ()) and
                      (category not in {"liquidity","pool"} or event.get("status") == "confirmed"))
-        supported_lineage = lineage and state in LINEAGE.get(category, ())
+        supported_lineage = lineage and (state in LINEAGE.get(category, ()) or
+            category == "smt_match" and state == "MATCH_CLOSED" or
+            category == "smt" and state in {"SMT_INVALIDATED", "EXPIRED"})
         expected = (
             ("FORMATION" if kind == "PIVOT" else "CLOSE_ONLY") if category == "structure" else
             "CLOSE_ONLY" if category in {"liquidity","pool"} and state == "BROKEN" else
             "AGGREGATED_REFERENCE" if category == "crt" and state == "ACTIVE" else
-            "FORMATION" if category == "smt_pivot" or category == "smt" and state == "SMT_CANDIDATE" or
+            "FORMATION" if category in {"smt_pivot", "smt_match"} or category == "smt" and state == "SMT_CANDIDATE" or
                           category == "smt" and state == "SMT_CONFIRMED" and event.get("confirmation_bars") == 0 or
                           category == "pool" and state in {"ACTIVE","FORMING"} or
                           category in {"order_block","fvg"} and state == "ACTIVE" else "WHOLE_CANDLE")
         shape = (version_valid and isinstance(event_id,str) and bool(event_id) and predicate in ACTIVATION and predicate == expected and isinstance(config,str) and bool(config)
                  and all(isinstance(value,str) and value for value in source[:-1]) and (source[-1] is None or isinstance(source[-1],str))
                  and type(event.get("algorithm_version")) is int
-                 and event.get("algorithm_version") in ({1,2} if category == "structure" else {1})
+                 and event.get("algorithm_version") in ({SMT_ALGORITHM_VERSION} if category in SMT_CATEGORIES else
+                                                        {1,2} if category == "structure" else {1})
                  and all(type(value) is int for value in (available,start,end,barrier,timing.get("evaluation_cutoff")))
                  and 0 <= start < end <= available <= timing["evaluation_cutoff"]
                  and event.get("available_at") == available and event.get("confirmation_time") == end)
+        if category == "smt_match":
+            prefix = event.get("coverage_prefix")
+            shape = (shape and isinstance(prefix, dict) and prefix.get("start") == start and prefix.get("end") == end
+                     and type(prefix.get("previous_end")) is int and start < prefix["previous_end"] < end
+                     and all(isinstance(prefix.get(key), str) and len(prefix[key]) == 64
+                             for key in ("digest", "previous_digest"))
+                     and available == barrier)
         temporal = ((barrier <= start) if predicate == "WHOLE_CANDLE" else
                     (barrier < end) if predicate == "CLOSE_ONLY" else barrier <= available)
         required = tuple(dict.fromkeys((*timing["required_dependencies"], *dependencies)))
@@ -166,7 +260,7 @@ class EvidenceRegistry:
                 pinned.setdefault(reference["event_id"], []).append(reference)
         resolved={}
         ambiguous=set()
-        smt_binding = self.smt_producers if category == "smt" else None
+        smt_binding = self.smt_producers if category in {"smt", "smt_match"} else None
         if smt_binding:
             for reference in producer_references:
                 record = self.resolve(reference)
@@ -188,7 +282,7 @@ class EvidenceRegistry:
             else:
                 resolved[dependency]=self.records.get(dependency)
         compatible = not ambiguous
-        if category == "smt":
+        if category in {"smt", "smt_match"}:
             compatible = bool(smt_binding and len(required) == len(producer_references) == 4
                               and set(required) == set(resolved)
                               and all(sum(key.startswith(side + ":") for key in required) == 2
@@ -211,13 +305,28 @@ class EvidenceRegistry:
                                (smt_binding or known.scope == source and
                                 (known.category in allowed_parents.get(category, ())
                                  or known.category == category and known.config == config)))
+        match_id = None
+        pivot_edges = ()
+        if category in {"smt_match", "smt"} and compatible:
+            pivot_edges = tuple(sorted((key, record.reference["calculation_snapshot"], record.reference["event_id"])
+                                       for key, record in resolved.items()))
+        if category == "smt":
+            links = smt_links or {}
+            valid, local_records = self._smt_lineage(family, state, source, config, barrier, available, pivot_edges, links)
+            compatible &= valid
+            resolved.update(local_records)
+            timing["smt_lifecycle_dependencies"] = list(local_records)
+            if valid:
+                match_id = links["match"]["event_id"]
         if self.snapshot is None:
             timing["dependency_configurations"] = {
                 key:record.config for key,record in resolved.items() if record
             }
         else:
             timing["dependency_references"] = {
-                key:{**record.reference,"source":list(record.scope)}
+                key:{**record.reference,"source":list(record.scope),
+                     **({"participants": {side: list(scope) for side, scope in record.reference["participants"].items()}}
+                        if "participants" in record.reference else {})}
                 for key,record in resolved.items() if record and record.reference
             }
         direct = (shape and temporal and coverage and timing["availability_basis"] == "RECORDED" and
@@ -240,13 +349,15 @@ class EvidenceRegistry:
             if smt_binding:
                 reference["participants"] = {side: list(source) for side, (_, source) in smt_binding.items()}
             event["evidence_reference"]=reference
-        summary = Summary(self.signature(event),source,config,category,family,available,attested,eligible,reference)
+        summary = Summary(self.signature(event),source,config,category,family,available,attested,eligible,
+                          reference,state,match_id,pivot_edges)
         if reference is not None:
             # Registry state must not alias mutable response projections.
             reference={**reference,"source":list(source)}
             if smt_binding:
                 reference["participants"] = {side: list(source) for side, (_, source) in smt_binding.items()}
-            summary=Summary(summary.signature,source,config,category,family,available,attested,eligible,reference)
+            summary=Summary(summary.signature,source,config,category,family,available,attested,eligible,
+                            reference,state,match_id,pivot_edges)
         existing = self.records.get(event_id)
         if existing is not None:
             if existing != summary:
@@ -259,7 +370,9 @@ class EvidenceRegistry:
             self.reserve(512)
         self.records[event_id] = summary
         self.counts["publications"] += 1
-        if family is not None:
+        if category == "smt" and attested:
+            self.smt_lifecycle[family].append((available, event_id))
+        if family is not None and category != "smt_match" and (category != "smt" or attested):
             insort_right(self.current[family],(available,event_id if active and attested else None),key=lambda item:item[0])
 
     def gap(self, category, config, scope, available):
@@ -275,6 +388,8 @@ class EvidenceRegistry:
                 record.reference["event_id"],cutoff)
         record = self.records.get(event_id)
         if not record or not record.eligible or record.available > cutoff:
+            return False
+        if record.category == "smt" and self.smt_state(record.family, cutoff)[0] != "SMT_CONFIRMED":
             return False
         history = self.current.get(record.family, ())
         index = bisect_right(history,cutoff,key=lambda item:item[0])-1

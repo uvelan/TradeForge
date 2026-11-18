@@ -26,12 +26,15 @@ test('strict SMT ignores stale pair responses and rewinds a frozen pair', async 
     const {primary, comparison, cutoff} = route.request().postDataJSON();
     if (comparison.symbol === 'GBPUSD') await oldPair;
     const confirmed = cutoff >= start + 3000;
+    const uncertain = cutoff >= start + 3300;
     await route.fulfill({json: {
       status: comparison.symbol === 'GBPUSD' ? 'STALE_PAIR_RESPONSE' : 'EVALUATED',
       sources: {primary: {...primary, authority: 'CHECKSUM_VERIFIED_ARCHIVE'},
                 comparison: {...comparison, authority: 'CHECKSUM_VERIFIED_ARCHIVE'}},
-      current: [{id: 'stable-event', direction: 'bearish', state: confirmed ? 'SMT_CONFIRMED' : 'SMT_CANDIDATE',
-                 current_eligible: confirmed}], events: [],
+      current: [{id: 'stable-event', direction: 'bearish',
+                 state: uncertain ? 'UNCERTAIN' : confirmed ? 'SMT_CONFIRMED' : 'SMT_CANDIDATE',
+                 current_eligible: confirmed && !uncertain,
+                 reason: uncertain ? 'MISSING_LAGGARD_OBSERVATION' : null}], events: [],
     }}).catch(() => {});
   });
 
@@ -63,6 +66,11 @@ test('strict SMT ignores stale pair responses and rewinds a frozen pair', async 
   expect((await next).postDataJSON().comparison.partitions[0].id).toBe('partition-USDJPY');
   await expect(monitor).toContainText('SMT_CONFIRMED');
   await page.screenshot({path: info.outputPath('strict-smt-confirmed-replay.png')});
+  await replay.getByRole('button', {name: 'Next candle'}).click();
+  await expect(monitor).toContainText('UNCERTAIN · MISSING_LAGGARD_OBSERVATION');
+  await page.screenshot({path: info.outputPath('strict-smt-uncertain-replay.png')});
+  await replay.getByRole('button', {name: 'Previous candle'}).click();
+  await expect(monitor).toContainText('SMT_CONFIRMED');
   await replay.getByRole('button', {name: 'Previous candle'}).click();
   await expect(monitor).toContainText('SMT_CANDIDATE');
   await expect(monitor).not.toContainText('SMT_CONFIRMED');

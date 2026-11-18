@@ -25,7 +25,8 @@ type SmtEvidence = {
   id: string; direction: string; leader: string; current_state: string; current_reason?: string;
   pivots: Record<string, {previous: Pivot; current: Pivot}>;
   confirmed_at: number | null; candidate_at: number; historically_eligible: boolean;
-  matching_window: {status: string; start: number; end: number; available_at: number};
+  matching_window: {status: string; start: number; end: number; available_at: number;
+    coverage_prefix?: {start: number; end: number}};
   revisions: Revision[];
 };
 type Result = {
@@ -109,6 +110,8 @@ function StrictSnapshot({body}: {body: string}) {
       <summary>{event.direction} · {event.leader} leads · {event.current_state} · {utc(event.candidate_at)}</summary>
       <small>Matching {event.matching_window.status.toLowerCase()} · {utc(event.matching_window.start)}
         {' – '}{utc(event.matching_window.end)} · available {utc(event.matching_window.available_at)}</small>
+      {event.matching_window.coverage_prefix && <small>Required session prefix · {
+        utc(event.matching_window.coverage_prefix.start)}{' – '}{utc(event.matching_window.coverage_prefix.end)}</small>}
       <small>{event.confirmed_at === null ? 'Awaiting confirmation' : `Confirmed ${utc(event.confirmed_at)}`} · {
         event.historically_eligible ? 'Historically eligible' : 'Research only'
       }</small>

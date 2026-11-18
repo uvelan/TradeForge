@@ -1,6 +1,8 @@
 """Frozen dual-source SMT evidence built on the legacy wick mathematics."""
 from bisect import bisect_left
 from dataclasses import asdict, dataclass
+from hashlib import sha256
+from time import perf_counter
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
@@ -13,10 +15,13 @@ from .indicator_history import load_reference
 from .indicators import swing_points
 from .market import FRAME_MIN
 from .smt import divergence_leader, nearest_peer, pivots, signed_change
-from .strategy_evidence import REFERENCE_VERSION, SOURCE_FIELDS, VERSION as TIMING_VERSION, fingerprint
+from .strategy_evidence import (
+    REFERENCE_VERSION, SOURCE_FIELDS, SMT_ALGORITHM_VERSION as ALGORITHM_VERSION,
+    VERSION as TIMING_VERSION, SmtUncertainty, fingerprint,
+)
 from .structure_pages import EventPage, StaleStructureCursor
 
-ALGORITHM_VERSION = 1
+LIFECYCLE_VERSION = 2
 AUTHORITY = "CHECKSUM_VERIFIED_ARCHIVE"
 SIDES = ("primary", "comparison")
 MAX_TIMESTAMP = 32_503_680_000
@@ -107,6 +112,8 @@ class Match:
     start: int
     end: int
     evidence_digest: str
+    prefix_digest: str
+    prefix_start: int
 
 
 def _usable(rows):
@@ -132,33 +139,49 @@ def _pivots(series, period, step, candle_ids):
     return observed
 
 
-def _matches(primary, comparison, intervals, series, candle_ids, policy, step):
+def _matching_frontiers(intervals, series, candle_ids, step):
+    """Scan each shared session prefix once, stopping at the first unavailable slot."""
+    result = {}
+    for start, end in intervals:
+        digest = sha256()
+        availability = start
+        prefix = []
+        for stamp in range(start, end, step):
+            left, right = series[0].get(stamp), series[1].get(stamp)
+            if left is None or right is None:
+                break
+            availability = max(availability, left[1], right[1])
+            digest.update(bytes.fromhex(candle_ids[0][stamp] + candle_ids[1][stamp]))
+            prefix.append((availability, digest.hexdigest()))
+        result[start] = prefix
+    return result
+
+
+def _matches(primary, comparison, intervals, frontiers, candle_ids, policy, step):
     """Freeze matches in primary UTC order, partitioned by declared market session."""
     window = policy.alignment_bars * step
     margin = policy.period * step
     times = [pivot.time for pivot in comparison]
-    for start, end in intervals:
+    for start, _ in intervals:
         # A missing open candle leaves earlier potential pivots unresolved. An
         # independent scheduled session may still establish its own sequence.
-        complete_end = next((stamp for stamp in range(start, end, step)
-                             if any(stamp not in feed for feed in series)), end)
+        prefix = frontiers[start]
+        complete_end = start+len(prefix)*step
         previous = None
         next_peer = bisect_left(times, start + margin)
-        frontier = start
         lo = bisect_left(primary, start + margin + window, key=lambda pivot: pivot.time)
-        hi = bisect_left(primary, min(end, complete_end)-margin-window, lo=lo,
+        hi = bisect_left(primary, complete_end-margin-window, lo=lo,
                          key=lambda pivot: pivot.time)
         for pivot in primary[lo:hi]:
             first, last = pivot.time-window-margin, pivot.time+window+margin+step
-            members = [[feed[stamp] for stamp in range(first, last, step)] for feed in series]
-            frontier = max(frontier, *(available for side in members for _, available in side))
+            frontier, prefix_digest = prefix[(last-start)//step-1]
             match_index = nearest_peer(times, pivot.time, window, next_peer)
             if match_index is None:
                 continue
             peer = comparison[match_index]
             next_peer = match_index + 1
-            witness = fingerprint([[ids[bar.time] for bar, _ in side] for ids, side in zip(candle_ids, members)])
-            current = Match(pivot, peer, frontier, first, last, witness)
+            witness = fingerprint([[ids[stamp] for stamp in range(first, last, step)] for ids in candle_ids])
+            current = Match(pivot, peer, frontier, first, last, witness, prefix_digest, start)
             if previous:
                 yield previous, current
             previous = current
@@ -169,7 +192,7 @@ def _transition(state, observed_start, observed_end, available, barrier, witness
             "barrier": barrier, "witness": witness}
 
 
-def _lifecycle(match, laggard, reference, sign, policy, step, slots, series, candle_ids, charge):
+def _lifecycle(match, laggard, reference, sign, policy, step, slots, series, candle_ids, unrecorded, charge):
     tolerance = policy.tolerance_bps
     candidate_at = match.closure
     own = series[laggard]
@@ -189,7 +212,7 @@ def _lifecycle(match, laggard, reference, sign, policy, step, slots, series, can
         stamp = slots[offset]
         member = own.get(stamp)
         if member is None or breaks(member[0]):
-            return [], False, "INCOMPLETE_OR_BREACHED_BEFORE_ACTIVATION"
+            return [], ()
         candidate_at = max(candidate_at, member[1])
         end = max(end, stamp+step)
         activation_members.append(candle_ids[laggard][stamp])
@@ -230,20 +253,25 @@ def _lifecycle(match, laggard, reference, sign, policy, step, slots, series, can
         available, stamp = breach
         changes.append(_transition("SMT_INVALIDATED", stamp, stamp+step, available, candidate_at,
                                    candle_ids[laggard][stamp]))
-        return changes, False, None
-    missing = any(stamp+step <= policy.cutoff and stamp not in own for stamp in monitored)
-    if expiry is not None:
+    elif expiry is not None:
         witness = fingerprint([candle_ids[laggard][stamp] for stamp in monitored])
         changes.append(_transition("EXPIRED", monitored[0], monitored[-1]+step,
                                    expiry, candidate_at, witness))
-        return changes, False, None
-    if missing:
-        return changes, False, "MISSING_LAGGARD_OBSERVATION"
-    if ambiguous_wick:
-        return changes, False, "AMBIGUOUS_ACTIVATION_WICK"
-    if len(shared) != policy.confirmation_bars:
-        return changes, False, "PENDING_SHARED_CONFIRMATION"
-    return changes, True, None
+    boundaries = []
+    for stamp in monitored:
+        deadline = stamp+step
+        observed = own.get(stamp)
+        recovery = observed[1] if observed else None
+        if deadline <= policy.cutoff and (recovery is None or recovery > deadline):
+            reason = ("UNRECORDED_LAGGARD_ARRIVAL" if stamp in unrecorded[laggard]
+                      else "MISSING_LAGGARD_OBSERVATION")
+            boundaries.append(SmtUncertainty(deadline, reason, recovery))
+    if straddling_start is not None and straddling_start+step <= policy.cutoff:
+        deadline = straddling_start+step
+        recovery = straddling[1] if straddling and not breaks(straddling[0]) else None
+        if recovery is None or recovery > deadline:
+            boundaries.append(SmtUncertainty(deadline, "AMBIGUOUS_ACTIVATION_WICK", recovery))
+    return changes, boundaries
 
 
 def _timed_event(event_id, state, start, end, available, dependency, cutoff, *, refs=(), reason=None):
@@ -287,7 +315,8 @@ def evaluate_strict_smt(request, loader=load_reference):
     step = FRAME_MIN[request.primary.timeframe]*60
     rule_keys = {"relationship", "period", "alignment_bars", "tolerance_bps", "confirmation_bars", "expiry_bars"}
     rules = {**request.model_dump(include=rule_keys), "algorithm_version": ALGORITHM_VERSION,
-             "timing_policy_version": TIMING_VERSION, "evidence_reference_version": REFERENCE_VERSION}
+             "timing_policy_version": TIMING_VERSION, "evidence_reference_version": REFERENCE_VERSION,
+             "lifecycle_version": LIFECYCLE_VERSION}
     config = fingerprint(rules)
     reply = {**rules, "cutoff": request.cutoff, "events": [], "current": [], "sources": {}, "alerts": []}
 
@@ -334,6 +363,7 @@ def evaluate_strict_smt(request, loader=load_reference):
         histories.append({**history, "rows": tuple(entry for entry in history["rows"] if entry[0].time in shared_slots)})
 
     series = [_usable(history["rows"]) for history in histories]
+    unrecorded = [{bar.time for bar, _ in history["rows"] if bar.available_at is None} for history in histories]
     candle_ids = [{stamp: fingerprint(bar.model_dump(mode="json")) for stamp, (bar, _) in feed.items()}
                   for feed in series]
     pair_id = fingerprint(identities)
@@ -346,15 +376,22 @@ def evaluate_strict_smt(request, loader=load_reference):
     view = coordinator.evidence_for("smt", histories[0]["rows"],
                                     {**pair_scope, "participants": scopes}, config, native=histories[1]["rows"])
     view.pin_smt_producers(left[0], right[0], scopes)
-    page = EventPage("strict-smt", request.limit, request.cursor)
+    frontier_started = perf_counter()
+    frontiers = _matching_frontiers(intervals, series, candle_ids, step)
+    frontier_slots = sum(map(len, frontiers.values()))
+    coordinator.charge_work(frontier_slots)
+    coordinator.reserve(frontier_slots * 160)
+    frontier_ms = (perf_counter()-frontier_started)*1000
+    page = EventPage("strict-smt-v2", request.limit, request.cursor)
     events = []
     unresolved_activations = 0
     post_window = open_intervals(end, max(end, request.cutoff), a.calendar) if request.cutoff > end else []
+    exhaustion = next((left+step for left, right in post_window or () if right-left >= step), None)
     for label in left[1]:
         sign = 1 if label == "Swing high" else -1
         direction = "bearish" if sign == 1 else "bullish"
         tol = request.tolerance_bps
-        for previous, match in _matches(left[1][label], right[1][label], intervals, series, candle_ids, request, step):
+        for previous, match in _matches(left[1][label], right[1][label], intervals, frontiers, candle_ids, request, step):
             leader = divergence_leader(
                 signed_change(match.primary.price, previous.primary.price, sign),
                 signed_change(match.comparison.price, previous.comparison.price, sign), tol)
@@ -362,13 +399,14 @@ def evaluate_strict_smt(request, loader=load_reference):
                 continue
             laggard = int(leader == "primary")
             reference = (previous.primary, previous.comparison)[laggard].price
-            changes, valid, reason = _lifecycle(match, laggard, reference, sign, request, step, slots, series, candle_ids,
-                                                coordinator.charge_work)
+            changes, boundaries = _lifecycle(match, laggard, reference, sign, request, step, slots, series,
+                                             candle_ids, unrecorded, coordinator.charge_work)
             if not changes:
                 unresolved_activations += 1
                 continue
-            if valid and post_window and any(right-left >= step for left, right in post_window):
-                valid, reason = False, "FROZEN_EVIDENCE_WINDOW_ENDED"
+            if exhaustion is not None:
+                boundaries.append(SmtUncertainty(max(exhaustion, changes[0]["available"]),
+                                                 "FROZEN_EVIDENCE_WINDOW_ENDED"))
             pivots_by_side = ((previous.primary, match.primary), (previous.comparison, match.comparison))
             refs = [producer[0].records[pivot.id].reference
                     for producer, side_pivots in zip(producers, pivots_by_side) for pivot in side_pivots]
@@ -376,6 +414,14 @@ def evaluate_strict_smt(request, loader=load_reference):
             event_id = fingerprint([pair_id, config, direction, leader,
                                     previous.evidence_digest, match.evidence_digest, previous.closure, match.closure,
                                     [pivot.id for pair in pivots_by_side for pivot in pair]])
+            prefix = {"start": match.prefix_start, "previous_end": previous.end, "end": match.end,
+                      "previous_digest": previous.prefix_digest, "digest": match.prefix_digest}
+            matching_id = fingerprint([event_id, "MATCH_CLOSED", prefix])
+            matching = _timed_event(matching_id, "MATCH_CLOSED", match.prefix_start, match.end, match.closure,
+                                    match.closure, request.cutoff, refs=keys, reason="RESEARCH_ONLY")
+            matching["coverage_prefix"] = prefix
+            view.publish(matching, "smt_match", pair_scope, config, family=event_id,
+                         predicate="FORMATION", lineage=True, producer_references=refs)
             states = []
             for change in changes:
                 state, available = change["state"], change["available"]
@@ -388,23 +434,28 @@ def evaluate_strict_smt(request, loader=load_reference):
                                      else None if eligible else "RESEARCH_ONLY")
                 event.update(market_event_id=event_id, pair_id=pair_id, direction=direction, leader=leader,
                              confirmation_bars=request.confirmation_bars, witness=change["witness"])
+                links = {"match": matching["evidence_reference"]}
+                if states:
+                    links["previous"] = states[-1]["evidence_reference"]
                 view.publish(event, "smt", pair_scope, config, family=event_id, active=eligible,
-                             predicate=predicate, lineage=state == "SMT_CANDIDATE", producer_references=refs)
+                             predicate=predicate, lineage=not eligible, producer_references=refs, smt_links=links)
                 states.append(event)
+            view.record_smt_uncertainty(event_id, boundaries)
             confirmed = next((state for state in states if state["state"] == "SMT_CONFIRMED"), None)
-            current = bool(valid and confirmed and strategy_eligible(confirmed, request.cutoff, registry=view, current=True))
+            historical = bool(confirmed and strategy_eligible(confirmed, request.cutoff, registry=view))
+            current = historical and view.current_at(confirmed["evidence_reference"], request.cutoff)
+            current_state, reason = view.smt_state(event_id, request.cutoff)
             events.append({"id": event_id, "direction": direction, "leader": leader,
                            "pivots": {side: {"previous": asdict(pair[0]), "current": asdict(pair[1])}
                                       for side, pair in zip(SIDES, pivots_by_side)},
                            "matching_window": {"status": "COMPLETE", "start": match.start, "end": match.end,
-                                               "available_at": match.closure, "previous_available_at": previous.closure},
+                                               "available_at": match.closure, "previous_available_at": previous.closure,
+                                               "attestation": matching["evidence_reference"], "coverage_prefix": prefix},
                            "candidate_at": states[0]["available_at"],
                            "confirmed_at": confirmed["available_at"] if confirmed else None,
-                           "historically_eligible": bool(confirmed and strategy_eligible(confirmed, request.cutoff, registry=view)),
+                           "historically_eligible": historical,
                            "current_eligible": current, "current_reason": reason,
-                           "current_state": "UNCERTAIN" if reason in {
-                               "MISSING_LAGGARD_OBSERVATION", "FROZEN_EVIDENCE_WINDOW_ENDED", "AMBIGUOUS_ACTIVATION_WICK"}
-                           else states[-1]["state"], "revisions": states})
+                           "current_state": current_state, "revisions": states})
     for event in sorted(events, key=lambda event: (event["candidate_at"], event["id"])):
         page.append(event)
     current = [{"id": event["id"], "state": event["current_state"], "current_eligible": event["current_eligible"],
@@ -423,4 +474,5 @@ def evaluate_strict_smt(request, loader=load_reference):
             "matching_status": matching,
             "delivery": page.finish(view.snapshot), "events": list(page.events), "current": current,
             "resources": {**coordinator.counts, **coordinator.archive.counts, **view.counts,
+                          "matching_frontier_slots": frontier_slots, "matching_frontier_ms": round(frontier_ms, 3),
                           "estimated_retained_bytes": coordinator.reserved_bytes}}

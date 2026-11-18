@@ -56,7 +56,10 @@ def test_positive_divergence_preserves_wicks_and_exact_producers(client, left, r
     assert (entry["candidate_at"], entry["confirmed_at"]) == (540, 600)
     assert entry["historically_eligible"] and entry["current_eligible"]
     confirmed = entry["revisions"][-1]
-    references = confirmed["timing"]["dependency_references"]
+    links = confirmed["timing"]["dependency_references"]
+    references = {key: ref for key, ref in links.items() if ref["category"] == "smt_pivot"}
+    assert links["smt:match"] == entry["matching_window"]["attestation"]
+    assert links["smt:previous"] == entry["revisions"][0]["evidence_reference"]
     assert sorted(ref["available_at"] for ref in references.values()) == [300, 300, 540, 540]
     reference = confirmed["evidence_reference"]
     for alias, producer in references.items():
@@ -288,26 +291,49 @@ def test_exact_aliases_isolate_identical_ids_and_non_smt_consumers():
             keys.append(f"{side}:{label}")
             refs.append(pivot["evidence_reference"])
 
-    def confirm(consumer, references, name, barrier=480):
+    def prepare(consumer):
+        match = _timed_event("matching", "MATCH_CLOSED", 0, 480, 480, 480, 900, refs=keys, reason="RESEARCH_ONLY")
+        match["coverage_prefix"] = {"start": 0, "previous_end": 240, "end": 480,
+                                    "digest": "1"*64, "previous_digest": "2"*64}
+        invalid_match = {**match, "id": "missing-coverage", "timing": dict(match["timing"])}
+        consumer.publish(invalid_match, "smt_match", root_scope, "s", family="family", predicate="FORMATION",
+                         producer_references=refs, lineage=True, coverage=False)
+        consumer.publish(match, "smt_match", root_scope, "s", family="family", predicate="FORMATION",
+                         producer_references=refs, lineage=True)
+        candidate = _timed_event("candidate", "SMT_CANDIDATE", 0, 480, 480, 480, 900, refs=keys,
+                                 reason="RESEARCH_ONLY")
+        consumer.publish(candidate, "smt", root_scope, "s", family="family", predicate="FORMATION",
+                         producer_references=refs, lineage=True, smt_links={"match": match["evidence_reference"]})
+        return ({"match": match["evidence_reference"], "previous": candidate["evidence_reference"]},
+                invalid_match["evidence_reference"])
+
+    def confirm(consumer, references, name, barrier=480, links=None):
         signal = _timed_event(name, "SMT_CONFIRMED", 480, 540, 540, barrier, 900, refs=keys)
         signal["confirmation_bars"] = 1
-        consumer.publish(signal, "smt", root_scope, "s", predicate="WHOLE_CANDLE", producer_references=references)
+        consumer.publish(signal, "smt", root_scope, "s", family="family", predicate="WHOLE_CANDLE",
+                         producer_references=references, smt_links=links)
         return signal
 
     smt = registry.calculation("smt", "s", root_scope, "paired", 900)
     assert not registry.eligible(confirm(smt, refs, "unpinned"), 900)
     smt.pin_smt_producers(producers["primary"], producers["comparison"], scopes)
-    signal = confirm(smt, refs, "pinned")
-    assert registry.eligible(signal, 540)
-    assert not registry.eligible(signal, 539)
-    assert not registry.eligible(confirm(smt, refs, "forward", barrier=479), 900)
-    assert not registry.eligible(confirm(smt, refs[:3]+[refs[1]], "swapped"), 900)
-    assert not registry.eligible(confirm(smt, refs[:3]+[signal["evidence_reference"]], "cycle"), 900)
-    assert not EvidenceRegistry().eligible(signal, 900)
+    links, invalid_match = prepare(smt)
+    assert not registry.eligible(confirm(smt, refs, "forward", barrier=479, links=links), 900)
+    assert not registry.eligible(confirm(smt, refs[:3]+[refs[1]], "swapped", links=links), 900)
+    assert not registry.eligible(confirm(smt, refs, "missing-candidate", links={"match": links["match"]}), 900)
+    assert not registry.eligible(confirm(smt, refs, "unauthorized-match", links={**links, "match": refs[0]}), 900)
+    assert not registry.eligible(confirm(smt, refs, "unattested-match", links={**links, "match": invalid_match}), 900)
     other = registry.calculation("smt-pivots", "p", scopes["comparison"], "changed", 900)
     foreign = _timed_event("local-b", "CONFIRMED", 360, 480, 480, 480, 900, reason="ELIGIBLE")
     other.publish(foreign, "smt_pivot", scopes["comparison"], "p", predicate="FORMATION")
-    assert not registry.eligible(confirm(smt, refs[:3]+[foreign["evidence_reference"]], "other-snapshot"), 900)
+    assert not registry.eligible(confirm(smt, refs[:3]+[foreign["evidence_reference"]], "other-snapshot",
+                                         links=links), 900)
+    signal = confirm(smt, refs, "pinned", links=links)
+    assert registry.eligible(signal, 540)
+    assert not registry.eligible({**signal, "market_event_id": "forged"}, 900)
+    assert not registry.eligible(signal, 539)
+    assert not registry.eligible(confirm(smt, refs[:3]+[signal["evidence_reference"]], "cycle", links=links), 900)
+    assert not EvidenceRegistry().eligible(signal, 900)
     normal = registry.calculation("fvg", "f", scopes["primary"], "data", 900)
     normal.pin_producer("smt_pivot", other)
     fvg = _timed_event("fvg", "ACTIVE", 480, 540, 540, 480, 900, refs=["local-b"], reason="ELIGIBLE")
