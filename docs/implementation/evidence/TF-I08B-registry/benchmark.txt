@@ -1,0 +1,111 @@
+K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+Windows, same process, alternating run order. 30 samples per version, P50/P95 in milliseconds.
+2,000 strict caller context | baseline | registry profile, seconds
+         814034 function calls (812024 primitive calls) in 0.709 seconds
+
+   Ordered by: cumulative time
+   List reduced from 253 to 15 due to restriction <'strategy_evidence|evidence_for|encoder.py|sha256'>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+     1597    0.035    0.000    0.142    0.000 strategy_evidence.py:54(publish)
+     8285    0.012    0.000    0.117    0.000 encoder.py:185(encode)
+     8285    0.099    0.000    0.099    0.000 encoder.py:207(iterencode)
+     1597    0.010    0.000    0.079    0.000 strategy_evidence.py:43(signature)
+    11800    0.026    0.000    0.063    0.000 strategy_evidence.py:134(gap)
+    82600    0.020    0.000    0.031    0.000 strategy_evidence.py:135(<genexpr>)
+    10243    0.023    0.000    0.023    0.000 {built-in method _hashlib.openssl_sha256}
+    11179    0.003    0.000    0.005    0.000 strategy_evidence.py:63(<genexpr>)
+     8598    0.003    0.000    0.004    0.000 strategy_evidence.py:79(<genexpr>)
+     8285    0.003    0.000    0.003    0.000 encoder.py:105(__init__)
+      998    0.001    0.000    0.002    0.000 strategy_evidence.py:151(eligible)
+     8598    0.002    0.000    0.002    0.000 strategy_evidence.py:82(<genexpr>)
+     2176    0.000    0.000    0.000    0.000 strategy_evidence.py:132(<lambda>)
+      498    0.000    0.000    0.000    0.000 strategy_evidence.py:93(<genexpr>)
+        1    0.000    0.000    0.000    0.000 strategy_evidence.py:36(__init__)
+
+
+2,000 strict caller context | baseline | calc 379.64/536.51 | JSON 5.76/7.32 | API 434.45/622.64 | bytes 785219 | peak 5889.8 KiB | RSS 143724->144052 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 2, 'levels': 5, 'crt': 1} | {} | evidence {'publications': 1597, 'dependency_lookups': 3563, 'consumer_lookups': 998}
+2,000 strict caller context | final | registry profile, seconds
+         848110 function calls (846100 primitive calls) in 0.930 seconds
+
+   Ordered by: cumulative time
+   List reduced from 257 to 22 due to restriction <'strategy_evidence|evidence_for|encoder.py|sha256'>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+     1597    0.065    0.000    0.259    0.000 strategy_evidence.py:96(publish)
+     6036    0.011    0.000    0.166    0.000 encoder.py:185(encode)
+     6036    0.149    0.000    0.149    0.000 encoder.py:207(iterencode)
+     1597    0.009    0.000    0.141    0.000 strategy_evidence.py:85(signature)
+     1617    0.006    0.000    0.132    0.000 strategy_evidence.py:24(fingerprint)
+    11800    0.027    0.000    0.066    0.000 strategy_evidence.py:211(gap)
+    82600    0.022    0.000    0.033    0.000 strategy_evidence.py:212(<genexpr>)
+     7996    0.031    0.000    0.031    0.000 {built-in method _hashlib.openssl_sha256}
+       10    0.000    0.000    0.013    0.001 analysis_evidence.py:193(evidence_for)
+     3398    0.007    0.000    0.011    0.000 strategy_evidence.py:75(resolve)
+        2    0.004    0.002    0.011    0.006 strategy_evidence.py:28(history_fingerprint)
+      998    0.001    0.000    0.007    0.000 strategy_evidence.py:232(eligible)
+    11179    0.004    0.000    0.006    0.000 strategy_evidence.py:105(<genexpr>)
+     8598    0.003    0.000    0.004    0.000 strategy_evidence.py:121(<genexpr>)
+     6036    0.003    0.000    0.003    0.000 encoder.py:105(__init__)
+     8598    0.002    0.000    0.002    0.000 strategy_evidence.py:124(<genexpr>)
+       10    0.000    0.000    0.001    0.000 strategy_evidence.py:62(calculation)
+     2400    0.000    0.000    0.000    0.000 strategy_evidence.py:139(<genexpr>)
+     2176    0.000    0.000    0.000    0.000 strategy_evidence.py:209(<lambda>)
+      498    0.000    0.000    0.000    0.000 strategy_evidence.py:153(<genexpr>)
+        7    0.000    0.000    0.000    0.000 strategy_evidence.py:50(__init__)
+        3    0.000    0.000    0.000    0.000 strategy_evidence.py:70(pin_producer)
+
+
+2,000 strict caller context | final | calc 401.58/561.57 | JSON 9.99/13.51 | API 494.99/669.19 | bytes 1309431 | peak 7189.0 KiB | RSS 142244->148732 KiB | {'structure': 1, 'fvg': 1, 'liquidity': 1, 'order_blocks': 2, 'levels': 5, 'crt': 1} | {} | evidence {'publications': 1597, 'dependency_lookups': 3563, 'consumer_lookups': 998}
+10,000 archive combined | baseline | registry profile, seconds
+         2355565 function calls (2345478 primitive calls) in 2.289 seconds
+
+   Ordered by: cumulative time
+   List reduced from 313 to 12 due to restriction <'strategy_evidence|evidence_for|encoder.py|sha256'>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+     7989    0.154    0.000    0.625    0.000 strategy_evidence.py:54(publish)
+    30359    0.043    0.000    0.442    0.000 encoder.py:185(encode)
+    30359    0.381    0.000    0.381    0.000 encoder.py:207(iterencode)
+     7989    0.045    0.000    0.341    0.000 strategy_evidence.py:43(signature)
+    40321    0.084    0.000    0.084    0.000 {built-in method _hashlib.openssl_sha256}
+    55923    0.015    0.000    0.022    0.000 strategy_evidence.py:63(<genexpr>)
+    42948    0.012    0.000    0.016    0.000 strategy_evidence.py:79(<genexpr>)
+    30359    0.010    0.000    0.010    0.000 encoder.py:105(__init__)
+    42948    0.009    0.000    0.009    0.000 strategy_evidence.py:82(<genexpr>)
+    10847    0.001    0.000    0.001    0.000 strategy_evidence.py:132(<lambda>)
+     2498    0.001    0.000    0.001    0.000 strategy_evidence.py:93(<genexpr>)
+        1    0.000    0.000    0.000    0.000 strategy_evidence.py:36(__init__)
+
+
+10,000 archive combined | baseline | calc 1455.82/1606.60 | JSON 5.15/5.95 | API 1493.69/1575.91 | bytes 777070 | peak 30204.6 KiB | RSS 188068->199228 KiB | {'requested_slots': 10000, 'history_reads': 1, 'normalized_records': 10000, 'crt': 1, 'history_reuses': 7, 'structure': 1, 'liquidity': 1, 'fvg': 1, 'order_blocks': 1} | {'checksum_attempts': 5, 'partition_decodes': 5, 'decoded_records': 10000} | evidence {'publications': 7989, 'dependency_lookups': 17682}
+10,000 archive combined | final | registry profile, seconds
+         2651958 function calls (2641871 primitive calls) in 2.566 seconds
+
+   Ordered by: cumulative time
+   List reduced from 317 to 19 due to restriction <'strategy_evidence|evidence_for|encoder.py|sha256'>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+     7989    0.227    0.000    0.896    0.000 strategy_evidence.py:96(publish)
+    29046    0.042    0.000    0.536    0.000 encoder.py:185(encode)
+    29046    0.476    0.000    0.476    0.000 encoder.py:207(iterencode)
+     7989    0.034    0.000    0.465    0.000 strategy_evidence.py:85(signature)
+     8003    0.015    0.000    0.427    0.000 strategy_evidence.py:24(fingerprint)
+    39010    0.105    0.000    0.105    0.000 {built-in method _hashlib.openssl_sha256}
+        7    0.000    0.000    0.042    0.006 analysis_evidence.py:193(evidence_for)
+        2    0.012    0.006    0.041    0.021 strategy_evidence.py:28(history_fingerprint)
+    11858    0.018    0.000    0.028    0.000 strategy_evidence.py:75(resolve)
+    55923    0.016    0.000    0.023    0.000 strategy_evidence.py:105(<genexpr>)
+    42948    0.012    0.000    0.017    0.000 strategy_evidence.py:121(<genexpr>)
+    29046    0.010    0.000    0.010    0.000 encoder.py:105(__init__)
+    42948    0.010    0.000    0.010    0.000 strategy_evidence.py:124(<genexpr>)
+    11858    0.001    0.000    0.001    0.000 strategy_evidence.py:139(<genexpr>)
+    10847    0.001    0.000    0.001    0.000 strategy_evidence.py:209(<lambda>)
+     2498    0.001    0.000    0.001    0.000 strategy_evidence.py:153(<genexpr>)
+        7    0.000    0.000    0.001    0.000 strategy_evidence.py:62(calculation)
+        6    0.000    0.000    0.000    0.000 strategy_evidence.py:50(__init__)
+        2    0.000    0.000    0.000    0.000 strategy_evidence.py:70(pin_producer)
+
+
+10,000 archive combined | final | calc 1681.77/1762.58 | JSON 8.24/9.43 | API 1743.72/2052.72 | bytes 1296792 | peak 34939.5 KiB | RSS 185344->202268 KiB | {'requested_slots': 10000, 'history_reads': 1, 'normalized_records': 10000, 'crt': 1, 'history_reuses': 7, 'structure': 1, 'liquidity': 1, 'fvg': 1, 'order_blocks': 1} | {'checksum_attempts': 5, 'partition_decodes': 5, 'decoded_records': 10000} | evidence {'publications': 7989, 'dependency_lookups': 17682}
