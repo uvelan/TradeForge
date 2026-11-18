@@ -18,7 +18,7 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
     if not records: raise ValueError('Empty market dataset cannot be committed')
     if provider not in ('MT5','DUKASCOPY') or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._#+-]{0,31}',symbol):
         raise ValueError('Unsupported provider or symbol')
-    if kind not in ('candles','ticks'):raise ValueError('Invalid kind')
+    if kind not in ('candles','ticks','arrival_candles'):raise ValueError('Invalid kind')
     if not re.fullmatch(r'[A-Za-z0-9_-]{1,60}',feed_id):raise ValueError('Invalid feed identifier')
     try:
         import pyarrow as pa
@@ -62,7 +62,14 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (new_id,provider,feed_id,symbol,kind,timeframe,price_basis,len(records),
               datetime.fromtimestamp(int(records[0]['time']),timezone.utc).isoformat(),
               datetime.fromtimestamp(int(records[-1]['time']),timezone.utc).isoformat(),relative,digest,utc_now()))
-            os.replace(temp,path)
+            if path.exists():
+                # Recover a complete file left by a rolled-back catalog
+                # commit. A different file at the immutable path is refused.
+                with path.open('rb') as orphan:
+                    if hashlib.file_digest(orphan, 'sha256').hexdigest() != digest:
+                        raise RuntimeError("UNTRUSTED: orphan partition checksum mismatch")
+            else:
+                os.replace(temp,path)
         return {'id':new_id,'provider':provider,'symbol':symbol,'rows':len(records),'relative_path':relative,'sha256':digest}
     finally:
         temp.unlink(missing_ok=True)

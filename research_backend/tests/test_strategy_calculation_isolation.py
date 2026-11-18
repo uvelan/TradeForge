@@ -3,6 +3,7 @@ import pytest
 from research_backend.app import storage
 from research_backend.app.fvg import FVGDelivery, FVGRules, evaluate_fvg
 from research_backend.app.strategy_evidence import EvidenceRegistry
+from arrival_fixtures import trusted_archive
 from test_strict_causal_timing import ARCHIVE, OPEN, bar, canonical_seed
 
 
@@ -46,8 +47,8 @@ def test_same_formation_in_overlapping_calculations(reverse):
 @pytest.mark.parametrize("parent",["candle_range_theory","order_blocks"])
 @pytest.mark.parametrize("reverse",[False,True])
 def test_overlapping_archived_window_api(client,parent,reverse):
-    archive=storage.write_partition("MT5","overlap-calculation","EURUSD","candles","M5","BID",
-        [c.model_dump() for c,_ in unrecorded_rows()])
+    archive=trusted_archive([c.model_dump() for c,_ in unrecorded_rows() if c.available_at is not None],
+        provider="MT5",feed="overlap-calculation",symbol="EURUSD",timeframe="M5",start=36000,end=39900)
     schedule={"kind":"continuous"}
     short={"history_bars":10000,"history_start":36300,"market_schedule":schedule}
     long={**short,"history_start":36000}
@@ -57,7 +58,7 @@ def test_overlapping_archived_window_api(client,parent,reverse):
                 {"id":parent,**settings,"context":{"policy":"independent","fvg":long}}]
     request=dict(source="MT5_SAVED",symbol="EURUSD",feed_id="overlap-calculation",timeframe="M5",
                  price_basis="BID",cutoff=39900,frozen=True,candles=[],timing_policy="STRICT_CAUSAL",
-                 partitions=[{k:archive[k] for k in ("id","sha256")}],
+                 partitions=archive["partitions"],arrival_manifest=archive["id"],
                  indicators=indicators[::-1] if reverse else indicators)
     response=client.post("/api/indicators/evaluate",json=request)
     assert response.status_code==200,response.text
@@ -154,8 +155,8 @@ def test_archived_standalone_ob_and_crt_are_order_independent(client,policy,exec
     history=[unrecorded_rows()[0],bar(36300),bar(36600,(104,105,100,102)),
              bar(36900,available=37320),bar(37200,(100,108,99,107)),
              *[bar(t,(104,106,102,104)) for t in range(37500,39900,300)]]
-    archive=storage.write_partition("MT5","overlap-ob","EURUSD","candles","M5","BID",
-                                    [c.model_dump() for c,_ in history])
+    archive=trusted_archive([c.model_dump() for c,_ in history if c.available_at is not None],
+        provider="MT5",feed="overlap-ob",symbol="EURUSD",timeframe="M5",start=36000,end=39900)
     schedule={"kind":"continuous"}
     late={"history_bars":10000,"history_start":36300,"market_schedule":schedule,
           "algorithm_version":2,"left":1,"right":1}
@@ -168,7 +169,7 @@ def test_archived_standalone_ob_and_crt_are_order_independent(client,policy,exec
                     "include_context":True,"history_bars":10000,"history_start":36000,"market_schedule":schedule}}]
     request=dict(source="MT5_SAVED",symbol="EURUSD",feed_id="overlap-ob",timeframe="M5",
                  price_basis="BID",cutoff=39900,frozen=True,candles=[],timing_policy="STRICT_CAUSAL",
-                 partitions=[{k:archive[k] for k in ("id","sha256")}])
+                 partitions=archive["partitions"],arrival_manifest=archive["id"])
     results=[]
     for ordering in (indicators,indicators[::-1]):
         response=client.post("/api/indicators/evaluate",json={**request,"indicators":ordering})

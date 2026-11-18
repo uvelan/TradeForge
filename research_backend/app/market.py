@@ -121,7 +121,7 @@ def mt5_rates(symbol:str,timeframe:str,limit:int=300,*,include_latest:bool=False
         # Exclude the newest bar, which may be incomplete.
         candles=[{'time':int(r['time']),'open':float(r['open']),'high':float(r['high']),
                   'low':float(r['low']),'close':float(r['close']),'volume':int(r['tick_volume'])} for r in rates]
-        return candles if include_latest or window is not None else candles[:-1]
+        return candles if include_latest or window is not None else sorted(candles,key=lambda bar:bar["time"])[:-1]
 
 
 def mt5_reference_candles(symbol, timeframe, start, end, provenance):

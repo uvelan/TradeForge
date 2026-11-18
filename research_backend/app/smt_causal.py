@@ -8,6 +8,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 from .analysis_evidence import AnalysisCoordinator, ResourceLimit
+from .arrival_policy import MODE_VERSIONS, RECORDED_AUTHORITY, RECORDED_MODE, SIMULATION_AUTHORITY, SIMULATION_MODE
 from .causal_timing import STRICT, TemporalEvidence, strategy_eligible
 from .indicator_coverage import MarketSchedule, open_intervals
 from .indicator_engine import Partition
@@ -38,6 +39,8 @@ class FrozenFeed(BaseModel, extra="forbid"):
     partitions: list[Partition] = Field(min_length=1, max_length=50)
     start: int = Field(ge=0, le=MAX_TIMESTAMP)
     end: int = Field(gt=0, le=MAX_TIMESTAMP)
+    arrival_manifest: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    delay_seconds: int = Field(default=0, ge=0, le=86_400)
 
     @model_validator(mode="after")
     def validate_window(self):
@@ -63,12 +66,13 @@ class FrozenFeed(BaseModel, extra="forbid"):
 class ArchiveRequest(FrozenFeed):
     cutoff: int
     frozen: Literal[True] = True
-    strict_arrivals: Literal[True] = True
+    availability_mode: Literal["STRICT_RECORDED", "HISTORICAL_SIMULATION"]
 
 
 class StrictSmtRequest(BaseModel, extra="forbid"):
     primary: FrozenFeed
     comparison: FrozenFeed
+    availability_mode: Literal["STRICT_RECORDED", "HISTORICAL_SIMULATION"] = RECORDED_MODE
     relationship: Literal["POSITIVE"] = "POSITIVE"
     period: int = Field(default=3, ge=2, le=20)
     alignment_bars: int = Field(default=2, ge=0, le=10)
@@ -274,8 +278,8 @@ def _lifecycle(match, laggard, reference, sign, policy, step, slots, series, can
     return changes, boundaries
 
 
-def _timed_event(event_id, state, start, end, available, dependency, cutoff, *, refs=(), reason=None):
-    temporal = TemporalEvidence(start, end, available, dependency, cutoff, True, AUTHORITY)
+def _timed_event(event_id, state, start, end, available, dependency, cutoff, *, refs=(), reason=None, authority=AUTHORITY):
+    temporal = TemporalEvidence(start, end, available, dependency, cutoff, True, authority)
     return {"id": event_id, "state": state, "algorithm_version": ALGORITHM_VERSION,
             "available_at": available, "confirmation_time": end,
             "timing": temporal.contract(reason=reason, references=refs)}
@@ -288,7 +292,8 @@ def _producer(coordinator, history, scope, policy, step, configuration, series, 
     for stream in streams.values():
         for pivot in stream:
             event = _timed_event(pivot.id, "CONFIRMED", pivot.observation_start, pivot.nominal_confirmation,
-                                 pivot.available_at, pivot.available_at, policy.cutoff, reason="ELIGIBLE")
+                                 pivot.available_at, pivot.available_at, policy.cutoff, reason="ELIGIBLE",
+                                 authority=scope["authority"])
             event["pivot"] = asdict(pivot)
             view.publish(event, "smt_pivot", scope, configuration, predicate="FORMATION")
     return view, streams
@@ -314,9 +319,13 @@ def evaluate_strict_smt(request, loader=load_reference):
     feeds = (request.primary, request.comparison)
     step = FRAME_MIN[request.primary.timeframe]*60
     rule_keys = {"relationship", "period", "alignment_bars", "tolerance_bps", "confirmation_bars", "expiry_bars"}
+    simulated = request.availability_mode == SIMULATION_MODE
+    authority = SIMULATION_AUTHORITY if simulated else RECORDED_AUTHORITY
     rules = {**request.model_dump(include=rule_keys), "algorithm_version": ALGORITHM_VERSION,
              "timing_policy_version": TIMING_VERSION, "evidence_reference_version": REFERENCE_VERSION,
-             "lifecycle_version": LIFECYCLE_VERSION}
+             "lifecycle_version": LIFECYCLE_VERSION, "availability_mode": request.availability_mode,
+             "availability_mode_version": MODE_VERSIONS[request.availability_mode],
+             "delay_seconds": [feed.delay_seconds for feed in feeds] if simulated else None}
     config = fingerprint(rules)
     reply = {**rules, "cutoff": request.cutoff, "events": [], "current": [], "sources": {}, "alerts": []}
 
@@ -343,14 +352,19 @@ def evaluate_strict_smt(request, loader=load_reference):
     scopes = {}
     identities = {}
     for side, feed, bounds in zip(SIDES, feeds, feed_intervals):
-        query = ArchiveRequest(**feed.model_dump(), cutoff=request.cutoff)
+        query = ArchiveRequest(**feed.model_dump(), cutoff=request.cutoff, availability_mode=request.availability_mode)
         history = coordinator.history(query, feed.start, feed.end, step)
         evidence = history["evidence"]
         scope = {**feed.scope(), "window": [feed.start, feed.end], "manifest": feed.manifest(),
-                 "authority": evidence.get("context_authority")}
+                 "authority": evidence.get("context_authority"), "arrival_manifest": evidence.get("arrival_manifest"),
+                 "availability_policy": evidence.get("availability_policy"),
+                 "delay_seconds": evidence.get("delay_seconds")}
         scopes[side] = scope
         reply["sources"][side] = {**scope, "retrieval": evidence.get("retrieval")}
-        if evidence.get("context_authority") != AUTHORITY or evidence.get("status"):
+        if evidence.get("context_authority") == "CHECKSUM_VERIFIED_UNRECORDED_ARCHIVE" and not evidence.get("status"):
+            # Preserve unverified coverage diagnostics without admitting any pivots.
+            pass
+        elif evidence.get("context_authority") != authority or evidence.get("status"):
             return unavailable(evidence.get("reason", "UNVERIFIED_SOURCE"),
                                evidence.get("status", "UNAVAILABLE"))
         if sorted((part["id"], part["sha256"].lower()) for part in evidence["context_partitions"]) != feed.manifest():
@@ -418,7 +432,7 @@ def evaluate_strict_smt(request, loader=load_reference):
                       "previous_digest": previous.prefix_digest, "digest": match.prefix_digest}
             matching_id = fingerprint([event_id, "MATCH_CLOSED", prefix])
             matching = _timed_event(matching_id, "MATCH_CLOSED", match.prefix_start, match.end, match.closure,
-                                    match.closure, request.cutoff, refs=keys, reason="RESEARCH_ONLY")
+                                    match.closure, request.cutoff, refs=keys, reason="RESEARCH_ONLY", authority=authority)
             matching["coverage_prefix"] = prefix
             view.publish(matching, "smt_match", pair_scope, config, family=event_id,
                          predicate="FORMATION", lineage=True, producer_references=refs)
@@ -429,7 +443,7 @@ def evaluate_strict_smt(request, loader=load_reference):
                 eligible = state == "SMT_CONFIRMED"
                 predicate = "FORMATION" if state == "SMT_CANDIDATE" or eligible and not request.confirmation_bars else "WHOLE_CANDLE"
                 event = _timed_event(revision, state, change["start"], change["end"], available, change["barrier"],
-                                     request.cutoff, refs=keys,
+                                     request.cutoff, refs=keys, authority=authority,
                                      reason=("ELIGIBLE" if eligible else "RESEARCH_ONLY") if predicate == "FORMATION"
                                      else None if eligible else "RESEARCH_ONLY")
                 event.update(market_event_id=event_id, pair_id=pair_id, direction=direction, leader=leader,
@@ -442,8 +456,10 @@ def evaluate_strict_smt(request, loader=load_reference):
                 states.append(event)
             view.record_smt_uncertainty(event_id, boundaries)
             confirmed = next((state for state in states if state["state"] == "SMT_CONFIRMED"), None)
-            historical = bool(confirmed and strategy_eligible(confirmed, request.cutoff, registry=view))
-            current = historical and view.current_at(confirmed["evidence_reference"], request.cutoff)
+            historical = bool(confirmed and strategy_eligible(confirmed, request.cutoff, registry=view,
+                                                               purpose=request.availability_mode))
+            current = historical and view.current_at(confirmed["evidence_reference"], request.cutoff,
+                                                      purpose=request.availability_mode)
             current_state, reason = view.smt_state(event_id, request.cutoff)
             events.append({"id": event_id, "direction": direction, "leader": leader,
                            "pivots": {side: {"previous": asdict(pair[0]), "current": asdict(pair[1])}
@@ -453,12 +469,15 @@ def evaluate_strict_smt(request, loader=load_reference):
                                                "attestation": matching["evidence_reference"], "coverage_prefix": prefix},
                            "candidate_at": states[0]["available_at"],
                            "confirmed_at": confirmed["available_at"] if confirmed else None,
-                           "historically_eligible": historical,
-                           "current_eligible": current, "current_reason": reason,
+                           "historically_eligible": historical and not simulated,
+                           "historically_simulation_eligible": historical and simulated,
+                           "current_simulation_eligible": current and simulated,
+                           "current_eligible": current and not simulated, "current_reason": reason,
                            "current_state": current_state, "revisions": states})
     for event in sorted(events, key=lambda event: (event["candidate_at"], event["id"])):
         page.append(event)
     current = [{"id": event["id"], "state": event["current_state"], "current_eligible": event["current_eligible"],
+                "current_simulation_eligible": event["current_simulation_eligible"],
                 "reason": event["current_reason"], "confirmed_at": event["confirmed_at"], "direction": event["direction"]}
                for event in events if event["current_state"] in {"SMT_CANDIDATE", "SMT_CONFIRMED", "UNCERTAIN"}]
     if len(current) > 500:

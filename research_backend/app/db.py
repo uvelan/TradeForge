@@ -189,9 +189,61 @@ CREATE INDEX IF NOT EXISTS idx_trades_time ON trades(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_datasets_lookup ON datasets(provider,symbol,kind,timeframe);
 CREATE INDEX IF NOT EXISTS idx_fills_symbol ON imported_fills(symbol);
 CREATE INDEX IF NOT EXISTS idx_journal_time ON journal_entries(created_at DESC);
+CREATE TABLE IF NOT EXISTS arrival_sessions (
+    id TEXT PRIMARY KEY,
+    provider TEXT NOT NULL,
+    symbol TEXT NOT NULL,
+    timeframe TEXT NOT NULL,
+    policy TEXT NOT NULL,
+    started_ms INTEGER NOT NULL,
+    calendar TEXT NOT NULL CHECK(json_valid(calendar))
+);
+CREATE TABLE IF NOT EXISTS arrival_leases (
+    symbol TEXT NOT NULL,
+    timeframe TEXT NOT NULL,
+    session_id TEXT NOT NULL REFERENCES arrival_sessions(id),
+    expires_ms INTEGER NOT NULL,
+    PRIMARY KEY(symbol,timeframe)
+);
+CREATE TABLE IF NOT EXISTS arrival_observations (
+    sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL REFERENCES arrival_sessions(id),
+    provider TEXT NOT NULL,
+    feed_id TEXT NOT NULL,
+    symbol TEXT NOT NULL,
+    timeframe TEXT NOT NULL,
+    price_basis TEXT NOT NULL,
+    candle_open INTEGER NOT NULL,
+    nominal_close INTEGER NOT NULL,
+    observed_ms INTEGER NOT NULL,
+    elapsed_ms INTEGER NOT NULL,
+    content TEXT NOT NULL CHECK(json_valid(content)),
+    fingerprint TEXT NOT NULL,
+    previous_sequence INTEGER REFERENCES arrival_observations(sequence),
+    recovery INTEGER NOT NULL CHECK(recovery IN (0,1))
+);
+CREATE INDEX IF NOT EXISTS arrival_scope ON arrival_observations(
+    provider,feed_id,symbol,timeframe,price_basis,candle_open,sequence);
+CREATE TABLE IF NOT EXISTS arrival_receipts (
+    sequence INTEGER PRIMARY KEY REFERENCES arrival_observations(sequence),
+    persisted_ms INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS arrival_manifests (
+    id TEXT PRIMARY KEY,
+    payload TEXT NOT NULL CHECK(json_valid(payload))
+);
+CREATE TABLE IF NOT EXISTS arrival_partitions (
+    dataset_id TEXT PRIMARY KEY REFERENCES datasets(id),
+    sha256 TEXT NOT NULL,
+    policy TEXT NOT NULL,
+    scope TEXT NOT NULL CHECK(json_valid(scope)),
+    sessions TEXT NOT NULL CHECK(json_valid(sessions))
+);
 '''
 
 IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
+IMMUTABLE_TABLES += ["arrival_sessions", "arrival_observations", "arrival_receipts",
+                     "arrival_manifests", "arrival_partitions"]
 
 
 def connect():

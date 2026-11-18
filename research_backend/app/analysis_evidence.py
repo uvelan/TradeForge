@@ -8,7 +8,7 @@ import json
 from time import perf_counter
 from types import MappingProxyType
 
-from .causal_timing import STRICT
+from .arrival_policy import LEGACY_MODE, availability_mode
 from .strategy_evidence import EvidenceRegistry, history_fingerprint
 from .structure_pages import EventPage, StructureDelivery
 
@@ -134,8 +134,9 @@ class AnalysisCoordinator:
         self.work=0
         # Witnesses are side-channel evidence and must not alter public legacy events.
         self.evidence_histories = {}
-        self.evidence = EvidenceRegistry(self.reserve) if request.timing_policy == STRICT else None
-        self.witness=request.timing_policy==STRICT or any(s.id=="order_blocks" or s.crt and s.crt.include_context for s in request.indicators)
+        mode = availability_mode(request)
+        self.evidence = EvidenceRegistry(self.reserve,purpose=mode) if mode != LEGACY_MODE else None
+        self.witness=mode!=LEGACY_MODE or any(s.id=="order_blocks" or s.crt and s.crt.include_context for s in request.indicators)
 
     def reserve(self,amount):
         if self.reserved_bytes+amount>96*1024*1024:
@@ -145,8 +146,10 @@ class AnalysisCoordinator:
     def history(self,current,start,end,step,*,archive_limits=None):
         scope=tuple(getattr(current,key) for key in SCOPE_FIELDS)
         manifest=tuple(sorted((part.id,part.sha256.lower()) for part in current.partitions))
-        key=(scope,manifest,current.cutoff,current.frozen,start,end,step,archive_limits,
-             getattr(current,"strict_arrivals",False))
+        calendar = getattr(current,"calendar",None)
+        key=(scope,manifest,current.cutoff,current.frozen,start,end,step,archive_limits,availability_mode(current),
+             getattr(current,"arrival_manifest",None),tuple(sorted(getattr(current,"native_arrival_manifests",{}).items())),
+             getattr(current,"delay_seconds",0),calendar.model_dump_json() if calendar else None)
         if key in self.histories:
             self.counts["history_reuses"]+=1
             return self.histories[key]

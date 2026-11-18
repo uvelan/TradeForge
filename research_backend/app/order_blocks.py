@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, FiniteFloat
 
 from .strategy_evidence import EvidenceRegistry
+from .arrival_policy import RECORDED_MODE
 from .causal_timing import evidence as timing_evidence, strategy_eligible
 from .fvg import identity
 from .structure_pages import EventPage
@@ -239,7 +240,8 @@ class OrderBlockStream:
     def form(self, event, bar, available, index):
         if event["status"] != "confirmed" or event["type"] not in {"BOS", "CHOCH"}:
             return
-        if self.timing_cutoff is not None and (not strategy_eligible(event, self.timing_cutoff, registry=self.registry) or
+        if self.timing_cutoff is not None and (not strategy_eligible(
+                event, self.timing_cutoff, registry=self.registry,purpose=getattr(self.registry,"purpose",RECORDED_MODE)) or
                 self.minimum_displacement and bar.time<event["level_available_at"]):
             self.rejections["INELIGIBLE_STRUCTURAL_DEPENDENCY"] += 1
             return

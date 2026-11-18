@@ -1,6 +1,7 @@
 """UTC temporal rules and the fail-closed strategy evidence boundary."""
 from dataclasses import dataclass
 from typing import Literal
+from .arrival_policy import RECORDED_AUTHORITY, RECORDED_MODE, SIMULATION_AUTHORITY, SIMULATION_ELIGIBLE
 
 TimingMode = Literal["LEGACY_RESEARCH", "STRICT_CAUSAL"]
 LEGACY = "LEGACY_RESEARCH"
@@ -37,11 +38,14 @@ class TemporalEvidence:
         if decision != "NOT_YET_AVAILABLE" and reason is not None:
             decision = reason
         if decision == "ELIGIBLE":
-            if self.authority != "CHECKSUM_VERIFIED_ARCHIVE":
+            if self.authority not in {RECORDED_AUTHORITY,SIMULATION_AUTHORITY}:
                 decision = "UNVERIFIED_SOURCE"
             elif not self.recorded:
                 decision = "UNVERIFIED_AVAILABILITY"
-        basis = ("UNVERIFIED_CANDLE_CLOSE_OR_DECLARED" if self.authority != "CHECKSUM_VERIFIED_ARCHIVE"
+            elif self.authority == SIMULATION_AUTHORITY:
+                decision = SIMULATION_ELIGIBLE
+        basis = ("MODELED_NOMINAL_CLOSE_PLUS_DELAY" if self.authority == SIMULATION_AUTHORITY and self.recorded
+                 else "UNVERIFIED_CANDLE_CLOSE_OR_DECLARED" if self.authority != RECORDED_AUTHORITY
                  else "RECORDED" if self.recorded else "ASSUMED_CANDLE_CLOSE_OR_DEPENDENCY")
         return {"timing_policy":"STRICT_CAUSAL", "timing_policy_version":3,
                 "observation_start":self.start, "observation_end":self.end,
@@ -60,6 +64,6 @@ def evidence(bar, step, available, dependency, cutoff, authority):
 
 
 
-def strategy_eligible(event, cutoff, *, registry=None, current=False):
+def strategy_eligible(event, cutoff, *, registry=None, current=False, purpose=RECORDED_MODE):
     """Only a publication in the current analytical request can satisfy eligibility."""
-    return registry is not None and registry.eligible(event, cutoff, current=current)
+    return registry is not None and registry.eligible(event, cutoff, current=current, purpose=purpose)

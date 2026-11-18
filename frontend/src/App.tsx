@@ -14,6 +14,7 @@ import {ChartView,frameMinutes,useViewCandles} from './chartViews';
 import {useChartIndicator} from './indicators';
 import {smtFeed,useSmt} from './smt';
 import {SmtMonitor} from './SmtMonitor';
+import {ArrivalPanel} from './ArrivalPanel';
 import {closedCandles, ReplayControls} from './ReplayControls';
 import {SignalExplorer,signalSummary,type SignalRecord} from './SignalExplorer';
 import {DataTrust} from './DataTrust';
@@ -830,6 +831,7 @@ function DataLibrary({refresh,initialDataset}:{refresh:()=>void;initialDataset?:
  async function importBi5(){if(!file)return;setBusy(true);setError('');try{const d=await api.importBi5(symbol,day,file,hour);setMsg(`Imported ${d.tick_dataset.rows} source ticks, ${d.candle_rows} M5 bars`);await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  return <><PageHeading eyebrow="STORAGE / PROVENANCE" title="Market data library" subtitle="Maintain separately sourced, checksummed datasets for research and replay." action={<a className="btn btn-secondary" href="/catalog.html">Open fixed-point catalog</a>}/>
  {error&&<Notice tone="red">{error}</Notice>}{msg&&<Success>{msg}</Success>}
+ <ArrivalPanel datasets={datasets}/>
  <Card><SectionTitle title="Inspect archived candle coverage"/>
    <label className="field">Candle partition <select value={inspected?.id??''}
      onChange={event=>setInspected(datasets.find(item=>item.id===event.target.value)??(initialDataset?.id===event.target.value?initialDataset:undefined))}>

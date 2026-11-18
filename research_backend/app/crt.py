@@ -141,7 +141,7 @@ def evaluate_crt(rows, step, cutoff, frame, rules, delivery, provenance, native_
         registry=EvidenceRegistry()
     authority=provenance.get("context_authority","CLIENT_SUPPLIED_UNVERIFIED")
     if strict and rules.reference_mode=="native" and provenance.get(
-            "native_reference",{}).get("context_authority")!="CHECKSUM_VERIFIED_ARCHIVE":
+            "native_reference",{}).get("context_authority")!=authority:
         authority="MIXED_OBSERVATION_AND_REFERENCE"
     policy=(VERSION,IDENTITY_VERSION,"STRICT_CAUSAL",3) if strict else (VERSION,IDENTITY_VERSION)
     config=identity("crt-rules",policy,rules.model_dump(exclude={
