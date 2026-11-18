@@ -17,6 +17,17 @@ async function enable(page: Page, query: string, id: string) {
   await page.getByRole("button",{name:"Enable indicator",exact:true}).click();
 }
 
+async function useHourlyDemo(page: Page) {
+  const hourly = page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return url.pathname.endsWith("/market/candles") && url.searchParams.get("timeframe") === "H1"
+      && url.searchParams.get("source") === "DEMO" && response.ok();
+  });
+  await page.getByRole("button",{name:"H1",exact:true}).click();
+  await hourly;
+  await expect(page.locator(primary)).toBeVisible();
+}
+
 test("multiple canonical indicators persist, update panes and clean up on remount",async ({page},info)=>{
   const errors:string[]=[];
   page.on("pageerror", error=>errors.push(error.message));
@@ -84,7 +95,7 @@ test("replay submits only closed evidence within the visible cutoff",async ({pag
 
 test("a session overlay exposes provisional and completed backend values",async ({page},info)=>{
   await terminal(page);
-  await page.getByRole("button",{name:"H1",exact:true}).click();
+  await useHourlyDemo(page);
   await page.getByText("Indicator library",{exact:true}).click();
   const evaluated=page.waitForResponse(res=>res.url().endsWith("/indicators/evaluate")&&
     res.request().postDataJSON().indicators[0]?.id==="session_new_york");
@@ -128,7 +139,7 @@ test("the terminal distinguishes a complete forex week from missing open-market 
         {time:next,open:10,close:10,high:40,low:1}]})});
   });
   await terminal(page);
-  await page.getByRole("button",{name:"H1",exact:true}).click();
+  await useHourlyDemo(page);
   await page.getByText("Indicator library",{exact:true}).click();
   await enable(page,"previous utc week","previous_week");
   const group=page.getByRole("group",{name:"Previous UTC week"});

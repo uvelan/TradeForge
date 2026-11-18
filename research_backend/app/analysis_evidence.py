@@ -145,7 +145,8 @@ class AnalysisCoordinator:
     def history(self,current,start,end,step,*,archive_limits=None):
         scope=tuple(getattr(current,key) for key in SCOPE_FIELDS)
         manifest=tuple(sorted((part.id,part.sha256.lower()) for part in current.partitions))
-        key=(scope,manifest,current.cutoff,current.frozen,start,end,step,archive_limits)
+        key=(scope,manifest,current.cutoff,current.frozen,start,end,step,archive_limits,
+             getattr(current,"strict_arrivals",False))
         if key in self.histories:
             self.counts["history_reuses"]+=1
             return self.histories[key]
@@ -173,11 +174,10 @@ class AnalysisCoordinator:
             return self.computed[cache_key]
         if cache_key in self.running:
             raise ValueError("Analytical dependency cycle")
-        if sum(self.counts[k] for k in ("structure","liquidity","fvg","order_blocks","crt","levels"))>=32:
+        if sum(self.counts[k] for k in ("structure","liquidity","fvg","order_blocks","crt","levels",
+                                        "smt_pivots","smt"))>=32:
             raise ResourceLimit("Analytical calculation count budget exceeded")
-        self.work+=len(rows)
-        if self.work>160_000:
-            raise ResourceLimit("Analytical observation work budget exceeded")
+        self.charge_work(len(rows))
         self.reserve(len(rows)*(768 if kind=="structure" else 384))
         self.running.add(cache_key)
         self.counts[kind]+=1
@@ -189,6 +189,11 @@ class AnalysisCoordinator:
         finally:
             self.timings[kind]+=round((perf_counter()-started)*1000,3)
             self.running.remove(cache_key)
+
+    def charge_work(self, records):
+        self.work+=records
+        if self.work>160_000:
+            raise ResourceLimit("Analytical observation work budget exceeded")
 
     def evidence_for(self, engine, rows, provenance, configuration, *, native=()):
         if self.evidence is None:

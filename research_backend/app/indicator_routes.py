@@ -15,12 +15,26 @@ from .indicator_history import load_reference
 from .structure_pages import StaleStructureCursor
 from .market import FRAME_MIN, mt5_rates
 from .smt import confirmation_timing, detect_smt
+from .smt_causal import StrictSmtRequest, evaluate_strict_smt
+from .analysis_evidence import ResourceLimit
 from .db import one, rows, transaction
 from .smt_history import event_identity, record_smt, scope_key
 from .storage import read_partition
 from .saved_history import saved_range
 
 router = APIRouter(prefix="/api/indicators")
+
+
+@router.post("/smt/strict")
+def strict_smt(request: StrictSmtRequest):
+    try:
+        return evaluate_strict_smt(request)
+    except StaleStructureCursor as error:
+        raise HTTPException(409, str(error)) from error
+    except ResourceLimit as error:
+        raise HTTPException(422, str(error)) from error
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
 
 
 class Calculation(BaseModel):

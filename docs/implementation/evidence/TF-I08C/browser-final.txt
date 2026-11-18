@@ -1,0 +1,90 @@
+
+> e2e
+> playwright test --retries=0 --reporter=line
+
+
+[WebServer] INFO:     Started server process [3516]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8185 (Press CTRL+C to quit)
+
+[WebServer] (node:8056) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 65 tests using 1 worker
+
+(node:34868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/65] e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions
+[2/65] e2e\drawing-edit.spec.ts:176:1 › all four rectangle handles edit only their corresponding boundaries
+[3/65] e2e\drawing-edit.spec.ts:196:3 › long position rejects crossed handles and preserves direction on a valid resize
+[4/65] e2e\drawing-edit.spec.ts:196:3 › short position rejects crossed handles and preserves direction on a valid resize
+[5/65] e2e\drawing-edit.spec.ts:221:1 › vertical horizontal edit works after zoom, resize and fullscreen with left scale and comparison pane
+[6/65] e2e\drawing-edit.spec.ts:248:1 › overlapping strokes prefer the later item; locked and hidden drawings cannot drag
+[7/65] e2e\drawing-edit.spec.ts:273:1 › Escape and pointer cancellation discard edits; a scope change cannot save an obsolete gesture
+[8/65] e2e\drawing-edit.spec.ts:304:1 › a native touchscreen cancel releases the selected drawing without writing
+[9/65] e2e\drawing-edit.spec.ts:319:1 › a real 409 blocks further edits and reload preserves the competing drawing
+[10/65] e2e\drawing-edit.spec.ts:344:1 › a canonical EMA overlay leaves creating and editing a drawing functional
+[11/65] e2e\drawing-edit.spec.ts:356:1 › market structure overlays preserve ownership of a saved drawing handle
+[12/65] e2e\drawing-edit.spec.ts:378:1 › Liquidity overlays preserve a saved drawing handle gesture
+[13/65] e2e\drawing-edit.spec.ts:378:1 › FVG overlays preserve a saved drawing handle gesture
+[14/65] e2e\drawing-edit.spec.ts:378:1 › Order block overlays preserve a saved drawing handle gesture
+[15/65] e2e\drawing-edit.spec.ts:378:1 › CRT overlays preserve a saved drawing handle gesture
+[16/65] e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1366x768
+[17/65] e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1920x1080
+[18/65] e2e\drawing-placement.spec.ts:51:1 › touch places a horizontal drawing and its persisted anchor can be edited
+[19/65] e2e\drawing-placement.spec.ts:78:1 › rejects outside release and Escape then saves a rectangle with two clicks
+[20/65] e2e\drawing-placement.spec.ts:99:1 › risk/reward commits valid prices after zoom and excludes the comparison axis
+[21/65] e2e\drawing-placement.spec.ts:134:1 › a stale drawing save reports 409 and reload preserves the competing scene
+[22/65] e2e\drawing-placement.spec.ts:154:1 › blank chart space and a secondary plot cannot save into the primary scope
+[23/65] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every trend anchor
+[24/65] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every rectangle anchor
+[25/65] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every risk-reward anchor
+[26/65] e2e\drawing-placement.spec.ts:258:1 › previews and saves both position directions and rejects an invalid edit
+[27/65] e2e\drawing-placement.spec.ts:320:1 › releases pointer ownership on candle refresh and scope remount
+[28/65] e2e\drawing-placement.spec.ts:418:1 › maps anchors across fullscreen and resized plots with a left comparison scale
+[29/65] e2e\drawing-placement.spec.ts:505:1 › the horizontal rail takes precedence over an unfinished trendline
+[30/65] e2e\drawing-placement.spec.ts:518:1 › a horizontal drawing drag uses the release candle and price after zoom and resize
+[31/65] e2e\drawing-placement.spec.ts:567:1 › Alt+H and the rail discard rectangle and risk/reward draft anchors
+[32/65] e2e\drawing-placement.spec.ts:588:1 › toolbox activation clears other modes and repeated switches save only the final intended drawing
+[33/65] e2e\drawing-placement.spec.ts:624:1 › Escape cancels all armed modes and an active drag cannot complete in a replacement mode
+[34/65] e2e\drawing-placement.spec.ts:668:1 › horizontal drags reject outside, missing candle and pointer cancellation
+[35/65] e2e\drawing-placement.spec.ts:703:1 › negative chart prices are rejected and navigation still pans and zooms
+(node:27440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[36/65] e2e\indicator-engine.spec.ts:31:1 › multiple canonical indicators persist, update panes and clean up on remount
+[37/65] e2e\indicator-engine.spec.ts:73:1 › replay submits only closed evidence within the visible cutoff
+[38/65] e2e\indicator-engine.spec.ts:96:1 › a session overlay exposes provisional and completed backend values
+[39/65] e2e\indicator-engine.spec.ts:112:1 › previous week requests a bounded M5 reference beyond chart history
+[40/65] e2e\indicator-engine.spec.ts:128:1 › the terminal distinguishes a complete forex week from missing open-market coverage
+[41/65] e2e\indicator-engine.spec.ts:163:1 › structure replay paints CHOCH at the confirming step and removes it on rewind
+[42/65] e2e\indicator-engine.spec.ts:228:1 › a pending market structure result stays tied to the original chart scope
+[43/65] e2e\indicator-engine.spec.ts:258:1 › older structure pages are bounded and leave the latest chart and state intact
+[44/65] e2e\indicator-engine.spec.ts:302:1 › calendar structure confirms a real reopening BOS and removes it on replay rewind
+[45/65] e2e\indicator-engine.spec.ts:339:1 › liquidity replay exposes the sweep only after its closed evidence and keeps it inspectable
+[46/65] e2e\indicator-engine.spec.ts:380:1 › a pending Liquidity request cannot replace another instrument or timeframe
+[47/65] e2e\indicator-engine.spec.ts:380:1 › a pending FVG request cannot replace another instrument or timeframe
+[48/65] e2e\indicator-engine.spec.ts:380:1 › a pending Order block request cannot replace another instrument or timeframe
+[49/65] e2e\indicator-engine.spec.ts:380:1 › a pending CRT request cannot replace another instrument or timeframe
+[50/65] e2e\indicator-engine.spec.ts:408:1 › FVG paints a causal zone and updates its remaining depth during replay
+[51/65] e2e\indicator-engine.spec.ts:453:1 › FVG selection survives a rolling MT5 refresh and drops corrected evidence
+[52/65] e2e\indicator-engine.spec.ts:501:1 › order block appears at BOS availability and rewinds independently of FVG and liquidity
+[53/65] e2e\indicator-engine.spec.ts:554:1 › CRT delays the H1 range, excludes a straddling sweep and rewinds cleanly
+[54/65] e2e\indicator-engine.spec.ts:612:1 › shared context follows chart structure settings and visibility changes send no request
+[55/65] e2e\indicator-engine.spec.ts:669:1 › strict FVG timing exposes a straddling replay observation and rewinds
+[56/65] e2e\liquidity-active.spec.ts:3:1 › unchanged live liquidity remains on chart beyond the revision page
+[57/65] e2e\research.spec.ts:3:1 › opens the research dashboard, replays demo bars, and links to the preserved catalog
+[58/65] e2e\research.spec.ts:22:1 › shows a saved background SMT watch and stops it from Market Terminal
+[59/65] e2e\research.spec.ts:45:1 › navigates by keyboard and moves recorded signal evidence into a persisted draft
+[60/65] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+[61/65] e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses
+[62/65] e2e\research.spec.ts:230:1 › a delayed drawing save cannot select a drawing in a different chart scope
+[63/65] e2e\research.spec.ts:266:1 › links four chart views and opens a saved simulation after reload
+[64/65] e2e\smt-causal.spec.ts:3:1 › strict SMT ignores stale pair responses and rewinds a frozen pair
+[65/65] e2e\terminal.spec.ts:3:1 › generates a simulated dataset and reopens it after reload
+  65 passed (4.7m)

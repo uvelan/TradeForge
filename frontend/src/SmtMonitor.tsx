@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react';
 import type {SmtEvent, SmtRules} from './smt';
 import type {Timeframe} from './types';
+import {StrictSmtEvidence, type StrictSmtContext} from './StrictSmtEvidence';
 
 const endpoint = '/research/api/indicators/smt/monitor';
 
@@ -13,11 +14,12 @@ type MonitorStatus = {
   latest_correction?: {source_correction:{observed_at:number; changes:unknown[]}} | null;
 };
 
-export function SmtMonitor({watch}: {watch?:Watch}) {
+export function SmtMonitor({watch, strict}: {watch?:Watch; strict?:StrictSmtContext}) {
   const [status,setStatus] = useState<MonitorStatus>();
   const [error,setError] = useState('');
   const [saving,setSaving] = useState(false);
   const [refresh,setRefresh] = useState(0);
+  const [mode,setMode] = useState<'legacy'|'strict'>('legacy');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -54,10 +56,15 @@ export function SmtMonitor({watch}: {watch?:Watch}) {
 
   const active = status?.configuration;
   const matches = watch && active && (Object.keys(watch) as (keyof Watch)[]).every(key => watch[key] === active[key]);
-  if (!watch && !active) return null;
+  if (!watch && !active && !strict) return null;
   return <details>
-    <summary>Background SMT</summary>
-    <div className="smt-rules">
+    <summary>{strict ? 'SMT monitor' : 'Background SMT'}</summary>
+    {strict && <label>SMT evidence mode <select value={mode}
+      onChange={event => setMode(event.target.value === 'strict' ? 'strict' : 'legacy')}>
+      <option value="legacy">Legacy research SMT</option>
+      <option value="strict">Strict causal SMT</option>
+    </select></label>}
+    {mode === 'strict' && strict ? <StrictSmtEvidence context={strict}/> : <div className="smt-rules">
       <small role="status">{error || status?.error || (active
         ? `${active.primary_symbol} / ${active.comparison_symbol} · ${active.timeframe} · ${status?.last_poll_at ? 'Polling' : 'Starting'}`
         : status ? 'Monitoring off' : 'Checking monitor status…')}</small>
@@ -66,6 +73,6 @@ export function SmtMonitor({watch}: {watch?:Watch}) {
       {active && <button type="button" className="small-tool" disabled={saving} onClick={()=>void save(active,false)}>Stop monitoring</button>}
       {status?.latest_alert?.confirmed_at && <small>SMT_CONFIRMED · {status.latest_alert.direction} · {new Date(status.latest_alert.confirmed_at*1000).toISOString()}</small>}
       {status?.latest_correction && <small>SMT_SOURCE_CORRECTED · {new Date(status.latest_correction.source_correction.observed_at*1000).toISOString()} · {status.latest_correction.source_correction.changes.length} revised or missing candles</small>}
-    </div>
+    </div>}
   </details>;
 }

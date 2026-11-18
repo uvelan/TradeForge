@@ -1,0 +1,27 @@
+K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+Windows-11-10.0.26200-SP0 3.13.14
+{"companion_executions": null, "event_count": 332, "json_encoding": {"p50_ms": 0.702, "p95_ms": 0.754}, "legacy_detector": {"p50_ms": 140.317, "p95_ms": 161.841}, "per_feed_candles": 2000, "process_rss_high_water_kib": 171840, "python_allocation_peak_bytes": 15405140, "replay_readvance_ms": 382.611, "replay_rewind_ms": 352.571, "resources": {"checksum_attempts": 2, "consumer_lookups": 332, "decoded_records": 4000, "dependency_lookups": 3976, "estimated_retained_bytes": 6481920, "history_reads": 2, "normalized_records": 4000, "partition_decodes": 2, "publications": 1660, "requested_slots": 4000, "smt_pivots": 2}, "response_bytes": 118595, "samples": 30, "scenario": "dense", "strict_archive_calculation": {"p50_ms": 294.656, "p95_ms": 381.388}, "strict_asgi": {"p50_ms": 295.531, "p95_ms": 390.729}}
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import runpy; runpy.run_path('docs/implementation/evidence/TF-I08C/benchmark.py', run_name='__main__')
+                  ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 294, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "docs/implementation/evidence/TF-I08C/benchmark.py", line 173, in <module>
+    main()
+    ~~~~^^
+  File "docs/implementation/evidence/TF-I08C/benchmark.py", line 168, in main
+    print(json.dumps(run_case(client, label, count, spacing, delayed, missing), sort_keys=True),
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "docs/implementation/evidence/TF-I08C/benchmark.py", line 121, in run_case
+    mixed()
+    ~~~~~^^
+  File "docs/implementation/evidence/TF-I08C/benchmark.py", line 113, in mixed
+    companion.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "K:\Projects\TradeForge\.venv\Lib\site-packages\httpx\_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '422 Unprocessable Entity' for url 'http://testserver/api/indicators/evaluate'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422

@@ -10,6 +10,7 @@ from .storage import read_partition
 MAX_BARS = 10_080
 MAX_PARTITIONS = 50
 MAX_DECODED = 30_000
+RECORDED_ARRIVAL = "SERVER_RECORDED_ARRIVAL_V1"
 
 
 def load_reference(request, start, end, step, *, archive_limits=None, archive_session=None):
@@ -73,10 +74,17 @@ def load_reference(request, start, end, step, *, archive_limits=None, archive_se
         else:
             return refused("HISTORY_UNAVAILABLE", "NO_COMPATIBLE_HISTORICAL_SOURCE")
         observed = {}
+        strict_arrivals = getattr(request, "strict_arrivals", False)
         for raw in bars:
             if not start <= raw["time"] < end:
                 continue
             bar = EvidenceBar.model_validate(dict(raw))
+            if strict_arrivals:
+                if raw.get("availability_policy") != RECORDED_ARRIVAL:
+                    bar = bar.model_copy(update={"available_at": None})
+                elif (type(raw.get("available_at")) is not int or type(raw.get("closed")) is not bool
+                      or bar.available_at < bar.time + step):
+                    return refused("SOURCE_INTEGRITY_FAILURE", "INVALID_RECORDED_ARRIVAL")
             available = max(bar.time + step, bar.available_at or 0)
             if bar.time in observed:
                 return refused("SOURCE_INTEGRITY_FAILURE", "DUPLICATE_ARCHIVE_CANDLE")

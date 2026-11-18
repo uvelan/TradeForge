@@ -1,0 +1,46 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+__________________ test_delayed_session_prefix_availability ___________________
+
+client = <starlette.testclient.TestClient object at 0x000002A8402667B0>
+
+    def test_delayed_session_prefix_availability(client):
+        body = archive(bars([10]*5+LEFT, delayed={0: 940}), bars([22]*5+RIGHT), end=1020)
+        before = query(client, body, cutoff=999)
+        assert not before["events"]
+        arrival = event(query(client, body, cutoff=1000))
+        after = event(query(client, body, cutoff=1020))
+>       assert (arrival["candidate_at"], arrival["confirmed_at"], after["confirmed_at"]) == (1000, None, None)
+E       assert (840, 900, 900) == (1000, None, None)
+E
+E         At index 0 diff: 840 != 1000
+E         Use -v to get more diff
+
+research_backend\tests\test_smt_integrity.py:30: AssertionError
+___________________ test_canonical_uncertainty_matches_api ____________________
+
+client = <starlette.testclient.TestClient object at 0x000002A84036F890>
+smt_registry = {'dad17ed6e2929b395769b05ca248bb1a66b7a670315a78c49d5c2920e9ef8018': <research_backend.app.strategy_evidence.EvidenceRegistry object at 0x000002A84EAF9490>}
+
+    def test_canonical_uncertainty_matches_api(client, smt_registry):
+        result = query(client, archive(bars(LEFT), bars(RIGHT, missing=(10,))))
+        entry = event(result)
+        confirmation = next(row for row in entry["revisions"] if row["state"] == "SMT_CONFIRMED")
+        view = smt_registry[result["snapshot"]]
+        assert strategy_eligible(confirmation, 720, registry=view)
+        assert entry["current_eligible"] is False
+>       assert strategy_eligible(confirmation, 720, registry=view, current=True) is entry["current_eligible"]
+E       AssertionError: assert True is False
+E        +  where True = strategy_eligible({'id': '26a8a1ca18313a327d935c2f50f874d30df200482afc1a8bb129ea4bf7eba802', 'state': 'SMT_CONFIRMED', 'algorithm_version': 1, 'available_at': 600, ...}, 720, registry=<research_backend.app.strategy_evidence.EvidenceRegistry object at 0x000002A84EAF9490>, current=True)
+
+research_backend\tests\test_smt_integrity.py:40: AssertionError
+============================== warnings summary ===============================
+research_backend/tests/test_smt_integrity.py::test_delayed_session_prefix_availability
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_smt_integrity.py::test_delayed_session_prefix_availability
+FAILED research_backend/tests/test_smt_integrity.py::test_canonical_uncertainty_matches_api
+2 failed, 1 warning in 4.60s
