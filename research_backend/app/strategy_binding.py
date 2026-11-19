@@ -96,14 +96,15 @@ def verified_family(registry, evidence):
 
 
 def select_candidate(registry, events, *, snapshot, cutoff, policy: Selection, age, limit,
-                     current=False, bound=None, coverage_known):
+                     current=False, bound=None, coverage_known, purpose=None):
     """Order an already predicate-matched, causally complete prefix for one rule.
 
     A caller owns the attempt, positive proof and availability cursor. Overflow
     or conflicting inputs are unknown. The selected bound family never falls back
     to an unrelated observation.
     """
-    if (not coverage_known or not 1 <= limit <= 128 or not 1 <= age <= 86400 or
+    if (purpose is not None and purpose != registry.purpose or
+            not coverage_known or not 1 <= limit <= 128 or not 1 <= age <= 86400 or
             policy not in ("EARLIEST_ELIGIBLE", "LATEST_ELIGIBLE", "BOUND_FAMILY") or
             (policy == "BOUND_FAMILY") != (bound is not None) or
             bound is not None and not verified_family(registry, bound)):
@@ -139,13 +140,14 @@ def select_candidate(registry, events, *, snapshot, cutoff, policy: Selection, a
     return Outcome.SATISFIED, choose(choices.values(), key=order)
 
 
-def crt_family_validity(registry, bound, revision, *, snapshot, cutoff, coverage_known):
+def crt_family_validity(registry, bound, revision, *, snapshot, cutoff, coverage_known, purpose=None):
     """Classify a selected CRT family's exact latest revision at a cutoff.
 
     Terminal producer projections may block an entry without supplying positive
     evidence to a rule. Missing, uncertain or ambiguous revisions remain unknown.
     """
-    if not coverage_known or bound.reference.category != "crt" or not verified_family(registry, bound):
+    if (purpose is not None and purpose != registry.purpose or not coverage_known or
+            bound.reference.category != "crt" or not verified_family(registry, bound)):
         return Outcome.UNKNOWN
     record = exact_record(registry, revision, snapshot, cutoff)
     if (record is None or record.category != "crt" or
@@ -166,7 +168,7 @@ def crt_family_validity(registry, bound, revision, *, snapshot, cutoff, coverage
 
 
 def activate_crt_attempt(registry, reference, revision, *, snapshot, cutoff, age,
-                         coverage_known, attempt_id, strategy_version_id, alias):
+                         coverage_known, attempt_id, strategy_version_id, alias, purpose=None):
     """Bind a historical ACTIVE reference only if its family is usable at creation."""
     if reference.reference.category != "crt" or not 1 <= age <= 86400:
         return Outcome.UNKNOWN, None
@@ -174,7 +176,7 @@ def activate_crt_attempt(registry, reference, revision, *, snapshot, cutoff, age
     if not initial or initial.state != "ACTIVE" or not 0 <= cutoff - initial.available <= age:
         return Outcome.UNKNOWN, None
     validity = crt_family_validity(registry, reference, revision, snapshot=snapshot,
-                                   cutoff=cutoff, coverage_known=coverage_known)
+                                   cutoff=cutoff, coverage_known=coverage_known,purpose=purpose)
     if validity != Outcome.SATISFIED:
         return validity, None
     return validity, AttemptBinding(attempt_id=attempt_id, strategy_version_id=strategy_version_id,

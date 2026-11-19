@@ -4,6 +4,7 @@ import {useTimestampFormat} from './timezone';
 import {BoundFields,Choice,GroupFields,Producers,fieldName,groupFor,rulesIn} from './StrategyRules';
 import {AttemptFields,Policies,ScopeFields,upgradeDraft} from './StrategyPolicies';
 import type {Catalog,Definition,Diff,Link,Listed,Phase,RecordVersion,Template,Validation} from './strategyTypes';
+import {StrategyEvaluation,type EvidenceChartLocation} from './StrategyEvaluation';
 import './strategyBuilder.css';
 
 const endpoint='/strategies/v1';
@@ -76,12 +77,13 @@ function VersionHistory({record,history,load}:{record:RecordVersion;history:Hist
   </section>;
 }
 
-export function StrategyBuilder(){
+export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartLocation)=>void}={}){
   const [catalog,setCatalog]=useState<Catalog>();
   const [templates,setTemplates]=useState<Template[]>([]);
   const [library,setLibrary]=useState<Listed[]>([]);
   const [offset,setOffset]=useState(0);
   const [record,setRecord]=useState<RecordVersion>();
+  const [evaluationVersion,setEvaluationVersion]=useState<string>();
   const [history,setHistory]=useState<History[]>([]);
   const [definition,setDefinition]=useState<Definition>();
   const [validation,setValidation]=useState<Validation>();
@@ -197,11 +199,15 @@ export function StrategyBuilder(){
           </div>
         </fieldset>
         {record&&<div className="strategy-actions">
+          {record.definition.schema_version===2&&record.status==='READY_FOR_EVALUATION'&&!record.binding_revision&&
+            record.definition.availability_modes[0]==='HISTORICAL_SIMULATION'&&
+            <button className="small-tool" type="button" disabled={busy} onClick={()=>setEvaluationVersion(record.version_id)}>Evaluate</button>}
           <button className="small-tool" disabled={busy} type="button" onClick={()=>void run(async()=>adopt(await api.get<RecordVersion>(endpoint+'/'+record.strategy_id)))}>Reload saved definition</button>
           <button className="small-tool" disabled={busy} type="button" onClick={()=>mutate('duplicate')}>Duplicate strategy</button>
           <button className="small-tool" disabled={busy||record.status==='ARCHIVED'} type="button" onClick={()=>mutate('archive')}>Archive strategy</button>
         </div>}
       </section>
+      {record&&record.version_id===evaluationVersion&&<StrategyEvaluation key={'evaluation-'+record.version_id} record={record} openChart={openChart}/>}
       <section className="card strategy-block" aria-label="Definition validation">
         <h2>Definition validation</h2>
         <p>{purposeLabel(definition.availability_modes[0])} · Recorded data blocked · Evaluation pending TF-I09B</p>

@@ -29,6 +29,7 @@ from .arrival_capture import CaptureManager
 from .arrival_routes import router as arrival_router
 from .workspace_routes import router as workspace_router
 from .strategy_routes import router as strategy_router
+from .strategy_evaluation_routes import router as strategy_evaluation_router
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
 from .saved_history import recent_archive_range, saved_range, tick_partitions, read_tick_partitions
 
@@ -53,6 +54,7 @@ app.include_router(arrival_router)
 app.include_router(drawing_router)
 app.include_router(workspace_router)
 app.include_router(strategy_router)
+app.include_router(strategy_evaluation_router)
 app.add_middleware(CORSMiddleware,allow_origins=['http://127.0.0.1:5173','http://localhost:5173','http://127.0.0.1:4180','http://localhost:4180'],allow_credentials=False,allow_methods=['GET','POST'],allow_headers=['Content-Type'])
 
 

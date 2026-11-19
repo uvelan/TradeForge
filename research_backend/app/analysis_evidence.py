@@ -119,7 +119,7 @@ class ArchiveSession:
 
 
 class AnalysisCoordinator:
-    def __init__(self, request, loader):
+    def __init__(self, request, loader, *, event_sink=None):
         self.request=request
         self.loader=loader
         self.reserved_bytes=0
@@ -135,7 +135,7 @@ class AnalysisCoordinator:
         # Witnesses are side-channel evidence and must not alter public legacy events.
         self.evidence_histories = {}
         mode = availability_mode(request)
-        self.evidence = EvidenceRegistry(self.reserve,purpose=mode) if mode != LEGACY_MODE else None
+        self.evidence = EvidenceRegistry(self.reserve,purpose=mode,event_sink=event_sink) if mode != LEGACY_MODE else None
         self.witness=mode!=LEGACY_MODE or any(s.id=="order_blocks" or s.crt and s.crt.include_context for s in request.indicators)
 
     def reserve(self,amount):
@@ -226,7 +226,8 @@ class AnalysisCoordinator:
         key=(id(rows),step,rules.algorithm_version,canonical(rules.identity_parameters()),
              canonical(scope),canonical(snapshot_scope))
         spec=self.request.indicators[0]
-        if len(self.request.indicators)==1 and not (spec.crt and spec.crt.include_context or spec.ob and spec.ob.include_context):
+        if (len(self.request.indicators)==1 and not (self.evidence and self.evidence.event_sink)
+                and not (spec.crt and spec.crt.include_context or spec.ob and spec.ob.include_context)):
             return self.run("structure",key,rows,lambda:detector(
                 rows,step,rules,scope,delivery,snapshot_scope,consumer,local_witness=self.witness, registry=registry))
         result, observations, public=self.run("structure",key,rows,calculate)

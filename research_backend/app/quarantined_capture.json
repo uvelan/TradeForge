@@ -1,0 +1,316 @@
+{
+  "sessions": [
+    {
+      "id": "914d2d22c175488387fb566a6a7e56cb",
+      "provider": "DUKASCOPY",
+      "feed_id": "clock-EURUSD",
+      "symbol": "EURUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "observations": 29,
+      "first_open": 0,
+      "last_open": 1680
+    },
+    {
+      "id": "97d5e19710ae4f61b09b5fa19cc62d38",
+      "provider": "DUKASCOPY",
+      "feed_id": "clock-GBPUSD",
+      "symbol": "GBPUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "observations": 29,
+      "first_open": 0,
+      "last_open": 1680
+    },
+    {
+      "id": "b2bb3599a8ce478a998d776f2cd90c10",
+      "provider": "DUKASCOPY",
+      "feed_id": "clock-GBPUSD",
+      "symbol": "GBPUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "observations": 29,
+      "first_open": 0,
+      "last_open": 1680
+    },
+    {
+      "id": "b83458c4fa4b4f89b1bebfc3200d893e",
+      "provider": "DUKASCOPY",
+      "feed_id": "clock-GBPUSD",
+      "symbol": "GBPUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "observations": 29,
+      "first_open": 0,
+      "last_open": 1680
+    },
+    {
+      "id": "cefdb644c4d844e5b920ef2ce31824f0",
+      "provider": "DUKASCOPY",
+      "feed_id": "clock-EURUSD",
+      "symbol": "EURUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "observations": 29,
+      "first_open": 0,
+      "last_open": 1680
+    },
+    {
+      "id": "e1258f975bd5406e99cedfe34e8f88c8",
+      "provider": "DUKASCOPY",
+      "feed_id": "clock-EURUSD",
+      "symbol": "EURUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "observations": 29,
+      "first_open": 0,
+      "last_open": 1680
+    }
+  ],
+  "partitions": [
+    {
+      "dataset_id": "c0140058b9ba488d025e9315307b085984a457d122f8719b33544762156dd166",
+      "sha256": "372449be9e3d5508b87e48cc9dd4fda97af2f2b33be68662a3cd2b20065b8da7",
+      "policy": "SERVER_RECORDED_ARRIVAL_V2",
+      "scope": {
+        "feed_id": "clock-EURUSD",
+        "price_basis": "BID",
+        "provider": "DUKASCOPY",
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      },
+      "sessions": [
+        "cefdb644c4d844e5b920ef2ce31824f0"
+      ],
+      "kind": "arrival_candles",
+      "feed_id": "clock-EURUSD",
+      "symbol": "EURUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "first_time": "1970-01-01T00:00:00+00:00",
+      "last_time": "1970-01-01T00:28:00+00:00"
+    },
+    {
+      "dataset_id": "48c6826566954e48bbe2ddac15822276b0edb749e75dba278f7c41b6f1f887e7",
+      "sha256": "b2375519e4d881f1f5d432f6042da5152928f8f17627512c0f874816e86f3872",
+      "policy": "SERVER_RECORDED_ARRIVAL_V2",
+      "scope": {
+        "feed_id": "clock-GBPUSD",
+        "price_basis": "BID",
+        "provider": "DUKASCOPY",
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "sessions": [
+        "97d5e19710ae4f61b09b5fa19cc62d38"
+      ],
+      "kind": "arrival_candles",
+      "feed_id": "clock-GBPUSD",
+      "symbol": "GBPUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "first_time": "1970-01-01T00:00:00+00:00",
+      "last_time": "1970-01-01T00:28:00+00:00"
+    },
+    {
+      "dataset_id": "a9e77d99541046a732380c9cd1354cabfc98a3187b83af77a8d16e17fd937c75",
+      "sha256": "4f73e06de4c638c7374626336a23e87166963c567ee42e4558887c758b72c82f",
+      "policy": "SERVER_RECORDED_ARRIVAL_V2",
+      "scope": {
+        "feed_id": "clock-EURUSD",
+        "price_basis": "BID",
+        "provider": "DUKASCOPY",
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      },
+      "sessions": [
+        "cefdb644c4d844e5b920ef2ce31824f0",
+        "e1258f975bd5406e99cedfe34e8f88c8"
+      ],
+      "kind": "arrival_candles",
+      "feed_id": "clock-EURUSD",
+      "symbol": "EURUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "first_time": "1970-01-01T00:00:00+00:00",
+      "last_time": "1970-01-01T00:28:00+00:00"
+    },
+    {
+      "dataset_id": "3e5069cea4cba889a9c33d474fda1830521ac02e653cd18764786858e92da1c0",
+      "sha256": "b56a5a8293ad760afce9fdc044d51f245ab86b62a95a4ecc442d0d4947fd64fa",
+      "policy": "SERVER_RECORDED_ARRIVAL_V2",
+      "scope": {
+        "feed_id": "clock-GBPUSD",
+        "price_basis": "BID",
+        "provider": "DUKASCOPY",
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "sessions": [
+        "97d5e19710ae4f61b09b5fa19cc62d38",
+        "b83458c4fa4b4f89b1bebfc3200d893e"
+      ],
+      "kind": "arrival_candles",
+      "feed_id": "clock-GBPUSD",
+      "symbol": "GBPUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "first_time": "1970-01-01T00:00:00+00:00",
+      "last_time": "1970-01-01T00:28:00+00:00"
+    },
+    {
+      "dataset_id": "4c8074e974bc4c3917dd42b60795c01efb057a50fc0ca90537903e6c88e7a78e",
+      "sha256": "227efbab59c9e8b23654b055da23e0d966190da36d56573d17cc480cf9470315",
+      "policy": "SERVER_RECORDED_ARRIVAL_V2",
+      "scope": {
+        "feed_id": "clock-EURUSD",
+        "price_basis": "BID",
+        "provider": "DUKASCOPY",
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      },
+      "sessions": [
+        "914d2d22c175488387fb566a6a7e56cb",
+        "cefdb644c4d844e5b920ef2ce31824f0",
+        "e1258f975bd5406e99cedfe34e8f88c8"
+      ],
+      "kind": "arrival_candles",
+      "feed_id": "clock-EURUSD",
+      "symbol": "EURUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "first_time": "1970-01-01T00:00:00+00:00",
+      "last_time": "1970-01-01T00:28:00+00:00"
+    },
+    {
+      "dataset_id": "9be8025129411b0ddcb62fb1ed5e652fe31890446dc488744638a8c5b27806df",
+      "sha256": "f1613b9cac89b02cc27ed1664b84bbcf6404cfce54a84d20ea7a51ef03b8879f",
+      "policy": "SERVER_RECORDED_ARRIVAL_V2",
+      "scope": {
+        "feed_id": "clock-GBPUSD",
+        "price_basis": "BID",
+        "provider": "DUKASCOPY",
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "sessions": [
+        "97d5e19710ae4f61b09b5fa19cc62d38",
+        "b2bb3599a8ce478a998d776f2cd90c10",
+        "b83458c4fa4b4f89b1bebfc3200d893e"
+      ],
+      "kind": "arrival_candles",
+      "feed_id": "clock-GBPUSD",
+      "symbol": "GBPUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "first_time": "1970-01-01T00:00:00+00:00",
+      "last_time": "1970-01-01T00:28:00+00:00"
+    }
+  ],
+  "manifests": [
+    {
+      "id": "5846f022c64aa47b1d0d146f60dee0f61ac7568ba67524a6436898bd652abca7",
+      "start": 0,
+      "end": 1740,
+      "cutoff": 5340,
+      "feed_id": "clock-EURUSD",
+      "sessions": [
+        "cefdb644c4d844e5b920ef2ce31824f0"
+      ],
+      "partitions": [
+        {
+          "id": "c0140058b9ba488d025e9315307b085984a457d122f8719b33544762156dd166",
+          "sha256": "372449be9e3d5508b87e48cc9dd4fda97af2f2b33be68662a3cd2b20065b8da7"
+        }
+      ]
+    },
+    {
+      "id": "6c0d8ebd6136ae8025cefa01acd175ada3ddfcfcb9f6e54a3e26ccef9f793a31",
+      "start": 0,
+      "end": 1740,
+      "cutoff": 5340,
+      "feed_id": "clock-GBPUSD",
+      "sessions": [
+        "97d5e19710ae4f61b09b5fa19cc62d38"
+      ],
+      "partitions": [
+        {
+          "id": "48c6826566954e48bbe2ddac15822276b0edb749e75dba278f7c41b6f1f887e7",
+          "sha256": "b2375519e4d881f1f5d432f6042da5152928f8f17627512c0f874816e86f3872"
+        }
+      ]
+    },
+    {
+      "id": "8f08def5a49fa5f72e6417dc38fb65f99900b8f1c078bc704b27d6157da2ee34",
+      "start": 0,
+      "end": 1740,
+      "cutoff": 5340,
+      "feed_id": "clock-EURUSD",
+      "sessions": [
+        "cefdb644c4d844e5b920ef2ce31824f0",
+        "e1258f975bd5406e99cedfe34e8f88c8"
+      ],
+      "partitions": [
+        {
+          "id": "a9e77d99541046a732380c9cd1354cabfc98a3187b83af77a8d16e17fd937c75",
+          "sha256": "4f73e06de4c638c7374626336a23e87166963c567ee42e4558887c758b72c82f"
+        }
+      ]
+    },
+    {
+      "id": "3ec59ed32c7e082340039618c025cdc5c204b6f79369f6ffd5d5c4165c30e9b1",
+      "start": 0,
+      "end": 1740,
+      "cutoff": 5340,
+      "feed_id": "clock-GBPUSD",
+      "sessions": [
+        "97d5e19710ae4f61b09b5fa19cc62d38",
+        "b83458c4fa4b4f89b1bebfc3200d893e"
+      ],
+      "partitions": [
+        {
+          "id": "3e5069cea4cba889a9c33d474fda1830521ac02e653cd18764786858e92da1c0",
+          "sha256": "b56a5a8293ad760afce9fdc044d51f245ab86b62a95a4ecc442d0d4947fd64fa"
+        }
+      ]
+    },
+    {
+      "id": "c6f63f8ef45654ec86be77bbfe5dce889376e969f1c999933c2ddb6b862a2bbb",
+      "start": 0,
+      "end": 1740,
+      "cutoff": 5340,
+      "feed_id": "clock-EURUSD",
+      "sessions": [
+        "914d2d22c175488387fb566a6a7e56cb",
+        "cefdb644c4d844e5b920ef2ce31824f0",
+        "e1258f975bd5406e99cedfe34e8f88c8"
+      ],
+      "partitions": [
+        {
+          "id": "4c8074e974bc4c3917dd42b60795c01efb057a50fc0ca90537903e6c88e7a78e",
+          "sha256": "227efbab59c9e8b23654b055da23e0d966190da36d56573d17cc480cf9470315"
+        }
+      ]
+    },
+    {
+      "id": "b9580929ec2f29cabf3c56e32828b7168d971568c4ebc8e3d3334e661881ad73",
+      "start": 0,
+      "end": 1740,
+      "cutoff": 5340,
+      "feed_id": "clock-GBPUSD",
+      "sessions": [
+        "97d5e19710ae4f61b09b5fa19cc62d38",
+        "b2bb3599a8ce478a998d776f2cd90c10",
+        "b83458c4fa4b4f89b1bebfc3200d893e"
+      ],
+      "partitions": [
+        {
+          "id": "9be8025129411b0ddcb62fb1ed5e652fe31890446dc488744638a8c5b27806df",
+          "sha256": "f1613b9cac89b02cc27ed1664b84bbcf6404cfce54a84d20ea7a51ef03b8879f"
+        }
+      ]
+    }
+  ],
+  "readiness_tables": [],
+  "live_leases": 0
+}

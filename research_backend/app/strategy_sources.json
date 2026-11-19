@@ -1,0 +1,71 @@
+{
+  "id": "DUKASCOPY_BID_2026_11_13_V1",
+  "series": [
+    {
+      "source": "DUKASCOPY_SAVED",
+      "feed_id": "dukascopy-web-m1-v1",
+      "symbol": "EURUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "calendar": {
+        "kind": "forex_weekly"
+      },
+      "partitions": [
+        {
+          "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+          "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+        }
+      ]
+    },
+    {
+      "source": "DUKASCOPY_SAVED",
+      "feed_id": "dukascopy-web-m1-v1",
+      "symbol": "EURUSD",
+      "timeframe": "M5",
+      "price_basis": "BID",
+      "calendar": {
+        "kind": "forex_weekly"
+      },
+      "partitions": [
+        {
+          "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+          "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+        }
+      ]
+    },
+    {
+      "source": "DUKASCOPY_SAVED",
+      "feed_id": "dukascopy-web-m1-v1",
+      "symbol": "GBPUSD",
+      "timeframe": "M1",
+      "price_basis": "BID",
+      "calendar": {
+        "kind": "forex_weekly"
+      },
+      "partitions": [
+        {
+          "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+          "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+        }
+      ]
+    },
+    {
+      "source": "DUKASCOPY_SAVED",
+      "feed_id": "dukascopy-web-m1-v1",
+      "symbol": "GBPUSD",
+      "timeframe": "M5",
+      "price_basis": "BID",
+      "calendar": {
+        "kind": "forex_weekly"
+      },
+      "partitions": [
+        {
+          "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+          "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+        }
+      ]
+    }
+  ],
+  "start": 1794528000,
+  "end": 1794607200
+}

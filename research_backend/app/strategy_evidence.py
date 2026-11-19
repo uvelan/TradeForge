@@ -86,7 +86,7 @@ class SmtUncertainty:
 
 class EvidenceRegistry:
     def __init__(self, reserve=None, *, root=None, calculation_id=None, snapshot=None, cutoff=None,
-                 purpose=RECORDED_MODE):
+                 purpose=RECORDED_MODE, event_sink=None):
         self.root = root if root is not None else self
         self.calculation_id = calculation_id
         self.snapshot = snapshot
@@ -94,6 +94,7 @@ class EvidenceRegistry:
         self.purpose = purpose if root is None else root.purpose
         self.calculations = {} if root is None else root.calculations
         self.reserve = reserve
+        self.event_sink = event_sink if root is None else root.event_sink
         self.records = {}
         self.current = defaultdict(list)
         self.counts = Counter() if root is None else root.counts
@@ -378,6 +379,8 @@ class EvidenceRegistry:
             return
         if self.reserve is not None:
             self.reserve(512)
+        if self.event_sink is not None:
+            self.event_sink(self, event)
         self.records[event_id] = summary
         self.counts["publications"] += 1
         if category == "smt" and attested:

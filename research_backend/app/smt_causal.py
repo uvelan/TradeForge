@@ -315,7 +315,7 @@ def _coverage(feed, rows, slots, cutoff, step):
             "unrecorded_observations": unknown, "symbol": feed.symbol}
 
 
-def evaluate_strict_smt(request, loader=load_reference):
+def evaluate_strict_smt(request, loader=load_reference, *, coordinator=None):
     feeds = (request.primary, request.comparison)
     step = FRAME_MIN[request.primary.timeframe]*60
     rule_keys = {"relationship", "period", "alignment_bars", "tolerance_bps", "confirmation_bars", "expiry_bars"}
@@ -347,7 +347,7 @@ def evaluate_strict_smt(request, loader=load_reference):
         return unavailable("UNKNOWN_OR_UNALIGNED_CALENDAR", "UNKNOWN_COVERAGE")
     slots = [stamp for left, right in intervals for stamp in range(left, right, step)]
     shared_slots = set(slots)
-    coordinator = AnalysisCoordinator(request, loader)
+    coordinator = coordinator or AnalysisCoordinator(request, loader)
     histories = []
     scopes = {}
     identities = {}

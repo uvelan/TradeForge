@@ -369,8 +369,8 @@ def build_crt_context(structure_events,products,level_sets,registry=None):
     return current_context
 
 
-def evaluate(request: Evaluation, history_loader=None) -> dict:
-    coordinator=AnalysisCoordinator(request,history_loader)
+def evaluate(request: Evaluation, history_loader=None, *, coordinator=None) -> dict:
+    coordinator = coordinator or AnalysisCoordinator(request,history_loader)
     history_loader=coordinator.history if history_loader is not None else None
     definitions = {item["id"]: item for item in catalog()}
     if len({spec.id for spec in request.indicators}) != len(request.indicators):
@@ -810,7 +810,7 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                               "failures":{"reference":evidence["status"]}}
                 else:
                     context,metadata=crt_context(spec,rules,crt_rows,provenance)
-            output=coordinator.run("crt",spec.id,crt_rows,lambda:evaluate_crt(
+            output=coordinator.run("crt",product_key(crt_rows,provenance,rules.model_dump()),crt_rows,lambda:evaluate_crt(
                 [] if failed else crt_rows,step,request.cutoff,frame,rules,spec.crt_delivery or CRTDelivery(),
                 provenance,native,context=context,context_snapshot=digest(metadata) if metadata is not None else None,
                 registry=coordinator.evidence_for("crt",crt_rows,provenance,
