@@ -133,3 +133,24 @@ def test_future_source_is_rejected_without_catalog_write(client):
                            files={"file":("fixture.bi5",packet([(0,110000,110002,1)]))})
     assert response.status_code == 422 and "completed UTC" in response.text
     assert not rows("SELECT id FROM datasets")
+
+def test_tick_m5_incomplete_constituents_excluded_from_simulation(client):
+    entries = [(0,110000,110002,1)] + [(i*60_000,110000+i,110020+i,1) for i in range(5,10)]
+    imported = historical_import.import_bi5(packet(entries),"EURUSD",DAY)
+    assert imported["quality"]["m5_incomplete_m1"] == 1
+    for side in ("BID","ASK"):
+        selected = next(item for item in imported["candle_datasets"]
+                        if (item["timeframe"],item["price_basis"]) == ("M5",side))
+        archive = one("SELECT * FROM datasets WHERE id=?", (selected["id"],))
+        assert [bar["complete_m1"] for bar in storage.read_partition(archive)] == [False,True]
+        feed = {"source":"DUKASCOPY_SAVED","symbol":"EURUSD","timeframe":"M5","feed_id":imported["feed_id"],
+                "price_basis":side,"calendar":{"kind":"continuous"},"start":START,"end":START+600,
+                "partitions":[{key:selected[key] for key in ("id","sha256")}]}
+        response = client.post("/api/market/arrival/readiness",json={"primary":feed,"cutoff":START+600})
+        assert response.status_code == 200,response.text
+        result = response.json()["primary"]
+        assert result["status"] == "INSUFFICIENT_COVERAGE"
+        assert result["modes"]["HISTORICAL_SIMULATION"]["missing_slots"] == 1
+        response = client.post("/api/market/arrival/readiness",json={
+            "primary":{**feed,"start":START+300},"cutoff":START+600})
+        assert response.json()["primary"]["status"] == "READY_SIMULATION"

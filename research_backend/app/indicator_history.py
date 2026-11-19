@@ -164,6 +164,9 @@ def load_reference(request, start, end, step, *, archive_limits=None, archive_se
             raw, attestation = (member,None) if mode == LEGACY_MODE else member
             if not start <= raw["time"] < end:
                 continue
+            if mode == SIMULATION_MODE and raw.get("complete_m1") is False:
+                # A tick-derived M5 candle can contain observations without having all five minutes.
+                continue
             bar = EvidenceBar.model_validate(dict(raw))
             if mode != LEGACY_MODE:
                 try:

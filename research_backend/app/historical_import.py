@@ -31,6 +31,9 @@ def import_bi5(payload, symbol, day, hour=None):
     if not ticks:
         raise ValueError("No ticks present in supplied source file")
     derived = {frame:fold_ticks(ticks, minutes) for frame,minutes in (("M1",1),("M5",5))}
+    seen_minutes = {bar["time"] for bar in derived["M1"]}
+    for bar in derived["M5"]:
+        bar["complete_m1"] = all(stamp in seen_minutes for stamp in range(bar["time"],bar["time"]+300,60))
     spreads = [tick["ask_units"] - tick["bid_units"] for tick in ticks]
     seen_at = utc_now()
     with transaction() as db:
@@ -42,7 +45,7 @@ def import_bi5(payload, symbol, day, hour=None):
                                     connection=db,row_group_size=8192)
         parts = []
         for frame,bars in derived.items():
-            ask_bars = [{"time":bar["time"],"volume":bar["volume"],
+            ask_bars = [{**{key:value for key,value in bar.items() if key=="complete_m1" or key in ("time","volume")},
                          **{field:bar["ask_"+field] for field in ("open","high","low","close")}}
                         for bar in bars]
             for side,values in (("BID",bars),("ASK",ask_bars)):
@@ -54,6 +57,7 @@ def import_bi5(payload, symbol, day, hour=None):
                             "format":"BI5","scale":POINT_SCALES[symbol],"first_imported_at":seen_at},
                   "quality":{"source_records":len(decoded),"valid_ticks":len(ticks),
                              "duplicate_identities":len(decoded)-len(ticks),"rejected_ticks":0,
+                             "m5_incomplete_m1":sum(not bar["complete_m1"] for bar in derived["M5"]),
                              "first_ms":ticks[0]["time_ms"],"last_ms":ticks[-1]["time_ms"],
                              "spread_points":{"min":min(spreads),"max":max(spreads),"mean":sum(spreads)/len(spreads)}},
                   "note":"Source coverage must be checked against the selected market calendar."}

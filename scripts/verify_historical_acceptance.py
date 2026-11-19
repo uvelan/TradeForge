@@ -215,6 +215,9 @@ def main():
         if entry["feed_id"] not in CSV_FEED.values():
             continue
         meta = entry["source"]
+        local_source = args.sources / (meta["symbol"]+"_"+meta["day"]+"_M1_"+meta["price_basis"]+".csv")
+        if sha256(local_source.read_bytes()).hexdigest() != meta["sha256"]:
+            raise ValueError("Original provider export checksum differs from the registered source")
         frames = {}
         for frame,step in (("M1",60),("M5",300)):
             parts,bars = get_data([entry],frame)

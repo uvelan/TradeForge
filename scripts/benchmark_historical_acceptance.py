@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 from research_backend.app import db, storage
 from research_backend.app.historical_csv import CSV_FEED, complete_m5, import_csv, read_minutes, source_name
 from research_backend.app.historical_import import import_bi5
+from research_backend.app.main import app
 from scripts.verify_historical_acceptance import DAY, READY, SMT, SYMBOLS, get_data, post, scope
 
 
