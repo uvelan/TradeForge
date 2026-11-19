@@ -49,6 +49,16 @@ CREATE TABLE IF NOT EXISTS trades (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS strategy_versions (
+    strategy_id TEXT NOT NULL,
+    version INTEGER NOT NULL CHECK(version > 0),
+    version_id TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('DRAFT','READY_FOR_EVALUATION','ARCHIVED')),
+    configuration_fingerprint TEXT NOT NULL,
+    definition TEXT NOT NULL CHECK(json_valid(definition)),
+    PRIMARY KEY(strategy_id,version)
+);
 CREATE TABLE IF NOT EXISTS plan_versions (
     id TEXT PRIMARY KEY,
     trade_id TEXT NOT NULL REFERENCES trades(id),
@@ -258,7 +268,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 
 IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 IMMUTABLE_TABLES += ["arrival_sessions", "arrival_observations", "arrival_receipts",
-                     "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports"]
+                     "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "strategy_versions"]
 
 
 def connect():

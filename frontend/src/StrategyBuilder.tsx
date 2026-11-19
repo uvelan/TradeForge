@@ -1,0 +1,215 @@
+import {useEffect,useState} from 'react';
+import {api} from './api';
+import {useTimestampFormat} from './timezone';
+import {BoundFields,Choice,GroupFields,Producers,fieldName,groupFor,rulesIn} from './StrategyRules';
+import {Policies,ScopeFields} from './StrategyPolicies';
+import type {Catalog,Definition,Diff,Link,Listed,Phase,RecordVersion,Template,Validation} from './strategyTypes';
+import './strategyBuilder.css';
+
+const endpoint='/strategies/v1';
+const phases:Phase[]=['context','setup','trigger','invalidation'];
+const purposeLabel=(value:string)=>value==='HISTORICAL_SIMULATION'?'Historical simulation':'Strict recorded';
+type History=Omit<Listed,'purpose'>;
+
+function validationError(error:unknown):Validation|null {
+  if(!(error instanceof Error))return null;
+  try {
+    const data=JSON.parse(error.message) as Validation;
+    return Array.isArray(data.errors)?data:null;
+  } catch {return null;}
+}
+
+function Temporal({value,onChange}:{value:Definition;onChange:(value:Definition)=>void}){
+  const ids=phases.flatMap(phase=>rulesIn(value[phase]).map(rule=>rule.id));
+  function update(index:number,link:Link){onChange({...value,temporal:value.temporal.map((old,i)=>i===index?link:old)});}
+  return <section className="card strategy-block"><h2>Temporal requirements</h2>
+    <p className="muted">Order uses causal availability. Equal timestamps cannot satisfy strict precedence.</p>
+    {value.temporal.map((link,i)=><fieldset key={i} className="strategy-subgroup"><legend>Relationship {i+1}</legend>
+      <div className="strategy-fields">
+        <Choice label="Anchor condition" options={ids} value={link.first} blank="Choose condition"
+          onChange={first=>first&&update(i,{...link,first})}/>
+        <Choice label="Related condition" options={ids} value={link.then} blank="Choose condition"
+          onChange={then=>then&&update(i,{...link,then})}/>
+        <Choice label="Availability relation" options={['AFTER','BEFORE','WITHIN_AFTER'] as const} value={link.relation}
+          display={relation=>relation==='BEFORE'?'Related before anchor':relation==='AFTER'?'Related after anchor':'Related within a window after anchor'}
+          onChange={relation=>relation&&update(i,{...link,relation,within:relation==='WITHIN_AFTER'?link.within:null})}/>
+      </div>
+      {link.relation==='WITHIN_AFTER'&&<BoundFields label="Relationship window" value={link.within} frame={value.timeframes.trigger}
+        onChange={within=>update(i,{...link,within})}/>}
+      <button className="small-tool" type="button"
+        onClick={()=>onChange({...value,temporal:value.temporal.filter((_item,index)=>i!==index)})}>Remove relationship</button>
+    </fieldset>)}
+    <button className="small-tool" disabled={ids.length<2||value.temporal.length>=96} type="button"
+      onClick={()=>onChange({...value,temporal:[...value.temporal,{first:ids[0],then:ids[1],relation:'AFTER',within:null}]})}>Add temporal relationship</button>
+    <BoundFields label="Setup expiry" value={value.expiry} frame={value.timeframes.trigger} onChange={expiry=>onChange({...value,expiry})}/>
+  </section>;
+}
+
+function VersionHistory({record,history,load}:{record:RecordVersion;history:History[];load:()=>void}){
+  const [from,setFrom]=useState(Math.max(1,record.version-1));
+  const [to,setTo]=useState(record.version);
+  const [result,setResult]=useState<Diff>();
+  const [error,setError]=useState('');
+  const [busy,setBusy]=useState(false);
+  const format=useTimestampFormat();
+  const versionOptions=history.map(row=>String(row.version));
+  return <section className="card strategy-block"><h2>Version history</h2>
+    <ol className="strategy-history">{history.map(row=><li key={row.version_id}>
+      <strong>v{row.version} · {row.status}</strong> · {format(row.created_at)}<br/><code>{row.configuration_fingerprint}</code>
+    </li>)}</ol>
+    {history.length<record.version&&<button type="button" className="small-tool" onClick={load}>Load older versions</button>}
+    {history.length>1&&<div className="strategy-fields">
+      <Choice label="Compare from" value={String(from)} options={versionOptions} onChange={next=>{setFrom(Number(next));setResult(undefined);}}/>
+      <Choice label="Compare to" value={String(to)} options={versionOptions} onChange={next=>{setTo(Number(next));setResult(undefined);}}/>
+      <button className="small-tool" disabled={busy} type="button" onClick={()=>{
+        setBusy(true);setError('');setResult(undefined);
+        void api.get<Diff>(endpoint+'/'+record.strategy_id+'/compare?from_version='+from+'&to_version='+to)
+          .then(setResult).catch((error:Error)=>setError(error.message)).finally(()=>setBusy(false));
+      }}>Compare versions</button>
+    </div>}
+    {error&&<p role="alert">{error}</p>}
+    {result&&<><p>{result.same_configuration?'Same configuration fingerprint':'Configuration fingerprint changed'}</p>
+      {result.changes.length>0&&<div className="table-scroll"><table><caption>Version changes</caption>
+        <thead><tr><th>Field</th><th>Before</th><th>After</th></tr></thead>
+        <tbody>{result.changes.map(change=><tr key={change.path}><td>{change.path}</td><td>{JSON.stringify(change.before)}</td>
+          <td>{JSON.stringify(change.after)}</td></tr>)}</tbody></table></div>}</>}
+  </section>;
+}
+
+export function StrategyBuilder(){
+  const [catalog,setCatalog]=useState<Catalog>();
+  const [templates,setTemplates]=useState<Template[]>([]);
+  const [library,setLibrary]=useState<Listed[]>([]);
+  const [offset,setOffset]=useState(0);
+  const [record,setRecord]=useState<RecordVersion>();
+  const [history,setHistory]=useState<History[]>([]);
+  const [definition,setDefinition]=useState<Definition>();
+  const [validation,setValidation]=useState<Validation>();
+  const [error,setError]=useState('');
+  const [busy,setBusy]=useState(false);
+  const [message,setMessage]=useState('');
+  const format=useTimestampFormat();
+
+  useEffect(()=>{
+    let active=true;
+    Promise.all([api.get<Catalog>(endpoint+'/capabilities'),api.get<Template[]>(endpoint+'/templates'),
+      api.get<Listed[]>(endpoint+'?limit=40')]).then(([cap,options,items])=>{
+        if(active){setCatalog(cap);setTemplates(options);setLibrary(items);}
+      }).catch((error:Error)=>{if(active)setError(error.message);});
+    return()=>{active=false;};
+  },[]);
+
+  async function run(action:()=>Promise<void>){
+    setBusy(true);setError('');setMessage('');
+    try{await action();}catch(error){
+      const detail=validationError(error);
+      if(detail)setValidation(detail);
+      else if(error instanceof Error)setError(error.message.includes('VERSION_CONFLICT')?'Another edit saved a newer version. Reload the saved definition before revising.':error.message);
+    }finally{setBusy(false);}
+  }
+  function edit(update:Definition){setDefinition(update);setValidation(undefined);setMessage('');}
+  async function page(next:number){
+    setLibrary(await api.get<Listed[]>(endpoint+'?limit=40&offset='+next));setOffset(next);
+  }
+  async function adopt(item:RecordVersion){
+    const versions=await api.get<History[]>(endpoint+'/'+item.strategy_id+'/history?limit=40');
+    setRecord(item);setDefinition(item.definition);setHistory(versions);setValidation(undefined);
+  }
+  function begin(template:Template,blank=false){
+    setRecord(undefined);setHistory([]);setValidation(undefined);setMessage('');setError('');
+    const item=structuredClone(template.definition);
+    setDefinition(blank?{...item,name:'Untitled strategy',description:'',context:null,setup:null,trigger:null,invalidation:null,
+      temporal:[],indicators:[]}:item);
+  }
+  function mutate(operation:'archive'|'duplicate'){
+    if(!record)return;
+    void run(async()=>{
+      const item=await api.post<RecordVersion>(endpoint+'/'+record.strategy_id+'/'+operation,{expected_version:record.version});
+      await adopt(item);await page(0);setMessage(operation==='archive'?'Strategy archived':'Independent draft created');
+    });
+  }
+
+  return <div className="strategy-builder">
+    <div className="page-heading"><div><h1>Strategy Builder</h1><p>Define reusable rules and compare immutable versions.</p></div></div>
+    <section className="card strategy-block" aria-label="Strategy library">
+      <h2>Strategy library</h2>
+      <div className="strategy-actions">
+        {templates.map(template=><button className="small-tool" key={template.id} type="button" disabled={busy}
+          onClick={()=>begin(template)}>Use {template.definition.name} template</button>)}
+        {templates[0]&&<button className="small-tool" type="button" disabled={busy} onClick={()=>begin(templates[0],true)}>New strategy</button>}
+      </div>
+      {library.length?<ul className="strategy-library">{library.map(item=><li key={item.strategy_id}>
+        <button className="small-tool" disabled={busy} type="button" onClick={()=>void run(async()=>{
+          await adopt(await api.get<RecordVersion>(endpoint+'/'+item.strategy_id));
+        })}>{item.name}</button>
+        <span>v{item.version} · {item.status} · {purposeLabel(item.purpose)} · {format(item.created_at)}</span>
+      </li>)}</ul>:<p className="muted">No saved strategies on this page.</p>}
+      <div className="strategy-actions">
+        {offset>0&&<button className="small-tool" type="button" disabled={busy} onClick={()=>void run(()=>page(offset-40))}>Previous strategies</button>}
+        {library.length===40&&<button className="small-tool" type="button" disabled={busy} onClick={()=>void run(()=>page(offset+40))}>More strategies</button>}
+      </div>
+    </section>
+    {error&&<p className="error-banner" role="alert">{error}</p>}
+    {message&&<p role="status">{message}</p>}
+    {definition&&catalog&&<>
+      <section className="card strategy-block" aria-label="Strategy editor">
+        <div className="strategy-heading"><h2>Strategy editor</h2>{record&&<span>v{record.version} · {record.status}</span>}</div>
+        <fieldset className="strategy-edit-fields" disabled={busy||record?.status==='ARCHIVED'}>
+          <div className="strategy-fields">
+            <label>Strategy name<input maxLength={100} value={definition.name} onChange={event=>edit({...definition,name:event.target.value})}/></label>
+            <Choice label="Definition status" options={['DRAFT','READY_FOR_EVALUATION'] as const} value={definition.status}
+              onChange={status=>status&&edit({...definition,status})}/>
+          </div>
+          <label>Description<textarea maxLength={2000} value={definition.description} onChange={event=>edit({...definition,description:event.target.value})}/></label>
+          <ScopeFields value={definition} onChange={edit}/>
+          <Producers value={definition} catalog={catalog} onChange={edit}/>
+          {phases.map(phase=><section key={phase} className="card strategy-block" aria-label={phase+' phase'}>
+            <h3>{phase[0].toUpperCase()+phase.slice(1)}</h3>
+            {definition[phase]?<>
+              <GroupFields node={definition[phase]!} value={definition} catalog={catalog} update={group=>edit({...definition,[phase]:group})}/>
+              <button type="button" className="small-tool" onClick={()=>edit({...definition,[phase]:null})}>Clear {phase}</button>
+            </>:<button className="small-tool" type="button" onClick={()=>edit({...definition,[phase]:groupFor(phase)})}>Add {phase} group</button>}
+          </section>)}
+          <Temporal value={definition} onChange={edit}/>
+          <Policies value={definition} onChange={edit}/>
+          <div className="strategy-actions">
+            <button className="small-tool" type="button" onClick={()=>void run(async()=>{
+              setValidation(await api.post<Validation>(endpoint+'/validate',definition));
+            })}>Validate definition</button>
+            <button className="btn btn-primary" type="button" onClick={()=>void run(async()=>{
+              const item=await api.post<RecordVersion>(record?endpoint+'/'+record.strategy_id+'/revisions':endpoint,
+                record?{expected_version:record.version,definition}:definition);
+              await adopt(item);await page(0);setMessage('Definition saved as version '+item.version);
+            })}>{record?'Save revision':'Save strategy'}</button>
+          </div>
+        </fieldset>
+        {record&&<div className="strategy-actions">
+          <button className="small-tool" disabled={busy} type="button" onClick={()=>void run(async()=>adopt(await api.get<RecordVersion>(endpoint+'/'+record.strategy_id)))}>Reload saved definition</button>
+          <button className="small-tool" disabled={busy} type="button" onClick={()=>mutate('duplicate')}>Duplicate strategy</button>
+          <button className="small-tool" disabled={busy||record.status==='ARCHIVED'} type="button" onClick={()=>mutate('archive')}>Archive strategy</button>
+        </div>}
+      </section>
+      <section className="card strategy-block" aria-label="Definition validation">
+        <h2>Definition validation</h2>
+        <p>{purposeLabel(definition.availability_modes[0])} · Recorded data blocked · Evaluation pending TF-I09B</p>
+        {record&&<p>Saved fingerprint <code>{record.configuration_fingerprint}</code></p>}
+        {validation&&<>
+          <strong role="status">{validation.status}</strong>
+          {validation.configuration_fingerprint&&<p>Draft fingerprint <code>{validation.configuration_fingerprint}</code></p>}
+          {validation.unresolved?.length>0&&<><h3>Unresolved settings</h3><ul>
+            {validation.unresolved.map(field=><li key={field}>{fieldName(field)}</li>)}</ul></>}
+          {validation.errors.length>0&&<ul role="alert">{validation.errors.map((issue,i)=><li key={i}>
+            <strong>{issue.path||'Request'}</strong> · {issue.code} · {Array.isArray(issue.expected)?issue.expected.join(', '):issue.expected}
+            {issue.condition_id&&<> · {issue.condition_id}</>}
+          </li>)}</ul>}
+        </>}
+      </section>
+      {record&&<VersionHistory key={record.version_id} record={record} history={history} load={()=>void run(async()=>{
+        const last=history.at(-1);
+        if(last)setHistory([...history,...await api.get<History[]>(endpoint+'/'+record.strategy_id+'/history?limit=40&before='+last.version)]);
+      })}/>}
+      <section className="card strategy-block"><details><summary>Unavailable capabilities</summary>
+        <ul>{Object.entries(catalog.unsupported).map(([name,why])=><li key={name}>{fieldName(name)} · {why}</li>)}</ul></details></section>
+    </>}
+  </div>;
+}
