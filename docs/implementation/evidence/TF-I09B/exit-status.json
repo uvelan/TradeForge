@@ -1,0 +1,10 @@
+{
+  "stress": 0,
+  "build": 0,
+  "compile": 0,
+  "vitest": 0,
+  "backend": 0,
+  "browser": 0,
+  "benchmark": 0,
+  "checkpoint": 1
+}

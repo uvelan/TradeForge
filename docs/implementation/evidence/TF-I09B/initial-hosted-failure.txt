@@ -1,0 +1,13 @@
+2026-11-19T13:30:16.5753213Z __________________ test_test_session_uses_disposable_storage __________________
+2026-11-19T13:30:16.5755889Z     def test_test_session_uses_disposable_storage(pytestconfig):
+2026-11-19T13:30:16.5760589Z E        +  where False = is_relative_to(WindowsPath('C:/Users/RUNNER~1/AppData/Local/Temp/tradeforge-pytest-83mq1l8s'))
+2026-11-19T13:30:16.5763889Z E        +    and   WindowsPath('C:/Users/RUNNER~1/AppData/Local/Temp/tradeforge-pytest-83mq1l8s') = <class 'pathlib._local.Path'>('C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tradeforge-pytest-83mq1l8s')
+2026-11-19T13:30:16.5765456Z E        +      where 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tradeforge-pytest-83mq1l8s' = <TemporaryDirectory 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tradeforge-pytest-83mq1l8s'>.name
+2026-11-19T13:30:16.5767184Z E        +        where <TemporaryDirectory 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tradeforge-pytest-83mq1l8s'> = <_pytest.config.Config object at 0x00000264A05B3A10>.tradeforge_test_archive
+2026-11-19T13:30:16.5776969Z FAILED research_backend/tests/test_strategy_evaluator.py::test_test_session_uses_disposable_storage - AssertionError: assert False
+2026-11-19T13:30:16.5777909Z  +  where False = is_relative_to(WindowsPath('C:/Users/RUNNER~1/AppData/Local/Temp/tradeforge-pytest-83mq1l8s'))
+2026-11-19T13:30:16.5780231Z  +    and   WindowsPath('C:/Users/RUNNER~1/AppData/Local/Temp/tradeforge-pytest-83mq1l8s') = <class 'pathlib._local.Path'>('C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tradeforge-pytest-83mq1l8s')
+2026-11-19T13:30:16.5783328Z  +      where 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tradeforge-pytest-83mq1l8s' = <TemporaryDirectory 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tradeforge-pytest-83mq1l8s'>.name
+2026-11-19T13:30:16.5784771Z  +        where <TemporaryDirectory 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tradeforge-pytest-83mq1l8s'> = <_pytest.config.Config object at 0x00000264A05B3A10>.tradeforge_test_archive
+2026-11-19T13:30:16.5785661Z 1 failed, 607 passed, 1 warning in 152.31s (0:02:32)
+2026-11-19T13:30:17.0908655Z ##[error]Process completed with exit code 1.
