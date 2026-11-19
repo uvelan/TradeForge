@@ -13,7 +13,7 @@ from pydantic import (
 from .arrival_policy import RECORDED_MODE, SIMULATION_MODE
 from .indicator_coverage import MarketSchedule
 from .strategy_catalog import (
-    AUTHORITIES, FAMILY_CATEGORIES, OBSERVATIONS, REFERENCE_VERSION, REQUIRES, ROLE_OBSERVATIONS, VERSIONS, effective_settings,
+    AUTHORITIES, BINDING_POLICY_VERSION, FAMILY_CATEGORIES, OBSERVATIONS, REFERENCE_VERSION, REQUIRES, ROLE_OBSERVATIONS, VERSIONS, effective_settings,
 )
 from .strategy_evidence import fingerprint
 
@@ -471,7 +471,11 @@ def semantic_group(group):
     return {**group,"children":children}
 
 
-def validate_attempt(definition, audit, unresolved):
+def phase_allows_precedence(origin, target):
+    return PHASES.index(origin) <= PHASES.index(target) and (origin,target)!=("trigger","invalidation")
+
+
+def validate_attempt(definition, audit, unresolved, dependencies):
     trade = definition.trade_intent
     for name in ("role", "direction", "entry", "earliest", "expiry"):
         if getattr(trade, name) is None:
@@ -544,13 +548,13 @@ def validate_attempt(definition, audit, unresolved):
                 audit.error("conditions." + id_, "UNTRACKED_LATCHED_CRT_REFERENCE",
                             "Track the latched reference family explicitly", condition_id=id_)
     for id_, rule in audit.rules.items():
+        parent = aliases.get(rule.same_family_as)
         if rule.same_family_as:
-            parent = aliases.get(rule.same_family_as)
             child_spec = OBSERVATIONS.get(rule.observation) or ROLE_OBSERVATIONS.get(rule.observation, {})
             parent_spec = ((OBSERVATIONS.get(parent.observation) or ROLE_OBSERVATIONS.get(parent.observation, {}))
                            if parent else {})
             suitable = (parent and parent.id in audit.mandatory and id_ in audit.mandatory and
-                        PHASES.index(audit.mandatory[parent.id]) <= PHASES.index(audit.mandatory[id_]) and
+                        phase_allows_precedence(audit.mandatory[parent.id],audit.mandatory[id_]) and
                         parent.dependency == rule.dependency and
                         parent_spec.get("category") == child_spec.get("category") in FAMILY_CATEGORIES)
             if not suitable:
@@ -563,10 +567,22 @@ def validate_attempt(definition, audit, unresolved):
                 reference.dependency != rule.dependency):
             audit.error("conditions." + id_, "CRT_RECLAIM_REQUIRES_REFERENCE",
                         "Bind reclaim to the selected CRT reference alias",rule.same_family_as,id_)
-        if (reference and audit.phases.get(id_)=="invalidation" and
-                rule.dependency==reference.dependency and rule.same_family_as!=reference.alias):
-            audit.error("conditions." + id_, "CRT_INVALIDATION_REQUIRES_REFERENCE",
-                        "Bind CRT invalidation to the selected reference family",rule.same_family_as,id_)
+        dependency = dependencies.get(rule.dependency)
+        if (reference and rule is not reference and dependency and dependency.indicator=="CRT" and
+                rule.observation!="CRT_RECLAIM" and
+                (rule.dependency!=reference.dependency or rule.same_family_as!=reference.alias)):
+            phase = audit.phases[id_]
+            code = ("CRT_INVALIDATION_REQUIRES_REFERENCE" if phase=="invalidation" else
+                    "CRT_LIFECYCLE_REQUIRES_REFERENCE")
+            audit.error(f"conditions.{id_}.same_family_as",code,
+                        f"Use BOUND_FAMILY with tracked CRT alias {reference.alias}",rule.same_family_as,id_)
+        if rule.observation in ROLE_OBSERVATIONS and (
+                rule.selection!="BOUND_FAMILY" or parent is None or
+                parent.observation!=ROLE_OBSERVATIONS[rule.observation]["requires_bound_observation"] or
+                parent.dependency!=rule.dependency):
+            audit.error(f"conditions.{id_}.same_family_as","SMT_ROLE_REQUIRES_DIVERGENCE",
+                        "Use BOUND_FAMILY with a prior SMT_CONFIRMED alias from this dependency",
+                        rule.same_family_as,id_)
 
 
 def validate_definition(payload):
@@ -647,10 +663,14 @@ def validate_definition(payload):
             audit.error(path,"INVALID_TEMPORAL_LINK","Distinct event IDs, unique relation and a declared bound where required")
             continue
         relationships.add(signature)
-        if link.relation=="BEFORE":
-            audit.edge(link.then,link.first)
-        else:
-            audit.edge(link.first,link.then)
+        earlier,later = (link.then,link.first) if link.relation=="BEFORE" else (link.first,link.then)
+        audit.edge(earlier,later)
+        if v2:
+            origin,target = audit.phases[earlier],audit.phases[later]
+            if not phase_allows_precedence(origin,target):
+                audit.error(path,"UNSUPPORTED_PHASE_ORDER",
+                            "Use context before setup, and context or setup before trigger or invalidation",
+                            {"earlier": origin, "later": target})
     policies = {"risk":("account_risk_pct","max_simultaneous_exposure_pct","max_session_loss_pct","min_reward_risk"),
                 "execution":(("price_basis","spread_bps","slippage_bps","commission_bps","intrabar") if v2 else
                              ("entry_intent","price_basis","spread_bps","slippage_bps","commission_bps","expiry","intrabar")),
@@ -673,7 +693,7 @@ def validate_definition(payload):
         audit.error("management.target.multiple","TARGET_BELOW_MINIMUM","At least the minimum reward/risk",
                     definition.management.target.multiple)
     if v2:
-        validate_attempt(definition, audit, unresolved)
+        validate_attempt(definition, audit, unresolved, catalog)
     elif definition.execution.price_basis and definition.execution.price_basis!=primary.price_basis:
         audit.error("execution.price_basis","INCOMPATIBLE_PRICE_BASIS",primary.price_basis,definition.execution.price_basis)
     if cycle(audit.edges):
@@ -692,7 +712,8 @@ def validate_definition(payload):
               "errors":audit.errors,"unresolved":unresolved,
               "restrictions":{"purpose":purpose,"source_authority":AUTHORITIES[purpose],
                               "recorded_operational":False,"evaluation_available":False,
-                              "requires_schema_revision":not v2}}
+                              "requires_schema_revision":not v2,
+                              **({"binding_policy_version":BINDING_POLICY_VERSION} if v2 else {})}}
     if not audit.errors:
         normalized = definition.model_dump(mode="json")
         for dep in normalized["indicators"]:

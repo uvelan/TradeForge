@@ -31,8 +31,8 @@ export type Definition = Record<Phase, Group|null> & {
     break_even_at_r:number|null;partial_exit:{at_r:number;percent:number}|null;trailing_pips:number|null;time_exit:Bound|null};
 };
 export type RecordVersion = {strategy_id:string;version:number;version_id:string;created_at:string;configuration_fingerprint:string;
-  status:Definition['status']|'ARCHIVED';definition:Definition};
-export type Listed = Omit<RecordVersion,'definition'> & {name:string;purpose:Purpose;schema_version?:1|2};
+  status:Definition['status']|'ARCHIVED';definition:Definition;binding_revision?:Validation};
+export type Listed = Omit<RecordVersion,'definition'|'binding_revision'> & {name:string;purpose:Purpose;schema_version?:1|2};
 export type Template = {id:string;definition:Definition;unresolved:string[]};
 export type FieldError = {path:string;condition_id:string|null;code:string;expected:string|number|string[];actual:unknown};
 export type Validation = {valid:boolean;status:string;errors:FieldError[];unresolved:string[];configuration_fingerprint?:string;
@@ -41,6 +41,6 @@ export type SchemaField = {type?:string;enum?:string[];minimum?:number;maximum?:
 export type Producer = {algorithm_version:number;timeframes:Frame[];roles:Role[];parameters:Record<string,SchemaField>;
   defaults:Record<string,Scalar>;observations:string[];required_producers:string[];required_canonical_producers:string[]};
 export type Observation = {label:string;indicator:string;category:string;field:string;values:string[];value_type:'enum'|'number';
-  operators:string[];state_requirements:Evidence['state'][]};
+  operators:string[];requires_bound_observation?:string;state_requirements:Evidence['state'][]};
 export type Catalog = {indicators:Record<string,Producer>;observations:Record<string,Observation>;unsupported:Record<string,string>;modes:Record<Purpose,{operationally_enabled:boolean}>};
 export type Diff = {same_configuration:boolean;changes:{path:string;before:unknown;after:unknown}[]};

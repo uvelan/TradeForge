@@ -1,0 +1,95 @@
+{
+  "crt_trigger": {
+    "submitted": "READY_FOR_EVALUATION",
+    "valid": true,
+    "status": "VALID_STRATEGY_DEFINITION",
+    "errors": [],
+    "fingerprint": "503ff3c689790f6bc8478da844cee838d06c865dd3dcb013095129f5e21c0e54",
+    "trigger": {
+      "type": "RULE",
+      "id": "trigger_event",
+      "dependency": "crt",
+      "observation": "CRT_STATE",
+      "operator": "EQ",
+      "expected": "EXPANSION_OBSERVED",
+      "selection": "LATEST_ELIGIBLE",
+      "alias": null,
+      "same_family_as": null,
+      "evidence": {
+        "state": "HISTORICAL",
+        "purpose": "HISTORICAL_SIMULATION",
+        "max_age_seconds": 3600
+      }
+    },
+    "temporal": [
+      {
+        "first": "reclaim",
+        "then": "divergence",
+        "relation": "AFTER"
+      }
+    ]
+  },
+  "smt_role": {
+    "submitted": "READY_FOR_EVALUATION",
+    "valid": true,
+    "status": "VALID_STRATEGY_DEFINITION",
+    "errors": [],
+    "fingerprint": "8dd433f5c4a0b4bb808d198aa39d697398d06f4d97b561adaa24ae149c963637",
+    "trigger": {
+      "type": "RULE",
+      "id": "trigger_event",
+      "dependency": "smt",
+      "observation": "SMT_LEADER",
+      "operator": "EQ",
+      "expected": "primary",
+      "evidence": {
+        "state": "HISTORICAL",
+        "purpose": "HISTORICAL_SIMULATION",
+        "max_age_seconds": 3600
+      },
+      "alias": null,
+      "selection": "EARLIEST_ELIGIBLE"
+    },
+    "temporal": [
+      {
+        "first": "reclaim",
+        "then": "divergence",
+        "relation": "AFTER"
+      }
+    ]
+  },
+  "phase_inversion": {
+    "submitted": "READY_FOR_EVALUATION",
+    "valid": true,
+    "status": "VALID_STRATEGY_DEFINITION",
+    "errors": [],
+    "fingerprint": "14d210e61d5e533d6fc1d23ccb65c86b44f46ca3b8b310d41cbbf55660662d25",
+    "trigger": {
+      "type": "RULE",
+      "id": "trigger_event",
+      "dependency": "smt",
+      "observation": "SMT_CONFIRMED",
+      "operator": "EQ",
+      "expected": "bullish",
+      "evidence": {
+        "state": "HISTORICAL",
+        "purpose": "HISTORICAL_SIMULATION",
+        "max_age_seconds": 3600
+      },
+      "alias": null,
+      "selection": "EARLIEST_ELIGIBLE"
+    },
+    "temporal": [
+      {
+        "first": "reclaim",
+        "then": "divergence",
+        "relation": "AFTER"
+      },
+      {
+        "first": "trigger_event",
+        "then": "reference",
+        "relation": "AFTER"
+      }
+    ]
+  }
+}

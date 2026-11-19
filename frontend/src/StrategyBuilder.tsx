@@ -113,7 +113,7 @@ export function StrategyBuilder(){
   }
   async function adopt(item:RecordVersion){
     const versions=await api.get<History[]>(endpoint+'/'+item.strategy_id+'/history?limit=40');
-    setRecord(item);setDefinition(item.definition);setHistory(versions);setValidation(undefined);
+    setRecord(item);setDefinition(item.definition);setHistory(versions);setValidation(item.binding_revision);
   }
   function begin(template:Template,blank=false){
     setRecord(undefined);setHistory([]);setValidation(undefined);setMessage('');setError('');
@@ -162,7 +162,7 @@ export function StrategyBuilder(){
         <fieldset className="strategy-edit-fields" disabled={busy||record?.status==='ARCHIVED'||definition.schema_version===1}>
           <div className="strategy-fields">
             <label>Strategy name<input maxLength={100} value={definition.name} onChange={event=>edit({...definition,name:event.target.value})}/></label>
-            <label>Definition status<output aria-label="Definition status">{definition.status}</output></label>
+            <label>Definition status<output aria-label="Definition status">{record?.binding_revision&&definition===record.definition?'REVISION_REQUIRED':definition.status}</output></label>
           </div>
           <label>Description<textarea maxLength={2000} value={definition.description} onChange={event=>edit({...definition,description:event.target.value})}/></label>
           <ScopeFields value={definition} onChange={edit}/>

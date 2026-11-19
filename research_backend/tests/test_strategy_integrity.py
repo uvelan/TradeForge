@@ -237,8 +237,10 @@ def test_smt_canonical_role_fields_do_not_set_trade_direction(client):
         observed=event(query(client,archive(bars(left),bars(right))))["revisions"][-1]
         assert observed["leader"]==leader
         item=ready_definition_v2("bullish")
-        item["trigger"]=group("trigger",{**item["trigger"]["children"][0],"observation":"SMT_LEADER","expected":leader})
-        item["invalidation"]["children"][0].update(observation="SMT_LAGGARD",expected=leader)
+        binding = {"same_family_as":"smt_confirmation","selection":"BOUND_FAMILY"}
+        item["trigger"]=group("trigger",{**item["trigger"]["children"][0],"observation":"SMT_LEADER",
+                                        "expected":leader,**binding})
+        item["invalidation"]["children"][0].update(observation="SMT_LAGGARD",expected=leader,**binding)
         assert validate_definition(item)["valid"]
         assert item["trade_intent"]["direction"]=="LONG"
 

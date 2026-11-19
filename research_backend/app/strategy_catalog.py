@@ -20,6 +20,7 @@ INTEGRITY_DEFAULT_POLICY = "STRATEGY_DEFAULTS_V2"
 REFERENCE_VERSION = 1
 TIMING_VERSION = 3
 LIFECYCLE_VERSION = 2
+BINDING_POLICY_VERSION = 2
 FRAMES = ("M1", "M5")
 AUTHORITIES = {SIMULATION_MODE: SIMULATION_AUTHORITY, RECORDED_MODE: RECORDED_AUTHORITY}
 
@@ -160,6 +161,7 @@ ROLE_OBSERVATIONS = {
 }
 for spec in ROLE_OBSERVATIONS.values():
     spec["where"] = {"state": "SMT_CONFIRMED"}
+    spec["requires_bound_observation"] = "SMT_CONFIRMED"
 ROLE_OBSERVATIONS["SMT_LAGGARD"]["projection"] = "OPPOSITE_PAIR_ROLE"
 
 FAMILY_CATEGORIES = frozenset({"crt", "smt", "pool", "fvg", "order_block"})
@@ -230,7 +232,8 @@ def capability_catalog(version=1):
                 "STRUCTURE":("STRUCTURE_TREND",),"FVG":("ATR_FVG",),
             }.get(key,())],
         }
-    return {"schema_version":version,"default_policy":INTEGRITY_DEFAULT_POLICY if version == 2 else DEFAULT_POLICY,
+    return {**({"binding_policy_version": BINDING_POLICY_VERSION} if version == 2 else {}),
+            "schema_version":version,"default_policy":INTEGRITY_DEFAULT_POLICY if version == 2 else DEFAULT_POLICY,
             "indicators":indicators,"observations":deepcopy(observations),"unsupported":UNSUPPORTED.copy(),
             "modes":{mode:{"authority":authority,"version":MODE_VERSIONS[mode],
                            "operationally_enabled":mode!=RECORDED_MODE} for mode,authority in AUTHORITIES.items()},

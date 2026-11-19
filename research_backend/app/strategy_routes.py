@@ -235,7 +235,13 @@ def strategy_list(limit: int=Query(40,ge=1,le=100), offset:int=Query(0,ge=0,le=1
 @router.get("/{strategy_id}")
 def read_strategy(strategy_id:str, version:int | None=Query(None,ge=1,le=MAX_HISTORY)):
     with transaction() as db:
-        return current(db,strategy_id,version)
+        record = current(db,strategy_id,version)
+    definition = record["definition"]
+    if record["status"]=="READY_FOR_EVALUATION" and definition["schema_version"]==2:
+        validation = validate_submission(definition)
+        if not validation["valid"]:
+            return {**record, "binding_revision":validation}
+    return record
 
 
 @router.get("/{strategy_id}/history")

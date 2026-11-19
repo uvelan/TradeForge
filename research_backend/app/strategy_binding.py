@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import Field, StrictInt, ValidationError, model_validator
 
+from .strategy_catalog import BINDING_POLICY_VERSION
 from .strategy_definitions import (
     Contract, Digest, ExactEvidenceReference, Key, Outcome, Selection, StrategyDecisionTrace,
     TimeBound, TradedRole,
@@ -44,6 +45,7 @@ class PinnedProducer(Contract, frozen=True):
 
 class AttemptDecisionTrace(StrategyDecisionTrace):
     contract_version: Literal[2]
+    binding_policy_version: Literal[BINDING_POLICY_VERSION]
     attempt_id: Digest
     traded_role: TradedRole
     direction: Literal["LONG", "SHORT"]
@@ -88,7 +90,9 @@ def exact_record(registry, event, snapshot, cutoff):
 
 def verified_family(registry, evidence):
     record = registry.resolve(evidence.reference.model_dump(mode="json", exclude_none=True))
-    return bool(record and record.eligible and record.family and record.family == evidence.family)
+    if record and record.eligible and record.family and record.family == evidence.family:
+        return record
+    return None
 
 
 def select_candidate(registry, events, *, snapshot, cutoff, policy: Selection, age, limit,
@@ -159,3 +163,19 @@ def crt_family_validity(registry, bound, revision, *, snapshot, cutoff, coverage
             record.state in {"INVALIDATED", "EXPIRED", "OPPOSITE_BOUNDARY_REACHED"}):
         return Outcome.NOT_SATISFIED
     return Outcome.UNKNOWN
+
+
+def activate_crt_attempt(registry, reference, revision, *, snapshot, cutoff, age,
+                         coverage_known, attempt_id, strategy_version_id, alias):
+    """Bind a historical ACTIVE reference only if its family is usable at creation."""
+    if reference.reference.category != "crt" or not 1 <= age <= 86400:
+        return Outcome.UNKNOWN, None
+    initial = verified_family(registry, reference)
+    if not initial or initial.state != "ACTIVE" or not 0 <= cutoff - initial.available <= age:
+        return Outcome.UNKNOWN, None
+    validity = crt_family_validity(registry, reference, revision, snapshot=snapshot,
+                                   cutoff=cutoff, coverage_known=coverage_known)
+    if validity != Outcome.SATISFIED:
+        return validity, None
+    return validity, AttemptBinding(attempt_id=attempt_id, strategy_version_id=strategy_version_id,
+                                    alias=alias, evidence=reference, activated_at=cutoff)

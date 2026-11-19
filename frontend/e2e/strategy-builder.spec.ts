@@ -108,3 +108,37 @@ test("requires an explicit fixed price and preserves CRT family binding", async 
   await expect(page.getByLabel("Fixed absolute entry price")).toHaveValue("1.205");
   await expect(page.getByLabel("Definition status")).toHaveText("READY_FOR_EVALUATION");
 });
+
+test("requires the tracked CRT and confirmed SMT aliases for dependent triggers", async ({ page }, info) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Strategy Builder", exact: true }).click();
+  await page.getByRole("button", { name: "Use Bearish CRT / SMT template" }).click();
+  await page.getByLabel("Strategy name").fill("Bound trigger definition");
+  const trigger = page.getByRole("region", { name: "trigger phase" });
+  const validation = page.getByRole("region", { name: "Definition validation" });
+  const validate = page.getByRole("button", { name: "Validate definition" });
+  await trigger.getByRole("button", { name: "Add trigger group" }).click();
+  await trigger.getByRole("button", { name: "Add condition" }).click();
+  await trigger.getByLabel("Observation").selectOption("CRT_STATE");
+  await validate.click();
+  await expect(validation.getByRole("alert")).toContainText("Use BOUND_FAMILY with tracked CRT alias crt_reference");
+  const crt = trigger.locator(".strategy-node").first();
+  await crt.getByLabel("Same family as").selectOption("crt_reference");
+
+  await trigger.getByRole("button", { name: "Add condition" }).click();
+  const smt = trigger.locator(".strategy-node").last();
+  await smt.getByLabel("Rule dependency").selectOption("smt");
+  await smt.locator("select").filter({ has: page.locator('option[value="SMT_LEADER"]') }).selectOption("SMT_LEADER");
+  await validate.click();
+  await expect(validation.getByRole("alert")).toContainText("Use BOUND_FAMILY with a prior SMT_CONFIRMED alias");
+  await smt.getByLabel("Same family as").selectOption("smt_confirmation");
+  await validate.click();
+  await expect(validation.getByText("VALID_STRATEGY_DEFINITION", { exact: true })).toBeVisible();
+  await trigger.screenshot({ path: info.outputPath("strategy-bound-trigger.png") });
+  await page.getByRole("button", { name: "Save strategy" }).click();
+  await expect(page.getByText("Definition saved as version 1", { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole("button", { name: "Bound trigger definition", exact: true }).click();
+  await expect(crt.getByLabel("Same family as")).toHaveValue("crt_reference");
+  await expect(smt.getByLabel("Same family as")).toHaveValue("smt_confirmation");
+});
