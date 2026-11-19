@@ -1,0 +1,45 @@
+FF.F..                                                                   [100%]
+================================== FAILURES ===================================
+______ test_crt_trigger_inventory[CRT_REFERENCE-ACTIVE-3600-False-None] _______
+research_backend\tests\test_strategy_evaluator_integrity.py:321: in test_crt_trigger_inventory
+    run, horizon = evaluate_case(client,approved_fixture,definition,start=A-BASE,cutoff=A-BASE+4800)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+research_backend\tests\test_strategy_evaluator_integrity.py:52: in evaluate_case
+    body = request_body(client, archive, definition, BASE+cutoff)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+research_backend\tests\test_strategy_evaluator.py:89: in request_body
+    assert saved.status_code==201,saved.text
+E   AssertionError: {"detail":{"valid":false,"status":"INVALID_STRATEGY_DEFINITION","errors":[{"path":"conditions.reference","condition_id":"reference","code":"UNTRACKED_LATCHED_CRT_REFERENCE","expected":"Track the latched reference family explicitly","actual":null}],"unresolved":[],"restrictions":{"purpose":"HISTORICAL_SIMULATION","source_authority":"VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY","recorded_operational":false,"evaluation_available":false,"requires_schema_revision":false,"binding_policy_version":2}}}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_______ test_crt_trigger_inventory[CRT_MIDPOINT-104.75-3600-True-None] ________
+research_backend\tests\test_strategy_evaluator_integrity.py:321: in test_crt_trigger_inventory
+    run, horizon = evaluate_case(client,approved_fixture,definition,start=A-BASE,cutoff=A-BASE+4800)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+research_backend\tests\test_strategy_evaluator_integrity.py:52: in evaluate_case
+    body = request_body(client, archive, definition, BASE+cutoff)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+research_backend\tests\test_strategy_evaluator.py:89: in request_body
+    assert saved.status_code==201,saved.text
+E   AssertionError: {"detail":{"valid":false,"status":"INVALID_STRATEGY_DEFINITION","errors":[{"path":"conditions.reference","condition_id":"reference","code":"UNTRACKED_LATCHED_CRT_REFERENCE","expected":"Track the latched reference family explicitly","actual":null}],"unresolved":[],"restrictions":{"purpose":"HISTORICAL_SIMULATION","source_authority":"VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY","recorded_operational":false,"evaluation_available":false,"requires_schema_revision":false,"binding_policy_version":2}}}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+_ test_crt_trigger_inventory[CRT_STATE-EXPANSION_OBSERVED-4800-False-crt_reference] _
+research_backend\tests\test_strategy_evaluator_integrity.py:323: in test_crt_trigger_inventory
+    assert decision["state"]=="TRIGGER_QUALIFIED",decision["phase_results"]
+E   AssertionError: {'context': 'SATISFIED', 'setup': 'SATISFIED', 'invalidation': 'UNKNOWN', 'trigger': 'NOT_SATISFIED'}
+E   assert 'INSUFFICIENT_EVIDENCE' == 'TRIGGER_QUALIFIED'
+E
+E     - TRIGGER_QUALIFIED
+E     + INSUFFICIENT_EVIDENCE
+============================== warnings summary ===============================
+research_backend/tests/test_strategy_evaluator_integrity.py::test_crt_trigger_inventory[CRT_REFERENCE-ACTIVE-3600-False-None]
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_strategy_evaluator_integrity.py::test_crt_trigger_inventory[CRT_REFERENCE-ACTIVE-3600-False-None]
+FAILED research_backend/tests/test_strategy_evaluator_integrity.py::test_crt_trigger_inventory[CRT_MIDPOINT-104.75-3600-True-None]
+FAILED research_backend/tests/test_strategy_evaluator_integrity.py::test_crt_trigger_inventory[CRT_STATE-EXPANSION_OBSERVED-4800-False-crt_reference]
+3 failed, 3 passed, 23 deselected, 1 warning in 2.78s

@@ -1,0 +1,217 @@
+FFFFF
+================================== FAILURES ===================================
+_______________ test_fvg_current_uncertainty[positive-context] ________________
+
+client = <starlette.testclient.TestClient object at 0x00000161838956A0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000161808B2190>
+phase = 'positive-context'
+
+    @pytest.mark.parametrize("phase", ["positive-context","negative-context","invalidation","negative-trigger"])
+    def test_fvg_current_uncertainty(client, monkeypatch, phase):
+        archive = with_fvg_interaction(monkeypatch)
+        definition = base_definition()
+        definition["instruments"]["primary"]["modeled_delay_seconds"] = 20
+        definition["indicators"] = [fvg_spec()]
+        active = condition("fvg-active","FVG_ACTIVE","fvg","ACTIVE",current=True)
+        formed = condition("formed","FVG_STATE","fvg","ACTIVE")
+        definition["context"] = group("context", condition("context-rule","FVG_STATE","fvg","ACTIVE"))
+        definition["setup"] = group("setup", formed)
+        definition["invalidation"] = group("invalidation", condition("invalidation-rule","FVG_STATE","fvg","FULLY_MITIGATED"))
+        definition["trigger"] = group("trigger", condition("trigger-rule","FVG_STATE","fvg","PARTIALLY_MITIGATED"))
+        if phase.endswith("context"):
+            definition["context"] = group("context",active)
+            if phase.startswith("negative"):
+                definition["context"]["operator"] = "NOT"
+        elif phase == "invalidation":
+            definition["invalidation"] = group("invalidation",active)
+        else:
+            definition["trigger"] = group("trigger",active)
+            definition["trigger"]["operator"] = "NOT"
+        run, observed = evaluate_case(client,archive,definition,start=1800,cutoff=3300)
+        view = observed.views["fvg"]
+        events = observed.events[view.snapshot]["fvg"][1]
+        uncertain = [event for event in events if event["state"]=="UNCERTAIN"]
+>       assert len(uncertain)==1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+research_backend\tests\test_strategy_evaluator_integrity.py:86: AssertionError
+_______________ test_fvg_current_uncertainty[negative-context] ________________
+
+client = <starlette.testclient.TestClient object at 0x00000161839279D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001618372FA80>
+phase = 'negative-context'
+
+    @pytest.mark.parametrize("phase", ["positive-context","negative-context","invalidation","negative-trigger"])
+    def test_fvg_current_uncertainty(client, monkeypatch, phase):
+        archive = with_fvg_interaction(monkeypatch)
+        definition = base_definition()
+        definition["instruments"]["primary"]["modeled_delay_seconds"] = 20
+        definition["indicators"] = [fvg_spec()]
+        active = condition("fvg-active","FVG_ACTIVE","fvg","ACTIVE",current=True)
+        formed = condition("formed","FVG_STATE","fvg","ACTIVE")
+        definition["context"] = group("context", condition("context-rule","FVG_STATE","fvg","ACTIVE"))
+        definition["setup"] = group("setup", formed)
+        definition["invalidation"] = group("invalidation", condition("invalidation-rule","FVG_STATE","fvg","FULLY_MITIGATED"))
+        definition["trigger"] = group("trigger", condition("trigger-rule","FVG_STATE","fvg","PARTIALLY_MITIGATED"))
+        if phase.endswith("context"):
+            definition["context"] = group("context",active)
+            if phase.startswith("negative"):
+                definition["context"]["operator"] = "NOT"
+        elif phase == "invalidation":
+            definition["invalidation"] = group("invalidation",active)
+        else:
+            definition["trigger"] = group("trigger",active)
+            definition["trigger"]["operator"] = "NOT"
+>       run, observed = evaluate_case(client,archive,definition,start=1800,cutoff=3300)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+research_backend\tests\test_strategy_evaluator_integrity.py:82:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+research_backend\tests\test_strategy_evaluator_integrity.py:52: in evaluate_case
+    body = request_body(client, archive, definition, BASE+cutoff)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = <starlette.testclient.TestClient object at 0x00000161839279D0>
+selection = {'id': 'INTEGRITY_FIXTURE', 'series': [{'source': 'DUKASCOPY_SAVED', 'feed_id': 'isolated-evaluator-fixture', 'symbol': 'EURUSD', 'timeframe': 'M5', ...}], 'start': 1577959200, 'end': 1577962500, ...}
+data = {'schema_version': 2, 'defaults_policy': 'STRATEGY_DEFAULTS_V2', 'name': 'Bearish CRT / SMT', 'description': 'Research template. No optional filters enabled. Configure trigger, invalidation and execution policies.', ...}
+cutoff = 1577962500
+
+    def request_body(client, selection, data=None, cutoff=A+4200):
+        definition = ready_entry() if data is None else data
+        saved = client.post(ROUTE,json=definition)
+>       assert saved.status_code==201,saved.text
+E       AssertionError: {"detail":{"valid":false,"status":"INVALID_STRATEGY_DEFINITION","errors":[{"path":"context","condition_id":"context","code":"INVALID_NEGATION","expected":"One child and unknown_policy PROPAGATE","actual":null}],"unresolved":[],"restrictions":{"purpose":"HISTORICAL_SIMULATION","source_authority":"VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY","recorded_operational":false,"evaluation_available":false,"requires_schema_revision":false,"binding_policy_version":2}}}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+research_backend\tests\test_strategy_evaluator.py:89: AssertionError
+_________________ test_fvg_current_uncertainty[invalidation] __________________
+
+client = <starlette.testclient.TestClient object at 0x000001619317DE50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000161839771D0>
+phase = 'invalidation'
+
+    @pytest.mark.parametrize("phase", ["positive-context","negative-context","invalidation","negative-trigger"])
+    def test_fvg_current_uncertainty(client, monkeypatch, phase):
+        archive = with_fvg_interaction(monkeypatch)
+        definition = base_definition()
+        definition["instruments"]["primary"]["modeled_delay_seconds"] = 20
+        definition["indicators"] = [fvg_spec()]
+        active = condition("fvg-active","FVG_ACTIVE","fvg","ACTIVE",current=True)
+        formed = condition("formed","FVG_STATE","fvg","ACTIVE")
+        definition["context"] = group("context", condition("context-rule","FVG_STATE","fvg","ACTIVE"))
+        definition["setup"] = group("setup", formed)
+        definition["invalidation"] = group("invalidation", condition("invalidation-rule","FVG_STATE","fvg","FULLY_MITIGATED"))
+        definition["trigger"] = group("trigger", condition("trigger-rule","FVG_STATE","fvg","PARTIALLY_MITIGATED"))
+        if phase.endswith("context"):
+            definition["context"] = group("context",active)
+            if phase.startswith("negative"):
+                definition["context"]["operator"] = "NOT"
+        elif phase == "invalidation":
+            definition["invalidation"] = group("invalidation",active)
+        else:
+            definition["trigger"] = group("trigger",active)
+            definition["trigger"]["operator"] = "NOT"
+        run, observed = evaluate_case(client,archive,definition,start=1800,cutoff=3300)
+        view = observed.views["fvg"]
+        events = observed.events[view.snapshot]["fvg"][1]
+        uncertain = [event for event in events if event["state"]=="UNCERTAIN"]
+>       assert len(uncertain)==1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+research_backend\tests\test_strategy_evaluator_integrity.py:86: AssertionError
+_______________ test_fvg_current_uncertainty[negative-trigger] ________________
+
+client = <starlette.testclient.TestClient object at 0x0000016183875BA0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000016183998D10>
+phase = 'negative-trigger'
+
+    @pytest.mark.parametrize("phase", ["positive-context","negative-context","invalidation","negative-trigger"])
+    def test_fvg_current_uncertainty(client, monkeypatch, phase):
+        archive = with_fvg_interaction(monkeypatch)
+        definition = base_definition()
+        definition["instruments"]["primary"]["modeled_delay_seconds"] = 20
+        definition["indicators"] = [fvg_spec()]
+        active = condition("fvg-active","FVG_ACTIVE","fvg","ACTIVE",current=True)
+        formed = condition("formed","FVG_STATE","fvg","ACTIVE")
+        definition["context"] = group("context", condition("context-rule","FVG_STATE","fvg","ACTIVE"))
+        definition["setup"] = group("setup", formed)
+        definition["invalidation"] = group("invalidation", condition("invalidation-rule","FVG_STATE","fvg","FULLY_MITIGATED"))
+        definition["trigger"] = group("trigger", condition("trigger-rule","FVG_STATE","fvg","PARTIALLY_MITIGATED"))
+        if phase.endswith("context"):
+            definition["context"] = group("context",active)
+            if phase.startswith("negative"):
+                definition["context"]["operator"] = "NOT"
+        elif phase == "invalidation":
+            definition["invalidation"] = group("invalidation",active)
+        else:
+            definition["trigger"] = group("trigger",active)
+            definition["trigger"]["operator"] = "NOT"
+>       run, observed = evaluate_case(client,archive,definition,start=1800,cutoff=3300)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+research_backend\tests\test_strategy_evaluator_integrity.py:82:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+research_backend\tests\test_strategy_evaluator_integrity.py:52: in evaluate_case
+    body = request_body(client, archive, definition, BASE+cutoff)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = <starlette.testclient.TestClient object at 0x0000016183875BA0>
+selection = {'id': 'INTEGRITY_FIXTURE', 'series': [{'source': 'DUKASCOPY_SAVED', 'feed_id': 'isolated-evaluator-fixture', 'symbol': 'EURUSD', 'timeframe': 'M5', ...}], 'start': 1577959200, 'end': 1577962500, ...}
+data = {'schema_version': 2, 'defaults_policy': 'STRATEGY_DEFAULTS_V2', 'name': 'Bearish CRT / SMT', 'description': 'Research template. No optional filters enabled. Configure trigger, invalidation and execution policies.', ...}
+cutoff = 1577962500
+
+    def request_body(client, selection, data=None, cutoff=A+4200):
+        definition = ready_entry() if data is None else data
+        saved = client.post(ROUTE,json=definition)
+>       assert saved.status_code==201,saved.text
+E       AssertionError: {"detail":{"valid":false,"status":"INVALID_STRATEGY_DEFINITION","errors":[{"path":"trigger","condition_id":"trigger","code":"INVALID_NEGATION","expected":"One child and unknown_policy PROPAGATE","actual":null}],"unresolved":[],"restrictions":{"purpose":"HISTORICAL_SIMULATION","source_authority":"VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY","recorded_operational":false,"evaluation_available":false,"requires_schema_revision":false,"binding_policy_version":2}}}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+research_backend\tests\test_strategy_evaluator.py:89: AssertionError
+__________________ test_continuous_context_preserves_family ___________________
+
+client = <starlette.testclient.TestClient object at 0x0000016193181CD0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000161931CC5A0>
+
+    def test_continuous_context_preserves_family(client, monkeypatch):
+        archive = two_smt_families(monkeypatch)
+>       run, observed = evaluate_case(client,archive,continuous_pair(),start=600,cutoff=3590)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+research_backend\tests\test_strategy_evaluator_integrity.py:120:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+client = <starlette.testclient.TestClient object at 0x0000016193181CD0>
+archive = {'id': 'INTEGRITY_FIXTURE', 'series': [{'source': 'DUKASCOPY_SAVED', 'feed_id': 'isolated-evaluator-fixture', 'symbol'...isolated-evaluator-fixture', 'symbol': 'EURUSD', 'timeframe': 'M5', ...}], 'start': 1577959200, 'end': 1577962800, ...}
+definition = {'schema_version': 2, 'defaults_policy': 'STRATEGY_DEFAULTS_V2', 'name': 'Bearish CRT / SMT', 'description': 'Research template. No optional filters enabled. Configure trigger, invalidation and execution policies.', ...}
+start = 600, cutoff = 3590
+
+    def evaluate_case(client, archive, definition, *, start, cutoff):
+        body = request_body(client, archive, definition, BASE+cutoff)
+        body.update(evaluation_start=BASE+start)
+        response = client.post(API,json=body)
+>       assert response.status_code == 201,response.text
+E       AssertionError: {"detail":{"code":"EVALUATION_UNAVAILABLE","reason":"Insufficient producer warm-up for fvg: require 5 observed bars"}}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+research_backend\tests\test_strategy_evaluator_integrity.py:55: AssertionError
+============================== warnings summary ===============================
+research_backend/tests/test_strategy_evaluator_integrity.py::test_fvg_current_uncertainty[positive-context]
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_strategy_evaluator_integrity.py::test_fvg_current_uncertainty[positive-context]
+FAILED research_backend/tests/test_strategy_evaluator_integrity.py::test_fvg_current_uncertainty[negative-context]
+FAILED research_backend/tests/test_strategy_evaluator_integrity.py::test_fvg_current_uncertainty[invalidation]
+FAILED research_backend/tests/test_strategy_evaluator_integrity.py::test_fvg_current_uncertainty[negative-trigger]
+FAILED research_backend/tests/test_strategy_evaluator_integrity.py::test_continuous_context_preserves_family
+5 failed, 1 warning in 2.16s

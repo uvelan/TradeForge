@@ -473,3 +473,37 @@ def test_concurrent_evaluation_admission_limit(client,approved_fixture):
         routes.LANES.release()
         routes.LANES.release()
     assert client.post(API,json=body).status_code==201
+
+def test_order_block_unknown_cannot_satisfy_negation(client,monkeypatch):
+    from test_order_blocks import BARS
+
+    bars = prices([10,10,10,12,10])+BARS[:3]+[(10,12,9,10),BARS[3],(13,14,11,13)]+prices([11,11])
+    records = []
+    frozen_candles(records,"EURUSD","M5",BASE,bars)
+    archive = selection(monkeypatch,records,len(bars)*300)
+    definition = base_definition()
+    definition["indicators"] = [STRUCTURE,ORDER_BLOCK]
+    definition["instruments"]["primary"]["modeled_delay_seconds"] = 20
+    active = condition("ob-active","ORDER_BLOCK_ACTIVE","ob","ACTIVE",current=True)
+    definition["context"] = group("context",active)
+    definition["context"].update(operator="NOT",unknown_policy="PROPAGATE")
+    for phase in ("setup","trigger","invalidation"):
+        definition[phase] = group(phase,condition(phase+"-pivot","STRUCTURE_PIVOT","structure","HIGH"))
+    run, horizon = evaluate_case(client,archive,definition,start=3300,cutoff=3320)
+    view = horizon.views["ob"]
+    assert any(row["state"]=="UNCERTAIN" and row["available_at"]==BASE+3320
+               for row in horizon.events[view.snapshot]["order_block"][1])
+    decision = run["decision"]
+    print({key:decision[key] for key in ("state","context_activated_at","phase_results","rules")})
+    assert decision["context_activated_at"] is None
+    assert decision["phase_results"]["context"]=="UNKNOWN"
+
+
+def test_age_boundary_is_observed_without_producer_publication(client,monkeypatch):
+    archive = two_smt_families(monkeypatch)
+    definition = continuous_pair()
+    definition["context"]["children"][0]["evidence"]["max_age_seconds"] = 75
+    run, horizon = evaluate_case(client,archive,definition,start=1500,cutoff=1890)
+    assert not any(BASE+1876 in stamps for lanes in horizon.events.values() for stamps,_ in lanes.values())
+    assert run["decision"]["transitions"][-1] == [BASE+1876,"INSUFFICIENT_EVIDENCE","CONTINUOUS_CONTEXT_FAILED"]
+    assert next(rule for rule in run["decision"]["rules"] if rule["id"]=="context-smt")["reason"]=="BOUND_EVIDENCE_STALE"
