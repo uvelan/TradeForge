@@ -70,8 +70,12 @@ async function handles(page:Page,count:number):Promise<Point[]>{
     const points=(window as unknown as {drawingHandleProbe:(canvas:HTMLCanvasElement)=>Point[]}).drawingHandleProbe(node);
     return points.map(p=>({x:p.x+rect.left,y:p.y+rect.top}));
   };
-  await expect.poll(()=>canvas.evaluate(read)).toHaveLength(count);
-  return canvas.evaluate(read);
+  let points:Point[]=[];
+  await expect.poll(async ()=>{
+    points=await canvas.evaluate(read);
+    return points.length;
+  }).toBe(count);
+  return points;
 }
 async function clickStroke(page:Page){
   const box=await plotBox(page);
@@ -196,15 +200,16 @@ for(const direction of ["long","short"]){
   test(direction+" position rejects crossed handles and preserves direction on a valid resize",async ({page},info)=>{
     const long=direction==="long";
     const {created,item}=await setup(page,"risk-reward",[[.39,.49],[.61,long ? .69 : .25],[.68,long ? .25 : .69]]);
-    const points=await handles(page,3);
     const writes:string[]=[];
     page.on("request",request=>{if(request.method()==="POST"&&request.url().includes("/drawings?"))writes.push(request.url());});
     for(const index of [1,2]){
+      const points=await handles(page,3);
       const crossed={x:points[index].x,y:points[0].y+(points[index].y>points[0].y?-14:14)};
       await drag(page,points[index],crossed);
       expect(await scene(page)).toEqual(created);
       expect(writes).toHaveLength(0);
     }
+    const points=await handles(page,3);
     const response=posted(page);
     await drag(page,points[2],shifted(points[2],24,long?-24:24));
     const changed=await saved(response);

@@ -32,7 +32,7 @@ def main():
         original=arrival_capture.transaction
 
         def provider(symbol,timeframe,limit,*,include_latest,provenance):
-            provenance.update(feed_id="mt5:injected",price_basis="BID")
+            provenance.update(feed_id="mt5:injected",price_basis="BID",timestamp_policy="UTC_EPOCH_VERIFIED_V1")
             return [{"time":stamp,"open":price,"high":price+1,"low":price-1,"close":price,"volume":9}]
 
         @contextmanager
