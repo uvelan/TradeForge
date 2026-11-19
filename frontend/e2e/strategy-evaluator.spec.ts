@@ -39,7 +39,8 @@ test("saves a canonical strategy decision, reconstructs, and opens exact chart e
   await expect(evaluation.getByText("Qualified entry intent", {exact: true})).toBeVisible();
   await evaluation.getByRole("button", {name: "Inspect expand"}).click();
   await expect(evaluation.locator('pre[aria-label="Exact evidence"]')).toContainText("EXPANSION_OBSERVED");
-  await evaluation.screenshot({path: info.outputPath("strategy-evaluation.png")});
+  await evaluation.getByRole("heading", {name: "Strategy evaluation"}).scrollIntoViewIfNeeded();
+  await page.screenshot({path: info.outputPath("strategy-evaluation.png")});
   await evaluation.getByLabel("Decision cutoff (UTC)").fill("2020-01-02T12:10");
   await evaluation.getByRole("button", {name: "Reconstruct cutoff"}).click();
   await expect(evaluation.getByText(/Reconstructed view/)).toBeVisible();
@@ -48,4 +49,6 @@ test("saves a canonical strategy decision, reconstructs, and opens exact chart e
   await evaluation.getByRole("button", {name: "Chart expand"}).click();
   await expect(page.getByText("FROZEN STRATEGY EVIDENCE", {exact: true})).toBeVisible();
   await expect(page.locator(".primary-chart canvas").first()).toBeVisible();
+  await page.getByText("FROZEN STRATEGY EVIDENCE", {exact: true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path: info.outputPath("strategy-evaluation-chart.png")});
 });

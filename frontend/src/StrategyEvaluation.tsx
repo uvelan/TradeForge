@@ -16,11 +16,12 @@ type Decision = {decision_id:string;attempt_id:string|null;state:string;reason:s
   phase_results:Record<string,string>;
   temporal:{before:string;after:string;relation:string;outcome:string;reason:string}[];
   supporting_events:Record<string,unknown>;bound_crt?:{evidence:{family:string};activated_at:number}|null;
-  evaluation:{strategy_version_id:string;configuration_fingerprint:string;purpose:string};
+  evaluation:{strategy_version_id:string;configuration_fingerprint:string;purpose:string;warmup_start:number;evaluation_start:number};
   coverage:{series:string;status:string;expected:number;observed:number;missing:number}[];
   entry_intent?:{status:string;role:string;direction:string;symbol:string;entry:{kind:string;price?:{value:number}};
     price_basis:string;strictly_after:number}|null};
-type Run = {run_id:string;decision:Decision;selection?:{authority:string;series:Record<string,Source>}};
+type FrozenSelection = Omit<Selection,"series"|"fingerprint"> & {series:Record<string,Source>};
+type Run = {run_id:string;decision:Decision;selection:FrozenSelection};
 type SavedRun = {run_id:string;cutoff:number;state:string};
 export type EvidenceChartLocation = {symbol:SymbolName;timeframe:Timeframe;source:ChartSource;
   range:CandleRange;evidencePath:string;timestamp:number};
@@ -44,6 +45,7 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
   const [busy,setBusy]=useState(false);
   const generation=useRef(0);
   const selection=catalog.find(item=>item.id===selectionId);
+  const frozen=run?.selection;
   function choose(item:Selection){
     setSelection(item.id);setWarmup(fieldDate(item.start));
     setStart(fieldDate(Math.min(item.start+7200,item.end)));setCutoff(fieldDate(item.end));
@@ -105,13 +107,13 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
   function chart(item:RuleResult){
     const ref=item.evidence_reference;
     const identity=ref?.participants?.primary??ref?.source;
-    if(!identity||!openChart||item.observed_at===null||!selection||!decision)return;
+    if(!identity||!openChart||item.observed_at===null||!frozen||!decision)return;
     const [source,symbol,frame]=identity;
     if((source!=='DUKASCOPY_SAVED'&&source!=='MT5_SAVED')||
        (symbol!=='EURUSD'&&symbol!=='GBPUSD')||(frame!=='M1'&&frame!=='M5'))return;
     const stride=frame==='M1'?60:300, observed=Math.floor(item.observed_at/stride)*stride;
     openChart({source,symbol,timeframe:frame,timestamp:observed,
-      range:{start:Math.max(selection.start,observed-15*stride),end:Math.min(decision.cutoff,observed+17*stride)},
+      range:{start:Math.max(frozen.start,observed-15*stride),end:Math.min(decision.cutoff,observed+17*stride)},
       evidencePath:evidencePath(item)+'/chart'});
   }
   return <section className="card strategy-block" aria-label="Strategy evaluation">
@@ -156,9 +158,14 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
       <h3>Market coverage</h3>
       <ul>{decision.coverage.map(lane=><li key={lane.series}>{lane.series} · {lane.observed}/{lane.expected} due bars
         {' · '}{title(lane.status)}{lane.missing?(' · '+lane.missing+' missing'):''}</li>)}</ul>
-      <p>{selection?.authority??'Verified archive'} · {selection?.availability_policy} · Modeled delays
-        {' '}{record.definition.instruments.primary.modeled_delay_seconds}s primary
-        {record.definition.instruments.comparison?' / '+record.definition.instruments.comparison.modeled_delay_seconds+'s comparison':''}</p>
+      {frozen&&<details>
+        <summary>Frozen data and modeled delays</summary>
+        <p>{frozen.id} · {title(frozen.authority)} · {title(frozen.availability_policy)}</p>
+        <p>Warm-up {utc(decision.evaluation.warmup_start)} · Start {utc(decision.evaluation.evaluation_start)} · End {utc(frozen.end)}</p>
+        <ul>{Object.entries(frozen.series).map(([key,lane])=><li key={key}>
+          {lane.symbol} {lane.timeframe} · {lane.feed_id} · {lane.price_basis} · {lane.delay_seconds??0}s modeled delay
+        </li>)}</ul>
+      </details>}
       <div className="table-scroll"><table><caption>Rule evidence</caption><thead><tr>
         <th>Rule</th><th>Outcome</th><th>Observation and availability</th><th>Evidence</th>
       </tr></thead><tbody>{decision.rules.map(item=><tr key={item.id}>
