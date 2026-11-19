@@ -112,6 +112,16 @@ CREATE TABLE IF NOT EXISTS datasets (
     sha256 TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS historical_imports (
+    feed_id TEXT NOT NULL,
+    symbol TEXT NOT NULL,
+    source_start INTEGER NOT NULL,
+    source_end INTEGER NOT NULL CHECK(source_end > source_start),
+    source_sha256 TEXT NOT NULL,
+    acquired_at TEXT NOT NULL,
+    manifest TEXT NOT NULL CHECK(json_valid(manifest)),
+    PRIMARY KEY(feed_id,symbol,source_start,source_end)
+);
 CREATE TABLE IF NOT EXISTS imported_fills (
     id TEXT PRIMARY KEY,
     broker_key TEXT NOT NULL,
@@ -248,7 +258,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 
 IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 IMMUTABLE_TABLES += ["arrival_sessions", "arrival_observations", "arrival_receipts",
-                     "arrival_publications", "arrival_manifests", "arrival_partitions"]
+                     "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports"]
 
 
 def connect():

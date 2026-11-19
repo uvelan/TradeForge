@@ -1,12 +1,12 @@
 from datetime import UTC, datetime
 
 from .db import rows
-from .storage import read_partition
+from .storage import iter_complete_partition, read_partition
 
 
 def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int) -> tuple[int, int]:
     partitions = rows("""SELECT first_time, last_time, feed_id, price_basis FROM datasets
-        WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles'
+        WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles' AND (provider<>'DUKASCOPY' OR price_basis='BID')
         ORDER BY last_time DESC, created_at DESC LIMIT 50""", (provider, symbol, timeframe))
     if not partitions:
         raise FileNotFoundError("No saved candle partitions for this symbol and timeframe")
@@ -25,7 +25,8 @@ def saved_range(provider: str, symbol: str, timeframe: str, start: int, end: int
     if not 0 <= start < end <= int(datetime.now(UTC).timestamp()) or start % step or end % step:
         raise ValueError("Use an aligned, completed UTC range")
     partitions = rows("""SELECT * FROM datasets
-        WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles' AND last_time>=? AND first_time<?
+        WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles' AND (provider<>'DUKASCOPY' OR price_basis='BID')
+        AND last_time>=? AND first_time<?
         ORDER BY first_time, id LIMIT 51""", (provider, symbol, timeframe, iso(start), iso(end)))
     if not partitions:
         raise FileNotFoundError("No saved candle partitions for this range")
@@ -86,11 +87,8 @@ def read_tick_partitions(partitions: list[dict]) -> list[dict]:
         raise ValueError("Selected tick partitions exceed the 500,000 quote replay limit")
     quotes = {}
     for part in partitions:
-        partition_quotes = read_partition(part, max_rows=part["rows_count"] + 1)
-        if len(partition_quotes) != part["rows_count"]:
-            raise ValueError("Tick partition row count differs from its manifest")
         keys = set()
-        for quote in partition_quotes:
+        for quote in iter_complete_partition(part, max_rows=TICK_REPLAY_LIMIT):
             key = (quote["time_ms"], quote["source_order"])
             if key in keys:
                 raise ValueError("Tick source order is ambiguous within a partition")

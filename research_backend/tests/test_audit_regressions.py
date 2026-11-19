@@ -70,7 +70,12 @@ def test_completed_bi5_final_bar_and_adjacent_partition_range(client):
     first = load("2025-01-02", 23)
     assert load("2025-01-02", 23)["tick_dataset"]["id"] == first["tick_dataset"]["id"]
     load("2025-01-03", 0)
-    assert len(client.get("/api/datasets").json()) == 4
+    datasets = client.get("/api/datasets").json()
+    assert len(datasets) == 10
+    assert {(part["kind"],part["timeframe"],part["price_basis"]) for part in datasets} == {
+        ("ticks",None,"BID_ASK_UNITS"), ("candles","M1","BID"), ("candles","M1","ASK"),
+        ("candles","M5","BID"), ("candles","M5","ASK"),
+    }
     start = int(datetime(2025, 1, 2, 23, tzinfo=UTC).timestamp())
     result = client.get("/api/market/candles", params={
         "source": "DUKASCOPY_SAVED", "start": start, "end": start + 7200, "limit": 24,

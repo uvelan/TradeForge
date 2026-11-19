@@ -1,5 +1,6 @@
 """Immutable Parquet partitions with separate SQLite metadata registration."""
 from __future__ import annotations
+from contextlib import nullcontext
 from datetime import datetime,timezone,timedelta
 import hashlib
 import json
@@ -14,7 +15,7 @@ from .config import MARKET_DIR
 from .db import transaction, utc_now
 
 
-def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|None,price_basis:str,records:list[dict])->dict:
+def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|None,price_basis:str,records:list[dict], *, connection=None, row_group_size=None)->dict:
     if not records: raise ValueError('Empty market dataset cannot be committed')
     if provider not in ('MT5','DUKASCOPY') or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._#+-]{0,31}',symbol):
         raise ValueError('Unsupported provider or symbol')
@@ -36,7 +37,7 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
     temp=folder/f'.part-{uuid.uuid4()}.pending'
     table=pa.Table.from_pylist(records)
     try:
-        pq.write_table(table,temp,compression='zstd')
+        pq.write_table(table,temp,compression='zstd',row_group_size=row_group_size)
         with temp.open('rb+') as f:
             digest = hashlib.file_digest(f, 'sha256').hexdigest()
             os.fsync(f.fileno())
@@ -44,8 +45,9 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
         new_id = hashlib.sha256(identity.encode()).hexdigest()
         path=folder/f'part-{new_id}.parquet'
         relative=str(path.relative_to(MARKET_DIR))
-        with transaction() as db:
-            db.execute("BEGIN IMMEDIATE")
+        with (transaction() if connection is None else nullcontext(connection)) as db:
+            if connection is None:
+                db.execute("BEGIN IMMEDIATE")
             existing = db.execute("""SELECT id, relative_path FROM datasets
                 WHERE provider=? AND feed_id=? AND symbol=? AND kind=? AND timeframe IS ?
                 AND price_basis=? AND sha256=? ORDER BY created_at LIMIT 1""",
@@ -96,11 +98,41 @@ def read_partition(dataset:dict,max_rows:int=2000)->list[dict]:
         return table.slice(max(0, table.num_rows - max_rows)).to_pylist()
 
 
+def iter_complete_partition(dataset, *, max_rows, batch_size=8192):
+    """Verify and read every row in bounded batches, without the chart tail limit."""
+    import pyarrow.parquet as pq
+
+    expected = dataset["rows_count"]
+    if not 0 < expected <= max_rows or not 0 < batch_size <= 8192:
+        raise ValueError("Partition exceeds the complete-read budget")
+    path = (MARKET_DIR / dataset["relative_path"]).resolve()
+    if not path.is_relative_to(MARKET_DIR.resolve()):
+        raise ValueError("Invalid stored dataset path")
+    with path.open("rb") as file:
+        if hashlib.file_digest(file, "sha256").hexdigest() != dataset["sha256"]:
+            raise RuntimeError("Dataset checksum mismatch")
+        file.seek(0)
+        parquet = pq.ParquetFile(file)
+        if parquet.metadata.num_rows != expected:
+            raise ValueError("Partition row count differs from its manifest")
+        count = 0
+        for batch in parquet.iter_batches(batch_size=batch_size):
+            count += batch.num_rows
+            if count > expected:
+                raise ValueError("Partition row count differs from its manifest")
+            yield from batch.to_pylist()
+        if count != expected:
+            raise ValueError("Incomplete partition read")
+
+
+POINT_SCALES = {"EURUSD":100000, "GBPUSD":100000, "USDJPY":1000, "XAUUSD":1000}
+
+
 def decode_bi5(payload:bytes, symbol:str,day:datetime,hour:int|None=None)->list[dict]:
     """Dukascopy big-endian .bi5 daily (current documented) or hourly (legacy).
     Recognizes symbol point-scale for supported instruments only. Bid/ask preserved.
     """
-    if symbol not in ('EURUSD','GBPUSD','USDJPY','XAUUSD'):
+    if symbol not in POINT_SCALES:
         raise ValueError('Unsupported instrument; point scaling must be explicitly defined')
     if len(payload)>40_000_000:raise ValueError('Compressed file exceeds 40MB safety limit')
     maximum = 10_000_000
@@ -114,8 +146,10 @@ def decode_bi5(payload:bytes, symbol:str,day:datetime,hour:int|None=None)->list[
     if not decoder.eof or decoder.unused_data:
         raise ValueError('Truncated BI5 stream or unexpected trailing data')
     if len(raw)%20:raise ValueError('Invalid bi5 record size')
-    multiplier={'EURUSD':100000,'GBPUSD':100000,'USDJPY':1000,'XAUUSD':1000}[symbol]
-    base=day.replace(hour=hour or 0,minute=0,second=0,microsecond=0,tzinfo=timezone.utc)
+    if day.utcoffset() != timedelta(0) or hour is not None and not 0 <= hour < 24:
+        raise ValueError("Use a UTC day and a valid optional hour")
+    multiplier = POINT_SCALES[symbol]
+    base = int(day.replace(hour=hour or 0,minute=0,second=0,microsecond=0).timestamp())
     records=[]
     max_ms=3600_000 if hour is not None else 86_400_000
     for index,(ms,ask,bid,ask_vol,bid_vol) in enumerate(struct.iter_unpack('>IIIff',raw)):
@@ -123,22 +157,59 @@ def decode_bi5(payload:bytes, symbol:str,day:datetime,hour:int|None=None)->list[
         if not (0<bid<=ask):raise ValueError('Invalid market bid/ask')
         if not all(math.isfinite(volume) and volume >= 0 for volume in (ask_vol, bid_vol)):
             raise ValueError('Invalid market volume')
-        records.append({'time':int(base.timestamp())+ms//1000,'time_ms':int(base.timestamp())*1000+ms,
+        records.append({'time':base+ms//1000,'time_ms':base*1000+ms,
             'bid_units':int(bid),'ask_units':int(ask), 'scale':multiplier,'source_order':index,
             'ask_volume':float(ask_vol),'bid_volume':float(bid_vol)})
     return records
 
 
-def aggregate_ticks(records:list[dict],timeframe_min:int)->list[dict]:
-    if not records: return []
-    groups={}
-    for r in records:
-        slot=(int(r['time'])//(timeframe_min*60))*(timeframe_min*60)
-        g=groups.setdefault(slot,[]);g.append(r)
-    result=[]
-    for ts,g in sorted(groups.items()):
-        scale=g[0]['scale']; bids=[r['bid_units']/scale for r in g]
-        asks=[r['ask_units']/scale for r in g]
-        result.append({'time':ts,'open':bids[0],'high':max(bids),'low':min(bids),'close':bids[-1],
-          'ask_open':asks[0],'ask_high':max(asks),'ask_low':min(asks),'ask_close':asks[-1],'volume':len(g)})
+def canonical_ticks(records, *, scale=None):
+    """Use one source scope. Its ordinal breaks ties at identical milliseconds."""
+    ordered = sorted(records, key=lambda tick: (tick["time_ms"], tick["source_order"]))
+    previous = None
+    for tick in ordered:
+        ms, sequence, units = tick["time_ms"], tick["source_order"], tick["scale"]
+        if (type(ms) is not int or ms < 0 or tick["time"] != ms // 1000
+                or type(sequence) is not int or sequence < 0):
+            raise ValueError("Invalid tick timestamp or source order")
+        if scale is None:
+            scale = units
+        if (type(units) is not int or units <= 0 or units != scale
+                or not 0 < tick["bid_units"] <= tick["ask_units"]):
+            raise ValueError("Invalid bid/ask or inconsistent point scale")
+        if previous and (ms, sequence) == (previous["time_ms"], previous["source_order"]):
+            if tick != previous:
+                raise ValueError("Conflicting tick quotes for the same source identity")
+            continue
+        previous = tick
+        yield tick
+
+
+def aggregate_ticks(records, timeframe_min):
+    if timeframe_min not in (1, 5):
+        raise ValueError("Use M1 or M5 tick aggregation")
+    return fold_ticks(canonical_ticks(records), timeframe_min)
+
+
+def fold_ticks(ordered, timeframe_min):
+    """Fold an already verified and canonically ordered tick stream."""
+    step = timeframe_min * 60
+    result = []
+    bar = None
+    for tick in ordered:
+        slot = tick["time"] // step * step
+        bid = tick["bid_units"] / tick["scale"]
+        ask = tick["ask_units"] / tick["scale"]
+        if bar is None or bar["time"] != slot:
+            bar = {"time":slot,"open":bid,"high":bid,"low":bid,"close":bid,
+                   "ask_open":ask,"ask_high":ask,"ask_low":ask,"ask_close":ask,"volume":1}
+            result.append(bar)
+        else:
+            bar["high"] = max(bar["high"], bid)
+            bar["low"] = min(bar["low"], bid)
+            bar["close"] = bid
+            bar["ask_high"] = max(bar["ask_high"], ask)
+            bar["ask_low"] = min(bar["ask_low"], ask)
+            bar["ask_close"] = ask
+            bar["volume"] += 1
     return result
