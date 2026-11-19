@@ -141,7 +141,8 @@ def semantic_prefix(payload):
     """Canonical identity fields remain exact, apart from snapshot coordinates."""
     chosen = {key:payload[key] for key in (
         "state","reason","attempt_id","terminal","context_activated_at","setup_activated_at","trigger_activated_at",
-        "invalidation","expiry","rules","phase_results","temporal","attempt_bindings","entry_intent","coverage")}
+        "invalidation","expiry","rules","phase_results","temporal","attempt_bindings","activation_proofs",
+        "temporal_predecessors","entry_intent","coverage")}
 
     def walk(value):
         if isinstance(value, dict):
@@ -171,7 +172,8 @@ def test_independent_smt_prefix_equivalence(client, monkeypatch, delay):
         assert semantic_prefix(compared)==semantic_prefix(reference),offset
 
 
-def test_existing_run_create_has_exact_cutoff_and_preserves_v1(client, approved_fixture):
+@pytest.mark.parametrize("version", [1,2])
+def test_existing_run_create_has_exact_cutoff_and_preserves_legacy(client, approved_fixture,version):
     from research_backend.app.db import transaction, utc_now
     from test_strategy_evaluator import A
 
@@ -186,7 +188,7 @@ def test_existing_run_create_has_exact_cutoff_and_preserves_v1(client, approved_
         "run_id":run["run_id"],"requested_cutoff":A+3900,"latest_cutoff":A+4200,
     }
     pinned = routes.load_run(run["run_id"])
-    legacy = {**pinned,"run_id":"legacy-run","identity":{**pinned["identity"],"evaluator_version":1}}
+    legacy = {**pinned,"run_id":"legacy-run","identity":{**pinned["identity"],"evaluator_version":version}}
     original = {**run["decision"],"decision_id":"1"*64}
     with transaction() as db:
         db.execute("INSERT INTO strategy_evaluations VALUES(?,?,?,?)",

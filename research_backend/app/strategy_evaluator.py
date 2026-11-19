@@ -7,7 +7,7 @@ from heapq import heapify, heappop, heappush
 
 from .analysis_evidence import ResourceLimit
 from .arrival_policy import SIMULATION_AUTHORITY, SIMULATION_MODE
-from .strategy_binding import BoundEvidence, activate_crt_attempt, crt_family_validity, expiry_status, select_candidate
+from .strategy_binding import BoundEvidence, activate_crt_attempt, crt_family_validity, exact_record, expiry_status, select_candidate
 from .strategy_catalog import OBSERVATIONS, ROLE_OBSERVATIONS
 from .strategy_definitions import Outcome, logical_outcome
 from .strategy_evidence import fingerprint
@@ -29,6 +29,7 @@ class RuleResult:
     proof: object = None
     event: dict | None = None
     selected_at: int | None = None
+    verified_at: int | None = None
 
     def trace(self, rule, phase):
         ref = self.proof.reference.model_dump(mode="json",exclude_none=True) if self.proof else None
@@ -37,7 +38,7 @@ class RuleResult:
                 "family":self.proof.family if self.proof else None,
                 "observed_at":self.proof.observed_at if self.proof else None,
                 "available_at":self.proof.reference.available_at if self.proof else None,
-                "selected_at":self.selected_at}
+                "selected_at":self.selected_at,"verified_at":self.verified_at,"evidence_state":rule.evidence.state}
 
 
 @dataclass(frozen=True)
@@ -144,6 +145,10 @@ class EvaluationMachine:
                              for snapshot,lanes in evidence.events.items()}
         self.bindings = {}
         self.binding_status = {}
+        self.binding_times = {}
+        self.activation_proofs = {}
+        self.phase_times = {}
+        self.temporal_proofs = {}
         self.temporal = {}
         self.timeline = []
         self.context_at = self.setup_at = self.trigger_at = None
@@ -187,10 +192,32 @@ class EvaluationMachine:
         index = bisect_right(rows,cutoff,key=lambda row:row["available_at"])-1
         return rows[index] if index>=0 else None
 
+    def prerequisites(self, rule, phase):
+        constraints = []
+        for edge in self.graph.temporal[rule.id]:
+            prior_phase = self.graph.phases[edge.before]
+            key = (edge.before,edge.after,edge.label)
+            parent = self.results.get(edge.before)
+            if prior_phase!=phase:
+                parent = self.temporal_proofs.get(key) or self.activation_proofs.get(edge.before) or parent
+            if not parent or parent.outcome!=YES:
+                unknown = not parent or parent.outcome==UNKNOWN
+                result = RuleResult(UNKNOWN if unknown else NO,
+                    "TEMPORAL_PREDECESSOR_UNKNOWN" if unknown else "TEMPORAL_PREDECESSOR_FALSE")
+                self.temporal[key] = [result.outcome.value,result.reason]
+                return (),result
+            anchor = parent.proof.reference.available_at
+            if prior_phase!=phase:
+                anchor = max(anchor,parent.selected_at,self.phase_times.get(prior_phase,0))
+            constraints.append((edge,anchor))
+        return constraints,None
+
     def select(self, rule, phase, cutoff, lower):
         spec = CATALOG[rule.observation]
         view = self.evidence.views[rule.dependency]
         established = self.bindings.get(rule.id)
+        if established and rule.evidence.state=="CURRENT":
+            return self.verify_maintained(rule,established,cutoff)
         bound = None
         if rule.same_family_as:
             parent_id = self.graph.aliases[rule.same_family_as]
@@ -198,19 +225,9 @@ class EvaluationMachine:
             if not parent or parent.outcome!=YES:
                 return RuleResult(UNKNOWN,"BOUND_FAMILY_UNAVAILABLE")
             bound = self.bindings.get(parent_id,parent).proof
-        prerequisites = []
-        for edge in self.graph.temporal[rule.id]:
-            parent = self.results.get(edge.before)
-            if not parent or parent.outcome!=YES:
-                reason = "TEMPORAL_PREDECESSOR_UNKNOWN" if not parent or parent.outcome==UNKNOWN else "TEMPORAL_PREDECESSOR_FALSE"
-                outcome = UNKNOWN if not parent or parent.outcome==UNKNOWN else NO
-                self.temporal[(edge.before,rule.id,edge.label)] = [outcome.value,reason]
-                return RuleResult(outcome,reason)
-            predecessor = self.bindings.get(edge.before,parent)
-            anchor = predecessor.proof.reference.available_at
-            if self.graph.phases[edge.before]!=phase:
-                anchor = max(anchor,predecessor.selected_at)
-            prerequisites.append((edge,anchor))
+        prerequisites, blocked = self.prerequisites(rule,phase)
+        if blocked:
+            return blocked
         policy = rule.selection
         stamps, events = self.evidence.events[view.snapshot].get(spec["category"],((),()))
         age_start = cutoff-rule.evidence.max_age_seconds
@@ -308,7 +325,7 @@ class EvaluationMachine:
                 selected_at = (previous.selected_at if previous and previous.proof==proof else cutoff)
                 if established and established.proof==proof:
                     selected_at = established.selected_at
-                result = RuleResult(YES,"CANONICAL_EVIDENCE",proof,event,selected_at)
+                result = RuleResult(YES,"CANONICAL_EVIDENCE",proof,event,selected_at,cutoff if current else None)
                 for edge,_ in prerequisites:
                     self.temporal[(edge.before,rule.id,edge.label)] = [YES.value,"CAUSAL_WINDOW_SATISFIED"]
                 return result
@@ -337,14 +354,22 @@ class EvaluationMachine:
         self.phase_results[phase] = outcome.value
         return outcome
 
-    def bind(self, phase):
+    def bind(self, phase, cutoff):
+        self.phase_times[phase] = cutoff
         for id_, rule in self.graph.rules.items():
             result = self.results.get(id_)
-            if self.graph.phases[id_]==phase and rule.alias and result and result.outcome==YES:
-                self.bindings.setdefault(id_,result)
+            if self.graph.phases[id_]!=phase or not result or result.outcome!=YES:
+                continue
+            self.activation_proofs[id_] = result
+            if rule.alias:
+                self.bindings[id_] = result
+                self.binding_times[id_] = cutoff
+            for edge in self.graph.temporal[id_]:
+                if self.graph.phases[edge.before]!=phase:
+                    parent = self.activation_proofs.get(edge.before) or self.results[edge.before]
+                    self.temporal_proofs[(edge.before,id_,edge.label)] = parent
 
     def latch(self, phase):
-        self.bind(phase)
         self.latches.update((id_,self.results[id_]) for id_ in self.graph.order if self.graph.phases[id_]==phase)
 
     def activate(self, cutoff):
@@ -365,7 +390,7 @@ class EvaluationMachine:
             self.latches[rule.id] = self.results[rule.id]
         self.context_at = cutoff
         self.attempt = attempt_id
-        self.bind("context")
+        self.bind("context",cutoff)
         if self.definition.attempt.context_mode=="LATCHED":
             self.latch("context")
         return YES
@@ -379,24 +404,61 @@ class EvaluationMachine:
             snapshot=self.latest_crt["evidence_reference"]["calculation_snapshot"] if self.latest_crt else
                      proof.reference.calculation_snapshot,cutoff=cutoff,coverage_known=True,purpose=SIMULATION_MODE)
 
+    def verify_maintained(self, rule, binding, cutoff):
+        """Recheck the precisely bound family's latest canonical revision."""
+        view = self.evidence.views[rule.dependency]
+        reference = binding.proof.reference.model_dump(mode="json",exclude_none=True)
+        status = view.current_state(reference,cutoff,purpose=SIMULATION_MODE)
+        self.binding_status[rule.id] = status.kind.value
+        if status.kind==CurrentKind.INACTIVE:
+            return RuleResult(NO,"BOUND_FAMILY_TERMINAL",verified_at=cutoff)
+        if status.kind!=CurrentKind.ACTIVE:
+            return RuleResult(UNKNOWN,status.reason,verified_at=cutoff)
+        event = self.events_by_id[view.snapshot][status.revision]
+        record = exact_record(self.evidence.registry,event,view.snapshot,cutoff)
+        if (record is None or not record.eligible or
+                record.family!=binding.proof.family or record.reference["source_authority"]!=SIMULATION_AUTHORITY):
+            return RuleResult(UNKNOWN,"EXACT_EVIDENCE_INELIGIBLE",verified_at=cutoff)
+        proof = BoundEvidence(reference=record.reference,family=record.family,
+            market_event_id=event.get("market_event_id") or record.family,
+            observed_at=event["timing"]["observation_start"])
+        previous = self.results.get(rule.id)
+        selected_at = previous.selected_at if previous and previous.proof==proof else cutoff
+
+        def result(outcome, reason):
+            return RuleResult(outcome,reason,proof,event,selected_at,cutoff)
+
+        if cutoff-record.available>rule.evidence.max_age_seconds:
+            return result(UNKNOWN,"BOUND_EVIDENCE_STALE")
+        spec = CATALOG[rule.observation]
+        matched = projection_matches(spec,event) and predicate(rule,spec,event)
+        if matched is None:
+            return result(UNKNOWN,"INVALID_FIELD_PROJECTION")
+        if not matched:
+            return result(NO,"BOUND_CURRENT_PREDICATE_FALSE")
+        constraints, blocked = self.prerequisites(rule,self.graph.phases[rule.id])
+        if blocked:
+            return result(blocked.outcome,blocked.reason)
+        for edge,anchor in constraints:
+            within = record.available>anchor and self.in_window(edge.within,anchor,record.available)
+            outcome = UNKNOWN if within is None else YES if within else NO
+            reason = "CAUSAL_WINDOW_SATISFIED" if within else "MAINTAINED_TEMPORAL_WINDOW_NOT_PROVEN"
+            self.temporal[(edge.before,rule.id,edge.label)] = [outcome.value,reason]
+            if outcome!=YES:
+                return result(outcome,reason)
+        return result(YES,"MAINTAINED_CURRENT_PREDICATE_SATISFIED")
+
     def pinned_current_guard(self, cutoff):
         for key,binding in self.bindings.items():
             rule = self.graph.rules[key]
             if key not in self.latches or rule.evidence.state!="CURRENT":
                 continue
-            reference = binding.proof.reference.model_dump(mode="json",exclude_none=True)
-            view = self.evidence.views[rule.dependency]
-            status = view.current_state(reference,cutoff,purpose=SIMULATION_MODE)
-            self.binding_status[key] = status.kind.value
-            if status.kind==CurrentKind.INACTIVE:
-                self.results[key] = RuleResult(NO,"BOUND_FAMILY_TERMINAL")
-                self.transition(cutoff,"INVALIDATED","BOUND_FAMILY_TERMINAL")
+            checked = self.verify_maintained(rule,binding,cutoff)
+            self.results[key] = checked
+            if checked.outcome!=YES:
+                state = "INVALIDATED" if checked.outcome==NO else "INSUFFICIENT_EVIDENCE"
+                self.transition(cutoff,state,checked.reason)
                 return False
-            if status.kind!=CurrentKind.ACTIVE or cutoff-view.records[status.revision].available>rule.evidence.max_age_seconds:
-                self.results[key] = RuleResult(UNKNOWN,status.reason if status.kind!=CurrentKind.ACTIVE else "BOUND_EVIDENCE_STALE")
-                self.transition(cutoff,"INSUFFICIENT_EVIDENCE","BOUND_CURRENT_EVIDENCE_UNKNOWN")
-                return False
-            self.results[key] = binding
         return True
 
     def at(self, cutoff):
@@ -432,6 +494,7 @@ class EvaluationMachine:
         setup = self.phase("setup",cutoff,self.context_at) if self.setup_at is None else YES
         if setup==YES and self.setup_at is None:
             self.setup_at = cutoff
+            self.bind("setup",cutoff)
             self.latch("setup")
             self.transition(cutoff,"SETUP_OBSERVED","SETUP_ACTIVATED")
         self.invalidation = self.phase("invalidation",cutoff,self.context_at)
@@ -533,7 +596,7 @@ class EvaluationMachine:
                     known.add(deadline)
                     heappush(pending,deadline)
         supporting = {f"{result.proof.reference.calculation_snapshot}:{result.proof.reference.event_id}":result.event
-                      for result in (*self.results.values(),*self.bindings.values()) if result.proof}
+                      for result in (*self.results.values(),*self.activation_proofs.values(),*self.temporal_proofs.values()) if result.proof}
         if self.latest_crt:
             ref = self.latest_crt["evidence_reference"]
             supporting[f"{ref['calculation_snapshot']}:{ref['event_id']}"] = self.latest_crt
@@ -547,10 +610,17 @@ class EvaluationMachine:
                      for key in sorted(self.results)],
             "binding_policy_version":2,
             "attempt_bindings":[{"rule":key,"alias":self.graph.rules[key].alias,
-                                  "family":value.proof.family,"activated_at":value.selected_at,
+                                  "family":value.proof.family,"selected_at":value.selected_at,"activated_at":self.binding_times[key],
                                   "validity":self.binding_status.get(key),"evidence_state":self.graph.rules[key].evidence.state,
                                   "reference":value.proof.reference.model_dump(mode="json",exclude_none=True)}
                                  for key,value in sorted(self.bindings.items())],
+            "activation_proofs":[value.trace(self.graph.rules[key],self.graph.phases[key]) |
+                {"phase_activated_at":self.phase_times[self.graph.phases[key]]}
+                for key,value in sorted(self.activation_proofs.items())],
+            "temporal_predecessors":[{"before":key[0],"after":key[1],"relation":key[2],
+                "selected_at":value.selected_at,"phase_activated_at":self.phase_times[self.graph.phases[key[0]]],
+                "reference":value.proof.reference.model_dump(mode="json",exclude_none=True)}
+                for key,value in sorted(self.temporal_proofs.items())],
             "bound_crt":self.crt_binding.model_dump(mode="json") if self.crt_binding else None,
             "crt_latest_reference":self.latest_crt["evidence_reference"] if self.latest_crt else None,
             "producers":[{"dependency":key,"calculation_id":view.calculation_id,"snapshot":view.snapshot}

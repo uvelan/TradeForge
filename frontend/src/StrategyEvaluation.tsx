@@ -9,12 +9,14 @@ type Source = {symbol:SymbolName;timeframe:Timeframe;source:ChartSource;feed_id:
 type Selection = {id:string;fingerprint:string;start:number;end:number;authority:string;availability_policy:string;series:Source[]};
 type Evidence = {event_id:string;calculation_snapshot:string;source:(string|null)[];participants?:Record<string,(string|null)[]>};
 type RuleResult = {id:string;phase:string;observation:string;outcome:string;reason:string;family:string|null;
-  observed_at:number|null;available_at:number|null;selected_at:number|null;evidence_reference:Evidence|null};
+  observed_at:number|null;available_at:number|null;selected_at:number|null;verified_at?:number|null;
+  evidence_state?:string;evidence_reference:Evidence|null};
 type Decision = {decision_id:string;attempt_id:string|null;state:string;reason:string;direction:string;cutoff:number;
   context_activated_at:number|null;setup_activated_at:number|null;trigger_activated_at:number|null;persisted?:false;
   invalidation:string;expiry:string;rules:RuleResult[];transitions:[number,string,string][];
   phase_results:Record<string,string>;
-  attempt_bindings?:{rule:string;alias:string;family:string;evidence_state:string;activated_at:number;validity:string|null}[];
+  attempt_bindings?:{rule:string;alias:string;family:string;evidence_state:string;activated_at:number;selected_at?:number;validity:string|null}[];
+  activation_proofs?:(RuleResult & {phase_activated_at:number})[];
   temporal:{before:string;after:string;relation:string;outcome:string;reason:string}[];
   supporting_events:Record<string,unknown>;bound_crt?:{evidence:{family:string};activated_at:number}|null;
   evaluation:{evaluator_version:number;strategy_version_id:string;configuration_fingerprint:string;purpose:string;warmup_start:number;evaluation_start:number};
@@ -47,7 +49,7 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
   const generation=useRef(0);
   const selection=catalog.find(item=>item.id===selectionId);
   const frozen=run?.selection;
-  const legacy=run?.decision.evaluation.evaluator_version===1;
+  const legacy=!!run&&run.decision.evaluation.evaluator_version!==3;
   function choose(item:Selection){
     setSelection(item.id);setWarmup(fieldDate(item.start));
     setStart(fieldDate(Math.min(item.start+7200,item.end)));setCutoff(fieldDate(item.end));
@@ -77,7 +79,7 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
   function create(){
     if(!selection)return;
     void execute(async valid=>{
-      const result=await api.post<Run>(endpoint,{evaluator_version:2,purpose:'HISTORICAL_SIMULATION',
+      const result=await api.post<Run>(endpoint,{evaluator_version:3,purpose:'HISTORICAL_SIMULATION',
         strategy_id:record.strategy_id,strategy_version_id:record.version_id,configuration_fingerprint:record.configuration_fingerprint,
         selection_id:selection.id,selection_fingerprint:selection.fingerprint,warmup_start:epoch(warmup),
         evaluation_start:epoch(start),cutoff:epoch(cutoff)});
@@ -119,9 +121,9 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
       evidencePath:evidencePath(item)+'/chart'});
   }
   return <section className="card strategy-block" aria-label="Strategy evaluation">
-    <div className="strategy-heading"><h2>Strategy evaluation</h2><span>Strategy revision {record.version} · Evaluator v{decision?.evaluation.evaluator_version??2} · Historical simulation</span></div>
+    <div className="strategy-heading"><h2>Strategy evaluation</h2><span>Strategy revision {record.version} · Evaluator v{decision?.evaluation.evaluator_version??3} · Historical simulation</span></div>
     <p className="muted">Recorded MT5 readiness is blocked. This evaluation ends at entry intent.</p>
-    {legacy&&<p role="status">Saved evaluator v1 record. Start a new v2 evaluation to recalculate.</p>}
+    {legacy&&<p role="status">Saved legacy evaluation. Start a new v3 evaluation to recalculate.</p>}
     {saved.length>0&&<div className="strategy-actions">
       <Choice label="Saved evaluation" value="" options={saved.map(item=>item.run_id)} blank="Choose saved run"
         display={id=>{const item=saved.find(entry=>entry.run_id===id)!;return utc(item.cutoff)+' · '+title(item.state);}}
@@ -161,7 +163,17 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
         <summary>Attempt bindings</summary>
         <ul>{decision.attempt_bindings.map(binding=><li key={binding.rule}>
           {binding.alias} · {title(binding.evidence_state)} · Bound {utc(binding.activated_at)}
+          {binding.selected_at!==undefined&&binding.selected_at!==binding.activated_at&&<> · Selected {utc(binding.selected_at)}</>}
           {" · "}{binding.validity?title(binding.validity):"Pinned observation"} <code>{binding.family}</code>
+        </li>)}</ul>
+      </details>}
+      {!!decision.activation_proofs?.length&&<details>
+        <summary>Original activation evidence</summary>
+        <ul>{decision.activation_proofs.map(item=><li key={item.id}>
+          {item.id} · {title(item.outcome)} · Phase activated {utc(item.phase_activated_at)}
+          {item.evidence_reference&&<button type="button" className="small-tool" disabled={busy} onClick={()=>inspect(item)}>
+            Inspect activation {item.id}
+          </button>}
         </li>)}</ul>
       </details>}
       <p>Invalidation {title(decision.invalidation)} · Expiry {title(decision.expiry)}</p>
@@ -181,7 +193,8 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
         <th>Rule</th><th>Outcome</th><th>Observation and availability</th><th>Evidence</th>
       </tr></thead><tbody>{decision.rules.map(item=><tr key={item.id}>
         <td>{item.phase} · {item.id}<br/>{title(item.observation)}</td><td>{title(item.outcome)}<br/>{title(item.reason)}</td>
-        <td>{utc(item.observed_at)}<br/>{utc(item.available_at)}</td>
+        <td>{utc(item.observed_at)}<br/>{utc(item.available_at)}
+          {item.verified_at!=null&&<><br/>Current verification {utc(item.verified_at)}</>}</td>
         <td>{item.family&&<small>{item.family}</small>}{item.evidence_reference&&<>
           <button type="button" className="small-tool" disabled={busy} onClick={()=>inspect(item)}>Inspect {item.id}</button>
           {openChart&&decision.persisted!==false&&<button type="button" className="small-tool" onClick={()=>chart(item)}>Chart {item.id}</button>}
