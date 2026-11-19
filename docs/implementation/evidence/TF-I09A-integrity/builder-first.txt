@@ -1,0 +1,24 @@
+
+> e2e
+> playwright test e2e/strategy-builder.spec.ts --retries=0 --reporter=line
+
+
+[WebServer] INFO:     Started server process [6464]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8196 (Press CTRL+C to quit)
+
+[WebServer] (node:42464) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+
+(node:33204) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/3] e2e\strategy-builder.spec.ts:5:1 › validates nested rules and saves immutable strategy revisions
+[2/3] e2e\strategy-builder.spec.ts:44:1 › requires reloading before a stale editor can overwrite a concurrent revision
+[3/3] e2e\strategy-builder.spec.ts:66:1 › requires an explicit fixed price and preserves CRT family binding
+  3 passed (17.0s)

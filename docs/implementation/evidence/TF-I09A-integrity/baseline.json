@@ -1,0 +1,102 @@
+{
+  "ready_without_direction_or_traded_role": {
+    "valid": true,
+    "status": "VALID_STRATEGY_DEFINITION",
+    "errors": [],
+    "unresolved": []
+  },
+  "limit_without_price": {
+    "valid": true,
+    "status": "VALID_STRATEGY_DEFINITION",
+    "errors": [],
+    "unresolved": []
+  },
+  "stop_without_price": {
+    "valid": true,
+    "status": "VALID_STRATEGY_DEFINITION",
+    "errors": [],
+    "unresolved": []
+  },
+  "instrument_cap_below_intended_risk": {
+    "valid": true,
+    "status": "VALID_STRATEGY_DEFINITION",
+    "errors": [],
+    "unresolved": []
+  },
+  "link_into_optional_branch": {
+    "valid": true,
+    "status": "VALID_STRATEGY_DEFINITION",
+    "errors": [],
+    "unresolved": []
+  },
+  "missing_semantics": {
+    "trade_intent": null,
+    "selection": null,
+    "lifecycle": null
+  },
+  "crt_context_and_setup": {
+    "context": {
+      "type": "GROUP",
+      "id": "context",
+      "operator": "ALL",
+      "children": [
+        {
+          "type": "RULE",
+          "id": "reference",
+          "dependency": "crt",
+          "observation": "CRT_REFERENCE",
+          "operator": "EQ",
+          "expected": "ACTIVE",
+          "evidence": {
+            "state": "CURRENT",
+            "purpose": "HISTORICAL_SIMULATION",
+            "max_age_seconds": 3600
+          }
+        }
+      ]
+    },
+    "setup": {
+      "type": "GROUP",
+      "id": "setup",
+      "operator": "SEQUENCE",
+      "children": [
+        {
+          "type": "RULE",
+          "id": "reclaim",
+          "dependency": "crt",
+          "observation": "CRT_RECLAIM",
+          "operator": "EQ",
+          "expected": "LOW_SWEPT_RECLAIMED",
+          "evidence": {
+            "state": "HISTORICAL",
+            "purpose": "HISTORICAL_SIMULATION",
+            "max_age_seconds": 3600
+          }
+        },
+        {
+          "type": "RULE",
+          "id": "divergence",
+          "dependency": "smt",
+          "observation": "SMT_CONFIRMED",
+          "operator": "EQ",
+          "expected": "bullish",
+          "evidence": {
+            "state": "HISTORICAL",
+            "purpose": "HISTORICAL_SIMULATION",
+            "max_age_seconds": 3600
+          }
+        }
+      ]
+    }
+  },
+  "smt_fields": [
+    "SMT_CONFIRMED"
+  ],
+  "actual_crt_transition": {
+    "same_family": true,
+    "different_event_ids": true,
+    "initial_state": "ACTIVE",
+    "later_state": "HIGH_SWEPT_RECLAIMED",
+    "active_revision_remains_current": false
+  }
+}

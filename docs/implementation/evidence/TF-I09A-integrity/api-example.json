@@ -1,0 +1,364 @@
+{
+  "method": "POST",
+  "path": "/api/strategies/v1/validate",
+  "body": {
+    "schema_version": 2,
+    "defaults_policy": "STRATEGY_DEFAULTS_V2",
+    "name": "Bearish CRT / SMT",
+    "description": "Research template. No optional filters enabled. Configure trigger, invalidation and execution policies.",
+    "status": "DRAFT",
+    "availability_modes": [
+      "HISTORICAL_SIMULATION"
+    ],
+    "instruments": {
+      "primary": {
+        "symbol": "EURUSD",
+        "source": "DUKASCOPY_SAVED",
+        "price_basis": "BID",
+        "modeled_delay_seconds": 0
+      },
+      "comparison": {
+        "symbol": "GBPUSD",
+        "source": "DUKASCOPY_SAVED",
+        "price_basis": "BID",
+        "modeled_delay_seconds": 0
+      },
+      "calendar": {
+        "kind": "forex_weekly"
+      }
+    },
+    "timeframes": {
+      "context": "M5",
+      "trigger": "M5"
+    },
+    "indicators": [
+      {
+        "id": "crt",
+        "indicator": "CRT",
+        "algorithm_version": 1,
+        "role": "PRIMARY",
+        "timeframe": "M5",
+        "settings": {}
+      },
+      {
+        "id": "smt",
+        "indicator": "SMT",
+        "algorithm_version": 2,
+        "role": "PAIR",
+        "timeframe": "M5",
+        "settings": {}
+      }
+    ],
+    "context": {
+      "type": "GROUP",
+      "id": "context",
+      "operator": "ALL",
+      "children": [
+        {
+          "type": "RULE",
+          "id": "reference",
+          "dependency": "crt",
+          "observation": "CRT_REFERENCE",
+          "operator": "EQ",
+          "expected": "ACTIVE",
+          "evidence": {
+            "state": "HISTORICAL",
+            "purpose": "HISTORICAL_SIMULATION",
+            "max_age_seconds": 3600
+          },
+          "alias": "crt_reference",
+          "selection": "EARLIEST_ELIGIBLE"
+        }
+      ]
+    },
+    "setup": {
+      "type": "GROUP",
+      "id": "setup",
+      "operator": "SEQUENCE",
+      "children": [
+        {
+          "type": "RULE",
+          "id": "reclaim",
+          "dependency": "crt",
+          "observation": "CRT_RECLAIM",
+          "operator": "EQ",
+          "expected": "HIGH_SWEPT_RECLAIMED",
+          "evidence": {
+            "state": "HISTORICAL",
+            "purpose": "HISTORICAL_SIMULATION",
+            "max_age_seconds": 3600
+          },
+          "alias": "crt_reclaim",
+          "same_family_as": "crt_reference",
+          "selection": "BOUND_FAMILY"
+        },
+        {
+          "type": "RULE",
+          "id": "divergence",
+          "dependency": "smt",
+          "observation": "SMT_CONFIRMED",
+          "operator": "EQ",
+          "expected": "bearish",
+          "evidence": {
+            "state": "HISTORICAL",
+            "purpose": "HISTORICAL_SIMULATION",
+            "max_age_seconds": 3600
+          },
+          "alias": "smt_confirmation",
+          "selection": "EARLIEST_ELIGIBLE"
+        }
+      ]
+    },
+    "temporal": [
+      {
+        "first": "reclaim",
+        "then": "divergence",
+        "relation": "AFTER"
+      }
+    ],
+    "trade_intent": {
+      "role": "PRIMARY",
+      "direction": "SHORT",
+      "earliest": "AFTER_CAUSAL_AVAILABILITY",
+      "entry": {
+        "kind": "LIMIT",
+        "price": {
+          "kind": "FIXED_ABSOLUTE",
+          "value": 1.05,
+          "basis": "BID"
+        }
+      }
+    },
+    "attempt": {
+      "context_mode": "LATCHED",
+      "candidate_limit": 32,
+      "expiry_origin": "CONTEXT_ACTIVATION",
+      "crt_reference_alias": "crt_reference"
+    }
+  },
+  "response": {
+    "valid": true,
+    "status": "VALID_STRATEGY_DEFINITION",
+    "errors": [],
+    "unresolved": [
+      "trigger",
+      "invalidation",
+      "expiry",
+      "risk.account_risk_pct",
+      "risk.max_simultaneous_exposure_pct",
+      "risk.max_session_loss_pct",
+      "risk.min_reward_risk",
+      "execution.price_basis",
+      "execution.spread_bps",
+      "execution.slippage_bps",
+      "execution.commission_bps",
+      "execution.intrabar",
+      "management.initial_stop",
+      "management.target",
+      "risk.instrument_limits.PRIMARY",
+      "trade_intent.expiry"
+    ],
+    "restrictions": {
+      "purpose": "HISTORICAL_SIMULATION",
+      "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+      "recorded_operational": false,
+      "evaluation_available": false,
+      "requires_schema_revision": false
+    },
+    "definition": {
+      "schema_version": 2,
+      "defaults_policy": "STRATEGY_DEFAULTS_V2",
+      "name": "Bearish CRT / SMT",
+      "description": "Research template. No optional filters enabled. Configure trigger, invalidation and execution policies.",
+      "status": "DRAFT",
+      "availability_modes": [
+        "HISTORICAL_SIMULATION"
+      ],
+      "instruments": {
+        "primary": {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "price_basis": "BID",
+          "modeled_delay_seconds": 0
+        },
+        "comparison": {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "price_basis": "BID",
+          "modeled_delay_seconds": 0
+        },
+        "calendar": {
+          "kind": "forex_weekly",
+          "timezone": "America/New_York",
+          "sunday_open": "17:00",
+          "friday_close": "17:00"
+        },
+        "data_selection": "FROZEN_VERIFIED_PARTITIONS"
+      },
+      "timeframes": {
+        "context": "M5",
+        "trigger": "M5"
+      },
+      "indicators": [
+        {
+          "id": "crt",
+          "indicator": "CRT",
+          "algorithm_version": 1,
+          "role": "PRIMARY",
+          "timeframe": "M5",
+          "settings": {
+            "reference_frame": "H1",
+            "reference_mode": "aggregated",
+            "daily_timezone": "UTC",
+            "daily_boundary": "00:00",
+            "history_bars": 2000,
+            "max_ranges": 2,
+            "max_age": 96,
+            "candidate_age": 3,
+            "min_penetration": 0.0,
+            "min_reclaim": 0.0,
+            "invalidate": "sweep_extreme",
+            "include_context": false
+          },
+          "producers": []
+        },
+        {
+          "id": "smt",
+          "indicator": "SMT",
+          "algorithm_version": 2,
+          "role": "PAIR",
+          "timeframe": "M5",
+          "settings": {
+            "relationship": "POSITIVE",
+            "period": 3,
+            "alignment_bars": 2,
+            "tolerance_bps": 0.5,
+            "confirmation_bars": 1,
+            "expiry_bars": 64
+          },
+          "producers": []
+        }
+      ],
+      "context": {
+        "type": "GROUP",
+        "id": "context",
+        "operator": "ALL",
+        "children": [
+          {
+            "type": "RULE",
+            "id": "reference",
+            "dependency": "crt",
+            "observation": "CRT_REFERENCE",
+            "operator": "EQ",
+            "expected": "ACTIVE",
+            "evidence": {
+              "state": "HISTORICAL",
+              "purpose": "HISTORICAL_SIMULATION",
+              "max_age_seconds": 3600
+            },
+            "selection": "EARLIEST_ELIGIBLE",
+            "alias": "crt_reference",
+            "same_family_as": null
+          }
+        ],
+        "unknown_policy": null,
+        "within": null
+      },
+      "setup": {
+        "type": "GROUP",
+        "id": "setup",
+        "operator": "SEQUENCE",
+        "children": [
+          {
+            "type": "RULE",
+            "id": "reclaim",
+            "dependency": "crt",
+            "observation": "CRT_RECLAIM",
+            "operator": "EQ",
+            "expected": "HIGH_SWEPT_RECLAIMED",
+            "evidence": {
+              "state": "HISTORICAL",
+              "purpose": "HISTORICAL_SIMULATION",
+              "max_age_seconds": 3600
+            },
+            "selection": "BOUND_FAMILY",
+            "alias": "crt_reclaim",
+            "same_family_as": "crt_reference"
+          },
+          {
+            "type": "RULE",
+            "id": "divergence",
+            "dependency": "smt",
+            "observation": "SMT_CONFIRMED",
+            "operator": "EQ",
+            "expected": "bearish",
+            "evidence": {
+              "state": "HISTORICAL",
+              "purpose": "HISTORICAL_SIMULATION",
+              "max_age_seconds": 3600
+            },
+            "selection": "EARLIEST_ELIGIBLE",
+            "alias": "smt_confirmation",
+            "same_family_as": null
+          }
+        ],
+        "unknown_policy": null,
+        "within": null
+      },
+      "trigger": null,
+      "invalidation": null,
+      "temporal": [
+        {
+          "first": "reclaim",
+          "then": "divergence",
+          "relation": "AFTER",
+          "within": null
+        }
+      ],
+      "expiry": null,
+      "risk": {
+        "account_risk_pct": null,
+        "max_simultaneous_exposure_pct": null,
+        "max_session_loss_pct": null,
+        "min_reward_risk": null,
+        "instrument_limits": []
+      },
+      "execution": {
+        "price_basis": null,
+        "spread_bps": null,
+        "slippage_bps": null,
+        "commission_bps": null,
+        "intrabar": null
+      },
+      "management": {
+        "initial_stop": null,
+        "target": null,
+        "break_even_at_r": null,
+        "partial_exit": null,
+        "trailing_pips": null,
+        "time_exit": null
+      },
+      "trade_intent": {
+        "role": "PRIMARY",
+        "direction": "SHORT",
+        "entry": {
+          "kind": "LIMIT",
+          "price": {
+            "kind": "FIXED_ABSOLUTE",
+            "value": 1.05,
+            "basis": "BID"
+          }
+        },
+        "earliest": "AFTER_CAUSAL_AVAILABILITY",
+        "expiry": null
+      },
+      "attempt": {
+        "context_mode": "LATCHED",
+        "candidate_limit": 32,
+        "expiry_origin": "CONTEXT_ACTIVATION",
+        "crt_reference_alias": "crt_reference"
+      }
+    },
+    "configuration_fingerprint": "a59a104462f56453f7d1043d9c657c8fbb29a1d5e059d465d224ef047b7fa6a2"
+  }
+}
