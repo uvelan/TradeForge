@@ -29,6 +29,9 @@ class Clock:
     def sample(self):
         return self.now,self.now-START*1000
 
+    def sample_receipt(self):
+        return self.sample()[0]
+
 
 def sample(callback):
     began=perf_counter()
@@ -44,14 +47,14 @@ def capture_workload():
     scopes=["EURUSD","GBPUSD"]
     clock=Clock(START*1000)
     cfg=CaptureConfig(symbols=scopes,timeframe="M1",calendar={"kind":"continuous"})
-    session=Worker(cfg,claim(cfg,clock.now),clock.now,clock)
+    session=Worker(cfg,*claim(cfg,clock),clock)
     current=START
     sleep_in_provider=False
 
     def feed(symbol,timeframe,limit,*,include_latest,provenance):
         if sleep_in_provider:
             sleep(.005)
-        provenance.update(feed_id="mt5:synthetic-benchmark",price_basis="BID")
+        provenance.update(feed_id="mt5:synthetic-benchmark",price_basis="BID",timestamp_policy="UTC_EPOCH_VERIFIED_V1")
         return [{"time":stamp,"open":12,"high":13,"low":11,"close":12,"volume":9}
                 for stamp in range(max(START,current-31*60),current+1,60)]
 
@@ -74,7 +77,7 @@ def capture_workload():
     # duplicate the latest already receipted observation.
     with db.transaction() as sql:
         sql.execute("DELETE FROM arrival_leases WHERE session_id IN (?,?)",tuple(session.sessions.values()))
-    restarted=Worker(cfg,claim(cfg,clock.now),clock.now,clock)
+    restarted=Worker(cfg,*claim(cfg,clock),clock)
     restart_ms,repeat=sample(lambda:[observe(restarted,feed,symbol) for symbol in scopes])
     assert published==66 and not any(item["writes"] for item in repeat)
     return {"scenario":"capture_two_scopes","samples":30,"write_pair_ms":stats(writes),

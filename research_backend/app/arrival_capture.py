@@ -332,9 +332,10 @@ class CaptureManager:
                     await asyncio.wait_for(worker.stop.wait(),timeout=min(30,worker.config.poll_seconds*2**retries))
                 except TimeoutError:
                     continue
-        except Exception:
+        except Exception as error:
             worker.state = "FAILED"
-            worker.warning = "CAPTURE_WORKER_FAILED"
+            worker.warning = (str(error) if isinstance(error, ValueError)
+                              else "CAPTURE_WORKER_FAILED")
         finally:
             await asyncio.to_thread(release,tuple(worker.sessions.values()))
             if worker.state != "FAILED":
@@ -374,6 +375,8 @@ def seal(scope, start, end, cutoff, calendar, *, selected_versions=None):
         raise ValueError("Recorded sessions use a different calendar")
     partitions = []
     registrations = []
+    aggregate = scope["feed_id"].startswith("aggregate-")
+    sources = set()
     for offset in range(0,len(selected),2000):
         chunk = selected[offset:offset+2000]
         members = [{**json.loads(row["content"]), "closed":True, "availability_policy":RECORDED_ARRIVAL,
@@ -382,6 +385,8 @@ def seal(scope, start, end, cutoff, calendar, *, selected_versions=None):
                     **{key:row[key] for key in ("session_id","sequence","previous_sequence","nominal_close",
                         "observed_ms","elapsed_ms","persisted_ms","receipt_committed_by_ms",
                         "witness_session_id","fingerprint","recovery")}} for row in chunk]
+        if aggregate:
+            sources.update((member["source_manifest_id"],member["source_cutoff"]) for member in members)
         part = write_partition(scope["provider"],scope["feed_id"],scope["symbol"],"arrival_candles",
                                scope["timeframe"],scope["price_basis"],members)
         entry = {"id":part["id"],"sha256":part["sha256"]}
@@ -394,8 +399,10 @@ def seal(scope, start, end, cutoff, calendar, *, selected_versions=None):
                 "publication_policy":PUBLICATION_POLICY,"manifest_version":2,
                 "sessions":sorted({row[key] for row in selected for key in ("session_id","witness_session_id")}),
                 "data_quality":{"observations":len(selected),"corrections":sum(row["previous_sequence"] is not None for row in selected)}}
-    if scope["feed_id"].startswith("aggregate-"):
+    if aggregate:
         manifest["aggregation_policy"] = AGGREGATION_POLICY
+        manifest["aggregation_sources"] = [{"id":identifier,"cutoff":source_cutoff}
+                                           for identifier,source_cutoff in sorted(sources)]
     manifest_id = fingerprint(manifest)
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")

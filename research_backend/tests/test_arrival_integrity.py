@@ -258,6 +258,9 @@ def test_aggregate_pending_restart_and_unchanged_ohlc_revision(client, monkeypat
     assert after["previous_sequence"] == before["sequence"]
     assert after["source_manifest_id"] == corrected["id"]
     assert after["source_cutoff"] == 322
+    assert second["aggregation_sources"] == sorted(
+        [{"id":original["id"],"cutoff":305},{"id":corrected["id"],"cutoff":322}],
+        key=lambda item: item["id"])
     assert before["constituents"][2]["available_at"] == 181
     assert after["constituents"][2]["available_at"] == 320
     assert before["constituents"][2]["sequence"] < after["constituents"][2]["sequence"]

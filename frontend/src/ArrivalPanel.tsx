@@ -8,11 +8,13 @@ type Mode = 'LEGACY_RESEARCH' | 'STRICT_RECORDED' | 'HISTORICAL_SIMULATION';
 type Calendar = {kind: 'continuous' | 'forex_weekly' | 'unknown'};
 type ScopeStatus = {feed_id?:string; price_basis?:string; state?:string; last_candle?:number; last_persisted_ms?:number;
   coverage_start?:number; coverage_end?:number; recorded?:number; missing_slots?:number[]; warning?:string; timestamp_policy?:string};
-type Capture = {state:string; timeframe?:string; scopes:Record<string, ScopeStatus>};
+type Capture = {state:string; timeframe?:string; clock_policy?:string; warning?:string; scopes:Record<string, ScopeStatus>};
 type Feed = {symbol:string; timeframe:string; feed_id:string; price_basis:string; source:string;
   start:number; end:number; partitions:{id:string; sha256:string}[]; calendar:Calendar;
   arrival_manifest?:string; delay_seconds:number};
-type Manifest = Omit<Feed,'source'|'arrival_manifest'|'delay_seconds'> & {id:string; provider:string; cutoff:number; availability_policy?:string};
+type Manifest = Omit<Feed,'source'|'arrival_manifest'|'delay_seconds'> & {id:string; provider:string; cutoff:number; availability_policy?:string;
+  aggregation_policy?:string; aggregation_sources?:{id:string; cutoff:number}[];
+  data_quality?:{observations:number; corrections:number}};
 type ModeResult = {status:string; eligible_candles:number; unverified_candles:number; missing_slots:number|null; blocking_reason:string|null};
 type Assessment = {symbol:string; status:string; modes:Record<string, ModeResult>};
 type Readiness = {primary:Assessment; comparison?:Assessment; joint_modes?:string[]};
@@ -55,7 +57,12 @@ export function ArrivalPanel({datasets}:{datasets:Dataset[]}) {
   async function run(action:()=>Promise<void>) {
     setError(''); setBusy(true);
     try {await action();}
-    catch (reason) {setError(reason instanceof Error ? reason.message : 'Arrival request unavailable');}
+    catch (reason) {
+      const message = reason instanceof Error ? reason.message : 'Arrival request unavailable';
+      setError(message==='STALE_OR_INCOMPARABLE_AGGREGATE_SOURCE'
+        ? 'Aggregate rejected. The selected M1 manifest contains stale or incomparable revisions.'
+        : message);
+    }
     finally {setBusy(false);}
   }
 
@@ -75,6 +82,15 @@ export function ArrivalPanel({datasets}:{datasets:Dataset[]}) {
     selection.current++;
     setMode('STRICT_RECORDED'); setPrimary(value.id); setSecondary(''); setCutoff(String(value.cutoff));
     setAssessment(undefined); setAnalysis(undefined);
+  }
+
+  async function publishAggregate(manifest:Manifest) {
+    const selected = selection.current;
+    const result = await api.post<Manifest>(endpoint+'/manifests/'+encodeURIComponent(manifest.id)+'/aggregate-m5',{});
+    setManifests(current=>[result,...current.filter(item=>item.id!==result.id)]);
+    if(selected!==selection.current) return;
+    selectionChanged(setPrimary,result.id);
+    setSecondary(''); setCutoff(String(result.cutoff));
   }
 
   async function resolveFeed(id:string,seconds:string):Promise<{feed:Feed;cutoff:number}> {
@@ -126,6 +142,7 @@ export function ArrivalPanel({datasets}:{datasets:Dataset[]}) {
     window.setTimeout(()=>URL.revokeObjectURL(url),0);
   }
 
+  const selectedManifest = mode==='STRICT_RECORDED' ? manifests.find(item=>item.id===primary) : undefined;
   const options = mode==='STRICT_RECORDED' ? manifests.map(value=>({id:value.id,
     label:`${value.symbol} · ${value.timeframe} · ${new Date(value.end*1000).toISOString()}${value.availability_policy==='SERVER_RECORDED_ARRIVAL_V1' ? ' - Legacy receipt, audit only' : ''}`})) :
     datasets.filter(value=>value.kind==='candles').map(value=>({id:value.id,
@@ -135,6 +152,8 @@ export function ArrivalPanel({datasets}:{datasets:Dataset[]}) {
   return <Card>
     <SectionTitle title="Recorded candle capture and readiness"/>
     <small role="status">{capture?.state??'Capture status unavailable'}</small>
+    {capture?.clock_policy && <p>Local clock guard {capture.clock_policy}
+      {capture.warning && <span> · {capture.warning}</span>}</p>}
     <div className="two-column">
       <div>
         <label className="field">MT5 symbols <input disabled={Boolean(running)} value={symbols} onChange={event=>setSymbols(event.target.value)}/></label>
@@ -158,6 +177,7 @@ export function ArrivalPanel({datasets}:{datasets:Dataset[]}) {
           {scope.recorded??0} recorded slots · {scope.missing_slots?.length??0} overdue slots {scope.warning && ` · ${scope.warning}`}</p>
           {scope.last_candle!==undefined && scope.last_candle!==null && <p>Last candle {new Date(scope.last_candle*1000).toISOString()}</p>}
           {scope.last_persisted_ms && <p>Receipt committed by {new Date(scope.last_persisted_ms).toISOString()}</p>}
+          {scope.timestamp_policy==='UTC_EPOCH_VERIFIED_V1' && <p>Verified provider time {scope.timestamp_policy}</p>}
           {scope.timestamp_policy==='UNVERIFIED_TIMESTAMP_DOMAIN' && <p>The broker timestamp domain
             needs verification before this feed can publish recorded evidence.</p>}
           {scope.recorded!==undefined && scope.recorded>0 && <button type="button" className="small-tool" disabled={busy}
@@ -178,6 +198,16 @@ export function ArrivalPanel({datasets}:{datasets:Dataset[]}) {
           onChange={event=>selectionChanged(setPrimary,event.target.value)}>
           <option value="">Choose evidence</option>{options.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
         </select></label>
+        {selectedManifest?.timeframe==='M1' && selectedManifest.provider==='MT5' &&
+          selectedManifest.availability_policy==='SERVER_RECORDED_ARRIVAL_V2' &&
+          <button type="button" className="small-tool" disabled={busy}
+            onClick={()=>void run(()=>publishAggregate(selectedManifest))}>Publish recorded M5</button>}
+        {selectedManifest?.aggregation_policy && <details>
+          <summary>Aggregate revision lineage</summary>
+          <p>{selectedManifest.aggregation_policy} · {selectedManifest.data_quality?.corrections??0} revised observations</p>
+          <ul>{selectedManifest.aggregation_sources?.map(source=><li key={source.id}>
+            {source.id} · source cutoff {new Date(source.cutoff*1000).toISOString()}</li>)}</ul>
+        </details>}
         {mode!=='LEGACY_RESEARCH' && <label className="field">Comparison frozen evidence <select value={secondary}
           onChange={event=>selectionChanged(setSecondary,event.target.value)}>
           <option value="">No comparison</option>{options.filter(item=>item.id!==primary).map(item=>
