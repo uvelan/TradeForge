@@ -127,14 +127,14 @@ def create_run(request):
         run_id = run["run_id"]
         existing = find_decision(run_id)
         if existing:
-            return {"run_id":run_id,"decision":existing}
+            return {"run_id":run_id,"selection":run["selection"],"decision":existing}
         decision = calculate(run,request.cutoff)
         with transaction() as db:
             db.execute("BEGIN IMMEDIATE")
             existing = db.execute("SELECT * FROM strategy_decisions WHERE run_id=? ORDER BY cutoff DESC LIMIT 1",
                                   (run_id,)).fetchone()
             if existing is not None:
-                return {"run_id":run_id,"decision":decode_decision(existing)}
+                return {"run_id":run_id,"selection":run["selection"],"decision":decode_decision(existing)}
             if current(db,request.strategy_id)["status"]=="ARCHIVED":
                 raise HTTPException(409,"Strategy archived while evaluation was running")
             if db.execute("SELECT COUNT(*) FROM strategy_evaluations").fetchone()[0]>=MAX_RUNS:
@@ -142,7 +142,7 @@ def create_run(request):
             db.execute("INSERT INTO strategy_evaluations VALUES(?,?,?,?)",
                        (run_id,request.strategy_version_id,canonical(run),utc_now()))
             result = store_decision(db,run_id,decision,None)
-        return {"run_id":run_id,"decision":result}
+        return {"run_id":run_id,"selection":run["selection"],"decision":result}
 
 
 def advance_run(run_id, request):
