@@ -1,0 +1,66 @@
+
+> e2e
+> playwright test e2e/research.spec.ts -g during delayed analytical and persistence responses --retries=0 --reporter=line --output=test-results-tf-i09a-stress
+
+
+[WebServer] INFO:     Started server process [39716]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8195 (Press CTRL+C to quit)
+
+
+[WebServer] (node:32748) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:26548) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/1] e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses
+  1) e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.primary-chart .chart-input tr').first().locator('canvas').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.primary-chart .chart-input tr').first().locator('canvas').first() with timeout 5000ms
+      - waiting for locator('.primary-chart .chart-input tr').first().locator('canvas').first()
+
+
+      103 |   await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
+      104 |   const row=page.locator(".primary-chart .chart-input tr").first();
+    > 105 |   await expect(row.locator("canvas").first()).toBeVisible();
+          |                                               ^
+      106 |   const widths=await row.locator("td").evaluateAll(cells=>cells.map(cell=>cell.getBoundingClientRect().width));
+      107 |   const chart=row.locator("td").nth(widths.indexOf(Math.max(...widths)));
+      108 |   const analytical=Promise.withResolvers<void>();
+        at K:\Projects\TradeForge\frontend\e2e\research.spec.ts:105:47
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results-tf-i09a-stress\research-persists-a-trendl-e8929-l-and-persistence-responses\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results-tf-i09a-stress\research-persists-a-trendl-e8929-l-and-persistence-responses\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results-tf-i09a-stress\research-persists-a-trendl-e8929-l-and-persistence-responses\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results-tf-i09a-stress\research-persists-a-trendl-e8929-l-and-persistence-responses\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results-tf-i09a-stress\research-persists-a-trendl-e8929-l-and-persistence-responses\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses

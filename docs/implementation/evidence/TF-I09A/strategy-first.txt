@@ -1,0 +1,54 @@
+...................................................F..                   [100%]
+================================== FAILURES ===================================
+_____ test_persistence_conflict_immutable_duplicate_archive_and_metadata ______
+
+client = <starlette.testclient.TestClient object at 0x00000209FE3EE7A0>
+plan = {'symbol': 'EURUSD', 'direction': 'BUY', 'strategy': 'CRT candidate', 'session': 'LONDON', ...}
+
+    def test_persistence_conflict_immutable_duplicate_archive_and_metadata(client,plan):
+        initial_plan = client.post("/api/trades",json=plan).json()
+        created = client.post(ROUTE,json=ready_definition())
+        assert created.status_code==201,created.text
+        original = created.json()
+        url = ROUTE+"/"+original["strategy_id"]
+        definition = original["definition"]
+        assert original["version"]==1 and original["status"]=="READY_FOR_EVALUATION"
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [executor.submit(client.post,url+"/revisions",json={
+                "expected_version":1,"definition":{**definition,"name":name}}) for name in ("Service A","Service B")]
+            attempts = sorted((future.result() for future in futures),key=lambda response:response.status_code)
+        assert [item.status_code for item in attempts]==[201,409]
+        winner = attempts[0].json()
+        assert winner["version"]==2 and winner["version_id"]!=original["version_id"]
+        assert winner["configuration_fingerprint"]==original["configuration_fingerprint"]
+        assert attempts[1].json()["detail"]["current_version"]==2
+        assert client.get(url+"?version=1").json()==original
+        history = client.get(url+"/history").json()
+        assert [row["version"] for row in history]==[2,1]
+        compare = client.get(url+"/compare?from_version=1&to_version=2").json()
+        assert compare["same_configuration"] and [change["path"] for change in compare["changes"]]==["name"]
+        clone = client.post(url+"/duplicate",json={"expected_version":2}).json()
+        assert clone["strategy_id"]!=original["strategy_id"] and clone["version"]==1 and clone["status"]=="DRAFT"
+        archived = client.post(url+"/archive",json={"expected_version":2}).json()
+        assert archived["version"]==3 and archived["status"]=="ARCHIVED"
+        assert client.post(url+"/revisions",json={"expected_version":3,"definition":definition}).status_code==409
+        assert client.get(url+"?version=1").json()==original
+        assert len(client.get(ROUTE).json())==2
+>       assert client.get("/api/trades/"+initial_plan["id"]).json()["plan"]==plan
+E       AssertionError: assert {'context': '... '10000', ...} == {'symbol': 'E...'LONDON', ...}
+E
+E         Omitting 19 identical items, use -vv to show
+E         Left contains 3 more items:
+E         {'knowledge_cutoff_utc': None, 'signal_reference': None, 'snapshot_id': None}
+E         Use -v to get more diff
+
+research_backend\tests\test_strategy_definitions.py:241: AssertionError
+============================== warnings summary ===============================
+research_backend/tests/test_strategy_definitions.py::test_mirrored_template_resolves_pinned_scope_and_preserves_pending_settings[bearish-HIGH_SWEPT_RECLAIMED]
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_strategy_definitions.py::test_persistence_conflict_immutable_duplicate_archive_and_metadata
+1 failed, 53 passed, 1 warning in 7.72s

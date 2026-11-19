@@ -1,0 +1,5 @@
+Python: Python 3.13.14
+Node: v24.14.0
+npm: 11.1.0
+Playwright: Version 1.65.1
+Chromium: 159.0.8154.6
