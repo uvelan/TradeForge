@@ -46,3 +46,12 @@ Backend passed **591 tests** and the focused backend lane passed **219**. The ap
 
 
 The complete Chromium suite passed **70** with zero retries. The checkpoint run passed **20 consecutive repetitions** and delayed-analysis drawing stress passed **1** test. The corrected Builder test exercised the CRT and SMT alias selectors and retained both bindings after reload. [Chromium](evidence/TF-I09A-closure/chromium.txt) · [Checkpoint run](evidence/TF-I09A-closure/checkpoints.txt) · [Delayed stress](evidence/TF-I09A-closure/delayed-stress.txt) · [Builder screenshot](evidence/TF-I09A-closure/strategy-bound-trigger.png)
+
+### Hosted runner correction
+
+The first push and PR checks at `3188c34efb3a1fe6a9c5ed82a46697a0ca8c4710` each failed the same newly added strict SMT test on an empty database. The fixture wrote directly to default storage and relied on local tables already being present. A fresh local database reproduced the missing arrival_sessions error. The regression now requests the existing isolated client fixture and calls the strict SMT endpoint while capturing the actual registry. All original family assertions remain in force. [Hosted failure excerpts](evidence/TF-I09A-closure/hosted-first.txt) · [Fresh local reproduction](evidence/TF-I09A-closure/hosted-local-reproduction.txt) · [Isolated fixture pass](evidence/TF-I09A-closure/hosted-local-fixed.txt)
+
+The earlier local runs left six synthetic epoch-dated clock-feed sessions in the workspace's default archive. They remain there. The isolated fixture prevents new writes to that archive from this test.
+
+
+The corrected branch passed the complete **591-test** backend suite with a newly created storage root. [Fresh-storage backend log](evidence/TF-I09A-closure/backend-fresh-storage.txt)

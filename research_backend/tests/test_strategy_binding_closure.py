@@ -189,7 +189,7 @@ def test_new_attempt_cannot_revive_terminal_reference(terminal,state):
     assert activation(registry,producer,bound,reference,A+300)==active
 
 
-def test_strict_smt_cannot_mix_direction_and_leader_families(monkeypatch):
+def test_strict_smt_cannot_mix_direction_and_leader_families(client,monkeypatch):
     views=[]
     class RecordingCoordinator(smt_causal.AnalysisCoordinator):
         def evidence_for(self, engine, *args, **kwargs):
@@ -201,7 +201,7 @@ def test_strict_smt_cannot_mix_direction_and_leader_families(monkeypatch):
     primary=LEFT+[11]*5+RIGHT
     comparison=RIGHT+[24]*5+LEFT
     payload=archive(bars(primary),bars(comparison),end=len(primary)*60)
-    result=smt_causal.evaluate_strict_smt(smt_causal.StrictSmtRequest.model_validate(payload))
+    result=query(client,payload)
     producer,=views
     confirmations=[rev for item in result["events"] for rev in item["revisions"] if rev["state"]=="SMT_CONFIRMED"]
     bearish=next(row for row in confirmations if row["direction"]=="bearish" and row["leader"]=="primary")

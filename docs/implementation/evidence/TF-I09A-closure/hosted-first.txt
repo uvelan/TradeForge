@@ -1,0 +1,13 @@
+# First exact-SHA hosted runs
+
+Push run 44508946298, job 135507798959, attempt 1
+2026-11-19T10:51:10.3969862Z research_backend\tests\test_smt_causal.py:31: in archive
+2026-11-19T10:51:10.3984878Z E           sqlite3.OperationalError: no such table: arrival_sessions
+2026-11-19T10:51:10.3991290Z FAILED research_backend/tests/test_strategy_binding_closure.py::test_strict_smt_cannot_mix_direction_and_leader_families - sqlite3.OperationalError: no such table: arrival_sessions
+2026-11-19T10:51:10.3992478Z 1 failed, 590 passed, 1 warning in 156.86s (0:02:36)
+
+PR run 44508954659, job 135507824871, attempt 1
+2026-11-19T10:51:19.1171020Z research_backend\tests\test_smt_causal.py:31: in archive
+2026-11-19T10:51:19.1185217Z E           sqlite3.OperationalError: no such table: arrival_sessions
+2026-11-19T10:51:19.1191008Z FAILED research_backend/tests/test_strategy_binding_closure.py::test_strict_smt_cannot_mix_direction_and_leader_families - sqlite3.OperationalError: no such table: arrival_sessions
+2026-11-19T10:51:19.1191948Z 1 failed, 590 passed, 1 warning in 152.87s (0:02:32)
