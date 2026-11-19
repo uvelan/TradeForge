@@ -14,7 +14,7 @@ from research_backend.app.strategy_definitions import (
     ExactEvidenceReference, Outcome, causal_order, guarded_outcome, logical_outcome, validate_definition,
 )
 from research_backend.app.strategy_evidence import EvidenceRegistry
-from research_backend.app.strategy_routes import template
+from research_backend.app.strategy_routes import template, template_v2
 
 
 ROUTE = "/api/strategies/v1"
@@ -53,9 +53,23 @@ def ready_definition():
     return data
 
 
+def ready_definition_v2(direction="bullish"):
+    old = ready_definition()
+    data = template_v2(direction)
+    data.update(status="READY_FOR_EVALUATION", expiry=old["expiry"], risk=old["risk"], management=old["management"])
+    data["execution"] = {key:value for key,value in old["execution"].items()
+                         if key not in {"expiry", "entry_intent"}}
+    data["trade_intent"].update(entry={"kind":"MARKET"}, expiry=old["expiry"])
+    smt = data["setup"]["children"][1]
+    data["trigger"] = group("trigger",{**smt,"id":"trigger_event","alias":None})
+    data["invalidation"] = group("invalidation",{**smt,"id":"invalid_event","alias":None,
+                                                 "expected":"bearish" if direction=="bullish" else "bullish"})
+    return data
+
+
 @pytest.mark.parametrize("direction,expected",[("bearish","HIGH_SWEPT_RECLAIMED"),("bullish","LOW_SWEPT_RECLAIMED")])
 def test_mirrored_template_resolves_pinned_scope_and_preserves_pending_settings(client,direction,expected):
-    catalog = client.get(ROUTE+"/capabilities").json()
+    catalog = client.get(ROUTE+"/capabilities?schema_version=1").json()
     assert catalog["indicators"]["SMT"]["algorithm_version"]==2
     assert catalog["indicators"]["FVG"]["identity_policy_version"]==2
     assert catalog["observations"].keys()==OBSERVATIONS.keys()
@@ -217,7 +231,7 @@ def test_exact_reference_required_and_existing_registry_rejects_unknown_or_wrong
 
 def test_persistence_conflict_immutable_duplicate_archive_and_metadata(client,plan):
     initial_plan = client.post("/api/trades",json=plan).json()
-    created = client.post(ROUTE,json=ready_definition())
+    created = client.post(ROUTE,json=ready_definition_v2())
     assert created.status_code==201,created.text
     original = created.json()
     url = ROUTE+"/"+original["strategy_id"]

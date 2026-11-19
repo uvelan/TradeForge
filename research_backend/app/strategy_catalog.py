@@ -5,17 +5,21 @@ from typing import Literal
 from pydantic import BaseModel, Field, StrictInt, ValidationError, create_model, FiniteFloat, model_validator
 
 from .arrival_policy import MODE_VERSIONS, RECORDED_AUTHORITY, RECORDED_MODE, SIMULATION_AUTHORITY, SIMULATION_MODE
-from .crt import CRTRules, VERSION as CRT_VERSION, IDENTITY_VERSION as CRT_IDENTITY
-from .fvg import FVGRules, VERSION as FVG_VERSION, IDENTITY_POLICY_VERSION as FVG_IDENTITY
-from .liquidity import LiquidityRules, VERSION as LIQUIDITY_VERSION
+from .crt import CRTRules
+from .fvg import FVGRules
+from .liquidity import LiquidityRules
 from .market_structure import StructureRules
-from .order_blocks import OrderBlockRules, ALGORITHM_VERSION as OB_VERSION, IDENTITY_VERSION as OB_IDENTITY
-from .strategy_evidence import REFERENCE_VERSION, SMT_ALGORITHM_VERSION, VERSION as TIMING_VERSION
-from .smt_causal import LIFECYCLE_VERSION
+from .order_blocks import OrderBlockRules
+
 
 
 SCHEMA_VERSION = 1
 DEFAULT_POLICY = "STRATEGY_DEFAULTS_V1"
+INTEGRITY_DEFAULT_POLICY = "STRATEGY_DEFAULTS_V2"
+# These numbers are contract pins. Engine changes require a new catalog version.
+REFERENCE_VERSION = 1
+TIMING_VERSION = 3
+LIFECYCLE_VERSION = 2
 FRAMES = ("M1", "M5")
 AUTHORITIES = {SIMULATION_MODE: SIMULATION_AUTHORITY, RECORDED_MODE: RECORDED_AUTHORITY}
 
@@ -40,8 +44,8 @@ MODELS = {
     "FVG": FVGRules, "ORDER_BLOCK": OrderBlockRules,
 }
 VERSIONS = {
-    "CRT": (CRT_VERSION, CRT_IDENTITY), "SMT": (SMT_ALGORITHM_VERSION, 2), "STRUCTURE": (2, 2),
-    "LIQUIDITY": (LIQUIDITY_VERSION, 1), "FVG": (FVG_VERSION, FVG_IDENTITY), "ORDER_BLOCK": (OB_VERSION, OB_IDENTITY),
+    "CRT": (1, 1), "SMT": (2, 2), "STRUCTURE": (2, 2),
+    "LIQUIDITY": (1, 1), "FVG": (1, 2), "ORDER_BLOCK": (1, 1),
 }
 REQUIRES = {"LIQUIDITY": ("STRUCTURE",), "ORDER_BLOCK": ("STRUCTURE",)}
 INTERNAL = {"SMT": ("smt_pivot:primary", "smt_pivot:comparison", "smt_match", "smt_lifecycle"),
@@ -148,6 +152,18 @@ OBSERVATIONS["STRUCTURE_PIVOT"]["where"] = {"type":"PIVOT"}
 OBSERVATIONS["STRUCTURE_BREAK_PRICE"]["where"] = {"type":["BOS","CHOCH","COUNTERTREND_BREAK"]}
 OBSERVATIONS["CRT_MIDPOINT"]["where"] = {"state":"ACTIVE"}
 
+ROLE_OBSERVATIONS = {
+    "SMT_LEADER": observation("Confirmed SMT leader", "SMT", "smt", "leader",
+                              ("primary", "comparison"), current=True),
+    "SMT_LAGGARD": observation("Confirmed SMT laggard", "SMT", "smt", "leader",
+                               ("primary", "comparison"), current=True),
+}
+for spec in ROLE_OBSERVATIONS.values():
+    spec["where"] = {"state": "SMT_CONFIRMED"}
+ROLE_OBSERVATIONS["SMT_LAGGARD"]["projection"] = "OPPOSITE_PAIR_ROLE"
+
+FAMILY_CATEGORIES = frozenset({"crt", "smt", "pool", "fvg", "order_block"})
+
 UNSUPPORTED = {
     "SESSION_MEMBERSHIP":"Calendar is a mandatory scope gate. Session charts do not publish a canonical session condition.",
     "PREVIOUS_PERIOD_LEVEL":"Chart projections are not canonical strategy evidence.",
@@ -189,7 +205,8 @@ def effective_settings(indicator, supplied, calendar):
     return effective
 
 
-def capability_catalog():
+def capability_catalog(version=1):
+    observations = {**OBSERVATIONS, **ROLE_OBSERVATIONS} if version == 2 else OBSERVATIONS
     indicators = {}
     for key, model in MODELS.items():
         settings = model.model_json_schema()["properties"]
@@ -207,14 +224,14 @@ def capability_catalog():
             "required_producers":list(REQUIRES.get(key,())),
             "required_canonical_producers":list(INTERNAL.get(key,())),
             "lifecycle_version":LIFECYCLE_VERSION if key=="SMT" else None,
-            "observations":[name for name,spec in OBSERVATIONS.items() if spec["indicator"]==key],
+            "observations":[name for name,spec in observations.items() if spec["indicator"]==key],
             "limitations": [UNSUPPORTED[name] for name in {
                 "CRT":("CRT_NATIVE_OR_OTHER_HTF",),"SMT":("INVERSE_SMT","SMT_CANDIDATE_OR_ABSENCE"),
                 "STRUCTURE":("STRUCTURE_TREND",),"FVG":("ATR_FVG",),
             }.get(key,())],
         }
-    return {"schema_version":SCHEMA_VERSION,"default_policy":DEFAULT_POLICY,"indicators":indicators,
-            "observations":deepcopy(OBSERVATIONS),"unsupported":UNSUPPORTED.copy(),
+    return {"schema_version":version,"default_policy":INTEGRITY_DEFAULT_POLICY if version == 2 else DEFAULT_POLICY,
+            "indicators":indicators,"observations":deepcopy(observations),"unsupported":UNSUPPORTED.copy(),
             "modes":{mode:{"authority":authority,"version":MODE_VERSIONS[mode],
                            "operationally_enabled":mode!=RECORDED_MODE} for mode,authority in AUTHORITIES.items()},
             "limits":{"max_nodes":96,"max_depth":6,"max_evidence_age_seconds":86400,

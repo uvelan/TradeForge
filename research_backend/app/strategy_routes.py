@@ -7,7 +7,7 @@ from pydantic import Field, StrictInt, ValidationError
 from starlette.concurrency import run_in_threadpool
 
 from .db import one, rows, transaction, utc_now
-from .strategy_catalog import DEFAULT_POLICY, VERSIONS, capability_catalog
+from .strategy_catalog import DEFAULT_POLICY, INTEGRITY_DEFAULT_POLICY, VERSIONS, capability_catalog
 from .strategy_definitions import Contract, validate_definition
 
 
@@ -83,8 +83,20 @@ async def envelope(request, model):
         fail("","INVALID_MUTATION","Integer expected_version and the required request fields")
 
 
-def validated(payload):
+def validate_submission(payload):
     result = validate_definition(payload)
+    if result["valid"] and payload["schema_version"] == 1 and payload.get("status") == "READY_FOR_EVALUATION":
+        result = {**result, "valid":False, "status":"INVALID_STRATEGY_DEFINITION", "errors":[{
+            "path":"schema_version", "condition_id":None, "code":"LEGACY_REQUIRES_REVISION",
+            "expected":"Revise this strategy as schema 2", "actual":1,
+        }]}
+        result.pop("definition")
+        result.pop("configuration_fingerprint")
+    return result
+
+
+def validated(payload):
+    result = validate_submission(payload)
     if not result["valid"]:
         raise HTTPException(422,result)
     return result
@@ -131,6 +143,9 @@ def append(strategy_id, expected, result=None):
         db.execute("BEGIN IMMEDIATE")
         previous = current(db,strategy_id)
         expect(previous,expected)
+        if result and result["definition"]["schema_version"] < previous["definition"]["schema_version"]:
+            fail("schema_version","SCHEMA_DOWNGRADE","Preserve or upgrade the saved schema",
+                 result["definition"]["schema_version"])
         if previous["version"]>=MAX_HISTORY:
             raise HTTPException(409,{"code":"HISTORY_LIMIT","current_version":previous["version"]})
         return store_version(db,strategy_id,expected+1,result or previous,archive=result is None)
@@ -163,20 +178,36 @@ def template(direction):
             "temporal":[{"first":"reclaim","then":"divergence","relation":"AFTER"}]}
 
 
+def template_v2(direction):
+    definition = template(direction)
+    reference, = definition["context"]["children"]
+    reclaim, smt = definition["setup"]["children"]
+    reference["evidence"]["state"] = "HISTORICAL"
+    reference.update(alias="crt_reference", selection="EARLIEST_ELIGIBLE")
+    reclaim.update(alias="crt_reclaim", same_family_as="crt_reference", selection="BOUND_FAMILY")
+    smt.update(alias="smt_confirmation", selection="EARLIEST_ELIGIBLE")
+    definition.update(schema_version=2, defaults_policy=INTEGRITY_DEFAULT_POLICY,
+                      trade_intent={"role":"PRIMARY", "direction":"SHORT" if direction=="bearish" else "LONG",
+                                    "earliest":"AFTER_CAUSAL_AVAILABILITY"},
+                      attempt={"context_mode":"LATCHED","candidate_limit":32,
+                               "expiry_origin":"CONTEXT_ACTIVATION","crt_reference_alias":"crt_reference"})
+    return definition
+
+
 @router.get("/capabilities")
-def capabilities():
-    return capability_catalog()
+def capabilities(schema_version: int = Query(2, ge=1, le=2)):
+    return capability_catalog(schema_version)
 
 
 @router.get("/templates")
 def templates():
-    return [{"id":direction,"definition":(result:=validated(template(direction)))["definition"],
+    return [{"id":direction,"definition":(result:=validated(template_v2(direction)))["definition"],
              "unresolved":result["unresolved"]} for direction in ("bearish","bullish")]
 
 
 @router.post("/validate")
 async def validate(request:Request):
-    return validate_definition(await read_object(request))
+    return validate_submission(await read_object(request))
 
 
 @router.post("",status_code=201)
@@ -194,6 +225,7 @@ def create_version(result):
 def strategy_list(limit: int=Query(40,ge=1,le=100), offset:int=Query(0,ge=0,le=10000)):
     return rows("""SELECT r.strategy_id,r.version,r.version_id,r.created_at,r.status,r.configuration_fingerprint,
                    json_extract(r.definition,'$.name') AS name,
+                   json_extract(r.definition,'$.schema_version') AS schema_version,
                    json_extract(r.definition,'$.availability_modes[0]') AS purpose
                    FROM strategy_versions r WHERE r.version=
                    (SELECT MAX(v.version) FROM strategy_versions v WHERE v.strategy_id=r.strategy_id)

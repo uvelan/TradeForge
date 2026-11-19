@@ -87,6 +87,9 @@ export function makeRule(dependency:Dependency,observation:string,catalog:Catalo
 function RuleFields({node,value,catalog,update}:{node:Rule;value:Definition;catalog:Catalog;update:(rule:Rule)=>void}){
   const dep=value.indicators.find(item=>item.id===node.dependency);
   const spec=catalog.observations[node.observation];
+  const aliases=(['context','setup','trigger','invalidation'] as const).flatMap(phase=>rulesIn(value[phase]))
+    .filter(rule=>rule.id!==node.id&&rule.alias&&rule.dependency===node.dependency&&
+      catalog.observations[rule.observation]?.category===spec?.category).map(rule=>rule.alias!);
   return <div className="strategy-fields">
     <Choice label="Rule dependency" options={value.indicators.map(item=>item.id)} value={node.dependency} blank="Choose dependency"
       display={id=>{const item=value.indicators.find(entry=>entry.id===id)!;return item.indicator+' · '+id;}}
@@ -100,6 +103,16 @@ function RuleFields({node,value,catalog,update}:{node:Rule;value:Definition;cata
         onChange={expected=>expected&&update({...node,expected})}/>:<NumberField label="Expected price" value={Number(node.expected)}
         step="any" onChange={expected=>update({...node,expected:expected??0})}/>}
       <Choice label="Evidence state" options={spec.state_requirements} value={node.evidence.state} onChange={state=>state&&update({...node,evidence:{...node.evidence,state}})}/>
+    </>}
+    {value.schema_version===2&&<>
+      <Choice label="Observation selection" value={node.selection??''}
+        options={['EARLIEST_ELIGIBLE','LATEST_ELIGIBLE','BOUND_FAMILY'] as const} blank="Choose policy"
+        onChange={selection=>update({...node,selection:selection||null,
+          same_family_as:selection==='BOUND_FAMILY'?node.same_family_as:null})}/>
+      <label>Evidence alias<input maxLength={40} value={node.alias??''}
+        onChange={event=>update({...node,alias:event.target.value||null})}/></label>
+      {node.selection==='BOUND_FAMILY'&&<Choice label="Same family as" value={node.same_family_as??''}
+        options={aliases} blank="Choose alias" onChange={alias=>update({...node,same_family_as:alias||null})}/>}
     </>}
     <NumberField label="Evidence age in seconds" value={node.evidence.max_age_seconds} min={1} max={86400}
       onChange={max_age_seconds=>update({...node,evidence:{...node.evidence,max_age_seconds:max_age_seconds??0}})}/>

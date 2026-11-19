@@ -2,7 +2,7 @@ import {useEffect,useState} from 'react';
 import {api} from './api';
 import {useTimestampFormat} from './timezone';
 import {BoundFields,Choice,GroupFields,Producers,fieldName,groupFor,rulesIn} from './StrategyRules';
-import {Policies,ScopeFields} from './StrategyPolicies';
+import {AttemptFields,Policies,ScopeFields,upgradeDraft} from './StrategyPolicies';
 import type {Catalog,Definition,Diff,Link,Listed,Phase,RecordVersion,Template,Validation} from './strategyTypes';
 import './strategyBuilder.css';
 
@@ -107,7 +107,7 @@ export function StrategyBuilder(){
       else if(error instanceof Error)setError(error.message.includes('VERSION_CONFLICT')?'Another edit saved a newer version. Reload the saved definition before revising.':error.message);
     }finally{setBusy(false);}
   }
-  function edit(update:Definition){setDefinition(update);setValidation(undefined);setMessage('');}
+  function edit(update:Definition){setDefinition({...update,status:'DRAFT'});setValidation(undefined);setMessage('');}
   async function page(next:number){
     setLibrary(await api.get<Listed[]>(endpoint+'?limit=40&offset='+next));setOffset(next);
   }
@@ -119,7 +119,7 @@ export function StrategyBuilder(){
     setRecord(undefined);setHistory([]);setValidation(undefined);setMessage('');setError('');
     const item=structuredClone(template.definition);
     setDefinition(blank?{...item,name:'Untitled strategy',description:'',context:null,setup:null,trigger:null,invalidation:null,
-      temporal:[],indicators:[]}:item);
+      temporal:[],indicators:[],trade_intent:undefined,attempt:null}:item);
   }
   function mutate(operation:'archive'|'duplicate'){
     if(!record)return;
@@ -154,11 +154,15 @@ export function StrategyBuilder(){
     {definition&&catalog&&<>
       <section className="card strategy-block" aria-label="Strategy editor">
         <div className="strategy-heading"><h2>Strategy editor</h2>{record&&<span>v{record.version} · {record.status}</span>}</div>
-        <fieldset className="strategy-edit-fields" disabled={busy||record?.status==='ARCHIVED'}>
+        {definition.schema_version===1&&<div className="strategy-actions">
+          <p role="status">Legacy schema 1 requires revision before evaluation.</p>
+          <button type="button" className="small-tool" disabled={busy||record?.status==='ARCHIVED'}
+            onClick={()=>edit(upgradeDraft(definition))}>Revise as schema 2</button>
+        </div>}
+        <fieldset className="strategy-edit-fields" disabled={busy||record?.status==='ARCHIVED'||definition.schema_version===1}>
           <div className="strategy-fields">
             <label>Strategy name<input maxLength={100} value={definition.name} onChange={event=>edit({...definition,name:event.target.value})}/></label>
-            <Choice label="Definition status" options={['DRAFT','READY_FOR_EVALUATION'] as const} value={definition.status}
-              onChange={status=>status&&edit({...definition,status})}/>
+            <label>Definition status<output aria-label="Definition status">{definition.status}</output></label>
           </div>
           <label>Description<textarea maxLength={2000} value={definition.description} onChange={event=>edit({...definition,description:event.target.value})}/></label>
           <ScopeFields value={definition} onChange={edit}/>
@@ -170,12 +174,21 @@ export function StrategyBuilder(){
               <button type="button" className="small-tool" onClick={()=>edit({...definition,[phase]:null})}>Clear {phase}</button>
             </>:<button className="small-tool" type="button" onClick={()=>edit({...definition,[phase]:groupFor(phase)})}>Add {phase} group</button>}
           </section>)}
+          {definition.schema_version===2&&<AttemptFields value={definition} onChange={edit}/>}
           <Temporal value={definition} onChange={edit}/>
           <Policies value={definition} onChange={edit}/>
           <div className="strategy-actions">
             <button className="small-tool" type="button" onClick={()=>void run(async()=>{
               setValidation(await api.post<Validation>(endpoint+'/validate',definition));
             })}>Validate definition</button>
+            <button className="small-tool" type="button" onClick={()=>void run(async()=>{
+              const candidate={...definition,status:'READY_FOR_EVALUATION'} as const;
+              const result=await api.post<Validation>(endpoint+'/validate',candidate);
+              if(result.valid)setDefinition(candidate);
+              setValidation(result);
+            })}>Check readiness</button>
+            {definition.status==='READY_FOR_EVALUATION'&&<button className="small-tool" type="button"
+              onClick={()=>edit(definition)}>Return to draft</button>}
             <button className="btn btn-primary" type="button" onClick={()=>void run(async()=>{
               const item=await api.post<RecordVersion>(record?endpoint+'/'+record.strategy_id+'/revisions':endpoint,
                 record?{expected_version:record.version,definition}:definition);
