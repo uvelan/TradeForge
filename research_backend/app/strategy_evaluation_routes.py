@@ -15,8 +15,9 @@ from .market import FRAME_MIN
 from .smt_causal import ArchiveRequest
 from .strategy_catalog import BINDING_POLICY_VERSION
 from .strategy_definitions import Contract, Digest, StrategyDefinitionV2, validate_definition
-from .strategy_evaluation_sources import EvaluationInput, collect, freeze_selection, selection_catalog
+from .strategy_evaluation_sources import EVALUATOR_VERSION, EvaluationInput, collect, freeze_selection, selection_catalog
 from .strategy_evaluator import EvaluationMachine
+from .strategy_evaluation_budget import deadline
 from .strategy_evidence import fingerprint
 from .strategy_routes import current, envelope
 
@@ -84,12 +85,16 @@ def prepare(request):
 
 def calculate(run, cutoff):
     identity = run["identity"]
+    if identity["evaluator_version"]!=EVALUATOR_VERSION:
+        raise HTTPException(409,{"code":"LEGACY_EVALUATION_READ_ONLY","reason":"Saved v1 decisions remain readable. Create a v2 evaluation to recalculate."})
     if not identity["evaluation_start"] <= cutoff <= run["selection"]["end"]:
         raise ValueError("Cutoff lies outside the frozen evaluation range")
     definition = StrategyDefinitionV2.model_validate(run["definition"])
-    observed = collect(definition,run["selection"],cutoff,identity["evaluation_start"])
+    check = deadline()
+    observed = collect(definition,run["selection"],cutoff,identity["evaluation_start"],check_budget=check)
     decision = EvaluationMachine(definition,observed,identity,identity["evaluation_start"],
-                                 run["selection"]["end"]).run(cutoff)
+                                 run["selection"]["end"],check_budget=check).run(cutoff)
+    check()
     decision["evaluation"] = {**identity,"evaluation_id":run["run_id"],"cutoff_utc":cutoff}
     decision["decision_id"] = fingerprint({key:value for key,value in decision.items() if key!="resource_counts"})
     if len(canonical(decision).encode())>MAX_SERIALIZED_DECISION:
@@ -121,20 +126,34 @@ def store_decision(db, run_id, decision, previous):
     return {**decision,"previous_decision_id":previous}
 
 
+def existing_creation(run, cutoff, latest, lookup):
+    exact = lookup() if latest["cutoff"] != cutoff else latest
+    if exact is None:
+        raise HTTPException(409,{"code":"EXACT_CUTOFF_RECONSTRUCTION_REQUIRED",
+                                 "reason":"This run already exists. Reconstruct the requested cutoff or advance the latest checkpoint.",
+                                 "run_id":run["run_id"],"requested_cutoff":cutoff,
+                                 "latest_cutoff":latest["cutoff"]})
+    return {"run_id":run["run_id"],"selection":run["selection"],"decision":exact}
+
+
 def create_run(request):
     with evaluation_lane():
         run = prepare(request)
         run_id = run["run_id"]
         existing = find_decision(run_id)
         if existing:
-            return {"run_id":run_id,"selection":run["selection"],"decision":existing}
+            return existing_creation(run,request.cutoff,existing,lambda:find_decision(run_id,request.cutoff))
         decision = calculate(run,request.cutoff)
         with transaction() as db:
             db.execute("BEGIN IMMEDIATE")
             existing = db.execute("SELECT * FROM strategy_decisions WHERE run_id=? ORDER BY cutoff DESC LIMIT 1",
                                   (run_id,)).fetchone()
             if existing is not None:
-                return {"run_id":run_id,"selection":run["selection"],"decision":decode_decision(existing)}
+                def exact():
+                    row = db.execute("SELECT * FROM strategy_decisions WHERE run_id=? AND cutoff=?",
+                                     (run_id,request.cutoff)).fetchone()
+                    return decode_decision(row) if row else None
+                return existing_creation(run,request.cutoff,decode_decision(existing),exact)
             if current(db,request.strategy_id)["status"]=="ARCHIVED":
                 raise HTTPException(409,"Strategy archived while evaluation was running")
             if db.execute("SELECT COUNT(*) FROM strategy_evaluations").fetchone()[0]>=MAX_RUNS:
@@ -147,6 +166,8 @@ def create_run(request):
 
 def advance_run(run_id, request):
     run = load_run(run_id)
+    if run["identity"]["evaluator_version"]!=EVALUATOR_VERSION:
+        raise HTTPException(409,{"code":"LEGACY_EVALUATION_READ_ONLY","reason":"Create a v2 evaluation to advance."})
     latest = find_decision(run_id)
     known = find_decision(run_id,request.cutoff)
     if known and request.expected_decision_id in {known["previous_decision_id"],known["decision_id"]}:
@@ -170,14 +191,14 @@ def advance_run(run_id, request):
 
 @router.get("/selections")
 def selections():
-    return {"purpose":SIMULATION_MODE,"recorded_readiness":"BLOCKED","selections":selection_catalog()}
+    return {"evaluator_version":EVALUATOR_VERSION,"purpose":SIMULATION_MODE,"recorded_readiness":"BLOCKED","selections":selection_catalog()}
 
 
 def validation(request):
     with evaluation_lane():
         run = prepare(request)
         data = collect(StrategyDefinitionV2.model_validate(run["definition"]),run["selection"],request.cutoff,
-                       run["identity"]["evaluation_start"])
+                       run["identity"]["evaluation_start"],check_budget=deadline())
         coverage = [lane.at(request.cutoff) for lane in data.coverage.values()]
         complete = all(lane["status"]=="COMPLETE" for lane in coverage)
         return {"valid":True,"status":"VERIFIED_FROZEN_HISTORICAL_SELECTION" if complete else "INSUFFICIENT_COVERAGE",

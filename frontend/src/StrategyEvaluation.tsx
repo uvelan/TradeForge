@@ -14,9 +14,10 @@ type Decision = {decision_id:string;attempt_id:string|null;state:string;reason:s
   context_activated_at:number|null;setup_activated_at:number|null;trigger_activated_at:number|null;persisted?:false;
   invalidation:string;expiry:string;rules:RuleResult[];transitions:[number,string,string][];
   phase_results:Record<string,string>;
+  attempt_bindings?:{rule:string;alias:string;family:string;evidence_state:string;activated_at:number;validity:string|null}[];
   temporal:{before:string;after:string;relation:string;outcome:string;reason:string}[];
   supporting_events:Record<string,unknown>;bound_crt?:{evidence:{family:string};activated_at:number}|null;
-  evaluation:{strategy_version_id:string;configuration_fingerprint:string;purpose:string;warmup_start:number;evaluation_start:number};
+  evaluation:{evaluator_version:number;strategy_version_id:string;configuration_fingerprint:string;purpose:string;warmup_start:number;evaluation_start:number};
   coverage:{series:string;status:string;expected:number;observed:number;missing:number}[];
   entry_intent?:{status:string;role:string;direction:string;symbol:string;entry:{kind:string;price?:{value:number}};
     price_basis:string;strictly_after:number}|null};
@@ -46,6 +47,7 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
   const generation=useRef(0);
   const selection=catalog.find(item=>item.id===selectionId);
   const frozen=run?.selection;
+  const legacy=run?.decision.evaluation.evaluator_version===1;
   function choose(item:Selection){
     setSelection(item.id);setWarmup(fieldDate(item.start));
     setStart(fieldDate(Math.min(item.start+7200,item.end)));setCutoff(fieldDate(item.end));
@@ -75,7 +77,7 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
   function create(){
     if(!selection)return;
     void execute(async valid=>{
-      const result=await api.post<Run>(endpoint,{evaluator_version:1,purpose:'HISTORICAL_SIMULATION',
+      const result=await api.post<Run>(endpoint,{evaluator_version:2,purpose:'HISTORICAL_SIMULATION',
         strategy_id:record.strategy_id,strategy_version_id:record.version_id,configuration_fingerprint:record.configuration_fingerprint,
         selection_id:selection.id,selection_fingerprint:selection.fingerprint,warmup_start:epoch(warmup),
         evaluation_start:epoch(start),cutoff:epoch(cutoff)});
@@ -84,7 +86,7 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
     });
   }
   function evaluate(operation:'advance'|'reconstruct'){
-    if(!run)return;
+    if(!run||legacy)return;
     void execute(async valid=>{
       const result=await api.post<Decision>(endpoint+'/'+run.run_id+'/'+operation,{cutoff:epoch(cutoff),
         ...(operation==='advance'?{expected_decision_id:run.decision.decision_id}:{})});
@@ -117,8 +119,9 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
       evidencePath:evidencePath(item)+'/chart'});
   }
   return <section className="card strategy-block" aria-label="Strategy evaluation">
-    <div className="strategy-heading"><h2>Strategy evaluation</h2><span>Version {record.version} · Historical simulation</span></div>
+    <div className="strategy-heading"><h2>Strategy evaluation</h2><span>Strategy revision {record.version} · Evaluator v{decision?.evaluation.evaluator_version??2} · Historical simulation</span></div>
     <p className="muted">Recorded MT5 readiness is blocked. This evaluation ends at entry intent.</p>
+    {legacy&&<p role="status">Saved evaluator v1 record. Start a new v2 evaluation to recalculate.</p>}
     {saved.length>0&&<div className="strategy-actions">
       <Choice label="Saved evaluation" value="" options={saved.map(item=>item.run_id)} blank="Choose saved run"
         display={id=>{const item=saved.find(entry=>entry.run_id===id)!;return utc(item.cutoff)+' · '+title(item.state);}}
@@ -137,10 +140,11 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
       <div className="strategy-actions">
         {!run?<button type="button" className="btn btn-primary" disabled={!selection||![warmup,start,cutoff].every(v=>Number.isFinite(epoch(v)))}
           onClick={create}>Run evaluation</button>:<>
-          <button type="button" className="small-tool" disabled={!Number.isFinite(epoch(cutoff))||epoch(cutoff)<=run.decision.cutoff}
+          <button type="button" className="small-tool" disabled={legacy||!Number.isFinite(epoch(cutoff))||epoch(cutoff)<=run.decision.cutoff}
             onClick={()=>evaluate('advance')}>Advance and save</button>
-          <button type="button" className="small-tool" disabled={!Number.isFinite(epoch(cutoff))} onClick={()=>evaluate('reconstruct')}>Reconstruct cutoff</button>
+          <button type="button" className="small-tool" disabled={legacy||!Number.isFinite(epoch(cutoff))} onClick={()=>evaluate('reconstruct')}>Reconstruct cutoff</button>
           <button type="button" className="small-tool" onClick={()=>load(run.run_id)}>Reload saved decision</button>
+          <button type="button" className="small-tool" onClick={()=>{setRun(undefined);setDecision(undefined);setTrace(undefined);if(selection)choose(selection);}}>New evaluation</button>
         </>}
       </div>
     </fieldset>
@@ -153,6 +157,13 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
       <p>Attempt {decision.attempt_id??'pending'} · Context {utc(decision.context_activated_at)} · Setup {utc(decision.setup_activated_at)}
         {' · Trigger '}{utc(decision.trigger_activated_at)}</p>
       {decision.bound_crt&&<p>Bound CRT family <code>{decision.bound_crt.evidence.family}</code></p>}
+      {!!decision.attempt_bindings?.length&&<details>
+        <summary>Attempt bindings</summary>
+        <ul>{decision.attempt_bindings.map(binding=><li key={binding.rule}>
+          {binding.alias} · {title(binding.evidence_state)} · Bound {utc(binding.activated_at)}
+          {" · "}{binding.validity?title(binding.validity):"Pinned observation"} <code>{binding.family}</code>
+        </li>)}</ul>
+      </details>}
       <p>Invalidation {title(decision.invalidation)} · Expiry {title(decision.expiry)}</p>
       {Object.entries(decision.phase_results).map(([name,status])=><p key={name}>{name} · {title(status)}</p>)}
       <h3>Market coverage</h3>

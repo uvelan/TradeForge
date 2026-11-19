@@ -155,7 +155,7 @@ def run(catalog,datasets,samples):
             record=client.post("/api/strategies/v1",json=definition)
             assert record.status_code==201,record.text
             item=record.json()
-            request={"evaluator_version":1,"purpose":"HISTORICAL_SIMULATION","strategy_id":item["strategy_id"],
+            request={"evaluator_version":2,"purpose":"HISTORICAL_SIMULATION","strategy_id":item["strategy_id"],
                      "strategy_version_id":item["version_id"],"configuration_fingerprint":item["configuration_fingerprint"],
                      "selection_id":selected["id"],"selection_fingerprint":selected["fingerprint"],
                      "warmup_start":catalog["start"],"evaluation_start":catalog["start"]+7200,"cutoff":cutoff if cutoff is not None else catalog["end"]}

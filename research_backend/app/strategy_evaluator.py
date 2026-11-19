@@ -11,6 +11,8 @@ from .strategy_binding import BoundEvidence, activate_crt_attempt, crt_family_va
 from .strategy_catalog import OBSERVATIONS, ROLE_OBSERVATIONS
 from .strategy_definitions import Outcome, logical_outcome
 from .strategy_evidence import fingerprint
+from .strategy_current_state import CurrentKind
+from .strategy_evaluation_sources import MAX_TIMELINE
 
 YES, NO, UNKNOWN = Outcome
 PHASES = ("context","setup","invalidation","trigger")
@@ -126,8 +128,9 @@ def predicate(rule, spec, event):
 
 
 class EvaluationMachine:
-    def __init__(self, definition, evidence, identity, start, selection_end):
+    def __init__(self, definition, evidence, identity, start, selection_end, *, check_budget=None):
         self.definition = definition
+        self.check_budget = check_budget
         self.evidence = evidence
         self.graph = RuleGraph(definition)
         self.identity = identity
@@ -137,7 +140,10 @@ class EvaluationMachine:
         self.results = {}
         self.phase_results = {}
         self.latches = {}
-        self.tentative = {}
+        self.events_by_id = {snapshot:{row["id"]:row for _,rows in lanes.values() for row in rows}
+                             for snapshot,lanes in evidence.events.items()}
+        self.bindings = {}
+        self.binding_status = {}
         self.temporal = {}
         self.timeline = []
         self.context_at = self.setup_at = self.trigger_at = None
@@ -184,12 +190,14 @@ class EvaluationMachine:
     def select(self, rule, phase, cutoff, lower):
         spec = CATALOG[rule.observation]
         view = self.evidence.views[rule.dependency]
+        established = self.bindings.get(rule.id)
         bound = None
         if rule.same_family_as:
-            parent = self.results.get(self.graph.aliases[rule.same_family_as])
+            parent_id = self.graph.aliases[rule.same_family_as]
+            parent = self.results.get(parent_id)
             if not parent or parent.outcome!=YES:
                 return RuleResult(UNKNOWN,"BOUND_FAMILY_UNAVAILABLE")
-            bound = parent.proof
+            bound = self.bindings.get(parent_id,parent).proof
         prerequisites = []
         for edge in self.graph.temporal[rule.id]:
             parent = self.results.get(edge.before)
@@ -198,44 +206,72 @@ class EvaluationMachine:
                 outcome = UNKNOWN if not parent or parent.outcome==UNKNOWN else NO
                 self.temporal[(edge.before,rule.id,edge.label)] = [outcome.value,reason]
                 return RuleResult(outcome,reason)
-            anchor = parent.proof.reference.available_at
+            predecessor = self.bindings.get(edge.before,parent)
+            anchor = predecessor.proof.reference.available_at
             if self.graph.phases[edge.before]!=phase:
-                anchor = max(anchor,parent.selected_at)
+                anchor = max(anchor,predecessor.selected_at)
             prerequisites.append((edge,anchor))
         policy = rule.selection
-        pinned = self.tentative.get(rule.id)
-        if pinned and pinned.proof and rule.evidence.state=="HISTORICAL":
-            visible = cutoff-pinned.proof.reference.available_at<=rule.evidence.max_age_seconds
-            return pinned if visible else RuleResult(UNKNOWN,"PINNED_EVIDENCE_STALE")
-
         stamps, events = self.evidence.events[view.snapshot].get(spec["category"],((),()))
         age_start = cutoff-rule.evidence.max_age_seconds
         end = bisect_right(stamps,cutoff)
         activating_crt = not self.attempt and rule.alias and rule.alias==self.definition.attempt.crt_reference_alias
         eligible = []
-        uncertain = False
+        uncertainty = None
         outside = False
-        start = bisect_left(stamps,max(lower,age_start))
-        for index in range(start,end):
+        current = rule.evidence.state=="CURRENT"
+        seen = set()
+        start = 0 if current else bisect_left(stamps,max(lower,age_start))
+        indexes = range(end-1,-1,-1) if current else range(start,end)
+        for index in indexes:
             self.scans += 1
+            if self.check_budget and self.scans%1024==0:
+                self.check_budget()
             if self.scans>MAX_SCANS:
                 raise ResourceLimit("Combined rule evidence scan budget exceeded")
             event = events[index]
             record = view.records[event["id"]]
-            if not projection_matches(spec,event) or (bound and record.family!=bound.family):
+            key = (record.category,record.config,record.scope,record.family)
+            if ((bound and record.family!=bound.family)
+                    or (established and record.family!=established.proof.family)):
                 continue
-            if rule.evidence.state=="CURRENT" and not view.current_at(event["evidence_reference"],cutoff,purpose=SIMULATION_MODE):
-                # A superseded event cannot supply a current predicate. Unknown
-                # SMT state is handled by its conservative absence lane below.
+            if current:
+                if key in seen:
+                    continue
+                seen.add(key)
+                state = view.current_state(event["evidence_reference"],cutoff,purpose=SIMULATION_MODE)
+                if established:
+                    self.binding_status[rule.id] = state.kind.value
+                if state.kind == CurrentKind.INACTIVE:
+                    if established:
+                        return RuleResult(NO,"BOUND_FAMILY_TERMINAL")
+                    continue
+                if state.kind != CurrentKind.ACTIVE:
+                    # SMT direction and role are fixed across its lifecycle.
+                    if spec["category"]!="smt" or predicate(rule,spec,event) is not False:
+                        uncertainty = uncertainty or state.reason
+                    continue
+                event = self.events_by_id[view.snapshot][state.revision]
+                record = view.records[state.revision]
+            if established and not current and event["id"]!=established.proof.reference.event_id:
                 continue
-            if (not record.eligible or event["evidence_reference"]["source_authority"]!=SIMULATION_AUTHORITY):
-                uncertain = True
+            if not projection_matches(spec,event):
+                if (event.get("state") in {"UNCERTAIN","AMBIGUOUS"}
+                        and rule.expected not in {"ACTIVE","FORMING"}):
+                    uncertainty = uncertainty or record.state
                 continue
             matches = predicate(rule,spec,event)
             if matches is None:
-                uncertain = True
+                uncertainty = uncertainty or "INVALID_FIELD_PROJECTION"
                 continue
             if not matches:
+                continue
+            if not record.eligible or event["evidence_reference"]["source_authority"]!=SIMULATION_AUTHORITY:
+                uncertainty = uncertainty or event["timing"]["eligibility_reason"]
+                continue
+            if current and record.available < max(lower,age_start):
+                uncertainty = uncertainty or ("BOUND_EVIDENCE_STALE" if record.available<age_start else
+                                              "CURRENT_MATCH_PRECEDES_PHASE")
                 continue
             if activating_crt:
                 proof = BoundEvidence(reference=event["evidence_reference"], family=record.family,
@@ -245,13 +281,14 @@ class EvaluationMachine:
                 validity = crt_family_validity(self.evidence.registry,proof,revision,snapshot=view.snapshot,
                     cutoff=cutoff,coverage_known=True,purpose=SIMULATION_MODE)
                 if validity!=YES:
-                    uncertain |= validity==UNKNOWN
+                    if validity==UNKNOWN:
+                        uncertainty = uncertainty or "CRT_REVISION_UNCERTAIN"
                     continue
             available = record.available
             for edge,anchor in prerequisites:
                 within = self.in_window(edge.within,anchor,available) if available>anchor else False
                 if within is None:
-                    uncertain = True
+                    uncertainty = uncertainty or "TEMPORAL_WINDOW_UNRESOLVED"
                 if not within:
                     outside = True
                     break
@@ -263,25 +300,30 @@ class EvaluationMachine:
             self.lookups += len(eligible)
             outcome,proof = select_candidate(self.evidence.registry,eligible,snapshot=view.snapshot,
                 cutoff=cutoff,policy=policy,age=rule.evidence.max_age_seconds,
-                limit=self.definition.attempt.candidate_limit,current=rule.evidence.state=="CURRENT",
+                limit=self.definition.attempt.candidate_limit,current=False,
                 bound=bound,coverage_known=True,purpose=SIMULATION_MODE)
             if outcome==YES:
                 event = next(row for row in eligible if row["id"]==proof.reference.event_id)
-                result = RuleResult(YES,"CANONICAL_EVIDENCE",proof,event,cutoff)
+                previous = self.results.get(rule.id)
+                selected_at = (previous.selected_at if previous and previous.proof==proof else cutoff)
+                if established and established.proof==proof:
+                    selected_at = established.selected_at
+                result = RuleResult(YES,"CANONICAL_EVIDENCE",proof,event,selected_at)
                 for edge,_ in prerequisites:
                     self.temporal[(edge.before,rule.id,edge.label)] = [YES.value,"CAUSAL_WINDOW_SATISFIED"]
-                if self.attempt and rule.alias and (phase=="setup" or phase=="trigger") and rule.evidence.state=="HISTORICAL":
-                    self.tentative[rule.id] = result
                 return result
             return RuleResult(UNKNOWN,"EXACT_EVIDENCE_INELIGIBLE")
         for edge,_ in prerequisites:
             self.temporal[(edge.before,rule.id,edge.label)] = [
-                UNKNOWN.value if uncertain else NO.value, "NO_COMPATIBLE_CAUSAL_CANDIDATE"]
-        if uncertain:
-            return RuleResult(UNKNOWN,"INELIGIBLE_OR_INCOMPLETE_EVIDENCE")
+                UNKNOWN.value if uncertainty else NO.value, "NO_COMPATIBLE_CAUSAL_CANDIDATE"]
+        if uncertainty:
+            return RuleResult(UNKNOWN,uncertainty)
+        if any(category==spec["category"] and bisect_right(gaps,cutoff)>bisect_left(gaps,lower)
+               for (category,_,_),gaps in view.gaps.items()):
+            return RuleResult(UNKNOWN,"PRODUCER_COVERAGE_GAP")
         if spec["category"]=="smt":
             return RuleResult(UNKNOWN,"SMT_ABSENCE_NOT_ESTABLISHED")
-        if age_start>lower and start>bisect_left(stamps,lower):
+        if not current and age_start>lower and start>bisect_left(stamps,lower):
             return RuleResult(UNKNOWN,"EVIDENCE_WINDOW_STALE")
         return RuleResult(NO,"CAUSAL_WINDOW_NOT_MET" if outside else "NO_MATCH_COMPLETE_COVERAGE")
 
@@ -295,7 +337,14 @@ class EvaluationMachine:
         self.phase_results[phase] = outcome.value
         return outcome
 
+    def bind(self, phase):
+        for id_, rule in self.graph.rules.items():
+            result = self.results.get(id_)
+            if self.graph.phases[id_]==phase and rule.alias and result and result.outcome==YES:
+                self.bindings.setdefault(id_,result)
+
     def latch(self, phase):
+        self.bind(phase)
         self.latches.update((id_,self.results[id_]) for id_ in self.graph.order if self.graph.phases[id_]==phase)
 
     def activate(self, cutoff):
@@ -316,6 +365,7 @@ class EvaluationMachine:
             self.latches[rule.id] = self.results[rule.id]
         self.context_at = cutoff
         self.attempt = attempt_id
+        self.bind("context")
         if self.definition.attempt.context_mode=="LATCHED":
             self.latch("context")
         return YES
@@ -328,6 +378,26 @@ class EvaluationMachine:
         return crt_family_validity(self.evidence.registry,proof,self.latest_crt,
             snapshot=self.latest_crt["evidence_reference"]["calculation_snapshot"] if self.latest_crt else
                      proof.reference.calculation_snapshot,cutoff=cutoff,coverage_known=True,purpose=SIMULATION_MODE)
+
+    def pinned_current_guard(self, cutoff):
+        for key,binding in self.bindings.items():
+            rule = self.graph.rules[key]
+            if key not in self.latches or rule.evidence.state!="CURRENT":
+                continue
+            reference = binding.proof.reference.model_dump(mode="json",exclude_none=True)
+            view = self.evidence.views[rule.dependency]
+            status = view.current_state(reference,cutoff,purpose=SIMULATION_MODE)
+            self.binding_status[key] = status.kind.value
+            if status.kind==CurrentKind.INACTIVE:
+                self.results[key] = RuleResult(NO,"BOUND_FAMILY_TERMINAL")
+                self.transition(cutoff,"INVALIDATED","BOUND_FAMILY_TERMINAL")
+                return False
+            if status.kind!=CurrentKind.ACTIVE or cutoff-view.records[status.revision].available>rule.evidence.max_age_seconds:
+                self.results[key] = RuleResult(UNKNOWN,status.reason if status.kind!=CurrentKind.ACTIVE else "BOUND_EVIDENCE_STALE")
+                self.transition(cutoff,"INSUFFICIENT_EVIDENCE","BOUND_CURRENT_EVIDENCE_UNKNOWN")
+                return False
+            self.results[key] = binding
+        return True
 
     def at(self, cutoff):
         if any(lane.at(cutoff)["status"]!="COMPLETE" for lane in self.evidence.coverage.values()):
@@ -355,6 +425,9 @@ class EvaluationMachine:
                 self.transition(cutoff,"INVALIDATED" if context==NO else "INSUFFICIENT_EVIDENCE",
                                 "CONTINUOUS_CONTEXT_FAILED")
                 return
+
+        if not self.pinned_current_guard(cutoff):
+            return
 
         setup = self.phase("setup",cutoff,self.context_at) if self.setup_at is None else YES
         if setup==YES and self.setup_at is None:
@@ -409,23 +482,58 @@ class EvaluationMachine:
                 "risk_policy_fingerprint":fingerprint(self.definition.risk.model_dump(mode="json")),
                 "management_policy_fingerprint":fingerprint(self.definition.management.model_dump(mode="json"))}
 
-    def run(self, cutoff):
-        pending = list(self.evidence.timeline)
+    def expire_during_uncertainty(self, cutoff):
+        if self.state != "INSUFFICIENT_EVIDENCE" or self.definition.expiry.unit != "SECONDS":
+            return
+        origin = self.context_at if self.definition.attempt.expiry_origin=="CONTEXT_ACTIVATION" else self.setup_at
+        if expiry_status(self.definition.expiry,origin,cutoff,traded_role=self.role)==YES:
+            self.expiry = YES
+            self.transition(cutoff,"EXPIRED","SETUP_EXPIRY_DURING_UNCERTAINTY")
+
+    def boundaries(self, cutoff):
+        points = {stamp for stamp in self.evidence.timeline if stamp<=cutoff} | {cutoff}
+        for view in {view.snapshot:view for view in self.evidence.views.values()}.values():
+            for family in view.smt_uncertainty.values():
+                for boundary in family:
+                    for stamp in (boundary.start,boundary.recovered_at):
+                        if stamp is not None and self.start<=stamp<=cutoff:
+                            points.add(stamp)
+        for rule in self.graph.rules.values():
+            view = self.evidence.views[rule.dependency]
+            stamps,_ = self.evidence.events[view.snapshot].get(CATALOG[rule.observation]["category"],((),()))
+            age = rule.evidence.max_age_seconds + 1
+            points.update(stamp+age for stamp in stamps if self.start<=stamp+age<=cutoff)
+            if self.check_budget:
+                self.check_budget()
+            if len(points)>MAX_TIMELINE:
+                raise ResourceLimit("Evaluation boundaries exceed the timeline budget")
+        return points
+
+    def run(self, cutoff, *, probes=()):
+        pending = sorted(self.boundaries(cutoff) | set(probes))
         known = set(pending)
         heapify(pending)
         while pending:
             stamp = heappop(pending)
+            if self.check_budget:
+                self.check_budget()
             self.at(stamp)
+            self.expire_during_uncertainty(stamp)
             if self.state in TERMINAL:
                 break
             origin = self.context_at if self.definition.attempt.expiry_origin=="CONTEXT_ACTIVATION" else self.setup_at
+            if len(known)>MAX_TIMELINE:
+                raise ResourceLimit("Evaluation boundaries exceed the timeline budget")
+            if self.setup_at is not None and stamp<self.setup_at+1<=cutoff and self.setup_at+1 not in known:
+                known.add(self.setup_at+1)
+                heappush(pending,self.setup_at+1)
             if origin is not None and self.definition.expiry.unit=="SECONDS":
                 deadline = origin+self.definition.expiry.count+1
                 if stamp<deadline<=cutoff and deadline not in known:
                     known.add(deadline)
                     heappush(pending,deadline)
         supporting = {f"{result.proof.reference.calculation_snapshot}:{result.proof.reference.event_id}":result.event
-                      for result in self.results.values() if result.proof}
+                      for result in (*self.results.values(),*self.bindings.values()) if result.proof}
         if self.latest_crt:
             ref = self.latest_crt["evidence_reference"]
             supporting[f"{ref['calculation_snapshot']}:{ref['event_id']}"] = self.latest_crt
@@ -438,6 +546,11 @@ class EvaluationMachine:
             "rules":[self.results[key].trace(self.graph.rules[key],self.graph.phases[key])
                      for key in sorted(self.results)],
             "binding_policy_version":2,
+            "attempt_bindings":[{"rule":key,"alias":self.graph.rules[key].alias,
+                                  "family":value.proof.family,"activated_at":value.selected_at,
+                                  "validity":self.binding_status.get(key),"evidence_state":self.graph.rules[key].evidence.state,
+                                  "reference":value.proof.reference.model_dump(mode="json",exclude_none=True)}
+                                 for key,value in sorted(self.bindings.items())],
             "bound_crt":self.crt_binding.model_dump(mode="json") if self.crt_binding else None,
             "crt_latest_reference":self.latest_crt["evidence_reference"] if self.latest_crt else None,
             "producers":[{"dependency":key,"calculation_id":view.calculation_id,"snapshot":view.snapshot}
@@ -446,5 +559,5 @@ class EvaluationMachine:
             "temporal":[{"before":key[0],"after":key[1],"relation":key[2],"outcome":value[0],"reason":value[1]}
                         for key,value in sorted(self.temporal.items())],
             "supporting_events":supporting,"entry_intent":self.intent(),
-            "resource_counts":{**self.evidence.metrics,"candidate_scans":self.scans,"exact_lookups":self.lookups},
+            "resource_counts":{**self.evidence.metrics,"candidate_scans":self.scans,"exact_lookups":self.lookups,"timeline_boundaries":len(known)},
         }

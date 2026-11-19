@@ -22,7 +22,7 @@ from .storage import read_partition
 from .strategy_definitions import Contract, Digest
 from .strategy_evidence import fingerprint
 
-EVALUATOR_VERSION = 1
+EVALUATOR_VERSION = 2
 MAX_TIMELINE = 4096
 MAX_SELECTION_SLOTS = 6000
 MAX_PUBLICATIONS = 16_000
@@ -37,7 +37,7 @@ VIEW_KIND = {
 
 
 class EvaluationInput(Contract):
-    evaluator_version: Literal[1]
+    evaluator_version: Literal[2]
     strategy_id: str = Field(pattern=r"^ST-[a-f0-9]{32}$")
     strategy_version_id: str = Field(pattern=r"^SV-[a-f0-9]{32}$")
     configuration_fingerprint: Digest
@@ -206,12 +206,14 @@ def indicator_request(feed, cutoff, spec):
                       cutoff=cutoff,frozen=True,load_reference=True,indicators=[spec],candles=[])
 
 
-def collect(definition, selection, cutoff, evaluation_start):
+def collect(definition, selection, cutoff, evaluation_start, *, check_budget=None):
     feeds = {key:FrozenFeed.model_validate(feed) for key,feed in selection["series"].items()}
     coordinator = StrategyCoordinator(indicator_request(next(iter(feeds.values())),cutoff,
                                                          IndicatorSpec(id="market_structure")))
     coverage = {}
     for key,feed in feeds.items():
+        if check_budget:
+            check_budget()
         for partition in feed.partitions:
             stored = one("SELECT * FROM datasets WHERE id=?",(partition.id,))
             actual = tuple(stored[name] for name in ("provider","feed_id","symbol","kind","timeframe","price_basis","sha256")) if stored else None
@@ -244,6 +246,8 @@ def collect(definition, selection, cutoff, evaluation_start):
     by_id = {dep.id:dep for dep in definition.indicators}
     computed = {}
     for dep in producer_order(definition.indicators):
+        if check_budget:
+            check_budget()
         keys = ([f"PRIMARY:{dep.timeframe}",f"COMPARISON:{dep.timeframe}"] if dep.role=="PAIR" else
                 [f"{dep.role}:{dep.timeframe}"])
         settings = dep.settings

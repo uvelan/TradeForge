@@ -8,6 +8,8 @@ from typing import NotRequired, TypedDict
 from .arrival_policy import (RECORDED_AUTHORITY, RECORDED_MODE, SIMULATION_AUTHORITY, SIMULATION_ELIGIBLE,
                              SIMULATION_MODE)
 
+from .strategy_current_state import CurrentKind, CurrentState, decisively_terminal
+
 VERSION = 3
 REFERENCE_VERSION = 1
 SOURCE_FIELDS = ("source", "symbol", "timeframe", "feed_id", "price_basis", "dataset_id")
@@ -97,6 +99,7 @@ class EvidenceRegistry:
         self.event_sink = event_sink if root is None else root.event_sink
         self.records = {}
         self.current = defaultdict(list)
+        self.current_revisions = defaultdict(list)
         self.counts = Counter() if root is None else root.counts
         self.gaps = defaultdict(list)
         self.producer_snapshots = {}
@@ -387,6 +390,50 @@ class EvidenceRegistry:
             self.smt_lifecycle[family].append((available, event_id))
         if family is not None and category != "smt_match" and (category != "smt" or attested):
             insort_right(self.current[family],(available,event_id if active and attested else None),key=lambda item:item[0])
+
+        if self.event_sink is not None and family is not None and category != "smt_match":
+            key = (category,config,source,family)
+            latest = decisively_terminal(category,state,event.get("reason"),
+                direct=direct,compatible=compatible,eligible=eligible,attested=attested)
+            if self.reserve is not None:
+                self.reserve(128)
+            insort_right(self.current_revisions[key],
+                         (available,event_id,active and eligible,latest,timing.get("eligibility_reason")),
+                         key=lambda row:row[0])
+
+    def current_state(self, reference, cutoff, *, purpose):
+        """Read latest family knowledge without mutating the boolean legacy API."""
+        if purpose != self.purpose:
+            return CurrentState(CurrentKind.UNKNOWN,"PURPOSE_MISMATCH")
+        record = self.resolve(reference)
+        if record is None:
+            return CurrentState(CurrentKind.UNKNOWN,"EXACT_REFERENCE_UNAVAILABLE")
+        producer = self.calculations[reference["calculation_snapshot"]]
+        if self.snapshot is not None and producer is not self:
+            return CurrentState(CurrentKind.UNKNOWN,"CALCULATION_SCOPE_MISMATCH")
+        if producer.cutoff is None or cutoff > producer.cutoff:
+            return CurrentState(CurrentKind.OUTSIDE,"OUTSIDE_EVALUATED_SNAPSHOT")
+        if record.available > cutoff:
+            return CurrentState(CurrentKind.UNKNOWN,"REFERENCE_NOT_YET_AVAILABLE")
+        key = (record.category,record.config,record.scope,record.family)
+        rows = producer.current_revisions.get(key,())
+        index = bisect_right(rows,cutoff,key=lambda row:row[0])-1
+        if index < 0:
+            return CurrentState(CurrentKind.UNKNOWN,"FAMILY_NOT_OBSERVED")
+        stamp,event_id,active,terminal,reason = rows[index]
+        if terminal:
+            return CurrentState(CurrentKind.INACTIVE,producer.records[event_id].state,event_id)
+        gaps = producer.gaps.get(key[:3],())
+        gap = bisect_right(gaps,cutoff)-1
+        if gap >= 0 and gaps[gap] >= stamp:
+            return CurrentState(CurrentKind.UNKNOWN,"PRODUCER_COVERAGE_GAP",event_id)
+        if record.category == "smt":
+            state,reason = producer.smt_state(record.family,cutoff)
+            if state != "SMT_CONFIRMED":
+                return CurrentState(CurrentKind.UNKNOWN,reason or "SMT_LIFECYCLE_UNRESOLVED",event_id)
+        if active:
+            return CurrentState(CurrentKind.ACTIVE,"CANONICAL_ACTIVE_REVISION",event_id)
+        return CurrentState(CurrentKind.UNKNOWN,reason or "CURRENT_REVISION_INELIGIBLE",event_id)
 
     def gap(self, category, config, scope, available):
         source = tuple(scope.get(key) for key in SOURCE_FIELDS)
