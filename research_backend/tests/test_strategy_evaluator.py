@@ -19,7 +19,9 @@ BASE = int(datetime(2020,1,2,10,tzinfo=UTC).timestamp())
 A = BASE+3600
 
 
-def frozen_candles(fixture, symbol, frame, start, bars):
+def frozen_candles(fixture, symbol, frame, start, bars, mirrored=False):
+    if mirrored:
+        bars = [(250-o,250-l,250-h,250-c) for o,h,l,c in bars]
     step = 60 if frame=="M1" else 300
     candles = [dict(time=start+i*step,open=o,high=h,low=l,close=c,volume=0,closed=True)
                for i,(o,h,l,c) in enumerate(bars)]
@@ -29,7 +31,7 @@ def frozen_candles(fixture, symbol, frame, start, bars):
                         partitions=[{"id":part["id"],"sha256":part["sha256"]}]))
 
 
-def seed_fixture():
+def seed_fixture(mirrored=False):
     records = []
     first_hour = [(104,105,103.5,104.5)]*12
     first_hour[3] = (104.5,106,103.5,104.5)
@@ -37,11 +39,11 @@ def seed_fixture():
         (104,105,102.75,104.5),(104.75,105,104,104.8),(104,104.5,103.5,104),
         (103.5,104,102,103.5),(104,104.5,103.5,104),(104,104.5,103.5,104),
     ]
-    frozen_candles(records,"EURUSD","M5",BASE,[(103,105,100,103)]*12+first_hour+second_hour)
-    frozen_candles(records,"GBPUSD","M5",BASE,[(113,115,111,113)]*30)
+    frozen_candles(records,"EURUSD","M5",BASE,[(103,105,100,103)]*12+first_hour+second_hour,mirrored)
+    frozen_candles(records,"GBPUSD","M5",BASE,[(113,115,111,113)]*30,mirrored)
     for symbol,sequence,normal in (("EURUSD",LEFT,11),("GBPUSD",RIGHT,24)):
         values = [normal]*80+sequence+[normal]*(150-80-len(sequence))
-        frozen_candles(records,symbol,"M1",BASE,[(v,v+1,v-1,v) for v in values])
+        frozen_candles(records,symbol,"M1",BASE,[(v,v+1,v-1,v) for v in values],mirrored)
     selection = {"id":"ISOLATED_CANONICAL_FIXTURE","series":records,"start":BASE,"end":BASE+9000}
     selection["fingerprint"] = fingerprint(selection)
     return selection
@@ -55,8 +57,8 @@ def approved_fixture(client,monkeypatch):
     return selection
 
 
-def ready_entry(kind="MARKET",pair=True):
-    data = ready_definition_v2("bearish")
+def ready_entry(kind="MARKET",pair=True,direction="bearish"):
+    data = ready_definition_v2(direction)
     data["instruments"]["calendar"] = {"kind":"continuous"}
     data["expiry"] = {"unit":"SECONDS","count":9000}
     if pair:
@@ -336,3 +338,18 @@ def test_expired_earliest_crt_cannot_block_usable_new_reference(client,approved_
     decision = create(client,request)["decision"]
     assert decision["context_activated_at"]==A+3900
     assert decision["bound_crt"]["evidence"]["reference"]["available_at"]==A+3600
+
+def test_canonical_bullish_pair_qualifies_long_with_own_crt_family(client,monkeypatch):
+    selection = seed_fixture(mirrored=True)
+    monkeypatch.setattr(sources,"selection_catalog",lambda:[selection])
+    initial = create(client,request_body(client,selection,ready_entry(direction="bullish")))
+    assert initial["decision"]["state"]=="WAITING_FOR_TRIGGER"
+    decision = advance(client,initial,A+4800).json()
+    assert decision["state"]=="TRIGGER_QUALIFIED"
+    assert decision["setup_activated_at"]==A+1800
+    assert decision["trigger_activated_at"]==A+4800
+    assert decision["entry_intent"]["direction"]=="LONG"
+    evidence = decision["supporting_events"].values()
+    assert any(row.get("state")=="SMT_CONFIRMED" and row["direction"]=="bullish" for row in evidence)
+    assert any(row.get("state")=="EXPANSION_OBSERVED" and row["range_id"]==decision["bound_crt"]["evidence"]["family"]
+               for row in evidence)

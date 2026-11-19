@@ -13,7 +13,9 @@ type RuleResult = {id:string;phase:string;observation:string;outcome:string;reas
 type Decision = {decision_id:string;attempt_id:string|null;state:string;reason:string;direction:string;cutoff:number;
   context_activated_at:number|null;setup_activated_at:number|null;trigger_activated_at:number|null;persisted?:false;
   invalidation:string;expiry:string;rules:RuleResult[];transitions:[number,string,string][];
-  phase_results:Record<string,string>;bound_crt?:{evidence:{family:string};activated_at:number}|null;
+  phase_results:Record<string,string>;
+  temporal:{before:string;after:string;relation:string;outcome:string;reason:string}[];
+  supporting_events:Record<string,unknown>;bound_crt?:{evidence:{family:string};activated_at:number}|null;
   evaluation:{strategy_version_id:string;configuration_fingerprint:string;purpose:string};
   coverage:{series:string;status:string;expected:number;observed:number;missing:number}[];
   entry_intent?:{status:string;role:string;direction:string;symbol:string;entry:{kind:string;price?:{value:number}};
@@ -93,6 +95,11 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
       encodeURIComponent(ref.calculation_snapshot)+'/'+encodeURIComponent(ref.event_id);
   }
   function inspect(item:RuleResult){
+    if(decision?.persisted===false&&item.evidence_reference){
+      const ref=item.evidence_reference;
+      setTrace(decision.supporting_events[ref.calculation_snapshot+":"+ref.event_id]);
+      return;
+    }
     void execute(async valid=>{const value=await api.get<unknown>(evidencePath(item));if(valid())setTrace(value);});
   }
   function chart(item:RuleResult){
@@ -157,11 +164,15 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
       </tr></thead><tbody>{decision.rules.map(item=><tr key={item.id}>
         <td>{item.phase} · {item.id}<br/>{title(item.observation)}</td><td>{title(item.outcome)}<br/>{title(item.reason)}</td>
         <td>{utc(item.observed_at)}<br/>{utc(item.available_at)}</td>
-        <td>{item.family&&<small>{item.family}</small>}{item.evidence_reference&&decision.persisted!==false&&<>
+        <td>{item.family&&<small>{item.family}</small>}{item.evidence_reference&&<>
           <button type="button" className="small-tool" disabled={busy} onClick={()=>inspect(item)}>Inspect {item.id}</button>
-          {openChart&&<button type="button" className="small-tool" onClick={()=>chart(item)}>Chart {item.id}</button>}
+          {openChart&&decision.persisted!==false&&<button type="button" className="small-tool" onClick={()=>chart(item)}>Chart {item.id}</button>}
         </>}</td></tr>)}</tbody></table></div>
       {trace!=null&&<pre aria-label="Exact evidence" className="strategy-trace">{JSON.stringify(trace,null,2)}</pre>}
+      {decision.temporal.length>0&&<details><summary>Temporal links</summary>
+        <ul>{decision.temporal.map(link=><li key={[link.before,link.after,link.relation].join("-")}>
+          {link.before} → {link.after} · {title(link.relation)} · {title(link.outcome)} · {title(link.reason)}
+        </li>)}</ul></details>}
       <details><summary>Timeline</summary><ol>{decision.transitions.map(([at,state,reason],index)=>
         <li key={at+'-'+index}>{utc(at)} · {title(state)} · {title(reason)}</li>)}</ol></details>
       {decision.entry_intent&&<p><strong>Qualified entry intent</strong> {decision.entry_intent.direction} {decision.entry_intent.symbol}
