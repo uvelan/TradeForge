@@ -25,8 +25,9 @@ import {SimulationEvidence} from './SimulationEvidence';
 import {ChartLink} from './ChartLink';
 import {DrawingToolbox,tools,useDrawingBook,type Drawing} from './Drawings';
 import {PlanHistory} from './PlanHistory';
+import {StrategyBuilder} from './StrategyBuilder';
 
-type Section='overview'|'terminal'|'signals'|'plans'|'ai'|'lab'|'journal'|'data'|'settings';
+type Section='overview'|'terminal'|'signals'|'plans'|'ai'|'lab'|'builder'|'journal'|'data'|'settings';
 const menu:{id:Section;name:string;icon:typeof Activity}[]=[
   {id:'overview',name:'Overview',icon:LayoutDashboard},
   {id:'terminal',name:'Market Terminal',icon:Activity},
@@ -34,6 +35,7 @@ const menu:{id:Section;name:string;icon:typeof Activity}[]=[
   {id:'plans',name:'Trade Planner',icon:Target},
   {id:'ai',name:'AI Review Center',icon:BrainCircuit},
   {id:'lab',name:'Strategy Lab',icon:FlaskConical},
+  {id:'builder',name:'Strategy Builder',icon:FileCheck2},
   {id:'journal',name:'Learning Journal',icon:BookOpen},
   {id:'data',name:'Data Library',icon:Database},
   {id:'settings',name:'Settings',icon:Settings}
@@ -133,6 +135,7 @@ function App(){
       {section==='plans'&&<Planner refresh={refresh} initialLocation={planLocation} onLesson={plan_reference=>journalFrom({plan_reference})} incoming={incomingPlan} onConsume={()=>setIncomingPlan(undefined)} onReview={id=>{setReviewPlan(id);go("ai");}}/>}
       {section==='ai'&&<AIPage refresh={refresh} initialTrade={reviewPlan}/>}
       {section==='lab'&&<StrategyLab/>}
+      {section==='builder'&&<StrategyBuilder/>}
       {section==='journal'&&<Journal refresh={refresh} initialEntry={journalLocation} incoming={journalSignal} initialContext={journalContext}
         clearLink={()=>{setJournalSignal(undefined);setJournalContext(undefined);}}
         openPlan={(id,version)=>{setPlanLocation({id,version});go('plans');}}

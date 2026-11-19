@@ -1,0 +1,62 @@
+{
+  "python": "3.13.14",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "warmups": 3,
+  "iterations": 30,
+  "fixture_max_nodes": 96,
+  "fixture_max_depth": 6,
+  "schema": {
+    "p50_ms": 0.026,
+    "p95_ms": 0.029,
+    "peak_python_bytes": 14504,
+    "response_bytes": null
+  },
+  "nested_validation": {
+    "p50_ms": 0.191,
+    "p95_ms": 0.2,
+    "peak_python_bytes": 36004,
+    "response_bytes": 3541
+  },
+  "max_graph_validation": {
+    "p50_ms": 0.831,
+    "p95_ms": 1.116,
+    "peak_python_bytes": 281484,
+    "response_bytes": 21926
+  },
+  "fingerprint_hash": {
+    "p50_ms": 0.038,
+    "p95_ms": 0.04,
+    "peak_python_bytes": 7936,
+    "response_bytes": 64
+  },
+  "catalog": {
+    "p50_ms": 5.26,
+    "p95_ms": 5.529,
+    "peak_python_bytes": 137425,
+    "response_bytes": 15033
+  },
+  "create": {
+    "p50_ms": 10.642,
+    "p95_ms": 12.451,
+    "peak_python_bytes": 98679,
+    "response_bytes": 3041
+  },
+  "revise": {
+    "p50_ms": 10.815,
+    "p95_ms": 15.156,
+    "peak_python_bytes": 117168,
+    "response_bytes": 3042
+  },
+  "list": {
+    "p50_ms": 6.086,
+    "p95_ms": 8.81,
+    "peak_python_bytes": 117136,
+    "response_bytes": 11552
+  },
+  "history": {
+    "p50_ms": 7.36,
+    "p95_ms": 9.252,
+    "peak_python_bytes": 98702,
+    "response_bytes": 7347
+  }
+}

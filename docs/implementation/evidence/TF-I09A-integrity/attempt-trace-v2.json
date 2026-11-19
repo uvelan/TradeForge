@@ -1,0 +1,467 @@
+{
+  "$defs": {
+    "AttemptBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "strategy_version_id": {
+          "pattern": "^SV-[a-f0-9]{32}$",
+          "title": "Strategy Version Id",
+          "type": "string"
+        },
+        "alias": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+          "title": "Alias",
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/$defs/BoundEvidence"
+        },
+        "activated_at": {
+          "minimum": 0,
+          "title": "Activated At",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "attempt_id",
+        "strategy_version_id",
+        "alias",
+        "evidence",
+        "activated_at"
+      ],
+      "title": "AttemptBinding",
+      "type": "object"
+    },
+    "BoundEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/ExactEvidenceReference"
+        },
+        "family": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Family"
+        },
+        "market_event_id": {
+          "title": "Market Event Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "minimum": 0,
+          "title": "Observed At",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "reference",
+        "family",
+        "market_event_id",
+        "observed_at"
+      ],
+      "title": "BoundEvidence",
+      "type": "object"
+    },
+    "ConditionTrace": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "outcome": {
+          "$ref": "#/$defs/Outcome"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/ExactEvidenceReference"
+          },
+          "maxItems": 24,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "outcome",
+        "evidence",
+        "reasons"
+      ],
+      "title": "ConditionTrace",
+      "type": "object"
+    },
+    "ExactEvidenceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "category": {
+          "maxLength": 50,
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "event_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "calculation_id": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Calculation Id",
+          "type": "string"
+        },
+        "calculation_snapshot": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Calculation Snapshot",
+          "type": "string"
+        },
+        "configuration": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Configuration",
+          "type": "string"
+        },
+        "source": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "title": "Source",
+          "type": "array"
+        },
+        "available_at": {
+          "minimum": 0,
+          "title": "Available At",
+          "type": "integer"
+        },
+        "source_authority": {
+          "title": "Source Authority",
+          "type": "string"
+        },
+        "availability_mode": {
+          "enum": [
+            "HISTORICAL_SIMULATION",
+            "STRICT_RECORDED"
+          ],
+          "title": "Availability Mode",
+          "type": "string"
+        },
+        "participants": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array"
+              },
+              "propertyNames": {
+                "enum": [
+                  "primary",
+                  "comparison"
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Participants"
+        }
+      },
+      "required": [
+        "version",
+        "category",
+        "event_id",
+        "calculation_id",
+        "calculation_snapshot",
+        "configuration",
+        "source",
+        "available_at",
+        "source_authority",
+        "availability_mode"
+      ],
+      "title": "ExactEvidenceReference",
+      "type": "object"
+    },
+    "Outcome": {
+      "enum": [
+        "SATISFIED",
+        "NOT_SATISFIED",
+        "UNKNOWN"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "PinnedProducer": {
+      "additionalProperties": false,
+      "properties": {
+        "dependency": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+          "title": "Dependency",
+          "type": "string"
+        },
+        "calculation_id": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Calculation Id",
+          "type": "string"
+        },
+        "calculation_snapshot": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Calculation Snapshot",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dependency",
+        "calculation_id",
+        "calculation_snapshot"
+      ],
+      "title": "PinnedProducer",
+      "type": "object"
+    },
+    "StrategyEvaluationReference": {
+      "additionalProperties": false,
+      "properties": {
+        "strategy_id": {
+          "pattern": "^ST-[a-f0-9]{32}$",
+          "title": "Strategy Id",
+          "type": "string"
+        },
+        "strategy_version_id": {
+          "pattern": "^SV-[a-f0-9]{32}$",
+          "title": "Strategy Version Id",
+          "type": "string"
+        },
+        "configuration_fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Configuration Fingerprint",
+          "type": "string"
+        },
+        "purpose": {
+          "enum": [
+            "HISTORICAL_SIMULATION",
+            "STRICT_RECORDED"
+          ],
+          "title": "Purpose",
+          "type": "string"
+        },
+        "cutoff_utc": {
+          "minimum": 0,
+          "title": "Cutoff Utc",
+          "type": "integer"
+        },
+        "frozen_selection_fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Frozen Selection Fingerprint",
+          "type": "string"
+        }
+      },
+      "required": [
+        "strategy_id",
+        "strategy_version_id",
+        "configuration_fingerprint",
+        "purpose",
+        "cutoff_utc",
+        "frozen_selection_fingerprint"
+      ],
+      "title": "StrategyEvaluationReference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "evaluation": {
+      "$ref": "#/$defs/StrategyEvaluationReference"
+    },
+    "state": {
+      "enum": [
+        "WAITING_FOR_CONTEXT",
+        "WAITING_FOR_SETUP",
+        "SETUP_OBSERVED",
+        "WAITING_FOR_TRIGGER",
+        "TRIGGER_QUALIFIED",
+        "INVALIDATED",
+        "EXPIRED",
+        "NO_TRADE",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "conditions": {
+      "items": {
+        "$ref": "#/$defs/ConditionTrace"
+      },
+      "maxItems": 96,
+      "title": "Conditions",
+      "type": "array"
+    },
+    "missing_evidence": {
+      "items": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+        "type": "string"
+      },
+      "maxItems": 96,
+      "title": "Missing Evidence",
+      "type": "array"
+    },
+    "rejection_reasons": {
+      "items": {
+        "maxLength": 120,
+        "type": "string"
+      },
+      "maxItems": 24,
+      "title": "Rejection Reasons",
+      "type": "array"
+    },
+    "invalidation": {
+      "$ref": "#/$defs/Outcome"
+    },
+    "expiry": {
+      "$ref": "#/$defs/Outcome"
+    },
+    "contract_version": {
+      "const": 2,
+      "title": "Contract Version",
+      "type": "integer"
+    },
+    "attempt_id": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "traded_role": {
+      "enum": [
+        "PRIMARY",
+        "COMPARISON"
+      ],
+      "title": "Traded Role",
+      "type": "string"
+    },
+    "direction": {
+      "enum": [
+        "LONG",
+        "SHORT"
+      ],
+      "title": "Direction",
+      "type": "string"
+    },
+    "producers": {
+      "items": {
+        "$ref": "#/$defs/PinnedProducer"
+      },
+      "maxItems": 24,
+      "title": "Producers",
+      "type": "array"
+    },
+    "bindings": {
+      "items": {
+        "$ref": "#/$defs/AttemptBinding"
+      },
+      "maxItems": 96,
+      "title": "Bindings",
+      "type": "array"
+    },
+    "context_activated_at": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Context Activated At"
+    },
+    "setup_activated_at": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Setup Activated At"
+    },
+    "trigger_activated_at": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Trigger Activated At"
+    }
+  },
+  "required": [
+    "evaluation",
+    "state",
+    "conditions",
+    "missing_evidence",
+    "rejection_reasons",
+    "invalidation",
+    "expiry",
+    "contract_version",
+    "attempt_id",
+    "traded_role",
+    "direction",
+    "producers",
+    "bindings",
+    "context_activated_at",
+    "setup_activated_at",
+    "trigger_activated_at"
+  ],
+  "title": "AttemptDecisionTrace",
+  "type": "object"
+}

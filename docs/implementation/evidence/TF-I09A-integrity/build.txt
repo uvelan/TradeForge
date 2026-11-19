@@ -1,0 +1,36 @@
+
+> build
+> tsc --noEmit && vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 3011 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/catalog.html                    0.45 kB │ gzip:   0.31 kB
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/private-theming/useTheme/useTheme.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/private-theming/useTheme/useTheme.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/private-theming/useTheme/ThemeContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/private-theming/useTheme/ThemeContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+✓ built in 6.20s
+Exit code: 0

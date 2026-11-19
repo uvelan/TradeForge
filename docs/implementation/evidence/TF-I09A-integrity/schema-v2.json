@@ -1,0 +1,1258 @@
+{
+  "$defs": {
+    "AttemptPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "context_mode": {
+          "enum": [
+            "LATCHED",
+            "CONTINUOUS"
+          ],
+          "title": "Context Mode",
+          "type": "string"
+        },
+        "candidate_limit": {
+          "maximum": 128,
+          "minimum": 1,
+          "title": "Candidate Limit",
+          "type": "integer"
+        },
+        "expiry_origin": {
+          "enum": [
+            "CONTEXT_ACTIVATION",
+            "SETUP_ACTIVATION"
+          ],
+          "title": "Expiry Origin",
+          "type": "string"
+        },
+        "crt_reference_alias": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Crt Reference Alias"
+        }
+      },
+      "required": [
+        "context_mode",
+        "candidate_limit",
+        "expiry_origin"
+      ],
+      "title": "AttemptPolicy",
+      "type": "object"
+    },
+    "BoundGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "GROUP",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "operator": {
+          "enum": [
+            "ALL",
+            "ANY",
+            "NOT",
+            "SEQUENCE"
+          ],
+          "title": "Operator",
+          "type": "string"
+        },
+        "children": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "GROUP": "#/$defs/BoundGroup",
+                "RULE": "#/$defs/BoundRule"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/BoundRule"
+              },
+              {
+                "$ref": "#/$defs/BoundGroup"
+              }
+            ]
+          },
+          "maxItems": 24,
+          "minItems": 1,
+          "title": "Children",
+          "type": "array"
+        },
+        "unknown_policy": {
+          "anyOf": [
+            {
+              "const": "PROPAGATE",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unknown Policy"
+        },
+        "within": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TimeBound"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "operator",
+        "children"
+      ],
+      "title": "BoundGroup",
+      "type": "object"
+    },
+    "BoundRule": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "RULE",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "dependency": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+          "title": "Dependency",
+          "type": "string"
+        },
+        "observation": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+          "title": "Observation",
+          "type": "string"
+        },
+        "operator": {
+          "enum": [
+            "EQ",
+            "LT",
+            "LTE",
+            "GT",
+            "GTE"
+          ],
+          "title": "Operator",
+          "type": "string"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Expected"
+        },
+        "evidence": {
+          "$ref": "#/$defs/EvidenceRequirement"
+        },
+        "selection": {
+          "anyOf": [
+            {
+              "enum": [
+                "EARLIEST_ELIGIBLE",
+                "LATEST_ELIGIBLE",
+                "BOUND_FAMILY"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Selection"
+        },
+        "alias": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Alias"
+        },
+        "same_family_as": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Same Family As"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "dependency",
+        "observation",
+        "operator",
+        "expected",
+        "evidence"
+      ],
+      "title": "BoundRule",
+      "type": "object"
+    },
+    "EvidenceRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": [
+            "HISTORICAL",
+            "CURRENT"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "purpose": {
+          "enum": [
+            "HISTORICAL_SIMULATION",
+            "STRICT_RECORDED"
+          ],
+          "title": "Purpose",
+          "type": "string"
+        },
+        "max_age_seconds": {
+          "maximum": 86400,
+          "minimum": 1,
+          "title": "Max Age Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "state",
+        "purpose",
+        "max_age_seconds"
+      ],
+      "title": "EvidenceRequirement",
+      "type": "object"
+    },
+    "ExecutionCosts": {
+      "additionalProperties": false,
+      "properties": {
+        "price_basis": {
+          "anyOf": [
+            {
+              "enum": [
+                "BID",
+                "ASK",
+                "LAST_TRADE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Price Basis"
+        },
+        "spread_bps": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Spread Bps"
+        },
+        "slippage_bps": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Slippage Bps"
+        },
+        "commission_bps": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Commission Bps"
+        },
+        "intrabar": {
+          "anyOf": [
+            {
+              "enum": [
+                "REJECT_AMBIGUOUS",
+                "ADVERSE_FIRST"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Intrabar"
+        }
+      },
+      "title": "ExecutionCosts",
+      "type": "object"
+    },
+    "Exposure": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "enum": [
+            "PRIMARY",
+            "COMPARISON"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "max_risk_percent": {
+          "exclusiveMinimum": 0,
+          "maximum": 100,
+          "title": "Max Risk Percent",
+          "type": "number"
+        }
+      },
+      "required": [
+        "role",
+        "max_risk_percent"
+      ],
+      "title": "Exposure",
+      "type": "object"
+    },
+    "FixedPrice": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "FIXED_ABSOLUTE",
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000000,
+          "title": "Value",
+          "type": "number"
+        },
+        "basis": {
+          "enum": [
+            "BID",
+            "ASK",
+            "LAST_TRADE"
+          ],
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value",
+        "basis"
+      ],
+      "title": "FixedPrice",
+      "type": "object"
+    },
+    "IndicatorDependency": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "indicator": {
+          "enum": [
+            "CRT",
+            "SMT",
+            "STRUCTURE",
+            "LIQUIDITY",
+            "FVG",
+            "ORDER_BLOCK"
+          ],
+          "title": "Indicator",
+          "type": "string"
+        },
+        "algorithm_version": {
+          "title": "Algorithm Version",
+          "type": "integer"
+        },
+        "role": {
+          "enum": [
+            "PRIMARY",
+            "COMPARISON",
+            "PAIR"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "timeframe": {
+          "enum": [
+            "M1",
+            "M5"
+          ],
+          "title": "Timeframe",
+          "type": "string"
+        },
+        "settings": {
+          "maxProperties": 24,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]{0,39}$": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "title": "Settings",
+          "type": "object"
+        },
+        "producers": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+            "type": "string"
+          },
+          "maxItems": 4,
+          "title": "Producers",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "indicator",
+        "algorithm_version",
+        "role",
+        "timeframe"
+      ],
+      "title": "IndicatorDependency",
+      "type": "object"
+    },
+    "InstrumentBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "symbol": {
+          "enum": [
+            "EURUSD",
+            "GBPUSD"
+          ],
+          "title": "Symbol",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "DUKASCOPY_SAVED",
+            "MT5_SAVED"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "price_basis": {
+          "enum": [
+            "BID",
+            "ASK",
+            "LAST_TRADE"
+          ],
+          "title": "Price Basis",
+          "type": "string"
+        },
+        "modeled_delay_seconds": {
+          "maximum": 86400,
+          "minimum": 0,
+          "title": "Modeled Delay Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "symbol",
+        "source",
+        "price_basis",
+        "modeled_delay_seconds"
+      ],
+      "title": "InstrumentBinding",
+      "type": "object"
+    },
+    "InstrumentBindings": {
+      "additionalProperties": false,
+      "properties": {
+        "primary": {
+          "$ref": "#/$defs/InstrumentBinding"
+        },
+        "comparison": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InstrumentBinding"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "calendar": {
+          "$ref": "#/$defs/StrategyCalendar"
+        },
+        "data_selection": {
+          "const": "FROZEN_VERIFIED_PARTITIONS",
+          "default": "FROZEN_VERIFIED_PARTITIONS",
+          "title": "Data Selection",
+          "type": "string"
+        }
+      },
+      "required": [
+        "primary",
+        "calendar"
+      ],
+      "title": "InstrumentBindings",
+      "type": "object"
+    },
+    "LimitEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "LIMIT",
+          "title": "Kind",
+          "type": "string"
+        },
+        "price": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FixedPrice"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "LimitEntry",
+      "type": "object"
+    },
+    "ManagementPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "initial_stop": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stop"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Target"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "break_even_at_r": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 1000,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Break Even At R"
+        },
+        "partial_exit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PartialExit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "trailing_pips": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 1000,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trailing Pips"
+        },
+        "time_exit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TimeBound"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "ManagementPolicy",
+      "type": "object"
+    },
+    "MarketEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "MARKET",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "MarketEntry",
+      "type": "object"
+    },
+    "PartialExit": {
+      "additionalProperties": false,
+      "properties": {
+        "at_r": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000,
+          "title": "At R",
+          "type": "number"
+        },
+        "percent": {
+          "exclusiveMaximum": 100,
+          "exclusiveMinimum": 0,
+          "title": "Percent",
+          "type": "number"
+        }
+      },
+      "required": [
+        "at_r",
+        "percent"
+      ],
+      "title": "PartialExit",
+      "type": "object"
+    },
+    "RiskPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "account_risk_pct": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 2,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Account Risk Pct"
+        },
+        "max_simultaneous_exposure_pct": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Simultaneous Exposure Pct"
+        },
+        "max_session_loss_pct": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Session Loss Pct"
+        },
+        "min_reward_risk": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 1000,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Reward Risk"
+        },
+        "instrument_limits": {
+          "items": {
+            "$ref": "#/$defs/Exposure"
+          },
+          "maxItems": 2,
+          "title": "Instrument Limits",
+          "type": "array"
+        }
+      },
+      "title": "RiskPolicy",
+      "type": "object"
+    },
+    "Stop": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "FIXED_PIPS",
+          "title": "Kind",
+          "type": "string"
+        },
+        "distance": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000,
+          "title": "Distance",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "distance"
+      ],
+      "title": "Stop",
+      "type": "object"
+    },
+    "StopEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "STOP",
+          "title": "Kind",
+          "type": "string"
+        },
+        "price": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FixedPrice"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "StopEntry",
+      "type": "object"
+    },
+    "StrategyCalendar": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "continuous",
+            "forex_weekly",
+            "unknown"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "timezone": {
+          "default": "America/New_York",
+          "maxLength": 64,
+          "title": "Timezone",
+          "type": "string"
+        },
+        "sunday_open": {
+          "default": "17:00",
+          "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+          "title": "Sunday Open",
+          "type": "string"
+        },
+        "friday_close": {
+          "default": "17:00",
+          "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+          "title": "Friday Close",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "StrategyCalendar",
+      "type": "object"
+    },
+    "Target": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "REWARD_MULTIPLE",
+          "title": "Kind",
+          "type": "string"
+        },
+        "multiple": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000,
+          "title": "Multiple",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "multiple"
+      ],
+      "title": "Target",
+      "type": "object"
+    },
+    "TemporalLink": {
+      "additionalProperties": false,
+      "properties": {
+        "first": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+          "title": "First",
+          "type": "string"
+        },
+        "then": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$",
+          "title": "Then",
+          "type": "string"
+        },
+        "relation": {
+          "enum": [
+            "AFTER",
+            "BEFORE",
+            "WITHIN_AFTER"
+          ],
+          "title": "Relation",
+          "type": "string"
+        },
+        "within": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TimeBound"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "first",
+        "then",
+        "relation"
+      ],
+      "title": "TemporalLink",
+      "type": "object"
+    },
+    "TimeBound": {
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "enum": [
+            "SECONDS",
+            "ELIGIBLE_BARS"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "count": {
+          "maximum": 86400,
+          "minimum": 1,
+          "title": "Count",
+          "type": "integer"
+        },
+        "timeframe": {
+          "anyOf": [
+            {
+              "enum": [
+                "M1",
+                "M5"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeframe"
+        }
+      },
+      "required": [
+        "unit",
+        "count"
+      ],
+      "title": "TimeBound",
+      "type": "object"
+    },
+    "TimeframeBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "enum": [
+            "M1",
+            "M5"
+          ],
+          "title": "Context",
+          "type": "string"
+        },
+        "trigger": {
+          "enum": [
+            "M1",
+            "M5"
+          ],
+          "title": "Trigger",
+          "type": "string"
+        }
+      },
+      "required": [
+        "context",
+        "trigger"
+      ],
+      "title": "TimeframeBinding",
+      "type": "object"
+    },
+    "TradeIntent": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "anyOf": [
+            {
+              "enum": [
+                "PRIMARY",
+                "COMPARISON"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "enum": [
+                "LONG",
+                "SHORT"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Direction"
+        },
+        "entry": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "LIMIT": "#/$defs/LimitEntry",
+                  "MARKET": "#/$defs/MarketEntry",
+                  "STOP": "#/$defs/StopEntry"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/MarketEntry"
+                },
+                {
+                  "$ref": "#/$defs/LimitEntry"
+                },
+                {
+                  "$ref": "#/$defs/StopEntry"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Entry"
+        },
+        "earliest": {
+          "anyOf": [
+            {
+              "const": "AFTER_CAUSAL_AVAILABILITY",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Earliest"
+        },
+        "expiry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TimeBound"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "TradeIntent",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 2,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "defaults_policy": {
+      "const": "STRATEGY_DEFAULTS_V2",
+      "title": "Defaults Policy",
+      "type": "string"
+    },
+    "name": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Description",
+      "type": "string"
+    },
+    "status": {
+      "default": "DRAFT",
+      "enum": [
+        "DRAFT",
+        "READY_FOR_EVALUATION"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "availability_modes": {
+      "items": {
+        "enum": [
+          "HISTORICAL_SIMULATION",
+          "STRICT_RECORDED"
+        ],
+        "type": "string"
+      },
+      "maxItems": 1,
+      "minItems": 1,
+      "title": "Availability Modes",
+      "type": "array"
+    },
+    "instruments": {
+      "$ref": "#/$defs/InstrumentBindings"
+    },
+    "timeframes": {
+      "$ref": "#/$defs/TimeframeBinding"
+    },
+    "indicators": {
+      "items": {
+        "$ref": "#/$defs/IndicatorDependency"
+      },
+      "maxItems": 24,
+      "title": "Indicators",
+      "type": "array"
+    },
+    "context": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BoundGroup"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "setup": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BoundGroup"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "trigger": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BoundGroup"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "invalidation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BoundGroup"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "temporal": {
+      "items": {
+        "$ref": "#/$defs/TemporalLink"
+      },
+      "maxItems": 96,
+      "title": "Temporal",
+      "type": "array"
+    },
+    "expiry": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TimeBound"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "risk": {
+      "$ref": "#/$defs/RiskPolicy"
+    },
+    "execution": {
+      "$ref": "#/$defs/ExecutionCosts"
+    },
+    "management": {
+      "$ref": "#/$defs/ManagementPolicy"
+    },
+    "trade_intent": {
+      "$ref": "#/$defs/TradeIntent"
+    },
+    "attempt": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AttemptPolicy"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "schema_version",
+    "defaults_policy",
+    "name",
+    "availability_modes",
+    "instruments",
+    "timeframes",
+    "indicators"
+  ],
+  "title": "StrategyDefinitionV2",
+  "type": "object"
+}

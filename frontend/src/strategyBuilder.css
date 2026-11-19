@@ -1,0 +1,23 @@
+ .strategy-builder { display: grid; gap: 1rem; max-width: 1180px; margin-inline: auto; }
+.strategy-block { display: grid; gap: .8rem; padding: 1rem; }
+.strategy-block h2, .strategy-block h3, .strategy-block p { margin-block: 0; }
+.strategy-heading, .strategy-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.strategy-heading { justify-content: space-between; }
+.strategy-fields { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,12rem),1fr)); gap: .75rem; align-items: end; }
+.strategy-builder label { display: grid; gap: .3rem; min-width: 0; }
+.strategy-builder input:not([type=checkbox]), .strategy-builder textarea, .strategy-builder select { width: 100%; min-width: 0; }
+.strategy-builder label:has(input[type=checkbox]) { grid-template-columns: 1fr auto; align-items: center; }
+.strategy-edit-fields, .strategy-group, .strategy-subgroup { min-width: 0; display: grid; gap: .75rem; }
+.strategy-edit-fields { border: 0; padding: 0; }
+.strategy-group, .strategy-subgroup { border: 1px solid var(--line, #34465b); border-radius: .5rem; padding: .8rem; }
+.strategy-subgroup[open] > :not(summary) { margin-top: .65rem; }
+.strategy-node { display: grid; gap: .6rem; padding: .65rem; border-inline-start: 2px solid #418c89; }
+.strategy-library, .strategy-history { margin: 0; padding-inline-start: 1.4rem; }
+.strategy-library li + li, .strategy-history li + li { margin-block-start: .5rem; }
+.strategy-library span { display: inline-block; margin-inline-start: .7rem; }
+.strategy-builder code, .strategy-builder td { overflow-wrap: anywhere; }
+.strategy-policies { display: grid; gap: .75rem; }
+@media (max-width: 600px) {
+  .strategy-block { padding: .7rem; }
+  .strategy-group, .strategy-node { padding-inline: .45rem; }
+}

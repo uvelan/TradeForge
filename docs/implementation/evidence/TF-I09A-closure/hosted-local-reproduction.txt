@@ -1,0 +1,45 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+__________ test_strict_smt_cannot_mix_direction_and_leader_families ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000244122A2060>
+
+    def test_strict_smt_cannot_mix_direction_and_leader_families(monkeypatch):
+        views=[]
+        class RecordingCoordinator(smt_causal.AnalysisCoordinator):
+            def evidence_for(self, engine, *args, **kwargs):
+                result=super().evidence_for(engine,*args,**kwargs)
+                if engine=="smt":
+                    views.append(result)
+                return result
+        monkeypatch.setattr(smt_causal,"AnalysisCoordinator",RecordingCoordinator)
+        primary=LEFT+[11]*5+RIGHT
+        comparison=RIGHT+[24]*5+LEFT
+>       payload=archive(bars(primary),bars(comparison),end=len(primary)*60)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+research_backend\tests\test_strategy_binding_closure.py:203:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+research_backend\tests\test_smt_causal.py:31: in archive
+    sealed = trusted_archive(sequence,provider="DUKASCOPY",feed=f"clock-{symbol}",symbol=symbol,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+records = [{'time': 0, 'available_at': 60, 'availability_policy': 'SERVER_RECORDED_ARRIVAL_V2', 'closed': True, ...}, {'time': 6.....}, {'time': 300, 'available_at': 360, 'availability_policy': 'SERVER_RECORDED_ARRIVAL_V2', 'closed': True, ...}, ...]
+provider = 'DUKASCOPY', feed = 'clock-EURUSD', symbol = 'EURUSD'
+timeframe = 'M1', start = 0, end = 1740, cutoff = 5340
+calendar = MarketSchedule(kind='continuous', timezone='America/New_York', sunday_open='17:00', friday_close='17:00')
+
+    def trusted_archive(records, *, provider, feed, symbol, timeframe, start, end, cutoff=None, calendar=None):
+        calendar = MarketSchedule.model_validate(calendar or {"kind":"continuous"})
+        session = uuid4().hex
+        step = FRAME_MIN[timeframe]*60
+        scope = {"provider":provider,"feed_id":feed,"symbol":symbol,"timeframe":timeframe,"price_basis":"BID"}
+        with transaction() as db:
+>           db.execute("INSERT INTO arrival_sessions VALUES(?,?,?,?,?,?,?)",
+                       (session,provider,symbol,timeframe,RECORDED_ARRIVAL,start*1000,canonical(calendar.model_dump())))
+E           sqlite3.OperationalError: no such table: arrival_sessions
+
+research_backend\tests\arrival_fixtures.py:17: OperationalError
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_strategy_binding_closure.py::test_strict_smt_cannot_mix_direction_and_leader_families
+1 failed in 0.53s
