@@ -10,7 +10,10 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
 
-from .arrival_policy import CLOCK_POLICY, RECORDED_ARRIVAL, RECORDED_MODE, to_seconds
+from .arrival_policy import (
+    AGGREGATION_POLICY, CLOCK_POLICY, PUBLICATION_POLICY, RECORDED_ARRIVAL, RECORDED_MODE,
+    UNKNOWN_TIMESTAMP_DOMAIN, VERIFIED_UTC, to_seconds,
+)
 from .db import rows, transaction
 from .indicator_coverage import MarketSchedule, open_intervals
 from .indicators import Bar
@@ -20,7 +23,6 @@ from .storage import write_partition
 LEASE_MS = 90_000
 LOOKBACK = 32
 MAX_SCOPES = 8
-AGGREGATION_POLICY = "RECORDED_M1_TO_M5_V1"
 SCOPE_FIELDS = ("provider", "feed_id", "symbol", "timeframe", "price_basis")
 
 
@@ -64,6 +66,10 @@ class CaptureClock:
         self.anchor = wall, mono
         return wall//1_000_000, (mono-self.origin)//1_000_000
 
+    def sample_receipt(self):
+        self.sample()
+        return (self.anchor[0] + 999_999) // 1_000_000
+
 
 @dataclass(slots=True)
 class Worker:
@@ -78,10 +84,12 @@ class Worker:
     warning: str | None = None
 
 
-def claim(config, started):
+def claim(config, clock):
+    clock.sample()
     sessions = {symbol: uuid4().hex for symbol in config.symbols}
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
+        started, _ = clock.sample()
         db.execute("DELETE FROM arrival_leases WHERE expires_ms<=?", (started,))
         if db.execute("SELECT COUNT(*) FROM arrival_leases").fetchone()[0] + len(sessions) > MAX_SCOPES:
             raise ValueError("Capture scope limit reached")
@@ -94,7 +102,7 @@ def claim(config, started):
                         canonical(config.calendar.model_dump())))
             db.execute("INSERT INTO arrival_leases VALUES(?,?,?,?)",
                        (symbol, config.timeframe, id_, started+LEASE_MS))
-    return sessions
+    return sessions, started
 
 
 def renew(db, session, stamp):
@@ -104,10 +112,13 @@ def renew(db, session, stamp):
         raise ValueError("CAPTURE_LEASE_LOST")
 
 
-def heartbeat(sessions, wall):
+def heartbeat(worker):
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
-        for id_ in sessions:
+        if worker.stop.is_set():
+            return
+        wall, _ = worker.clock.sample()
+        for id_ in worker.sessions.values():
             renew(db,id_,wall)
 
 
@@ -116,7 +127,54 @@ def release(sessions):
         db.executemany("DELETE FROM arrival_leases WHERE session_id=?",[(id_,) for id_ in sessions])
 
 
+def fenced_stamp(db, clock, worker=None, session=None):
+    stamp, _ = clock.sample()
+    if worker is not None:
+        if worker.stop.is_set():
+            raise ValueError("CAPTURE_STOPPED")
+        renew(db, session, stamp)
+    return stamp
+
+
+def publish(pending, clock, witness_session, worker=None, *, guard_aggregate=False):
+    """Witness a completed receipt transaction. An unwitnessed receipt is unavailable."""
+    if not pending:
+        return None
+    with transaction() as db:
+        db.execute("BEGIN IMMEDIATE")
+        prepared = fenced_stamp(db, clock, worker, witness_session)
+        db.executemany("INSERT OR IGNORE INTO arrival_receipts VALUES(?,?)",
+                       [(seq, prepared) for seq in pending])
+    with transaction() as db:
+        db.execute("BEGIN IMMEDIATE")
+        # This sample bounds the prior durable commit, including recovery of an older receipt.
+        fenced = fenced_stamp(db, clock, worker, witness_session)
+        witnessed = clock.sample_receipt()
+        if witnessed < max(prepared, fenced):
+            raise ValueError("CLOCK_DISCONTINUITY")
+        for seq in pending:
+            if db.execute("SELECT 1 FROM arrival_publications WHERE sequence=?", (seq,)).fetchone():
+                continue
+            if guard_aggregate:
+                latest = db.execute("""SELECT MAX(newer.sequence)
+                    FROM arrival_observations current JOIN arrival_observations newer
+                    USING (provider,feed_id,symbol,timeframe,price_basis,candle_open)
+                    WHERE current.sequence=?""", (seq,)).fetchone()[0]
+                if latest != seq:
+                    raise ValueError("STALE_OR_INCOMPARABLE_AGGREGATE_SOURCE")
+            receipt = db.execute("SELECT persisted_ms FROM arrival_receipts WHERE sequence=?", (seq,)).fetchone()
+            if receipt["persisted_ms"] > witnessed:
+                raise ValueError("CLOCK_PRECEDES_PRIOR_OBSERVATION")
+            db.execute("INSERT OR IGNORE INTO arrival_publications VALUES(?,?,?)",
+                       (seq, witnessed, witness_session))
+        if worker is not None:
+            fenced_stamp(db, clock, worker, witness_session)
+    return witnessed
+
+
 def observe(worker, provider, symbol):
+    if worker.stop.is_set():
+        raise ValueError("CAPTURE_STOPPED")
     config = worker.config
     session = worker.sessions[symbol]
     step = FRAME_MIN[config.timeframe]*60
@@ -126,6 +184,10 @@ def observe(worker, provider, symbol):
     raw_feed, basis = metadata.get("feed_id"), metadata.get("price_basis")
     if not isinstance(raw_feed, str) or not raw_feed or basis not in {"BID", "LAST_TRADE"}:
         raise ValueError("UNVERIFIED_FEED_IDENTITY")
+    if worker.stop.is_set():
+        raise ValueError("CAPTURE_STOPPED")
+    if metadata.get("timestamp_policy") != VERIFIED_UTC:
+        raise ValueError(UNKNOWN_TIMESTAMP_DOMAIN)
     feed = "capture-" + sha256(raw_feed.encode()).hexdigest()[:40]
     scope = ("MT5", feed, symbol, config.timeframe, basis)
     prior = worker.scopes.get(symbol, {})
@@ -148,7 +210,8 @@ def observe(worker, provider, symbol):
         if open_intervals(bar.time, bar.time+step, config.calendar) != [(bar.time,bar.time+step)]:
             raise ValueError("PROVIDER_OUTSIDE_CALENDAR")
         content = {**bar.model_dump(), "volume": volume,
-                   "source_observed_ms": raw.get("source_observed_ms")}
+                   "source_observed_ms": raw.get("source_observed_ms"),
+                   "timestamp_policy": VERIFIED_UTC, "raw_provider_time": raw["time"]}
         digest = fingerprint({key: content[key] for key in ("time", "open", "high", "low", "close", "volume")})
         valid.append((bar.time, content, digest))
 
@@ -156,18 +219,21 @@ def observe(worker, provider, symbol):
     writes = duplicates = 0
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
-        renew(db, session, observed)
+        written = fenced_stamp(db, worker.clock, worker, session)
+        if written < observed:
+            raise ValueError("CLOCK_DISCONTINUITY")
         for stamp, content, digest in valid:
-            latest = db.execute("""SELECT o.sequence, o.fingerprint, o.observed_ms, r.persisted_ms
-                FROM arrival_observations o LEFT JOIN arrival_receipts r USING(sequence)
+            latest = db.execute("""SELECT o.sequence, o.fingerprint, o.observed_ms, p.receipt_committed_by_ms
+                FROM arrival_observations o JOIN arrival_sessions s ON s.id=o.session_id
+                LEFT JOIN arrival_publications p USING(sequence)
                 WHERE o.provider=? AND o.feed_id=? AND o.symbol=? AND o.timeframe=? AND o.price_basis=?
-                AND o.candle_open=? ORDER BY o.sequence DESC LIMIT 1""", (*scope,stamp)).fetchone()
+                AND o.candle_open=? AND s.policy=? ORDER BY o.sequence DESC LIMIT 1""", (*scope,stamp,RECORDED_ARRIVAL)).fetchone()
             nominal = stamp+step
             if latest is None and nominal*1000 <= worker.started_ms:
                 continue
-            if latest and observed < max(latest["observed_ms"], latest["persisted_ms"] or 0):
+            if latest and observed < max(latest["observed_ms"], latest["receipt_committed_by_ms"] or 0):
                 raise ValueError("CLOCK_PRECEDES_PRIOR_OBSERVATION")
-            if latest and latest["persisted_ms"] is None:
+            if latest and latest["receipt_committed_by_ms"] is None:
                 pending.append(latest["sequence"])
             if latest and latest["fingerprint"] == digest:
                 duplicates += 1
@@ -179,22 +245,16 @@ def observe(worker, provider, symbol):
                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (session,*scope,stamp,nominal,observed,elapsed,
                 canonical(content),digest,latest["sequence"] if latest else None,recovery)).lastrowid)
             writes += 1
+        fenced_stamp(db, worker.clock, worker, session)
 
-    persisted = None
-    if pending:
-        persisted, _ = worker.clock.sample()
-        with transaction() as db:
-            db.execute("BEGIN IMMEDIATE")
-            renew(db, session, persisted)
-            db.executemany("INSERT OR IGNORE INTO arrival_receipts VALUES(?,?)",
-                           [(sequence, persisted) for sequence in pending])
+    persisted = publish(pending, worker.clock, session, worker)
 
     # Coverage status is bounded to the polling lookback. A separate frozen
     # assessment verifies any larger research window.
     end = observed // (step*1000)*step
     start = max(end-LOOKBACK*step, worker.started_ms//(step*1000)*step)
     present = {item["candle_open"] for item in rows("""SELECT DISTINCT o.candle_open
-        FROM arrival_observations o JOIN arrival_receipts r USING(sequence)
+        FROM arrival_observations o JOIN arrival_publications p USING(sequence)
         WHERE o.provider=? AND o.feed_id=? AND o.symbol=? AND o.timeframe=? AND o.price_basis=?
           AND o.candle_open>=? AND o.candle_open<?""", (*scope,start,end))}
     intervals = open_intervals(start,end,config.calendar)
@@ -204,6 +264,7 @@ def observe(worker, provider, symbol):
                if stamp not in present and (stamp+step)*1000+config.poll_seconds*2000 <= observed]
     return {"state": "DEGRADED" if missing else "RUNNING", "feed_id": feed, "price_basis": basis,
             "last_observed_ms": observed, "last_persisted_ms": persisted or prior.get("last_persisted_ms"),
+            "timestamp_policy": VERIFIED_UTC,
             "last_candle": max(present, default=prior.get("last_candle")),
             "missing_slots": missing, "coverage_start": start, "coverage_end": end,
             "recorded": len(present), "duplicates": duplicates, "writes": writes}
@@ -232,8 +293,7 @@ class CaptureManager:
                     return self.status()
                 raise ValueError("Stop the existing capture session before reconfiguring")
             clock = self.clock_factory()
-            started, _ = clock.sample()
-            sessions = await asyncio.to_thread(claim,config,started)
+            sessions, started = await asyncio.to_thread(claim, config, clock)
             worker = self.worker = Worker(config,sessions,started,clock)
             worker.task = asyncio.create_task(self.run(worker))
             return self.status()
@@ -253,17 +313,21 @@ class CaptureManager:
                     except (ValueError, OSError, sqlite3.Error) as error:
                         worker.scopes[symbol] = {**worker.scopes.get(symbol,{}),"state":"DEGRADED",
                                                  "warning":str(error) if isinstance(error,ValueError) else "STORAGE_UNAVAILABLE"}
+                        if str(error) == "CAPTURE_STOPPED":
+                            return
+                        if str(error) == UNKNOWN_TIMESTAMP_DOMAIN:
+                            worker.scopes[symbol].update(state="BLOCKED", timestamp_policy=UNKNOWN_TIMESTAMP_DOMAIN)
                         if str(error) in {"CLOCK_DISCONTINUITY","CLOCK_PRECEDES_PRIOR_OBSERVATION",
                                           "CAPTURE_LEASE_LOST","FEED_IDENTITY_CHANGED"}:
                             worker.state = "FAILED"
                             return
                 statuses = {state["state"] for state in worker.scopes.values()}
                 worker.state = ("DISCONNECTED" if statuses == {"DISCONNECTED"} else
-                                "RUNNING" if statuses == {"RUNNING"} else "DEGRADED")
+                                "RUNNING" if statuses == {"RUNNING"} else
+                                "BLOCKED" if statuses == {"BLOCKED"} else "DEGRADED")
                 retries = min(retries+1, 3) if "DISCONNECTED" in statuses else 0
                 # Heartbeat is independent of successful broker acquisition.
-                wall, _ = worker.clock.sample()
-                await asyncio.to_thread(heartbeat,tuple(worker.sessions.values()),wall)
+                await asyncio.to_thread(heartbeat, worker)
                 try:
                     await asyncio.wait_for(worker.stop.wait(),timeout=min(30,worker.config.poll_seconds*2**retries))
                 except TimeoutError:
@@ -281,6 +345,7 @@ class CaptureManager:
             if self.worker and self.worker.task and not self.worker.task.done():
                 self.worker.state = "STOPPING"
                 self.worker.stop.set()
+                await asyncio.to_thread(release, tuple(self.worker.sessions.values()))
                 try:
                     await asyncio.wait_for(asyncio.shield(self.worker.task),timeout=5)
                 except TimeoutError:
@@ -288,15 +353,20 @@ class CaptureManager:
             return self.status()
 
 
-def seal(scope, start, end, cutoff, calendar):
+def seal(scope, start, end, cutoff, calendar, *, selected_versions=None):
     step = FRAME_MIN[scope["timeframe"]]*60
     if start < 0 or start % step or end % step or not 0 < end-start <= 10_000*step:
         raise ValueError("Use a bounded aligned UTC range")
-    selected = rows("""SELECT o.*,r.persisted_ms,s.calendar FROM arrival_observations o
-        JOIN arrival_receipts r USING(sequence) JOIN arrival_sessions s ON s.id=o.session_id
+    selected = rows("""SELECT o.*,r.persisted_ms,p.receipt_committed_by_ms,p.witness_session_id,s.calendar
+        FROM arrival_observations o JOIN arrival_receipts r USING(sequence)
+        JOIN arrival_publications p USING(sequence) JOIN arrival_sessions s ON s.id=o.session_id
         WHERE o.provider=? AND o.feed_id=? AND o.symbol=? AND o.timeframe=? AND o.price_basis=?
-          AND candle_open>=? AND candle_open<? AND persisted_ms<=? ORDER BY candle_open,sequence LIMIT 30001""",
-        (*(scope[key] for key in SCOPE_FIELDS),start,end,cutoff*1000))
+          AND candle_open>=? AND candle_open<? AND p.receipt_committed_by_ms<=? AND s.policy=?
+          AND (? IS NULL OR o.sequence <= (SELECT CAST(value AS INTEGER) FROM json_each(?)
+                                          WHERE key=CAST(o.candle_open AS TEXT)))
+        ORDER BY candle_open,sequence LIMIT 30001""",
+        (*(scope[key] for key in SCOPE_FIELDS),start,end,cutoff*1000,RECORDED_ARRIVAL,
+         None if selected_versions is None else 1,canonical(selected_versions)))
     if not selected or len(selected)>30_000:
         raise ValueError("No bounded recorded evidence for the requested scope")
     calendar_data = calendar.model_dump()
@@ -307,19 +377,22 @@ def seal(scope, start, end, cutoff, calendar):
     for offset in range(0,len(selected),2000):
         chunk = selected[offset:offset+2000]
         members = [{**json.loads(row["content"]), "closed":True, "availability_policy":RECORDED_ARRIVAL,
-                    "clock_quality":CLOCK_POLICY, "available_at":to_seconds(row["persisted_ms"]),
+                    "clock_quality":CLOCK_POLICY, "publication_policy":PUBLICATION_POLICY,
+                    "available_at":to_seconds(row["receipt_committed_by_ms"]),
                     **{key:row[key] for key in ("session_id","sequence","previous_sequence","nominal_close",
-                        "observed_ms","elapsed_ms","persisted_ms","fingerprint","recovery")}} for row in chunk]
+                        "observed_ms","elapsed_ms","persisted_ms","receipt_committed_by_ms",
+                        "witness_session_id","fingerprint","recovery")}} for row in chunk]
         part = write_partition(scope["provider"],scope["feed_id"],scope["symbol"],"arrival_candles",
                                scope["timeframe"],scope["price_basis"],members)
         entry = {"id":part["id"],"sha256":part["sha256"]}
         partitions.append(entry)
         registrations.append((part["id"],part["sha256"],RECORDED_ARRIVAL,canonical(scope),
-                              canonical(sorted({row["session_id"] for row in chunk}))))
+                              canonical(sorted({row[key] for row in chunk for key in ("session_id","witness_session_id")}))))
     manifest = {**scope,"start":start,"end":end,"cutoff":cutoff,"partitions":partitions,
                 "calendar":calendar_data,"availability_mode":RECORDED_MODE,
                 "availability_policy":RECORDED_ARRIVAL,"clock_policy":CLOCK_POLICY,
-                "sessions":sorted({row["session_id"] for row in selected}),
+                "publication_policy":PUBLICATION_POLICY,"manifest_version":2,
+                "sessions":sorted({row[key] for row in selected for key in ("session_id","witness_session_id")}),
                 "data_quality":{"observations":len(selected),"corrections":sum(row["previous_sequence"] is not None for row in selected)}}
     if scope["feed_id"].startswith("aggregate-"):
         manifest["aggregation_policy"] = AGGREGATION_POLICY
@@ -351,58 +424,81 @@ def aggregate_m1(manifest, clock=None):
         feed_id=manifest["feed_id"], price_basis=manifest["price_basis"], calendar=manifest["calendar"],
         partitions=manifest["partitions"], arrival_manifest=manifest["id"], start=start, end=end,
         cutoff=manifest["cutoff"], availability_mode=RECORDED_MODE)
-    admitted = load_reference(window,start,end,60)
+    admitted = load_reference(window,start,end,60,include_observations=True)
     if admitted["evidence"].get("status"):
         raise ValueError("Source manifest failed recorded verification")
-    visible = {bar.time for bar,_ in admitted["rows"]}
-    raw = {}
-    from .storage import read_partition
-    for expected in manifest["partitions"]:
-        part = one("SELECT * FROM datasets WHERE id=?",(expected["id"],))
-        if not part or part["sha256"] != expected["sha256"]:
-            raise ValueError("Source manifest partition changed")
-        for row in read_partition(part):
-            stamp = row["time"]
-            existing = raw.get(stamp)
-            if stamp in visible and row["available_at"]<=manifest["cutoff"] and (
-                existing is None or (row["available_at"],row["sequence"]) >
-                                     (existing["available_at"],existing["sequence"])
-            ):
-                raw[stamp] = row
+    raw = admitted["observations"]
     calendar = MarketSchedule.model_validate(manifest["calendar"])
     scope = {"provider":"MT5","symbol":manifest["symbol"],"timeframe":"M5","price_basis":manifest["price_basis"],
              "feed_id":"aggregate-"+fingerprint([AGGREGATION_POLICY,manifest["feed_id"]])[:40]}
-    pending=[]
-    session=uuid4().hex
+    pending = []
+    selected = {}
+    session = None
+    scope_key = tuple(scope[key] for key in SCOPE_FIELDS)
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
-        db.execute("INSERT INTO arrival_sessions VALUES(?,?,?,?,?,?,?)",
-                   (session,"MT5",scope["symbol"],"M5",RECORDED_ARRIVAL,observed,canonical(manifest["calendar"])))
+        written, _ = clock.sample()
+        if written < observed:
+            raise ValueError("CLOCK_DISCONTINUITY")
         for stamp in range(start,end,300):
-            if not all(member in raw for member in range(stamp,stamp+300,60)) or (
+            times = range(stamp,stamp+300,60)
+            if not all(member in raw for member in times) or (
                 open_intervals(stamp,stamp+300,calendar) != [(stamp,stamp+300)]
             ):
                 continue
-            members = [raw[member] for member in range(stamp,stamp+300,60)]
+            members = [raw[member] for member in times]
+            constituents = [{key: row[key] for key in ("time", "sequence", "fingerprint", "available_at")}
+                            for row in members]
+            vector = [row["sequence"] for row in constituents]
+            prior = db.execute("""SELECT o.sequence,o.content,o.observed_ms,p.receipt_committed_by_ms
+                FROM arrival_observations o LEFT JOIN arrival_publications p USING(sequence)
+                WHERE provider=? AND feed_id=? AND symbol=? AND timeframe=? AND price_basis=?
+                AND candle_open=? ORDER BY sequence DESC LIMIT 1""", (*scope_key,stamp)).fetchone()
+            if prior:
+                saved = json.loads(prior["content"])
+                previous = [row["sequence"] for row in saved["constituents"]]
+                if vector == previous:
+                    if constituents != saved["constituents"]:
+                        raise ValueError("AGGREGATE_CONSTITUENT_ATTESTATION_MISMATCH")
+                    selected[stamp] = prior["sequence"]
+                    if prior["receipt_committed_by_ms"] is None:
+                        pending.append(prior["sequence"])
+                    continue
+                if any(new < old for new,old in zip(vector,previous,strict=True)):
+                    raise ValueError("STALE_OR_INCOMPARABLE_AGGREGATE_SOURCE")
+                if written < max(prior["observed_ms"], prior["receipt_committed_by_ms"] or 0):
+                    raise ValueError("CLOCK_PRECEDES_PRIOR_OBSERVATION")
             content = {"time":stamp,"open":members[0]["open"],"high":max(row["high"] for row in members),
                        "low":min(row["low"] for row in members),"close":members[-1]["close"],
                        "volume":sum(row["volume"] for row in members),"source_observed_ms":None,
-                       "aggregation_policy":AGGREGATION_POLICY,"constituents":[row["fingerprint"] for row in members]}
-            digest = fingerprint(content)
-            prior = db.execute("""SELECT o.sequence,o.fingerprint,r.persisted_ms FROM arrival_observations o
-                LEFT JOIN arrival_receipts r USING(sequence) WHERE provider=? AND feed_id=? AND symbol=?
-                AND timeframe=? AND price_basis=? AND candle_open=? ORDER BY sequence DESC LIMIT 1""",
-                (*(scope[key] for key in SCOPE_FIELDS),stamp)).fetchone()
-            if prior and prior["fingerprint"]==digest:
-                if prior["persisted_ms"] is None:
-                    pending.append(prior["sequence"])
-                continue
-            pending.append(db.execute("""INSERT INTO arrival_observations(
+                       "aggregation_policy":AGGREGATION_POLICY,"constituents":constituents,
+                       "aggregate_candle_id":fingerprint([AGGREGATION_POLICY,*scope_key,stamp]),
+                       "source_feed_id":manifest["feed_id"], "source_manifest_id":manifest["id"],
+                       "source_cutoff":manifest["cutoff"], "source_attestation":RECORDED_ARRIVAL}
+            if session is None:
+                session = create_aggregate_session(db, scope, written, manifest["calendar"])
+            seq = db.execute("""INSERT INTO arrival_observations(
                 session_id,provider,feed_id,symbol,timeframe,price_basis,candle_open,nominal_close,
                 observed_ms,elapsed_ms,content,fingerprint,previous_sequence,recovery)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,0)""", (session,*(scope[key] for key in SCOPE_FIELDS),
-                stamp,stamp+300,observed,elapsed,canonical(content),digest,prior["sequence"] if prior else None)).lastrowid)
-    persisted,_ = clock.sample()
-    with transaction() as db:
-        db.executemany("INSERT OR IGNORE INTO arrival_receipts VALUES(?,?)",[(seq,persisted) for seq in pending])
-    return seal(scope,start,end,to_seconds(persisted),calendar)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,0)""", (session,*scope_key,stamp,stamp+300,observed,
+                elapsed,canonical(content),fingerprint(content),prior["sequence"] if prior else None)).lastrowid
+            pending.append(seq)
+            selected[stamp] = seq
+        if pending and session is None:
+            session = create_aggregate_session(db, scope, written, manifest["calendar"])
+    if not selected:
+        raise ValueError("No complete admitted M1 groups for aggregation")
+    publish(pending, clock, session, guard_aggregate=True)
+    placeholders = ",".join("?" for _ in selected)
+    proof = one(f"""SELECT COUNT(*) AS count,MAX(receipt_committed_by_ms) AS witnessed
+                    FROM arrival_publications WHERE sequence IN ({placeholders})""", tuple(selected.values()))
+    if proof["count"] != len(selected):
+        raise ValueError("Incomplete aggregate publication")
+    return seal(scope,start,end,to_seconds(proof["witnessed"]),calendar,selected_versions=selected)
+
+
+def create_aggregate_session(db, scope, written, calendar):
+    session = uuid4().hex
+    db.execute("INSERT INTO arrival_sessions VALUES(?,?,?,?,?,?,?)",
+               (session,"MT5",scope["symbol"],"M5",RECORDED_ARRIVAL,written,canonical(calendar)))
+    return session

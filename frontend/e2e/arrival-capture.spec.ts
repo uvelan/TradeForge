@@ -2,22 +2,26 @@ import {expect, test} from '@playwright/test';
 
 test('data library controls capture and labels frozen recorded readiness', async ({page},info) => {
   let state = 'STOPPED';
+  let blocked = false;
   const start = 1735689600;
   const available = {
     state:'RUNNING',timeframe:'M5',
     scopes:{EURUSD:{state:'RUNNING',feed_id:'capture-test',price_basis:'BID',
       coverage_start:start,coverage_end:start+300,last_candle:start,last_persisted_ms:(start+301)*1000,recorded:1}},
   };
+  const blockedCapture = {
+    state:'BLOCKED',timeframe:'M5',scopes:{EURUSD:{state:'BLOCKED',timestamp_policy:'UNVERIFIED_TIMESTAMP_DOMAIN'}},
+  };
   const manifest = {id:'frozen-recorded',symbol:'EURUSD',provider:'MT5',feed_id:'capture-test',
     price_basis:'BID',timeframe:'M5',calendar:{kind:'forex_weekly'},start,end:start+300,cutoff:start+302,
-    partitions:[{id:'partition-recorded',sha256:'a'.repeat(64)}],availability_policy:'SERVER_RECORDED_ARRIVAL_V1'};
+    partitions:[{id:'partition-recorded',sha256:'a'.repeat(64)}],availability_policy:'SERVER_RECORDED_ARRIVAL_V2'};
   let frozen = false;
   await page.route('**/research/api/market/arrival/capture',route=>
-    route.fulfill({json:state==='STOPPED'?{state,scopes:{}}:available}));
+    route.fulfill({json:state==='STOPPED'?{state,scopes:{}}:blocked?blockedCapture:available}));
   await page.route('**/research/api/market/arrival/capture/start',route=>{
     expect(route.request().postDataJSON()).toMatchObject({symbols:['EURUSD','GBPUSD'],timeframe:'M5'});
     state='RUNNING';
-    return route.fulfill({json:available});
+    return route.fulfill({json:blocked?blockedCapture:available});
   });
   await page.route('**/research/api/market/arrival/capture/stop',route=>{
     state='STOPPED';
@@ -44,7 +48,7 @@ test('data library controls capture and labels frozen recorded readiness', async
   await page.getByRole('button',{name:'Data Library',exact:true}).click();
   await expect(page.getByRole('combobox',{name:'Availability mode'})).toHaveValue('LEGACY_RESEARCH');
   await page.getByRole('button',{name:'Start read-only candle capture'}).click();
-  await expect(page.getByText('Last durable write',{exact:false})).toBeVisible();
+  await expect(page.getByText('Receipt committed by',{exact:false})).toBeVisible();
   await page.getByRole('button',{name:'Freeze EURUSD coverage'}).click();
   await expect(page.getByRole('combobox',{name:'Availability mode'})).toHaveValue('STRICT_RECORDED');
   await page.getByRole('button',{name:'Assess data readiness'}).click();
@@ -55,4 +59,10 @@ test('data library controls capture and labels frozen recorded readiness', async
   await page.getByRole('combobox',{name:'Availability mode'}).selectOption('HISTORICAL_SIMULATION');
   await expect(page.getByLabel('Primary modeled delay (seconds)')).toBeVisible();
   await expect(page.getByText('EURUSD · READY_RECORDED')).toHaveCount(0);
+  blocked = true;
+  await page.getByRole('button',{name:'Start read-only candle capture'}).click();
+  await expect(page.getByText('EURUSD · BLOCKED')).toBeVisible();
+  await expect(page.getByText(/broker timestamp domain needs verification/)).toBeVisible();
+  await expect(page.getByRole('button',{name:'Freeze EURUSD coverage'})).toHaveCount(0);
+  await page.screenshot({path:info.outputPath('arrival-blocked.png')});
 });

@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 from hashlib import sha256
 from math import sin, cos
 from tradeforge.market import MT5_LOCK as _LOCK
+from .arrival_policy import UNKNOWN_TIMESTAMP_DOMAIN
 from .schemas import Symbol
 
 BASE={'EURUSD':1.0862,'GBPUSD':1.2728,'USDJPY':151.35,'XAUUSD':2651.0}
@@ -116,6 +117,7 @@ def mt5_rates(symbol:str,timeframe:str,limit:int=300,*,include_latest:bool=False
             account = mt5.account_info()
             instrument = mt5.symbol_info(symbol)
             if account and account.server and instrument and instrument.chart_mode in (0, 1):
+                provenance["timestamp_policy"] = UNKNOWN_TIMESTAMP_DOMAIN
                 provenance["feed_id"] = f"mt5:{account.server}"
                 provenance["price_basis"] = "BID" if instrument.chart_mode == 0 else "LAST_TRADE"
         # Exclude the newest bar, which may be incomplete.

@@ -228,6 +228,11 @@ CREATE TABLE IF NOT EXISTS arrival_receipts (
     sequence INTEGER PRIMARY KEY REFERENCES arrival_observations(sequence),
     persisted_ms INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS arrival_publications (
+    sequence INTEGER PRIMARY KEY REFERENCES arrival_receipts(sequence),
+    receipt_committed_by_ms INTEGER NOT NULL CHECK(receipt_committed_by_ms >= 0),
+    witness_session_id TEXT NOT NULL REFERENCES arrival_sessions(id)
+);
 CREATE TABLE IF NOT EXISTS arrival_manifests (
     id TEXT PRIMARY KEY,
     payload TEXT NOT NULL CHECK(json_valid(payload))
@@ -243,12 +248,13 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 
 IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 IMMUTABLE_TABLES += ["arrival_sessions", "arrival_observations", "arrival_receipts",
-                     "arrival_manifests", "arrival_partitions"]
+                     "arrival_publications", "arrival_manifests", "arrival_partitions"]
 
 
 def connect():
     db = sqlite3.connect(str(DATABASE), timeout=10, check_same_thread=False)
     db.row_factory = sqlite3.Row
+    db.execute('PRAGMA synchronous=FULL')
     db.execute('PRAGMA foreign_keys=ON')
     db.execute('PRAGMA busy_timeout=10000')
     return db

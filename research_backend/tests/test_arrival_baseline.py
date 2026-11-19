@@ -55,7 +55,7 @@ def test_report_archived_arrival_admission(client):
             print(label, result["id"], result.get("analysis",{}).get("strategy_eligibility"),
                   sorted({item["strategy_eligibility"] for item in timing}))
             if label == "registered_capture":
-                assert result["provenance"]["availability_policy"] == "SERVER_RECORDED_ARRIVAL_V1"
+                assert result["provenance"]["availability_policy"] == "SERVER_RECORDED_ARRIVAL_V2"
                 assert result["provenance"]["context_authority"] == "CHECKSUM_VERIFIED_ARCHIVE"
             else:
                 assert all(item["strategy_eligibility"]!="ELIGIBLE" for item in timing)

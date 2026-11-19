@@ -27,6 +27,9 @@ class Clock:
             raise ValueError("CLOCK_DISCONTINUITY")
         return self.now, self.now
 
+    def sample_receipt(self):
+        return self.sample()[0]
+
 
 def candle(instant, price=12, **changes):
     return {"time":instant,"open":price,"high":price+1,"low":price-1,"close":price,
@@ -36,7 +39,7 @@ def candle(instant, price=12, **changes):
 def provider(values, *, feed="mt5:fixture", basis="BID"):
     def read(symbol, timeframe, limit, *, include_latest, provenance):
         assert include_latest is False and limit == 32 and timeframe == "M1"
-        provenance.update(feed_id=feed,price_basis=basis)
+        provenance.update(feed_id=feed,price_basis=basis,timestamp_policy="UTC_EPOCH_VERIFIED_V1")
         return list(values)
     return read
 
@@ -44,7 +47,8 @@ def provider(values, *, feed="mt5:fixture", basis="BID"):
 def worker(clock=None, **settings):
     config=CaptureConfig(**{**SETTINGS,**settings})
     clock=clock or Clock()
-    return Worker(config,claim(config,clock.now),clock.now,clock)
+    sessions, started = claim(config, clock)
+    return Worker(config,sessions,started,clock)
 
 
 def capture_scope(status, symbol="EURUSD"):
@@ -139,7 +143,7 @@ def test_storage_interruption_does_not_publish_unreceipted_row(client,monkeypatc
     def fail_after_write():
         nonlocal observed
         observed+=1
-        if observed==2:
+        if observed==4:
             raise ValueError("CLOCK_DISCONTINUITY")
         return 61_000,61_000
     monkeypatch.setattr(current.clock,"sample",fail_after_write)
@@ -250,7 +254,7 @@ def test_recorded_aggregation_waits_for_complete_constituents_and_publication(cl
     assert (bar.open,bar.high,bar.low,bar.close,at)==(12,17,11,16,706)
     part=one("SELECT * FROM datasets WHERE id=?",(combined["partitions"][0]["id"],))
     row=storage.read_partition(part)[0]
-    assert row["aggregation_policy"]=="RECORDED_M1_TO_M5_V1" and len(row["constituents"])==5
+    assert row["aggregation_policy"]=="RECORDED_M1_TO_M5_V2" and len(row["constituents"])==5
     assert row["volume"]==45
 
 

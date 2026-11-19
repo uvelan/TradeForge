@@ -3,7 +3,8 @@ from datetime import UTC, datetime
 import json
 
 from .analysis_evidence import ResourceLimit
-from .arrival_policy import (CLOCK_POLICY, LEGACY_MODE, MODE_VERSIONS, RECORDED_ARRIVAL, RECORDED_MODE, SIMULATED_ARRIVAL,
+from .arrival_policy import (CLOCK_POLICY, LEGACY_MODE, LEGACY_RECORDED_ARRIVAL, MODE_VERSIONS, PUBLICATION_POLICY,
+                             RECORDED_ARRIVAL, RECORDED_MODE, SIMULATED_ARRIVAL,
                              SIMULATION_AUTHORITY, SIMULATION_MODE, admitted_arrival, availability_mode)
 from .db import one, rows
 from .indicator_coverage import open_intervals
@@ -16,7 +17,7 @@ MAX_PARTITIONS = 50
 MAX_DECODED = 30_000
 
 
-def load_reference(request, start, end, step, *, archive_limits=None, archive_session=None):
+def load_reference(request, start, end, step, *, archive_limits=None, archive_session=None, include_observations=False):
     measurements = {"requested_candles": (end-start)//step, "decoded_candles": 0,
                     "partitions_examined": 0}
     evidence = {"context_authority": "UNAVAILABLE", "context_partitions": [], "retrieval": measurements}
@@ -62,11 +63,14 @@ def load_reference(request, start, end, step, *, archive_limits=None, archive_se
                 if not sealed:
                     return refused("UNVERIFIED_AVAILABILITY", "UNKNOWN_CAPTURE_MANIFEST")
                 sealed = json.loads(sealed["payload"])
+                if sealed.get("availability_policy") == LEGACY_RECORDED_ARRIVAL:
+                    return refused("UNVERIFIED_AVAILABILITY", "LEGACY_RECEIPT_HAS_NO_DURABLE_PUBLICATION_PROOF")
                 scope = {"provider":provider,"symbol":request.symbol,"feed_id":request.feed_id,
                          "timeframe":request.timeframe,"price_basis":request.price_basis}
                 if (any(sealed.get(key) != value for key,value in scope.items())
                     or not sealed["start"] <= start < end <= sealed["end"] or request.cutoff > sealed["cutoff"]
-                    or sealed["availability_policy"] != RECORDED_ARRIVAL or sealed["clock_policy"] != CLOCK_POLICY
+                    or sealed.get("availability_policy") != RECORDED_ARRIVAL or sealed["clock_policy"] != CLOCK_POLICY
+                    or sealed.get("publication_policy") != PUBLICATION_POLICY or sealed.get("manifest_version") != 2
                     or calendar is not None and sealed["calendar"] != calendar.model_dump()):
                     return refused("UNVERIFIED_AVAILABILITY", "CAPTURE_MANIFEST_SCOPE_MISMATCH")
                 pinned = {part["id"]:part["sha256"] for part in sealed["partitions"]}
@@ -182,12 +186,15 @@ def load_reference(request, start, end, step, *, archive_limits=None, archive_se
                     return refused("SOURCE_INTEGRITY_FAILURE", "DUPLICATE_ARCHIVE_CANDLE")
                 if (available,raw["sequence"]) < (prior[1],prior[2]):
                     continue
-            observed[bar.time] = (bar, available, raw.get("sequence",0))
+            observed[bar.time] = (bar, available, raw.get("sequence",0), raw if include_observations else None)
         ordered = [observed[stamp] for stamp in sorted(observed)]
         if any(right[0].time < left[0].time + step for left, right in zip(ordered, ordered[1:])):
             return refused("SOURCE_INTEGRITY_FAILURE", "OVERLAPPING_ARCHIVE_CANDLE")
-        return {"rows": [(bar, available) for bar, available, _ in ordered if bar.closed and available <= request.cutoff],
-                "evidence": evidence}
+        visible = [entry for entry in ordered if entry[0].closed and entry[1] <= request.cutoff]
+        result = {"rows": [(bar, available) for bar, available, _, _ in visible], "evidence": evidence}
+        if include_observations:
+            result["observations"] = {bar.time: raw for bar, _, _, raw in visible}
+        return result
     except ResourceLimit:
         raise
     except (OSError, RuntimeError, ValueError):

@@ -7,12 +7,12 @@ const endpoint = '/market/arrival';
 type Mode = 'LEGACY_RESEARCH' | 'STRICT_RECORDED' | 'HISTORICAL_SIMULATION';
 type Calendar = {kind: 'continuous' | 'forex_weekly' | 'unknown'};
 type ScopeStatus = {feed_id?:string; price_basis?:string; state?:string; last_candle?:number; last_persisted_ms?:number;
-  coverage_start?:number; coverage_end?:number; recorded?:number; missing_slots?:number[]; warning?:string};
+  coverage_start?:number; coverage_end?:number; recorded?:number; missing_slots?:number[]; warning?:string; timestamp_policy?:string};
 type Capture = {state:string; timeframe?:string; scopes:Record<string, ScopeStatus>};
 type Feed = {symbol:string; timeframe:string; feed_id:string; price_basis:string; source:string;
   start:number; end:number; partitions:{id:string; sha256:string}[]; calendar:Calendar;
   arrival_manifest?:string; delay_seconds:number};
-type Manifest = Omit<Feed,'source'|'arrival_manifest'|'delay_seconds'> & {id:string; provider:string; cutoff:number};
+type Manifest = Omit<Feed,'source'|'arrival_manifest'|'delay_seconds'> & {id:string; provider:string; cutoff:number; availability_policy?:string};
 type ModeResult = {status:string; eligible_candles:number; unverified_candles:number; missing_slots:number|null; blocking_reason:string|null};
 type Assessment = {symbol:string; status:string; modes:Record<string, ModeResult>};
 type Readiness = {primary:Assessment; comparison?:Assessment; joint_modes?:string[]};
@@ -127,7 +127,7 @@ export function ArrivalPanel({datasets}:{datasets:Dataset[]}) {
   }
 
   const options = mode==='STRICT_RECORDED' ? manifests.map(value=>({id:value.id,
-    label:`${value.symbol} · ${value.timeframe} · ${new Date(value.end*1000).toISOString()}`})) :
+    label:`${value.symbol} · ${value.timeframe} · ${new Date(value.end*1000).toISOString()}${value.availability_policy==='SERVER_RECORDED_ARRIVAL_V1' ? ' - Legacy receipt, audit only' : ''}`})) :
     datasets.filter(value=>value.kind==='candles').map(value=>({id:value.id,
       label:`${value.symbol} · ${value.timeframe} · ${value.id.slice(0,10)}`}));
   const running = capture && !['STOPPED','FAILED'].includes(capture.state);
@@ -157,7 +157,9 @@ export function ArrivalPanel({datasets}:{datasets:Dataset[]}) {
           <p>{scope.feed_id && <span>Feed {scope.feed_id} · {scope.price_basis} · </span>}
           {scope.recorded??0} recorded slots · {scope.missing_slots?.length??0} overdue slots {scope.warning && ` · ${scope.warning}`}</p>
           {scope.last_candle!==undefined && scope.last_candle!==null && <p>Last candle {new Date(scope.last_candle*1000).toISOString()}</p>}
-          {scope.last_persisted_ms && <p>Last durable write {new Date(scope.last_persisted_ms).toISOString()}</p>}
+          {scope.last_persisted_ms && <p>Receipt committed by {new Date(scope.last_persisted_ms).toISOString()}</p>}
+          {scope.timestamp_policy==='UNVERIFIED_TIMESTAMP_DOMAIN' && <p>The broker timestamp domain
+            needs verification before this feed can publish recorded evidence.</p>}
           {scope.recorded!==undefined && scope.recorded>0 && <button type="button" className="small-tool" disabled={busy}
             onClick={()=>void run(()=>freeze(symbol,scope))}>Freeze {symbol} coverage</button>}
         </div>)}

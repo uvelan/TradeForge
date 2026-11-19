@@ -2,7 +2,7 @@
 from uuid import uuid4
 
 from research_backend.app.arrival_capture import canonical, fingerprint, seal
-from research_backend.app.arrival_policy import RECORDED_ARRIVAL
+from research_backend.app.arrival_policy import RECORDED_ARRIVAL, VERIFIED_UTC
 from research_backend.app.db import transaction
 from research_backend.app.indicator_coverage import MarketSchedule
 from research_backend.app.market import FRAME_MIN
@@ -23,7 +23,7 @@ def trusted_archive(records, *, provider, feed, symbol, timeframe, start, end, c
             stamp = bar["time"]
             at = bar.get("available_at",stamp+step)*1000
             content = {key:bar[key] for key in ("time","open","high","low","close")}
-            content.update(volume=bar.get("volume",0),source_observed_ms=None)
+            content.update(volume=bar.get("volume",0),source_observed_ms=None, timestamp_policy=VERIFIED_UTC, raw_provider_time=stamp)
             candle_hash = fingerprint(content)
             seq = db.execute("""INSERT INTO arrival_observations(
                 session_id,provider,feed_id,symbol,timeframe,price_basis,candle_open,nominal_close,
@@ -32,4 +32,5 @@ def trusted_archive(records, *, provider, feed, symbol, timeframe, start, end, c
                 at,at-start*1000,canonical(content),candle_hash,previous.get(stamp),0)).lastrowid
             previous[stamp]=seq
             db.execute("INSERT INTO arrival_receipts VALUES(?,?)",(seq,at))
+            db.execute("INSERT INTO arrival_publications VALUES(?,?,?)",(seq,at,session))
     return seal(scope,start,end,cutoff if cutoff is not None else end+3600,calendar)
