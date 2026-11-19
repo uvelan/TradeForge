@@ -200,7 +200,7 @@ def test_test_session_uses_disposable_storage(pytestconfig):
     from research_backend.app.config import DATABASE
     from pathlib import Path
 
-    assert DATABASE.is_relative_to(Path(pytestconfig.tradeforge_test_archive.name))
+    assert DATABASE.is_relative_to(Path(pytestconfig.tradeforge_test_archive.name).resolve())
 
 def test_candidate_overflow_fails_closed(client,approved_fixture):
     data=ready_entry(pair=False)

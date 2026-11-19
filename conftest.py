@@ -8,7 +8,7 @@ def pytest_configure(config):
     config.tradeforge_test_archive = TemporaryDirectory(prefix="tradeforge-pytest-")
     config.tradeforge_previous_storage = {key:os.environ.get(key)
                                          for key in ("TRADEFORGE_STORAGE","TRADEFORGE_DATA_DIR")}
-    root = Path(config.tradeforge_test_archive.name)
+    root = Path(config.tradeforge_test_archive.name).resolve()
     os.environ["TRADEFORGE_STORAGE"] = str(root)
     os.environ["TRADEFORGE_DATA_DIR"] = str(root/"research")
 
