@@ -1,0 +1,65 @@
+
+> e2e
+> playwright test e2e/strategy-builder.spec.ts --retries=0 --reporter=line
+
+
+[WebServer] INFO:     Started server process [29908]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8197 (Press CTRL+C to quit)
+
+[WebServer] (node:38884) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 4 tests using 1 worker
+
+
+(node:44924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/4] e2e\strategy-builder.spec.ts:5:1 › validates nested rules and saves immutable strategy revisions
+[2/4] e2e\strategy-builder.spec.ts:44:1 › requires reloading before a stale editor can overwrite a concurrent revision
+[3/4] e2e\strategy-builder.spec.ts:66:1 › requires an explicit fixed price and preserves CRT family binding
+[4/4] e2e\strategy-builder.spec.ts:112:1 › requires the tracked CRT and confirmed SMT aliases for dependent triggers
+  1) e2e\strategy-builder.spec.ts:112:1 › requires the tracked CRT and confirmed SMT aliases for dependent triggers
+
+    Error: locator.selectOption: Error: strict mode violation: getByRole('region', { name: 'trigger phase' }).locator('.strategy-node').last().getByLabel('Observation') resolved to 2 elements:
+        1) <select>…</select> aka getByRole('region', { name: 'trigger phase' }).getByLabel('ObservationConfirmed positive')
+        2) <select>…</select> aka getByRole('region', { name: 'trigger phase' }).getByLabel('Observation selectionChoose')
+
+    Call log:
+      - waiting for getByRole('region', { name: 'trigger phase' }).locator('.strategy-node').last().getByLabel('Observation')
+
+
+      129 |   const smt = trigger.locator(".strategy-node").last();
+      130 |   await smt.getByLabel("Rule dependency").selectOption("smt");
+    > 131 |   await smt.getByLabel("Observation").selectOption("SMT_LEADER");
+          |                                       ^
+      132 |   await validate.click();
+      133 |   await expect(validation.getByRole("alert")).toContainText("Use BOUND_FAMILY with a prior SMT_CONFIRMED alias");
+      134 |   await smt.getByLabel("Same family as").selectOption("smt_confirmation");
+        at K:\Projects\TradeForge\frontend\e2e\strategy-builder.spec.ts:131:39
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\strategy-builder-requires--5541b-ases-for-dependent-triggers\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\strategy-builder-requires--5541b-ases-for-dependent-triggers\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\strategy-builder-requires--5541b-ases-for-dependent-triggers\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\strategy-builder-requires--5541b-ases-for-dependent-triggers\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\strategy-builder-requires--5541b-ases-for-dependent-triggers\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    e2e\strategy-builder.spec.ts:112:1 › requires the tracked CRT and confirmed SMT aliases for dependent triggers
+  3 passed (16.9s)

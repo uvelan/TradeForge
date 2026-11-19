@@ -1,0 +1,122 @@
+{
+  "crt_trigger": {
+    "submitted": "READY_FOR_EVALUATION",
+    "valid": false,
+    "status": "INVALID_STRATEGY_DEFINITION",
+    "errors": [
+      {
+        "path": "conditions.trigger_event.same_family_as",
+        "condition_id": "trigger_event",
+        "code": "CRT_LIFECYCLE_REQUIRES_REFERENCE",
+        "expected": "Use BOUND_FAMILY with tracked CRT alias crt_reference",
+        "actual": null
+      }
+    ],
+    "fingerprint": null,
+    "trigger": {
+      "type": "RULE",
+      "id": "trigger_event",
+      "dependency": "crt",
+      "observation": "CRT_STATE",
+      "operator": "EQ",
+      "expected": "EXPANSION_OBSERVED",
+      "selection": "LATEST_ELIGIBLE",
+      "alias": null,
+      "same_family_as": null,
+      "evidence": {
+        "state": "HISTORICAL",
+        "purpose": "HISTORICAL_SIMULATION",
+        "max_age_seconds": 3600
+      }
+    },
+    "temporal": [
+      {
+        "first": "reclaim",
+        "then": "divergence",
+        "relation": "AFTER"
+      }
+    ]
+  },
+  "smt_role": {
+    "submitted": "READY_FOR_EVALUATION",
+    "valid": false,
+    "status": "INVALID_STRATEGY_DEFINITION",
+    "errors": [
+      {
+        "path": "conditions.trigger_event.same_family_as",
+        "condition_id": "trigger_event",
+        "code": "SMT_ROLE_REQUIRES_DIVERGENCE",
+        "expected": "Use BOUND_FAMILY with a prior SMT_CONFIRMED alias from this dependency",
+        "actual": null
+      }
+    ],
+    "fingerprint": null,
+    "trigger": {
+      "type": "RULE",
+      "id": "trigger_event",
+      "dependency": "smt",
+      "observation": "SMT_LEADER",
+      "operator": "EQ",
+      "expected": "primary",
+      "evidence": {
+        "state": "HISTORICAL",
+        "purpose": "HISTORICAL_SIMULATION",
+        "max_age_seconds": 3600
+      },
+      "alias": null,
+      "selection": "EARLIEST_ELIGIBLE"
+    },
+    "temporal": [
+      {
+        "first": "reclaim",
+        "then": "divergence",
+        "relation": "AFTER"
+      }
+    ]
+  },
+  "phase_inversion": {
+    "submitted": "READY_FOR_EVALUATION",
+    "valid": false,
+    "status": "INVALID_STRATEGY_DEFINITION",
+    "errors": [
+      {
+        "path": "temporal.1",
+        "condition_id": null,
+        "code": "UNSUPPORTED_PHASE_ORDER",
+        "expected": "Use context before setup, and context or setup before trigger or invalidation",
+        "actual": {
+          "earlier": "trigger",
+          "later": "context"
+        }
+      }
+    ],
+    "fingerprint": null,
+    "trigger": {
+      "type": "RULE",
+      "id": "trigger_event",
+      "dependency": "smt",
+      "observation": "SMT_CONFIRMED",
+      "operator": "EQ",
+      "expected": "bullish",
+      "evidence": {
+        "state": "HISTORICAL",
+        "purpose": "HISTORICAL_SIMULATION",
+        "max_age_seconds": 3600
+      },
+      "alias": null,
+      "selection": "EARLIEST_ELIGIBLE"
+    },
+    "temporal": [
+      {
+        "first": "reclaim",
+        "then": "divergence",
+        "relation": "AFTER"
+      },
+      {
+        "first": "trigger_event",
+        "then": "reference",
+        "relation": "AFTER"
+      }
+    ]
+  }
+}
