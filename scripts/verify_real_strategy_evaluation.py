@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path
 import shutil
 import sqlite3
@@ -83,6 +84,30 @@ def independent_references(decision, datasets, archive, delay):
              "expected_available_at":members[-1]["time"]+300+delay,"actual_activation":proof["activated_at"]}]
 
 
+def peak_rss_bytes():
+    if platform.system() != "Windows":
+        import resource
+        peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return peak if platform.system() == "Darwin" else peak * 1024
+
+    import ctypes
+    from ctypes import wintypes
+
+    class ProcessMemory(ctypes.Structure):
+        _fields_ = [("size", wintypes.DWORD), ("faults", wintypes.DWORD),
+                    ("peak_working_set", ctypes.c_size_t), ("remaining_counters", ctypes.c_size_t*7)]
+
+    memory = ProcessMemory()
+    memory.size = ctypes.sizeof(memory)
+    kernel = ctypes.WinDLL("kernel32")
+    kernel.GetCurrentProcess.restype = wintypes.HANDLE
+    query = ctypes.WinDLL("psapi").GetProcessMemoryInfo
+    query.argtypes = [wintypes.HANDLE, ctypes.POINTER(ProcessMemory), wintypes.DWORD]
+    if query(kernel.GetCurrentProcess(), ctypes.byref(memory), memory.size):
+        return memory.peak_working_set
+    return None
+
+
 def measure(call,samples):
     for _ in range(3):
         call()
@@ -98,14 +123,16 @@ def measure(call,samples):
     finally:
         tracemalloc.stop()
     output = result if isinstance(result,dict) else None
+    size = len(json.dumps(output).encode()) if output else len(result.encode()) if isinstance(result,str) else None
     return {"samples":samples,"p50_ms":round(median(elapsed),3),
             "p95_ms":round(quantiles(elapsed,n=100,method="inclusive")[94],3),
-            "peak_python_bytes":peak,"response_bytes":len(json.dumps(output).encode()) if output else None,
+            "peak_python_bytes":peak,"process_peak_rss_bytes":peak_rss_bytes(),"response_bytes":size,
             "resource_counts":output.get("resource_counts") if output else None}
 
 
 def run(catalog,datasets,samples):
     from fastapi.testclient import TestClient
+    from research_backend.app.analysis_evidence import canonical as serialize
     from research_backend.app.config import MARKET_DIR
     from research_backend.app.db import initialize, transaction
     from research_backend.app.main import app
@@ -155,6 +182,8 @@ def run(catalog,datasets,samples):
             benchmark_definition = StrategyDefinitionV2.model_validate(canonical["definition"])
             benchmarks["strategy_compilation"] = measure(lambda:RuleGraph(benchmark_definition),samples)
             benchmarks["full_session_crt_smt"] = measure(lambda:calculate(canonical,catalog["end"]),samples)
+            sample_decision = calculate(canonical,catalog["end"])
+            benchmarks["decision_serialization"] = measure(lambda:serialize(sample_decision),samples)
             benchmarks["reconstruction_early"] = measure(lambda:calculate(canonical,catalog["start"]+12600),samples)
             single=demo("bearish",0,0)
             single["indicators"].pop()
