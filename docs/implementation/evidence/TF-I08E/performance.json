@@ -1,0 +1,179 @@
+{
+  "samples": 30,
+  "warmups": 3,
+  "import": {
+    "real_csv": {
+      "m1": 1320,
+      "m5": 264,
+      "source_bytes": 88714,
+      "decode": {
+        "p50_ms": 11.479,
+        "p95_ms": 12.016
+      },
+      "derive_m5": {
+        "p50_ms": 0.804,
+        "p95_ms": 0.83
+      },
+      "publish_including_setup": {
+        "p50_ms": 170.514,
+        "p95_ms": 207.794
+      },
+      "duplicate": {
+        "p50_ms": 17.503,
+        "p95_ms": 19.004
+      },
+      "partitions": 2,
+      "python_peak_bytes": 1012912,
+      "native_peak_kib": 95432
+    },
+    "synthetic_bi5": {
+      "decoded": 25000,
+      "source_bytes": 56504,
+      "decode": {
+        "p50_ms": 32.05,
+        "p95_ms": 34.082
+      },
+      "m1": {
+        "p50_ms": 33.089,
+        "p95_ms": 34.938
+      },
+      "m5": {
+        "p50_ms": 33.11,
+        "p95_ms": 35.593
+      },
+      "m1_bars": 52,
+      "m5_bars": 11,
+      "publish_including_setup": {
+        "p50_ms": 303.773,
+        "p95_ms": 367.456
+      },
+      "duplicate": {
+        "p50_ms": 30.404,
+        "p95_ms": 34.179
+      },
+      "partitions": 5,
+      "python_peak_bytes": 21031440,
+      "native_peak_kib": 159168
+    }
+  },
+  "analysis": {
+    "lanes": {
+      "real_one_day_simulation": {
+        "p50_ms": 46.688,
+        "p95_ms": 52.356,
+        "python_peak_bytes": 1741014,
+        "native_peak_kib": 160448,
+        "status": "PARTIAL",
+        "reason": "MATCHING_OR_ACTIVATION_COVERAGE_INCOMPLETE",
+        "fingerprint": "b0e5a6e06b64c0d5b1b2c8a260cb3af56fdae6c49b87ee4ed25fa0098368c6a2",
+        "checksums": 2,
+        "decoded": 528,
+        "bytes": 169459,
+        "partitions": 2
+      },
+      "real_five_session_incomplete_simulation": {
+        "p50_ms": 123.021,
+        "p95_ms": 156.86,
+        "python_peak_bytes": 5802654,
+        "native_peak_kib": 170200,
+        "status": "PARTIAL",
+        "reason": "MATCHING_OR_ACTIVATION_COVERAGE_INCOMPLETE",
+        "fingerprint": "1a61eb02168c96b1f6668b47078f2ba25657eb27aeb7b2294511b5c23b5a69b9",
+        "checksums": 10,
+        "decoded": 2807,
+        "bytes": 64815,
+        "partitions": 10
+      },
+      "same_real_candles_strict_recorded_gate": {
+        "p50_ms": 19.034,
+        "p95_ms": 23.701,
+        "python_peak_bytes": 869156,
+        "native_peak_kib": 170452,
+        "status": "PARTIAL",
+        "reason": "UNVERIFIED_AVAILABILITY",
+        "fingerprint": "dff8a174edf6461271f24c9d27b6e4998508795ed5f354c0e5b95207567976f7",
+        "checksums": 2,
+        "decoded": 528,
+        "bytes": 2682,
+        "partitions": 2
+      }
+    },
+    "five_session_request": {
+      "primary": {
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "690dd9a65118d99848cd7083e808b7f7cde4eee5635522961217705d71f3a958",
+            "sha256": "4e8e035ecdaa4d46f1eb88b7bd618ea2fc44cbfa3573aa66b5d4c2d362415cee"
+          },
+          {
+            "id": "a49eb413dde18237282d271d0634db5393ea3654fc1cb2c6699bc073510c43a5",
+            "sha256": "c793040e0b9e5f8360b5f69791cbd8f20a1718c23db9d9cd1812d0b9c49b8eeb"
+          },
+          {
+            "id": "eb3af24738e240057b7f1496b7c957c96fb826ba1b2505a2dc55d05a7c0403d1",
+            "sha256": "262c4bcbbd5b7c260df1b7441664ffe7fb4beed3b2941b38ccd105b613a7ab91"
+          },
+          {
+            "id": "b0d10e1cc14af77fc8d484bc63034a608cec654b52ce15f9a351a19b3a5352d5",
+            "sha256": "08a5fe051a312091688a780be5bcd3f72e1d97d61b862dcd5f5b1c3d5bf2f6fd"
+          },
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "start": 1794182400,
+        "end": 1794607200,
+        "delay_seconds": 0
+      },
+      "comparison": {
+        "symbol": "GBPUSD",
+        "timeframe": "M5",
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "cfb19c19152cc55bc463d75a7eacf0a9f4dcd13904e3bee8fba23fe5be1ffc36",
+            "sha256": "f19187fb65e535d5da6283cc5b1b328f3de8c1bc2535af2420751bafe3328b31"
+          },
+          {
+            "id": "9fc9a9e89822ef69df0f232c54234710dfa8d6e090bbaa6ce3b1de83fcdae7d6",
+            "sha256": "f685ddda306a03be57ab3fc055873eb48ae2db2819568951c0c057a129647d8c"
+          },
+          {
+            "id": "664754fe64aeb4c3da58c980671dc58ba28fb9d8d5628047f2e435ead83acad5",
+            "sha256": "b427ade21c11af8262cc09ecb0160f3e4932ffca2579d745be8ed3ccbef19373"
+          },
+          {
+            "id": "c0d69de19ec548402036521818a5d51bdd2cf9e3e1787d06ed21a1d9869133ea",
+            "sha256": "2de18c43361cc2f445e7f185df6ce83772723971ef480dada2cfb685cb4add57"
+          },
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "start": 1794182400,
+        "end": 1794607200,
+        "delay_seconds": 0
+      },
+      "cutoff": 1794607200
+    },
+    "five_session_missing_slots": {
+      "primary": 13,
+      "comparison": 12
+    }
+  }
+}

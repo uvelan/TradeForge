@@ -121,6 +121,8 @@ def numerical_market(source_dir, symbol, day, stored_m5):
     assert tick_m5 and all(value == native_m5[key] for key,value in tick_m5.items())
     return {"independent_m5_bars":len(native_m5),"direct_tick_m5_bars":len(tick_m5),
             "direct_bid_tick_rows":len(tick),"mismatched_ohlc":0,
+            "first_tick_epoch":tick[0][0],"last_tick_epoch":tick[-1][0],
+            "same_second_additional_rows":len(tick)-len({stamp for stamp,_ in tick}),
             "provider_m5_sha256":sha256(m5_path.read_bytes()).hexdigest(),
             "provider_tick_csv_sha256":sha256(tick_path.read_bytes()).hexdigest(),
             "tick_resolution":"seconds and provider file row order, BID only",
@@ -276,6 +278,9 @@ def main():
                 artifact = {"request":body,"indicator_requests":[],"rewind":rewind_body,"crt_early":[]}
                 detail = {"smt":answer,"readiness":readiness,"rewind":rewind,"strict_recorded":recorded,"indicators":[]}
                 item = {"calculation_id":answer["calculation_id"],"snapshot":answer["snapshot"],
+                        "response_fingerprint":fingerprint({k:v for k,v in answer.items() if k!="resources"}),
+                        "joint_ready_modes":readiness["joint_modes"],
+                        "bar_coverage":{side:value["coverage"] for side,value in answer["sources"].items()},
                         "smt_events":len(ids),"verified_pivot_pair_events":verified_pivots,"status":answer["status"],
                         "reason":answer["reason"],"simulation_eligible":sum(e["historically_simulation_eligible"] for e in answer["events"]),
                         "recorded_result":recorded["reason"],"paginated_snapshot_match":True,"replay_rewind_and_advance":"PASS",

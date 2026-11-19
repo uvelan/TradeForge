@@ -1,0 +1,108 @@
+{
+  "EURUSD": {
+    "bid_ask_spread": "unavailable from independently exported OHLC/one-side tick files",
+    "direct_bid_tick_rows": 3315,
+    "direct_tick_m5_bars": 12,
+    "first_tick_epoch": 1794571200,
+    "independent_m5_bars": 264,
+    "last_tick_epoch": 1794574796,
+    "mismatched_ohlc": 0,
+    "provider_m5_sha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6",
+    "provider_tick_csv_sha256": "a698e031df4b41f305625642c0738df6f3c3f36bf085594ab3358642bd9d2157",
+    "same_second_additional_rows": 1678,
+    "scenario_0": {
+      "fvg_bounds_and_availability": "PASS",
+      "fvg_c_open": 1794557700,
+      "h1_ohlc_midpoint_and_availability_matches": 22,
+      "no_h1_before_first_close": "PASS",
+      "structural_break": "PASS",
+      "structural_break_open": 1794540000,
+      "swing_extreme_and_confirmation": "PASS",
+      "swing_open": 1794531300
+    },
+    "scenario_1": {
+      "fvg_bounds_and_availability": "PASS",
+      "fvg_c_open": 1794557700,
+      "h1_ohlc_midpoint_and_availability_matches": 22,
+      "no_h1_before_first_close": "PASS",
+      "structural_break": "PASS",
+      "structural_break_open": 1794540000,
+      "swing_extreme_and_confirmation": "PASS",
+      "swing_open": 1794531300
+    },
+    "scenario_2": {
+      "fvg_bounds_and_availability": "PASS",
+      "fvg_c_open": 1794557700,
+      "h1_ohlc_midpoint_and_availability_matches": 22,
+      "no_h1_before_first_close": "PASS",
+      "structural_break": "PASS",
+      "structural_break_open": 1794540000,
+      "swing_extreme_and_confirmation": "PASS",
+      "swing_open": 1794531300
+    },
+    "scenario_3": {
+      "fvg_bounds_and_availability": "PASS",
+      "fvg_c_open": 1794557700,
+      "h1_ohlc_midpoint_and_availability_matches": 22,
+      "no_h1_before_first_close": "PASS",
+      "structural_break": "PASS",
+      "structural_break_open": 1794540000,
+      "swing_extreme_and_confirmation": "PASS",
+      "swing_open": 1794531300
+    },
+    "tick_resolution": "seconds and provider file row order, BID only"
+  },
+  "GBPUSD": {
+    "bid_ask_spread": "unavailable from independently exported OHLC/one-side tick files",
+    "direct_bid_tick_rows": 3105,
+    "direct_tick_m5_bars": 12,
+    "first_tick_epoch": 1794571200,
+    "independent_m5_bars": 264,
+    "last_tick_epoch": 1794574792,
+    "mismatched_ohlc": 0,
+    "provider_m5_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928",
+    "provider_tick_csv_sha256": "6072ed425c5e1e278a47c704385492d0bc3a93eac865a15012c6056d970c441a",
+    "same_second_additional_rows": 1627,
+    "scenario_0": {
+      "fvg_bounds_and_availability": "PASS",
+      "fvg_c_open": 1794561900,
+      "h1_ohlc_midpoint_and_availability_matches": 22,
+      "no_h1_before_first_close": "PASS",
+      "structural_break": "PASS",
+      "structural_break_open": 1794537000,
+      "swing_extreme_and_confirmation": "PASS",
+      "swing_open": 1794528900
+    },
+    "scenario_1": {
+      "fvg_bounds_and_availability": "PASS",
+      "fvg_c_open": 1794561900,
+      "h1_ohlc_midpoint_and_availability_matches": 22,
+      "no_h1_before_first_close": "PASS",
+      "structural_break": "PASS",
+      "structural_break_open": 1794537000,
+      "swing_extreme_and_confirmation": "PASS",
+      "swing_open": 1794528900
+    },
+    "scenario_2": {
+      "fvg_bounds_and_availability": "PASS",
+      "fvg_c_open": 1794561900,
+      "h1_ohlc_midpoint_and_availability_matches": 22,
+      "no_h1_before_first_close": "PASS",
+      "structural_break": "PASS",
+      "structural_break_open": 1794537000,
+      "swing_extreme_and_confirmation": "PASS",
+      "swing_open": 1794528900
+    },
+    "scenario_3": {
+      "fvg_bounds_and_availability": "PASS",
+      "fvg_c_open": 1794561900,
+      "h1_ohlc_midpoint_and_availability_matches": 22,
+      "no_h1_before_first_close": "PASS",
+      "structural_break": "PASS",
+      "structural_break_open": 1794537000,
+      "swing_extreme_and_confirmation": "PASS",
+      "swing_open": 1794528900
+    },
+    "tick_resolution": "seconds and provider file row order, BID only"
+  }
+}

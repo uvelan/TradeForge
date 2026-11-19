@@ -1,0 +1,1093 @@
+[
+  {
+    "source": {
+      "day": "2026-11-09",
+      "end": 1794268800,
+      "first_imported_at": "2026-11-19T04:12:15.557Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "EUR-USD_1Minute_BID_2026-11-09_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "0560cf18711672c26fc4747018cc566fca095d1abf5a6b64efd82c65dfaae3dc",
+      "start": 1794182400,
+      "symbol": "EURUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794182400,
+      "last": 1794268740,
+      "rejected_rows": 0,
+      "source_records": 1437,
+      "valid_m1": 1437
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "5857ff8df129c59dc9f92a20f85d2bb0c58225328ee4ca115a93d249e3308783",
+            "sha256": "c830c3475967a004992f22436d1f182e6b77b962cfe9360df86928d396385e96"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1437,
+        "missing_utc_epochs": [
+          1794251580,
+          1794261660,
+          1794261780
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.7917
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "690dd9a65118d99848cd7083e808b7f7cde4eee5635522961217705d71f3a958",
+            "sha256": "4e8e035ecdaa4d46f1eb88b7bd618ea2fc44cbfa3573aa66b5d4c2d362415cee"
+          }
+        ],
+        "expected": 288,
+        "observed": 286,
+        "missing_utc_epochs": [
+          1794251400,
+          1794261600
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.3056
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-10",
+      "end": 1794355200,
+      "first_imported_at": "2026-11-19T04:12:15.817Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "EUR-USD_1Minute_BID_2026-11-10_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "4db5776c7d7dd309daac2d01783c6dad69d34a06c5f5127a1693f602c6afe969",
+      "start": 1794268800,
+      "symbol": "EURUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794268800,
+      "last": 1794355140,
+      "rejected_rows": 0,
+      "source_records": 1433,
+      "valid_m1": 1433
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "e2cbd6a9139b69211b80ce5c77abf267c280de63dca1a20dbcba5f89368634bd",
+            "sha256": "61ef0bbc2262b9e859f56d202de4c0777a5a6524dfd9dc261434b75721771e1d"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1433,
+        "missing_utc_epochs": [
+          1794281640,
+          1794284700,
+          1794342960,
+          1794348180,
+          1794348240,
+          1794348840,
+          1794349020
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.5139
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "a49eb413dde18237282d271d0634db5393ea3654fc1cb2c6699bc073510c43a5",
+            "sha256": "c793040e0b9e5f8360b5f69791cbd8f20a1718c23db9d9cd1812d0b9c49b8eeb"
+          }
+        ],
+        "expected": 288,
+        "observed": 282,
+        "missing_utc_epochs": [
+          1794281400,
+          1794284700,
+          1794342900,
+          1794348000,
+          1794348600,
+          1794348900
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 97.9167
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-11",
+      "end": 1794441600,
+      "first_imported_at": "2026-11-19T04:12:15.934Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "EUR-USD_1Minute_BID_2026-11-11_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "a07849dcdb4585f782859f9878b7a6c93c34b6f2959ceffa150102c7e4627e9a",
+      "start": 1794355200,
+      "symbol": "EURUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794355200,
+      "last": 1794441540,
+      "rejected_rows": 0,
+      "source_records": 1438,
+      "valid_m1": 1438
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "8ba6dbcf4cab08a5d4e4e504de792c8d46c6663ec34b4637c1525311d31764c6",
+            "sha256": "d99e5d4db40c068051b0f061fcb9ea0ed7cb2f82cbac85570246f0f3e28fc856"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1438,
+        "missing_utc_epochs": [
+          1794432840,
+          1794436080
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.8611
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "eb3af24738e240057b7f1496b7c957c96fb826ba1b2505a2dc55d05a7c0403d1",
+            "sha256": "262c4bcbbd5b7c260df1b7441664ffe7fb4beed3b2941b38ccd105b613a7ab91"
+          }
+        ],
+        "expected": 288,
+        "observed": 286,
+        "missing_utc_epochs": [
+          1794432600,
+          1794435900
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.3056
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-12",
+      "end": 1794528000,
+      "first_imported_at": "2026-11-19T04:12:16.053Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "EUR-USD_1Minute_BID_2026-11-12_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "4c1c30716245d43f68f1ad415c72d3f64d542aa129f93fda43917df53c67239e",
+      "start": 1794441600,
+      "symbol": "EURUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794441600,
+      "last": 1794527880,
+      "rejected_rows": 0,
+      "source_records": 1436,
+      "valid_m1": 1436
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "2bf3a4ec7a539509db3b7ce9797a8f5b7fbdee6df30aeebc14da7a19abb32c75",
+            "sha256": "6e4a82a08ab8483a613a8a4b55a80ef7b149ac75b60ad203b437d6920c2965fa"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1436,
+        "missing_utc_epochs": [
+          1794519060,
+          1794519240,
+          1794525480,
+          1794527940
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.7222
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "b0d10e1cc14af77fc8d484bc63034a608cec654b52ce15f9a351a19b3a5352d5",
+            "sha256": "08a5fe051a312091688a780be5bcd3f72e1d97d61b862dcd5f5b1c3d5bf2f6fd"
+          }
+        ],
+        "expected": 288,
+        "observed": 285,
+        "missing_utc_epochs": [
+          1794519000,
+          1794525300,
+          1794527700
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 98.9583
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-13",
+      "end": 1794614400,
+      "first_imported_at": "2026-11-19T04:12:16.181Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "EUR-USD_1Minute_ASK_2026-11-13_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "ASK",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "cf2c056c0d60d81a0326f9fba8c2b96620e50e0f18bf223a7b12ccf2da0cb653",
+      "start": 1794528000,
+      "symbol": "EURUSD"
+    },
+    "feed_id": "dukascopy-web-ask-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794528000,
+      "last": 1794607140,
+      "rejected_rows": 0,
+      "source_records": 1320,
+      "valid_m1": 1320
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "d1fa18041afe71de34cf96e95953dbba2f2c73e5ce22b23bc5653131cc4ea967",
+            "sha256": "8fd4a2f48040ea4da6f7a8c72aa818aea2ebd583133385a1cb41da44eed3b93e"
+          }
+        ],
+        "expected": 1320,
+        "observed": 1320,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 120,
+        "coverage_pct": 100.0
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "6a2089ea4aa8b7a5b16fc3cad2e31c200074baf2de84e97fb6554a8312f49fc6",
+            "sha256": "234a604ac993e1e637a4e7c4ad49eb92a573c53d6b2f84663300dc72035e034b"
+          }
+        ],
+        "expected": 264,
+        "observed": 264,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 24,
+        "coverage_pct": 100.0
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-13",
+      "end": 1794614400,
+      "first_imported_at": "2026-11-19T04:12:16.316Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "EUR-USD_1Minute_BID_2026-11-13_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "4c1e415ee7bb1c8a7cfe473364afb5d00f82d11ea9e3b48d8960b476f53f0a6d",
+      "start": 1794528000,
+      "symbol": "EURUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794528000,
+      "last": 1794607140,
+      "rejected_rows": 0,
+      "source_records": 1320,
+      "valid_m1": 1320
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "expected": 1320,
+        "observed": 1320,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 120,
+        "coverage_pct": 100.0
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "expected": 264,
+        "observed": 264,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 24,
+        "coverage_pct": 100.0
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-16",
+      "end": 1794873600,
+      "first_imported_at": "2026-11-19T04:12:16.451Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "EUR-USD_1Minute_BID_2026-11-16_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "28d7be87a1a5642741ac9c526f13caf49fbfb5aae8c5ab8aec076ee7d31190b7",
+      "start": 1794787200,
+      "symbol": "EURUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794787200,
+      "last": 1794873480,
+      "rejected_rows": 0,
+      "source_records": 1439,
+      "valid_m1": 1439
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "5c9f312ac2a3e600df0ed7a766c3d8ec126789d26acc4bf39c601c08f948d0bc",
+            "sha256": "895da62f8035c6a4799d475e5494bff592fe657cb7d4dcf1a2edcd015a801ba8"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1439,
+        "missing_utc_epochs": [
+          1794873540
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.9306
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "74da2b5a1df3f3c595d09c031e071b2a0e7a6484bb886b410423d2cb120f5997",
+            "sha256": "253e72e89a1cfda09653a7c20cb2205d87f0160b78466c3539674665c0f4a818"
+          }
+        ],
+        "expected": 288,
+        "observed": 287,
+        "missing_utc_epochs": [
+          1794873300
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.6528
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-17",
+      "end": 1794960000,
+      "first_imported_at": "2026-11-19T04:12:16.562Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "EUR-USD_1Minute_BID_2026-11-17_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "b10f5f39e04815bb22a3aae14015002af8d4d55013f7b250913b8330c0d07a7d",
+      "start": 1794873600,
+      "symbol": "EURUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794873600,
+      "last": 1794959940,
+      "rejected_rows": 0,
+      "source_records": 1440,
+      "valid_m1": 1440
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "c07ba1902596db1e2d24442cb50fcfade7fc2088c21f52c2991bd367453c2ad9",
+            "sha256": "8a4607d768b0c2c3768f4034c1fa44a497fc783f1eb8791adaa9e051e11695c5"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1440,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 100.0
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "ed2c6ccdce7de1355a21e10d0bd715f6673e454b2899b46d7c69e117cffbc951",
+            "sha256": "7f42f6d0d43fd87066aabc4470d52e6fe70a6c6cac14b3032eb9a1e25e0477f7"
+          }
+        ],
+        "expected": 288,
+        "observed": 288,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 100.0
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-18",
+      "end": 1795046400,
+      "first_imported_at": "2026-11-19T04:12:16.700Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "EUR-USD_1Minute_BID_2026-11-18_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "b672895c5866519b68dc25ea5dc55c0ab2fbaec7de240af4c4087dd981f46dba",
+      "start": 1794960000,
+      "symbol": "EURUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794960000,
+      "last": 1795046340,
+      "rejected_rows": 0,
+      "source_records": 1440,
+      "valid_m1": 1440
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "089975ac99528fe2eb78654bdd483d1aeca5c58883fcbecbe8f760c83a81a2f7",
+            "sha256": "40384cd7efc21b86454515001c9b539346998641195fd47fe06f849dcb60aed4"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1440,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 100.0
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "db03af5b54618526652f0b8bac3b473d39bde1985318ba2ca37f9e9a1b0917c4",
+            "sha256": "6605e8636b2776925d41a23a94b101f39d05b38c460850f6d59d4b57870f3ec1"
+          }
+        ],
+        "expected": 288,
+        "observed": 288,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 100.0
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-09",
+      "end": 1794268800,
+      "first_imported_at": "2026-11-19T04:12:16.830Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "GBP-USD_1Minute_BID_2026-11-09_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "bfd85b96494e39080026e1406939dfbb3e2866eae1c3cb10b8414d6211dd1356",
+      "start": 1794182400,
+      "symbol": "GBPUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794182400,
+      "last": 1794268740,
+      "rejected_rows": 0,
+      "source_records": 1435,
+      "valid_m1": 1435
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "fa206b3f8f3b4305cb7a019d5813d4e5b35a81928382ffc1183c240372fb78ef",
+            "sha256": "1fc7759e527e0f67a4c0430234780d73bb80e0d468bcfe923053df647e5ad366"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1435,
+        "missing_utc_epochs": [
+          1794261780,
+          1794265080,
+          1794266280,
+          1794266340,
+          1794266760
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.6528
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "cfb19c19152cc55bc463d75a7eacf0a9f4dcd13904e3bee8fba23fe5be1ffc36",
+            "sha256": "f19187fb65e535d5da6283cc5b1b328f3de8c1bc2535af2420751bafe3328b31"
+          }
+        ],
+        "expected": 288,
+        "observed": 284,
+        "missing_utc_epochs": [
+          1794261600,
+          1794264900,
+          1794266100,
+          1794266700
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 98.6111
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-10",
+      "end": 1794355200,
+      "first_imported_at": "2026-11-19T04:12:16.959Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "GBP-USD_1Minute_BID_2026-11-10_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "ab0ef93bd47aa36b1238873e08efe3b2410d9cbdd0fe898b599a98c17a7b78f4",
+      "start": 1794268800,
+      "symbol": "GBPUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794268800,
+      "last": 1794355140,
+      "rejected_rows": 0,
+      "source_records": 1435,
+      "valid_m1": 1435
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "4ee8cd31b8e13be20347d97115e493d13772c4b3f8d3fc560d3b273b5e53d419",
+            "sha256": "c9352c167a5bc7f31418734fb22f2d5b246ad4ca6a7d50d0f17225566f741ddc"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1435,
+        "missing_utc_epochs": [
+          1794348060,
+          1794348120,
+          1794348180,
+          1794353160,
+          1794354540
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.6528
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "9fc9a9e89822ef69df0f232c54234710dfa8d6e090bbaa6ce3b1de83fcdae7d6",
+            "sha256": "f685ddda306a03be57ab3fc055873eb48ae2db2819568951c0c057a129647d8c"
+          }
+        ],
+        "expected": 288,
+        "observed": 285,
+        "missing_utc_epochs": [
+          1794348000,
+          1794353100,
+          1794354300
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 98.9583
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-11",
+      "end": 1794441600,
+      "first_imported_at": "2026-11-19T04:12:17.075Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "GBP-USD_1Minute_BID_2026-11-11_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "14003bf93e64aecd14a7c0898e1abbaa53cb7cd8fce9fc20123c09db3a91a804",
+      "start": 1794355200,
+      "symbol": "GBPUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794355200,
+      "last": 1794441540,
+      "rejected_rows": 0,
+      "source_records": 1435,
+      "valid_m1": 1435
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "d5c1d2149080d9dead8d5dd51325e1d59f1f509a036ab30c21a6cd1790766a0c",
+            "sha256": "94f7b9623632df54c29e9bbb5d90cc0602a37ace0530b6936820daf43340dbc4"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1435,
+        "missing_utc_epochs": [
+          1794432840,
+          1794434460,
+          1794434520,
+          1794434580,
+          1794434880
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.6528
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "664754fe64aeb4c3da58c980671dc58ba28fb9d8d5628047f2e435ead83acad5",
+            "sha256": "b427ade21c11af8262cc09ecb0160f3e4932ffca2579d745be8ed3ccbef19373"
+          }
+        ],
+        "expected": 288,
+        "observed": 285,
+        "missing_utc_epochs": [
+          1794432600,
+          1794434400,
+          1794434700
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 98.9583
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-12",
+      "end": 1794528000,
+      "first_imported_at": "2026-11-19T04:12:17.204Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "GBP-USD_1Minute_BID_2026-11-12_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "3bbcd8915b623a30fb9b85ea722063a081bec4601791e93b05a9d75e9be77da1",
+      "start": 1794441600,
+      "symbol": "GBPUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794441600,
+      "last": 1794527940,
+      "rejected_rows": 0,
+      "source_records": 1436,
+      "valid_m1": 1436
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "b5db8bd345060a2e25ef9dfcff470c4985cf002f75c0e7e053e8dcdc129f26d1",
+            "sha256": "a53a51f861a8231f7cf2189dbf8aed3f211ebfee29a30b5802b503ce73c2d68b"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1436,
+        "missing_utc_epochs": [
+          1794520860,
+          1794520920,
+          1794520980,
+          1794523560
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.7222
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "c0d69de19ec548402036521818a5d51bdd2cf9e3e1787d06ed21a1d9869133ea",
+            "sha256": "2de18c43361cc2f445e7f185df6ce83772723971ef480dada2cfb685cb4add57"
+          }
+        ],
+        "expected": 288,
+        "observed": 286,
+        "missing_utc_epochs": [
+          1794520800,
+          1794523500
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.3056
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-13",
+      "end": 1794614400,
+      "first_imported_at": "2026-11-19T04:12:17.332Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "GBP-USD_1Minute_ASK_2026-11-13_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "ASK",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "347e7a6aa96f1f95846d65e8c5d5f4e6cfd0d1230d0e52ea5652d15b7a0031a8",
+      "start": 1794528000,
+      "symbol": "GBPUSD"
+    },
+    "feed_id": "dukascopy-web-ask-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794528000,
+      "last": 1794607140,
+      "rejected_rows": 0,
+      "source_records": 1320,
+      "valid_m1": 1320
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "34e06d605e562ec0231905d6fc0fde1c8baa9c594fbb2c82e252f76319085392",
+            "sha256": "8bbcadb1dc38299e9110d337d3dcb70076a89fb373c9c88de8aebe6464487a5a"
+          }
+        ],
+        "expected": 1320,
+        "observed": 1320,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 120,
+        "coverage_pct": 100.0
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "f027e07c491f0f6a0f13af00606f406e234356524256df19434476c54c74a639",
+            "sha256": "4ea4d80d64b6e366a5ad0ba427621c35ea404f2ba3b50bf87c8bd1c3b9ef7518"
+          }
+        ],
+        "expected": 264,
+        "observed": 264,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 24,
+        "coverage_pct": 100.0
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-13",
+      "end": 1794614400,
+      "first_imported_at": "2026-11-19T04:12:17.502Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "GBP-USD_1Minute_BID_2026-11-13_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "25b5f24e0973f993b721fa06bc3e1cff1870d1eef4d943db0fa97604ea4f0e75",
+      "start": 1794528000,
+      "symbol": "GBPUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794528000,
+      "last": 1794607140,
+      "rejected_rows": 0,
+      "source_records": 1320,
+      "valid_m1": 1320
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "expected": 1320,
+        "observed": 1320,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 120,
+        "coverage_pct": 100.0
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "expected": 264,
+        "observed": 264,
+        "missing_utc_epochs": [],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 24,
+        "coverage_pct": 100.0
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-16",
+      "end": 1794873600,
+      "first_imported_at": "2026-11-19T04:12:17.630Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "GBP-USD_1Minute_BID_2026-11-16_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "425cb8d421ea51b1d4ca1dc97217532da3f3ab83f7be1ca5983d409eb484e715",
+      "start": 1794787200,
+      "symbol": "GBPUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794787200,
+      "last": 1794873540,
+      "rejected_rows": 0,
+      "source_records": 1439,
+      "valid_m1": 1439
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "0e4cb47e35b32bb7706595c9f1916a1ff54b2cab7f28e397b6e7d95a9d7ca3da",
+            "sha256": "02c10b5d005443d762c79fd2c8c04a85029ff47e19ae074f8ffe298f808036af"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1439,
+        "missing_utc_epochs": [
+          1794868080
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.9306
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "f7f42baae5304ee21f5a11cfd2d6233338c877fa6d6b69674ff51c201d238515",
+            "sha256": "18db7664b67a1c659b8acd887c231591f7d0f83b687f703d7d97e5b88df4f14b"
+          }
+        ],
+        "expected": 288,
+        "observed": 287,
+        "missing_utc_epochs": [
+          1794867900
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.6528
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-17",
+      "end": 1794960000,
+      "first_imported_at": "2026-11-19T04:12:17.759Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "GBP-USD_1Minute_BID_2026-11-17_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "656a8302fee4dd40b32d410a4d452a4384b0f8fa5f408feba71a30a72fd77f85",
+      "start": 1794873600,
+      "symbol": "GBPUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794873600,
+      "last": 1794959940,
+      "rejected_rows": 0,
+      "source_records": 1437,
+      "valid_m1": 1437
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "3e207fbfef644290646375603d76552368b69778a1d0b19aeca7de721057bdd3",
+            "sha256": "c1d0413ff15f450bafec237dafd6e1008203462efe0a842abb7d763e09a0b727"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1437,
+        "missing_utc_epochs": [
+          1794952860,
+          1794952980,
+          1794953340
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.7917
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "15b31cd0a5769f401394cda4d39f39ed86779359f120c667b68fb8a3e57c98aa",
+            "sha256": "2df341f64ff2a92d6bf5d0aed49c795ea5b78f7c9c70a97e6f907456cb252868"
+          }
+        ],
+        "expected": 288,
+        "observed": 286,
+        "missing_utc_epochs": [
+          1794952800,
+          1794953100
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.3056
+      }
+    }
+  },
+  {
+    "source": {
+      "day": "2026-11-18",
+      "end": 1795046400,
+      "first_imported_at": "2026-11-19T04:12:17.887Z",
+      "format": "WEB_M1_CSV",
+      "original_name": "GBP-USD_1Minute_BID_2026-11-18_00_00-23_59_Etc_UTC.csv",
+      "price_basis": "BID",
+      "provider": "DUKASCOPY",
+      "scale": 100000,
+      "sha256": "dfbf707b636434d35c2dcf35e9974c13d971f8e05a42207e289feb94ff5bc7b6",
+      "start": 1794960000,
+      "symbol": "GBPUSD"
+    },
+    "feed_id": "dukascopy-web-m1-v1",
+    "aggregation_policy": "DUKASCOPY_WEB_M1_COMPLETE_M5_V1",
+    "counts": {
+      "duplicates": 0,
+      "first": 1794960000,
+      "last": 1795046340,
+      "rejected_rows": 0,
+      "source_records": 1435,
+      "valid_m1": 1435
+    },
+    "coverage": {
+      "M1": {
+        "partitions": [
+          {
+            "id": "bc436b9c5ae4ea9589a5de76b7293c689a3ee2ead09e06d2ada1c816bf15f48e",
+            "sha256": "9faeef167f56d47d64f883660e64437d9edb536e1da8da868ea419ec5bfedaef"
+          }
+        ],
+        "expected": 1440,
+        "observed": 1435,
+        "missing_utc_epochs": [
+          1795040640,
+          1795040700,
+          1795040760,
+          1795040820,
+          1795045260
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 99.6528
+      },
+      "M5": {
+        "partitions": [
+          {
+            "id": "257d868228b2fc313ab1e53aa2d9e47077b4eec89f8fdbf93296b18ad181741b",
+            "sha256": "6fb37f6f3308203226ff3bd917a3008d0857385b5e85a212d31361bb17c860b0"
+          }
+        ],
+        "expected": 288,
+        "observed": 285,
+        "missing_utc_epochs": [
+          1795040400,
+          1795040700,
+          1795045200
+        ],
+        "outside_schedule": [],
+        "scheduled_closed_slots": 0,
+        "coverage_pct": 98.9583
+      }
+    }
+  }
+]

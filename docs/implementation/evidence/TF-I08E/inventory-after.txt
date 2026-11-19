@@ -1,0 +1,3 @@
+[{"provider": "DUKASCOPY", "kind": "candles", "partitions": 36, "records": 30451}]
+sealed_recorded_manifests 0
+DUKASCOPY M5 INSUFFICIENT_COVERAGE {"HISTORICAL_SIMULATION": {"blocking_reason": "MISSING_OPEN_CANDLES", "eligible": 285, "missing": 3}, "STRICT_RECORDED": {"blocking_reason": "UNVERIFIED_AVAILABILITY", "eligible": 0, "missing": 288}}

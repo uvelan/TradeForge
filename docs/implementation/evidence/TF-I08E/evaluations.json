@@ -1,0 +1,450 @@
+{
+  "M1-S0": {
+    "bar_coverage": {
+      "comparison": {
+        "expected_closed": 1320,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "GBPUSD",
+        "unrecorded_observations": 0
+      },
+      "primary": {
+        "expected_closed": 1320,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "EURUSD",
+        "unrecorded_observations": 0
+      }
+    },
+    "calculation_id": "35b6da2ff113786d6f632844fe4207622c373758374de9738858166817619877",
+    "indicator_fingerprints": [
+      "ee2ce5369b0be9611f73b22f22d795dd966ec907bdf0b36e435ab7cb02db5945",
+      "eba651893fe50dcca7cce50cff7007f30c9cc5b8ec61a309e4f091781ea40cb0"
+    ],
+    "indicators": [
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks"
+      ],
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks"
+      ]
+    ],
+    "joint_ready_modes": [
+      "LEGACY_RESEARCH",
+      "HISTORICAL_SIMULATION"
+    ],
+    "paginated_snapshot_match": true,
+    "reason": "MATCHING_OR_ACTIVATION_COVERAGE_INCOMPLETE",
+    "recorded_result": "UNVERIFIED_AVAILABILITY",
+    "replay_rewind_and_advance": "PASS",
+    "response_fingerprint": "d1886953e41f06d2f3df979c36ede064f89f28cda3fa94dfb71c8a69985907a3",
+    "simulation_eligible": 8,
+    "smt_events": 8,
+    "snapshot": "ad9c59661f4dbedd900a4ad1617e9b18e15b2e25f1bee4f96744820fb03471c2",
+    "status": "PARTIAL",
+    "verified_pivot_pair_events": 8
+  },
+  "M1-S1": {
+    "bar_coverage": {
+      "comparison": {
+        "expected_closed": 1320,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "GBPUSD",
+        "unrecorded_observations": 0
+      },
+      "primary": {
+        "expected_closed": 1320,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "EURUSD",
+        "unrecorded_observations": 0
+      }
+    },
+    "calculation_id": "12fedb8a05c097ca3b7ffd23761d28056aedb601245512eb15d340fd61d356f8",
+    "indicator_fingerprints": [
+      "5ee4b2c4735a6bed1527412d9f2cc3a2fb6db4d8f2fa6f758636d90700845f7f",
+      "7ca23e585ca798f76bd112a87a69564de31860915c456fea2f1d6e5f728c9dd4"
+    ],
+    "indicators": [
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks"
+      ],
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks"
+      ]
+    ],
+    "joint_ready_modes": [
+      "LEGACY_RESEARCH",
+      "HISTORICAL_SIMULATION"
+    ],
+    "paginated_snapshot_match": true,
+    "reason": "MATCHING_OR_ACTIVATION_COVERAGE_INCOMPLETE",
+    "recorded_result": "UNVERIFIED_AVAILABILITY",
+    "replay_rewind_and_advance": "PASS",
+    "response_fingerprint": "2d8a289f699b0de63afae7741edd346ab57cfe1af218bfdbf3dd29b839e6c112",
+    "simulation_eligible": 8,
+    "smt_events": 8,
+    "snapshot": "6310550941292426d14d95ae1997812c030c5377b9d3020950dd2d1556391557",
+    "status": "PARTIAL",
+    "verified_pivot_pair_events": 8
+  },
+  "M1-S2": {
+    "bar_coverage": {
+      "comparison": {
+        "expected_closed": 1320,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "GBPUSD",
+        "unrecorded_observations": 0
+      },
+      "primary": {
+        "expected_closed": 1320,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "EURUSD",
+        "unrecorded_observations": 0
+      }
+    },
+    "calculation_id": "62b6109b922b4a4f1bebc7e92915dad90d3016162a12c6b609ba67fcf86863ba",
+    "indicator_fingerprints": [
+      "4fe8435879c0af8ab366a0b66cc71c740a62213fbad7980b10864199e3f7a91a",
+      "bcd24a14a8d93fb60fa53f65e296cfc7042e536b851785d152b88d3dbe83ecb2"
+    ],
+    "indicators": [
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks"
+      ],
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks"
+      ]
+    ],
+    "joint_ready_modes": [
+      "LEGACY_RESEARCH",
+      "HISTORICAL_SIMULATION"
+    ],
+    "paginated_snapshot_match": true,
+    "reason": "MATCHING_OR_ACTIVATION_COVERAGE_INCOMPLETE",
+    "recorded_result": "UNVERIFIED_AVAILABILITY",
+    "replay_rewind_and_advance": "PASS",
+    "response_fingerprint": "978ee6d778e1c14da21f98390be0c843514af8a4b5b0f18ab465abb029293c00",
+    "simulation_eligible": 8,
+    "smt_events": 8,
+    "snapshot": "44af50d7c56898f151976b13a5132f865fefc941f70e8df847bca5ef3272a49d",
+    "status": "PARTIAL",
+    "verified_pivot_pair_events": 8
+  },
+  "M1-S3": {
+    "bar_coverage": {
+      "comparison": {
+        "expected_closed": 1320,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "GBPUSD",
+        "unrecorded_observations": 0
+      },
+      "primary": {
+        "expected_closed": 1320,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "EURUSD",
+        "unrecorded_observations": 0
+      }
+    },
+    "calculation_id": "807375c93cd652e2d57eb5e01bf3ee7a9964a37579f34a50978e43734de04ce8",
+    "indicator_fingerprints": [
+      "49ccff770933ce2526636ffc4e2b24c93f5668c0e5a05207ec823457cf633539",
+      "496f025621ad766570a505d43b822932c638d1126a3dd50d9b1ce184391ec365"
+    ],
+    "indicators": [
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks"
+      ],
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks"
+      ]
+    ],
+    "joint_ready_modes": [
+      "LEGACY_RESEARCH",
+      "HISTORICAL_SIMULATION"
+    ],
+    "paginated_snapshot_match": true,
+    "reason": "MATCHING_OR_ACTIVATION_COVERAGE_INCOMPLETE",
+    "recorded_result": "UNVERIFIED_AVAILABILITY",
+    "replay_rewind_and_advance": "PASS",
+    "response_fingerprint": "b274c24dd53a31a64d5a4985ad4bb37c9f9b104e1cd88d33a347f6b79060833d",
+    "simulation_eligible": 8,
+    "smt_events": 8,
+    "snapshot": "2320ffeca205334315f57859f806726ace9b109442076994e1afe5b77bfc1d46",
+    "status": "PARTIAL",
+    "verified_pivot_pair_events": 8
+  },
+  "M5-S0": {
+    "bar_coverage": {
+      "comparison": {
+        "expected_closed": 264,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "GBPUSD",
+        "unrecorded_observations": 0
+      },
+      "primary": {
+        "expected_closed": 264,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "EURUSD",
+        "unrecorded_observations": 0
+      }
+    },
+    "calculation_id": "9cd024d065ede64b18978cd1c7e17fa020e8ea6ca37c6371e0d28afd69fcd094",
+    "indicator_fingerprints": [
+      "ee78870abddaf6d45a6ca6a0fae67add9e6661667af515325b123b99b534a068",
+      "986baf02a4f6b2c83e95227d43792299bf273e5442f799ccbd6a45c1285557dd"
+    ],
+    "indicators": [
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks",
+        "candle_range_theory"
+      ],
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks",
+        "candle_range_theory"
+      ]
+    ],
+    "joint_ready_modes": [
+      "LEGACY_RESEARCH",
+      "HISTORICAL_SIMULATION"
+    ],
+    "paginated_snapshot_match": true,
+    "reason": "MATCHING_OR_ACTIVATION_COVERAGE_INCOMPLETE",
+    "recorded_result": "UNVERIFIED_AVAILABILITY",
+    "replay_rewind_and_advance": "PASS",
+    "response_fingerprint": "a2f890a75a764a7894976d3b8e3ef4d2efdc612a8691706ee67bd795068cfc3b",
+    "simulation_eligible": 8,
+    "smt_events": 8,
+    "snapshot": "2f5fe046b9e2a5fcd9b8216415ae3619ecefa71bcdb933732acb460c47541b57",
+    "status": "PARTIAL",
+    "verified_pivot_pair_events": 8
+  },
+  "M5-S1": {
+    "bar_coverage": {
+      "comparison": {
+        "expected_closed": 264,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "GBPUSD",
+        "unrecorded_observations": 0
+      },
+      "primary": {
+        "expected_closed": 264,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "EURUSD",
+        "unrecorded_observations": 0
+      }
+    },
+    "calculation_id": "2e4930f38b91d9b4e802e29ae1f61104927e73eedc3cb8c8c56f7c44d06a6e79",
+    "indicator_fingerprints": [
+      "ab5dfff068a566ba1596a9fbad22ba5e0bb4c1bdb29added29c43260f49c73f2",
+      "059af5bee5dda43ff5e7b1e02503061072504512eaee96de3c08cccb76a4096a"
+    ],
+    "indicators": [
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks",
+        "candle_range_theory"
+      ],
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks",
+        "candle_range_theory"
+      ]
+    ],
+    "joint_ready_modes": [
+      "LEGACY_RESEARCH",
+      "HISTORICAL_SIMULATION"
+    ],
+    "paginated_snapshot_match": true,
+    "reason": "MATCHING_OR_ACTIVATION_COVERAGE_INCOMPLETE",
+    "recorded_result": "UNVERIFIED_AVAILABILITY",
+    "replay_rewind_and_advance": "PASS",
+    "response_fingerprint": "ff3314bf5e5b40e62a778d3e8f66733b0a09ea0e371a1224f4aac1204fd0cb9a",
+    "simulation_eligible": 8,
+    "smt_events": 8,
+    "snapshot": "1b1f09ad4066e9857e3d37886dad17bbc59536b7a8b04f8d8b3b79d8c92c24d8",
+    "status": "PARTIAL",
+    "verified_pivot_pair_events": 8
+  },
+  "M5-S2": {
+    "bar_coverage": {
+      "comparison": {
+        "expected_closed": 264,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "GBPUSD",
+        "unrecorded_observations": 0
+      },
+      "primary": {
+        "expected_closed": 264,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "EURUSD",
+        "unrecorded_observations": 0
+      }
+    },
+    "calculation_id": "d1dd89b066884dec99ac0118c95030174f6f335df107d81fc4850f5ad26b7e10",
+    "indicator_fingerprints": [
+      "f0a14637021999a3dfc6a3da78029fa70e9cae7721690143a068a5d736a865eb",
+      "4a3dffca31e19bad9922d20b38de60d4c00dda7251d5ba6dabd507a6c1b425dd"
+    ],
+    "indicators": [
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks",
+        "candle_range_theory"
+      ],
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks",
+        "candle_range_theory"
+      ]
+    ],
+    "joint_ready_modes": [
+      "LEGACY_RESEARCH",
+      "HISTORICAL_SIMULATION"
+    ],
+    "paginated_snapshot_match": true,
+    "reason": "MATCHING_OR_ACTIVATION_COVERAGE_INCOMPLETE",
+    "recorded_result": "UNVERIFIED_AVAILABILITY",
+    "replay_rewind_and_advance": "PASS",
+    "response_fingerprint": "fbb2f4b55f285b66571fd5a8f2c0d194b799993f6f111f4ed398ca84c3ab04c0",
+    "simulation_eligible": 8,
+    "smt_events": 8,
+    "snapshot": "b0e5a6e06b64c0d5b1b2c8a260cb3af56fdae6c49b87ee4ed25fa0098368c6a2",
+    "status": "PARTIAL",
+    "verified_pivot_pair_events": 8
+  },
+  "M5-S3": {
+    "bar_coverage": {
+      "comparison": {
+        "expected_closed": 264,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "GBPUSD",
+        "unrecorded_observations": 0
+      },
+      "primary": {
+        "expected_closed": 264,
+        "known_open_gaps": 0,
+        "missing_closed": 0,
+        "pending_closed": 0,
+        "status": "COMPLETE",
+        "symbol": "EURUSD",
+        "unrecorded_observations": 0
+      }
+    },
+    "calculation_id": "69dcab9cc5716a414304435711304a905e7ad69ce5c6e22c006d88901b5c42e1",
+    "indicator_fingerprints": [
+      "8f02d1e10b978759c3e397b3e873cfa392a09a81f85f56a4c6ce9e432dfb2692",
+      "6775b9985a20193e1473f55ff669141720e8847fa9ac1323895a4339282d6103"
+    ],
+    "indicators": [
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks",
+        "candle_range_theory"
+      ],
+      [
+        "market_structure",
+        "liquidity_sweeps",
+        "fair_value_gap",
+        "order_blocks",
+        "candle_range_theory"
+      ]
+    ],
+    "joint_ready_modes": [
+      "LEGACY_RESEARCH",
+      "HISTORICAL_SIMULATION"
+    ],
+    "paginated_snapshot_match": true,
+    "reason": "MATCHING_OR_ACTIVATION_COVERAGE_INCOMPLETE",
+    "recorded_result": "UNVERIFIED_AVAILABILITY",
+    "replay_rewind_and_advance": "PASS",
+    "response_fingerprint": "caa04267b24e3fca082f22db108ab98a3bed7a7027174a990e522b5c46cb171d",
+    "simulation_eligible": 8,
+    "smt_events": 8,
+    "snapshot": "ce3f104cd93ee147ab7d18f71a5fa6ec5a5ee89143ea035458f241069ead1a23",
+    "status": "PARTIAL",
+    "verified_pivot_pair_events": 8
+  }
+}

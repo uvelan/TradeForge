@@ -1,0 +1,7 @@
+forward [{'time': 1794787200, 'open': 1.1, 'high': 1.1002, 'low': 1.1, 'close': 1.1001, 'ask_open': 1.10002, 'ask_high': 1.10022, 'ask_low': 1.10002, 'ask_close': 1.10012, 'volume': 3}]
+reverse [{'time': 1794787200, 'open': 1.1001, 'high': 1.1002, 'low': 1.1, 'close': 1.1, 'ask_open': 1.10012, 'ask_high': 1.10022, 'ask_low': 1.10002, 'ask_close': 1.10002, 'volume': 3}]
+Traceback (most recent call last):
+  File "K:\Projects\TradeForge\arrival_e_baseline_tmp.py", line 12, in <module>
+    assert forward == reverse, "Provider order changed candle open and close"
+           ^^^^^^^^^^^^^^^^^^
+AssertionError: Provider order changed candle open and close
