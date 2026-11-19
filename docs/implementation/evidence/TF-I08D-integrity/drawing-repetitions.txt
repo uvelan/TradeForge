@@ -1,0 +1,38 @@
+
+> e2e
+> playwright test e2e/drawing-edit.spec.ts -g all four rectangle handles|long position rejects crossed --retries=0 --repeat-each=4 --reporter=line
+
+[WebServer] INFO:     Started server process [29420]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8191 (Press CTRL+C to quit)
+
+
+[WebServer] (node:7528) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 8 tests using 1 worker
+
+
+(node:14360) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/8] e2e\drawing-edit.spec.ts:180:1 › all four rectangle handles edit only their corresponding boundaries
+[2/8] e2e\drawing-edit.spec.ts:200:3 › long position rejects crossed handles and preserves direction on a valid resize
+
+(node:28276) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[3/8] e2e\drawing-edit.spec.ts:180:1 › all four rectangle handles edit only their corresponding boundaries
+[4/8] e2e\drawing-edit.spec.ts:200:3 › long position rejects crossed handles and preserves direction on a valid resize
+
+(node:2848) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[5/8] e2e\drawing-edit.spec.ts:180:1 › all four rectangle handles edit only their corresponding boundaries
+[6/8] e2e\drawing-edit.spec.ts:200:3 › long position rejects crossed handles and preserves direction on a valid resize
+
+(node:2480) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[7/8] e2e\drawing-edit.spec.ts:180:1 › all four rectangle handles edit only their corresponding boundaries
+[8/8] e2e\drawing-edit.spec.ts:200:3 › long position rejects crossed handles and preserves direction on a valid resize
+  8 passed (44.0s)

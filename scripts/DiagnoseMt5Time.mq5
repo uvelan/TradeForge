@@ -18,4 +18,3 @@ void OnStart()
                      (long)rates[bar].time);
    }
 }
-

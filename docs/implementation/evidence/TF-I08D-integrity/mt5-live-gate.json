@@ -1,0 +1,12 @@
+{
+  "connection": "initialized",
+  "scopes": {
+    "EURUSD M1": "UNVERIFIED_TIMESTAMP_DOMAIN",
+    "GBPUSD M1": "UNVERIFIED_TIMESTAMP_DOMAIN",
+    "EURUSD M5": "UNVERIFIED_TIMESTAMP_DOMAIN",
+    "GBPUSD M5": "UNVERIFIED_TIMESTAMP_DOMAIN"
+  },
+  "observations": 0,
+  "witnesses": 0,
+  "leases_after_release": 0
+}

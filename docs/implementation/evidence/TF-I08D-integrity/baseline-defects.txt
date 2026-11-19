@@ -1,0 +1,118 @@
+FFF                                                                      [100%]
+================================== FAILURES ===================================
+__________________ test_receipt_cannot_be_backdated[native] ___________________
+
+client = <starlette.testclient.TestClient object at 0x00000267D2C8B4D0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000267D249DA70>
+aggregate = False
+
+    @pytest.mark.parametrize("aggregate", [False, True], ids=["native", "aggregate"])
+    def test_receipt_cannot_be_backdated(client, monkeypatch, aggregate):
+        from arrival_fixtures import trusted_archive
+
+        clock = Clock((CLOSE + 1) * 1000)
+        if aggregate:
+            source = trusted_archive([candle(t) for t in range(OPEN, CLOSE, 60)],
+                provider="MT5", feed="minute", symbol="EURUSD", timeframe="M1",
+                start=OPEN, end=CLOSE, cutoff=CLOSE)
+            delay_receipt(monkeypatch, clock)
+            output = capture.aggregate_m1(source, clock)
+            scope = {key: output[key] for key in capture.SCOPE_FIELDS}
+            calendar = capture.MarketSchedule.model_validate(output["calendar"])
+        else:
+            current = worker(Clock(OPEN * 1000), timeframe="M5")
+            with transaction() as db:
+                for offset in (240, 180, 120, 60):
+                    capture.renew(db, current.sessions["EURUSD"], (CLOSE-offset)*1000)
+            current.clock = clock
+            def read(symbol, frame, limit, **kwargs):
+                kwargs["provenance"].update(feed_id="mt5:fixture", price_basis="BID",
+                                            timestamp_policy="UTC_EPOCH_VERIFIED_V1")
+                return [candle(OPEN)]
+            delay_receipt(monkeypatch, clock)
+            result = observe(current, read, "EURUSD")
+            scope = {**capture_scope(result), "timeframe": "M5"}
+            calendar = current.config.calendar
+>       with pytest.raises(ValueError, match="No bounded recorded evidence"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+research_backend\tests\test_arrival_integrity.py:93: Failed
+_________________ test_receipt_cannot_be_backdated[aggregate] _________________
+
+client = <starlette.testclient.TestClient object at 0x00000267D2DF1310>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000267CFED2060>
+aggregate = True
+
+    @pytest.mark.parametrize("aggregate", [False, True], ids=["native", "aggregate"])
+    def test_receipt_cannot_be_backdated(client, monkeypatch, aggregate):
+        from arrival_fixtures import trusted_archive
+
+        clock = Clock((CLOSE + 1) * 1000)
+        if aggregate:
+            source = trusted_archive([candle(t) for t in range(OPEN, CLOSE, 60)],
+                provider="MT5", feed="minute", symbol="EURUSD", timeframe="M1",
+                start=OPEN, end=CLOSE, cutoff=CLOSE)
+            delay_receipt(monkeypatch, clock)
+            output = capture.aggregate_m1(source, clock)
+            scope = {key: output[key] for key in capture.SCOPE_FIELDS}
+            calendar = capture.MarketSchedule.model_validate(output["calendar"])
+        else:
+            current = worker(Clock(OPEN * 1000), timeframe="M5")
+            with transaction() as db:
+                for offset in (240, 180, 120, 60):
+                    capture.renew(db, current.sessions["EURUSD"], (CLOSE-offset)*1000)
+            current.clock = clock
+            def read(symbol, frame, limit, **kwargs):
+                kwargs["provenance"].update(feed_id="mt5:fixture", price_basis="BID",
+                                            timestamp_policy="UTC_EPOCH_VERIFIED_V1")
+                return [candle(OPEN)]
+            delay_receipt(monkeypatch, clock)
+            result = observe(current, read, "EURUSD")
+            scope = {**capture_scope(result), "timeframe": "M5"}
+            calendar = current.config.calendar
+>       with pytest.raises(ValueError, match="No bounded recorded evidence"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+research_backend\tests\test_arrival_integrity.py:93: Failed
+___________ test_older_manifest_cannot_replace_corrected_aggregate ____________
+
+client = <starlette.testclient.TestClient object at 0x00000267E1417D90>
+
+    def test_older_manifest_cannot_replace_corrected_aggregate(client):
+        current = worker(Clock(OPEN * 1000))
+        with transaction() as db:
+            for offset in (240, 180, 120, 60):
+                capture.renew(db, current.sessions["EURUSD"], (CLOSE-offset)*1000)
+        current.clock.now = (CLOSE + 1) * 1000
+        batch = [candle(t) for t in range(OPEN, CLOSE, 60)]
+        scope = capture_scope(observe(current, provider(batch), "EURUSD"))
+        a = capture.seal(scope, OPEN, CLOSE, CLOSE+2, current.config.calendar)
+        first = capture.aggregate_m1(a, Clock((CLOSE+3)*1000))
+        current.clock.now = (CLOSE+4)*1000
+        observe(current, provider([candle(OPEN, 20)]), "EURUSD")
+        b = capture.seal(scope, OPEN, CLOSE, CLOSE+5, current.config.calendar)
+        second = capture.aggregate_m1(b, Clock((CLOSE+6)*1000))
+        try:
+            capture.aggregate_m1(a, Clock((CLOSE+7)*1000))
+        except ValueError as error:
+            assert str(error) == "STALE_OR_INCOMPARABLE_AGGREGATE_SOURCE"
+        assert first["id"] != second["id"]
+>       assert len(rows("SELECT sequence FROM arrival_observations WHERE timeframe='M5'")) == 2
+E       assert 3 == 2
+E        +  where 3 = len([{'sequence': 6}, {'sequence': 8}, {'sequence': 9}])
+E        +    where [{'sequence': 6}, {'sequence': 8}, {'sequence': 9}] = rows("SELECT sequence FROM arrival_observations WHERE timeframe='M5'")
+
+research_backend\tests\test_arrival_integrity.py:117: AssertionError
+============================== warnings summary ===============================
+research_backend/tests/test_arrival_integrity.py::test_receipt_cannot_be_backdated[native]
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_arrival_integrity.py::test_receipt_cannot_be_backdated[native]
+FAILED research_backend/tests/test_arrival_integrity.py::test_receipt_cannot_be_backdated[aggregate]
+FAILED research_backend/tests/test_arrival_integrity.py::test_older_manifest_cannot_replace_corrected_aggregate
+3 failed, 1 warning in 2.43s

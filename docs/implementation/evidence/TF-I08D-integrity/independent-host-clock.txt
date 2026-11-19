@@ -1,0 +1,7 @@
+Tracking time.windows.com [40.81.94.65:123].
+Collecting 3 samples.
+The current time is 19-11-2026 08:20:41.
+08:20:41, +06.4789650s
+08:20:43, +06.4789175s
+08:20:45, +06.4826244s
+Exit code 0
