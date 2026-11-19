@@ -1,0 +1,16 @@
+
+Leap Indicator: 3(not synchronized)
+Stratum: 0 (unspecified)
+Last Successful Sync Time: unspecified
+
+Tracking time.windows.com [40.81.94.65:123].
+Collecting 5 samples.
+The current time is 19-11-2026 09:29:36.
+09:29:36, +06.5570466s
+09:29:38, +06.5587542s
+09:29:40, +06.5576506s
+09:29:43, +06.5589978s
+09:29:45, +06.5567609s
+2026-11-19T04:22:45.0085829Z
+Monotonic and wall elapsed ns: 100282400 100283400
+Configured source not published.

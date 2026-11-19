@@ -1,0 +1,17 @@
+EUR/USD T23 EUR-USD_1Tick_BID_2026-11-16_23_00-23_00_Etc_UTC.csv null
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.innerText: Timeout 30000ms exceeded.
+Call log:
+  - waiting for getByRole('dialog').getByRole('combobox', { name: /^Tick$|^Minute$/ })
+
+    at K:\Projects\TradeForge\frontend\tf_widget_tmp.mjs:13:36 {
+  log: [
+    "  - waiting for getByRole('dialog').getByRole('combobox', { name: /^Tick$|^Minute$/ })"
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.14.0

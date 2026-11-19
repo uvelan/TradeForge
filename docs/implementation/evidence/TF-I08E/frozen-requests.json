@@ -1,0 +1,2182 @@
+{
+  "M1-S0": {
+    "crt_early": [],
+    "indicator_requests": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607200,
+        "delay_seconds": 0,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607200,
+        "delay_seconds": 0,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      }
+    ],
+    "request": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 0,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "cutoff": 1794607200,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 0,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      }
+    },
+    "rewind": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 0,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "cutoff": 1794605400,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 0,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      }
+    }
+  },
+  "M1-S1": {
+    "crt_early": [],
+    "indicator_requests": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607202,
+        "delay_seconds": 2,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607202,
+        "delay_seconds": 2,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      }
+    ],
+    "request": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "cutoff": 1794607202,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      }
+    },
+    "rewind": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "cutoff": 1794605402,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      }
+    }
+  },
+  "M1-S2": {
+    "crt_early": [],
+    "indicator_requests": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607215,
+        "delay_seconds": 2,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607215,
+        "delay_seconds": 15,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      }
+    ],
+    "request": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 15,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "cutoff": 1794607215,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      }
+    },
+    "rewind": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 15,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "cutoff": 1794605415,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      }
+    }
+  },
+  "M1-S3": {
+    "crt_early": [],
+    "indicator_requests": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607230,
+        "delay_seconds": 15,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607230,
+        "delay_seconds": 30,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      }
+    ],
+    "request": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 30,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "cutoff": 1794607230,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 15,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      }
+    },
+    "rewind": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 30,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M1"
+      },
+      "cutoff": 1794605430,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 15,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M1"
+      }
+    }
+  },
+  "M5-S0": {
+    "crt_early": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794531599,
+        "delay_seconds": 0,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794531599,
+        "delay_seconds": 0,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      }
+    ],
+    "indicator_requests": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607200,
+        "delay_seconds": 0,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607200,
+        "delay_seconds": 0,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      }
+    ],
+    "request": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 0,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      },
+      "cutoff": 1794607200,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 0,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      }
+    },
+    "rewind": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 0,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      },
+      "cutoff": 1794605400,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 0,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      }
+    }
+  },
+  "M5-S1": {
+    "crt_early": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794531599,
+        "delay_seconds": 2,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794531599,
+        "delay_seconds": 2,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      }
+    ],
+    "indicator_requests": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607202,
+        "delay_seconds": 2,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607202,
+        "delay_seconds": 2,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      }
+    ],
+    "request": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      },
+      "cutoff": 1794607202,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      }
+    },
+    "rewind": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      },
+      "cutoff": 1794605402,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      }
+    }
+  },
+  "M5-S2": {
+    "crt_early": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794531599,
+        "delay_seconds": 2,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794531599,
+        "delay_seconds": 15,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      }
+    ],
+    "indicator_requests": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607215,
+        "delay_seconds": 2,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607215,
+        "delay_seconds": 15,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      }
+    ],
+    "request": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 15,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      },
+      "cutoff": 1794607215,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      }
+    },
+    "rewind": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 15,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      },
+      "cutoff": 1794605415,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 2,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      }
+    }
+  },
+  "M5-S3": {
+    "crt_early": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794531599,
+        "delay_seconds": 15,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794531599,
+        "delay_seconds": 30,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      }
+    ],
+    "indicator_requests": [
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607230,
+        "delay_seconds": 15,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      },
+      {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "availability_start": 1794528000,
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "candles": [],
+        "cutoff": 1794607230,
+        "delay_seconds": 30,
+        "feed_id": "dukascopy-web-m1-v1",
+        "frozen": true,
+        "indicators": [
+          {
+            "id": "market_structure",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "id": "liquidity_sweeps",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "fvg": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "fair_value_gap"
+          },
+          {
+            "id": "order_blocks",
+            "structure": {
+              "algorithm_version": 2,
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            }
+          },
+          {
+            "crt": {
+              "history_bars": 10000,
+              "history_start": 1794528000,
+              "market_schedule": {
+                "kind": "forex_weekly"
+              }
+            },
+            "id": "candle_range_theory"
+          }
+        ],
+        "load_reference": true,
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      }
+    ],
+    "request": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 30,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      },
+      "cutoff": 1794607230,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 15,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      }
+    },
+    "rewind": {
+      "availability_mode": "HISTORICAL_SIMULATION",
+      "comparison": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 30,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "GBPUSD",
+        "timeframe": "M5"
+      },
+      "cutoff": 1794605430,
+      "limit": 100,
+      "primary": {
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "delay_seconds": 15,
+        "end": 1794607200,
+        "feed_id": "dukascopy-web-m1-v1",
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "price_basis": "BID",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794528000,
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      }
+    }
+  }
+}

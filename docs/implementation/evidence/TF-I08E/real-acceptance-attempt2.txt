@@ -1,0 +1,16 @@
+K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+Traceback (most recent call last):
+  File "<frozen runpy>", line 203, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "K:\Projects\TradeForge\scripts\verify_historical_acceptance.py", line 302, in <module>
+    main()
+    ~~~~^^
+  File "K:\Projects\TradeForge\scripts\verify_historical_acceptance.py", line 262, in main
+    verified_pivots = numerical_smt(answer,bars,step,delays)
+  File "K:\Projects\TradeForge\scripts\verify_historical_acceptance.py", line 181, in numerical_smt
+    observed = confirm_pivot(bars[symbol],pivot["time"],extrema,3,step)
+  File "K:\Projects\TradeForge\scripts\verify_historical_acceptance.py", line 133, in confirm_pivot
+    assert price > max(others) if side=="high" else price < min(others)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

@@ -16,7 +16,8 @@ import httpx
 from . import binance
 from .db import initialize, rows, one, transaction, utc_now
 from .market import mt5_connection, mt5_rates, mt5_recent_deals,mt5_quote,mt5_symbols,demo_candles,BASE,FRAME_MIN
-from .storage import write_partition, decode_bi5, aggregate_ticks,read_partition
+from .storage import write_partition, read_partition
+from .historical_import import import_bi5
 from .domain import create_trade,get_trade,revise,decline_trade,close_trade,list_trades,analytics,export_ai,import_ai,journal_add,journal_list,journal_materialize
 from .risk import evaluate
 from .backtest import breakout_backtest
@@ -296,14 +297,7 @@ async def import_dukascopy_bi5(symbol:str,day:str,hour:int|None=Query(None,ge=0,
         if end > datetime.now(timezone.utc):
             raise ValueError("Select a completed UTC hour or day")
         payload=await file.read(40_000_001)
-        records=await asyncio.to_thread(decode_bi5,payload,symbol,date,hour)
-        if not records:raise ValueError('No ticks present in supplied source file')
-        tick_result=await asyncio.to_thread(write_partition,'DUKASCOPY','dukascopy-bi5',symbol,'ticks',None,'BID_ASK_UNITS',records)
-        candles=await asyncio.to_thread(aggregate_ticks,records,5)
-        if candles:
-            await asyncio.to_thread(write_partition,'DUKASCOPY','dukascopy-bi5',symbol,'candles','M5','BID',candles)
-        return {'tick_dataset':tick_result,'candle_rows':len(candles),
-          'note':'Imported source file; no guarantee data is exhaustive.'}
+        return await asyncio.to_thread(import_bi5,payload,symbol,date,hour)
     except (RuntimeError,ValueError,ImportError) as ex:raise HTTPException(422,str(ex)) from ex
 
 
