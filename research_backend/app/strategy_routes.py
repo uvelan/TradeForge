@@ -22,6 +22,8 @@ def fail(path, code, expected, actual=None):
 
 
 def pairs(items):
+    for key, _ in items:
+        key.encode("utf-8")
     result = dict(items)
     if len(result)!=len(items):
         raise ValueError("Duplicate JSON key")
@@ -57,6 +59,11 @@ async def read_object(request):
             nodes.extend((child,depth+1) for child in value)
         elif isinstance(value,float) and not -float("inf") < value < float("inf"):
             fail("","INVALID_NUMBER","Finite JSON numbers")
+        elif isinstance(value,str):
+            try:
+                value.encode("utf-8")
+            except UnicodeError:
+                fail("","INVALID_JSON","Unicode scalar values")
     return result
 
 

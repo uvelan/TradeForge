@@ -121,6 +121,12 @@ def test_nonfinite_duplicate_key_and_stream_limits(client):
         result = client.post(ROUTE+"/validate",content=raw)
         assert result.status_code==422
         assert result.json()["detail"]["errors"][0]["code"] in {"INVALID_JSON","INVALID_NUMBER"}
+    for raw in (br'{"name":"\ud800"}', br'{"\udc00":true}'):
+        result = client.post(ROUTE+"/validate", content=raw)
+        assert result.status_code == 422
+        assert result.json()["detail"]["errors"][0]["code"] == "INVALID_JSON"
+    unicode_definition = {**template("bullish"), "name": "Market study " + chr(0x1F4C8)}
+    assert client.post(ROUTE+"/validate", json=unicode_definition).json()["valid"]
     data = b'{"x":"' + b"o"*65536+b'"}'
     assert client.post(ROUTE+"/validate",content=data).status_code==413
     nested = '{"x":'+"["*40+"0"+"]"*40+"}"
