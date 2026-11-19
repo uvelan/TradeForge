@@ -1,0 +1,2 @@
+{"scopes": {"EURUSD": {"state": "DEGRADED", "warning": "INVALID_PROVIDER_CANDLE"}, "GBPUSD": {"state": "DEGRADED", "warning": "INVALID_PROVIDER_CANDLE"}}, "state": "STOPPED"}
+FAIL: terminal was available but a recorded pair did not complete

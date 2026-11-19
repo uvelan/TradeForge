@@ -7,6 +7,7 @@ from research_backend.app.db import one
 from research_backend.app.indicator_history import RECORDED_ARRIVAL
 from research_backend.app.smt import divergence_leader, nearest_peer, signed_change
 from research_backend.app.storage import write_partition
+from arrival_fixtures import trusted_archive
 from research_backend.app.smt_causal import _timed_event
 from research_backend.app.strategy_evidence import EvidenceRegistry
 
@@ -23,13 +24,19 @@ def bars(values, *, start=0, delayed=None, missing=(), unrecorded=(), partial=()
             for i, x in enumerate(values) if i not in missing]
 
 
-def archive(left, right, *, start=0, end=720, **rules):
+def archive(left, right, *, start=0, end=720, recorded=True, calendar=None, **rules):
     body = {"period": 2, "alignment_bars": 0, "cutoff": end, **rules}
     for side, symbol, sequence in zip(("primary", "comparison"), ("EURUSD", "GBPUSD"), (left, right)):
-        part = write_partition("DUKASCOPY", f"clock-{symbol}", symbol, "candles", "M1", "BID", sequence)
+        if recorded:
+            sealed = trusted_archive(sequence,provider="DUKASCOPY",feed=f"clock-{symbol}",symbol=symbol,
+                                     timeframe="M1",start=start,end=end,calendar=calendar,cutoff=end+3600)
+            manifest = dict(partitions=sealed["partitions"],arrival_manifest=sealed["id"])
+        else:
+            part = write_partition("DUKASCOPY", f"clock-{symbol}", symbol, "candles", "M1", "BID", sequence)
+            manifest = dict(partitions=[{"id":part["id"],"sha256":part["sha256"]}])
         body[side] = {"source": "DUKASCOPY_SAVED", "feed_id": f"clock-{symbol}", "price_basis": "BID",
-                      "symbol": symbol, "timeframe": "M1", "calendar": {"kind": "continuous"},
-                      "partitions": [{"id": part["id"], "sha256": part["sha256"]}], "start": start, "end": end}
+                      "symbol": symbol, "timeframe": "M1", "calendar": calendar or {"kind":"continuous"},
+                      **manifest, "start": start, "end": end}
     return body
 
 
@@ -92,7 +99,8 @@ def test_required_window_does_not_close_across_missing_partial_or_unrecorded_can
     right = {condition: (7,)} if side == "comparison" else {}
     result = query(client, archive(bars(LEFT, **left), bars(RIGHT, **right)))
     assert not result["events"] and not result["current"]
-    expected = "UNVERIFIED_AVAILABILITY" if condition == "unrecorded" else "MISSING_OPEN_CANDLES"
+    # Untrusted observations are outside a sealed recorded capture.
+    expected = "MISSING_OPEN_CANDLES"
     assert result["sources"][side]["coverage"]["status"] == expected
 
 
@@ -179,7 +187,7 @@ def test_source_bytes_and_manifest_are_verified_for_each_feed(client, side):
 
 def test_duplicate_candles_are_refused(client):
     left = bars(LEFT)
-    assert query(client, archive(left+[left[5]], bars(RIGHT)))["reason"] == "DUPLICATE_ARCHIVE_CANDLE"
+    assert query(client, archive(left+[left[5]], bars(RIGHT), recorded=False))["reason"] == "DUPLICATE_ARCHIVE_CANDLE"
 
 
 def test_replay_cutoff_pagination_and_alert_isolation(client):
@@ -266,9 +274,7 @@ def test_scheduled_dst_weekend_does_not_count_as_confirmation_bars(client):
     start = friday_close-540
     left = bars(LEFT[:9], start=start)+bars([11, 11], start=sunday_open)
     right = bars(RIGHT[:9], start=start)+bars([24, 24], start=sunday_open)
-    body = archive(left, right, start=start, end=sunday_open+120)
-    for side in ("primary", "comparison"):
-        body[side]["calendar"] = {"kind": "forex_weekly"}
+    body = archive(left, right, start=start, end=sunday_open+120,calendar={"kind":"forex_weekly"})
     assert event(query(client, body, cutoff=sunday_open-1))["confirmed_at"] is None
     confirmed = event(query(client, body, cutoff=sunday_open+60))
     assert confirmed["candidate_at"] == friday_close

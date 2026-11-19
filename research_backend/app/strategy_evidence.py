@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from hashlib import sha256
 import json
 from typing import NotRequired, TypedDict
+from .arrival_policy import (RECORDED_AUTHORITY, RECORDED_MODE, SIMULATION_AUTHORITY, SIMULATION_ELIGIBLE,
+                             SIMULATION_MODE)
 
 VERSION = 3
 REFERENCE_VERSION = 1
@@ -55,6 +57,7 @@ class EvidenceReference(TypedDict):
     source: list[str | None]
     available_at: int
     source_authority: str
+    availability_mode: NotRequired[str]
     participants: NotRequired[dict[str, list[str | None]]]
 
 
@@ -82,11 +85,13 @@ class SmtUncertainty:
 
 
 class EvidenceRegistry:
-    def __init__(self, reserve=None, *, root=None, calculation_id=None, snapshot=None, cutoff=None):
+    def __init__(self, reserve=None, *, root=None, calculation_id=None, snapshot=None, cutoff=None,
+                 purpose=RECORDED_MODE):
         self.root = root if root is not None else self
         self.calculation_id = calculation_id
         self.snapshot = snapshot
         self.cutoff = cutoff
+        self.purpose = purpose if root is None else root.purpose
         self.calculations = {} if root is None else root.calculations
         self.reserve = reserve
         self.records = {}
@@ -99,7 +104,7 @@ class EvidenceRegistry:
         self.smt_uncertainty = {}
 
     def calculation(self, engine, configuration, source, history_fingerprint, cutoff):
-        calculation_id = fingerprint([REFERENCE_VERSION,engine,configuration,source])
+        calculation_id = fingerprint([REFERENCE_VERSION,self.purpose,engine,configuration,source])
         snapshot = fingerprint([calculation_id,history_fingerprint,cutoff])
         if snapshot not in self.calculations:
             self.calculations[snapshot] = EvidenceRegistry(
@@ -329,15 +334,19 @@ class EvidenceRegistry:
                         if "participants" in record.reference else {})}
                 for key,record in resolved.items() if record and record.reference
             }
-        direct = (shape and temporal and coverage and timing["availability_basis"] == "RECORDED" and
-                  timing["source_authority"] == "CHECKSUM_VERIFIED_ARCHIVE")
+        simulated = self.purpose == SIMULATION_MODE
+        basis = "MODELED_NOMINAL_CLOSE_PLUS_DELAY" if simulated else "RECORDED"
+        authority = SIMULATION_AUTHORITY if simulated else RECORDED_AUTHORITY
+        accepted = SIMULATION_ELIGIBLE if simulated else "ELIGIBLE"
+        direct = (shape and temporal and coverage and timing["availability_basis"] == basis and
+                  timing["source_authority"] == authority)
         claimed = timing["strategy_eligibility"]
-        attested = direct and compatible and (supported and claimed == "ELIGIBLE" or
-                                              supported_lineage and claimed in {"RESEARCH_ONLY","ELIGIBLE"})
+        attested = direct and compatible and (supported and claimed == accepted or
+                                              supported_lineage and claimed in {"RESEARCH_ONLY",accepted})
         eligible = attested and supported
         if attested and supported_lineage and not supported:
             timing.update(strategy_eligibility="RESEARCH_ONLY", eligibility_reason="RESEARCH_ONLY")
-        elif claimed == "ELIGIBLE" and not eligible:
+        elif claimed in {"ELIGIBLE", SIMULATION_ELIGIBLE} and not eligible:
             reason = ("DEPENDENCY_UNAVAILABLE" if not compatible else "INVALID_TEMPORAL_EVIDENCE")
             timing.update(strategy_eligibility=reason, eligibility_reason=reason)
         reference=None
@@ -346,6 +355,7 @@ class EvidenceRegistry:
                        "calculation_id":self.calculation_id,"calculation_snapshot":self.snapshot,
                        "configuration":config,"source":list(source),"available_at":available,
                        "source_authority":timing["source_authority"]}
+            reference["availability_mode"] = self.purpose
             if smt_binding:
                 reference["participants"] = {side: list(source) for side, (_, source) in smt_binding.items()}
             event["evidence_reference"]=reference
@@ -381,11 +391,13 @@ class EvidenceRegistry:
         if not history or history[-1] != available:
             insort_right(history,available)
 
-    def current_at(self, event_id, cutoff):
+    def current_at(self, event_id, cutoff, *, purpose=RECORDED_MODE):
+        if purpose != self.purpose or self.cutoff is not None and cutoff > self.cutoff:
+            return False
         if isinstance(event_id,dict):
             record=self.resolve(event_id)
             return record is not None and self.calculations[event_id["calculation_snapshot"]].current_at(
-                record.reference["event_id"],cutoff)
+                record.reference["event_id"],cutoff,purpose=purpose)
         record = self.records.get(event_id)
         if not record or not record.eligible or record.available > cutoff:
             return False
@@ -398,12 +410,13 @@ class EvidenceRegistry:
         return (index >= 0 and history[index][1] == event_id
                 and (gap < 0 or gaps[gap] < record.available))
 
-    def eligible(self, event, cutoff, *, current=False):
+    def eligible(self, event, cutoff, *, current=False, purpose=RECORDED_MODE):
         self.counts["consumer_lookups"] += 1
-        if not isinstance(event,dict) or not isinstance(event.get("id"),str) or type(cutoff) is not int:
+        if (purpose != self.purpose or not isinstance(event,dict) or not isinstance(event.get("id"),str)
+                or type(cutoff) is not int):
             return False
         reference=event.get("evidence_reference")
         record=self.resolve(reference) if reference is not None else self.records.get(event["id"])
         if not record or not record.eligible or record.available > cutoff or record.signature != self.signature(event):
             return False
-        return not current or self.current_at(reference if reference is not None else event["id"],cutoff)
+        return not current or self.current_at(reference if reference is not None else event["id"],cutoff,purpose=purpose)

@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 from .indicators import Bar, REGISTRY, calculate
 from .market import FRAME_MIN
 from .causal_timing import STRICT, TimingMode, strategy_eligible
+from .arrival_policy import AvailabilityMode, LEGACY_MODE, MODE_VERSIONS, SIMULATION_MODE, availability_mode
 from .analysis_evidence import AnalysisCoordinator, AnalysisKey, EvidenceIndex, ResourceLimit, SCOPE_FIELDS, canonical, digest
 from .market_structure import StructureRules, detect_structure
 from .structure_pages import StructureDelivery
@@ -91,6 +92,12 @@ class Partition(BaseModel):
 
 class Evaluation(BaseModel):
     timing_policy: TimingMode = "LEGACY_RESEARCH"
+    availability_mode: AvailabilityMode | None = None
+    availability_start: int | None = Field(default=None, ge=0, le=32_503_680_000)
+    arrival_manifest: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    native_arrival_manifests: dict[str,str] = Field(default_factory=dict,max_length=3)
+    delay_seconds: int = Field(default=0,ge=0,le=86_400)
+    calendar: MarketSchedule | None = None
     source: Literal["DEMO", "MT5", "MT5_SAVED", "DUKASCOPY_SAVED", "BINANCE_SPOT"]
     symbol: str = Field(min_length=1, max_length=64)
     timeframe: str
@@ -250,16 +257,22 @@ def range_series(rows: list[tuple[EvidenceBar, int]], step: int, key: str,
 
 
 def resolve_history(request, rows, step, rules, history_loader):
-    if rules.history_bars == 2000:
+    server_evidence = request.frozen and (request.arrival_manifest or availability_mode(request)==SIMULATION_MODE)
+    if rules.history_bars == 2000 and not server_evidence:
         return rows, {"context_authority": "CLIENT_SUPPLIED_UNVERIFIED"}
     if not history_loader:
         raise ValueError("Extended history requires the server history reader")
     end = request.cutoff // step * step
-    start = rules.history_start
+    start = rules.history_start if rules.history_start is not None else request.availability_start
     if start is None or start % step or end-start > rules.history_bars*step:
         raise ValueError("Extended history must be aligned and at most 10,000 slots")
     context = history_loader(request,start,end,step) if start<end else {
         "rows":[], "evidence":{"status":"HISTORY_UNAVAILABLE"}}
+    selected_calendar = getattr(rules,"market_schedule",None)
+    source_calendar = context["evidence"].get("capture_calendar") or context["evidence"].get("simulation_calendar")
+    if (selected_calendar is not None and selected_calendar.kind != "unknown" and source_calendar
+            and selected_calendar.model_dump() != source_calendar):
+        return (), {**context["evidence"],"status":"UNKNOWN_COVERAGE","reason":"CALENDAR_POLICY_MISMATCH"}
     return context["rows"], context["evidence"]
 
 
@@ -365,13 +378,14 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
     if request.timeframe not in FRAME_MIN:
         raise ValueError("Unsupported timeframe")
     step = FRAME_MIN[request.timeframe] * 60
+    purpose = availability_mode(request)
     rows = []
     warnings = set()
     previous = None
     for bar in request.candles:
         if bar.time > 32_503_680_000:
             raise ValueError("Candle timestamp outside supported range")
-        if (request.timing_policy==STRICT and bar.closed and bar.available_at is not None
+        if (purpose!=LEGACY_MODE and bar.closed and bar.available_at is not None
                 and bar.available_at<bar.time+step):
             raise ValueError("Recorded availability precedes the candle close")
         available = max(bar.time + step, bar.available_at or 0)
@@ -403,8 +417,9 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
     input_identity = request.model_dump(
         include={"source", "symbol", "timeframe", "dataset_id", "feed_id", "price_basis", "partitions"})
     selected={spec.id:spec for spec in request.indicators}
-    strict=request.timing_policy==STRICT
-    timing_provenance={"timing_policy":STRICT,"timing_policy_version":3} if strict else {}
+    strict=purpose!=LEGACY_MODE
+    timing_provenance={"timing_policy":STRICT,"timing_policy_version":3,"availability_mode":purpose,
+                       "availability_mode_version":MODE_VERSIONS[purpose]} if strict else {}
 
     def resolved(rule):
         history,evidence=resolve_history(request,rows,step,rule,history_loader)
@@ -518,12 +533,12 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                 f_index=EvidenceIndex()
                 l_index=EvidenceIndex()
                 for event in f_events:
-                    if strict and not strategy_eligible(event,request.cutoff,registry=coordinator.evidence):
+                    if strict and not strategy_eligible(event,request.cutoff,registry=coordinator.evidence,purpose=purpose):
                         continue
                     f_index.add("fvg",contextual_reference("fair_value_gap",event,event["c_time"],f_source,
                                       f_config,f_result["fvg_page"]["snapshot"],witness=event["fvg_id"]))
                 for event in l_events:
-                    if strict and not strategy_eligible(event,request.cutoff,registry=coordinator.evidence):
+                    if strict and not strategy_eligible(event,request.cutoff,registry=coordinator.evidence,purpose=purpose):
                         continue
                     ref=contextual_reference("liquidity_sweeps",event,event["observation_time"],l_source,
                                               l_config,l_result["liquidity_page"]["snapshot"])
@@ -717,8 +732,8 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
         if strict:
             metadata["strategy_context_policy"]="ONLY_ELIGIBLE_AT_OBSERVATION_OPEN"
             metadata["excluded_unattested_levels"]=list(levels)
-            s_refs=[item for item in s_refs if strategy_eligible(item[1],request.cutoff,registry=coordinator.evidence)]
-            products=[(name,[event for event in events if strategy_eligible(event,request.cutoff,registry=coordinator.evidence)],source,config,snapshot)
+            s_refs=[item for item in s_refs if strategy_eligible(item[1],request.cutoff,registry=coordinator.evidence,purpose=purpose)]
+            products=[(name,[event for event in events if strategy_eligible(event,request.cutoff,registry=coordinator.evidence,purpose=purpose)],source,config,snapshot)
                       for name,events,source,config,snapshot in products]
             # Level observations lack trusted availability attestations for the caller input.
             levels={}
@@ -898,7 +913,9 @@ def evaluate(request: Evaluation, history_loader=None) -> dict:
                 "eligibility":"closed_and_available_before_interaction",
             }
     for result in results:
-        result["analysis"].update(timing_policy=request.timing_policy,timing_policy_version=3 if strict else 1)
+        result["analysis"].update(timing_policy=STRICT if strict else request.timing_policy,timing_policy_version=3 if strict else 1)
+        if strict:
+            result["analysis"]["availability_mode"] = purpose
         if strict and result.get("provenance",{}).get("status"):
             result["analysis"]["strategy_eligibility"]=result["provenance"]["status"]
         if not strict:

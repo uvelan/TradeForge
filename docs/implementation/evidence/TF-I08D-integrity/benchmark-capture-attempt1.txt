@@ -1,0 +1,17 @@
+K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+Traceback (most recent call last):
+  File "K:\Projects\TradeForge\docs\implementation\evidence\TF-I08D\benchmark_capture_extra.py", line 122, in <module>
+    main()
+    ~~~~^^
+  File "K:\Projects\TradeForge\docs\implementation\evidence\TF-I08D\benchmark_capture_extra.py", line 51, in main
+    took,result=sample(lambda:[arrival_capture.observe(active,provider,symbol) for symbol in cfg.symbols])
+                ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "K:\Projects\TradeForge\docs\implementation\evidence\TF-I08D\benchmark.py", line 38, in sample
+    result=callback()
+  File "K:\Projects\TradeForge\docs\implementation\evidence\TF-I08D\benchmark_capture_extra.py", line 51, in <lambda>
+    took,result=sample(lambda:[arrival_capture.observe(active,provider,symbol) for symbol in cfg.symbols])
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "K:\Projects\TradeForge\research_backend\app\arrival_capture.py", line 190, in observe
+    raise ValueError(UNKNOWN_TIMESTAMP_DOMAIN)
+ValueError: UNVERIFIED_TIMESTAMP_DOMAIN

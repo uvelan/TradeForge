@@ -1,0 +1,109 @@
+explicit_without_marker market_structure None ['UNVERIFIED_AVAILABILITY']
+explicit_without_marker liquidity_sweeps RESEARCH_ONLY_WHOLE_CANDLE_TIMING ['RESEARCH_ONLY', 'UNVERIFIED_AVAILABILITY']
+explicit_without_marker fair_value_gap None ['AMBIGUOUS_INTRABAR_ORDER', 'UNVERIFIED_AVAILABILITY']
+explicit_without_marker order_blocks RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+explicit_without_marker candle_range_theory None ['EXPIRED_REFERENCE', 'RESEARCH_ONLY', 'UNVERIFIED_AVAILABILITY']
+explicit_without_marker SMT UNVERIFIED_AVAILABILITY
+explicit_without_marker client_forgery CLIENT_SUPPLIED_UNVERIFIED
+explicit_without_marker verified_reader_explicit_timestamps 0
+assumed_close market_structure None ['UNVERIFIED_AVAILABILITY']
+assumed_close liquidity_sweeps RESEARCH_ONLY_WHOLE_CANDLE_TIMING ['RESEARCH_ONLY', 'UNVERIFIED_AVAILABILITY']
+assumed_close fair_value_gap None ['AMBIGUOUS_INTRABAR_ORDER', 'UNVERIFIED_AVAILABILITY']
+assumed_close order_blocks RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+assumed_close candle_range_theory None ['EXPIRED_REFERENCE', 'RESEARCH_ONLY', 'UNVERIFIED_AVAILABILITY']
+assumed_close SMT UNVERIFIED_AVAILABILITY
+assumed_close client_forgery CLIENT_SUPPLIED_UNVERIFIED
+assumed_close verified_reader_explicit_timestamps 0
+invalid_early market_structure SOURCE_INTEGRITY_FAILURE []
+invalid_early liquidity_sweeps SOURCE_INTEGRITY_FAILURE []
+invalid_early fair_value_gap SOURCE_INTEGRITY_FAILURE []
+invalid_early order_blocks SOURCE_INTEGRITY_FAILURE []
+invalid_early candle_range_theory SOURCE_INTEGRITY_FAILURE []
+invalid_early SMT INVALID_RECORDED_ARRIVAL
+invalid_early client_forgery CLIENT_SUPPLIED_UNVERIFIED
+invalid_early verified_reader_explicit_timestamps 0
+registered_capture market_structure None ['ELIGIBLE']
+registered_capture liquidity_sweeps RESEARCH_ONLY_WHOLE_CANDLE_TIMING ['ELIGIBLE', 'RESEARCH_ONLY']
+registered_capture fair_value_gap None ['AMBIGUOUS_INTRABAR_ORDER', 'ELIGIBLE', 'INVALID_TEMPORAL_EVIDENCE']
+registered_capture order_blocks RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+registered_capture candle_range_theory None ['ELIGIBLE', 'EXPIRED_REFERENCE', 'RESEARCH_ONLY']
+registered_capture SMT None
+F...............
+================================== FAILURES ===================================
+___________________ test_report_archived_arrival_admission ____________________
+
+client = <starlette.testclient.TestClient object at 0x000001EAEA4A2BA0>
+
+    def test_report_archived_arrival_admission(client):
+        from research_backend.app.indicator_engine import Evaluation
+        from research_backend.app.indicator_history import load_reference
+
+        values = [100, 101, 110, 104, 105, 102, 109, 103, 104, 117, 118, 107, 118, 104, 93, 111] * 5
+        def candles(offset, timing):
+            return [dict(time=START+i*STEP, open=x+offset, high=x+offset+2, low=x+offset-2, close=x+offset,
+                         closed=True, **({"available_at": START+(i+1)*STEP+timing} if timing is not None else {}))
+                    for i, x in enumerate(values)]
+
+        end = START+len(values)*STEP
+        schedule = {"kind":"continuous"}
+        for label, delay in (("explicit_without_marker", 0), ("assumed_close", None), ("invalid_early", -1),
+                             ("registered_capture",0)):
+            scopes = {}
+            for side, symbol, offset in (("primary", "EURUSD", 0), ("comparison", "GBPUSD", 10)):
+                records = candles(offset,delay)
+                if label == "registered_capture":
+                    sealed = trusted_archive(records,provider="MT5",feed=label,symbol=symbol,timeframe="M5",
+                                             start=START,end=end)
+                    archive = dict(partitions=sealed["partitions"],arrival_manifest=sealed["id"])
+                else:
+                    part = write_partition("MT5", label, symbol, "candles", "M5", "BID", records)
+                    archive = dict(partitions=[{k:part[k] for k in ("id","sha256")}])
+                scopes[side] = dict(source="MT5_SAVED", symbol=symbol, timeframe="M5", feed_id=label,
+                                    price_basis="BID", **archive)
+            common = dict(history_bars=10_000, history_start=START)
+            settings = [dict(id=engine, **{key: common}) for engine,key in ENGINES]
+            for item in settings:
+                if item["id"] in {"market_structure","liquidity_sweeps","order_blocks"}:
+                    item["structure"] = {**common,"algorithm_version":2,"market_schedule":schedule}
+                if item["id"] in {"fair_value_gap","candle_range_theory"}:
+                    key = "fvg" if item["id"]=="fair_value_gap" else "crt"
+                    item[key] = {**common,"market_schedule":schedule}
+            request = dict(**scopes["primary"], cutoff=end, frozen=True, load_reference=True, timing_policy="STRICT_CAUSAL",
+                           candles=[], indicators=settings)
+            response = client.post(URL,json=request)
+            assert response.is_success, response.text
+            for result in response.json()["results"]:
+                timing = [entry["timing"] for value in result.values() if isinstance(value,list)
+                          for entry in value if isinstance(entry,dict) and isinstance(entry.get("timing"),dict)]
+                print(label, result["id"], result.get("analysis",{}).get("strategy_eligibility"),
+                      sorted({item["strategy_eligibility"] for item in timing}))
+                if label == "registered_capture":
+                    assert result["provenance"]["availability_policy"] == "SERVER_RECORDED_ARRIVAL_V1"
+                    assert result["provenance"]["context_authority"] == "CHECKSUM_VERIFIED_ARCHIVE"
+                else:
+                    assert all(item["strategy_eligibility"]!="ELIGIBLE" for item in timing)
+            smt = client.post("/api/indicators/smt/strict", json={
+                **{side:dict(**scope,start=START,end=end,calendar={"kind":"continuous"}) for side,scope in scopes.items()},
+                "cutoff":end,
+            })
+            assert smt.is_success, smt.text
+            print(label, "SMT", smt.json().get("reason"))
+            assert (smt.json().get("reason") == "UNVERIFIED_AVAILABILITY") == (label in {
+                "explicit_without_marker","assumed_close"})
+            request["candles"] = [dict(**bar, availability_policy="SERVER_RECORDED_ARRIVAL_V1")
+                                  for bar in candles(0,0)]
+            request["indicators"] = [{"id":"fair_value_gap"}]
+>           print(label, "client_forgery", client.post(URL,json=request).json()["results"][0]["provenance"]["context_authority"])
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'results'
+
+research_backend\tests\test_arrival_baseline.py:73: KeyError
+============================== warnings summary ===============================
+research_backend/tests/test_arrival_baseline.py::test_report_archived_arrival_admission
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_arrival_baseline.py::test_report_archived_arrival_admission
+1 failed, 15 passed, 1 warning in 5.83s

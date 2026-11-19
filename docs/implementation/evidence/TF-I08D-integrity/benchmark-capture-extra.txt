@@ -1,0 +1,4 @@
+K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+{"corrected_manifest_observations": 2, "correction_before_after_lookup_pair_ms": [19.96, 22.798], "injected_5ms_each_capture_transaction_pair_ms": [80.069, 103.303], "queue_depth": 0, "samples": 30, "transaction_ms_with_delay": {"observation": [12.698, 16.653], "receipt": [11.919, 19.544], "witness": [11.937, 17.524]}}
+{"aggregate_m5_ms": {"corrected": [67.423, 106.16], "identical": [37.759, 44.52], "original": [67.317, 76.482], "stale_rejection": [12.268, 13.529]}, "aggregate_m5_samples": 30}

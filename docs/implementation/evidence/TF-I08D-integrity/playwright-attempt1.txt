@@ -1,0 +1,137 @@
+
+> e2e
+> playwright test --retries=0 --reporter=line
+
+[WebServer] INFO:     Started server process [20504]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8191 (Press CTRL+C to quit)
+
+
+[WebServer] (node:29252) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 66 tests using 1 worker
+
+(node:29132) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/66] e2e\arrival-capture.spec.ts:3:1 › data library controls capture and labels frozen recorded readiness
+  1) e2e\arrival-capture.spec.ts:3:1 › data library controls capture and labels frozen recorded readiness
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Last durable write')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('Last durable write') with timeout 5000ms
+      - waiting for getByText('Last durable write')
+
+
+      45 |   await expect(page.getByRole('combobox',{name:'Availability mode'})).toHaveValue('LEGACY_RESEARCH');
+      46 |   await page.getByRole('button',{name:'Start read-only candle capture'}).click();
+    > 47 |   await expect(page.getByText('Last durable write',{exact:false})).toBeVisible();
+         |                                                                    ^
+      48 |   await page.getByRole('button',{name:'Freeze EURUSD coverage'}).click();
+      49 |   await expect(page.getByRole('combobox',{name:'Availability mode'})).toHaveValue('STRICT_RECORDED');
+      50 |   await page.getByRole('button',{name:'Assess data readiness'}).click();
+        at K:\Projects\TradeForge\frontend\e2e\arrival-capture.spec.ts:47:68
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\arrival-capture-data-libra-86c23-s-frozen-recorded-readiness\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\arrival-capture-data-libra-86c23-s-frozen-recorded-readiness\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\arrival-capture-data-libra-86c23-s-frozen-recorded-readiness\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\arrival-capture-data-libra-86c23-s-frozen-recorded-readiness\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\arrival-capture-data-libra-86c23-s-frozen-recorded-readiness\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:30288) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2/66] e2e\indicator-engine.spec.ts:31:1 › multiple canonical indicators persist, update panes and clean up on remount
+[3/66] e2e\indicator-engine.spec.ts:73:1 › replay submits only closed evidence within the visible cutoff
+[4/66] e2e\indicator-engine.spec.ts:96:1 › a session overlay exposes provisional and completed backend values
+[5/66] e2e\indicator-engine.spec.ts:112:1 › previous week requests a bounded M5 reference beyond chart history
+[6/66] e2e\indicator-engine.spec.ts:128:1 › the terminal distinguishes a complete forex week from missing open-market coverage
+[7/66] e2e\indicator-engine.spec.ts:163:1 › structure replay paints CHOCH at the confirming step and removes it on rewind
+[8/66] e2e\indicator-engine.spec.ts:228:1 › a pending market structure result stays tied to the original chart scope
+[9/66] e2e\indicator-engine.spec.ts:258:1 › older structure pages are bounded and leave the latest chart and state intact
+[10/66] e2e\indicator-engine.spec.ts:302:1 › calendar structure confirms a real reopening BOS and removes it on replay rewind
+[11/66] e2e\indicator-engine.spec.ts:339:1 › liquidity replay exposes the sweep only after its closed evidence and keeps it inspectable
+[12/66] e2e\indicator-engine.spec.ts:380:1 › a pending Liquidity request cannot replace another instrument or timeframe
+[13/66] e2e\indicator-engine.spec.ts:380:1 › a pending FVG request cannot replace another instrument or timeframe
+[14/66] e2e\indicator-engine.spec.ts:380:1 › a pending Order block request cannot replace another instrument or timeframe
+[15/66] e2e\indicator-engine.spec.ts:380:1 › a pending CRT request cannot replace another instrument or timeframe
+[16/66] e2e\indicator-engine.spec.ts:408:1 › FVG paints a causal zone and updates its remaining depth during replay
+[17/66] e2e\indicator-engine.spec.ts:453:1 › FVG selection survives a rolling MT5 refresh and drops corrected evidence
+[18/66] e2e\indicator-engine.spec.ts:501:1 › order block appears at BOS availability and rewinds independently of FVG and liquidity
+[19/66] e2e\indicator-engine.spec.ts:554:1 › CRT delays the H1 range, excludes a straddling sweep and rewinds cleanly
+[20/66] e2e\indicator-engine.spec.ts:612:1 › shared context follows chart structure settings and visibility changes send no request
+[21/66] e2e\indicator-engine.spec.ts:669:1 › strict FVG timing exposes a straddling replay observation and rewinds
+[22/66] e2e\liquidity-active.spec.ts:3:1 › unchanged live liquidity remains on chart beyond the revision page
+[23/66] e2e\research.spec.ts:3:1 › opens the research dashboard, replays demo bars, and links to the preserved catalog
+[24/66] e2e\research.spec.ts:22:1 › shows a saved background SMT watch and stops it from Market Terminal
+[25/66] e2e\research.spec.ts:45:1 › navigates by keyboard and moves recorded signal evidence into a persisted draft
+[26/66] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+[27/66] e2e\research.spec.ts:95:36 › persists a trendline and resumes replay during delayed analytical and persistence responses
+[28/66] e2e\research.spec.ts:230:1 › a delayed drawing save cannot select a drawing in a different chart scope
+[29/66] e2e\research.spec.ts:266:1 › links four chart views and opens a saved simulation after reload
+[30/66] e2e\smt-causal.spec.ts:3:1 › strict SMT ignores stale pair responses and rewinds a frozen pair
+[31/66] e2e\terminal.spec.ts:3:1 › generates a simulated dataset and reopens it after reload
+
+(node:29964) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[32/66] e2e\drawing-edit.spec.ts:125:1 › select, move and resize a trendline; reload and undo/redo exact revisions
+[33/66] e2e\drawing-edit.spec.ts:176:1 › all four rectangle handles edit only their corresponding boundaries
+[34/66] e2e\drawing-edit.spec.ts:196:3 › long position rejects crossed handles and preserves direction on a valid resize
+[35/66] e2e\drawing-edit.spec.ts:196:3 › short position rejects crossed handles and preserves direction on a valid resize
+[36/66] e2e\drawing-edit.spec.ts:221:1 › vertical horizontal edit works after zoom, resize and fullscreen with left scale and comparison pane
+[37/66] e2e\drawing-edit.spec.ts:248:1 › overlapping strokes prefer the later item; locked and hidden drawings cannot drag
+[38/66] e2e\drawing-edit.spec.ts:273:1 › Escape and pointer cancellation discard edits; a scope change cannot save an obsolete gesture
+[39/66] e2e\drawing-edit.spec.ts:304:1 › a native touchscreen cancel releases the selected drawing without writing
+[40/66] e2e\drawing-edit.spec.ts:319:1 › a real 409 blocks further edits and reload preserves the competing drawing
+[41/66] e2e\drawing-edit.spec.ts:344:1 › a canonical EMA overlay leaves creating and editing a drawing functional
+[42/66] e2e\drawing-edit.spec.ts:356:1 › market structure overlays preserve ownership of a saved drawing handle
+[43/66] e2e\drawing-edit.spec.ts:378:1 › Liquidity overlays preserve a saved drawing handle gesture
+[44/66] e2e\drawing-edit.spec.ts:378:1 › FVG overlays preserve a saved drawing handle gesture
+[45/66] e2e\drawing-edit.spec.ts:378:1 › Order block overlays preserve a saved drawing handle gesture
+[46/66] e2e\drawing-edit.spec.ts:378:1 › CRT overlays preserve a saved drawing handle gesture
+[47/66] e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1366x768
+[48/66] e2e\drawing-placement.spec.ts:33:3 › drag places one trendline at 1920x1080
+[49/66] e2e\drawing-placement.spec.ts:51:1 › touch places a horizontal drawing and its persisted anchor can be edited
+[50/66] e2e\drawing-placement.spec.ts:78:1 › rejects outside release and Escape then saves a rectangle with two clicks
+[51/66] e2e\drawing-placement.spec.ts:99:1 › risk/reward commits valid prices after zoom and excludes the comparison axis
+[52/66] e2e\drawing-placement.spec.ts:134:1 › a stale drawing save reports 409 and reload preserves the competing scene
+[53/66] e2e\drawing-placement.spec.ts:154:1 › blank chart space and a secondary plot cannot save into the primary scope
+[54/66] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every trend anchor
+[55/66] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every rectangle anchor
+[56/66] e2e\drawing-placement.spec.ts:215:3 › persists in-place edits of every risk-reward anchor
+[57/66] e2e\drawing-placement.spec.ts:258:1 › previews and saves both position directions and rejects an invalid edit
+[58/66] e2e\drawing-placement.spec.ts:320:1 › releases pointer ownership on candle refresh and scope remount
+[59/66] e2e\drawing-placement.spec.ts:418:1 › maps anchors across fullscreen and resized plots with a left comparison scale
+[60/66] e2e\drawing-placement.spec.ts:505:1 › the horizontal rail takes precedence over an unfinished trendline
+[61/66] e2e\drawing-placement.spec.ts:518:1 › a horizontal drawing drag uses the release candle and price after zoom and resize
+[62/66] e2e\drawing-placement.spec.ts:567:1 › Alt+H and the rail discard rectangle and risk/reward draft anchors
+[63/66] e2e\drawing-placement.spec.ts:588:1 › toolbox activation clears other modes and repeated switches save only the final intended drawing
+[64/66] e2e\drawing-placement.spec.ts:624:1 › Escape cancels all armed modes and an active drag cannot complete in a replacement mode
+[65/66] e2e\drawing-placement.spec.ts:668:1 › horizontal drags reject outside, missing candle and pointer cancellation
+[66/66] e2e\drawing-placement.spec.ts:703:1 › negative chart prices are rejected and navigation still pans and zooms
+  1 failed
+    e2e\arrival-capture.spec.ts:3:1 › data library controls capture and labels frozen recorded readiness
+  65 passed (4.3m)

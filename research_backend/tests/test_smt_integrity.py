@@ -108,7 +108,7 @@ def test_zero_bar_confirmation_uses_corrected_frontier_and_horizon(client, smt_r
 
 
 @pytest.mark.parametrize(("options", "deadline", "reason"), [
-    ({"unrecorded": (10,)}, 660, "UNRECORDED_LAGGARD_ARRIVAL"),
+    ({"unrecorded": (10,)}, 660, "MISSING_LAGGARD_OBSERVATION"),
     ({"delayed": {10: 35}}, 660, "MISSING_LAGGARD_OBSERVATION"),
 ])
 def test_current_recovery_depends_on_actual_recorded_arrival(client, smt_registry, options, deadline, reason):

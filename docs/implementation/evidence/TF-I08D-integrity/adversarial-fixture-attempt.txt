@@ -1,0 +1,135 @@
+FFF...........                                                           [100%]
+================================== FAILURES ===================================
+__________________ test_receipt_cannot_be_backdated[native] ___________________
+
+client = <starlette.testclient.TestClient object at 0x000001F55FC8FB60>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001F55F4F9E00>
+aggregate = False
+
+    @pytest.mark.parametrize("aggregate", [False, True], ids=["native", "aggregate"])
+    def test_receipt_cannot_be_backdated(client, monkeypatch, aggregate):
+        from arrival_fixtures import trusted_archive
+
+        clock = Clock((CLOSE + 1) * 1000)
+        if aggregate:
+            source = trusted_archive([candle(t) for t in range(OPEN, CLOSE, 60)],
+                provider="MT5", feed="minute", symbol="EURUSD", timeframe="M1",
+                start=OPEN, end=CLOSE, cutoff=CLOSE)
+            delay_receipt(monkeypatch, clock)
+            output = capture.aggregate_m1(source, clock)
+            scope = {key: output[key] for key in capture.SCOPE_FIELDS}
+            calendar = capture.MarketSchedule.model_validate(output["calendar"])
+        else:
+            current = worker(Clock(OPEN * 1000), timeframe="M5")
+            with transaction() as db:
+                for offset in (240, 180, 120, 60):
+                    capture.renew(db, current.sessions["EURUSD"], (CLOSE-offset)*1000)
+            current.clock = clock
+            def read(symbol, frame, limit, **kwargs):
+                kwargs["provenance"].update(feed_id="mt5:fixture", price_basis="BID",
+                                            timestamp_policy="UTC_EPOCH_VERIFIED_V1")
+                return [candle(OPEN)]
+            delay_receipt(monkeypatch, clock)
+            result = observe(current, read, "EURUSD")
+            scope = {**capture_scope(result), "timeframe": "M5"}
+            calendar = current.config.calendar
+        with pytest.raises(ValueError, match="No bounded recorded evidence"):
+            capture.seal(scope, OPEN, CLOSE, CLOSE + 5, calendar)
+        final = capture.seal(scope, OPEN, CLOSE, CLOSE + 10, calendar)
+>       request = ArchiveRequest(source="MT5_SAVED", symbol="EURUSD", timeframe="M5",
+            feed_id=scope["feed_id"], price_basis="BID", calendar=calendar, start=OPEN, end=CLOSE,
+            partitions=final["partitions"], arrival_manifest=final["id"], cutoff=CLOSE+5)
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for ArchiveRequest
+E       availability_mode
+E         Field required [type=missing, input_value={'source': 'MT5_SAVED', '...01a1c', 'cutoff': 39905}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.14/v/missing
+
+research_backend\tests\test_arrival_integrity.py:98: ValidationError
+_________________ test_receipt_cannot_be_backdated[aggregate] _________________
+
+client = <starlette.testclient.TestClient object at 0x000001F55FE0D450>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001F55CEF2060>
+aggregate = True
+
+    @pytest.mark.parametrize("aggregate", [False, True], ids=["native", "aggregate"])
+    def test_receipt_cannot_be_backdated(client, monkeypatch, aggregate):
+        from arrival_fixtures import trusted_archive
+
+        clock = Clock((CLOSE + 1) * 1000)
+        if aggregate:
+            source = trusted_archive([candle(t) for t in range(OPEN, CLOSE, 60)],
+                provider="MT5", feed="minute", symbol="EURUSD", timeframe="M1",
+                start=OPEN, end=CLOSE, cutoff=CLOSE)
+            delay_receipt(monkeypatch, clock)
+            output = capture.aggregate_m1(source, clock)
+            scope = {key: output[key] for key in capture.SCOPE_FIELDS}
+            calendar = capture.MarketSchedule.model_validate(output["calendar"])
+        else:
+            current = worker(Clock(OPEN * 1000), timeframe="M5")
+            with transaction() as db:
+                for offset in (240, 180, 120, 60):
+                    capture.renew(db, current.sessions["EURUSD"], (CLOSE-offset)*1000)
+            current.clock = clock
+            def read(symbol, frame, limit, **kwargs):
+                kwargs["provenance"].update(feed_id="mt5:fixture", price_basis="BID",
+                                            timestamp_policy="UTC_EPOCH_VERIFIED_V1")
+                return [candle(OPEN)]
+            delay_receipt(monkeypatch, clock)
+            result = observe(current, read, "EURUSD")
+            scope = {**capture_scope(result), "timeframe": "M5"}
+            calendar = current.config.calendar
+        with pytest.raises(ValueError, match="No bounded recorded evidence"):
+            capture.seal(scope, OPEN, CLOSE, CLOSE + 5, calendar)
+        final = capture.seal(scope, OPEN, CLOSE, CLOSE + 10, calendar)
+>       request = ArchiveRequest(source="MT5_SAVED", symbol="EURUSD", timeframe="M5",
+            feed_id=scope["feed_id"], price_basis="BID", calendar=calendar, start=OPEN, end=CLOSE,
+            partitions=final["partitions"], arrival_manifest=final["id"], cutoff=CLOSE+5)
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for ArchiveRequest
+E       availability_mode
+E         Field required [type=missing, input_value={'source': 'MT5_SAVED', '...5dfc8', 'cutoff': 39905}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.14/v/missing
+
+research_backend\tests\test_arrival_integrity.py:98: ValidationError
+___________ test_older_manifest_cannot_replace_corrected_aggregate ____________
+
+client = <starlette.testclient.TestClient object at 0x000001F56E42FD90>
+
+    def test_older_manifest_cannot_replace_corrected_aggregate(client):
+        current = worker(Clock(OPEN * 1000))
+        with transaction() as db:
+            for offset in (240, 180, 120, 60):
+                capture.renew(db, current.sessions["EURUSD"], (CLOSE-offset)*1000)
+        current.clock.now = (CLOSE + 1) * 1000
+        batch = [candle(t) for t in range(OPEN, CLOSE, 60)]
+        scope = capture_scope(observe(current, provider(batch), "EURUSD"))
+        a = capture.seal(scope, OPEN, CLOSE, CLOSE+2, current.config.calendar)
+        first = capture.aggregate_m1(a, Clock((CLOSE+3)*1000))
+        current.clock.now = (CLOSE+4)*1000
+        observe(current, provider([candle(OPEN, 20)]), "EURUSD")
+        b = capture.seal(scope, OPEN, CLOSE, CLOSE+5, current.config.calendar)
+        second = capture.aggregate_m1(b, Clock((CLOSE+6)*1000))
+        try:
+            capture.aggregate_m1(a, Clock((CLOSE+7)*1000))
+        except ValueError as error:
+            assert str(error) == "STALE_OR_INCOMPARABLE_AGGREGATE_SOURCE"
+        assert first["id"] != second["id"]
+>       request = ArchiveRequest(source="MT5_SAVED", symbol="EURUSD", timeframe="M5",
+            feed_id=first["feed_id"], price_basis="BID", calendar=first["calendar"], start=OPEN, end=CLOSE,
+            partitions=first["partitions"], arrival_manifest=first["id"], cutoff=first["cutoff"])
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for ArchiveRequest
+E       availability_mode
+E         Field required [type=missing, input_value={'source': 'MT5_SAVED', '...df49d', 'cutoff': 39903}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.14/v/missing
+
+research_backend\tests\test_arrival_integrity.py:125: ValidationError
+============================== warnings summary ===============================
+research_backend/tests/test_arrival_integrity.py::test_receipt_cannot_be_backdated[native]
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_arrival_integrity.py::test_receipt_cannot_be_backdated[native]
+FAILED research_backend/tests/test_arrival_integrity.py::test_receipt_cannot_be_backdated[aggregate]
+FAILED research_backend/tests/test_arrival_integrity.py::test_older_manifest_cannot_replace_corrected_aggregate
+3 failed, 11 passed, 1 warning in 5.79s

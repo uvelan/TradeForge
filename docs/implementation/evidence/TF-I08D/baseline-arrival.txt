@@ -1,0 +1,32 @@
+explicit_without_marker market_structure None ['UNKNOWN_COVERAGE']
+explicit_without_marker liquidity_sweeps RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+explicit_without_marker fair_value_gap None ['AMBIGUOUS_INTRABAR_ORDER', 'UNKNOWN_COVERAGE']
+explicit_without_marker order_blocks RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+explicit_without_marker candle_range_theory None ['EXPIRED_REFERENCE', 'RESEARCH_ONLY', 'UNKNOWN_COVERAGE']
+explicit_without_marker SMT UNVERIFIED_AVAILABILITY
+explicit_without_marker client_forgery CLIENT_SUPPLIED_UNVERIFIED
+explicit_without_marker verified_reader_explicit_timestamps 80
+assumed_close market_structure None ['UNKNOWN_COVERAGE']
+assumed_close liquidity_sweeps RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+assumed_close fair_value_gap None ['AMBIGUOUS_INTRABAR_ORDER', 'UNKNOWN_COVERAGE']
+assumed_close order_blocks RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+assumed_close candle_range_theory None ['EXPIRED_REFERENCE', 'RESEARCH_ONLY', 'UNKNOWN_COVERAGE']
+assumed_close SMT UNVERIFIED_AVAILABILITY
+assumed_close client_forgery CLIENT_SUPPLIED_UNVERIFIED
+assumed_close verified_reader_explicit_timestamps 0
+invalid_early market_structure None ['UNKNOWN_COVERAGE']
+invalid_early liquidity_sweeps RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+invalid_early fair_value_gap None ['AMBIGUOUS_INTRABAR_ORDER', 'UNKNOWN_COVERAGE']
+invalid_early order_blocks RESEARCH_ONLY_WHOLE_CANDLE_TIMING []
+invalid_early candle_range_theory None ['EXPIRED_REFERENCE', 'RESEARCH_ONLY', 'UNKNOWN_COVERAGE']
+invalid_early SMT UNVERIFIED_AVAILABILITY
+invalid_early client_forgery CLIENT_SUPPLIED_UNVERIFIED
+invalid_early verified_reader_explicit_timestamps 0
+.
+============================== warnings summary ===============================
+research_backend/tests/test_arrival_baseline.py::test_report_archived_arrival_admission
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 1.69s

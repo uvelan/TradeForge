@@ -1,0 +1,43 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+____________ test_start_during_existing_history_and_reconnect_gap _____________
+
+client = <starlette.testclient.TestClient object at 0x0000025A90E8B0E0>
+
+    def test_start_during_existing_history_and_reconnect_gap(client):
+        current=worker(Clock(65_000))
+        current.clock.now=125_000
+        first=observe(current,provider([candle(0),candle(60)]),"EURUSD")
+        scope=capture_scope(first)
+        assert rows("SELECT candle_open FROM arrival_observations")==[{"candle_open":60}]
+        current.scopes["EURUSD"]={**first,"state":"DISCONNECTED"}
+        current.clock.now=250_000
+>       delayed=observe(current,provider([candle(180),candle(60)]),"EURUSD")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+research_backend\tests\test_arrival_capture.py:108:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+research_backend\app\arrival_capture.py:144: in observe
+    renew(db, session, observed)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+db = <sqlite3.Connection object at 0x0000025A90186E30>
+session = '5eb1635ffe0e49f2a4e192ec8d216d26', stamp = 250000
+
+    def renew(db, session, stamp):
+        lease = db.execute("UPDATE arrival_leases SET expires_ms=? WHERE session_id=? AND expires_ms>?",
+                           (stamp+LEASE_MS, session, stamp))
+        if lease.rowcount != 1:
+>           raise ValueError("CAPTURE_LEASE_LOST")
+E           ValueError: CAPTURE_LEASE_LOST
+
+research_backend\app\arrival_capture.py:103: ValueError
+============================== warnings summary ===============================
+research_backend/tests/test_arrival_capture.py::test_start_during_existing_history_and_reconnect_gap
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_arrival_capture.py::test_start_during_existing_history_and_reconnect_gap
+1 failed, 12 deselected, 1 warning in 0.72s
