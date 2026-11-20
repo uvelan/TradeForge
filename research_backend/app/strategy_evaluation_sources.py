@@ -22,7 +22,7 @@ from .storage import read_partition
 from .strategy_definitions import Contract, Digest
 from .strategy_evidence import fingerprint
 
-EVALUATOR_VERSION = 3
+EVALUATOR_VERSION = 4
 MAX_TIMELINE = 4096
 MAX_SELECTION_SLOTS = 6000
 MAX_PUBLICATIONS = 16_000
@@ -37,7 +37,7 @@ VIEW_KIND = {
 
 
 class EvaluationInput(Contract):
-    evaluator_version: Literal[3]
+    evaluator_version: Literal[4]
     strategy_id: str = Field(pattern=r"^ST-[a-f0-9]{32}$")
     strategy_version_id: str = Field(pattern=r"^SV-[a-f0-9]{32}$")
     configuration_fingerprint: Digest
@@ -80,8 +80,8 @@ def required_series(definition):
     return keys
 
 
-def freeze_selection(request, definition):
-    source = next((item for item in selection_catalog() if item["id"]==request.selection_id),None)
+def freeze_selection(request, definition, *, source=None):
+    source = source or next((item for item in selection_catalog() if item["id"]==request.selection_id),None)
     if source is None or source["fingerprint"] != request.selection_fingerprint:
         raise ValueError("Selection must match an approved frozen archive fingerprint")
     if not source["start"] <= request.warmup_start < request.evaluation_start <= request.cutoff <= source["end"]:

@@ -86,7 +86,7 @@ def prepare(request):
 def calculate(run, cutoff):
     identity = run["identity"]
     if identity["evaluator_version"]!=EVALUATOR_VERSION:
-        raise HTTPException(409,{"code":"LEGACY_EVALUATION_READ_ONLY","reason":"Saved v1 and v2 decisions remain readable. Create a v3 evaluation to recalculate."})
+        raise HTTPException(409,{"code":"LEGACY_EVALUATION_READ_ONLY","reason":"Saved v1 through v3 decisions remain readable. Create a v4 evaluation to recalculate."})
     if not identity["evaluation_start"] <= cutoff <= run["selection"]["end"]:
         raise ValueError("Cutoff lies outside the frozen evaluation range")
     definition = StrategyDefinitionV2.model_validate(run["definition"])
@@ -167,7 +167,7 @@ def create_run(request):
 def advance_run(run_id, request):
     run = load_run(run_id)
     if run["identity"]["evaluator_version"]!=EVALUATOR_VERSION:
-        raise HTTPException(409,{"code":"LEGACY_EVALUATION_READ_ONLY","reason":"Create a v3 evaluation to advance."})
+        raise HTTPException(409,{"code":"LEGACY_EVALUATION_READ_ONLY","reason":"Create a v4 evaluation to advance."})
     latest = find_decision(run_id)
     known = find_decision(run_id,request.cutoff)
     if known and request.expected_decision_id in {known["previous_decision_id"],known["decision_id"]}:
@@ -285,7 +285,10 @@ def get_evidence(run_id:str,cutoff:int,snapshot:str,event_id:str):
 @router.get("/{run_id}/decisions/{cutoff}/evidence/{snapshot}/{event_id}/chart")
 def evidence_chart(run_id:str,cutoff:int,snapshot:str,event_id:str):
     event = get_evidence(run_id,cutoff,snapshot,event_id)
-    pinned = load_run(run_id)["selection"]["series"]
+    return archived_evidence_chart(event,load_run(run_id)["selection"]["series"],cutoff)
+
+
+def archived_evidence_chart(event,pinned,cutoff):
     ref = event["evidence_reference"]
     identity = ref.get("participants",{}).get("primary",ref["source"])
     provider,symbol,frame,feed_id,basis,dataset_id = identity

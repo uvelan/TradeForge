@@ -129,9 +129,13 @@ def predicate(rule, spec, event):
 
 
 class EvaluationMachine:
-    def __init__(self, definition, evidence, identity, start, selection_end, *, check_budget=None):
+    def __init__(self, definition, evidence, identity, start, selection_end, *, check_budget=None,
+                 rearm_rule=None, rearm_after=None, spent_families=()):
         self.definition = definition
         self.check_budget = check_budget
+        self.rearm_rule = rearm_rule
+        self.rearm_after = rearm_after
+        self.spent_families = frozenset(spent_families)
         self.evidence = evidence
         self.graph = RuleGraph(definition)
         self.identity = identity
@@ -290,6 +294,9 @@ class EvaluationMachine:
                 uncertainty = uncertainty or ("BOUND_EVIDENCE_STALE" if record.available<age_start else
                                               "CURRENT_MATCH_PRECEDES_PHASE")
                 continue
+            if rule.id==self.rearm_rule and not self.attempt:
+                if record.family in self.spent_families or not record.family or record.available<=self.rearm_after:
+                    continue
             if activating_crt:
                 proof = BoundEvidence(reference=event["evidence_reference"], family=record.family,
                     market_event_id=event.get("market_event_id") or record.family,
@@ -449,9 +456,10 @@ class EvaluationMachine:
         return result(YES,"MAINTAINED_CURRENT_PREDICATE_SATISFIED")
 
     def pinned_current_guard(self, cutoff):
-        for key,binding in self.bindings.items():
+        for key in self.graph.order:
+            binding = self.bindings.get(key)
             rule = self.graph.rules[key]
-            if key not in self.latches or rule.evidence.state!="CURRENT":
+            if binding is None or key not in self.latches or rule.evidence.state!="CURRENT":
                 continue
             checked = self.verify_maintained(rule,binding,cutoff)
             self.results[key] = checked
@@ -466,7 +474,7 @@ class EvaluationMachine:
             self.transition(cutoff,"INSUFFICIENT_EVIDENCE","REQUIRED_SOURCE_COVERAGE_UNKNOWN")
             return
         if not self.attempt:
-            context = self.phase("context",cutoff,self.identity["warmup_start"])
+            context = self.phase("context",cutoff,self.identity["warmup_start"] if self.rearm_after is None else self.rearm_after+1)
             if context!=YES or self.activate(cutoff)!=YES:
                 state = ("NO_TRADE" if cutoff==self.end and context==NO else
                          "WAITING_FOR_CONTEXT" if context==NO else "INSUFFICIENT_EVIDENCE")
@@ -482,7 +490,7 @@ class EvaluationMachine:
             self.transition(cutoff,state,"BOUND_REFERENCE_TERMINAL")
             return
         if self.definition.attempt.context_mode=="CONTINUOUS":
-            context = self.phase("context",cutoff,self.identity["warmup_start"])
+            context = self.phase("context",cutoff,self.identity["warmup_start"] if self.rearm_after is None else self.rearm_after+1)
             if context!=YES:
                 self.transition(cutoff,"INVALIDATED" if context==NO else "INSUFFICIENT_EVIDENCE",
                                 "CONTINUOUS_CONTEXT_FAILED")
@@ -580,21 +588,31 @@ class EvaluationMachine:
             stamp = heappop(pending)
             if self.check_budget:
                 self.check_budget()
-            self.at(stamp)
-            self.expire_during_uncertainty(stamp)
+            self.step(stamp)
             if self.state in TERMINAL:
                 break
-            origin = self.context_at if self.definition.attempt.expiry_origin=="CONTEXT_ACTIVATION" else self.setup_at
-            if len(known)>MAX_TIMELINE:
-                raise ResourceLimit("Evaluation boundaries exceed the timeline budget")
-            if self.setup_at is not None and stamp<self.setup_at+1<=cutoff and self.setup_at+1 not in known:
-                known.add(self.setup_at+1)
-                heappush(pending,self.setup_at+1)
-            if origin is not None and self.definition.expiry.unit=="SECONDS":
-                deadline = origin+self.definition.expiry.count+1
-                if stamp<deadline<=cutoff and deadline not in known:
-                    known.add(deadline)
-                    heappush(pending,deadline)
+            for next_stamp in self.dynamic_boundaries(stamp,cutoff):
+                if next_stamp not in known:
+                    if len(known)>=MAX_TIMELINE:
+                        raise ResourceLimit("Evaluation boundaries exceed the timeline budget")
+                    known.add(next_stamp)
+                    heappush(pending,next_stamp)
+        return self.decision(cutoff,len(known))
+
+    def step(self, cutoff):
+        self.at(cutoff)
+        self.expire_during_uncertainty(cutoff)
+
+    def dynamic_boundaries(self, stamp, cutoff):
+        origin = self.context_at if self.definition.attempt.expiry_origin=="CONTEXT_ACTIVATION" else self.setup_at
+        if self.setup_at is not None and stamp<self.setup_at+1<=cutoff:
+            yield self.setup_at+1
+        if origin is not None and self.definition.expiry.unit=="SECONDS":
+            deadline = origin+self.definition.expiry.count+1
+            if stamp<deadline<=cutoff:
+                yield deadline
+
+    def decision(self, cutoff, boundary_count):
         supporting = {f"{result.proof.reference.calculation_snapshot}:{result.proof.reference.event_id}":result.event
                       for result in (*self.results.values(),*self.activation_proofs.values(),*self.temporal_proofs.values()) if result.proof}
         if self.latest_crt:
@@ -629,5 +647,5 @@ class EvaluationMachine:
             "temporal":[{"before":key[0],"after":key[1],"relation":key[2],"outcome":value[0],"reason":value[1]}
                         for key,value in sorted(self.temporal.items())],
             "supporting_events":supporting,"entry_intent":self.intent(),
-            "resource_counts":{**self.evidence.metrics,"candidate_scans":self.scans,"exact_lookups":self.lookups,"timeline_boundaries":len(known)},
+            "resource_counts":{**self.evidence.metrics,"candidate_scans":self.scans,"exact_lookups":self.lookups,"timeline_boundaries":boundary_count},
         }

@@ -130,7 +130,7 @@ def measure(call,samples):
             "resource_counts":output.get("resource_counts") if output else None}
 
 
-def run(catalog,datasets,samples):
+def run(catalog,datasets,samples,historical=False):
     from fastapi.testclient import TestClient
     from research_backend.app.analysis_evidence import canonical as serialize
     from research_backend.app.config import MARKET_DIR
@@ -140,6 +140,9 @@ def run(catalog,datasets,samples):
     from research_backend.app.strategy_evaluation_routes import calculate, load_run
     from research_backend.app.strategy_evaluation_sources import collect
     from research_backend.app.strategy_evaluator import RuleGraph
+    from research_backend.app.analysis_evidence import ResourceLimit
+    from research_backend.app.historical_strategy_engine import run_chunks
+    from research_backend.app.historical_strategy_inputs import HistoricalInput, prepare_historical, verified_evidence
 
     initialize()
     with transaction() as database:
@@ -155,7 +158,7 @@ def run(catalog,datasets,samples):
             record=client.post("/api/strategies/v1",json=definition)
             assert record.status_code==201,record.text
             item=record.json()
-            request={"evaluator_version":3,"purpose":"HISTORICAL_SIMULATION","strategy_id":item["strategy_id"],
+            request={"evaluator_version":4,"purpose":"HISTORICAL_SIMULATION","strategy_id":item["strategy_id"],
                      "strategy_version_id":item["version_id"],"configuration_fingerprint":item["configuration_fingerprint"],
                      "selection_id":selected["id"],"selection_fingerprint":selected["fingerprint"],
                      "warmup_start":catalog["start"],"evaluation_start":catalog["start"]+7200,"cutoff":cutoff if cutoff is not None else catalog["end"]}
@@ -175,6 +178,24 @@ def run(catalog,datasets,samples):
                               "independent_reference_checks":check,"same_cutoff_reconstruction":True,
                               "decision":decision})
                 runs[(direction,left,right)] = load_run(run["run_id"])
+                if historical:
+                    cases[-1]["historical"] = {}
+                    for policy in ("SINGLE_ATTEMPT","NEW_CONTEXT_FAMILY"):
+                        request_v1 = dict(request,rearm=policy)
+                        if policy=="NEW_CONTEXT_FAMILY":
+                            request_v1.update(context_alias=demo(direction,left,right)["attempt"]["crt_reference_alias"],
+                                              max_attempts=16)
+                        pinned = prepare_historical(HistoricalInput.model_validate(request_v1))
+                        model = StrategyDefinitionV2.model_validate(pinned["definition"])
+                        entries = []
+                        proof = verified_evidence(model,pinned)
+                        try:
+                            run_chunks(pinned,proof,model,lambda snapshot,frontier,rows,*args:entries.extend(rows))
+                        except ResourceLimit as error:
+                            cases[-1]["historical"][policy] = {"status":"RESOURCE_LIMIT_EXCEEDED","reason":str(error),"decisions":len(entries)}
+                        else:
+                            cases[-1]["historical"][policy] = {"status":"COMPLETED","decisions":[row["trace"]["state"] for row in entries],
+                                                                "intents":sum(bool(row["intent"]) for row in entries)}
 
         benchmarks = {}
         if samples:
@@ -245,6 +266,7 @@ def run(catalog,datasets,samples):
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--samples",type=int,choices=(0,30),default=0)
+    parser.add_argument("--historical",action="store_true")
     args=parser.parse_args()
     source_root=Path(os.environ.get("TRADEFORGE_STORAGE", ROOT/"storage"))
     original=Path(os.environ.get("TRADEFORGE_DATA_DIR",source_root/"research")).resolve()
@@ -254,7 +276,7 @@ def main():
         datasets=copy_sources(catalog,original,temp)
         os.environ["TRADEFORGE_STORAGE"]=space
         os.environ["TRADEFORGE_DATA_DIR"]=str(temp/"research")
-        cases,measurements=run(catalog,datasets,args.samples)
+        cases,measurements=run(catalog,datasets,args.samples,args.historical)
         print(json.dumps({"selection":catalog,"cases":cases,"benchmarks":measurements},indent=2))
 
 

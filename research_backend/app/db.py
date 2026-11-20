@@ -310,6 +310,8 @@ def initialize():
         db.execute('PRAGMA journal_mode=WAL')
         db.execute('PRAGMA synchronous=FULL')
         db.executescript(SCHEMA)
+        from .historical_strategy_store import install
+        install(db)
         for table in IMMUTABLE_TABLES:
             for op in ('UPDATE','DELETE'):
                 name = f'protect_{table}_{op.lower()}'
