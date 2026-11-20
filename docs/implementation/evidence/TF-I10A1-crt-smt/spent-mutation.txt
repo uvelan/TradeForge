@@ -1,0 +1,8 @@
+Command: python -B -m pytest -q -s research_backend/tests/test_historical_successor_oracle.py::test_rearm_rejects_same_family_and_equal_cutoff
+Mutation: remove only the spent-family membership disjunct from EvaluationMachine.select.
+Expected failure, exit 1. Original evaluator source restored byte-for-byte before the normal run.
+
+shared selector FVG control family 0d50691803870041892dfe45ea95c25d578a95e6cd0396887ea0652e9f46d96a candidate 644bdd2fe856f0cc0e04045c8aa8aaef3cc5cb543cec00fcb42bcf558e8693f7 available 1577962500 terminal 1577962200 cutoff 1577962500 unspent SATISFIED spent SATISFIED spent_has_proof True
+E       AssertionError: Spent membership must exclude the same otherwise eligible post-terminal revision
+FAILED research_backend/tests/test_historical_successor_oracle.py::test_rearm_rejects_same_family_and_equal_cutoff
+1 failed, 1 warning in 1.96s

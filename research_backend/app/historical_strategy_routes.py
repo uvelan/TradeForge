@@ -4,8 +4,10 @@ import json
 from fastapi import APIRouter, HTTPException, Query, Request
 from starlette.concurrency import run_in_threadpool
 
+from .analysis_evidence import ResourceLimit
 from .db import one, rows, transaction
-from .historical_strategy_inputs import RUN_VERSION, HistoricalInput, prepare_historical, verified_evidence, approved_partition
+from .historical_strategy_engine import successor_schedule
+from .historical_strategy_inputs import CRT_SMT_METHOD, RUN_VERSION, HistoricalInput, prepare_historical, verified_evidence, approved_partition
 from .historical_strategy_store import cancel, enqueue, latest_checkpoint, resume
 from .strategy_definitions import StrategyDefinitionV2
 from .strategy_evaluation_budget import deadline
@@ -35,10 +37,20 @@ def partitions(feed_id:str=Query(min_length=1,max_length=128),symbol:str=Query(m
 def checked(body, persist):
     with evaluation_lane():
         run = prepare_historical(body)
-        if persist:
-            return {"run_id":enqueue(run)}
         identity = run["identity"]
-        evidence = verified_evidence(StrategyDefinitionV2.model_validate(run["definition"]),run,deadline())
+        if persist and identity["method"]!=CRT_SMT_METHOD:
+            return {"run_id":enqueue(run)}
+        definition = StrategyDefinitionV2.model_validate(run["definition"])
+        if identity["method"]==CRT_SMT_METHOD:
+            try:
+                evidence = verified_evidence(definition,run,deadline())
+                successor_schedule(run,evidence,definition)
+            except (ResourceLimit, ValueError) as error:
+                raise HTTPException(422,str(error)) from error
+            if persist:
+                return {"run_id":enqueue(run)}
+        else:
+            evidence = verified_evidence(definition,run,deadline())
         return {"run_id":run["run_id"],"identity":identity,"selection":run["selection"],
                 "coverage":{key:lane.at(identity["cutoff"]) for key,lane in evidence.coverage.items()}}
 
