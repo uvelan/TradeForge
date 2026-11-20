@@ -21,3 +21,4 @@
   .strategy-block { padding: .7rem; }
   .strategy-group, .strategy-node { padding-inline: .45rem; }
 }
+.strategy-trace { max-height: 28rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }

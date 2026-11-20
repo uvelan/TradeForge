@@ -1,0 +1,139 @@
+
+> e2e
+> playwright test e2e/research.spec.ts -g persists a trendline and resumes a frozen replay checkpoint --retries=0 --repeat-each=20 --reporter=line
+
+[WebServer] INFO:     Started server process [336]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8198 (Press CTRL+C to quit)
+
+
+[WebServer] (node:7720) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 20 tests using 1 worker
+
+(node:2072) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:46980) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[2/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+
+(node:49112) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[3/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:21452) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[4/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+
+(node:40428) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[5/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+
+(node:37608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[6/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:26236) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[7/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+
+(node:31164) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[8/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+  1) e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint ──────
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('Historical replay').getByRole('button', { name: 'Next candle' })
+        - waiting for navigation to finish...
+        - navigated to "http://127.0.0.1:4198/"
+
+
+      205 |   let position=0;
+      206 |   do{
+    > 207 |     await controls.getByRole("button",{name:"Next candle"}).click();
+          |                                                             ^
+      208 |     await expect(timeline).toHaveValue(String(++position));
+      209 |   }while(bookmarks.includes(position));
+      210 |   const bookmark=controls.getByRole("button",{name:"Bookmark candle"});
+        at K:\Projects\TradeForge\frontend\e2e\research.spec.ts:207:61
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat7\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat7\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat7\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat7\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\research-persists-a-trendl-f86a1--a-frozen-replay-checkpoint-repeat7\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+(node:41216) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[9/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:8064) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[10/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:20764) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[11/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+
+(node:38072) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[12/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:39924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[13/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+
+(node:41676) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[14/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:2672) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[15/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:36320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[16/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:18224) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[17/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:30744) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[18/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+(node:30192) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[19/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+
+(node:41700) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[20/20] e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint
+  1 failed
+    e2e\research.spec.ts:95:36 › persists a trendline and resumes a frozen replay checkpoint ───────
+  19 passed (2.8m)

@@ -1,0 +1,2597 @@
+
+> build
+> tsc --noEmit && vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 3012 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/catalog.html                    0.45 kB │ gzip:   0.31 kB
+dist/index.html                      0.53 kB │ gzip:   0.33 kB
+dist/assets/terminal-CBK_TtMD.css   41.47 kB │ gzip:  10.12 kB
+dist/assets/catalog-BtfC513C.js    237.06 kB │ gzip:  74.93 kB
+dist/assets/terminal-ttoFii33.js   284.20 kB │ gzip:  79.14 kB
+dist/assets/timezone-C1I9y4LN.js   399.92 kB │ gzip: 127.18 kB
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/utils/index.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/utils/index.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/AccordionDetails/AccordionDetails.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/AccordionDetails/AccordionDetails.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/AvatarGroup/AvatarGroup.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/AvatarGroup/AvatarGroup.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Autocomplete/Autocomplete.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Autocomplete/Autocomplete.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/CardActionArea/CardActionArea.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/CardActionArea/CardActionArea.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Accordion/Accordion.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Accordion/Accordion.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Badge/Badge.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Badge/Badge.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/DialogTitle/DialogTitle.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/DialogTitle/DialogTitle.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/styles/useTheme.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/styles/useTheme.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/styles/useThemeProps.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/styles/useThemeProps.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/styles/styled.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/styles/styled.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/styles/ThemeProvider.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/styles/ThemeProvider.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/AccordionSummary/AccordionSummary.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/AccordionSummary/AccordionSummary.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ClickAwayListener/ClickAwayListener.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ClickAwayListener/ClickAwayListener.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Backdrop/Backdrop.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Backdrop/Backdrop.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/CssBaseline/CssBaseline.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/CssBaseline/CssBaseline.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Container/Container.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Container/Container.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/CardHeader/CardHeader.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/CardHeader/CardHeader.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/styles/ThemeProviderWithVars.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/styles/ThemeProviderWithVars.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/DialogContentText/DialogContentText.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/DialogContentText/DialogContentText.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/BottomNavigationAction/BottomNavigationAction.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/BottomNavigationAction/BottomNavigationAction.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Breadcrumbs/Breadcrumbs.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Breadcrumbs/Breadcrumbs.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/AlertTitle/AlertTitle.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/AlertTitle/AlertTitle.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ButtonGroup/ButtonGroupButtonContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ButtonGroup/ButtonGroupButtonContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Collapse/Collapse.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Collapse/Collapse.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Input/Input.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Input/Input.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Fade/Fade.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Fade/Fade.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/InputLabel/InputLabel.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/InputLabel/InputLabel.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/NoSsr/NoSsr.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/NoSsr/NoSsr.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Box/Box.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Box/Box.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/CardActions/CardActions.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/CardActions/CardActions.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ButtonBase/ButtonBase.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ButtonBase/ButtonBase.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Portal/Portal.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Portal/Portal.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Alert/Alert.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Alert/Alert.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/CircularProgress/CircularProgress.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/CircularProgress/CircularProgress.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/DialogContent/DialogContent.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/DialogContent/DialogContent.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Grow/Grow.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Grow/Grow.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Avatar/Avatar.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Avatar/Avatar.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/utils/useEnhancedEffect.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/utils/useEnhancedEffect.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ImageListItem/ImageListItem.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ImageListItem/ImageListItem.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/styles/adaptV4Theme.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/styles/adaptV4Theme.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/AppBar/AppBar.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/AppBar/AppBar.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Step/StepContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Step/StepContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/FormControlLabel/FormControlLabel.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/FormControlLabel/FormControlLabel.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Card/Card.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Card/Card.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/utils/useControlled.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/utils/useControlled.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/BottomNavigation/BottomNavigation.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/BottomNavigation/BottomNavigation.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ListItemIcon/ListItemIcon.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ListItemIcon/ListItemIcon.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/IconButton/IconButton.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/IconButton/IconButton.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/FormGroup/FormGroup.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/FormGroup/FormGroup.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Checkbox/Checkbox.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Checkbox/Checkbox.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ListItemButton/ListItemButton.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ListItemButton/ListItemButton.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/RadioGroup/useRadioGroup.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/RadioGroup/useRadioGroup.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/RadioGroup/RadioGroup.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/RadioGroup/RadioGroup.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ListItem/ListItem.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ListItem/ListItem.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/AccordionActions/AccordionActions.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/AccordionActions/AccordionActions.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/utils/useEventCallback.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/utils/useEventCallback.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/CardContent/CardContent.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/CardContent/CardContent.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Dialog/Dialog.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Dialog/Dialog.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Pagination/Pagination.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Pagination/Pagination.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/FormHelperText/FormHelperText.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/FormHelperText/FormHelperText.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ListItemAvatar/ListItemAvatar.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ListItemAvatar/ListItemAvatar.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/utils/useId.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/utils/useId.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ListItemText/ListItemText.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ListItemText/ListItemText.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/List/List.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/List/List.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Button/Button.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Button/Button.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Grid/Grid.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Grid/Grid.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Chip/Chip.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Chip/Chip.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/FilledInput/FilledInput.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/FilledInput/FilledInput.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Divider/Divider.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Divider/Divider.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/FormLabel/FormLabel.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/FormLabel/FormLabel.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Stack/Stack.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Stack/Stack.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Radio/Radio.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Radio/Radio.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Stepper/StepperContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Stepper/StepperContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/StepIcon/StepIcon.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/StepIcon/StepIcon.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/SnackbarContent/SnackbarContent.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/SnackbarContent/SnackbarContent.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Popover/Popover.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Popover/Popover.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Paper/Paper.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Paper/Paper.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/MenuItem/MenuItem.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/MenuItem/MenuItem.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Popper/Popper.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Popper/Popper.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/NativeSelect/NativeSelect.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/NativeSelect/NativeSelect.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Stepper/Stepper.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Stepper/Stepper.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TableRow/TableRow.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TableRow/TableRow.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/PaginationItem/PaginationItem.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/PaginationItem/PaginationItem.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/FormControl/FormControl.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/FormControl/FormControl.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TableContainer/TableContainer.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TableContainer/TableContainer.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TablePaginationActions/TablePaginationActions.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TablePaginationActions/TablePaginationActions.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/FormControl/useFormControl.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/FormControl/useFormControl.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Link/Link.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Link/Link.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/StepLabel/StepLabel.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/StepLabel/StepLabel.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ListSubheader/ListSubheader.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ListSubheader/ListSubheader.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ButtonGroup/ButtonGroupContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ButtonGroup/ButtonGroupContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/MobileStepper/MobileStepper.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/MobileStepper/MobileStepper.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TabScrollButton/TabScrollButton.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TabScrollButton/TabScrollButton.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Switch/Switch.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Switch/Switch.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ListItemSecondaryAction/ListItemSecondaryAction.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ListItemSecondaryAction/ListItemSecondaryAction.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/LinearProgress/LinearProgress.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/LinearProgress/LinearProgress.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/utils/useSlot.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/utils/useSlot.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Snackbar/Snackbar.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Snackbar/Snackbar.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Zoom/Zoom.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Zoom/Zoom.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/StepButton/StepButton.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/StepButton/StepButton.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Tab/Tab.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Tab/Tab.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Menu/Menu.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Menu/Menu.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ImageList/ImageList.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ImageList/ImageList.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TableBody/TableBody.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TableBody/TableBody.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/GlobalStyles/GlobalStyles.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/GlobalStyles/GlobalStyles.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TextField/TextField.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TextField/TextField.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/SvgIcon/SvgIcon.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/SvgIcon/SvgIcon.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TableCell/TableCell.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TableCell/TableCell.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Dialog/DialogContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Dialog/DialogContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/SvgIcon/createSvgIcon.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/SvgIcon/createSvgIcon.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/SpeedDial/SpeedDial.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/SpeedDial/SpeedDial.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ToggleButton/ToggleButton.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ToggleButton/ToggleButton.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TableSortLabel/TableSortLabel.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TableSortLabel/TableSortLabel.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ImageListItemBar/ImageListItemBar.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ImageListItemBar/ImageListItemBar.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Rating/Rating.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Rating/Rating.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Toolbar/Toolbar.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Toolbar/Toolbar.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ToggleButtonGroup/ToggleButtonGroup.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ToggleButtonGroup/ToggleButtonGroup.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Tooltip/Tooltip.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Tooltip/Tooltip.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Fab/Fab.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Fab/Fab.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/useScrollTrigger/useScrollTrigger.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/useScrollTrigger/useScrollTrigger.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/styles/defaultTheme.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/styles/defaultTheme.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TableFooter/TableFooter.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TableFooter/TableFooter.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/usePagination/usePagination.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/usePagination/usePagination.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/StepConnector/StepConnector.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/StepConnector/StepConnector.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Typography/Typography.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Typography/Typography.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TableHead/TableHead.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TableHead/TableHead.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Unstable_TrapFocus/FocusTrap.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Unstable_TrapFocus/FocusTrap.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/SpeedDialIcon/SpeedDialIcon.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/SpeedDialIcon/SpeedDialIcon.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/transitions/useReducedMotion.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/transitions/useReducedMotion.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Select/Select.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Select/Select.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Breadcrumbs/BreadcrumbCollapsed.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Breadcrumbs/BreadcrumbCollapsed.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/InfoOutlined.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/InfoOutlined.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ButtonBase/TouchRipple.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ButtonBase/TouchRipple.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ScopedCssBaseline/ScopedCssBaseline.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ScopedCssBaseline/ScopedCssBaseline.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ButtonGroup/ButtonGroup.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ButtonGroup/ButtonGroup.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/Close.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/Close.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Accordion/AccordionContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Accordion/AccordionContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Tabs/Tabs.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Tabs/Tabs.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/ArrowDropDown.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/ArrowDropDown.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/CardMedia/CardMedia.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/CardMedia/CardMedia.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Badge/useBadge.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Badge/useBadge.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/StepContent/StepContent.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/StepContent/StepContent.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/SuccessOutlined.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/SuccessOutlined.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/ReportProblemOutlined.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/ReportProblemOutlined.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/Cancel.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/Cancel.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/DialogActions/DialogActions.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/DialogActions/DialogActions.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/ErrorOutline.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/ErrorOutline.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TablePagination/TablePagination.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TablePagination/TablePagination.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/Person.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/Person.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/TextareaAutosize/TextareaAutosize.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/TextareaAutosize/TextareaAutosize.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/Transition.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/Transition.mjs:2:1 ]
+   │
+ 2 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/InputAdornment/InputAdornment.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/InputAdornment/InputAdornment.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ImageList/ImageListContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ImageList/ImageListContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/List/ListContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/List/ListContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/IndeterminateCheckBox.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/IndeterminateCheckBox.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/RadioGroup/RadioGroupContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/RadioGroup/RadioGroupContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Slide/Slide.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Slide/Slide.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/Warning.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/Warning.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Slider/Slider.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Slider/Slider.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/MenuList/MenuListContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/MenuList/MenuListContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/MenuList/MenuList.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/MenuList/MenuList.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/styled-engine/index.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/styled-engine/index.mjs:8:1 ]
+   │
+ 8 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/CheckBox.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/CheckBox.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/NativeSelect/NativeSelectInput.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/NativeSelect/NativeSelectInput.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/SpeedDialAction/SpeedDialAction.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/SpeedDialAction/SpeedDialAction.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ButtonBase/useButtonBase.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ButtonBase/useButtonBase.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/useLazyRipple/index.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/useLazyRipple/index.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Popper/BasePopper.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Popper/BasePopper.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Drawer/Drawer.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Drawer/Drawer.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Radio/RadioButtonIcon.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Radio/RadioButtonIcon.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/utils/useForkRef.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/utils/useForkRef.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/styles/ThemeProviderNoVars.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/styles/ThemeProviderNoVars.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Snackbar/useSnackbar.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Snackbar/useSnackbar.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/ArrowDownward.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/ArrowDownward.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/cssVars/createCssVarsProvider.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/cssVars/createCssVarsProvider.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/StarBorder.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/StarBorder.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Table/Tablelvl2Context.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Table/Tablelvl2Context.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/Grid/Grid.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/Grid/Grid.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Icon/Icon.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Icon/Icon.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/useMediaQuery/useMediaQuery.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/useMediaQuery/useMediaQuery.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/RtlProvider/index.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/RtlProvider/index.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/MoreHoriz.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/MoreHoriz.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/SwitchBase.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/SwitchBase.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ToggleButtonGroup/ToggleButtonGroupContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ToggleButtonGroup/ToggleButtonGroupContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Table/TableContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Table/TableContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/NavigateNext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/NavigateNext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ToggleButtonGroup/ToggleButtonGroupButtonContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ToggleButtonGroup/ToggleButtonGroupButtonContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/FormControl/FormControlContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/FormControl/FormControlContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/DefaultPropsProvider/DefaultPropsProvider.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/DefaultPropsProvider/DefaultPropsProvider.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/utils/focusWithVisible.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/utils/focusWithVisible.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/CheckBoxOutlineBlank.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/CheckBoxOutlineBlank.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ToggleButton/RovingToggleButton.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ToggleButton/RovingToggleButton.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/ButtonBase/Ripple.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/ButtonBase/Ripple.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/KeyboardArrowRight.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/KeyboardArrowRight.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/Container/createContainer.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/Container/createContainer.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/Stack/Stack.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/Stack/Stack.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Tabs/ScrollbarSize.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Tabs/ScrollbarSize.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/KeyboardArrowLeft.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/KeyboardArrowLeft.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useForkRef/useForkRef.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useForkRef/useForkRef.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/Stack/createStack.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/Stack/createStack.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/CheckCircle.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/CheckCircle.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/useTheme/useTheme.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/useTheme/useTheme.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/Add.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/Add.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/LastPage.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/LastPage.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useEnhancedEffect/useEnhancedEffect.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useEnhancedEffect/useEnhancedEffect.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/NavigateBefore.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/NavigateBefore.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useEventCallback/useEventCallback.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useEventCallback/useEventCallback.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/useThemeWithoutDefault/useThemeWithoutDefault.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/useThemeWithoutDefault/useThemeWithoutDefault.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useId/useId.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useId/useId.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/utils/useFocusableWhenDisabled.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/utils/useFocusableWhenDisabled.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Select/utils/SelectFocusSourceContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Select/utils/SelectFocusSourceContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/createBox/createBox.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/createBox/createBox.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/InitColorSchemeScript/InitColorSchemeScript.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/InitColorSchemeScript/InitColorSchemeScript.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/useLazyRipple/useLazyRipple.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/useLazyRipple/useLazyRipple.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/FirstPage.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/FirstPage.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/ThemeProvider/ThemeProvider.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/ThemeProvider/ThemeProvider.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/GlobalStyles/GlobalStyles.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/GlobalStyles/GlobalStyles.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useSlotProps/useSlotProps.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useSlotProps/useSlotProps.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useControlled/useControlled.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useControlled/useControlled.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/Container/Container.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/Container/Container.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Select/SelectInput.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Select/SelectInput.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/RadioButtonUnchecked.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/RadioButtonUnchecked.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/Box/Box.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/Box/Box.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/usePreviousProps/usePreviousProps.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/usePreviousProps/usePreviousProps.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/cssVars/useCurrentColorScheme.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/cssVars/useCurrentColorScheme.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/RadioButtonChecked.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/RadioButtonChecked.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useOnMount/useOnMount.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useOnMount/useOnMount.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useForcedRerendering/useForcedRerendering.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useForcedRerendering/useForcedRerendering.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Step/Step.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Step/Step.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useTimeout/useTimeout.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useTimeout/useTimeout.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useValueAsRef/useValueAsRef.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useValueAsRef/useValueAsRef.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/Grid/createGrid.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/Grid/createGrid.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/DefaultPropsProvider/DefaultPropsProvider.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/DefaultPropsProvider/DefaultPropsProvider.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useRovingTabIndex/RovingTabIndexContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useRovingTabIndex/RovingTabIndexContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useLazyRef/useLazyRef.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useLazyRef/useLazyRef.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/styled-engine/StyledEngineProvider/StyledEngineProvider.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/styled-engine/StyledEngineProvider/StyledEngineProvider.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/utils/useRovingTabIndex/useRovingTabIndex.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/utils/useRovingTabIndex/useRovingTabIndex.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/private-theming/useTheme/useTheme.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/private-theming/useTheme/useTheme.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/private-theming/useTheme/ThemeContext.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/private-theming/useTheme/ThemeContext.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/OutlinedInput/OutlinedInput.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/OutlinedInput/OutlinedInput.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Modal/Modal.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Modal/Modal.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/OutlinedInput/NotchedOutline.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/OutlinedInput/NotchedOutline.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Table/Table.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Table/Table.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Modal/useModal.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Modal/useModal.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/useAutocomplete/useAutocomplete.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/useAutocomplete/useAutocomplete.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/styled-engine/GlobalStyles/GlobalStyles.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/styled-engine/GlobalStyles/GlobalStyles.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/useAutocomplete/utils/useOptionValue.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/useAutocomplete/utils/useOptionValue.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/InputBase/InputBase.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/InputBase/InputBase.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/internal/svg-icons/Star.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/internal/svg-icons/Star.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Slider/SliderValueLabel.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Slider/SliderValueLabel.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Skeleton/Skeleton.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Skeleton/Skeleton.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/system/useThemeProps/useThemeProps.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/system/useThemeProps/useThemeProps.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/Slider/useSlider.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/Slider/useSlider.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/SwipeableDrawer/SwipeableDrawer.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/SwipeableDrawer/SwipeableDrawer.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/SwipeableDrawer/SwipeArea.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/SwipeableDrawer/SwipeArea.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/lucide-react/dist/esm/context.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/lucide-react/dist/esm/context.mjs:2:1 ]
+   │
+ 2 │ "use client";
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/lucide-react/dist/esm/Icon.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/lucide-react/dist/esm/Icon.mjs:2:1 ]
+   │
+ 2 │ "use client";
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+✓ built in 390ms

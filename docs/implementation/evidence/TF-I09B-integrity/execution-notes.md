@@ -1,0 +1,11 @@
+# Execution notes
+
+Local environment used Windows, Python 3.13.14 and Node 24.14.0. GitHub runs use the repository's Windows workflow and lockfiles.
+
+The first v1 fixture setup run used too short a delayed cutoff, omitted required NOT metadata and left the FVG producer without its five-bar warm-up. The corrected reviewed-HEAD run gives the actual five regressions. The first v2 edit run raised a NameError because the local established-binding variable had not been inserted. Its repair exposed the missing alias-binding activation hook, recorded in focused-first.txt. The next prefix/API run needed to register the approved_fixture in the new module.
+
+The first observation inventory selected the expected canonical event types, but five fixture timestamps missed earlier boundary formations or breaks. Rechecking the fixture's initial segment established the corrected timestamps. The first CRT inventory attempts used a latched untracked reference and evaluated the expansion fixture from a different setup boundary. Those attempts are preserved. The initial delayed OB seed put its candidate inside a straddling activation bar. Inserting one neutral candle allows the producer to establish the candidate before the break, so the following interaction is the intended source of uncertainty.
+
+The initial dense benchmark finished its successful rows internally but discarded them when the oversized request failed the per-series alignment check before the aggregate slot cap. An aligned endpoint exercises the intended combined cap. The resulting first dense fixture established six producer computations and dense SMT, but produced no FVG publications. It is retained as dense-initial.json. The expanded fixture explicitly requires confirmed overlapping FVG publications and dense SMT before recording measurements. The first invocation of that expanded fixture was interrupted to keep benchmark measurements separate from the browser checks.
+
+The preceding review's Data Library timing failure was isolated to the initial hosted navigation click. The revised serial check launches a fresh test server and reruns that scenario at the original retry and timeout settings. The current workflow status and any hosted failures are listed on PR #16.

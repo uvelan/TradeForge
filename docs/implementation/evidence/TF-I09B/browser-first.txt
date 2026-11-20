@@ -1,0 +1,67 @@
+
+> e2e
+> playwright test e2e/strategy-evaluator.spec.ts --retries=0 --reporter=line
+
+
+[WebServer] INFO:     Started server process [40952]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8198 (Press CTRL+C to quit)
+
+
+[WebServer] (node:12680) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+
+(node:24036) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/1] e2e\strategy-evaluator.spec.ts:3:1 › saves a canonical strategy decision, reconstructs, and opens exact chart evidence
+
+[WebServer] 6:43:30 pm [vite] (client) [console.error] Encountered two children with the same key, `SV-0bd52a7219a64acfa67f965f692a1eab`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+  1) e2e\strategy-evaluator.spec.ts:3:1 › saves a canonical strategy decision, reconstructs, and opens exact chart evidence
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('region', { name: 'Strategy evaluation' }).getByRole('heading', { name: 'waiting for trigger' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('region', { name: 'Strategy evaluation' }).getByRole('heading', { name: 'waiting for trigger' }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Strategy evaluation' }).getByRole('heading', { name: 'waiting for trigger' })
+
+
+      34 |   await evaluation.getByLabel("Decision cutoff (UTC)").fill("2020-01-02T12:10");
+      35 |   await evaluation.getByRole("button", {name: "Run evaluation"}).click();
+    > 36 |   await expect(evaluation.getByRole("heading", {name: "waiting for trigger"})).toBeVisible();
+         |                                                                                ^
+      37 |   await evaluation.getByLabel("Decision cutoff (UTC)").fill("2020-01-02T12:20");
+      38 |   await evaluation.getByRole("button", {name: "Advance and save"}).click();
+      39 |   await expect(evaluation.getByText("Qualified entry intent", {exact: true})).toBeVisible();
+        at K:\Projects\TradeForge\frontend\e2e\strategy-evaluator.spec.ts:36:80
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    e2e\strategy-evaluator.spec.ts:3:1 › saves a canonical strategy decision, reconstructs, and opens exact chart evidence

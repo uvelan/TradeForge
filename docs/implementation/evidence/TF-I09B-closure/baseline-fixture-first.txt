@@ -1,0 +1,23 @@
+F
+================================== FAILURES ===================================
+___ test_bound_current_fvg_does_not_keep_active_predicate_after_mitigation ____
+research_backend\tests\test_strategy_evaluator_closure.py:25: in test_bound_current_fvg_does_not_keep_active_predicate_after_mitigation
+    run, evidence = evaluate_case(client, archive, fvg_strategy(), start=1800, cutoff=3300)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+research_backend\tests\test_strategy_evaluator_integrity.py:52: in evaluate_case
+    body = request_body(client, archive, definition, BASE+cutoff)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+research_backend\tests\test_strategy_evaluator.py:89: in request_body
+    assert saved.status_code==201,saved.text
+E   AssertionError: {"detail":{"valid":false,"status":"INVALID_STRATEGY_DEFINITION","errors":[{"path":"setup.children.0.id","condition_id":"setup","code":"DUPLICATE_ID","expected":"Unique condition/group ID","actual":"setup"},{"path":"trigger.children.0.id","condition_id":"trigger","code":"DUPLICATE_ID","expected":"Unique condition/group ID","actual":"trigger"}],"unresolved":[],"restrictions":{"purpose":"HISTORICAL_SIMULATION","source_authority":"VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY","recorded_operational":false,"evaluation_available":false,"requires_schema_revision":false,"binding_policy_version":2}}}
+E   assert 422 == 201
+E    +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+============================== warnings summary ===============================
+research_backend/tests/test_strategy_evaluator_closure.py::test_bound_current_fvg_does_not_keep_active_predicate_after_mitigation
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_strategy_evaluator_closure.py::test_bound_current_fvg_does_not_keep_active_predicate_after_mitigation
+1 failed, 1 warning in 1.95s

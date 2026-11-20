@@ -26,6 +26,9 @@ import {ChartLink} from './ChartLink';
 import {DrawingToolbox,tools,useDrawingBook,type Drawing} from './Drawings';
 import {PlanHistory} from './PlanHistory';
 import {StrategyBuilder} from './StrategyBuilder';
+import type {EvidenceChartLocation} from './StrategyEvaluation';
+
+type ChartLocation = Partial<EvidenceChartLocation> & {indicator?:string;sequence:number};
 
 type Section='overview'|'terminal'|'signals'|'plans'|'ai'|'lab'|'builder'|'journal'|'data'|'settings';
 const menu:{id:Section;name:string;icon:typeof Activity}[]=[
@@ -66,14 +69,14 @@ function App(){
   const [planLocation,setPlanLocation]=useState<{id:string;version?:number}>();
   const [journalLocation,setJournalLocation]=useState<JournalEntry>();
   const [dataLocation,setDataLocation]=useState<Dataset>();
-  const [chartLocation,setChartLocation]=useState<{symbol?:SymbolName;indicator?:string;sequence:number}>();
+  const [chartLocation,setChartLocation]=useState<ChartLocation>();
   const [indicatorCommands,setIndicatorCommands]=useState<{id:string;label:string}[]>([]);
   useEffect(()=>{
     let active=true;
     api.get<{id:string;label:string}[]>('/indicators').then(values=>{if(active)setIndicatorCommands(values);}).catch(()=>{});
     return()=>{active=false;};
   },[]);
-  const openChart=(location:{symbol?:SymbolName;indicator?:string})=>{
+  const openChart=(location:Omit<ChartLocation,'sequence'>)=>{
     setChartLocation(previous=>({...location,sequence:(previous?.sequence??0)+1}));go('terminal');
   };
 
@@ -135,7 +138,7 @@ function App(){
       {section==='plans'&&<Planner refresh={refresh} initialLocation={planLocation} onLesson={plan_reference=>journalFrom({plan_reference})} incoming={incomingPlan} onConsume={()=>setIncomingPlan(undefined)} onReview={id=>{setReviewPlan(id);go("ai");}}/>}
       {section==='ai'&&<AIPage refresh={refresh} initialTrade={reviewPlan}/>}
       {section==='lab'&&<StrategyLab/>}
-      {section==='builder'&&<StrategyBuilder/>}
+      {section==='builder'&&<StrategyBuilder openChart={openChart}/>}
       {section==='journal'&&<Journal refresh={refresh} initialEntry={journalLocation} incoming={journalSignal} initialContext={journalContext}
         clearLink={()=>{setJournalSignal(undefined);setJournalContext(undefined);}}
         openPlan={(id,version)=>{setPlanLocation({id,version});go('plans');}}
@@ -155,7 +158,7 @@ const chartSources:ChartSource[]=['MT5','MT5_SAVED','DUKASCOPY_SAVED','BINANCE_S
 const chartTimeframes:Timeframe[]=['M1','M3','M5','M15','M30','H1','H4','D1'];
 type ChartLevel=import('./components').ChartLevel;
 function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}:{expanded?:boolean;onPlan?:(seed:Partial<Plan>)=>void;
-  onSignal?:(reference:import('./types').SignalReference)=>Promise<void>; initialLocation?:{symbol?:SymbolName;indicator?:string;sequence:number};onChartLesson?:(snapshot:string)=>void}){
+  onSignal?:(reference:import('./types').SignalReference)=>Promise<void>; initialLocation?:ChartLocation;onChartLesson?:(snapshot:string)=>void}){
   const [planPrices,setPlanPrices]=useState<string[]>([]);
   const [chartCapture,setChartCapture]=useState<string>();
   const {zone}=useTimezone();
@@ -165,11 +168,16 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [selectedRange,setRange]=useState<CandleRange>();
   const savedSource=source==='MT5_SAVED'||source==='DUKASCOPY_SAVED';
   const range=savedSource?selectedRange:undefined;
+  const exactEvidence=Boolean(initialLocation?.evidencePath&&initialLocation.symbol===forexSymbol&&
+    initialLocation.timeframe===timeframe&&initialLocation.source===source&&initialLocation.range===range);
   const isBinance=source==='BINANCE_SPOT';
   const [brokerSymbol,setBrokerSymbol]=useWorkspacePreference<string>('broker-symbol','EURUSD');
   useEffect(()=>{
     if(!initialLocation?.symbol)return;
-    if(source==='BINANCE_SPOT')setSource('MT5');
+    if(initialLocation.source)setSource(initialLocation.source);
+    else if(source==='BINANCE_SPOT')setSource('MT5');
+    if(initialLocation.timeframe)setTimeframe(initialLocation.timeframe);
+    if(initialLocation.range)setRange(initialLocation.range);
     setBrokerSymbol(initialLocation.symbol);
     setSymbol(initialLocation.symbol);
   },[initialLocation]);
@@ -244,12 +252,13 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     let active=true;
     setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);setReplayBusy(false);setReplayError('');setChartCapture(undefined);setPlanPrices([]);
     setInteraction(current=>current.mode==='plan'?{mode:'navigate'}:current);
-    api.candles(symbol,timeframe,source,expanded?600:200,source==='MT5',range)
+    (exactEvidence?api.get<CandleResponse>(initialLocation!.evidencePath!):
+      api.candles(symbol,timeframe,source,expanded?600:200,source==='MT5',range))
       .then(main=>{if(active){setData(main);setLoadedIndicatorScope(indicatorScope);}})
       .catch(e=>{if(active){setError(e.message);setData(null)}})
       .finally(()=>{if(active)setBusy(false)});
     return()=>{active=false};
-  },[symbol,timeframe,source,expanded,refreshCount,range]);
+  },[symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence]);
   useEffect(()=>{
     if(source!=='MT5'||busy||error||replayIndex!==null)return;
     let active=true;
@@ -516,7 +525,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
           }).catch(reason=>setPollError(reason.message))}>Inspect alert evidence</button>}
         </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(interaction.mode==='navigate'?'active':'')} title="Crosshair (Esc)" onClick={()=>setInteraction({mode:'navigate'})}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
         <div className={'terminal-chart-columns '+(viewCount!=='1'?'multi-chart':'')}>
-          <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
+          <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':exactEvidence?'FROZEN STRATEGY EVIDENCE':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} focus={exactEvidence&&initialLocation?.timestamp!==undefined?
+            {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
               item.anchors.every(anchor=>anchor.time+frameMinutes[timeframe]*60<=cutoff))}
             drawMode={interaction.mode!=='navigate'} placementInteraction={interaction}
             onSaveSnapshot={async png=>{

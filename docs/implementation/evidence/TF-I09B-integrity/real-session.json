@@ -1,0 +1,2546 @@
+{
+  "selection": {
+    "id": "DUKASCOPY_BID_2026_11_13_V1",
+    "series": [
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "EURUSD",
+        "timeframe": "M1",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ]
+      },
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ]
+      },
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "GBPUSD",
+        "timeframe": "M1",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ]
+      },
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "GBPUSD",
+        "timeframe": "M5",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ]
+      }
+    ],
+    "start": 1794528000,
+    "end": 1794607200
+  },
+  "cases": [
+    {
+      "fixture": {
+        "evaluator_version": 2,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-3d4a42b0b9844bea8cdc096a33758954",
+        "strategy_version_id": "SV-7152e00b60b04790a683ba4277ceba53",
+        "configuration_fingerprint": "168be95cf261436d54d3d4e4c5d005849b9602f92d9eb3816909c4925f61dd75",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        0,
+        0
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535200,
+          "actual_activation": 1794535200
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-a23071e68f50deb09971da810b771a4742c4cd696326c33f8d9e179ef831eb7e",
+        "terminal": true,
+        "cutoff": 1794607200,
+        "direction": "LONG",
+        "context_activated_at": 1794535200,
+        "setup_activated_at": null,
+        "trigger_activated_at": null,
+        "transitions": [
+          [
+            1794535200,
+            "WAITING_FOR_SETUP",
+            "CONTEXT_ACTIVATED"
+          ],
+          [
+            1794535200,
+            "WAITING_FOR_SETUP",
+            "SETUP_NOT_ESTABLISHED"
+          ],
+          [
+            1794538801,
+            "INSUFFICIENT_EVIDENCE",
+            "INVALIDATION_UNKNOWN"
+          ],
+          [
+            1794542400,
+            "EXPIRED",
+            "BOUND_REFERENCE_TERMINAL"
+          ]
+        ],
+        "invalidation": "UNKNOWN",
+        "expiry": "NOT_SATISFIED",
+        "phase_results": {
+          "context": "SATISFIED",
+          "setup": "UNKNOWN",
+          "invalidation": "UNKNOWN"
+        },
+        "rules": [
+          {
+            "id": "completed",
+            "phase": "invalidation",
+            "observation": "CRT_STATE",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "divergence",
+            "phase": "setup",
+            "observation": "SMT_CONFIRMED",
+            "dependency": "smt",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reclaim",
+            "phase": "setup",
+            "observation": "CRT_RECLAIM",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reference",
+            "phase": "context",
+            "observation": "CRT_REFERENCE",
+            "dependency": "crt",
+            "outcome": "SATISFIED",
+            "reason": "CANONICAL_EVIDENCE",
+            "evidence_reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+              "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+              "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535200,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            },
+            "family": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "observed_at": 1794531600,
+            "available_at": 1794535200,
+            "selected_at": 1794535200
+          }
+        ],
+        "binding_policy_version": 2,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "activated_at": 1794535200,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+              "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+              "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535200,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ],
+        "bound_crt": {
+          "attempt_id": "a23071e68f50deb09971da810b771a4742c4cd696326c33f8d9e179ef831eb7e",
+          "strategy_version_id": "SV-7152e00b60b04790a683ba4277ceba53",
+          "alias": "crt_reference",
+          "evidence": {
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+              "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+              "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535200,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION",
+              "participants": null
+            },
+            "family": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "market_event_id": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "observed_at": 1794531600
+          },
+          "activated_at": 1794535200
+        },
+        "crt_latest_reference": {
+          "version": 1,
+          "category": "crt",
+          "event_id": "da77420fc81e03ec347b892f5e1292406f9fac6250ae0a7be22b85073064f77d",
+          "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+          "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+          "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "dukascopy-web-m1-v1",
+            "BID",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+          ],
+          "available_at": 1794542400,
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "availability_mode": "HISTORICAL_SIMULATION"
+        },
+        "producers": [
+          {
+            "dependency": "crt",
+            "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+            "snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f"
+          },
+          {
+            "dependency": "smt",
+            "calculation_id": "39871d6ad76a04c14f7a2ea796baabdaec33cafa4774d3f8289d6b1f6876bf44",
+            "snapshot": "2911494417a89543a05b18801fc2317480aa5c39fe2898af5a843c01c984aae2"
+          }
+        ],
+        "coverage": [
+          {
+            "series": "COMPARISON:M1",
+            "status": "COMPLETE",
+            "expected": 1320,
+            "observed": 1320,
+            "missing": 0,
+            "first_due": 1794528060,
+            "last_observed": 1794607200
+          },
+          {
+            "series": "PRIMARY:M1",
+            "status": "COMPLETE",
+            "expected": 1320,
+            "observed": 1320,
+            "missing": 0,
+            "first_due": 1794528060,
+            "last_observed": 1794607200
+          },
+          {
+            "series": "PRIMARY:M5",
+            "status": "COMPLETE",
+            "expected": 264,
+            "observed": 264,
+            "missing": 0,
+            "first_due": 1794528300,
+            "last_observed": 1794607200
+          }
+        ],
+        "temporal": [
+          {
+            "before": "reclaim",
+            "after": "divergence",
+            "relation": "SEQUENCE",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN"
+          }
+        ],
+        "entry_intent": null,
+        "resource_counts": {
+          "unique_producers": 2,
+          "registry_publications": 501,
+          "archive": {
+            "checksum_attempts": 3,
+            "partition_decodes": 3,
+            "decoded_records": 2904,
+            "partition_reuses": 3
+          },
+          "analytical_work": 4783,
+          "estimated_retained_bytes": 7161388,
+          "candidate_scans": 254,
+          "exact_lookups": 1,
+          "timeline_boundaries": 1281
+        },
+        "evaluation": {
+          "evaluator_version": 2,
+          "strategy_id": "ST-3d4a42b0b9844bea8cdc096a33758954",
+          "strategy_version_id": "SV-7152e00b60b04790a683ba4277ceba53",
+          "configuration_fingerprint": "168be95cf261436d54d3d4e4c5d005849b9602f92d9eb3816909c4925f61dd75",
+          "purpose": "HISTORICAL_SIMULATION",
+          "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+          "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+          "warmup_start": 1794528000,
+          "evaluation_start": 1794535200,
+          "binding_policy_version": 2,
+          "frozen_selection_fingerprint": "08ece05e3a8abb2946d361fd6f3f1c649bab408a35f138393664f8638f3bced8",
+          "evaluation_id": "EV-80028a978f68a4bf595aa29cfe1f39336039d9586f056af2a4f5cc8d67240943",
+          "cutoff_utc": 1794607200
+        },
+        "decision_id": "7fc7ab22130974d3a5822b47286b5ea8d1a484d2a9aad8dac56fc1dd7fdba1f8",
+        "previous_decision_id": null
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 2,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-03a1710c94894d18b1099b7721c4ef53",
+        "strategy_version_id": "SV-9d8d94198c394220a1808ea203034427",
+        "configuration_fingerprint": "671a4a0d8511211cfc8f6da5c7712a4dd9891eb5ba87f2d9f261b88671998ab5",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        2,
+        2
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-319af1b288fd22a6242ce8a910d61a080e10f7236d6b83c100550d4364461737",
+        "terminal": true,
+        "cutoff": 1794607200,
+        "direction": "LONG",
+        "context_activated_at": 1794535202,
+        "setup_activated_at": null,
+        "trigger_activated_at": null,
+        "transitions": [
+          [
+            1794535200,
+            "INSUFFICIENT_EVIDENCE",
+            "CONTEXT_OR_REFERENCE_UNAVAILABLE"
+          ],
+          [
+            1794535202,
+            "WAITING_FOR_SETUP",
+            "CONTEXT_ACTIVATED"
+          ],
+          [
+            1794535202,
+            "WAITING_FOR_SETUP",
+            "SETUP_NOT_ESTABLISHED"
+          ],
+          [
+            1794538803,
+            "INSUFFICIENT_EVIDENCE",
+            "INVALIDATION_UNKNOWN"
+          ],
+          [
+            1794542402,
+            "EXPIRED",
+            "BOUND_REFERENCE_TERMINAL"
+          ]
+        ],
+        "invalidation": "UNKNOWN",
+        "expiry": "NOT_SATISFIED",
+        "phase_results": {
+          "context": "SATISFIED",
+          "setup": "UNKNOWN",
+          "invalidation": "UNKNOWN"
+        },
+        "rules": [
+          {
+            "id": "completed",
+            "phase": "invalidation",
+            "observation": "CRT_STATE",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "divergence",
+            "phase": "setup",
+            "observation": "SMT_CONFIRMED",
+            "dependency": "smt",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reclaim",
+            "phase": "setup",
+            "observation": "CRT_RECLAIM",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reference",
+            "phase": "context",
+            "observation": "CRT_REFERENCE",
+            "dependency": "crt",
+            "outcome": "SATISFIED",
+            "reason": "CANONICAL_EVIDENCE",
+            "evidence_reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            },
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "observed_at": 1794531600,
+            "available_at": 1794535202,
+            "selected_at": 1794535202
+          }
+        ],
+        "binding_policy_version": 2,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ],
+        "bound_crt": {
+          "attempt_id": "319af1b288fd22a6242ce8a910d61a080e10f7236d6b83c100550d4364461737",
+          "strategy_version_id": "SV-9d8d94198c394220a1808ea203034427",
+          "alias": "crt_reference",
+          "evidence": {
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION",
+              "participants": null
+            },
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "market_event_id": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "observed_at": 1794531600
+          },
+          "activated_at": 1794535202
+        },
+        "crt_latest_reference": {
+          "version": 1,
+          "category": "crt",
+          "event_id": "2f55fc3045f1a0721ac3e8a14b0e1c750123afb4f3911a135c761b60f23c4d93",
+          "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+          "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+          "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "dukascopy-web-m1-v1",
+            "BID",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+          ],
+          "available_at": 1794542402,
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "availability_mode": "HISTORICAL_SIMULATION"
+        },
+        "producers": [
+          {
+            "dependency": "crt",
+            "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+            "snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4"
+          },
+          {
+            "dependency": "smt",
+            "calculation_id": "41a0760c7a10c95cd71fd97e425640a63c0ed54cda262d9de1ac0816b5454deb",
+            "snapshot": "4ecc490b807ef5e602fd9ed5a1185e2718cfa048722b0bec37ee0ebc83ab7e82"
+          }
+        ],
+        "coverage": [
+          {
+            "series": "COMPARISON:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528062,
+            "last_observed": 1794607142
+          },
+          {
+            "series": "PRIMARY:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528062,
+            "last_observed": 1794607142
+          },
+          {
+            "series": "PRIMARY:M5",
+            "status": "COMPLETE",
+            "expected": 263,
+            "observed": 263,
+            "missing": 0,
+            "first_due": 1794528302,
+            "last_observed": 1794606902
+          }
+        ],
+        "temporal": [
+          {
+            "before": "reclaim",
+            "after": "divergence",
+            "relation": "SEQUENCE",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN"
+          }
+        ],
+        "entry_intent": null,
+        "resource_counts": {
+          "unique_producers": 2,
+          "registry_publications": 484,
+          "archive": {
+            "checksum_attempts": 3,
+            "partition_decodes": 3,
+            "decoded_records": 2904,
+            "partition_reuses": 3
+          },
+          "analytical_work": 4779,
+          "estimated_retained_bytes": 7068504,
+          "candidate_scans": 347,
+          "exact_lookups": 1,
+          "timeline_boundaries": 1658
+        },
+        "evaluation": {
+          "evaluator_version": 2,
+          "strategy_id": "ST-03a1710c94894d18b1099b7721c4ef53",
+          "strategy_version_id": "SV-9d8d94198c394220a1808ea203034427",
+          "configuration_fingerprint": "671a4a0d8511211cfc8f6da5c7712a4dd9891eb5ba87f2d9f261b88671998ab5",
+          "purpose": "HISTORICAL_SIMULATION",
+          "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+          "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+          "warmup_start": 1794528000,
+          "evaluation_start": 1794535200,
+          "binding_policy_version": 2,
+          "frozen_selection_fingerprint": "8754192e224ec1beb0750d811130f55c87bf011c82567520d641add785e831b6",
+          "evaluation_id": "EV-577e235f3ae0a7e689d849d8bb500655788137300f9ac0e4f07e7682808560dd",
+          "cutoff_utc": 1794607200
+        },
+        "decision_id": "fc6181983e43cf64c8d744d97015dcb7795acb29bcae7e0284fc530586e6cf2e",
+        "previous_decision_id": null
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 2,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-12d2c4960f9b4a1f8b103accb962ba47",
+        "strategy_version_id": "SV-1b6ba9b786304c41abdd352a771558cb",
+        "configuration_fingerprint": "4a2a2597976b153d73dc008124937829270fd79e09f4f11700bff8ddbfb90794",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        2,
+        15
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-7fd1f65112f51b17d017175d1d7e3f2c8807ed8189e94731a931b9e4fa9c08bc",
+        "terminal": true,
+        "cutoff": 1794607200,
+        "direction": "LONG",
+        "context_activated_at": 1794535202,
+        "setup_activated_at": null,
+        "trigger_activated_at": null,
+        "transitions": [
+          [
+            1794535200,
+            "INSUFFICIENT_EVIDENCE",
+            "CONTEXT_OR_REFERENCE_UNAVAILABLE"
+          ],
+          [
+            1794535202,
+            "WAITING_FOR_SETUP",
+            "CONTEXT_ACTIVATED"
+          ],
+          [
+            1794535202,
+            "WAITING_FOR_SETUP",
+            "SETUP_NOT_ESTABLISHED"
+          ],
+          [
+            1794538803,
+            "INSUFFICIENT_EVIDENCE",
+            "INVALIDATION_UNKNOWN"
+          ],
+          [
+            1794542402,
+            "EXPIRED",
+            "BOUND_REFERENCE_TERMINAL"
+          ]
+        ],
+        "invalidation": "UNKNOWN",
+        "expiry": "NOT_SATISFIED",
+        "phase_results": {
+          "context": "SATISFIED",
+          "setup": "UNKNOWN",
+          "invalidation": "UNKNOWN"
+        },
+        "rules": [
+          {
+            "id": "completed",
+            "phase": "invalidation",
+            "observation": "CRT_STATE",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "divergence",
+            "phase": "setup",
+            "observation": "SMT_CONFIRMED",
+            "dependency": "smt",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reclaim",
+            "phase": "setup",
+            "observation": "CRT_RECLAIM",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reference",
+            "phase": "context",
+            "observation": "CRT_REFERENCE",
+            "dependency": "crt",
+            "outcome": "SATISFIED",
+            "reason": "CANONICAL_EVIDENCE",
+            "evidence_reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            },
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "observed_at": 1794531600,
+            "available_at": 1794535202,
+            "selected_at": 1794535202
+          }
+        ],
+        "binding_policy_version": 2,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ],
+        "bound_crt": {
+          "attempt_id": "7fd1f65112f51b17d017175d1d7e3f2c8807ed8189e94731a931b9e4fa9c08bc",
+          "strategy_version_id": "SV-1b6ba9b786304c41abdd352a771558cb",
+          "alias": "crt_reference",
+          "evidence": {
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION",
+              "participants": null
+            },
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "market_event_id": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "observed_at": 1794531600
+          },
+          "activated_at": 1794535202
+        },
+        "crt_latest_reference": {
+          "version": 1,
+          "category": "crt",
+          "event_id": "2f55fc3045f1a0721ac3e8a14b0e1c750123afb4f3911a135c761b60f23c4d93",
+          "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+          "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+          "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "dukascopy-web-m1-v1",
+            "BID",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+          ],
+          "available_at": 1794542402,
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "availability_mode": "HISTORICAL_SIMULATION"
+        },
+        "producers": [
+          {
+            "dependency": "crt",
+            "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+            "snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4"
+          },
+          {
+            "dependency": "smt",
+            "calculation_id": "77b88028067f2898b85cb796c8a05f08bca9bebf744aa287151b8060ec1df706",
+            "snapshot": "a199750a311efedfe324a7e0b0a1de30e356a4660d3ef055387113dd754c0e1e"
+          }
+        ],
+        "coverage": [
+          {
+            "series": "COMPARISON:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528075,
+            "last_observed": 1794607155
+          },
+          {
+            "series": "PRIMARY:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528062,
+            "last_observed": 1794607142
+          },
+          {
+            "series": "PRIMARY:M5",
+            "status": "COMPLETE",
+            "expected": 263,
+            "observed": 263,
+            "missing": 0,
+            "first_due": 1794528302,
+            "last_observed": 1794606902
+          }
+        ],
+        "temporal": [
+          {
+            "before": "reclaim",
+            "after": "divergence",
+            "relation": "SEQUENCE",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN"
+          }
+        ],
+        "entry_intent": null,
+        "resource_counts": {
+          "unique_producers": 2,
+          "registry_publications": 484,
+          "archive": {
+            "checksum_attempts": 3,
+            "partition_decodes": 3,
+            "decoded_records": 2904,
+            "partition_reuses": 3
+          },
+          "analytical_work": 4779,
+          "estimated_retained_bytes": 7068504,
+          "candidate_scans": 587,
+          "exact_lookups": 1,
+          "timeline_boundaries": 2858
+        },
+        "evaluation": {
+          "evaluator_version": 2,
+          "strategy_id": "ST-12d2c4960f9b4a1f8b103accb962ba47",
+          "strategy_version_id": "SV-1b6ba9b786304c41abdd352a771558cb",
+          "configuration_fingerprint": "4a2a2597976b153d73dc008124937829270fd79e09f4f11700bff8ddbfb90794",
+          "purpose": "HISTORICAL_SIMULATION",
+          "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+          "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+          "warmup_start": 1794528000,
+          "evaluation_start": 1794535200,
+          "binding_policy_version": 2,
+          "frozen_selection_fingerprint": "4cf69a172934f10030c25462d465775d91a3ba7875f86742346ff1eeef40aafe",
+          "evaluation_id": "EV-e77a80c9d2522d214e4b3a21e86932454243f472f5cac3bc25fe720bfa76d092",
+          "cutoff_utc": 1794607200
+        },
+        "decision_id": "e730882435da351518dc7920e843ec9f28a2881d7889c7cca63f26b51107c218",
+        "previous_decision_id": null
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 2,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-16c7fbbe03c14db6a5c54c66daabac7c",
+        "strategy_version_id": "SV-f22bcd137d6048f7ba283350a0091872",
+        "configuration_fingerprint": "9896675de907720b3b2b8f83a82ca5e3452270bae0aa8e71eb85a46b6c4a44cb",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        15,
+        30
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535215,
+          "actual_activation": 1794535215
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-30224713adfc668ae75972cd7941ce594d2e9ad93769e8fa56e5e6e2220f09bf",
+        "terminal": true,
+        "cutoff": 1794607200,
+        "direction": "LONG",
+        "context_activated_at": 1794535215,
+        "setup_activated_at": null,
+        "trigger_activated_at": null,
+        "transitions": [
+          [
+            1794535200,
+            "INSUFFICIENT_EVIDENCE",
+            "CONTEXT_OR_REFERENCE_UNAVAILABLE"
+          ],
+          [
+            1794535215,
+            "WAITING_FOR_SETUP",
+            "CONTEXT_ACTIVATED"
+          ],
+          [
+            1794535215,
+            "WAITING_FOR_SETUP",
+            "SETUP_NOT_ESTABLISHED"
+          ],
+          [
+            1794538816,
+            "INSUFFICIENT_EVIDENCE",
+            "INVALIDATION_UNKNOWN"
+          ],
+          [
+            1794542415,
+            "EXPIRED",
+            "BOUND_REFERENCE_TERMINAL"
+          ]
+        ],
+        "invalidation": "UNKNOWN",
+        "expiry": "NOT_SATISFIED",
+        "phase_results": {
+          "context": "SATISFIED",
+          "setup": "UNKNOWN",
+          "invalidation": "UNKNOWN"
+        },
+        "rules": [
+          {
+            "id": "completed",
+            "phase": "invalidation",
+            "observation": "CRT_STATE",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "divergence",
+            "phase": "setup",
+            "observation": "SMT_CONFIRMED",
+            "dependency": "smt",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reclaim",
+            "phase": "setup",
+            "observation": "CRT_RECLAIM",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reference",
+            "phase": "context",
+            "observation": "CRT_REFERENCE",
+            "dependency": "crt",
+            "outcome": "SATISFIED",
+            "reason": "CANONICAL_EVIDENCE",
+            "evidence_reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+              "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+              "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535215,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            },
+            "family": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "observed_at": 1794531600,
+            "available_at": 1794535215,
+            "selected_at": 1794535215
+          }
+        ],
+        "binding_policy_version": 2,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "activated_at": 1794535215,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+              "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+              "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535215,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ],
+        "bound_crt": {
+          "attempt_id": "30224713adfc668ae75972cd7941ce594d2e9ad93769e8fa56e5e6e2220f09bf",
+          "strategy_version_id": "SV-f22bcd137d6048f7ba283350a0091872",
+          "alias": "crt_reference",
+          "evidence": {
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+              "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+              "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535215,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION",
+              "participants": null
+            },
+            "family": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "market_event_id": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "observed_at": 1794531600
+          },
+          "activated_at": 1794535215
+        },
+        "crt_latest_reference": {
+          "version": 1,
+          "category": "crt",
+          "event_id": "b77c57ad07d72472a65e10ed1967bb317a741023f27503523b13d08f1d83c9c9",
+          "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+          "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+          "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "dukascopy-web-m1-v1",
+            "BID",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+          ],
+          "available_at": 1794542415,
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "availability_mode": "HISTORICAL_SIMULATION"
+        },
+        "producers": [
+          {
+            "dependency": "crt",
+            "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+            "snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e"
+          },
+          {
+            "dependency": "smt",
+            "calculation_id": "186b3a72e04145ea96b89636a44b1148c846c003275af7c4e22e91316922a7f8",
+            "snapshot": "42e264b80b6adef3a168f100232ad0336485fbc1058c4e362df0d22728160bc0"
+          }
+        ],
+        "coverage": [
+          {
+            "series": "COMPARISON:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528090,
+            "last_observed": 1794607170
+          },
+          {
+            "series": "PRIMARY:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528075,
+            "last_observed": 1794607155
+          },
+          {
+            "series": "PRIMARY:M5",
+            "status": "COMPLETE",
+            "expected": 263,
+            "observed": 263,
+            "missing": 0,
+            "first_due": 1794528315,
+            "last_observed": 1794606915
+          }
+        ],
+        "temporal": [
+          {
+            "before": "reclaim",
+            "after": "divergence",
+            "relation": "SEQUENCE",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN"
+          }
+        ],
+        "entry_intent": null,
+        "resource_counts": {
+          "unique_producers": 2,
+          "registry_publications": 484,
+          "archive": {
+            "checksum_attempts": 3,
+            "partition_decodes": 3,
+            "decoded_records": 2904,
+            "partition_reuses": 3
+          },
+          "analytical_work": 4779,
+          "estimated_retained_bytes": 7068504,
+          "candidate_scans": 587,
+          "exact_lookups": 1,
+          "timeline_boundaries": 2858
+        },
+        "evaluation": {
+          "evaluator_version": 2,
+          "strategy_id": "ST-16c7fbbe03c14db6a5c54c66daabac7c",
+          "strategy_version_id": "SV-f22bcd137d6048f7ba283350a0091872",
+          "configuration_fingerprint": "9896675de907720b3b2b8f83a82ca5e3452270bae0aa8e71eb85a46b6c4a44cb",
+          "purpose": "HISTORICAL_SIMULATION",
+          "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+          "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+          "warmup_start": 1794528000,
+          "evaluation_start": 1794535200,
+          "binding_policy_version": 2,
+          "frozen_selection_fingerprint": "0886098f7be597ec6b40e46be3341d55acaffc569bb127467d54ac98871d5668",
+          "evaluation_id": "EV-eb43d77ea2d9d1b089a540801799a051a4ecb0481a8b9527478e3a35e921deff",
+          "cutoff_utc": 1794607200
+        },
+        "decision_id": "e267caacb10defe1e4795607afa7d92b08b5ff2dc934fc73fae4f210d6d2773b",
+        "previous_decision_id": null
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 2,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-c0111a941a4543b59411159cb5de767a",
+        "strategy_version_id": "SV-f1addbe4b7a14f54a17f78e434947bde",
+        "configuration_fingerprint": "fba4cc07bc6020aea750a9b12f63c72a8f975d281d5dbe59f235951143339d4b",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        0,
+        0
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535200,
+          "actual_activation": 1794535200
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-1429e0034325d26724e0c941149af005f8aac31199a6119af6f9f1557d77df4c",
+        "terminal": true,
+        "cutoff": 1794607200,
+        "direction": "SHORT",
+        "context_activated_at": 1794535200,
+        "setup_activated_at": null,
+        "trigger_activated_at": null,
+        "transitions": [
+          [
+            1794535200,
+            "WAITING_FOR_SETUP",
+            "CONTEXT_ACTIVATED"
+          ],
+          [
+            1794535200,
+            "WAITING_FOR_SETUP",
+            "SETUP_NOT_ESTABLISHED"
+          ],
+          [
+            1794538801,
+            "INSUFFICIENT_EVIDENCE",
+            "INVALIDATION_UNKNOWN"
+          ],
+          [
+            1794542400,
+            "EXPIRED",
+            "BOUND_REFERENCE_TERMINAL"
+          ]
+        ],
+        "invalidation": "UNKNOWN",
+        "expiry": "NOT_SATISFIED",
+        "phase_results": {
+          "context": "SATISFIED",
+          "setup": "UNKNOWN",
+          "invalidation": "UNKNOWN"
+        },
+        "rules": [
+          {
+            "id": "completed",
+            "phase": "invalidation",
+            "observation": "CRT_STATE",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "divergence",
+            "phase": "setup",
+            "observation": "SMT_CONFIRMED",
+            "dependency": "smt",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reclaim",
+            "phase": "setup",
+            "observation": "CRT_RECLAIM",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reference",
+            "phase": "context",
+            "observation": "CRT_REFERENCE",
+            "dependency": "crt",
+            "outcome": "SATISFIED",
+            "reason": "CANONICAL_EVIDENCE",
+            "evidence_reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+              "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+              "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535200,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            },
+            "family": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "observed_at": 1794531600,
+            "available_at": 1794535200,
+            "selected_at": 1794535200
+          }
+        ],
+        "binding_policy_version": 2,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "activated_at": 1794535200,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+              "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+              "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535200,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ],
+        "bound_crt": {
+          "attempt_id": "1429e0034325d26724e0c941149af005f8aac31199a6119af6f9f1557d77df4c",
+          "strategy_version_id": "SV-f1addbe4b7a14f54a17f78e434947bde",
+          "alias": "crt_reference",
+          "evidence": {
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+              "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+              "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535200,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION",
+              "participants": null
+            },
+            "family": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "market_event_id": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "observed_at": 1794531600
+          },
+          "activated_at": 1794535200
+        },
+        "crt_latest_reference": {
+          "version": 1,
+          "category": "crt",
+          "event_id": "da77420fc81e03ec347b892f5e1292406f9fac6250ae0a7be22b85073064f77d",
+          "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+          "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+          "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "dukascopy-web-m1-v1",
+            "BID",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+          ],
+          "available_at": 1794542400,
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "availability_mode": "HISTORICAL_SIMULATION"
+        },
+        "producers": [
+          {
+            "dependency": "crt",
+            "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+            "snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f"
+          },
+          {
+            "dependency": "smt",
+            "calculation_id": "39871d6ad76a04c14f7a2ea796baabdaec33cafa4774d3f8289d6b1f6876bf44",
+            "snapshot": "2911494417a89543a05b18801fc2317480aa5c39fe2898af5a843c01c984aae2"
+          }
+        ],
+        "coverage": [
+          {
+            "series": "COMPARISON:M1",
+            "status": "COMPLETE",
+            "expected": 1320,
+            "observed": 1320,
+            "missing": 0,
+            "first_due": 1794528060,
+            "last_observed": 1794607200
+          },
+          {
+            "series": "PRIMARY:M1",
+            "status": "COMPLETE",
+            "expected": 1320,
+            "observed": 1320,
+            "missing": 0,
+            "first_due": 1794528060,
+            "last_observed": 1794607200
+          },
+          {
+            "series": "PRIMARY:M5",
+            "status": "COMPLETE",
+            "expected": 264,
+            "observed": 264,
+            "missing": 0,
+            "first_due": 1794528300,
+            "last_observed": 1794607200
+          }
+        ],
+        "temporal": [
+          {
+            "before": "reclaim",
+            "after": "divergence",
+            "relation": "SEQUENCE",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN"
+          }
+        ],
+        "entry_intent": null,
+        "resource_counts": {
+          "unique_producers": 2,
+          "registry_publications": 501,
+          "archive": {
+            "checksum_attempts": 3,
+            "partition_decodes": 3,
+            "decoded_records": 2904,
+            "partition_reuses": 3
+          },
+          "analytical_work": 4783,
+          "estimated_retained_bytes": 7161388,
+          "candidate_scans": 254,
+          "exact_lookups": 1,
+          "timeline_boundaries": 1281
+        },
+        "evaluation": {
+          "evaluator_version": 2,
+          "strategy_id": "ST-c0111a941a4543b59411159cb5de767a",
+          "strategy_version_id": "SV-f1addbe4b7a14f54a17f78e434947bde",
+          "configuration_fingerprint": "fba4cc07bc6020aea750a9b12f63c72a8f975d281d5dbe59f235951143339d4b",
+          "purpose": "HISTORICAL_SIMULATION",
+          "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+          "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+          "warmup_start": 1794528000,
+          "evaluation_start": 1794535200,
+          "binding_policy_version": 2,
+          "frozen_selection_fingerprint": "08ece05e3a8abb2946d361fd6f3f1c649bab408a35f138393664f8638f3bced8",
+          "evaluation_id": "EV-8ab521192ba6d400b673148e46f89e269554444467f4bb1a994e54ae4188d229",
+          "cutoff_utc": 1794607200
+        },
+        "decision_id": "4dcd4e7f3dd8149741d5e5dfe5a0795782328b24f16f86258c2ca3d96944c112",
+        "previous_decision_id": null
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 2,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-ff5dbd0a1b7b42a18fef3724b18f39c1",
+        "strategy_version_id": "SV-24a6b92c89134201862c6b974e730e4a",
+        "configuration_fingerprint": "2c6c1061915686f200a7af5dda54b018124e1b745a677c2a2f67cfa00651fd5e",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        2,
+        2
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-99bb70739860896a451b8a83f11c65687f793dfebf4771fbef7c571957e8c4a2",
+        "terminal": true,
+        "cutoff": 1794607200,
+        "direction": "SHORT",
+        "context_activated_at": 1794535202,
+        "setup_activated_at": null,
+        "trigger_activated_at": null,
+        "transitions": [
+          [
+            1794535200,
+            "INSUFFICIENT_EVIDENCE",
+            "CONTEXT_OR_REFERENCE_UNAVAILABLE"
+          ],
+          [
+            1794535202,
+            "WAITING_FOR_SETUP",
+            "CONTEXT_ACTIVATED"
+          ],
+          [
+            1794535202,
+            "WAITING_FOR_SETUP",
+            "SETUP_NOT_ESTABLISHED"
+          ],
+          [
+            1794538803,
+            "INSUFFICIENT_EVIDENCE",
+            "INVALIDATION_UNKNOWN"
+          ],
+          [
+            1794542402,
+            "EXPIRED",
+            "BOUND_REFERENCE_TERMINAL"
+          ]
+        ],
+        "invalidation": "UNKNOWN",
+        "expiry": "NOT_SATISFIED",
+        "phase_results": {
+          "context": "SATISFIED",
+          "setup": "UNKNOWN",
+          "invalidation": "UNKNOWN"
+        },
+        "rules": [
+          {
+            "id": "completed",
+            "phase": "invalidation",
+            "observation": "CRT_STATE",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "divergence",
+            "phase": "setup",
+            "observation": "SMT_CONFIRMED",
+            "dependency": "smt",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reclaim",
+            "phase": "setup",
+            "observation": "CRT_RECLAIM",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reference",
+            "phase": "context",
+            "observation": "CRT_REFERENCE",
+            "dependency": "crt",
+            "outcome": "SATISFIED",
+            "reason": "CANONICAL_EVIDENCE",
+            "evidence_reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            },
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "observed_at": 1794531600,
+            "available_at": 1794535202,
+            "selected_at": 1794535202
+          }
+        ],
+        "binding_policy_version": 2,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ],
+        "bound_crt": {
+          "attempt_id": "99bb70739860896a451b8a83f11c65687f793dfebf4771fbef7c571957e8c4a2",
+          "strategy_version_id": "SV-24a6b92c89134201862c6b974e730e4a",
+          "alias": "crt_reference",
+          "evidence": {
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION",
+              "participants": null
+            },
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "market_event_id": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "observed_at": 1794531600
+          },
+          "activated_at": 1794535202
+        },
+        "crt_latest_reference": {
+          "version": 1,
+          "category": "crt",
+          "event_id": "2f55fc3045f1a0721ac3e8a14b0e1c750123afb4f3911a135c761b60f23c4d93",
+          "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+          "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+          "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "dukascopy-web-m1-v1",
+            "BID",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+          ],
+          "available_at": 1794542402,
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "availability_mode": "HISTORICAL_SIMULATION"
+        },
+        "producers": [
+          {
+            "dependency": "crt",
+            "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+            "snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4"
+          },
+          {
+            "dependency": "smt",
+            "calculation_id": "41a0760c7a10c95cd71fd97e425640a63c0ed54cda262d9de1ac0816b5454deb",
+            "snapshot": "4ecc490b807ef5e602fd9ed5a1185e2718cfa048722b0bec37ee0ebc83ab7e82"
+          }
+        ],
+        "coverage": [
+          {
+            "series": "COMPARISON:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528062,
+            "last_observed": 1794607142
+          },
+          {
+            "series": "PRIMARY:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528062,
+            "last_observed": 1794607142
+          },
+          {
+            "series": "PRIMARY:M5",
+            "status": "COMPLETE",
+            "expected": 263,
+            "observed": 263,
+            "missing": 0,
+            "first_due": 1794528302,
+            "last_observed": 1794606902
+          }
+        ],
+        "temporal": [
+          {
+            "before": "reclaim",
+            "after": "divergence",
+            "relation": "SEQUENCE",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN"
+          }
+        ],
+        "entry_intent": null,
+        "resource_counts": {
+          "unique_producers": 2,
+          "registry_publications": 484,
+          "archive": {
+            "checksum_attempts": 3,
+            "partition_decodes": 3,
+            "decoded_records": 2904,
+            "partition_reuses": 3
+          },
+          "analytical_work": 4779,
+          "estimated_retained_bytes": 7068504,
+          "candidate_scans": 347,
+          "exact_lookups": 1,
+          "timeline_boundaries": 1658
+        },
+        "evaluation": {
+          "evaluator_version": 2,
+          "strategy_id": "ST-ff5dbd0a1b7b42a18fef3724b18f39c1",
+          "strategy_version_id": "SV-24a6b92c89134201862c6b974e730e4a",
+          "configuration_fingerprint": "2c6c1061915686f200a7af5dda54b018124e1b745a677c2a2f67cfa00651fd5e",
+          "purpose": "HISTORICAL_SIMULATION",
+          "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+          "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+          "warmup_start": 1794528000,
+          "evaluation_start": 1794535200,
+          "binding_policy_version": 2,
+          "frozen_selection_fingerprint": "8754192e224ec1beb0750d811130f55c87bf011c82567520d641add785e831b6",
+          "evaluation_id": "EV-3b63d2eb1b71ca56c29f4e335cb1bb48e54d525df3149c669886106a3b094aa0",
+          "cutoff_utc": 1794607200
+        },
+        "decision_id": "95d614d7d0f714b96a123f2ee80f25687ff30b54aff020302474db0b2e4e4f1f",
+        "previous_decision_id": null
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 2,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-73e34a5b39894a2f9f48d1e8c8546c47",
+        "strategy_version_id": "SV-ec4ec8ab6e464292b5850c6cdee8148f",
+        "configuration_fingerprint": "0dc71db55e1e64eeaa896cc5eed21a119b2eb48e48ae180ae831db150ed41d57",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        2,
+        15
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-0c0ac075cfefc8c62bb0b8bda3dfa995b3c739b8cf9d4c35ff9ca0cf5b8f1f1c",
+        "terminal": true,
+        "cutoff": 1794607200,
+        "direction": "SHORT",
+        "context_activated_at": 1794535202,
+        "setup_activated_at": null,
+        "trigger_activated_at": null,
+        "transitions": [
+          [
+            1794535200,
+            "INSUFFICIENT_EVIDENCE",
+            "CONTEXT_OR_REFERENCE_UNAVAILABLE"
+          ],
+          [
+            1794535202,
+            "WAITING_FOR_SETUP",
+            "CONTEXT_ACTIVATED"
+          ],
+          [
+            1794535202,
+            "WAITING_FOR_SETUP",
+            "SETUP_NOT_ESTABLISHED"
+          ],
+          [
+            1794538803,
+            "INSUFFICIENT_EVIDENCE",
+            "INVALIDATION_UNKNOWN"
+          ],
+          [
+            1794542402,
+            "EXPIRED",
+            "BOUND_REFERENCE_TERMINAL"
+          ]
+        ],
+        "invalidation": "UNKNOWN",
+        "expiry": "NOT_SATISFIED",
+        "phase_results": {
+          "context": "SATISFIED",
+          "setup": "UNKNOWN",
+          "invalidation": "UNKNOWN"
+        },
+        "rules": [
+          {
+            "id": "completed",
+            "phase": "invalidation",
+            "observation": "CRT_STATE",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "divergence",
+            "phase": "setup",
+            "observation": "SMT_CONFIRMED",
+            "dependency": "smt",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reclaim",
+            "phase": "setup",
+            "observation": "CRT_RECLAIM",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reference",
+            "phase": "context",
+            "observation": "CRT_REFERENCE",
+            "dependency": "crt",
+            "outcome": "SATISFIED",
+            "reason": "CANONICAL_EVIDENCE",
+            "evidence_reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            },
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "observed_at": 1794531600,
+            "available_at": 1794535202,
+            "selected_at": 1794535202
+          }
+        ],
+        "binding_policy_version": 2,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ],
+        "bound_crt": {
+          "attempt_id": "0c0ac075cfefc8c62bb0b8bda3dfa995b3c739b8cf9d4c35ff9ca0cf5b8f1f1c",
+          "strategy_version_id": "SV-ec4ec8ab6e464292b5850c6cdee8148f",
+          "alias": "crt_reference",
+          "evidence": {
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION",
+              "participants": null
+            },
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "market_event_id": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "observed_at": 1794531600
+          },
+          "activated_at": 1794535202
+        },
+        "crt_latest_reference": {
+          "version": 1,
+          "category": "crt",
+          "event_id": "2f55fc3045f1a0721ac3e8a14b0e1c750123afb4f3911a135c761b60f23c4d93",
+          "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+          "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+          "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "dukascopy-web-m1-v1",
+            "BID",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+          ],
+          "available_at": 1794542402,
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "availability_mode": "HISTORICAL_SIMULATION"
+        },
+        "producers": [
+          {
+            "dependency": "crt",
+            "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+            "snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4"
+          },
+          {
+            "dependency": "smt",
+            "calculation_id": "77b88028067f2898b85cb796c8a05f08bca9bebf744aa287151b8060ec1df706",
+            "snapshot": "a199750a311efedfe324a7e0b0a1de30e356a4660d3ef055387113dd754c0e1e"
+          }
+        ],
+        "coverage": [
+          {
+            "series": "COMPARISON:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528075,
+            "last_observed": 1794607155
+          },
+          {
+            "series": "PRIMARY:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528062,
+            "last_observed": 1794607142
+          },
+          {
+            "series": "PRIMARY:M5",
+            "status": "COMPLETE",
+            "expected": 263,
+            "observed": 263,
+            "missing": 0,
+            "first_due": 1794528302,
+            "last_observed": 1794606902
+          }
+        ],
+        "temporal": [
+          {
+            "before": "reclaim",
+            "after": "divergence",
+            "relation": "SEQUENCE",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN"
+          }
+        ],
+        "entry_intent": null,
+        "resource_counts": {
+          "unique_producers": 2,
+          "registry_publications": 484,
+          "archive": {
+            "checksum_attempts": 3,
+            "partition_decodes": 3,
+            "decoded_records": 2904,
+            "partition_reuses": 3
+          },
+          "analytical_work": 4779,
+          "estimated_retained_bytes": 7068504,
+          "candidate_scans": 587,
+          "exact_lookups": 1,
+          "timeline_boundaries": 2858
+        },
+        "evaluation": {
+          "evaluator_version": 2,
+          "strategy_id": "ST-73e34a5b39894a2f9f48d1e8c8546c47",
+          "strategy_version_id": "SV-ec4ec8ab6e464292b5850c6cdee8148f",
+          "configuration_fingerprint": "0dc71db55e1e64eeaa896cc5eed21a119b2eb48e48ae180ae831db150ed41d57",
+          "purpose": "HISTORICAL_SIMULATION",
+          "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+          "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+          "warmup_start": 1794528000,
+          "evaluation_start": 1794535200,
+          "binding_policy_version": 2,
+          "frozen_selection_fingerprint": "4cf69a172934f10030c25462d465775d91a3ba7875f86742346ff1eeef40aafe",
+          "evaluation_id": "EV-02a986e7b5ab905292740814dc9b7751b959168d681c4d5aa6cb5d6e8ab55f53",
+          "cutoff_utc": 1794607200
+        },
+        "decision_id": "5aece87b78146e22536cc2674953131c9451f4a5b0361fc3e72e191a055ba56c",
+        "previous_decision_id": null
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 2,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-492aac6f6c684fe99f9ebb027edcae0c",
+        "strategy_version_id": "SV-6b081aa43638409b9007b658ae50c48a",
+        "configuration_fingerprint": "cac1b23b28dde95264deb4c6f68e32de917ceac98ab91716e70b2b7a4978c0f3",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        15,
+        30
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535215,
+          "actual_activation": 1794535215
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-6a24187eba78bdfe6e735b8fec74a34e74d6fd8d4f1efab084a7fd21012ce4a2",
+        "terminal": true,
+        "cutoff": 1794607200,
+        "direction": "SHORT",
+        "context_activated_at": 1794535215,
+        "setup_activated_at": null,
+        "trigger_activated_at": null,
+        "transitions": [
+          [
+            1794535200,
+            "INSUFFICIENT_EVIDENCE",
+            "CONTEXT_OR_REFERENCE_UNAVAILABLE"
+          ],
+          [
+            1794535215,
+            "WAITING_FOR_SETUP",
+            "CONTEXT_ACTIVATED"
+          ],
+          [
+            1794535215,
+            "WAITING_FOR_SETUP",
+            "SETUP_NOT_ESTABLISHED"
+          ],
+          [
+            1794538816,
+            "INSUFFICIENT_EVIDENCE",
+            "INVALIDATION_UNKNOWN"
+          ],
+          [
+            1794542415,
+            "EXPIRED",
+            "BOUND_REFERENCE_TERMINAL"
+          ]
+        ],
+        "invalidation": "UNKNOWN",
+        "expiry": "NOT_SATISFIED",
+        "phase_results": {
+          "context": "SATISFIED",
+          "setup": "UNKNOWN",
+          "invalidation": "UNKNOWN"
+        },
+        "rules": [
+          {
+            "id": "completed",
+            "phase": "invalidation",
+            "observation": "CRT_STATE",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "divergence",
+            "phase": "setup",
+            "observation": "SMT_CONFIRMED",
+            "dependency": "smt",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reclaim",
+            "phase": "setup",
+            "observation": "CRT_RECLAIM",
+            "dependency": "crt",
+            "outcome": "UNKNOWN",
+            "reason": "EVIDENCE_WINDOW_STALE",
+            "evidence_reference": null,
+            "family": null,
+            "observed_at": null,
+            "available_at": null,
+            "selected_at": null
+          },
+          {
+            "id": "reference",
+            "phase": "context",
+            "observation": "CRT_REFERENCE",
+            "dependency": "crt",
+            "outcome": "SATISFIED",
+            "reason": "CANONICAL_EVIDENCE",
+            "evidence_reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+              "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+              "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535215,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            },
+            "family": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "observed_at": 1794531600,
+            "available_at": 1794535215,
+            "selected_at": 1794535215
+          }
+        ],
+        "binding_policy_version": 2,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "activated_at": 1794535215,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+              "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+              "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535215,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ],
+        "bound_crt": {
+          "attempt_id": "6a24187eba78bdfe6e735b8fec74a34e74d6fd8d4f1efab084a7fd21012ce4a2",
+          "strategy_version_id": "SV-6b081aa43638409b9007b658ae50c48a",
+          "alias": "crt_reference",
+          "evidence": {
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+              "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+              "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535215,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION",
+              "participants": null
+            },
+            "family": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "market_event_id": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "observed_at": 1794531600
+          },
+          "activated_at": 1794535215
+        },
+        "crt_latest_reference": {
+          "version": 1,
+          "category": "crt",
+          "event_id": "b77c57ad07d72472a65e10ed1967bb317a741023f27503523b13d08f1d83c9c9",
+          "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+          "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+          "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "dukascopy-web-m1-v1",
+            "BID",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+          ],
+          "available_at": 1794542415,
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "availability_mode": "HISTORICAL_SIMULATION"
+        },
+        "producers": [
+          {
+            "dependency": "crt",
+            "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+            "snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e"
+          },
+          {
+            "dependency": "smt",
+            "calculation_id": "186b3a72e04145ea96b89636a44b1148c846c003275af7c4e22e91316922a7f8",
+            "snapshot": "42e264b80b6adef3a168f100232ad0336485fbc1058c4e362df0d22728160bc0"
+          }
+        ],
+        "coverage": [
+          {
+            "series": "COMPARISON:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528090,
+            "last_observed": 1794607170
+          },
+          {
+            "series": "PRIMARY:M1",
+            "status": "COMPLETE",
+            "expected": 1319,
+            "observed": 1319,
+            "missing": 0,
+            "first_due": 1794528075,
+            "last_observed": 1794607155
+          },
+          {
+            "series": "PRIMARY:M5",
+            "status": "COMPLETE",
+            "expected": 263,
+            "observed": 263,
+            "missing": 0,
+            "first_due": 1794528315,
+            "last_observed": 1794606915
+          }
+        ],
+        "temporal": [
+          {
+            "before": "reclaim",
+            "after": "divergence",
+            "relation": "SEQUENCE",
+            "outcome": "UNKNOWN",
+            "reason": "TEMPORAL_PREDECESSOR_UNKNOWN"
+          }
+        ],
+        "entry_intent": null,
+        "resource_counts": {
+          "unique_producers": 2,
+          "registry_publications": 484,
+          "archive": {
+            "checksum_attempts": 3,
+            "partition_decodes": 3,
+            "decoded_records": 2904,
+            "partition_reuses": 3
+          },
+          "analytical_work": 4779,
+          "estimated_retained_bytes": 7068504,
+          "candidate_scans": 587,
+          "exact_lookups": 1,
+          "timeline_boundaries": 2858
+        },
+        "evaluation": {
+          "evaluator_version": 2,
+          "strategy_id": "ST-492aac6f6c684fe99f9ebb027edcae0c",
+          "strategy_version_id": "SV-6b081aa43638409b9007b658ae50c48a",
+          "configuration_fingerprint": "cac1b23b28dde95264deb4c6f68e32de917ceac98ab91716e70b2b7a4978c0f3",
+          "purpose": "HISTORICAL_SIMULATION",
+          "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+          "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+          "warmup_start": 1794528000,
+          "evaluation_start": 1794535200,
+          "binding_policy_version": 2,
+          "frozen_selection_fingerprint": "0886098f7be597ec6b40e46be3341d55acaffc569bb127467d54ac98871d5668",
+          "evaluation_id": "EV-805259b6bb2a71a82f9ee62594dcb88aeebced49e7bb665d1385c85d9cc7982b",
+          "cutoff_utc": 1794607200
+        },
+        "decision_id": "57e7ea0d8b0c958761a7d619865e8ab9660bbef91eee6c36f99bb91504991ccc",
+        "previous_decision_id": null
+      }
+    }
+  ],
+  "benchmarks": {}
+}

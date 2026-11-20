@@ -9,6 +9,7 @@ function port(value: string){
 }
 const apiPort=port(process.env.TRADEFORGE_E2E_API_PORT??"8000");
 const uiPort=port(process.env.TRADEFORGE_E2E_UI_PORT??"4180");
+const testStorage=mkdtempSync(join(tmpdir(), "tradeforge-e2e-"));
 const baseURL=`http://127.0.0.1:${uiPort}`;
 
 export default defineConfig({
@@ -17,9 +18,9 @@ export default defineConfig({
   testDir: "./e2e",
   webServer: [
     {
-      command: `.venv\\Scripts\\python.exe -m uvicorn tradeforge.api:app --host 127.0.0.1 --port ${apiPort}`,
+      command: `.venv\\Scripts\\python.exe -m uvicorn research_backend.tests.evaluator_browser_app:app --host 127.0.0.1 --port ${apiPort}`,
       cwd: "..",
-      env: { TRADEFORGE_STORAGE: mkdtempSync(join(tmpdir(), "tradeforge-e2e-")) },
+      env: { TRADEFORGE_STORAGE: testStorage, TRADEFORGE_DATA_DIR: join(testStorage,"research") },
       url: `http://127.0.0.1:${apiPort}/api/health`,
     },
     {command:`npm run dev -- --config e2e/vite.config.ts --port ${uiPort}`,url:baseURL},

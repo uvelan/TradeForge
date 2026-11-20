@@ -370,6 +370,9 @@ def seal(scope, start, end, cutoff, calendar, *, selected_versions=None):
          None if selected_versions is None else 1,canonical(selected_versions)))
     if not selected or len(selected)>30_000:
         raise ValueError("No bounded recorded evidence for the requested scope")
+    from .archive_provenance import SYNTHETIC_SESSIONS
+    if any(row[key] in SYNTHETIC_SESSIONS for row in selected for key in ("session_id","witness_session_id")):
+        raise ValueError("QUARANTINED_SYNTHETIC_CAPTURE")
     calendar_data = calendar.model_dump()
     if any(json.loads(row["calendar"]) != calendar_data for row in selected):
         raise ValueError("Recorded sessions use a different calendar")

@@ -79,6 +79,9 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
 
 def read_partition(dataset:dict,max_rows:int=2000)->list[dict]:
     import pyarrow.parquet as pq
+    from .archive_provenance import require_market_partition
+
+    require_market_partition(dataset["id"])
     path=(MARKET_DIR/dataset['relative_path']).resolve()
     if not path.is_relative_to(MARKET_DIR.resolve()):raise ValueError('Invalid stored dataset path')
     if not path.exists():raise FileNotFoundError('Dataset missing from disk')
@@ -102,6 +105,9 @@ def iter_complete_partition(dataset, *, max_rows, batch_size=8192):
     """Verify and read every row in bounded batches, without the chart tail limit."""
     import pyarrow.parquet as pq
 
+    from .archive_provenance import require_market_partition
+
+    require_market_partition(dataset["id"])
     expected = dataset["rows_count"]
     if not 0 < expected <= max_rows or not 0 < batch_size <= 8192:
         raise ValueError("Partition exceeds the complete-read budget")

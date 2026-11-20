@@ -1,0 +1,66 @@
+{
+  "canonical_producers": {
+    "samples": 30,
+    "p50_ms": 766.651,
+    "p95_ms": 923.298,
+    "peak_python_bytes": 24157762,
+    "process_peak_rss_bytes": 184737792,
+    "response_bytes": 524,
+    "resource_counts": {
+      "unique_producers": 6,
+      "registry_publications": 2709,
+      "archive": {
+        "checksum_attempts": 3,
+        "partition_decodes": 3,
+        "decoded_records": 2904,
+        "partition_reuses": 3
+      },
+      "analytical_work": 19948,
+      "estimated_retained_bytes": 29057708,
+      "publications_by_producer_category": {
+        "base-structure:structure": 143,
+        "crt:crt": 42,
+        "fvg:fvg": 433,
+        "liquidity:pool": 98,
+        "liquidity:liquidity": 21,
+        "ob:order_block": 121,
+        "smt:smt_match": 218,
+        "smt:smt": 646
+      },
+      "overlapping_fvg_formations": 98,
+      "timeline_boundaries": 1201
+    }
+  },
+  "full_evaluation": {
+    "samples": 30,
+    "p50_ms": 845.136,
+    "p95_ms": 965.607,
+    "peak_python_bytes": 24325405,
+    "process_peak_rss_bytes": 186826752,
+    "response_bytes": 36986,
+    "resource_counts": {
+      "unique_producers": 6,
+      "registry_publications": 2709,
+      "archive": {
+        "checksum_attempts": 3,
+        "partition_decodes": 3,
+        "decoded_records": 2904,
+        "partition_reuses": 3
+      },
+      "analytical_work": 19948,
+      "estimated_retained_bytes": 29057708,
+      "candidate_scans": 9031,
+      "exact_lookups": 3,
+      "timeline_boundaries": 1295
+    }
+  },
+  "reject_oversized_selection": {
+    "samples": 30,
+    "p50_ms": 7.222,
+    "p95_ms": 10.107,
+    "peak_python_bytes": 630253,
+    "process_peak_rss_bytes": 187654144,
+    "response_bytes": 101,
+    "resource_counts": null
+  }
+}

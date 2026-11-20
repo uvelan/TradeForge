@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 import json
 
 from .analysis_evidence import ResourceLimit
+from .archive_provenance import SYNTHETIC_MANIFESTS, SYNTHETIC_SESSIONS
 from .arrival_policy import (CLOCK_POLICY, LEGACY_MODE, LEGACY_RECORDED_ARRIVAL, MODE_VERSIONS, PUBLICATION_POLICY,
                              RECORDED_ARRIVAL, RECORDED_MODE, SIMULATED_ARRIVAL,
                              SIMULATION_AUTHORITY, SIMULATION_MODE, admitted_arrival, availability_mode)
@@ -63,6 +64,8 @@ def load_reference(request, start, end, step, *, archive_limits=None, archive_se
                 if not sealed:
                     return refused("UNVERIFIED_AVAILABILITY", "UNKNOWN_CAPTURE_MANIFEST")
                 sealed = json.loads(sealed["payload"])
+                if manifest_id in SYNTHETIC_MANIFESTS or SYNTHETIC_SESSIONS.intersection(sealed.get("sessions",[])):
+                    return refused("UNVERIFIED_AVAILABILITY", "QUARANTINED_SYNTHETIC_CAPTURE")
                 if sealed.get("availability_policy") == LEGACY_RECORDED_ARRIVAL:
                     return refused("UNVERIFIED_AVAILABILITY", "LEGACY_RECEIPT_HAS_NO_DURABLE_PUBLICATION_PROOF")
                 scope = {"provider":provider,"symbol":request.symbol,"feed_id":request.feed_id,
