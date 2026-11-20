@@ -118,6 +118,12 @@ def make_machine(run, evidence, definition, after=None, spent=()):
 
 def ledger_entry(run, machine, frontier):
     trace = machine.decision(frontier,0)
+    if trace["attempt_id"]:
+        state = trace["state"]
+        trace["historical_attempt_state"] = (
+            state if state in {"TRIGGER_QUALIFIED","INVALIDATED","EXPIRED","INSUFFICIENT_EVIDENCE"}
+            else "PENDING_AT_END"
+        )
     decision_id = "HD-"+fingerprint({key:value for key,value in trace.items() if key!="resource_counts"} |
                                    {"run_id":run["run_id"]})
     intent = trace["entry_intent"]

@@ -1,0 +1,19 @@
+[('INVALIDATED', [{'before': 'early', 'after': 'later', 'relation': 'AFTER', 'outcome': 'NOT_SATISFIED', 'reason': 'MAINTAINED_TEMPORAL_WINDOW_NOT_PROVEN'}], [('early', 'SATISFIED', 1577963100), ('later', 'NOT_SATISFIED', 1577962800)]), ('WAITING_FOR_TRIGGER', [{'before': 'early', 'after': 'later', 'relation': 'AFTER', 'outcome': 'SATISFIED', 'reason': 'CAUSAL_WINDOW_SATISFIED'}], [('early', 'SATISFIED', 1577963100), ('later', 'SATISFIED', 1577962800)])]
+F
+================================== FAILURES ===================================
+________________ test_current_dependencies_follow_graph_order _________________
+research_backend\tests\test_historical_dependency_order.py:38: in test_current_dependencies_follow_graph_order
+    assert outcomes[0]==outcomes[1]
+E   AssertionError: assert ('INVALIDATED... 1577962800)]) == ('WAITING_FOR... 1577962800)])
+E
+E     At index 0 diff: 'INVALIDATED' != 'WAITING_FOR_TRIGGER'
+E     Use -v to get more diff
+============================== warnings summary ===============================
+research_backend/tests/test_historical_dependency_order.py::test_current_dependencies_follow_graph_order
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_historical_dependency_order.py::test_current_dependencies_follow_graph_order
+1 failed, 1 warning in 5.12s

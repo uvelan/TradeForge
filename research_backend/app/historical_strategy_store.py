@@ -178,7 +178,7 @@ def publish(run_id, owner, snapshot, frontier, entries, completed, metrics):
                        (entry["id"],run_id,cursor,trace["attempt_id"],trace["state"],trace_json))
             if trace["attempt_id"]:
                 db.execute("INSERT INTO historical_strategy_attempts VALUES (?,?,?,?)",
-                           (trace["attempt_id"],run_id,entry["id"],trace["state"]))
+                           (trace["attempt_id"],run_id,entry["id"],trace["historical_attempt_state"]))
             if intent_json:
                 db.execute("INSERT INTO historical_strategy_intents VALUES (?,?,?,?,?)",
                            (entry["intent"]["id"],run_id,entry["id"],trace["attempt_id"],intent_json))

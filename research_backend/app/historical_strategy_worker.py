@@ -28,7 +28,9 @@ def child(run_id, owner):
         identity = run["identity"]
         if (identity["historical_version"]!=RUN_VERSION or identity["evaluator_version"]!=EVALUATOR_VERSION
                 or run["run_id"]!="HR-"+fingerprint(identity)
-                or identity["frozen_selection"]!=fingerprint(run["selection"])):
+                or identity["frozen_selection"]!=fingerprint(run["selection"])
+                or identity["frozen_definition"]!=fingerprint(run["definition"])
+                or identity["rearm_rule"]!=run["rearm_rule"]):
             raise ValueError("Incompatible or corrupt historical run identity")
 
         next_check = 0.0

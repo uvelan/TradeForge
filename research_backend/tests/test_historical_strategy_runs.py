@@ -68,6 +68,7 @@ def test_bounded_fvg_prefix_rearm_and_chunk_equivalence(prepared,mirrored):
     assert engine.normalize_prefix(large)==engine.normalize_prefix(small)
     assert [row["trace"]["state"] for row in large][:2]==["INVALIDATED","TRIGGER_QUALIFIED"]
     assert len({row["trace"]["attempt_id"] for row in large})==len(large)
+    assert all(row["trace"]["historical_attempt_state"] for row in large if row["trace"]["attempt_id"])
     assert large[1]["intent"]["direction"]==("LONG" if mirrored else "SHORT")
     assert len({row["intent"]["id"] for row in large if row["intent"]})==sum(bool(row["intent"]) for row in large)
     assert len({row["trace"]["attempt_bindings"][0]["family"] for row in large if row["trace"]["attempt_bindings"]})>=3
@@ -167,3 +168,54 @@ def test_rearm_requires_declared_positive_family_and_admitted_archives(prepared)
                                                                "selection_fingerprint":"0"*64,"partitions":partitions}))
     assert pinned["selection"]["id"]=="WORKSPACE"
     assert len(pinned["selection"]["catalog_fingerprint"])==64
+
+
+@pytest.mark.parametrize("reason",["deadline","memory","cancel"])
+def test_supervisor_terminates_uncooperative_process(prepared, monkeypatch, reason):
+    import asyncio
+    import subprocess
+    import sys
+    from contextvars import ContextVar
+    from research_backend.app import historical_strategy_worker as worker
+
+    _,run,_,_ = prepared()
+    identifier = store.enqueue(run)
+    own_supervisor = ContextVar("own_supervisor",default=False)
+    monkeypatch.setattr(worker,"claim",lambda owner:store.claim(owner) if own_supervisor.get() else None)
+    monkeypatch.setattr(worker,"HARD_SECONDS",0.01 if reason=="deadline" else 60)
+    if reason=="memory":
+        monkeypatch.setattr(worker,"working_set",lambda pid:worker.MEMORY_BYTES+1)
+
+    launch = subprocess.Popen
+    children = []
+
+    def launch_uncooperative(_command,**options):
+        process = launch([sys.executable,"-c","import time; time.sleep(60)"],**options)
+        children.append(process)
+        if reason=="cancel":
+            assert store.cancel(identifier)
+        return process
+
+    monkeypatch.setattr(worker.subprocess,"Popen",launch_uncooperative)
+
+    async def observe():
+        own_supervisor.set(True)
+        stop = asyncio.Event()
+        supervisor = asyncio.create_task(worker.supervise(stop))
+        expected = "CANCELLED" if reason=="cancel" else "RESOURCE_LIMIT_EXCEEDED"
+        try:
+            async with asyncio.timeout(5):
+                while store.status(identifier)["state"]!=expected:
+                    await asyncio.sleep(.05)
+        finally:
+            stop.set()
+            await supervisor
+
+    asyncio.run(observe())
+    assert len(children)==1 and children[0].poll() is not None
+    assert store.latest_checkpoint(identifier) is None
+    outcome = store.status(identifier)
+    assert outcome["frontier"] is None
+    diagnostic = {"deadline":"External process deadline","memory":"Sampled working-set limit",
+                  "cancel":"Worker lease or cancellation"}[reason]
+    assert outcome["diagnostic"]==diagnostic

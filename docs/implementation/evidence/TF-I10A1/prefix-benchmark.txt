@@ -1,0 +1,9 @@
+HISTORICAL_BENCHMARK {"bounded_prefix": {"p50_ms": 26.006, "p95_ms": 37.542, "peak_python_bytes": 2031001, "process_peak_rss_bytes": 129736704, "resource_counts": null, "response_bytes": null, "samples": 30}, "canonical_metrics": {"analytical_work": 123, "archive": {"checksum_attempts": 1, "decoded_records": 123, "partition_decodes": 1, "partition_reuses": 1}, "estimated_retained_bytes": 220258, "registry_publications": 7, "unique_producers": 1}, "cutoffs": 100, "independent": {"p50_ms": 1279.445, "p95_ms": 1383.195, "peak_python_bytes": 5049756, "process_peak_rss_bytes": 128438272, "resource_counts": null, "response_bytes": null, "samples": 30}, "max_checkpoint_bytes": 1137, "workload": "continuous M5, FVG lifecycle prefix using 123 canonical candles"}
+.
+============================== warnings summary ===============================
+research_backend/tests/benchmark_historical_prefix.py::test_dense_historical_prefix_measurements
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 51.42s

@@ -180,8 +180,12 @@ def run(catalog,datasets,samples,historical=False):
                 runs[(direction,left,right)] = load_run(run["run_id"])
                 if historical:
                     cases[-1]["historical"] = {}
-                    for policy in ("SINGLE_ATTEMPT","NEW_CONTEXT_FAMILY"):
-                        request_v1 = dict(request,rearm=policy)
+                    for label,policy,cutoff in (
+                        ("SINGLE_ATTEMPT","SINGLE_ATTEMPT",request["cutoff"]),
+                        ("NEW_CONTEXT_FAMILY","NEW_CONTEXT_FAMILY",request["cutoff"]),
+                        ("NEW_CONTEXT_FAMILY_50MIN","NEW_CONTEXT_FAMILY",request["evaluation_start"]+3000),
+                    ):
+                        request_v1 = dict(request,rearm=policy,cutoff=cutoff)
                         if policy=="NEW_CONTEXT_FAMILY":
                             request_v1.update(context_alias=demo(direction,left,right)["attempt"]["crt_reference_alias"],
                                               max_attempts=16)
@@ -192,10 +196,15 @@ def run(catalog,datasets,samples,historical=False):
                         try:
                             run_chunks(pinned,proof,model,lambda snapshot,frontier,rows,*args:entries.extend(rows))
                         except ResourceLimit as error:
-                            cases[-1]["historical"][policy] = {"status":"RESOURCE_LIMIT_EXCEEDED","reason":str(error),"decisions":len(entries)}
+                            cases[-1]["historical"][label] = {"status":"RESOURCE_LIMIT_EXCEEDED","reason":str(error),"decisions":len(entries)}
+                        except ValueError as error:
+                            cases[-1]["historical"][label] = {"status":"FAILED","reason":str(error),"decisions":len(entries)}
                         else:
-                            cases[-1]["historical"][policy] = {"status":"COMPLETED","decisions":[row["trace"]["state"] for row in entries],
-                                                                "intents":sum(bool(row["intent"]) for row in entries)}
+                            cases[-1]["historical"][label] = {"status":"COMPLETED","decisions":[row["trace"]["state"] for row in entries],
+                                                               "intents":sum(bool(row["intent"]) for row in entries),
+                                                               "attempts":sum(bool(row["trace"]["attempt_id"]) for row in entries),
+                                                               "families":sorted({binding["family"] for row in entries
+                                                                                  for binding in row["trace"]["attempt_bindings"]})}
 
         benchmarks = {}
         if samples:

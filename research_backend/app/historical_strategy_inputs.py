@@ -122,7 +122,9 @@ def prepare_historical(request):
     method = ("REFERENCE_SINGLE" if request.rearm=="SINGLE_ATTEMPT" else
               "FVG_BOUNDED_PREFIX" if all(dep.indicator=="FVG" for dep in definition.indicators)
               else "INDEPENDENT_PREFIX_CHECKED")
+    frozen_definition = definition.model_dump(mode="json")
     identity = {**request.model_dump(mode="json"),"frozen_selection":fingerprint(selection),
+                "frozen_definition":fingerprint(frozen_definition),"rearm_rule":rule.id if rule else None,
                 "binding_policy_version":2,"strategy_schema":2,"availability":SIMULATION_MODE,
                 "producer_versions":producers,"method":method,"checkpoint_version":CHECKPOINT_VERSION,
                 "budgets":{"oracle_cutoffs":MAX_ORACLE_CUTOFFS,"hard_seconds":HARD_SECONDS,
@@ -130,7 +132,7 @@ def prepare_historical(request):
                            "ledger_bytes":MAX_LEDGER_BYTES}}
     run_id = "HR-"+fingerprint(identity)
     return {"run_id":run_id,"identity":identity,"selection":selection,
-            "definition":definition.model_dump(mode="json"),"rearm_rule":rule.id if rule else None}
+            "definition":frozen_definition,"rearm_rule":identity["rearm_rule"]}
 
 
 def verified_evidence(definition, run, check_budget=None):
