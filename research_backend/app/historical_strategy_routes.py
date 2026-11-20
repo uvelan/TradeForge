@@ -4,9 +4,9 @@ import json
 from fastapi import APIRouter, HTTPException, Query, Request
 from starlette.concurrency import run_in_threadpool
 
-from .db import one, rows
-from .historical_strategy_inputs import HistoricalInput, prepare_historical, verified_evidence, approved_partition
-from .historical_strategy_store import cancel, enqueue, latest_checkpoint, resume, status
+from .db import one, rows, transaction
+from .historical_strategy_inputs import RUN_VERSION, HistoricalInput, prepare_historical, verified_evidence, approved_partition
+from .historical_strategy_store import cancel, enqueue, latest_checkpoint, resume
 from .strategy_definitions import StrategyDefinitionV2
 from .strategy_evaluation_budget import deadline
 from .strategy_evaluation_routes import archived_evidence_chart, evaluation_lane
@@ -60,19 +60,39 @@ def list_runs(strategy_version_id:str=Query(max_length=40),limit:int=Query(25,ge
                    ORDER BY r.created_at DESC,r.id LIMIT ?""",(strategy_version_id,limit))
 
 
-@router.get("/{run_id}")
-def get_run(run_id:str):
-    row = one("SELECT payload,created_at FROM historical_strategy_runs WHERE id=?",(run_id,))
+def run_state(run_id):
+    with transaction() as db:
+        row = db.execute("SELECT state FROM historical_worker_state WHERE run_id=?",(run_id,)).fetchone()
     if not row:
         raise HTTPException(404,"Historical run not found")
-    result = json.loads(row["payload"])
-    worker = status(run_id)
-    for name in ("owner","lease_until"):
-        worker.pop(name,None)
-    counts = rows("SELECT state,COUNT(*) AS count FROM historical_strategy_attempts WHERE run_id=? GROUP BY state",(run_id,))
-    return {key:result[key] for key in ("run_id","identity","selection")} | {
-        "created_at":row["created_at"],"worker":worker,"attempt_counts":{entry["state"]:entry["count"] for entry in counts},
-        "qualified_intents":one("SELECT COUNT(*) AS count FROM historical_strategy_intents WHERE run_id=?",(run_id,))["count"]}
+    return row["state"]
+
+
+def require_published(run_id):
+    if run_state(run_id)!="COMPLETED":
+        raise HTTPException(409,"Historical results are available after the run completes")
+
+
+@router.get("/{run_id}")
+def get_run(run_id:str):
+    with transaction() as db:
+        db.execute("BEGIN")
+        row = db.execute("SELECT payload,created_at FROM historical_strategy_runs WHERE id=?",(run_id,)).fetchone()
+        if not row:
+            raise HTTPException(404,"Historical run not found")
+        result = json.loads(row["payload"])
+        worker = dict(db.execute("""SELECT state,frontier,diagnostic,metrics FROM historical_worker_state
+                                    WHERE run_id=?""",(run_id,)).fetchone())
+        completed = worker["state"]=="COMPLETED"
+        worker["metrics"] = json.loads(worker["metrics"]) if completed else {}
+        counts = db.execute("""SELECT state,COUNT(*) AS count FROM historical_strategy_attempts
+                               WHERE run_id=? GROUP BY state""",(run_id,)).fetchall() if completed else ()
+        intent_count = db.execute("SELECT COUNT(*) FROM historical_strategy_intents WHERE run_id=?",
+                                  (run_id,)).fetchone()[0] if completed else 0
+        return {key:result[key] for key in ("run_id","identity","selection")} | {
+            "created_at":row["created_at"],"worker":worker,"results_published":completed,
+            "attempt_counts":{entry["state"]:entry["count"] for entry in counts},
+            "qualified_intents":intent_count}
 
 
 @router.post("/{run_id}/cancel")
@@ -85,7 +105,9 @@ def cancel_run(run_id:str):
 
 @router.post("/{run_id}/resume")
 def resume_run(run_id:str):
-    get_run(run_id)
+    run = get_run(run_id)
+    if run["identity"]["historical_version"]!=RUN_VERSION:
+        raise HTTPException(409,"Saved run uses an older evaluator. Create a new historical run.")
     with evaluation_lane():
         if not resume(run_id):
             raise HTTPException(409,"Historical run is not resumable")
@@ -94,7 +116,7 @@ def resume_run(run_id:str):
 
 @router.get("/{run_id}/checkpoint")
 def checkpoint(run_id:str):
-    get_run(run_id)
+    require_published(run_id)
     record = latest_checkpoint(run_id)
     if not record:
         raise HTTPException(404,"No committed checkpoint")
@@ -103,14 +125,16 @@ def checkpoint(run_id:str):
 
 @router.get("/{run_id}/decisions")
 def decisions(run_id:str,after:int=Query(0,ge=0),limit:int=Query(30,ge=1,le=100)):
-    get_run(run_id)
+    if run_state(run_id)!="COMPLETED":
+        return []
     return rows("""SELECT id,cutoff,attempt_id,state FROM historical_strategy_decisions
                    WHERE run_id=? AND cutoff>? ORDER BY cutoff LIMIT ?""",(run_id,after,limit))
 
 
 @router.get("/{run_id}/attempts")
 def attempts(run_id:str,after:int=Query(0,ge=0),limit:int=Query(30,ge=1,le=100)):
-    get_run(run_id)
+    if run_state(run_id)!="COMPLETED":
+        return []
     return rows("""SELECT a.id,a.state,d.cutoff,d.id AS decision_id FROM historical_strategy_attempts a
                    JOIN historical_strategy_decisions d ON d.id=a.decision_id
                    WHERE a.run_id=? AND d.cutoff>? ORDER BY d.cutoff LIMIT ?""",(run_id,after,limit))
@@ -118,7 +142,8 @@ def attempts(run_id:str,after:int=Query(0,ge=0),limit:int=Query(30,ge=1,le=100))
 
 @router.get("/{run_id}/intents")
 def intents(run_id:str,after:int=Query(0,ge=0),limit:int=Query(30,ge=1,le=100)):
-    get_run(run_id)
+    if run_state(run_id)!="COMPLETED":
+        return []
     return [json.loads(row["payload"]) for row in rows("""SELECT i.payload FROM historical_strategy_intents i
              JOIN historical_strategy_decisions d ON d.id=i.decision_id WHERE i.run_id=? AND d.cutoff>?
              ORDER BY d.cutoff LIMIT ?""",(run_id,after,limit))]
@@ -126,6 +151,7 @@ def intents(run_id:str,after:int=Query(0,ge=0),limit:int=Query(30,ge=1,le=100)):
 
 @router.get("/{run_id}/decisions/{cutoff}")
 def decision(run_id:str,cutoff:int):
+    require_published(run_id)
     row = one("SELECT * FROM historical_strategy_decisions WHERE run_id=? AND cutoff=?",(run_id,cutoff))
     if not row:
         raise HTTPException(404,"No saved decision at this cutoff")

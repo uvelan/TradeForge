@@ -1,23 +1,19 @@
-"""Chronological orchestration of the authoritative mechanical evaluator."""
+"""Bounded historical evaluation with fresh, exact as-of successor proofs."""
 import json
 from bisect import bisect_right
-from heapq import heapify, heappop, heappush
+from datetime import UTC, datetime
 
 from .analysis_evidence import ResourceLimit, canonical
+from .db import one
 from .historical_strategy_inputs import CHECKPOINT_VERSION, MAX_CHECKPOINT_BYTES, MAX_ORACLE_CUTOFFS
-from .strategy_binding import AttemptBinding, BoundEvidence
-from .strategy_definitions import Outcome
-from .strategy_evaluation_sources import MAX_TIMELINE, collect
-from .strategy_evaluator import EvaluationMachine, RuleResult, TERMINAL
+from .market import FRAME_MIN
+from .strategy_evaluation_sources import collect
+from .strategy_evaluator import EvaluationMachine, TERMINAL
 from .strategy_evidence import fingerprint
-
-STATE_FIELDS = ("context_at","setup_at","trigger_at","attempt","state","reason","timeline","phase_results",
-                "phase_times","binding_times","binding_status","scans","lookups")
-PROOF_FIELDS = ("results","latches","bindings","activation_proofs")
 
 
 def normalize_prefix(value):
-    """Drop proof coordinates that encode the chosen calculation snapshot."""
+    """Normalize snapshot coordinates for the analytical benchmark only."""
     if isinstance(value,dict):
         return {key:normalize_prefix(item) for key,item in value.items()
                 if key not in {"calculation_snapshot","evaluation_cutoff"}}
@@ -33,85 +29,62 @@ def publication_prefix(evidence, cutoff):
             for key,view in evidence.views.items()}
 
 
-def uncertainty_prefix(evidence, cutoff):
-    return {key:{family:[(edge.start,edge.reason,
-                         edge.recovered_at if edge.recovered_at is not None and edge.recovered_at<=cutoff else None)
-                        for edge in entries if edge.start<=cutoff]
-                 for family,entries in view.smt_uncertainty.items() if entries[0].start<=cutoff}
-            for key,view in evidence.views.items()}
+def asof_selection(selection, cutoff):
+    """Retain exact pinned partition attestations that can contribute at cutoff."""
+    series = {}
+    for key,feed in selection["series"].items():
+        step = FRAME_MIN[feed["timeframe"]]*60
+        last_open = cutoff-step-feed["delay_seconds"]
+        parts = []
+        for part in feed["partitions"]:
+            row = one("SELECT first_time,last_time,sha256 FROM datasets WHERE id=?",(part["id"],))
+            if not row or row["sha256"]!=part["sha256"]:
+                raise ValueError("As-of partition attestation changed")
+            first,last = (int(datetime.fromisoformat(row[field]).astimezone(UTC).timestamp())
+                          for field in ("first_time","last_time"))
+            if first<=last_open and last>=feed["start"]:
+                parts.append(part)
+        if not parts:
+            raise ValueError("No partition contributes before the as-of cutoff")
+        series[key] = {**feed,"partitions":parts}
+    return {**selection,"series":series}
 
 
-def verify_prefix(definition, run, evidence, cutoff, check):
-    earlier = collect(definition,run["selection"],cutoff,run["identity"]["evaluation_start"],check_budget=check)
-    if (publication_prefix(earlier,cutoff)!=publication_prefix(evidence,cutoff)
-            or uncertainty_prefix(earlier,cutoff)!=uncertainty_prefix(evidence,cutoff)
-            or any(lane.at(cutoff)!=earlier.coverage[key].at(cutoff) for key,lane in evidence.coverage.items())):
-        raise ValueError("Canonical producer prefix diverged from an independent calculation")
-    return earlier.metrics
-
-
-def checkpoint(run, evidence, machine, frontier, attempts, spent, terminal_time, processed):
-    fields = {key:getattr(machine,key) for key in STATE_FIELDS}
-
-    def encode(result):
-        return [result.outcome.value,result.reason,
-                result.proof.model_dump(mode="json") if result.proof else None,
-                result.selected_at,result.verified_at]
-
+def checkpoint(run, evidence, frontier, attempts, spent, terminal_time, processed, dynamic):
     payload = {"version":CHECKPOINT_VERSION,"run_id":run["run_id"],
                "selection":run["identity"]["frozen_selection"],"frontier":frontier,"attempts":attempts,
-               "spent":spent,"terminal_time":terminal_time,"processed":processed,
-               "snapshots":{key:view.snapshot for key,view in evidence.views.items()},
-               "fields":fields,"outcomes":[machine.invalidation.value,machine.expiry.value],
-               "crt":machine.crt_binding.model_dump(mode="json") if machine.crt_binding else None,
-               "latest_crt":machine.latest_crt["evidence_reference"] if machine.latest_crt else None,
-               "proofs":{name:{key:encode(item) for key,item in getattr(machine,name).items()} for name in PROOF_FIELDS},
-               "temporal":[[list(key),value] for key,value in sorted(machine.temporal.items())],
-               "temporal_proofs":[[list(key),encode(item)] for key,item in sorted(machine.temporal_proofs.items())]}
+               "spent":spent,"terminal_time":terminal_time,"processed":processed,"dynamic":sorted(dynamic),
+               "snapshots":{key:view.snapshot for key,view in evidence.views.items()}}
     encoded = canonical(payload)
     if len(encoded.encode())>MAX_CHECKPOINT_BYTES:
         raise ResourceLimit("Historical checkpoint exceeds the byte budget")
     return encoded,fingerprint(payload)
 
 
-def restore(run, evidence, definition, saved):
+def restore(run, evidence, saved):
     data = json.loads(saved["payload"])
+    identity = run["identity"]
     if (fingerprint(data)!=saved["digest"] or data["version"]!=CHECKPOINT_VERSION
-            or data["run_id"]!=run["run_id"] or data["selection"]!=run["identity"]["frozen_selection"]
+            or data["run_id"]!=run["run_id"] or data["selection"]!=identity["frozen_selection"]
             or data["frontier"]!=saved["frontier"]
-            or not run["identity"]["evaluation_start"]<=data["frontier"]<=run["identity"]["cutoff"]
-            or data["snapshots"]!={key:view.snapshot for key,view in evidence.views.items()}):
+            or not identity["evaluation_start"]<=data["frontier"]<=identity["cutoff"]
+            or data["snapshots"]!={key:view.snapshot for key,view in evidence.views.items()}
+            or not 0<=data["attempts"]<=identity["max_attempts"]
+            or data["attempts"]!=len(set(data["spent"])) or data["attempts"]!=len(data["spent"])
+            or bool(data["attempts"])!=(data["terminal_time"] is not None)
+            or (data["terminal_time"] is not None and
+                not identity["evaluation_start"]<=data["terminal_time"]<=data["frontier"])
+            or not 1<=data["processed"]<=MAX_ORACLE_CUTOFFS
+            or len(data["dynamic"])>2
+            or any(not data["frontier"]<stamp<=identity["cutoff"] for stamp in data["dynamic"])):
         raise ValueError("Historical checkpoint is corrupt or incompatible")
-    machine = make_machine(run,evidence,definition,data["terminal_time"],data["spent"])
-
-    def event_for(ref):
-        if evidence.registry.resolve(ref) is None or ref["available_at"]>data["frontier"]:
-            raise ValueError("Checkpoint references unavailable or future evidence")
-        return machine.events_by_id[ref["calculation_snapshot"]][ref["event_id"]]
-
-    def decode(values):
-        outcome,reason,proof,selected,verified = values
-        proof = BoundEvidence.model_validate(proof) if proof else None
-        event = event_for(proof.reference.model_dump(mode="json",exclude_none=True)) if proof else None
-        if any(stamp is not None and stamp>data["frontier"] for stamp in (selected,verified)):
-            raise ValueError("Checkpoint contains a future verification")
-        return RuleResult(Outcome(outcome),reason,proof,event,selected,verified)
-
-    for key in STATE_FIELDS:
-        setattr(machine,key,data["fields"][key])
-    for key in PROOF_FIELDS:
-        setattr(machine,key,{rule:decode(value) for rule,value in data["proofs"][key].items()})
-    machine.invalidation,machine.expiry = map(Outcome,data["outcomes"])
-    machine.crt_binding = AttemptBinding.model_validate(data["crt"]) if data["crt"] else None
-    machine.latest_crt = event_for(data["latest_crt"]) if data["latest_crt"] else None
-    machine.temporal = {tuple(key):value for key,value in data["temporal"]}
-    machine.temporal_proofs = {tuple(key):decode(value) for key,value in data["temporal_proofs"]}
-    return machine,data
+    return data
 
 
 def make_machine(run, evidence, definition, after=None, spent=()):
     identity = run["identity"]
-    return EvaluationMachine(definition,evidence,identity,identity["evaluation_start"],identity["cutoff"],
+    started = identity["evaluation_start"] if after is None else after+1
+    return EvaluationMachine(definition,evidence,identity,started,identity["cutoff"],
                              rearm_rule=run["rearm_rule"] if after is not None else None,
                              rearm_after=after,spent_families=spent)
 
@@ -136,66 +109,60 @@ def ledger_entry(run, machine, frontier):
 def run_chunks(run, evidence, definition, publish, *, saved=None, chunk_size=32, check=lambda:None):
     identity = run["identity"]
     start,end = identity["evaluation_start"],identity["cutoff"]
-    method = identity["method"]
-    if method=="REFERENCE_SINGLE":
+    if identity["method"]=="REFERENCE_SINGLE":
         if saved:
             raise ValueError("Single reference evaluation has no partial checkpoint")
         machine = make_machine(run,evidence,definition)
         machine.check_budget = check
         machine.run(end)
-        entry = ledger_entry(run,machine,end)
-        publish(checkpoint(run,evidence,machine,end,int(bool(machine.attempt)),[],None,1),
-                end,[entry],True,evidence.metrics)
+        publish(checkpoint(run,evidence,end,0,[],None,1,()),
+                end,[ledger_entry(run,machine,end)],True,evidence.metrics)
         return
-    machine,data = restore(run,evidence,definition,saved) if saved else (make_machine(run,evidence,definition),None)
+    if identity["method"]!="FVG_ASOF_REFERENCE":
+        raise ValueError("This run uses an unsupported historical calculation")
+
+    # Full-window evidence validates coverage and identifies reachable cutoffs.
+    # Decisions and persisted proofs always come from a fresh as-of archive.
+    schedule = make_machine(run,evidence,definition).boundaries(end)
+    if len(schedule)>MAX_ORACLE_CUTOFFS:
+        raise ResourceLimit("FVG successor evaluation requires at most 160 as-of cutoffs")
+    data = restore(run,evidence,saved) if saved else None
     frontier = data["frontier"] if data else start-1
-    attempts,spent,terminal_time,processed = ((data["attempts"],data["spent"],data["terminal_time"],data["processed"])
-                                                if data else (0,[],None,0))
-    candidates = machine.boundaries(end)
-    candidates.update(machine.dynamic_boundaries(frontier,end))
-    if method=="INDEPENDENT_PREFIX_CHECKED" and len(candidates)>MAX_ORACLE_CUTOFFS:
-        raise ResourceLimit("This producer combination requires a shorter independently checked window")
-    pending = [point for point in candidates if frontier<point<=end]
-    heapify(pending)
-    known = set(pending)
+    attempts,spent,terminal_time,processed,dynamic = (
+        (data["attempts"],data["spent"],data["terminal_time"],data["processed"],set(data["dynamic"]))
+        if data else (0,[],None,0,set()))
+    if attempts>=identity["max_attempts"] and frontier<end:
+        raise ResourceLimit("Historical attempt budget reached before the final cutoff")
+    pending = set(point for point in schedule if point>frontier)
     batch = []
-    batch_count = 0
-    while pending:
+    while pending or dynamic:
         check()
-        frontier = heappop(pending)
-        if method=="INDEPENDENT_PREFIX_CHECKED":
-            if processed>=MAX_ORACLE_CUTOFFS:
-                raise ResourceLimit("Historical oracle cutoff budget exceeded")
-            verify_prefix(definition,run,evidence,frontier,check)
-        if machine.state in TERMINAL:
-            machine = make_machine(run,evidence,definition,terminal_time,spent)
-        machine.step(frontier)
+        frontier = min(pending | dynamic)
+        pending.discard(frontier)
+        if processed>=MAX_ORACLE_CUTOFFS:
+            raise ResourceLimit("Historical oracle cutoff budget exceeded")
+        prefix = collect(definition,asof_selection(run["selection"],frontier),frontier,start,check_budget=check)
+        machine = make_machine(run,prefix,definition,terminal_time,spent)
+        machine.check_budget = check
+        machine.run(frontier)
         if machine.state in TERMINAL and machine.attempt:
             batch.append(ledger_entry(run,machine,frontier))
             binding = machine.bindings[run["rearm_rule"]]
             spent.append(binding.proof.family)
             terminal_time = frontier
             attempts += 1
+            dynamic = set()
+        else:
+            dynamic = set(machine.dynamic_boundaries(frontier,end))
         processed += 1
-        batch_count += 1
-        for stamp in machine.dynamic_boundaries(frontier,end):
-            if stamp not in known:
-                if len(known)>=MAX_TIMELINE:
-                    raise ResourceLimit("Historical timeline exceeds the evaluator budget")
-                known.add(stamp)
-                heappush(pending,stamp)
-        done = not pending
-        if attempts>=identity["max_attempts"] and not done:
-            # Preserve the last trustworthy frontier instead of labeling a
-            # resource-bounded prefix as a complete window.
-            publish(checkpoint(run,evidence,machine,frontier,attempts,spent,terminal_time,processed),
-                    frontier,batch,False,evidence.metrics)
-            raise ResourceLimit("Historical attempt budget reached before the final cutoff")
+        done = not (pending or dynamic)
+        limit_hit = attempts>=identity["max_attempts"] and not done
         if done and (not batch or batch[-1]["trace"]["cutoff"]!=frontier):
             batch.append(ledger_entry(run,machine,frontier))
-        if done or batch_count>=chunk_size:
-            publish(checkpoint(run,evidence,machine,frontier,attempts,spent,terminal_time,processed),
+        if done or limit_hit or processed%chunk_size==0:
+            publish(checkpoint(run,evidence,frontier,attempts,spent,terminal_time,processed,dynamic),
                     frontier,batch,done,{**evidence.metrics,"processed_cutoffs":processed,
-                                          "oracle_prefixes":processed if method=="INDEPENDENT_PREFIX_CHECKED" else 0,
-                                          "spent_context_families":len(spent)})
-            batch,batch_count = [],0
+                                         "oracle_prefixes":processed,"spent_context_families":len(spent)})
+            batch = []
+        if limit_hit:
+            raise ResourceLimit("Historical attempt budget reached before the final cutoff")

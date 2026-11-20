@@ -22,7 +22,7 @@ def prepared(client,monkeypatch):
     monkeypatch.setattr("research_backend.app.historical_strategy_worker.claim",lambda owner:None)
     # Intentionally lead with a mitigated/invalidated range, followed by
     # separately formed gaps that can qualify and rearm.
-    def create(mirrored=False,rearm="NEW_CONTEXT_FAMILY",extra_bars=0):
+    def create(mirrored=False,rearm="NEW_CONTEXT_FAMILY",extra_bars=0,split=None):
         records = []
         bars = [(99,100,97,99)]*8+[
             (100,108,100,108),(106,110,105,109),(105,108,102,104),
@@ -33,7 +33,12 @@ def prepared(client,monkeypatch):
         # Keep all body prices inside their corresponding wick extremes.
         bars[15] = (121,124,120,123)
         bars.extend([(124,126,121,125)]*extra_bars)
-        frozen_candles(records,"EURUSD","M5",BASE,bars,mirrored)
+        if split:
+            for begin,segment in ((0,bars[:split]),(split,bars[split:])):
+                frozen_candles(records,"EURUSD","M5",BASE+begin*300,segment,mirrored)
+            records[0]["partitions"].extend(records.pop()["partitions"])
+        else:
+            frozen_candles(records,"EURUSD","M5",BASE,bars,mirrored)
         archive = selection(monkeypatch,records,len(bars)*300)
         monkeypatch.setattr("research_backend.app.historical_strategy_inputs.selection_catalog",lambda:[archive])
         definition = fvg_strategy()
@@ -87,9 +92,9 @@ def test_bounded_fvg_prefix_rearm_and_chunk_equivalence(prepared,mirrored):
     engine.run_chunks(run,evidence,model,lambda args,frontier,entries,*_:suffix.extend(deepcopy(entries)),
                       saved=prior,chunk_size=3)
     assert suffix==[row for row in large if row["trace"]["cutoff"]>prior["frontier"]]
-    broken = {**prior,"payload":prior["payload"].replace('"version":1','"version":2')}
+    broken = {**prior,"payload":prior["payload"].replace('"version":2','"version":1')}
     with pytest.raises(ValueError,match="corrupt or incompatible"):
-        engine.restore(run,evidence,model,broken)
+        engine.restore(run,evidence,broken)
 
 
 def test_fenced_atomic_publication_and_resume(prepared):

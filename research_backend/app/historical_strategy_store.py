@@ -92,9 +92,9 @@ def check_queue(db):
 
 
 def claim(owner):
-    now = time()
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
+        now = time()
         db.execute("""UPDATE historical_worker_state SET state=CASE state WHEN 'CANCELLING' THEN 'CANCELLED' ELSE 'FAILED' END,
                     owner=NULL,lease_until=NULL,diagnostic='Worker lease expired'
                     WHERE state IN ('RUNNING','CANCELLING') AND lease_until<=?""",(now,))
@@ -117,8 +117,9 @@ def status(run_id):
 
 
 def heartbeat(run_id, owner):
-    now = time()
     with transaction() as db:
+        db.execute("BEGIN IMMEDIATE")
+        now = time()
         return db.execute("""UPDATE historical_worker_state SET lease_until=? WHERE run_id=?
                              AND owner=? AND state='RUNNING' AND lease_until>?""",
                           (now+LEASE_SECONDS,run_id,owner,now)).rowcount==1
@@ -126,15 +127,22 @@ def heartbeat(run_id, owner):
 
 def finish(run_id, owner, outcome, diagnostic):
     with transaction() as db:
+        db.execute("BEGIN IMMEDIATE")
         db.execute("""UPDATE historical_worker_state SET state=CASE state WHEN 'CANCELLING' THEN 'CANCELLED' ELSE ? END,
-                    owner=NULL,lease_until=NULL,diagnostic=? WHERE run_id=? AND owner=? AND state IN ('RUNNING','CANCELLING')""",
-                   (outcome,str(diagnostic)[:512],run_id,owner))
+                    owner=NULL,lease_until=NULL,diagnostic=? WHERE run_id=? AND owner=?
+                    AND state IN ('RUNNING','CANCELLING') AND lease_until>?""",
+                   (outcome,str(diagnostic)[:512],run_id,owner,time()))
 
 
 def cancel(run_id):
     with transaction() as db:
-        return db.execute("""UPDATE historical_worker_state SET state=CASE state WHEN 'RUNNING' THEN 'CANCELLING' ELSE 'CANCELLED' END
-                             WHERE run_id=? AND state IN ('QUEUED','RUNNING')""",(run_id,)).rowcount==1
+        db.execute("BEGIN IMMEDIATE")
+        now = time()
+        return db.execute("""UPDATE historical_worker_state
+                             SET state=CASE WHEN state='RUNNING' AND lease_until>? THEN 'CANCELLING' ELSE 'CANCELLED' END,
+                                 owner=CASE WHEN state='RUNNING' AND lease_until>? THEN owner END,
+                                 lease_until=CASE WHEN state='RUNNING' AND lease_until>? THEN lease_until END
+                             WHERE run_id=? AND state IN ('QUEUED','RUNNING')""",(now,now,now,run_id)).rowcount==1
 
 
 def resume(run_id):
@@ -183,5 +191,10 @@ def publish(run_id, owner, snapshot, frontier, entries, completed, metrics):
                 db.execute("INSERT INTO historical_strategy_intents VALUES (?,?,?,?,?)",
                            (entry["intent"]["id"],run_id,entry["id"],trace["attempt_id"],intent_json))
         db.execute("INSERT INTO historical_strategy_checkpoints VALUES (?,?,?,?)",(run_id,frontier,digest,payload))
-        db.execute("""UPDATE historical_worker_state SET state=?,frontier=?,ledger_bytes=ledger_bytes+?,metrics=?
-                      WHERE run_id=?""",("COMPLETED" if completed else "RUNNING",frontier,size,canonical(metrics),run_id))
+        if lease["lease_until"]<=time():
+            raise LeaseLost()
+        db.execute("""UPDATE historical_worker_state SET state=?,frontier=?,ledger_bytes=ledger_bytes+?,metrics=?,
+                          owner=CASE WHEN ? THEN NULL ELSE owner END,
+                          lease_until=CASE WHEN ? THEN NULL ELSE lease_until END
+                      WHERE run_id=?""",("COMPLETED" if completed else "RUNNING",frontier,size,canonical(metrics),
+                                         completed,completed,run_id))

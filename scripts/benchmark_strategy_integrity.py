@@ -88,7 +88,7 @@ def benchmark():
         assert strategy.status_code==201,strategy.text
         record = strategy.json()
         request = {"strategy_id":record["strategy_id"],"strategy_version_id":record["version_id"],
-                   "configuration_fingerprint":record["configuration_fingerprint"],"evaluator_version":4,
+                   "configuration_fingerprint":record["configuration_fingerprint"],"evaluator_version":5,
                    "selection_id":selection["id"],"selection_fingerprint":selection["fingerprint"],
                    "purpose":"HISTORICAL_SIMULATION","warmup_start":START,"evaluation_start":START+7200,"cutoff":END}
         pinned = prepare(sources.EvaluationInput.model_validate(request))

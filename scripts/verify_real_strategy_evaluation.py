@@ -158,7 +158,7 @@ def run(catalog,datasets,samples,historical=False):
             record=client.post("/api/strategies/v1",json=definition)
             assert record.status_code==201,record.text
             item=record.json()
-            request={"evaluator_version":4,"purpose":"HISTORICAL_SIMULATION","strategy_id":item["strategy_id"],
+            request={"evaluator_version":5,"purpose":"HISTORICAL_SIMULATION","strategy_id":item["strategy_id"],
                      "strategy_version_id":item["version_id"],"configuration_fingerprint":item["configuration_fingerprint"],
                      "selection_id":selected["id"],"selection_fingerprint":selected["fingerprint"],
                      "warmup_start":catalog["start"],"evaluation_start":catalog["start"]+7200,"cutoff":cutoff if cutoff is not None else catalog["end"]}
@@ -189,6 +189,16 @@ def run(catalog,datasets,samples,historical=False):
                         if policy=="NEW_CONTEXT_FAMILY":
                             request_v1.update(context_alias=demo(direction,left,right)["attempt"]["crt_reference_alias"],
                                               max_attempts=16)
+                        if policy=="NEW_CONTEXT_FAMILY":
+                            endpoint = "/api/historical-strategy-runs/v1"
+                            validation = client.post(endpoint+"/validate",json=request_v1)
+                            queue = client.post(endpoint,json=request_v1)
+                            assert validation.status_code==queue.status_code==422,(validation.text,queue.text)
+                            assert "Use SINGLE_ATTEMPT" in queue.text,queue.text
+                            cases[-1]["historical"][label] = {"status":"ADMISSION_REJECTED",
+                                "validate_http":validation.status_code,"enqueue_http":queue.status_code,
+                                "diagnostic":queue.json()["detail"],"decisions":0}
+                            continue
                         pinned = prepare_historical(HistoricalInput.model_validate(request_v1))
                         model = StrategyDefinitionV2.model_validate(pinned["definition"])
                         entries = []

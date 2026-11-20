@@ -1,0 +1,884 @@
+{
+  "selection": {
+    "id": "DUKASCOPY_BID_2026_11_13_V1",
+    "series": [
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "EURUSD",
+        "timeframe": "M1",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ]
+      },
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ]
+      },
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "GBPUSD",
+        "timeframe": "M1",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ]
+      },
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "GBPUSD",
+        "timeframe": "M5",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ]
+      }
+    ],
+    "start": 1794528000,
+    "end": 1794607200
+  },
+  "cases": [
+    {
+      "fixture": {
+        "evaluator_version": 5,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-7af83dee82834732a99149adc180557a",
+        "strategy_version_id": "SV-16c1de3c63f34ed394689ceb5301d5e7",
+        "configuration_fingerprint": "168be95cf261436d54d3d4e4c5d005849b9602f92d9eb3816909c4925f61dd75",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        0,
+        0
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535200,
+          "actual_activation": 1794535200
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "cutoff": 1794607200,
+        "attempt_id": "ATT-ddd1e420976db7da053080f9979038f2370f6f1d794e1374d7bfc5c5f1ecf082",
+        "decision_id": "a7fd8baac8792ba298336f913f15a9925013eca1db17aa420aca7094fe33adfd",
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "selected_at": 1794535200,
+            "activated_at": 1794535200,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+              "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+              "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535200,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 5,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-8092b7a65ce64f2a89d23582a137d809",
+        "strategy_version_id": "SV-4bad0d8bee1b460b83a37db4320cb9a7",
+        "configuration_fingerprint": "671a4a0d8511211cfc8f6da5c7712a4dd9891eb5ba87f2d9f261b88671998ab5",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        2,
+        2
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "cutoff": 1794607200,
+        "attempt_id": "ATT-b6aeeac30154556b7284536e8c57849d36c85c67c70bcfa0d4af829118f394df",
+        "decision_id": "26c3c842be600bbbf5d41cd80c66ce8fec5c53d4a85f7d2b502e8e0dc031d95f",
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "selected_at": 1794535202,
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 5,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-1caace3b4efd43b3a6645db4702c449b",
+        "strategy_version_id": "SV-0a980ef9ffc54ac3a213ac54f94bf7b9",
+        "configuration_fingerprint": "4a2a2597976b153d73dc008124937829270fd79e09f4f11700bff8ddbfb90794",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        2,
+        15
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "cutoff": 1794607200,
+        "attempt_id": "ATT-b4e9012da26e0be81d5d25afb00c8d7db4a585136a4689115c950693bf64813b",
+        "decision_id": "5ebe5e5c6e6b09290ab6bfa799030b4facf28654209f5e44287c339f0a15c8be",
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "selected_at": 1794535202,
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 5,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-0c18155f88fc42b79be2c40470742c10",
+        "strategy_version_id": "SV-28c2d41a6ac04587b141ab25153b144f",
+        "configuration_fingerprint": "9896675de907720b3b2b8f83a82ca5e3452270bae0aa8e71eb85a46b6c4a44cb",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        15,
+        30
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535215,
+          "actual_activation": 1794535215
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "cutoff": 1794607200,
+        "attempt_id": "ATT-ffb56460441cfbf4cfd09503f2cf6962e862a419e259e824d5e9ba4515cdf60a",
+        "decision_id": "813e2b6e476b73e3128af30b8e11ee36812efb17388c5f4ca09ad304c2456d63",
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "selected_at": 1794535215,
+            "activated_at": 1794535215,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+              "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+              "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535215,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 5,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-5e177f0c44e54c18885628b7d88f98a2",
+        "strategy_version_id": "SV-5625a463211649eaab775d636ede7c79",
+        "configuration_fingerprint": "fba4cc07bc6020aea750a9b12f63c72a8f975d281d5dbe59f235951143339d4b",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        0,
+        0
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535200,
+          "actual_activation": 1794535200
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "cutoff": 1794607200,
+        "attempt_id": "ATT-aaf25e75fe4b379f086ff22751ad1b937d2c8279a80033d690b3f91d035d85cd",
+        "decision_id": "e3be06f389f661311f6aa8c0ee6bb0b67f7cd42b78d96af6e69df612f3b6d739",
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "selected_at": 1794535200,
+            "activated_at": 1794535200,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+              "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+              "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535200,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 5,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-1b6d87bd76134935893b64c54ff871e6",
+        "strategy_version_id": "SV-f904e14c36b248cf983e3dfe5bd90cb8",
+        "configuration_fingerprint": "2c6c1061915686f200a7af5dda54b018124e1b745a677c2a2f67cfa00651fd5e",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        2,
+        2
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "cutoff": 1794607200,
+        "attempt_id": "ATT-72e152c2e76f8b508f04a1cfc3ec2d575f940c42740607ffda247fe0dae522ec",
+        "decision_id": "c5c28c91c9e95c2ad64281c98e938a991000b8d9ea9166229de032f1309bd942",
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "selected_at": 1794535202,
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 5,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-51380aa5f3184ac3a2c747ff1adaea7b",
+        "strategy_version_id": "SV-55500a274b5b4b3da7002d0f550fec36",
+        "configuration_fingerprint": "0dc71db55e1e64eeaa896cc5eed21a119b2eb48e48ae180ae831db150ed41d57",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        2,
+        15
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "cutoff": 1794607200,
+        "attempt_id": "ATT-1dbd82317f8de114bf39377e0ecbde03ae89746845569e2973150fdad974cc84",
+        "decision_id": "684906facc2fda90ba34dc5fcefdde62e6fb73d4b47c9695fcfe9b289a8f454c",
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "selected_at": 1794535202,
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 5,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-404828f2c7ab48ba989255551a6818e8",
+        "strategy_version_id": "SV-9d49203a91cd49c6bf1a756d4099f507",
+        "configuration_fingerprint": "cac1b23b28dde95264deb4c6f68e32de917ceac98ab91716e70b2b7a4978c0f3",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        15,
+        30
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535215,
+          "actual_activation": 1794535215
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "cutoff": 1794607200,
+        "attempt_id": "ATT-91b4a8c31c0dd17e9692ec4bed7ce352d69d92d8edc93af9560021c32a44fc66",
+        "decision_id": "5a5b30dbe5d9534cb957b8b6f0b16496aeb57ee071749e25658ff7fce5ee9e9e",
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "selected_at": 1794535215,
+            "activated_at": 1794535215,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+              "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+              "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535215,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "ADMISSION_REJECTED",
+          "validate_http": 422,
+          "enqueue_http": 422,
+          "diagnostic": {
+            "code": "EVALUATION_UNAVAILABLE",
+            "reason": "Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations."
+          },
+          "decisions": 0
+        }
+      }
+    }
+  ],
+  "benchmarks": {}
+}

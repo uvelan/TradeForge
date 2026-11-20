@@ -13,8 +13,8 @@ from .strategy_evaluation_sources import EvaluationInput, collect, freeze_select
 from .strategy_evaluator import RuleGraph
 from .strategy_evidence import fingerprint
 
-RUN_VERSION = 1
-CHECKPOINT_VERSION = 1
+RUN_VERSION = 2
+CHECKPOINT_VERSION = 2
 MAX_ATTEMPTS = 32
 MAX_ORACLE_CUTOFFS = 160
 MAX_WORKERS = 1
@@ -28,7 +28,7 @@ LEASE_SECONDS = 12
 
 
 class HistoricalInput(EvaluationInput):
-    historical_version: Literal[1] = RUN_VERSION
+    historical_version: Literal[2] = RUN_VERSION
     rearm: Literal["SINGLE_ATTEMPT","NEW_CONTEXT_FAMILY"] = "SINGLE_ATTEMPT"
     context_alias: Key | None = None
     max_attempts: int = Field(default=1,strict=True,ge=1,le=MAX_ATTEMPTS)
@@ -106,22 +106,28 @@ def prepare_historical(request):
             raise ValueError("Historical end must align to each required timeframe")
     graph = RuleGraph(definition)
     if request.rearm=="NEW_CONTEXT_FAMILY":
+        if not request.context_alias:
+            raise ValueError("Rearm requires an explicit mandatory positive context-family alias")
         rule = mandatory_alias(graph.groups["context"],request.context_alias)
         from .strategy_catalog import FAMILY_CATEGORIES, OBSERVATIONS, ROLE_OBSERVATIONS
         if not rule or (OBSERVATIONS|ROLE_OBSERVATIONS)[rule.observation]["category"] not in FAMILY_CATEGORIES:
             raise ValueError("Rearm requires a mandatory positive context-family alias in ALL groups")
-        if definition.attempt.crt_reference_alias and request.context_alias!=definition.attempt.crt_reference_alias:
-            raise ValueError("A tracked CRT strategy must rearm on its CRT reference alias")
+        only_fvg = len(definition.indicators)==1 and definition.indicators[0]
+        if (not only_fvg or (only_fvg.indicator,only_fvg.role,only_fvg.timeframe)!=("FVG","PRIMARY","M5")
+                or definition.instruments.primary.symbol!="EURUSD" or definition.trade_intent.role!="PRIMARY"
+                or set(selection["series"])!={"PRIMARY:M5"} or rule.dependency!=only_fvg.id
+                or rule.observation not in {"FVG_STATE","FVG_ACTIVE"} or rule.expected!="ACTIVE"):
+            raise ValueError("Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. "
+                             "Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations.")
+        # Family identity follows the pinned feed rather than the archive file
+        # count. Exact contributing partition digests remain in each proof.
+        selection["series"]["PRIMARY:M5"]["dataset_id"] = None
     else:
         rule = None
         if request.context_alias is not None or request.max_attempts!=1:
             raise ValueError("Single-attempt runs have one attempt and no rearm alias")
     producers = {dep.id:{"kind":dep.indicator,"algorithm_version":dep.algorithm_version} for dep in definition.indicators}
-    # Only the bounded FVG contract needs no per-cutoff runtime oracle. Other
-    # multi-attempt workloads prove their actual prefix before accepting it.
-    method = ("REFERENCE_SINGLE" if request.rearm=="SINGLE_ATTEMPT" else
-              "FVG_BOUNDED_PREFIX" if all(dep.indicator=="FVG" for dep in definition.indicators)
-              else "INDEPENDENT_PREFIX_CHECKED")
+    method = "REFERENCE_SINGLE" if request.rearm=="SINGLE_ATTEMPT" else "FVG_ASOF_REFERENCE"
     frozen_definition = definition.model_dump(mode="json")
     identity = {**request.model_dump(mode="json"),"frozen_selection":fingerprint(selection),
                 "frozen_definition":fingerprint(frozen_definition),"rearm_rule":rule.id if rule else None,

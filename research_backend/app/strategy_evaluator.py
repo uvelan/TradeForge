@@ -456,16 +456,23 @@ class EvaluationMachine:
         return result(YES,"MAINTAINED_CURRENT_PREDICATE_SATISFIED")
 
     def pinned_current_guard(self, cutoff):
+        maintained = {}
         for key in self.graph.order:
-            binding = self.bindings.get(key)
+            activation = self.activation_proofs.get(key)
             rule = self.graph.rules[key]
-            if binding is None or key not in self.latches or rule.evidence.state!="CURRENT":
+            if activation is None or key not in self.latches or rule.evidence.state!="CURRENT":
                 continue
-            checked = self.verify_maintained(rule,binding,cutoff)
+            checked = self.verify_maintained(rule,activation,cutoff)
             self.results[key] = checked
-            if checked.outcome!=YES:
-                state = "INVALIDATED" if checked.outcome==NO else "INSUFFICIENT_EVIDENCE"
-                self.transition(cutoff,state,checked.reason)
+            maintained.setdefault(self.graph.phases[key],[]).append(checked)
+        for phase,checks in maintained.items():
+            outcome = self.graph.outcome(self.graph.groups[phase],self.results)
+            self.phase_results[phase] = outcome.value
+            if outcome!=YES:
+                state = "INVALIDATED" if outcome==NO else "INSUFFICIENT_EVIDENCE"
+                reason = next((item.reason for item in checks if item.outcome==outcome),
+                              "LATCHED_PHASE_NO_LONGER_SATISFIED")
+                self.transition(cutoff,state,reason)
                 return False
         return True
 
@@ -562,7 +569,7 @@ class EvaluationMachine:
             self.transition(cutoff,"EXPIRED","SETUP_EXPIRY_DURING_UNCERTAINTY")
 
     def boundaries(self, cutoff):
-        points = {stamp for stamp in self.evidence.timeline if stamp<=cutoff} | {cutoff}
+        points = {stamp for stamp in self.evidence.timeline if self.start<=stamp<=cutoff} | {cutoff}
         for view in {view.snapshot:view for view in self.evidence.views.values()}.values():
             for family in view.smt_uncertainty.values():
                 for boundary in family:

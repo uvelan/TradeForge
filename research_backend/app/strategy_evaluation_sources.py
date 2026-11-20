@@ -22,7 +22,7 @@ from .storage import read_partition
 from .strategy_definitions import Contract, Digest
 from .strategy_evidence import fingerprint
 
-EVALUATOR_VERSION = 4
+EVALUATOR_VERSION = 5
 MAX_TIMELINE = 4096
 MAX_SELECTION_SLOTS = 6000
 MAX_PUBLICATIONS = 16_000
@@ -37,7 +37,7 @@ VIEW_KIND = {
 
 
 class EvaluationInput(Contract):
-    evaluator_version: Literal[4]
+    evaluator_version: Literal[5]
     strategy_id: str = Field(pattern=r"^ST-[a-f0-9]{32}$")
     strategy_version_id: str = Field(pattern=r"^SV-[a-f0-9]{32}$")
     configuration_fingerprint: Digest
@@ -200,7 +200,7 @@ def indicator_spec(dep, dependencies, calendar):
 
 def indicator_request(feed, cutoff, spec):
     return Evaluation(source=feed.source,symbol=feed.symbol,timeframe=feed.timeframe,feed_id=feed.feed_id,
-                      dataset_id=feed.partitions[0].id if len(feed.partitions)==1 else None,
+                      dataset_id=feed.dataset_id,
                       price_basis=feed.price_basis,partitions=feed.partitions,availability_mode=SIMULATION_MODE,
                       availability_start=feed.start,delay_seconds=feed.delay_seconds,calendar=feed.calendar,
                       cutoff=cutoff,frozen=True,load_reference=True,indicators=[spec],candles=[])

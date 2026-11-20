@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {api} from './api';
 import type {EvidenceChartLocation} from './StrategyEvaluation';
 import type {Listed} from './strategyTypes';
@@ -10,13 +10,13 @@ const epoch=(value:string)=>Date.parse(value+'Z')/1000;
 const human=(value:string)=>value.toLowerCase().replaceAll('_',' ');
 type Source={id:string;fingerprint:string;start:number;end:number};
 type Summary={run_id:string;state:string;frontier:number|null};
-type Run={run_id:string;identity:{method:string;evaluation_start:number;warmup_start:number;cutoff:number;rearm:string;strategy_version_id:string};
+type Run={run_id:string;identity:{historical_version:number;method:string;evaluation_start:number;warmup_start:number;cutoff:number;rearm:string;strategy_version_id:string};
   selection:{series:Record<string,{symbol:string;timeframe:string;feed_id:string;delay_seconds:number;price_basis:string}>};
-  worker:{state:string;frontier:number|null;diagnostic:string|null};attempt_counts:Record<string,number>;qualified_intents:number};
+  results_published:boolean;worker:{state:string;frontier:number|null;diagnostic:string|null};attempt_counts:Record<string,number>;qualified_intents:number};
 type Decision={id:string;cutoff:number;state:string;attempt_id:string|null};
 type Reference={calculation_snapshot:string;event_id:string;source:string[];participants?:{primary:string[]}};
 type Proof={state?:string;type?:string;timing:{observation_start:number};evidence_reference:Reference};
-type Snapshot={reason:string;supporting_events:Record<string,Proof>;entry_intent:{id:string;direction:string;symbol:string;status:string}|null};
+type Snapshot={decision_id:string;reason:string;supporting_events:Record<string,Proof>;entry_intent:{id:string;direction:string;symbol:string;status:string}|null};
 
 export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChartLocation)=>void}){
   const [available,setAvailable]=useState<Listed[]>([]);
@@ -35,7 +35,13 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
   const [runRevision,setRunRevision]=useState(0);
   const [run,setRun]=useState<Run>();
   const [decisions,setDecisions]=useState<Decision[]>([]);
-  const [trace,setTrace]=useState<{cutoff:number;data:Snapshot}>();
+  const [trace,setTrace]=useState<{runId:string;cutoff:number;decisionId:string;warmupStart:number;data:Snapshot}>();
+  const inspection = useRef(0);
+  function chooseRun(id:string){
+    inspection.current++;
+    setTrace(undefined);
+    setRunId(id);
+  }
   const [notice,setNotice]=useState('');
   const [problem,setProblem]=useState('');
   const [busy,setBusy]=useState(false);
@@ -66,8 +72,8 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
     let timer:ReturnType<typeof setTimeout>|undefined;
     async function load(){
       try{
-        const [result,entries]=await Promise.all([api.get<Run>(endpoint+'/'+runId),
-          api.get<Decision[]>(endpoint+'/'+runId+'/decisions')]);
+        const result=await api.get<Run>(endpoint+'/'+runId);
+        const entries=result.results_published?await api.get<Decision[]>(endpoint+'/'+runId+'/decisions'):[];
         if(!active)return;
         setRun(result);setDecisions(entries);
         if(['QUEUED','RUNNING','CANCELLING'].includes(result.worker.state))timer=setTimeout(load,900);
@@ -93,7 +99,7 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
     const found=sources.find(item=>item.id===source);
     void action(async()=>{
       const result=await api.post<{run_id:string;identity?:{method:string}}>(endpoint+(validate?'/validate':''),{
-        evaluator_version:4,purpose:'HISTORICAL_SIMULATION',strategy_id:selected.strategy_id,
+        evaluator_version:5,purpose:'HISTORICAL_SIMULATION',strategy_id:selected.strategy_id,
         strategy_version_id:version,configuration_fingerprint:selected.configuration_fingerprint,
         selection_id:source,selection_fingerprint:found?.fingerprint??'0'.repeat(64),warmup_start:epoch(warmup),
         evaluation_start:epoch(start),cutoff:epoch(end),rearm,context_alias:rearm==='NEW_CONTEXT_FAMILY'?alias.trim():null,
@@ -101,17 +107,30 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
         partitions:source==='WORKSPACE'?parts.trim().split(/[\s,]+/):[],
       });
       if(validate)setNotice('Verified source coverage · '+human(result.identity?.method??''));
-      else setRunId(result.run_id);
+      else chooseRun(result.run_id);
     });
   }
-  function showChart(proof:Proof,cutoff:number){
+  function inspect(item:Decision){
+    if(!run||run.run_id!==runId)return;
+    const origin={runId,cutoff:item.cutoff,decisionId:item.id,warmupStart:run.identity.warmup_start};
+    const request=++inspection.current;
+    setTrace(undefined);
+    void api.get<Snapshot>(endpoint+'/'+origin.runId+'/decisions/'+origin.cutoff).then(data=>{
+      if(inspection.current===request&&data.decision_id===origin.decisionId)setTrace({...origin,data});
+    }).catch(error=>{
+      if(inspection.current===request)setProblem(error instanceof Error?error.message:String(error));
+    });
+  }
+
+  function showChart(proof:Proof, accepted:NonNullable<typeof trace>){
+    const {runId,cutoff,warmupStart}=accepted;
     const ref=proof.evidence_reference;
     const [provider,symbol,timeframe]=ref.participants?.primary??ref.source;
     if((provider!=='DUKASCOPY_SAVED'&&provider!=='MT5_SAVED')||
         (symbol!=='EURUSD'&&symbol!=='GBPUSD')||(timeframe!=='M1'&&timeframe!=='M5'))return;
     const step=timeframe==='M1'?60:300;
     const anchor=Math.floor(proof.timing.observation_start/step)*step;
-    openChart({symbol,timeframe,source:provider,timestamp:anchor,range:{start:Math.max(run?.identity.warmup_start??0,anchor-15*step),
+    openChart({symbol,timeframe,source:provider,timestamp:anchor,range:{start:Math.max(warmupStart,anchor-15*step),
       end:Math.min(cutoff,anchor+17*step)},evidencePath:endpoint+'/'+runId+'/decisions/'+cutoff+'/evidence/'+
       encodeURIComponent(ref.calculation_snapshot)+'/'+encodeURIComponent(ref.event_id)+'/chart'});
   }
@@ -122,7 +141,7 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
     {!available.length&&<p>Save a ready historical strategy in Strategy Builder to begin.</p>}
     <fieldset className="strategy-edit-fields" disabled={busy||!available.length}>
       <div className="strategy-fields">
-        <label>Strategy version<select value={version} onChange={event=>{setVersion(event.target.value);setRunId('');}}>
+        <label>Strategy version<select value={version} onChange={event=>{setVersion(event.target.value);chooseRun('');}}>
           {available.map(item=><option key={item.version_id} value={item.version_id}>{item.name} · revision {item.version}</option>)}
         </select></label>
         <label>Frozen source<select value={source} onChange={event=>pickSource(event.target.value)}>
@@ -146,7 +165,7 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
         <button className="btn btn-primary" disabled={!valid} onClick={()=>submit(false)}>Queue historical evaluation</button>
       </div>
     </fieldset>
-    {saved.length>0&&<label>Saved historical run<select value={runId} onChange={event=>setRunId(event.target.value)}>
+    {saved.length>0&&<label>Saved historical run<select value={runId} onChange={event=>chooseRun(event.target.value)}>
       <option value="">Choose a run</option>
       {saved.map(item=><option key={item.run_id} value={item.run_id}>{item.frontier===null?'Awaiting frontier':utc(item.frontier)} · {human(item.state)}</option>)}
     </select></label>}
@@ -163,20 +182,18 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
         {['QUEUED','RUNNING'].includes(run.worker.state)&&<button className="small-tool" disabled={busy} onClick={()=>void action(async()=>{
           setRun(await api.post<Run>(endpoint+'/'+runId+'/cancel',{}));
         })}>Cancel run</button>}
-        {['FAILED','CANCELLED'].includes(run.worker.state)&&<button className="small-tool" disabled={busy} onClick={()=>void action(async()=>{
+        {run.identity.historical_version===2&&['FAILED','CANCELLED'].includes(run.worker.state)&&<button className="small-tool" disabled={busy} onClick={()=>void action(async()=>{
           const next=await api.post<Run>(endpoint+'/'+runId+'/resume',{});
           setRun(next);
           setRunRevision(revision=>revision+1);
         })}>Resume run</button>}
       </div>
       <ul>{decisions.map(item=><li key={item.id}>{utc(item.cutoff)} · {human(item.state)}{' '}
-        <button className="small-tool" disabled={busy} onClick={()=>void action(async()=>{
-          setTrace({cutoff:item.cutoff,data:await api.get<Snapshot>(endpoint+'/'+runId+'/decisions/'+item.cutoff)});
-        })}>Inspect historical decision</button></li>)}</ul>
-      {trace&&<div>
+        <button className="small-tool" disabled={busy} onClick={()=>inspect(item)}>Inspect historical decision</button></li>)}</ul>
+      {trace?.runId===runId&&<div>
         <p>{human(trace.data.reason)}{trace.data.entry_intent&&' · '+trace.data.entry_intent.direction+' '+trace.data.entry_intent.symbol+' · '+human(trace.data.entry_intent.status)}</p>
         {Object.values(trace.data.supporting_events).map(proof=><button key={proof.evidence_reference.event_id}
-          className="small-tool" onClick={()=>showChart(proof,trace.cutoff)}>Chart {human(proof.state??proof.type??'evidence')}</button>)}
+          className="small-tool" onClick={()=>showChart(proof,trace)}>Chart {human(proof.state??proof.type??'evidence')}</button>)}
       </div>}
     </>}
   </section>;

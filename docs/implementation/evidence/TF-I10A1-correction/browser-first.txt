@@ -1,0 +1,65 @@
+> e2e
+> playwright test e2e/strategy-evaluator.spec.ts --retries=0 --reporter=line
+
+
+[WebServer] INFO:     Started server process [47252]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8215 (Press CTRL+C to quit)
+
+[WebServer] (node:30664) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:8380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/1] e2e\strategy-evaluator.spec.ts:3:1 › saves a canonical strategy decision, reconstructs, and opens exact chart evidence
+  1) e2e\strategy-evaluator.spec.ts:3:1 › saves a canonical strategy decision, reconstructs, and opens exact chart evidence
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('region', { name: 'Historical strategy evaluation' }).getByRole('heading', { name: 'completed' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('region', { name: 'Historical strategy evaluation' }).getByRole('heading', { name: 'completed' }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Historical strategy evaluation' }).getByRole('heading', { name: 'completed' })
+
+
+      71 |   await historical.getByRole("button", {name: "Queue historical evaluation"}).click();
+      72 |   await expect(savedRuns).not.toHaveValue(runA);
+    > 73 |   await expect(historical.getByRole("heading", {name: "completed"})).toBeVisible();
+         |                                                                      ^
+      74 |   const runB = await savedRuns.inputValue();
+      75 |   expect(runB).toMatch(/^HR-/);
+      76 |   const base = "/research/api/historical-strategy-runs/v1/";
+        at K:\Projects\TradeForge\frontend\e2e\strategy-evaluator.spec.ts:73:70
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    e2e\strategy-evaluator.spec.ts:3:1 › saves a canonical strategy decision, reconstructs, and opens exact chart evidence
