@@ -23,3 +23,18 @@ npm run e2e -- e2e/research.spec.ts -g "persists a trendline and resumes a froze
 npm run e2e -- e2e/research.spec.ts -g "during delayed analytical and persistence responses" --retries=0 --reporter=line
 npm run e2e -- e2e/arrival-capture.spec.ts --retries=0 --reporter=line
 ```
+
+## PR #18 evidence correction
+
+Starting remote head and local HEAD both resolved to `b816d3abe9c7fd19ed9d765349c6d48006e3bd57` after fetching `codex/crt-smt-successor-evidence`.
+
+```text
+git fetch origin refs/heads/codex/crt-smt-successor-evidence:refs/remotes/origin/codex/crt-smt-successor-evidence
+git rev-parse HEAD origin/codex/crt-smt-successor-evidence
+python -B -m pytest -q -s --tb=short research_backend/tests/test_bounded_crt_smt_successors.py research_backend/tests/test_historical_successor_oracle.py::test_rearm_rejects_same_family_and_equal_cutoff
+python -B -m pytest -q research_backend/tests/test_historical_successor_oracle.py research_backend/tests/test_historical_strategy_runs.py research_backend/tests/test_historical_publication_v2.py
+git diff --exit-code -- research_backend/app
+git diff --check
+```
+
+For the isolated mutation, remove only the disjunct checking membership in `self.spent_families` in `EvaluationMachine.select`. Run the single shared-selector test with `python -B -m pytest -q -s` followed by its node ID above. Restore the original source before the normal run. The [mutation trace](spent-mutation.txt) records the expected failed assertion.

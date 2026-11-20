@@ -142,5 +142,11 @@ def test_rearm_rejects_same_family_and_equal_cutoff(client, monkeypatch):
     # predicate that is deliberately excluded from the public rearm contract.
     rule = model.context.children[0].model_copy(update={"expected":"PARTIALLY_MITIGATED"})
     revised = model.model_copy(update={"context":model.context.model_copy(update={"children":[rule]})})
-    assert select(revised,formation,revision).proof.family==family
-    assert select(revised,formation,revision,[family]).proof is None
+    unspent = select(revised,formation,revision)
+    assert unspent.outcome.value=="SATISFIED"
+    assert unspent.proof.family==family and unspent.proof.reference.available_at==revision
+    spent = select(revised,formation,revision,[family])
+    print("shared selector FVG control", "family",family,"candidate",unspent.proof.reference.event_id,
+          "available",revision,"terminal",formation,"cutoff",revision,
+          "unspent",unspent.outcome.value,"spent",spent.outcome.value,"spent_has_proof",spent.proof is not None)
+    assert spent.proof is None, "Spent membership must exclude the same otherwise eligible post-terminal revision"

@@ -8,7 +8,7 @@ Both instruments use canonical M5 candles. EURUSD is the primary with 0-second m
 | ---: | --- |
 | 3600 | A, the H1 reference at offset 0, activates. |
 | 7200 | A expires without an intent. B, the H1 reference at 3600, becomes available at the exact terminal cutoff and is rejected for rearm. |
-| 7500 | The primary sweep/reclaim produces a later revision of spent A. It stays rejected and cannot activate another attempt. |
+| 7500 | The primary sweep/reclaim produces a later revision of A. It cannot activate another attempt under the ACTIVE rearm rule. The review uses a separate selector control for spent-family membership. |
 | 10800 | C, the H1 reference at 7200, activates strictly after A. |
 | 12900 | C reclaims its high. |
 | 13500 | A later candle reaches C's midpoint. The same candle closes the second pivot's right wing. |

@@ -1,10 +1,11 @@
 """A canonical, bounded three-opportunity CRT/SMT fixture and reference."""
+from collections import Counter
 from time import perf_counter
 
 import pytest
 
 from research_backend.app.strategy_evaluation_sources import collect, freeze_selection, EvaluationInput
-from research_backend.app.strategy_evaluator import EvaluationMachine
+from research_backend.app.strategy_evaluator import CATALOG, EvaluationMachine, RuleGraph, predicate
 from research_backend.app.strategy_evidence import fingerprint
 from test_smt_causal import LEFT, RIGHT
 from test_strategy_definitions import group
@@ -129,13 +130,44 @@ def test_independent_three_opportunities(canonical_successors):
 
 def test_later_confirmation_and_missing_quote(canonical_successors):
     request,model,pin = canonical_successors()
-    for cutoff in (13520,14119,14120):
-        decision,evidence = reference_prefix(model,pin,BASE+cutoff,request,BASE+7200)
-        bearish = [(row["state"],row["available_at"]-BASE) for row in events(evidence,"smt","smt")
-                   if row.get("direction")=="bearish"]
-        print(cutoff,decision["state"],bearish)
-        assert bool(decision["entry_intent"])==(cutoff==14120)
-        assert any(state=="SMT_CONFIRMED" and since==14120 for state,since in bearish)==(cutoff==14120)
+    _,initial = reference_prefix(model,pin,BASE+13520,request,BASE+7200)
+    candidate, = [row for row in exact_smt(initial) if row["state"]=="SMT_CANDIDATE"
+                  and row["available_at"]==BASE+13520]
+    family = initial.views["smt"].records[candidate["id"]].family
+    assert family==candidate["market_event_id"]
+
+    for offset,available,state,intent_count in (
+        (14119,13520,"SMT_CANDIDATE",0), (14120,14120,"SMT_CONFIRMED",1),
+    ):
+        cutoff = BASE+offset
+        decision,evidence = reference_prefix(model,pin,cutoff,request,BASE+7200)
+        view = evidence.views["smt"]
+        revision = max((row for row in exact_smt(evidence) if (record:=view.records[row["id"]]).family==family
+                        and record.attested and record.available<=cutoff),key=lambda row:row["available_at"])
+        record = view.records[revision["id"]]
+        assert (revision["state"], record.available)==(state,BASE+available)
+        # A published candidate is valid lifecycle lineage, even while the
+        # current-state projection marks the pending comparison candle uncertain.
+        projected_state,projection_reason = view.smt_state(family,cutoff)
+        assert (projected_state,projection_reason)==(
+            ("SMT_CONFIRMED",None) if intent_count else ("UNCERTAIN","MISSING_LAGGARD_OBSERVATION")
+        )
+        assert record.eligible==bool(intent_count)
+        assert int(decision["entry_intent"] is not None)==intent_count
+        if intent_count:
+            assert decision["state"]=="TRIGGER_QUALIFIED"
+            assert decision["context_activated_at"]==BASE+10800
+            assert decision["trigger_activated_at"]==cutoff
+            proof = revision["evidence_reference"]
+            assert any(row["evidence_reference"]==proof for row in decision["supporting_events"].values())
+            assert set(proof["participants"])=={"primary","comparison"}
+            assert {key.split(":",1)[0] for key in revision["timing"]["dependency_references"]
+                    if key.startswith(("primary:","comparison:"))}=={"primary","comparison"}
+        else:
+            assert revision["id"]==candidate["id"]
+        print("SMT",offset,"family",family,"revision",revision["id"],state,"available",available,
+              "strategy_eligible",record.eligible,"projection",projected_state,projection_reason,
+              "decision",decision["state"],"intents",intent_count)
     for missing in (False,True):
         delay = LATE if missing else 0
         request,model,pin = canonical_successors(delay,missing)
@@ -146,22 +178,53 @@ def test_later_confirmation_and_missing_quote(canonical_successors):
         if missing:
             assert decision["state"]=="INSUFFICIENT_EVIDENCE"
 
-def test_exact_cutoff_and_spent_rearm_rejections(canonical_successors):
+def test_exact_cutoff_root_and_nonmatching_reclaim(canonical_successors):
     request,model,pin = canonical_successors()
-    at_terminal,evidence = reference_prefix(model,pin,BASE+7200,request)
+    terminal_cutoff = BASE+7200
+    at_terminal,evidence = reference_prefix(model,pin,terminal_cutoff,request)
     roots = {row["reference_start"]:row for row in events(evidence,"crt","crt") if row["state"]=="ACTIVE"}
-    spent_a,b = roots[BASE],roots[BASE+3600]
-    assert (at_terminal["bound_crt"]["evidence"]["family"],at_terminal["state"])==(spent_a["range_id"],"EXPIRED")
-    assert b["available_at"]==BASE+7200 and b["range_id"]!=spent_a["range_id"]
-    inspection,_ = reference_prefix(model,pin,BASE+7201,request,BASE+7200)
-    assert inspection["attempt_id"] is None
-    inspection,prefix = reference_prefix(model,pin,BASE+7500,request,BASE+7200)
-    revision = next(row for row in events(prefix,"crt","crt") if row["range_id"]==spent_a["range_id"]
-                    and row["available_at"]==BASE+7500)
-    assert revision["state"]=="HIGH_SWEPT_RECLAIMED"
-    assert inspection["attempt_id"] is None and inspection["entry_intent"] is None
-    print("rejected",b["range_id"],7200,"AT_TERMINAL_CUTOFF",
-          revision["range_id"],7500,revision["state"],"SPENT_FAMILY")
+    a,b = roots[BASE],roots[BASE+3600]
+    assert (at_terminal["bound_crt"]["evidence"]["family"],at_terminal["state"],at_terminal["cutoff"])==(
+        a["range_id"],"EXPIRED",terminal_cutoff)
+    assert b["available_at"]==at_terminal["cutoff"] and b["range_id"]!=a["range_id"]
+
+    graph = RuleGraph(model)
+    rule_id = graph.aliases["crt_reference"]
+    rule = graph.rules[rule_id]
+
+    def inspect(cutoff,prefix):
+        # Use the actual rearm rule while keeping the spent set empty. This
+        # isolates the terminal cutoff and the ACTIVE predicate in these checks.
+        machine = EvaluationMachine(model,prefix,request,terminal_cutoff+1,END,
+                                    rearm_after=terminal_cutoff,rearm_rule=rule_id)
+        machine.step(cutoff)
+        return machine.decision(cutoff,0)
+
+    inspection_cutoff = terminal_cutoff+1
+    first_prefix = collect(model,pin,inspection_cutoff,START)
+    inspection = inspect(inspection_cutoff,first_prefix)
+    assert inspection["attempt_id"] is None and inspection["bound_crt"] is None
+    assert (rule.observation,rule.expected)==("CRT_REFERENCE","ACTIVE")
+    assert predicate(rule,CATALOG[rule.observation],b) is True
+    print("CRT terminal",7200,a["range_id"],at_terminal["state"],at_terminal["reason"],
+          "B root",b["range_id"],b["id"],b["state"],b["available_at"]-BASE,
+          "first successor",7201,inspection["state"],"bound",inspection["bound_crt"])
+
+    cutoff = BASE+7500
+    prefix = collect(model,pin,cutoff,START)
+    inspection = inspect(cutoff,prefix)
+    revisions = events(prefix,"crt","crt")
+    revision, = [row for row in revisions if row["range_id"]==a["range_id"] and row["available_at"]==cutoff]
+    view = prefix.views["crt"]
+    record = view.records[revision["id"]]
+    assert (record.family,record.state,record.available)==(a["range_id"],"HIGH_SWEPT_RECLAIMED",cutoff)
+    assert not predicate(rule,CATALOG[rule.observation],revision)
+    active_roots = Counter(row["range_id"] for row in revisions if row["state"]=="ACTIVE")
+    assert active_roots[a["range_id"]]==1 and all(count==1 for count in active_roots.values())
+    assert inspection["attempt_id"] is None and inspection["bound_crt"] is None and inspection["entry_intent"] is None
+    print("CRT revision",7500,record.family,revision["id"],record.state,"available",record.available-BASE,
+          "rearm",rule.observation,rule.expected,"predicate_match",False,"active_roots",active_roots[a["range_id"]],
+          "spent_set_empty",True,"bound",inspection["bound_crt"])
 
 
 def successor_request(request):
@@ -201,6 +264,10 @@ def test_scheduler_equivalence_and_completion_gate(client,canonical_successors,m
     clock = perf_counter()
     result,checkpoints = execute(run,model,evidence,7)
     elapsed = perf_counter()-clock
+    first_successor = min(stamp for stamp in seen if stamp>BASE+7200)
+    first_trace = seen[first_successor][0]
+    assert first_trace["attempt_id"] is None and first_trace["bound_crt"] is None
+    print("first scheduled inspection",first_successor-BASE,first_trace["state"],"bound",first_trace["bound_crt"])
     primary_cutoffs = (3600,7200,7500,10800,12900,13500,13520,14100,14120,14400,14700,15000)
     fields = ("state","reason","bound_crt","crt_latest_reference","context_activated_at","setup_activated_at",
               "trigger_activated_at","phase_results","entry_intent","supporting_events","rules")
