@@ -86,7 +86,7 @@ def prepare(request):
 def calculate(run, cutoff):
     identity = run["identity"]
     if identity["evaluator_version"]!=EVALUATOR_VERSION:
-        raise HTTPException(409,{"code":"LEGACY_EVALUATION_READ_ONLY","reason":"Saved v1 through v4 decisions remain readable. Create a v5 evaluation to recalculate."})
+        raise HTTPException(409,{"code":"LEGACY_EVALUATION_READ_ONLY","reason":"Saved v1 through v5 decisions remain readable. Create a v6 evaluation to recalculate."})
     if not identity["evaluation_start"] <= cutoff <= run["selection"]["end"]:
         raise ValueError("Cutoff lies outside the frozen evaluation range")
     definition = StrategyDefinitionV2.model_validate(run["definition"])
@@ -167,7 +167,7 @@ def create_run(request):
 def advance_run(run_id, request):
     run = load_run(run_id)
     if run["identity"]["evaluator_version"]!=EVALUATOR_VERSION:
-        raise HTTPException(409,{"code":"LEGACY_EVALUATION_READ_ONLY","reason":"Create a v5 evaluation to advance."})
+        raise HTTPException(409,{"code":"LEGACY_EVALUATION_READ_ONLY","reason":"Create a v6 evaluation to advance."})
     latest = find_decision(run_id)
     known = find_decision(run_id,request.cutoff)
     if known and request.expected_decision_id in {known["previous_decision_id"],known["decision_id"]}:

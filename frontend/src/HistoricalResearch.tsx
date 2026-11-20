@@ -10,13 +10,14 @@ const epoch=(value:string)=>Date.parse(value+'Z')/1000;
 const human=(value:string)=>value.toLowerCase().replaceAll('_',' ');
 type Source={id:string;fingerprint:string;start:number;end:number};
 type Summary={run_id:string;state:string;frontier:number|null};
-type Run={run_id:string;identity:{historical_version:number;method:string;evaluation_start:number;warmup_start:number;cutoff:number;rearm:string;strategy_version_id:string};
+type Run={run_id:string;identity:{historical_version:number;evaluator_version:number;method:string;evaluation_start:number;warmup_start:number;cutoff:number;rearm:string;strategy_version_id:string};
   selection:{series:Record<string,{symbol:string;timeframe:string;feed_id:string;delay_seconds:number;price_basis:string}>};
   results_published:boolean;worker:{state:string;frontier:number|null;diagnostic:string|null};attempt_counts:Record<string,number>;qualified_intents:number};
 type Decision={id:string;cutoff:number;state:string;attempt_id:string|null};
 type Reference={calculation_snapshot:string;event_id:string;source:string[];participants?:{primary:string[]}};
 type Proof={state?:string;type?:string;timing:{observation_start:number};evidence_reference:Reference};
-type Snapshot={decision_id:string;reason:string;supporting_events:Record<string,Proof>;entry_intent:{id:string;direction:string;symbol:string;status:string}|null};
+type Check={id:string;outcome:string;verified_at?:number|null};
+type Snapshot={decision_id:string;rules:Check[];activation_outcomes?:(Check & {phase_activated_at:number})[];reason:string;supporting_events:Record<string,Proof>;entry_intent:{id:string;direction:string;symbol:string;status:string}|null};
 
 export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChartLocation)=>void}){
   const [available,setAvailable]=useState<Listed[]>([]);
@@ -99,7 +100,7 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
     const found=sources.find(item=>item.id===source);
     void action(async()=>{
       const result=await api.post<{run_id:string;identity?:{method:string}}>(endpoint+(validate?'/validate':''),{
-        evaluator_version:5,purpose:'HISTORICAL_SIMULATION',strategy_id:selected.strategy_id,
+        evaluator_version:6,purpose:'HISTORICAL_SIMULATION',strategy_id:selected.strategy_id,
         strategy_version_id:version,configuration_fingerprint:selected.configuration_fingerprint,
         selection_id:source,selection_fingerprint:found?.fingerprint??'0'.repeat(64),warmup_start:epoch(warmup),
         evaluation_start:epoch(start),cutoff:epoch(end),rearm,context_alias:rearm==='NEW_CONTEXT_FAMILY'?alias.trim():null,
@@ -182,7 +183,7 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
         {['QUEUED','RUNNING'].includes(run.worker.state)&&<button className="small-tool" disabled={busy} onClick={()=>void action(async()=>{
           setRun(await api.post<Run>(endpoint+'/'+runId+'/cancel',{}));
         })}>Cancel run</button>}
-        {run.identity.historical_version===2&&['FAILED','CANCELLED'].includes(run.worker.state)&&<button className="small-tool" disabled={busy} onClick={()=>void action(async()=>{
+        {run.identity.historical_version===2&&run.identity.evaluator_version===6&&['FAILED','CANCELLED'].includes(run.worker.state)&&<button className="small-tool" disabled={busy} onClick={()=>void action(async()=>{
           const next=await api.post<Run>(endpoint+'/'+runId+'/resume',{});
           setRun(next);
           setRunRevision(revision=>revision+1);
@@ -192,6 +193,12 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
         <button className="small-tool" disabled={busy} onClick={()=>inspect(item)}>Inspect historical decision</button></li>)}</ul>
       {trace?.runId===runId&&<div>
         <p>{human(trace.data.reason)}{trace.data.entry_intent&&' · '+trace.data.entry_intent.direction+' '+trace.data.entry_intent.symbol+' · '+human(trace.data.entry_intent.status)}</p>
+        {!!trace.data.activation_outcomes?.length&&<ul>{trace.data.activation_outcomes.map(activation=>{
+          const latest=trace.data.rules.find(rule=>rule.id===activation.id);
+          return <li key={activation.id}>{activation.id} · At activation {human(activation.outcome)} {utc(activation.phase_activated_at)}
+            {latest&&<> · Latest {human(latest.outcome)}{latest.verified_at!=null&&' '+utc(latest.verified_at)}</>}
+          </li>;
+        })}</ul>}
         {Object.values(trace.data.supporting_events).map(proof=><button key={proof.evidence_reference.event_id}
           className="small-tool" onClick={()=>showChart(proof,trace)}>Chart {human(proof.state??proof.type??'evidence')}</button>)}
       </div>}

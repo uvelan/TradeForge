@@ -10,7 +10,7 @@ from .historical_strategy_store import cancel, enqueue, latest_checkpoint, resum
 from .strategy_definitions import StrategyDefinitionV2
 from .strategy_evaluation_budget import deadline
 from .strategy_evaluation_routes import archived_evidence_chart, evaluation_lane
-from .strategy_evaluation_sources import selection_catalog
+from .strategy_evaluation_sources import EVALUATOR_VERSION, selection_catalog
 from .strategy_routes import envelope
 
 router = APIRouter(prefix="/api/historical-strategy-runs/v1")
@@ -106,7 +106,7 @@ def cancel_run(run_id:str):
 @router.post("/{run_id}/resume")
 def resume_run(run_id:str):
     run = get_run(run_id)
-    if run["identity"]["historical_version"]!=RUN_VERSION:
+    if (run["identity"]["historical_version"],run["identity"]["evaluator_version"])!=(RUN_VERSION,EVALUATOR_VERSION):
         raise HTTPException(409,"Saved run uses an older evaluator. Create a new historical run.")
     with evaluation_lane():
         if not resume(run_id):

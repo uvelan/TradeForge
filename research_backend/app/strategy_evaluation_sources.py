@@ -22,7 +22,7 @@ from .storage import read_partition
 from .strategy_definitions import Contract, Digest
 from .strategy_evidence import fingerprint
 
-EVALUATOR_VERSION = 5
+EVALUATOR_VERSION = 6
 MAX_TIMELINE = 4096
 MAX_SELECTION_SLOTS = 6000
 MAX_PUBLICATIONS = 16_000
@@ -37,7 +37,7 @@ VIEW_KIND = {
 
 
 class EvaluationInput(Contract):
-    evaluator_version: Literal[5]
+    evaluator_version: Literal[6]
     strategy_id: str = Field(pattern=r"^ST-[a-f0-9]{32}$")
     strategy_version_id: str = Field(pattern=r"^SV-[a-f0-9]{32}$")
     configuration_fingerprint: Digest

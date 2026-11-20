@@ -88,7 +88,7 @@ def request_body(client, selection, data=None, cutoff=A+4200):
     saved = client.post(ROUTE,json=definition)
     assert saved.status_code==201,saved.text
     version = saved.json()
-    return {"evaluator_version":5,"purpose":"HISTORICAL_SIMULATION","strategy_id":version["strategy_id"],
+    return {"evaluator_version":6,"purpose":"HISTORICAL_SIMULATION","strategy_id":version["strategy_id"],
             "strategy_version_id":version["version_id"],"configuration_fingerprint":version["configuration_fingerprint"],
             "selection_id":selection["id"],"selection_fingerprint":selection["fingerprint"],
             "warmup_start":BASE,"evaluation_start":A+300,"cutoff":cutoff}

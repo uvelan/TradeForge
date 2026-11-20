@@ -16,6 +16,7 @@ type Decision = {decision_id:string;attempt_id:string|null;state:string;reason:s
   invalidation:string;expiry:string;rules:RuleResult[];transitions:[number,string,string][];
   phase_results:Record<string,string>;
   attempt_bindings?:{rule:string;alias:string;family:string;evidence_state:string;activated_at:number;selected_at?:number;validity:string|null}[];
+  activation_outcomes?:(RuleResult & {phase_activated_at:number})[];
   activation_proofs?:(RuleResult & {phase_activated_at:number})[];
   temporal:{before:string;after:string;relation:string;outcome:string;reason:string}[];
   supporting_events:Record<string,unknown>;bound_crt?:{evidence:{family:string};activated_at:number}|null;
@@ -49,7 +50,7 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
   const generation=useRef(0);
   const selection=catalog.find(item=>item.id===selectionId);
   const frozen=run?.selection;
-  const legacy=!!run&&run.decision.evaluation.evaluator_version!==5;
+  const legacy=!!run&&run.decision.evaluation.evaluator_version!==6;
   function choose(item:Selection){
     setSelection(item.id);setWarmup(fieldDate(item.start));
     setStart(fieldDate(Math.min(item.start+7200,item.end)));setCutoff(fieldDate(item.end));
@@ -79,7 +80,7 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
   function create(){
     if(!selection)return;
     void execute(async valid=>{
-      const result=await api.post<Run>(endpoint,{evaluator_version:5,purpose:'HISTORICAL_SIMULATION',
+      const result=await api.post<Run>(endpoint,{evaluator_version:6,purpose:'HISTORICAL_SIMULATION',
         strategy_id:record.strategy_id,strategy_version_id:record.version_id,configuration_fingerprint:record.configuration_fingerprint,
         selection_id:selection.id,selection_fingerprint:selection.fingerprint,warmup_start:epoch(warmup),
         evaluation_start:epoch(start),cutoff:epoch(cutoff)});
@@ -121,9 +122,9 @@ export function StrategyEvaluation({record,openChart}:{record:RecordVersion;open
       evidencePath:evidencePath(item)+'/chart'});
   }
   return <section className="card strategy-block" aria-label="Strategy evaluation">
-    <div className="strategy-heading"><h2>Strategy evaluation</h2><span>Strategy revision {record.version} · Evaluator v{decision?.evaluation.evaluator_version??5} · Historical simulation</span></div>
+    <div className="strategy-heading"><h2>Strategy evaluation</h2><span>Strategy revision {record.version} · Evaluator v{decision?.evaluation.evaluator_version??6} · Historical simulation</span></div>
     <p className="muted">Recorded MT5 readiness is blocked. This evaluation ends at entry intent.</p>
-    {legacy&&<p role="status">Saved legacy evaluation. Start a new v5 evaluation to recalculate.</p>}
+    {legacy&&<p role="status">Saved legacy evaluation. Start a new v6 evaluation to recalculate.</p>}
     {saved.length>0&&<div className="strategy-actions">
       <Choice label="Saved evaluation" value="" options={saved.map(item=>item.run_id)} blank="Choose saved run"
         display={id=>{const item=saved.find(entry=>entry.run_id===id)!;return utc(item.cutoff)+' · '+title(item.state);}}

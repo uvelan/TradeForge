@@ -1,7 +1,7 @@
 """Bounded chronological strategy decisions over exact canonical evidence."""
 from bisect import bisect_left, bisect_right
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from operator import eq, ge, gt, le, lt
 from heapq import heapify, heappop, heappush
 
@@ -54,6 +54,7 @@ class RuleGraph:
         self.rules = {}
         self.phases = {}
         self.aliases = {}
+        self.negated = set()
         self.predecessors = defaultdict(list)
         self.temporal = defaultdict(list)
         self.groups = {phase:getattr(definition,phase) for phase in PHASES}
@@ -88,15 +89,17 @@ class RuleGraph:
         self.predecessors[edge.after].append(edge.before)
         self.temporal[edge.after].append(edge)
 
-    def register(self, node, phase):
+    def register(self, node, phase, negated=False):
         if node.type=="RULE":
             self.rules[node.id] = node
             self.phases[node.id] = phase
+            if negated:
+                self.negated.add(node.id)
             if node.alias:
                 self.aliases[node.alias] = node.id
             return
         for child in node.children:
-            self.register(child,phase)
+            self.register(child,phase,negated != (node.operator=="NOT"))
         if node.operator=="SEQUENCE":
             for before,after in zip(node.children,node.children[1:]):
                 self.add(Edge(before.id,after.id,label="SEQUENCE"))
@@ -455,16 +458,30 @@ class EvaluationMachine:
                 return result(outcome,reason)
         return result(YES,"MAINTAINED_CURRENT_PREDICATE_SATISFIED")
 
+    def latched_lower(self, phase):
+        if phase=="setup":
+            return self.context_at
+        return self.identity["warmup_start"] if self.rearm_after is None else self.rearm_after+1
+
     def pinned_current_guard(self, cutoff):
         maintained = {}
         for key in self.graph.order:
-            activation = self.activation_proofs.get(key)
             rule = self.graph.rules[key]
-            if activation is None or key not in self.latches or rule.evidence.state!="CURRENT":
+            if key not in self.latches or rule.evidence.state!="CURRENT":
                 continue
-            checked = self.verify_maintained(rule,activation,cutoff)
+            phase = self.graph.phases[key]
+            activation = self.activation_proofs.get(key)
+            if key in self.graph.negated:
+                # Absence is a query over the declared scope, even when a
+                # previous check had a positive witness in one family.
+                checked = self.select(rule,phase,cutoff,self.latched_lower(phase))
+                checked = replace(checked,verified_at=cutoff)
+            elif activation is not None:
+                checked = self.verify_maintained(rule,activation,cutoff)
+            else:
+                continue
             self.results[key] = checked
-            maintained.setdefault(self.graph.phases[key],[]).append(checked)
+            maintained.setdefault(phase,[]).append(checked)
         for phase,checks in maintained.items():
             outcome = self.graph.outcome(self.graph.groups[phase],self.results)
             self.phase_results[phase] = outcome.value
@@ -478,6 +495,13 @@ class EvaluationMachine:
 
     def at(self, cutoff):
         if any(lane.at(cutoff)["status"]!="COMPLETE" for lane in self.evidence.coverage.values()):
+            affected = set()
+            for key in self.latches.keys() & self.graph.negated:
+                if self.graph.rules[key].evidence.state=="CURRENT":
+                    self.results[key] = RuleResult(UNKNOWN,"REQUIRED_SOURCE_COVERAGE_UNKNOWN",verified_at=cutoff)
+                    affected.add(self.graph.phases[key])
+            for phase in affected:
+                self.phase_results[phase] = self.graph.outcome(self.graph.groups[phase],self.results).value
             self.transition(cutoff,"INSUFFICIENT_EVIDENCE","REQUIRED_SOURCE_COVERAGE_UNKNOWN")
             return
         if not self.attempt:
@@ -631,6 +655,10 @@ class EvaluationMachine:
             "context_activated_at":self.context_at,"setup_activated_at":self.setup_at,"trigger_activated_at":self.trigger_at,
             "transitions":self.timeline,"invalidation":self.invalidation.value,"expiry":self.expiry.value,
             "phase_results":self.phase_results,
+            "activation_outcomes":[self.latches[key].trace(self.graph.rules[key],self.graph.phases[key]) |
+                {"phase_activated_at":self.phase_times[self.graph.phases[key]]}
+                for key in sorted(self.latches.keys() & self.graph.negated)
+                if self.graph.rules[key].evidence.state=="CURRENT"],
             "rules":[self.results[key].trace(self.graph.rules[key],self.graph.phases[key])
                      for key in sorted(self.results)],
             "binding_policy_version":2,
