@@ -157,6 +157,7 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
           <option value="SINGLE_ATTEMPT">Single attempt</option><option value="NEW_CONTEXT_FAMILY">New context family</option>
         </select></label>
         {rearm==='NEW_CONTEXT_FAMILY'&&<>
+          <p className="muted">Successor evaluation supports EURUSD M5 FVG and bounded short EURUSD/GBPUSD M5 CRT/SMT with 0s primary and 20s comparison delay. Other producer combinations use single attempt.</p>
           <label>Required context alias<input value={alias} onChange={event=>setAlias(event.target.value)}/></label>
           <label>Maximum attempts<input type="number" min={1} max={32} value={maxAttempts} onChange={event=>setMaxAttempts(+event.target.value)}/></label>
         </>}
