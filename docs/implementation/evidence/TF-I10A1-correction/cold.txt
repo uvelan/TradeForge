@@ -1,0 +1,21 @@
+> e2e
+> playwright test e2e/arrival-capture.spec.ts --retries=0 --reporter=line --output=<isolated-temp>/cold
+
+[WebServer] INFO:     Started server process [8836]
+
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8217 (Press CTRL+C to quit)
+
+
+[WebServer] (node:39124) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:35416) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/1] e2e\arrival-capture.spec.ts:3:1 › data library controls capture and labels frozen recorded readiness
+  1 passed (6.3s)

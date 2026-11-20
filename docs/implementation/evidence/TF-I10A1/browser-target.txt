@@ -1,0 +1,60 @@
+> e2e
+> playwright test e2e/strategy-evaluator.spec.ts --retries=0 --reporter=line --output=historical-target-results
+
+
+[WebServer] INFO:     Started server process [32148]
+[WebServer] INFO:     Waiting for application startup.
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
+[WebServer] (node:32552) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+
+(node:32196) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/1] e2e\strategy-evaluator.spec.ts:3:1 › saves a canonical strategy decision, reconstructs, and opens exact chart evidence
+  1) e2e\strategy-evaluator.spec.ts:3:1 › saves a canonical strategy decision, reconstructs, and opens exact chart evidence
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: 'Canonical strategy browser fixture', exact: true })
+
+
+      28 |   await page.goto("/");
+      29 |   await page.getByRole("button", {name: "Strategy Builder", exact: true}).click();
+    > 30 |   await page.getByRole("button", {name: data.name, exact: true}).click();
+         |                                                                  ^
+      31 |   await page.getByRole("button", {name: "Evaluate", exact: true}).click();
+      32 |   const evaluation = page.getByRole("region", {name: "Strategy evaluation"});
+      33 |   await evaluation.getByLabel("Evaluation starts (UTC)").fill("2020-01-02T11:05");
+        at K:\Projects\TradeForge\frontend\e2e\strategy-evaluator.spec.ts:30:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    historical-target-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    historical-target-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: historical-target-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    historical-target-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\trace.zip
+    Usage:
+
+        npx playwright show-trace historical-target-results\strategy-evaluator-saves-a-12fa7--opens-exact-chart-evidence\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    e2e\strategy-evaluator.spec.ts:3:1 › saves a canonical strategy decision, reconstructs, and opens exact chart evidence

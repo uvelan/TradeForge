@@ -1,0 +1,550 @@
+[
+  {
+    "phase": "context",
+    "reversed": false,
+    "cutoff": 1577962500,
+    "formation": {
+      "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+      "reference": {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "available_at": 1577962200,
+        "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+        "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+        "category": "fvg",
+        "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+        "event_id": "939c9d0d27a7c8b2798650d588f178be4d4063621b69f841cda80e331fbf0c0c",
+        "source": [
+          "DUKASCOPY_SAVED",
+          "EURUSD",
+          "M5",
+          "isolated-evaluator-fixture",
+          "BID",
+          "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+        ],
+        "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+        "version": 1
+      },
+      "state": "ACTIVE"
+    },
+    "contradicting_revision": {
+      "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+      "reference": {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "available_at": 1577962500,
+        "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+        "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+        "category": "fvg",
+        "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+        "event_id": "e643c78a854859fd77fb99c391ff06497065c1f9c174c906ff4ab029d11930da",
+        "source": [
+          "DUKASCOPY_SAVED",
+          "EURUSD",
+          "M5",
+          "isolated-evaluator-fixture",
+          "BID",
+          "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+        ],
+        "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+        "version": 1
+      },
+      "state": "PARTIALLY_MITIGATED"
+    },
+    "baseline": {
+      "decision": "TRIGGER_QUALIFIED",
+      "rule": {
+        "available_at": null,
+        "dependency": "fvg",
+        "evidence_reference": null,
+        "evidence_state": "CURRENT",
+        "family": null,
+        "id": "prohibited",
+        "observation": "FVG_ACTIVE",
+        "observed_at": null,
+        "outcome": "NOT_SATISFIED",
+        "phase": "context",
+        "reason": "NO_MATCH_COMPLETE_COVERAGE",
+        "selected_at": null,
+        "verified_at": null
+      },
+      "groups": {
+        "context": "SATISFIED",
+        "invalidation": "NOT_SATISFIED",
+        "setup": "SATISFIED",
+        "trigger": "SATISFIED"
+      },
+      "intents": 1
+    },
+    "corrected": {
+      "decision": "INVALIDATED",
+      "activation": [
+        {
+          "available_at": null,
+          "dependency": "fvg",
+          "evidence_reference": null,
+          "evidence_state": "CURRENT",
+          "family": null,
+          "id": "prohibited",
+          "observation": "FVG_ACTIVE",
+          "observed_at": null,
+          "outcome": "NOT_SATISFIED",
+          "phase": "context",
+          "phase_activated_at": 1577962200,
+          "reason": "NO_MATCH_COMPLETE_COVERAGE",
+          "selected_at": null,
+          "verified_at": null
+        }
+      ],
+      "rule": {
+        "available_at": 1577962500,
+        "dependency": "fvg",
+        "evidence_reference": {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1577962500,
+          "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+          "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+          "category": "fvg",
+          "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+          "event_id": "e643c78a854859fd77fb99c391ff06497065c1f9c174c906ff4ab029d11930da",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        "evidence_state": "CURRENT",
+        "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+        "id": "prohibited",
+        "observation": "FVG_ACTIVE",
+        "observed_at": 1577962200,
+        "outcome": "SATISFIED",
+        "phase": "context",
+        "reason": "CANONICAL_EVIDENCE",
+        "selected_at": 1577962500,
+        "verified_at": 1577962500
+      },
+      "groups": {
+        "context": "NOT_SATISFIED",
+        "invalidation": "NOT_SATISFIED",
+        "setup": "SATISFIED",
+        "trigger": "NOT_SATISFIED"
+      },
+      "intents": 0
+    }
+  },
+  {
+    "phase": "setup",
+    "reversed": false,
+    "cutoff": 1577962500,
+    "formation": {
+      "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+      "reference": {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "available_at": 1577962200,
+        "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+        "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+        "category": "fvg",
+        "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+        "event_id": "939c9d0d27a7c8b2798650d588f178be4d4063621b69f841cda80e331fbf0c0c",
+        "source": [
+          "DUKASCOPY_SAVED",
+          "EURUSD",
+          "M5",
+          "isolated-evaluator-fixture",
+          "BID",
+          "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+        ],
+        "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+        "version": 1
+      },
+      "state": "ACTIVE"
+    },
+    "contradicting_revision": {
+      "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+      "reference": {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "available_at": 1577962500,
+        "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+        "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+        "category": "fvg",
+        "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+        "event_id": "e643c78a854859fd77fb99c391ff06497065c1f9c174c906ff4ab029d11930da",
+        "source": [
+          "DUKASCOPY_SAVED",
+          "EURUSD",
+          "M5",
+          "isolated-evaluator-fixture",
+          "BID",
+          "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+        ],
+        "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+        "version": 1
+      },
+      "state": "PARTIALLY_MITIGATED"
+    },
+    "baseline": {
+      "decision": "TRIGGER_QUALIFIED",
+      "rule": {
+        "available_at": null,
+        "dependency": "fvg",
+        "evidence_reference": null,
+        "evidence_state": "CURRENT",
+        "family": null,
+        "id": "prohibited",
+        "observation": "FVG_ACTIVE",
+        "observed_at": null,
+        "outcome": "NOT_SATISFIED",
+        "phase": "setup",
+        "reason": "NO_MATCH_COMPLETE_COVERAGE",
+        "selected_at": null,
+        "verified_at": null
+      },
+      "groups": {
+        "context": "SATISFIED",
+        "invalidation": "NOT_SATISFIED",
+        "setup": "SATISFIED",
+        "trigger": "SATISFIED"
+      },
+      "intents": 1
+    },
+    "corrected": {
+      "decision": "INVALIDATED",
+      "activation": [
+        {
+          "available_at": null,
+          "dependency": "fvg",
+          "evidence_reference": null,
+          "evidence_state": "CURRENT",
+          "family": null,
+          "id": "prohibited",
+          "observation": "FVG_ACTIVE",
+          "observed_at": null,
+          "outcome": "NOT_SATISFIED",
+          "phase": "setup",
+          "phase_activated_at": 1577962200,
+          "reason": "NO_MATCH_COMPLETE_COVERAGE",
+          "selected_at": null,
+          "verified_at": null
+        }
+      ],
+      "rule": {
+        "available_at": 1577962500,
+        "dependency": "fvg",
+        "evidence_reference": {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1577962500,
+          "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+          "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+          "category": "fvg",
+          "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+          "event_id": "e643c78a854859fd77fb99c391ff06497065c1f9c174c906ff4ab029d11930da",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        "evidence_state": "CURRENT",
+        "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+        "id": "prohibited",
+        "observation": "FVG_ACTIVE",
+        "observed_at": 1577962200,
+        "outcome": "SATISFIED",
+        "phase": "setup",
+        "reason": "CANONICAL_EVIDENCE",
+        "selected_at": 1577962500,
+        "verified_at": 1577962500
+      },
+      "groups": {
+        "context": "SATISFIED",
+        "invalidation": "NOT_SATISFIED",
+        "setup": "NOT_SATISFIED",
+        "trigger": "NOT_SATISFIED"
+      },
+      "intents": 0
+    }
+  },
+  {
+    "phase": "context",
+    "reversed": true,
+    "cutoff": 1577962500,
+    "formation": {
+      "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+      "reference": {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "available_at": 1577962200,
+        "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+        "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+        "category": "fvg",
+        "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+        "event_id": "939c9d0d27a7c8b2798650d588f178be4d4063621b69f841cda80e331fbf0c0c",
+        "source": [
+          "DUKASCOPY_SAVED",
+          "EURUSD",
+          "M5",
+          "isolated-evaluator-fixture",
+          "BID",
+          "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+        ],
+        "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+        "version": 1
+      },
+      "state": "ACTIVE"
+    },
+    "contradicting_revision": {
+      "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+      "reference": {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "available_at": 1577962500,
+        "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+        "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+        "category": "fvg",
+        "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+        "event_id": "e643c78a854859fd77fb99c391ff06497065c1f9c174c906ff4ab029d11930da",
+        "source": [
+          "DUKASCOPY_SAVED",
+          "EURUSD",
+          "M5",
+          "isolated-evaluator-fixture",
+          "BID",
+          "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+        ],
+        "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+        "version": 1
+      },
+      "state": "PARTIALLY_MITIGATED"
+    },
+    "baseline": {
+      "decision": "TRIGGER_QUALIFIED",
+      "rule": {
+        "available_at": null,
+        "dependency": "fvg",
+        "evidence_reference": null,
+        "evidence_state": "CURRENT",
+        "family": null,
+        "id": "prohibited",
+        "observation": "FVG_ACTIVE",
+        "observed_at": null,
+        "outcome": "NOT_SATISFIED",
+        "phase": "context",
+        "reason": "NO_MATCH_COMPLETE_COVERAGE",
+        "selected_at": null,
+        "verified_at": null
+      },
+      "groups": {
+        "context": "SATISFIED",
+        "invalidation": "NOT_SATISFIED",
+        "setup": "SATISFIED",
+        "trigger": "SATISFIED"
+      },
+      "intents": 1
+    },
+    "corrected": {
+      "decision": "INVALIDATED",
+      "activation": [
+        {
+          "available_at": null,
+          "dependency": "fvg",
+          "evidence_reference": null,
+          "evidence_state": "CURRENT",
+          "family": null,
+          "id": "prohibited",
+          "observation": "FVG_ACTIVE",
+          "observed_at": null,
+          "outcome": "NOT_SATISFIED",
+          "phase": "context",
+          "phase_activated_at": 1577962200,
+          "reason": "NO_MATCH_COMPLETE_COVERAGE",
+          "selected_at": null,
+          "verified_at": null
+        }
+      ],
+      "rule": {
+        "available_at": 1577962500,
+        "dependency": "fvg",
+        "evidence_reference": {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1577962500,
+          "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+          "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+          "category": "fvg",
+          "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+          "event_id": "e643c78a854859fd77fb99c391ff06497065c1f9c174c906ff4ab029d11930da",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        "evidence_state": "CURRENT",
+        "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+        "id": "prohibited",
+        "observation": "FVG_ACTIVE",
+        "observed_at": 1577962200,
+        "outcome": "SATISFIED",
+        "phase": "context",
+        "reason": "CANONICAL_EVIDENCE",
+        "selected_at": 1577962500,
+        "verified_at": 1577962500
+      },
+      "groups": {
+        "context": "NOT_SATISFIED",
+        "invalidation": "NOT_SATISFIED",
+        "setup": "SATISFIED",
+        "trigger": "NOT_SATISFIED"
+      },
+      "intents": 0
+    }
+  },
+  {
+    "phase": "setup",
+    "reversed": true,
+    "cutoff": 1577962500,
+    "formation": {
+      "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+      "reference": {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "available_at": 1577962200,
+        "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+        "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+        "category": "fvg",
+        "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+        "event_id": "939c9d0d27a7c8b2798650d588f178be4d4063621b69f841cda80e331fbf0c0c",
+        "source": [
+          "DUKASCOPY_SAVED",
+          "EURUSD",
+          "M5",
+          "isolated-evaluator-fixture",
+          "BID",
+          "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+        ],
+        "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+        "version": 1
+      },
+      "state": "ACTIVE"
+    },
+    "contradicting_revision": {
+      "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+      "reference": {
+        "availability_mode": "HISTORICAL_SIMULATION",
+        "available_at": 1577962500,
+        "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+        "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+        "category": "fvg",
+        "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+        "event_id": "e643c78a854859fd77fb99c391ff06497065c1f9c174c906ff4ab029d11930da",
+        "source": [
+          "DUKASCOPY_SAVED",
+          "EURUSD",
+          "M5",
+          "isolated-evaluator-fixture",
+          "BID",
+          "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+        ],
+        "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+        "version": 1
+      },
+      "state": "PARTIALLY_MITIGATED"
+    },
+    "baseline": {
+      "decision": "TRIGGER_QUALIFIED",
+      "rule": {
+        "available_at": null,
+        "dependency": "fvg",
+        "evidence_reference": null,
+        "evidence_state": "CURRENT",
+        "family": null,
+        "id": "prohibited",
+        "observation": "FVG_ACTIVE",
+        "observed_at": null,
+        "outcome": "NOT_SATISFIED",
+        "phase": "setup",
+        "reason": "NO_MATCH_COMPLETE_COVERAGE",
+        "selected_at": null,
+        "verified_at": null
+      },
+      "groups": {
+        "context": "SATISFIED",
+        "invalidation": "NOT_SATISFIED",
+        "setup": "SATISFIED",
+        "trigger": "SATISFIED"
+      },
+      "intents": 1
+    },
+    "corrected": {
+      "decision": "INVALIDATED",
+      "activation": [
+        {
+          "available_at": null,
+          "dependency": "fvg",
+          "evidence_reference": null,
+          "evidence_state": "CURRENT",
+          "family": null,
+          "id": "prohibited",
+          "observation": "FVG_ACTIVE",
+          "observed_at": null,
+          "outcome": "NOT_SATISFIED",
+          "phase": "setup",
+          "phase_activated_at": 1577962200,
+          "reason": "NO_MATCH_COMPLETE_COVERAGE",
+          "selected_at": null,
+          "verified_at": null
+        }
+      ],
+      "rule": {
+        "available_at": 1577962500,
+        "dependency": "fvg",
+        "evidence_reference": {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1577962500,
+          "calculation_id": "7e03fa399bf765238c25b57525d8305fa4fd4feffdca61031f1aec2bfd553824",
+          "calculation_snapshot": "a920766866fb827ceb9daa92fd003128ef8af06cf4488223e112caa57730296f",
+          "category": "fvg",
+          "configuration": "533811fc2cf46077ce5399aa6a9be196afbe1d9f3c77c322f222d26cd031a482",
+          "event_id": "e643c78a854859fd77fb99c391ff06497065c1f9c174c906ff4ab029d11930da",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "6e564cef0d153b8c46b79467729d525580d829836006c584a751e95b1a60b152"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        "evidence_state": "CURRENT",
+        "family": "0126852dfeb46a14a13ff7fb5a73ce9de8fd03dec14c12ee10093c7115d489a7",
+        "id": "prohibited",
+        "observation": "FVG_ACTIVE",
+        "observed_at": 1577962200,
+        "outcome": "SATISFIED",
+        "phase": "setup",
+        "reason": "CANONICAL_EVIDENCE",
+        "selected_at": 1577962500,
+        "verified_at": 1577962500
+      },
+      "groups": {
+        "context": "SATISFIED",
+        "invalidation": "NOT_SATISFIED",
+        "setup": "NOT_SATISFIED",
+        "trigger": "NOT_SATISFIED"
+      },
+      "intents": 0
+    }
+  }
+]

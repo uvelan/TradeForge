@@ -30,6 +30,8 @@ from .arrival_routes import router as arrival_router
 from .workspace_routes import router as workspace_router
 from .strategy_routes import router as strategy_router
 from .strategy_evaluation_routes import router as strategy_evaluation_router
+from .historical_strategy_routes import router as historical_strategy_router
+from .historical_strategy_worker import supervise as supervise_strategy_history
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
 from .saved_history import recent_archive_range, saved_range, tick_partitions, read_tick_partitions
 
@@ -42,12 +44,14 @@ async def lifespan(app:FastAPI):
     app.state.arrival_capture = CaptureManager()
     stop = asyncio.Event()
     monitor = asyncio.create_task(run_smt_monitor(stop, app.state.smt_monitor))
+    history = asyncio.create_task(supervise_strategy_history(stop))
     try:
         yield
     finally:
         stop.set()
         await app.state.arrival_capture.stop()
         await monitor
+        await history
 app=FastAPI(title='TradeForge Local API',version='0.1.0',lifespan=lifespan)
 app.include_router(indicator_router)
 app.include_router(arrival_router)
@@ -55,6 +59,7 @@ app.include_router(drawing_router)
 app.include_router(workspace_router)
 app.include_router(strategy_router)
 app.include_router(strategy_evaluation_router)
+app.include_router(historical_strategy_router)
 app.add_middleware(CORSMiddleware,allow_origins=['http://127.0.0.1:5173','http://localhost:5173','http://127.0.0.1:4180','http://localhost:4180'],allow_credentials=False,allow_methods=['GET','POST'],allow_headers=['Content-Type'])
 
 

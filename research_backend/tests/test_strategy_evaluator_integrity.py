@@ -172,7 +172,7 @@ def test_independent_smt_prefix_equivalence(client, monkeypatch, delay):
         assert semantic_prefix(compared)==semantic_prefix(reference),offset
 
 
-@pytest.mark.parametrize("version", [1,2])
+@pytest.mark.parametrize("version", [1,2,3,4,5])
 def test_existing_run_create_has_exact_cutoff_and_preserves_legacy(client, approved_fixture,version):
     from research_backend.app.db import transaction, utc_now
     from test_strategy_evaluator import A

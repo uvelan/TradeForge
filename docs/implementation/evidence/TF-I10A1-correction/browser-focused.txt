@@ -1,0 +1,21 @@
+> e2e
+> playwright test e2e/strategy-evaluator.spec.ts --retries=0 --reporter=line --output=<isolated-temp>
+
+
+[WebServer] INFO:     Started server process [13160]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8216 (Press CTRL+C to quit)
+
+[WebServer] (node:32516) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:12340) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/1] e2e\strategy-evaluator.spec.ts:3:1 › saves a canonical strategy decision, reconstructs, and opens exact chart evidence
+  1 passed (12.7s)

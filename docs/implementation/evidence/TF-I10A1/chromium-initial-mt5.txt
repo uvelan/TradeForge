@@ -1,0 +1,54 @@
+> e2e
+> playwright test --retries=0 --reporter=line
+
+[WebServer] INFO:     Started server process [8232]
+[WebServer] INFO:     Waiting for application startup.
+
+
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8198 (Press CTRL+C to quit)
+
+[WebServer] (node:9136) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 71 tests using 1 worker
+
+
+(node:29692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.primary-chart .chart-input')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.primary-chart .chart-input') with timeout 5000ms
+      - waiting for locator('.primary-chart .chart-input')
+
+
+       8 |   await page.getByRole("button",{name:"Market Terminal",exact:true}).click();
+       9 |   await page.getByRole("combobox",{name:"Market data source"}).selectOption("DEMO");
+    > 10 |   await expect(page.locator(primary)).toBeVisible();
+         |                                       ^
+[Intermediate test output omitted]
+  16 failed
+    e2e\indicator-engine.spec.ts:31:1 › multiple canonical indicators persist, update panes and clean up on remount
+    e2e\indicator-engine.spec.ts:73:1 › replay submits only closed evidence within the visible cutoff
+    e2e\indicator-engine.spec.ts:96:1 › a session overlay exposes provisional and completed backend values
+    e2e\indicator-engine.spec.ts:112:1 › previous week requests a bounded M5 reference beyond chart history
+    e2e\indicator-engine.spec.ts:128:1 › the terminal distinguishes a complete forex week from missing open-market coverage
+    e2e\indicator-engine.spec.ts:163:1 › structure replay paints CHOCH at the confirming step and removes it on rewind
+    e2e\indicator-engine.spec.ts:228:1 › a pending market structure result stays tied to the original chart scope
+    e2e\indicator-engine.spec.ts:258:1 › older structure pages are bounded and leave the latest chart and state intact
+    e2e\indicator-engine.spec.ts:302:1 › calendar structure confirms a real reopening BOS and removes it on replay rewind
+    e2e\indicator-engine.spec.ts:339:1 › liquidity replay exposes the sweep only after its closed evidence and keeps it inspectable
+    e2e\indicator-engine.spec.ts:380:1 › a pending Liquidity request cannot replace another instrument or timeframe
+    e2e\indicator-engine.spec.ts:380:1 › a pending FVG request cannot replace another instrument or timeframe
+    e2e\indicator-engine.spec.ts:380:1 › a pending Order block request cannot replace another instrument or timeframe
+    e2e\indicator-engine.spec.ts:380:1 › a pending CRT request cannot replace another instrument or timeframe
+    e2e\indicator-engine.spec.ts:408:1 › FVG paints a causal zone and updates its remaining depth during replay
+    e2e\indicator-engine.spec.ts:453:1 › FVG selection survives a rolling MT5 refresh and drops corrected evidence
+  55 passed (9.5m)

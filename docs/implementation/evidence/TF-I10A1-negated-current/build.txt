@@ -1,0 +1,37 @@
+> build
+> tsc --noEmit && vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 3013 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/catalog.html                    0.45 kB │ gzip:   0.31 kB
+dist/index.html                      0.53 kB │ gzip:   0.33 kB
+dist/assets/terminal-CBK_TtMD.css   41.47 kB │ gzip:  10.12 kB
+dist/assets/catalog-BtfC513C.js    237.06 kB │ gzip:  74.93 kB
+dist/assets/terminal-sbkVOPlb.js   293.21 kB │ gzip:  81.09 kB
+dist/assets/timezone-C1I9y4LN.js   399.92 kB │ gzip: 127.18 kB
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/AccordionDetails/AccordionDetails.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/@mui/material/AccordionDetails/AccordionDetails.mjs:1:1 ]
+   │
+ 1 │ 'use client';
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+
+[Additional dependency module-directive warnings omitted]
+
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/lucide-react/dist/esm/Icon.mjs" may not be preserved when bundling.
+   ╭─[ node_modules/lucide-react/dist/esm/Icon.mjs:2:1 ]
+   │
+ 2 │ "use client";
+   │ ──────┬──────
+   │       ╰──────── module level directive may not be preserved
+   │
+   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives
+───╯
+
+✓ built in 2.75s

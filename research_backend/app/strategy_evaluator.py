@@ -1,7 +1,7 @@
 """Bounded chronological strategy decisions over exact canonical evidence."""
 from bisect import bisect_left, bisect_right
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from operator import eq, ge, gt, le, lt
 from heapq import heapify, heappop, heappush
 
@@ -54,6 +54,7 @@ class RuleGraph:
         self.rules = {}
         self.phases = {}
         self.aliases = {}
+        self.negated = set()
         self.predecessors = defaultdict(list)
         self.temporal = defaultdict(list)
         self.groups = {phase:getattr(definition,phase) for phase in PHASES}
@@ -88,15 +89,17 @@ class RuleGraph:
         self.predecessors[edge.after].append(edge.before)
         self.temporal[edge.after].append(edge)
 
-    def register(self, node, phase):
+    def register(self, node, phase, negated=False):
         if node.type=="RULE":
             self.rules[node.id] = node
             self.phases[node.id] = phase
+            if negated:
+                self.negated.add(node.id)
             if node.alias:
                 self.aliases[node.alias] = node.id
             return
         for child in node.children:
-            self.register(child,phase)
+            self.register(child,phase,negated != (node.operator=="NOT"))
         if node.operator=="SEQUENCE":
             for before,after in zip(node.children,node.children[1:]):
                 self.add(Edge(before.id,after.id,label="SEQUENCE"))
@@ -129,9 +132,13 @@ def predicate(rule, spec, event):
 
 
 class EvaluationMachine:
-    def __init__(self, definition, evidence, identity, start, selection_end, *, check_budget=None):
+    def __init__(self, definition, evidence, identity, start, selection_end, *, check_budget=None,
+                 rearm_rule=None, rearm_after=None, spent_families=()):
         self.definition = definition
         self.check_budget = check_budget
+        self.rearm_rule = rearm_rule
+        self.rearm_after = rearm_after
+        self.spent_families = frozenset(spent_families)
         self.evidence = evidence
         self.graph = RuleGraph(definition)
         self.identity = identity
@@ -290,6 +297,9 @@ class EvaluationMachine:
                 uncertainty = uncertainty or ("BOUND_EVIDENCE_STALE" if record.available<age_start else
                                               "CURRENT_MATCH_PRECEDES_PHASE")
                 continue
+            if rule.id==self.rearm_rule and not self.attempt:
+                if record.family in self.spent_families or not record.family or record.available<=self.rearm_after:
+                    continue
             if activating_crt:
                 proof = BoundEvidence(reference=event["evidence_reference"], family=record.family,
                     market_event_id=event.get("market_event_id") or record.family,
@@ -448,25 +458,54 @@ class EvaluationMachine:
                 return result(outcome,reason)
         return result(YES,"MAINTAINED_CURRENT_PREDICATE_SATISFIED")
 
+    def latched_lower(self, phase):
+        if phase=="setup":
+            return self.context_at
+        return self.identity["warmup_start"] if self.rearm_after is None else self.rearm_after+1
+
     def pinned_current_guard(self, cutoff):
-        for key,binding in self.bindings.items():
+        maintained = {}
+        for key in self.graph.order:
             rule = self.graph.rules[key]
             if key not in self.latches or rule.evidence.state!="CURRENT":
                 continue
-            checked = self.verify_maintained(rule,binding,cutoff)
+            phase = self.graph.phases[key]
+            activation = self.activation_proofs.get(key)
+            if key in self.graph.negated:
+                # Absence is a query over the declared scope, even when a
+                # previous check had a positive witness in one family.
+                checked = self.select(rule,phase,cutoff,self.latched_lower(phase))
+                checked = replace(checked,verified_at=cutoff)
+            elif activation is not None:
+                checked = self.verify_maintained(rule,activation,cutoff)
+            else:
+                continue
             self.results[key] = checked
-            if checked.outcome!=YES:
-                state = "INVALIDATED" if checked.outcome==NO else "INSUFFICIENT_EVIDENCE"
-                self.transition(cutoff,state,checked.reason)
+            maintained.setdefault(phase,[]).append(checked)
+        for phase,checks in maintained.items():
+            outcome = self.graph.outcome(self.graph.groups[phase],self.results)
+            self.phase_results[phase] = outcome.value
+            if outcome!=YES:
+                state = "INVALIDATED" if outcome==NO else "INSUFFICIENT_EVIDENCE"
+                reason = next((item.reason for item in checks if item.outcome==outcome),
+                              "LATCHED_PHASE_NO_LONGER_SATISFIED")
+                self.transition(cutoff,state,reason)
                 return False
         return True
 
     def at(self, cutoff):
         if any(lane.at(cutoff)["status"]!="COMPLETE" for lane in self.evidence.coverage.values()):
+            affected = set()
+            for key in self.latches.keys() & self.graph.negated:
+                if self.graph.rules[key].evidence.state=="CURRENT":
+                    self.results[key] = RuleResult(UNKNOWN,"REQUIRED_SOURCE_COVERAGE_UNKNOWN",verified_at=cutoff)
+                    affected.add(self.graph.phases[key])
+            for phase in affected:
+                self.phase_results[phase] = self.graph.outcome(self.graph.groups[phase],self.results).value
             self.transition(cutoff,"INSUFFICIENT_EVIDENCE","REQUIRED_SOURCE_COVERAGE_UNKNOWN")
             return
         if not self.attempt:
-            context = self.phase("context",cutoff,self.identity["warmup_start"])
+            context = self.phase("context",cutoff,self.identity["warmup_start"] if self.rearm_after is None else self.rearm_after+1)
             if context!=YES or self.activate(cutoff)!=YES:
                 state = ("NO_TRADE" if cutoff==self.end and context==NO else
                          "WAITING_FOR_CONTEXT" if context==NO else "INSUFFICIENT_EVIDENCE")
@@ -482,7 +521,7 @@ class EvaluationMachine:
             self.transition(cutoff,state,"BOUND_REFERENCE_TERMINAL")
             return
         if self.definition.attempt.context_mode=="CONTINUOUS":
-            context = self.phase("context",cutoff,self.identity["warmup_start"])
+            context = self.phase("context",cutoff,self.identity["warmup_start"] if self.rearm_after is None else self.rearm_after+1)
             if context!=YES:
                 self.transition(cutoff,"INVALIDATED" if context==NO else "INSUFFICIENT_EVIDENCE",
                                 "CONTINUOUS_CONTEXT_FAILED")
@@ -554,7 +593,7 @@ class EvaluationMachine:
             self.transition(cutoff,"EXPIRED","SETUP_EXPIRY_DURING_UNCERTAINTY")
 
     def boundaries(self, cutoff):
-        points = {stamp for stamp in self.evidence.timeline if stamp<=cutoff} | {cutoff}
+        points = {stamp for stamp in self.evidence.timeline if self.start<=stamp<=cutoff} | {cutoff}
         for view in {view.snapshot:view for view in self.evidence.views.values()}.values():
             for family in view.smt_uncertainty.values():
                 for boundary in family:
@@ -580,21 +619,31 @@ class EvaluationMachine:
             stamp = heappop(pending)
             if self.check_budget:
                 self.check_budget()
-            self.at(stamp)
-            self.expire_during_uncertainty(stamp)
+            self.step(stamp)
             if self.state in TERMINAL:
                 break
-            origin = self.context_at if self.definition.attempt.expiry_origin=="CONTEXT_ACTIVATION" else self.setup_at
-            if len(known)>MAX_TIMELINE:
-                raise ResourceLimit("Evaluation boundaries exceed the timeline budget")
-            if self.setup_at is not None and stamp<self.setup_at+1<=cutoff and self.setup_at+1 not in known:
-                known.add(self.setup_at+1)
-                heappush(pending,self.setup_at+1)
-            if origin is not None and self.definition.expiry.unit=="SECONDS":
-                deadline = origin+self.definition.expiry.count+1
-                if stamp<deadline<=cutoff and deadline not in known:
-                    known.add(deadline)
-                    heappush(pending,deadline)
+            for next_stamp in self.dynamic_boundaries(stamp,cutoff):
+                if next_stamp not in known:
+                    if len(known)>=MAX_TIMELINE:
+                        raise ResourceLimit("Evaluation boundaries exceed the timeline budget")
+                    known.add(next_stamp)
+                    heappush(pending,next_stamp)
+        return self.decision(cutoff,len(known))
+
+    def step(self, cutoff):
+        self.at(cutoff)
+        self.expire_during_uncertainty(cutoff)
+
+    def dynamic_boundaries(self, stamp, cutoff):
+        origin = self.context_at if self.definition.attempt.expiry_origin=="CONTEXT_ACTIVATION" else self.setup_at
+        if self.setup_at is not None and stamp<self.setup_at+1<=cutoff:
+            yield self.setup_at+1
+        if origin is not None and self.definition.expiry.unit=="SECONDS":
+            deadline = origin+self.definition.expiry.count+1
+            if stamp<deadline<=cutoff:
+                yield deadline
+
+    def decision(self, cutoff, boundary_count):
         supporting = {f"{result.proof.reference.calculation_snapshot}:{result.proof.reference.event_id}":result.event
                       for result in (*self.results.values(),*self.activation_proofs.values(),*self.temporal_proofs.values()) if result.proof}
         if self.latest_crt:
@@ -606,6 +655,10 @@ class EvaluationMachine:
             "context_activated_at":self.context_at,"setup_activated_at":self.setup_at,"trigger_activated_at":self.trigger_at,
             "transitions":self.timeline,"invalidation":self.invalidation.value,"expiry":self.expiry.value,
             "phase_results":self.phase_results,
+            "activation_outcomes":[self.latches[key].trace(self.graph.rules[key],self.graph.phases[key]) |
+                {"phase_activated_at":self.phase_times[self.graph.phases[key]]}
+                for key in sorted(self.latches.keys() & self.graph.negated)
+                if self.graph.rules[key].evidence.state=="CURRENT"],
             "rules":[self.results[key].trace(self.graph.rules[key],self.graph.phases[key])
                      for key in sorted(self.results)],
             "binding_policy_version":2,
@@ -629,5 +682,5 @@ class EvaluationMachine:
             "temporal":[{"before":key[0],"after":key[1],"relation":key[2],"outcome":value[0],"reason":value[1]}
                         for key,value in sorted(self.temporal.items())],
             "supporting_events":supporting,"entry_intent":self.intent(),
-            "resource_counts":{**self.evidence.metrics,"candidate_scans":self.scans,"exact_lookups":self.lookups,"timeline_boundaries":len(known)},
+            "resource_counts":{**self.evidence.metrics,"candidate_scans":self.scans,"exact_lookups":self.lookups,"timeline_boundaries":boundary_count},
         }

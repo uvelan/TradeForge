@@ -1,0 +1,852 @@
+{
+  "selection": {
+    "id": "DUKASCOPY_BID_2026_11_13_V1",
+    "series": [
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "EURUSD",
+        "timeframe": "M1",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+            "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+          }
+        ]
+      },
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ]
+      },
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "GBPUSD",
+        "timeframe": "M1",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+            "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+          }
+        ]
+      },
+      {
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "symbol": "GBPUSD",
+        "timeframe": "M5",
+        "price_basis": "BID",
+        "calendar": {
+          "kind": "forex_weekly"
+        },
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ]
+      }
+    ],
+    "start": 1794528000,
+    "end": 1794607200
+  },
+  "cases": [
+    {
+      "fixture": {
+        "evaluator_version": 4,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-e739a359273340669f02cb640c5f30f1",
+        "strategy_version_id": "SV-9615e6f8014349f3a9d4b0b67dd35451",
+        "configuration_fingerprint": "168be95cf261436d54d3d4e4c5d005849b9602f92d9eb3816909c4925f61dd75",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        0,
+        0
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535200,
+          "actual_activation": 1794535200
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-e40a97ec186df74ea3a6c70f752c3d5983a8b5740a81099e937a99ee545eb9e7",
+        "decision_id": "95a6556cb55797524185803a2a27b007e1f90e8a207385f27e052e0e47e237b2",
+        "cutoff": 1794607200,
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "selected_at": 1794535200,
+            "activated_at": 1794535200,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+              "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+              "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535200,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "RESOURCE_LIMIT_EXCEEDED",
+          "reason": "This producer combination requires a shorter independently checked window",
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "COMPLETED",
+          "decisions": [
+            "NO_TRADE"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65"
+          ]
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 4,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-b1dbb0db07f14ac2a7c71fda1e47bc80",
+        "strategy_version_id": "SV-4f7a5d6fae4945cb9cb7760bd532dbf8",
+        "configuration_fingerprint": "671a4a0d8511211cfc8f6da5c7712a4dd9891eb5ba87f2d9f261b88671998ab5",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        2,
+        2
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-633755fa7c26e5a6158dda9b2fe679b3ac8ca3142da1ee189be9def36c2f092f",
+        "decision_id": "afff7ebc619ebd83d40a7f3bf09cbf1965a5c0c3c9f79d7b5c2439832b39efcc",
+        "cutoff": 1794607200,
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "selected_at": 1794535202,
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "RESOURCE_LIMIT_EXCEEDED",
+          "reason": "This producer combination requires a shorter independently checked window",
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "COMPLETED",
+          "decisions": [
+            "NO_TRADE"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 4,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-62d25afb4a6d4184ba03efedc15af971",
+        "strategy_version_id": "SV-39621c7a9b05469180938e5ab45b860b",
+        "configuration_fingerprint": "4a2a2597976b153d73dc008124937829270fd79e09f4f11700bff8ddbfb90794",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        2,
+        15
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-e4891388e6256d5733b48cfa13b100a064a945d53d9a4a9d2660e855c4af1b63",
+        "decision_id": "0168f1ef6c73990e913966d44952141285b7b7f3677c057a50a2bb59b3ec2260",
+        "cutoff": 1794607200,
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "selected_at": 1794535202,
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "RESOURCE_LIMIT_EXCEEDED",
+          "reason": "This producer combination requires a shorter independently checked window",
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "COMPLETED",
+          "decisions": [
+            "NO_TRADE"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 4,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-6fd2bee6202740ca81d2d61624d1069d",
+        "strategy_version_id": "SV-e5b6b546369d46669847f082b6907569",
+        "configuration_fingerprint": "9896675de907720b3b2b8f83a82ca5e3452270bae0aa8e71eb85a46b6c4a44cb",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bullish",
+      "delays": [
+        15,
+        30
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535215,
+          "actual_activation": 1794535215
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-0edfcbce8b5394cdd05435ae0639fe4ec0d1f1384b00d5017415b624e0c2fef7",
+        "decision_id": "20620ac7c0390ed6591ed7df7f5c67dd4c62dce13066ef8d364af4d08cf31a05",
+        "cutoff": 1794607200,
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "selected_at": 1794535215,
+            "activated_at": 1794535215,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+              "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+              "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535215,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "RESOURCE_LIMIT_EXCEEDED",
+          "reason": "This producer combination requires a shorter independently checked window",
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "COMPLETED",
+          "decisions": [
+            "NO_TRADE"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0"
+          ]
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 4,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-ec17e859e6b4464b9b131066b6d91b34",
+        "strategy_version_id": "SV-7e844cd748fe4ef984ddf4530b69c28e",
+        "configuration_fingerprint": "fba4cc07bc6020aea750a9b12f63c72a8f975d281d5dbe59f235951143339d4b",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        0,
+        0
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535200,
+          "actual_activation": 1794535200
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-40e0a70bec3a081b137a88a376bbd148567b86f0ab63438a9fb404a9deb5b2b3",
+        "decision_id": "3dd808b873576753cbcb8b5e076d7ead079fac672339e14385401be6873602a3",
+        "cutoff": 1794607200,
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65",
+            "selected_at": 1794535200,
+            "activated_at": 1794535200,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "6f35b4ca03c41d8f5afdcce4b0f0e77886253437e6e3e55ed5d8c915cbae5e25",
+              "calculation_id": "fe012ed3eade0a291ab97a355e2c02b60728b5383b6ba244222f8336e0e85a50",
+              "calculation_snapshot": "c94d60baa6aa926830986bd752f32b5505784552351377d173b0c82de551ae6f",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535200,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "RESOURCE_LIMIT_EXCEEDED",
+          "reason": "This producer combination requires a shorter independently checked window",
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "COMPLETED",
+          "decisions": [
+            "NO_TRADE"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "22498f92de8e8c78dd49536ceeb8d2f4dad2a928b50f5784bb16558e4206fa65"
+          ]
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 4,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-a6d325ed8f2f4e178ab6f38c29c00603",
+        "strategy_version_id": "SV-d6d19dfa05fe47709c5026e90605e72a",
+        "configuration_fingerprint": "2c6c1061915686f200a7af5dda54b018124e1b745a677c2a2f67cfa00651fd5e",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        2,
+        2
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-8ce9e4ed8faeaa2973abec9c51f186146d17d3e32ee2f1f597b59d62ac81a009",
+        "decision_id": "10be79e8f0388b0b00553af2c06e79fcc1b0cff0a59c4629920c21b426adff6b",
+        "cutoff": 1794607200,
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "selected_at": 1794535202,
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "RESOURCE_LIMIT_EXCEEDED",
+          "reason": "This producer combination requires a shorter independently checked window",
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "COMPLETED",
+          "decisions": [
+            "NO_TRADE"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 4,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-e0cae54544294b8c93468a725adca377",
+        "strategy_version_id": "SV-440606c2c8fb4a1592990217309dbf4f",
+        "configuration_fingerprint": "0dc71db55e1e64eeaa896cc5eed21a119b2eb48e48ae180ae831db150ed41d57",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        2,
+        15
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535202,
+          "actual_activation": 1794535202
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-b7a636ef07eecd18ce27a889e26ce4d9fd36cbd708f794b1bfd5dae882beae7f",
+        "decision_id": "192d07b364f0bc464e71aca67e210089d73c1ad6fe265c5a8f33f0829ec654ae",
+        "cutoff": 1794607200,
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b",
+            "selected_at": 1794535202,
+            "activated_at": 1794535202,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "4be695ccc0ddf83b18781ab75c40213c475d9d983d2e8d49ec029839c1735195",
+              "calculation_id": "5e3c00e94eff734ef19015eb8645146f0ad5649d4b2dc5680ba1db22661e46d9",
+              "calculation_snapshot": "c051cb83081aaf2af4c29fc0e641c0bb920848bb513c240aa522539d7e3710f4",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535202,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "RESOURCE_LIMIT_EXCEEDED",
+          "reason": "This producer combination requires a shorter independently checked window",
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "COMPLETED",
+          "decisions": [
+            "NO_TRADE"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "c690f9e1560ec09acc27baa012024ed6661d54df63cf7c613cbca38eb783191b"
+          ]
+        }
+      }
+    },
+    {
+      "fixture": {
+        "evaluator_version": 4,
+        "purpose": "HISTORICAL_SIMULATION",
+        "strategy_id": "ST-c26a367837c04d85aa02fb28a78ee0cb",
+        "strategy_version_id": "SV-337854bc1880477fb1f848ea7761f40c",
+        "configuration_fingerprint": "cac1b23b28dde95264deb4c6f68e32de917ceac98ab91716e70b2b7a4978c0f3",
+        "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+        "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+        "warmup_start": 1794528000,
+        "evaluation_start": 1794535200,
+        "cutoff": 1794607200
+      },
+      "direction": "bearish",
+      "delays": [
+        15,
+        30
+      ],
+      "independent_reference_checks": [
+        {
+          "evidence_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+          "checked_constituents": 12,
+          "complete_ohlc_match": true,
+          "availability_match": true,
+          "expected_available_at": 1794535215,
+          "actual_activation": 1794535215
+        }
+      ],
+      "same_cutoff_reconstruction": true,
+      "decision": {
+        "state": "EXPIRED",
+        "reason": "BOUND_REFERENCE_TERMINAL",
+        "attempt_id": "ATT-f8d6baca79e1b33e230d51c89f081683b90d66823e2bcc2b06189c08d77c9936",
+        "decision_id": "c3270063784127255dd40c09b544c572c1e90b13b3f5458c0daa0f17259f52d2",
+        "cutoff": 1794607200,
+        "entry_intent": null,
+        "attempt_bindings": [
+          {
+            "rule": "reference",
+            "alias": "crt_reference",
+            "family": "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0",
+            "selected_at": 1794535215,
+            "activated_at": 1794535215,
+            "validity": null,
+            "evidence_state": "HISTORICAL",
+            "reference": {
+              "version": 1,
+              "category": "crt",
+              "event_id": "534219cae6c4ecab4c7b7557ffd037d99f47f0ece3996816c3e8d4c9817b4c67",
+              "calculation_id": "94650940e045678b51ac35a5742edcb0ab6d9e13597d6e61d1aa3299f3c1016c",
+              "calculation_snapshot": "997567a4f1c775aaf57c67c0e64e59501283fd408b773596c30fee33c65af96e",
+              "configuration": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+              "source": [
+                "DUKASCOPY_SAVED",
+                "EURUSD",
+                "M5",
+                "dukascopy-web-m1-v1",
+                "BID",
+                "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e"
+              ],
+              "available_at": 1794535215,
+              "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+              "availability_mode": "HISTORICAL_SIMULATION"
+            }
+          }
+        ]
+      },
+      "historical": {
+        "SINGLE_ATTEMPT": {
+          "status": "COMPLETED",
+          "decisions": [
+            "EXPIRED"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0"
+          ]
+        },
+        "NEW_CONTEXT_FAMILY": {
+          "status": "RESOURCE_LIMIT_EXCEEDED",
+          "reason": "This producer combination requires a shorter independently checked window",
+          "decisions": 0
+        },
+        "NEW_CONTEXT_FAMILY_50MIN": {
+          "status": "COMPLETED",
+          "decisions": [
+            "NO_TRADE"
+          ],
+          "intents": 0,
+          "attempts": 1,
+          "families": [
+            "656355e4e86f8dc94611e9705471ba40128b15993355006b24ac5b170077c8e0"
+          ]
+        }
+      }
+    }
+  ],
+  "benchmarks": {}
+}
