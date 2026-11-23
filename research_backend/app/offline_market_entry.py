@@ -1,6 +1,7 @@
-"""Offline, immutable entry validation for published historical intents."""
+"""Offline, immutable MARKET and fixed-price LIMIT entry validation."""
 import argparse
 import json
+from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
@@ -24,6 +25,13 @@ POLICY = {
     "fill_clock":"DELIVERY_UTC_MS", "expiry":"INCLUSIVE_SECONDS",
     "coverage":"SEALED_SYNTHETIC_DELIVERY_INTERVALS",
     "pricing":"EXACT_EXECUTABLE_SIDE_POINTS_ZERO_SLIPPAGE",
+}
+
+
+LIMIT_POLICY = POLICY | {
+    "id":"OFFLINE_FIXED_PRICE_LIMIT_ENTRY", "version":1,
+    "touch":"LONG_ASK_AT_OR_BELOW_LIMIT_SHORT_BID_AT_OR_ABOVE_LIMIT",
+    "limit_grid":"EXACT_INSTRUMENT_POINTS",
 }
 
 
@@ -141,35 +149,55 @@ def quote_priority(quote: Quote) -> tuple[int,int,int]:
 
 
 def simulate(intent, model, tape, tape_digest):
-    identity = {"intent":intent["id"],"execution_data_fingerprint":tape_digest,"policy":dict(POLICY)}
+    kind = intent["entry"]["kind"]
+    policy = LIMIT_POLICY if kind=="LIMIT" else POLICY
+    identity = {"intent":intent["id"],"execution_data_fingerprint":tape_digest,"policy":dict(policy)}
     identifier = "ME-"+fingerprint(identity)
     result = {"id":identifier,"identity":identity,"source":intent,
               "source_execution_policy":model.execution.model_dump(mode="json"),
               "order":None,"fill":None}
-    if intent["entry"]["kind"]!="MARKET":
+    if kind not in {"MARKET","LIMIT"}:
         return result | {"status":"UNSUPPORTED_ENTRY_TYPE"}
     expiry = intent["order_expiry"]
-    if expiry["unit"]!="SECONDS" or model.execution.slippage_bps!=0 or intent["symbol"] not in POINT_SCALES:
+    scale = POINT_SCALES.get(intent["symbol"])
+    if expiry["unit"]!="SECONDS" or model.execution.slippage_bps!=0 or scale is None:
         return result | {"status":"UNSUPPORTED_EXECUTION_POLICY"}
 
     begin = intent["qualified_at"]*1000
     end = begin+expiry["count"]*1000
     buy = intent["direction"]=="LONG"
     side = executable_side(buy)
-    result["order"] = {"kind":"MARKET","executable_side":side.upper(),
+    order = {"kind":kind,"executable_side":side.upper(),
                        "strictly_after_ms":begin,"expires_at_ms":end}
+    limit_units = None
+    if kind=="LIMIT":
+        limit = intent["entry"]["price"]
+        if limit is None or limit["kind"]!="FIXED_ABSOLUTE":
+            return result | {"status":"UNSUPPORTED_LIMIT_PRICE"}
+        scaled = Decimal(str(limit["value"]))*scale
+        if scaled!=scaled.to_integral_value():
+            return result | {"status":"UNSUPPORTED_LIMIT_PRICE_GRID"}
+        limit_units = int(scaled)
+        order.update(limit_price=limit,limit_price_units=limit_units,scale=scale)
+    result["order"] = order
     if tape is None:
         return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
     if tape.symbol!=intent["symbol"]:
         raise ValueError("Execution quote symbol does not match the published intent")
     relevant = [quote for quote in tape.quotes if begin<quote.time_ms<=quote.available_at_ms<=end]
-    chosen = min(relevant,key=quote_priority,default=None)
+    qualifying = relevant
+    if limit_units is not None:
+        qualifying = [quote for quote in relevant
+                      if (quote.ask_units<=limit_units if buy else quote.bid_units>=limit_units)]
+    chosen = min(qualifying,key=quote_priority,default=None)
     needed = chosen.available_at_ms if chosen else end
     if not covered(tape.complete_delivery_intervals,begin+1,needed):
         return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
     if chosen is None:
         return result | {"status":"VERIFIED_EXPIRED"}
 
+    # At the first possible touch, inspect all eligible rows at its priority,
+    # including rows that miss the limit.
     winning_priority = quote_priority(chosen)
     if any(quote_priority(quote)==winning_priority and quote!=chosen for quote in relevant):
         return result | {"status":"AMBIGUOUS_QUOTE_ORDER"}

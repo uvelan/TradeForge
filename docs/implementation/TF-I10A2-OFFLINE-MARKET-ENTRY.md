@@ -1,6 +1,6 @@
 # TF-I10A.2 offline MARKET entry validation
 
-PR #21 merged at `acfa2e965370d69629776b9317c3852f00c5afb3`. This increment consumes the immutable historical ledger through an offline service and CLI.
+PR #21 merged at `acfa2e965370d69629776b9317c3852f00c5afb3`. This increment consumes the immutable historical ledger through an offline service and CLI. The follow-up [fixed-price LIMIT policy](TF-I10A2-OFFLINE-FIXED-PRICE-LIMIT.md) uses the same service.
 
 ## Execution contract pinned before fixture execution
 
@@ -12,7 +12,7 @@ PR #21 merged at `acfa2e965370d69629776b9317c3852f00c5afb3`. This increment cons
 | Expiry | Add the immutable intent's seconds expiry to qualification. The upper boundary is inclusive, following the evaluator's expiry rule that expires only after the deadline. Both observation and delivery must be within the window. |
 | Precision | Decode integer points using the existing symbol point scale. Store the fill as an exact decimal string with its units and scale, without float conversion. |
 | Coverage | A verified synthetic tape explicitly attests complete delivery intervals. Before selecting a quote, require coverage from the first eligible millisecond through delivery. Without an eligible quote, require coverage through expiry to record verified expiry. A gap before the prospective fill or deadline produces `INSUFFICIENT_QUOTE_COVERAGE`. |
-| Scope | Accept a checksum-pinned `SYNTHETIC_EXECUTABLE_QUOTES_V1` tape. Existing archived ticks have observation order and bid/ask but no equivalent delivery receipt or complete-window attestation. The service rejects other entry types explicitly. |
+| Scope | Accept a checksum-pinned `SYNTHETIC_EXECUTABLE_QUOTES_V1` tape. Existing archived ticks have observation order and bid/ask but no equivalent delivery receipt or complete-window attestation. Other entry types are outside the MARKET policy. |
 
 ### Expected fixture
 

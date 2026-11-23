@@ -31,8 +31,8 @@ def tape(quotes, intervals=((Q+1,EXPIRY),)):
 
 @pytest.fixture
 def publish(client,canonical_successors):
-    def run(*, direction="bearish",kind="MARKET", incomplete=False, bad_proof=False):
-        request,model,_ = canonical_successors(direction=direction,kind=kind)
+    def run(*, direction="bearish",kind="MARKET", entry_price=None, incomplete=False, bad_proof=False):
+        request,model,_ = canonical_successors(direction=direction,kind=kind,entry_price=entry_price)
         if direction=="bearish" and kind=="MARKET":
             request = successor_request(request)
         else:
@@ -147,8 +147,8 @@ def test_reference_and_fingerprint_rejection(publish):
 
 
 def test_unsupported_entry_and_cross_run_identity(publish):
-    identifier,intent = publish(kind="LIMIT")
-    assert intent["entry"]["kind"]=="LIMIT"
+    identifier,intent = publish(kind="STOP")
+    assert intent["entry"]["kind"]=="STOP"
     response = validate(identifier,tape([quote(Q+1,Q+1,1)]))
     assert response["results"][0]["status"]=="UNSUPPORTED_ENTRY_TYPE"
     assert response["simulated_fills"]==response["simulated_orders"]==0
