@@ -18,7 +18,7 @@ from .tick_replay import executable_price, executable_side
 
 TAPE_LIMIT_BYTES = 4 * 1024**2
 POLICY = {
-    "id":"OFFLINE_MARKET_ENTRY", "version":1,
+    "id":"OFFLINE_MARKET_ENTRY", "version":2,
     "quote_order":"DELIVERY_OBSERVATION_SOURCE_SEQUENCE",
     "availability":"OBSERVED_AND_DELIVERED_STRICTLY_AFTER_QUALIFICATION",
     "fill_clock":"DELIVERY_UTC_MS", "expiry":"INCLUSIVE_SECONDS",
@@ -136,6 +136,10 @@ def verify_intent(run_id, identity, model, row):
     return intent
 
 
+def quote_priority(quote: Quote) -> tuple[int,int,int]:
+    return quote.available_at_ms,quote.time_ms,quote.source_order
+
+
 def simulate(intent, model, tape, tape_digest):
     identity = {"intent":intent["id"],"execution_data_fingerprint":tape_digest,"policy":dict(POLICY)}
     identifier = "ME-"+fingerprint(identity)
@@ -159,14 +163,16 @@ def simulate(intent, model, tape, tape_digest):
     if tape.symbol!=intent["symbol"]:
         raise ValueError("Execution quote symbol does not match the published intent")
     relevant = [quote for quote in tape.quotes if begin<quote.time_ms<=quote.available_at_ms<=end]
-    if len({quote.source_order for quote in tape.quotes})!=len(tape.quotes):
-        return result | {"status":"AMBIGUOUS_QUOTE_ORDER"}
-    chosen = min(relevant,key=lambda quote:(quote.available_at_ms,quote.time_ms,quote.source_order),default=None)
+    chosen = min(relevant,key=quote_priority,default=None)
     needed = chosen.available_at_ms if chosen else end
     if not covered(tape.complete_delivery_intervals,begin+1,needed):
         return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
     if chosen is None:
         return result | {"status":"VERIFIED_EXPIRED"}
+
+    winning_priority = quote_priority(chosen)
+    if any(quote_priority(quote)==winning_priority and quote!=chosen for quote in relevant):
+        return result | {"status":"AMBIGUOUS_QUOTE_ORDER"}
 
     quote = chosen.model_dump(mode="json") | {"scale":tape.scale}
     price = executable_price(quote,buy)

@@ -6,12 +6,12 @@ PR #21 merged at `acfa2e965370d69629776b9317c3852f00c5afb3`. This increment cons
 
 | Decision | Pinned policy |
 | --- | --- |
-| Offer side | The existing executable bid/ask convention in the tick replay selects bid for SHORT and ask for LONG. The supplied executable spread is already in the quote. V1 requires the source strategy's pinned slippage to be zero. |
+| Offer side | The existing executable bid/ask convention in the tick replay selects bid for SHORT and ask for LONG. The supplied executable spread is already in the quote. The offline MARKET policy requires the source strategy's pinned slippage to be zero. |
 | Event and availability | UTC epoch milliseconds. The intent's `AFTER_CAUSAL_AVAILABILITY` rule requires both quote observation and delivery to be strictly after qualification. A quote observed before or at qualification stays ineligible even if delivered later. The result's fill clock is delivery time. |
-| Order and ties | Select the first observable quote by delivery, observation time, then the unique source sequence of a single pinned tape. Duplicate source sequence makes order ambiguous. |
+| Order and ties | V2 selects the eligible quote by the earliest delivery, then earliest observation, then lowest source sequence. With continuous coverage through delivery, conflicting bid/ask rows at that exact winning priority return `AMBIGUOUS_QUOTE_ORDER`. Identical winning rows produce one fill. Conflicts at later priorities or outside the eligible window do not affect the decision. |
 | Expiry | Add the immutable intent's seconds expiry to qualification. The upper boundary is inclusive, following the evaluator's expiry rule that expires only after the deadline. Both observation and delivery must be within the window. |
 | Precision | Decode integer points using the existing symbol point scale. Store the fill as an exact decimal string with its units and scale, without float conversion. |
-| Coverage | A verified synthetic tape explicitly attests complete delivery intervals. Before selecting a quote, require coverage from the first eligible millisecond through delivery. Without an eligible quote, require coverage through expiry to record verified expiry. Gaps and ambiguous sequences produce explicit unresolved reasons. |
+| Coverage | A verified synthetic tape explicitly attests complete delivery intervals. Before selecting a quote, require coverage from the first eligible millisecond through delivery. Without an eligible quote, require coverage through expiry to record verified expiry. A gap before the prospective fill or deadline produces `INSUFFICIENT_QUOTE_COVERAGE`. |
 | Scope | Accept a checksum-pinned `SYNTHETIC_EXECUTABLE_QUOTES_V1` tape. Existing archived ticks have observation order and bid/ask but no equivalent delivery receipt or complete-window attestation. The service rejects other entry types explicitly. |
 
 ### Expected fixture
@@ -28,7 +28,7 @@ All timestamps in the table are epoch milliseconds or offsets from qualification
 | --- | --- | --- |
 | Reviewed synthetic C, SHORT | Qualification `1577973320000`. Use sequence 4, observed and delivered at qualification +1 ms. BID `1.10301`. | Same timestamp, side and price. The prequalification, equal-time and late-delivered prequalification quotes were excluded. |
 | Mirrored synthetic C, LONG | Same qualification and sequence 4. ASK `1.10314` with a 13-point spread. | Same timestamp, side and ask price. Exact resubmission returned the original result and fill IDs. |
-| Equal observations and delivery times | Sequence 8 wins the ordered tie. A repeated source sequence makes ordering ambiguous. | `SIMULATED_FILLED` for sequence 8 and `AMBIGUOUS_QUOTE_ORDER` for the repeated sequence. |
+| Equal observations and delivery times | Sequence 8 wins the ordered tie. Conflicting rows at its exact winning priority make ordering ambiguous. | `SIMULATED_FILLED` for sequence 8 and `AMBIGUOUS_QUOTE_ORDER` for the repeated sequence. |
 | Delivery order | The quote observed at qualification +2 ms and delivered at +3 ms beats the quote observed at +1 ms and delivered at +5 ms. | Filled at delivery +3 ms on the expected bid. |
 | Inclusive deadline | At `1577973620000`, the exact-boundary bid is eligible. Delivery one millisecond afterward is out of bounds. | The exact-boundary bid filled. Late delivery with complete coverage returned `VERIFIED_EXPIRED`. |
 | Empty or incomplete coverage | An empty tape covering through expiry expires. An open final millisecond or gap before the first possible fill stays unresolved. | `VERIFIED_EXPIRED` for the complete empty window and `INSUFFICIENT_QUOTE_COVERAGE` for missing coverage. |
@@ -74,4 +74,36 @@ The simulator validates research entry only. It has no HTTP, chart, account or b
 
 Before merge, close the PR to discard the change. After merge, revert this increment while retaining PR #21. The SQLite change is additive. Leave the offline result table intact for audit retention, and return to the previous code to stop writing it. Existing historical ledgers, exact proofs, strategies and provider archives are preserved.
 
-Focused verification completed with 6 passes, including the opt-in real negative control. The local runtime was Windows, Python 3.13.14 and Node 24.14.0.
+The initial increment recorded 6 focused passes, including the opt-in real negative control. The local runtime was Windows, Python 3.13.14 and Node 24.14.0.
+
+## PR #22 quote ordering correction
+
+Reviewed starting head `a844bcbacf6b279104ccdbe6816756938d8dd73a`. V1 scanned source sequences across the entire tape before selecting an eligible quote. That made later and ineligible rows capable of suppressing a covered fill or replacing an expiry outcome. The same published C SHORT intent and tapes were exercised against both policies.
+
+| C SHORT service case | V1 status and fills | Expected and observed V2 status and fills |
+| --- | --- | --- |
+| Clean winning prefix | `SIMULATED_FILLED`, 1 | `SIMULATED_FILLED`, 1 |
+| Conflicting later delivery | `AMBIGUOUS_QUOTE_ORDER`, 0 | `SIMULATED_FILLED`, 1 |
+| Same delivery, conflicting later observation | `AMBIGUOUS_QUOTE_ORDER`, 0 | `SIMULATED_FILLED`, 1 |
+| Same delivery and observation, conflicting greater sequence | `AMBIGUOUS_QUOTE_ORDER`, 0 | `SIMULATED_FILLED`, 1 |
+| Conflicting winning rows, same bid but different ask | `AMBIGUOUS_QUOTE_ORDER`, 0 | `AMBIGUOUS_QUOTE_ORDER`, 0 |
+| Identical winning rows | `AMBIGUOUS_QUOTE_ORDER`, 0 | `SIMULATED_FILLED`, 1 |
+| Late prequalification conflict alongside an eligible quote | `AMBIGUOUS_QUOTE_ORDER`, 0 | `SIMULATED_FILLED`, 1 |
+| Only ineligible conflicts, coverage through expiry | `AMBIGUOUS_QUOTE_ORDER`, 0 | `VERIFIED_EXPIRED`, 0 |
+| Only ineligible conflicts, incomplete expiry coverage | `AMBIGUOUS_QUOTE_ORDER`, 0 | `INSUFFICIENT_QUOTE_COVERAGE`, 0 |
+| Gap before conflicting prospective winner | `AMBIGUOUS_QUOTE_ORDER`, 0 | `INSUFFICIENT_QUOTE_COVERAGE`, 0 |
+
+Each row was replayed in forward and reverse input order. The unchanged winning quote was observed at qualification +1 ms and delivered at +2 ms, with side BID and price `1.10301`. The forward and reverse tape revisions preserve their full fingerprints. Distinct tape fingerprints derive distinct result IDs and, when filled, distinct fill IDs even when the semantic outcome matches. Identical requests reuse the same immutable result and fill IDs. V2 can coexist with a V1 result for the same intent and tape. The regression compares the stored V1 payload and all source run, attempt, decision and intent records byte-for-byte, including the embedded proofs.
+
+Full tape fingerprints, expected and observed statuses, counts and fill details are in the [V1 baseline](evidence/TF-I10A2-market-entry/quote-order-v1-baseline.txt) and [V2 verification](evidence/TF-I10A2-market-entry/quote-order-v2-verification.txt). The baseline regression failed as expected before modifying the simulator. Run the first command on the reviewed V1 code with the new regression in place. Run the remaining checks on V2.
+
+```powershell
+.venv/Scripts/python.exe -m pytest -q -s --tb=no research_backend/tests/test_offline_market_entry.py::test_first_eligible_quote_is_decisive
+.venv/Scripts/python.exe -m pytest -q -s --tb=short research_backend/tests/test_offline_market_entry.py research_backend/tests/benchmark_dukascopy_nov13.py::test_nov13_market_entry_negative_control
+.venv/Scripts/python.exe -m pytest -q
+git diff --check
+```
+
+To roll back only the ordering correction, revert its commit while retaining the offline result table and its immutable V1 and V2 records. The historical ledger is outside the change. The public 160-cutoff limit and the source intent status `AWAITING_EXECUTION_VALIDATION` still apply.
+
+V2 focused verification passed 8 tests, including the November 13 negative control. It reproduced 14 historical attempts and zero qualified intents, simulated orders or fills. The approved ledger and provider archive hashes matched.

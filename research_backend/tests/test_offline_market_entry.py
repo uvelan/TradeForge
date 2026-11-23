@@ -6,6 +6,7 @@ import pytest
 
 from research_backend.app import historical_strategy_engine as engine
 from research_backend.app import historical_strategy_store as store
+from research_backend.app import offline_market_entry
 from research_backend.app.db import transaction
 from research_backend.app.historical_strategy_inputs import HistoricalInput, prepare_historical, verified_evidence
 from research_backend.app.offline_market_entry import validate_market_entries
@@ -153,3 +154,111 @@ def test_unsupported_entry_and_cross_run_identity(publish):
     assert response["simulated_fills"]==response["simulated_orders"]==0
     with pytest.raises(ValueError,match="does not belong"):
         validate_market_entries(identifier,intent_id="intent-from-another-run")
+
+
+def test_first_eligible_quote_is_decisive(publish,monkeypatch):
+    from itertools import count
+    from uuid import UUID
+
+    ids = count(1)
+    monkeypatch.setattr("research_backend.app.strategy_routes.uuid4",lambda:UUID(int=next(ids)))
+    identifier,intent = publish()
+    assert (intent["direction"],intent["qualified_at"],intent["status"])==(
+        "SHORT",Q//1000,"AWAITING_EXECUTION_VALIDATION")
+    before = source_records(identifier)
+    first = quote(Q+1,Q+2,4)
+    first_conflict = quote(Q+1,Q+2,4,110301,110315)
+    later = [quote(Q+3,Q+3,9),quote(Q+3,Q+3,9,111001,111002)]
+    later_observation = [quote(Q+2,Q+2,4),quote(Q+2,Q+2,4,111001,111002)]
+    later_sequence = [quote(Q+1,Q+2,5),quote(Q+1,Q+2,5,111001,111002)]
+    prequalification = [quote(Q,Q+1,4),quote(Q,Q+1,4,111001,111002)]
+    after_expiry = [quote(EXPIRY,EXPIRY+1,4),quote(EXPIRY,EXPIRY+1,4,111001,111002)]
+    complete = [(Q+1,EXPIRY)]
+    only_through_fill = [(Q+1,Q+2)]
+    gap = [(Q+2,EXPIRY)]
+    expected_fill = "SIMULATED_FILLED"
+    scenarios = [
+        ("clean winning prefix",[first],only_through_fill,expected_fill,1),
+        ("later delivery conflict",[first,*later],only_through_fill,expected_fill,1),
+        ("same delivery later observation conflict",[first,*later_observation],complete,expected_fill,1),
+        ("same clocks later sequence conflict",[first,*later_sequence],complete,expected_fill,1),
+        ("conflict at winning priority",[first,first_conflict],complete,"AMBIGUOUS_QUOTE_ORDER",0),
+        ("identical duplicate at winning priority",[first,first.copy()],complete,expected_fill,1),
+        ("late prequalification conflict",[first,*prequalification],complete,expected_fill,1),
+        ("only ineligible conflicts",[*prequalification,*after_expiry],complete,"VERIFIED_EXPIRED",0),
+        ("ineligible conflicts with incomplete expiry coverage",after_expiry,only_through_fill,
+         "INSUFFICIENT_QUOTE_COVERAGE",0),
+        ("gap before ambiguous winning priority",[first,first_conflict],gap,"INSUFFICIENT_QUOTE_COVERAGE",0),
+    ]
+    discrepancies,records = [],{}
+    winning_fills = {}
+    for name,quotes,coverage,status,fills in scenarios:
+        for order,rows in (("forward",quotes),("reverse",list(reversed(quotes)))):
+            data = tape(rows,coverage)
+            digest = fingerprint(data)
+            response = validate(identifier,data,intent["id"])
+            result, = response["results"]
+            assert result["source"]==intent
+            assert result["identity"]["execution_data_fingerprint"]==digest
+            assert response==validate(identifier,data,intent["id"])
+            fill = result["fill"]
+            if fill is not None:
+                assert (fill["quote"],fill["time_ms"],fill["side"],fill["price"])==(
+                    first | {"scale":100000},Q+2,"BID","1.10301")
+                winning_fills[digest] = fill["id"]
+            records[digest] = result["id"]
+            actual = result["status"],response["simulated_fills"]
+            expected = status,fills
+            print(json.dumps({"case":name,"input_order":order,"tape_sha256":digest,"intent":intent["id"],
+                              "policy":result["identity"]["policy"]["version"],"result_id":result["id"],
+                              "expected_status":status,"expected_fills":fills,"status":actual[0],"fills":actual[1],
+                              "fill":fill},sort_keys=True))
+            if actual!=expected:
+                discrepancies.append((name,order,expected,actual))
+    assert source_records(identifier)==before
+    assert len(set(records.values()))==len(records)
+    with transaction() as db:
+        assert db.execute("SELECT count(*) FROM offline_market_entry_results").fetchone()[0]==len(records)
+    assert not discrepancies,discrepancies
+    assert len(set(winning_fills.values()))==len(winning_fills)>1
+
+
+def source_records(identifier):
+    tables = ("historical_strategy_runs","historical_strategy_attempts",
+              "historical_strategy_decisions","historical_strategy_intents")
+    with transaction() as db:
+        return tuple(tuple(tuple(row) for row in db.execute(
+            f"SELECT * FROM {table} WHERE {'id' if table=='historical_strategy_runs' else 'run_id'}=? ORDER BY id",
+            (identifier,))) for table in tables)
+
+
+def test_corrected_policy_preserves_existing_immutable_result(publish,monkeypatch):
+    identifier,intent = publish()
+    data = tape([quote(Q+1,Q+1,4)])
+    source_before = source_records(identifier)
+    assert offline_market_entry.POLICY["version"]==2
+    with monkeypatch.context() as previous:
+        # The clean singleton produces exactly the same payload in the V1
+        # selector. Seed that payload under its original policy identity.
+        previous.setitem(offline_market_entry.POLICY,"version",1)
+        original, = validate(identifier,data,intent["id"])["results"]
+    with transaction() as db:
+        original_bytes = db.execute("SELECT CAST(payload AS BLOB) FROM offline_market_entry_results WHERE id=?",
+                                    (original["id"],)).fetchone()[0]
+
+    corrected, = validate(identifier,data,intent["id"])["results"]
+    repeated, = validate(identifier,data,intent["id"])["results"]
+    assert corrected==repeated
+    assert original["id"]!=corrected["id"]
+    assert original["fill"]["id"]!=corrected["fill"]["id"]
+    assert original["identity"] | {"policy":corrected["identity"]["policy"]}==corrected["identity"]
+    assert original["fill"] | {"id":corrected["fill"]["id"]}==corrected["fill"]
+    with transaction() as db:
+        rows = dict(db.execute("SELECT id,CAST(payload AS BLOB) FROM offline_market_entry_results"))
+        assert set(rows)=={original["id"],corrected["id"]}
+        assert rows[original["id"]]==original_bytes
+    assert source_records(identifier)==source_before
+    print(json.dumps({"case":"immutable policy coexistence","tape_sha256":fingerprint(data),
+                      "v1_result":original["id"],"v1_fill":original["fill"]["id"],
+                      "v2_result":corrected["id"],"v2_fill":corrected["fill"]["id"],
+                      "unchanged_original_bytes":True,"unchanged_source_bytes":True},sort_keys=True))
