@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import stat
 from dataclasses import asdict
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -93,6 +94,8 @@ class Catalog:
                 if not result.rowcount:
                     # The writer transaction serializes registration and validation.
                     entry = self._entry(connection, dataset_id)
+                    if entry is None:
+                        raise CatalogIntegrityError("Dataset registration cannot be verified")
                     self._verify_artifact(entry["relative_path"], entry["sha256"])
                 elif path.exists() or path.is_symlink():
                     # A rename can survive an interrupted SQLite commit. Retain the
@@ -125,7 +128,16 @@ class Catalog:
     def _verify_artifact(self, relative, checksum):
         path = self._artifact_path(relative)
         try:
-            with path.open("rb") as file:
+            if not path.is_file():
+                raise CatalogIntegrityError("Dataset artifact is not a regular file")
+            # POSIX nonblocking protects the SQLite writer if a FIFO replaces the
+            # path between the preliminary type check and the open.
+            def nonblocking(name, flags):
+                return os.open(name, flags | getattr(os, "O_NONBLOCK", 0))
+
+            with open(path, "rb", opener=nonblocking) as file:
+                if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
+                    raise CatalogIntegrityError("Dataset artifact is not a regular file")
                 actual = hashlib.file_digest(file, "sha256").hexdigest()
         except OSError as error:
             raise CatalogIntegrityError("Dataset artifact cannot be read") from error

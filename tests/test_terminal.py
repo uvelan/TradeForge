@@ -1,10 +1,13 @@
+import builtins
+import os
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import delete, update
 
 from tradeforge.api import create_app
 from tradeforge.catalog import Catalog, validate
@@ -124,6 +127,57 @@ def test_publication_preserves_file_only_orphan(tmp_path, monkeypatch, conflicti
         replace.assert_not_called()
         assert path.read_bytes() == original
         assert list(tmp_path.rglob("*.tmp")) == []
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="POSIX FIFO fixture")
+def test_duplicate_rejects_nonregular_artifact_without_opening(tmp_path, monkeypatch):
+    engine = open_database(tmp_path)
+    try:
+        catalog = Catalog(tmp_path, engine)
+        args = (Simulator(), "EURUSD", Timeframe.M1, 900, 1800)
+        catalog.ingest(*args)
+        entry, = catalog.list()
+        path = tmp_path / entry["relative_path"]
+        path.unlink()
+        os.mkfifo(path)
+
+        def guard(original):
+            def fail_if_opened(filename, *args, **kwargs):
+                if isinstance(filename, (str, os.PathLike)) and Path(filename) == path:
+                    pytest.fail("An invalid catalog node must never be opened")
+                return original(filename, *args, **kwargs)
+            return fail_if_opened
+
+        monkeypatch.setattr(builtins, "open", guard(builtins.open))
+        monkeypatch.setattr(Path, "open", guard(Path.open))
+        with pytest.raises(ValueError, match="not a regular file"):
+            catalog.ingest(*args)
+        assert path.is_fifo()
+        assert catalog.list() == [entry]
+        assert list(tmp_path.rglob("*.tmp")) == []
+    finally:
+        engine.dispose()
+
+
+def test_duplicate_rejects_path_outside_artifact_root(tmp_path):
+    engine = open_database(tmp_path)
+    try:
+        catalog = Catalog(tmp_path, engine)
+        args = (Simulator(), "EURUSD", Timeframe.M1, 900, 1800)
+        dataset_id = catalog.ingest(*args)
+        entry, = catalog.list()
+        path = tmp_path / entry["relative_path"]
+        outside = tmp_path / "outside.parquet"
+        outside.write_bytes(path.read_bytes())
+        with engine.begin() as connection:
+            connection.execute(update(catalog.table).where(catalog.table.c.id == dataset_id)
+                               .values(relative_path=outside.name))
+        with pytest.raises(ValueError, match="Invalid catalog path"):
+            catalog.ingest(*args)
+        assert outside.read_bytes() == path.read_bytes()
+        assert catalog.list()[0]["relative_path"] == outside.name
     finally:
         engine.dispose()
 
