@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from .catalog import Catalog
+from .catalog import Catalog, CatalogIntegrityError
 from .database import open_database
 from .market import MT5Connection, MT5Unavailable, Simulator, Timeframe
 
@@ -82,6 +82,9 @@ def create_app(storage: Path | None = None, broker: MT5Connection | None = None)
     def simulate(body: SimulationRequest):
         try:
             dataset_id = app.state.catalog.ingest(Simulator(), "EURUSD", body.timeframe, body.start, body.end)
+        except CatalogIntegrityError as error:
+            logger.exception("event=dataset_publication_integrity_failed")
+            raise HTTPException(409, "Dataset integrity check failed") from error
         except ValueError as error:
             raise HTTPException(422, str(error)) from error
         return {"id": dataset_id}
@@ -98,6 +101,9 @@ def create_app(storage: Path | None = None, broker: MT5Connection | None = None)
                                          body.timeframe, body.start, body.end, candles)
         except MT5Unavailable as error:
             raise HTTPException(503, str(error)) from error
+        except CatalogIntegrityError as error:
+            logger.exception("event=dataset_publication_integrity_failed")
+            raise HTTPException(409, "Dataset integrity check failed") from error
         except ValueError as error:
             raise HTTPException(422, str(error)) from error
         return {"id": dataset_id}

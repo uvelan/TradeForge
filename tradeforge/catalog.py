@@ -35,6 +35,10 @@ def validate(rows: list[Candle], start: int, end: int, step: int, *, allow_gaps=
         previous = row.time
 
 
+class CatalogIntegrityError(ValueError):
+    """A registered or pre-existing immutable catalog artifact cannot be verified."""
+
+
 class Catalog:
     def __init__(self, root: Path, engine: Engine):
         self.root = root.resolve()
@@ -67,6 +71,7 @@ class Catalog:
         dataset_id = hashlib.sha256(json.dumps(identity, separators=(",", ":")).encode()).hexdigest()
         relative = Path("market-data", dataset_id[:2], f"{dataset_id}.parquet")
         path = self.root / relative
+        self._artifact_path(relative)
         path.parent.mkdir(parents=True, exist_ok=True)
         with NamedTemporaryFile(dir=path.parent, delete=False, suffix=".tmp") as file:
             temporary = Path(file.name)
@@ -85,7 +90,15 @@ class Catalog:
                     relative_path=relative.as_posix(), sha256=checksum,
                     row_count=len(rows), validation_status=status,
                 ).on_conflict_do_nothing(index_elements=["id"]))
-                if result.rowcount:
+                if not result.rowcount:
+                    # The writer transaction serializes registration and validation.
+                    entry = self._entry(connection, dataset_id)
+                    self._verify_artifact(entry["relative_path"], entry["sha256"])
+                elif path.exists() or path.is_symlink():
+                    # A rename can survive an interrupted SQLite commit. Retain the
+                    # original bytes and claim only an exact match to the staged file.
+                    self._verify_artifact(relative, checksum)
+                else:
                     os.replace(temporary, path)
         finally:
             temporary.unlink(missing_ok=True)
@@ -96,17 +109,36 @@ class Catalog:
             query = select(self.table).order_by(self.table.c.acquired_utc.desc()).limit(100)
             return [dict(row) for row in connection.execute(query).mappings()]
 
+    def _entry(self, connection, dataset_id):
+        query = select(self.table).where(self.table.c.id == dataset_id)
+        return connection.execute(query).mappings().one_or_none()
+
+    def _artifact_path(self, relative):
+        try:
+            path = (self.root / relative).resolve()
+        except OSError as error:
+            raise CatalogIntegrityError("Invalid catalog path") from error
+        if not path.is_relative_to(self.root / "market-data"):
+            raise CatalogIntegrityError("Invalid catalog path")
+        return path
+
+    def _verify_artifact(self, relative, checksum):
+        path = self._artifact_path(relative)
+        try:
+            with path.open("rb") as file:
+                actual = hashlib.file_digest(file, "sha256").hexdigest()
+        except OSError as error:
+            raise CatalogIntegrityError("Dataset artifact cannot be read") from error
+        if actual != checksum:
+            raise CatalogIntegrityError("Dataset checksum mismatch")
+        return path
+
     def read(self, dataset_id: str, cutoff: int | None):
         with self.engine.connect() as connection:
-            entry = connection.execute(select(self.table).where(self.table.c.id == dataset_id)).mappings().one_or_none()
+            entry = self._entry(connection, dataset_id)
         if entry is None:
             raise KeyError(dataset_id)
-        path = (self.root / entry["relative_path"]).resolve()
-        if not path.is_relative_to(self.root / "market-data"):
-            raise ValueError("Invalid catalog path")
-        with path.open("rb") as file:
-            if hashlib.file_digest(file, "sha256").hexdigest() != entry["sha256"]:
-                raise ValueError("Dataset checksum mismatch")
+        path = self._verify_artifact(entry["relative_path"], entry["sha256"])
         candles = pl.scan_parquet(path).with_columns(
             pl.col("time", "available_at").dt.epoch("s")
         )
