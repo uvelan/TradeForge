@@ -143,17 +143,21 @@ def test_exit_activation_cutoff_and_continuous_coverage(position):
     assert first["exit"]==later["exit"]
 
 
-def test_stop_target_conflict_before_and_after_a_certain_exit(position):
+@pytest.mark.parametrize("other_quote",[
+    pytest.param(LONG_TARGET,id="stop-target"),
+    pytest.param(LONG_STOP | {"bid_units":110215},id="stop-miss"),
+])
+def test_same_priority_conflict_before_and_after_a_certain_exit(position,other_quote):
     published = position()
     sealed = [(Q+1,CUTOFF)]
     certain = quote(Q+3,Q+3,6,110514,110520)
     late = {"time_ms":Q+5,"available_at_ms":Q+5,"source_order":8}
     certain_rows = []
     for label, arrange in (("forward",list),("reverse",lambda rows:list(reversed(rows)))):
-        check(published,f"stop/target conflict first {label}",tape(arrange([ENTRY_LONG,LONG_STOP,LONG_TARGET,certain | late]),sealed),
+        check(published,f"same-priority conflict first {label}",tape(arrange([ENTRY_LONG,LONG_STOP,other_quote,certain | late]),sealed),
               "AMBIGUOUS_QUOTE_ORDER")
-        row = check(published,f"stop/target conflict after certain exit {label}",
-              tape(arrange([ENTRY_LONG,certain,LONG_STOP | late,LONG_TARGET | late]),sealed),
+        row = check(published,f"same-priority conflict after certain exit {label}",
+              tape(arrange([ENTRY_LONG,certain,LONG_STOP | late,other_quote | late]),sealed),
               "SIMULATED_EXIT",winner=(certain,"REWARD_TARGET","1.10514","1.10514"))
         certain_rows.append(row)
     first,reverse = certain_rows
