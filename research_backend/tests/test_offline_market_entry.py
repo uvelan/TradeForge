@@ -31,8 +31,8 @@ def tape(quotes, intervals=((Q+1,EXPIRY),)):
 
 @pytest.fixture
 def publish(client,canonical_successors):
-    def run(*, direction="bearish",kind="MARKET", entry_price=None, incomplete=False, bad_proof=False):
-        request,model,_ = canonical_successors(direction=direction,kind=kind,entry_price=entry_price)
+    def run(*, direction="bearish",kind="MARKET", entry_price=None, management=None, incomplete=False, bad_proof=False):
+        request,model,_ = canonical_successors(direction=direction,kind=kind,entry_price=entry_price,management=management)
         if direction=="bearish" and kind=="MARKET":
             request = successor_request(request)
         else:

@@ -157,15 +157,23 @@ def quote_priority(quote: Quote) -> tuple[int,int,int]:
     return quote.available_at_ms,quote.time_ms,quote.source_order
 
 
-def simulate(intent, model, tape, tape_digest):
+def simulate(intent, model, tape, tape_digest, *, policy=None, cutoff_ms=None):
     kind = intent["entry"]["kind"]
-    policy = ENTRY_POLICIES.get(kind,POLICY)
+    current = ENTRY_POLICIES.get(kind,POLICY)
+    policy = current if policy is None else policy
+    legacy_market = POLICY | {"version":1}
+    market_v1 = canonical(policy)==canonical(legacy_market)
+    # Before fixed-price support, MARKET V1/V2 recorded an unsupported outcome
+    # under its own policy identity for those entry kinds.
+    if canonical(policy) not in (canonical(current),canonical(POLICY)) and not market_v1:
+        raise ValueError("Unverifiable historical entry policy")
+
     identity = {"intent":intent["id"],"execution_data_fingerprint":tape_digest,"policy":dict(policy)}
     identifier = "ME-"+fingerprint(identity)
     result = {"id":identifier,"identity":identity,"source":intent,
               "source_execution_policy":model.execution.model_dump(mode="json"),
               "order":None,"fill":None}
-    if kind not in ENTRY_POLICIES:
+    if kind not in ENTRY_POLICIES or (kind!="MARKET" and (market_v1 or policy==POLICY)):
         return result | {"status":"UNSUPPORTED_ENTRY_TYPE"}
     expiry = intent["order_expiry"]
     scale = POINT_SCALES.get(intent["symbol"])
@@ -193,11 +201,17 @@ def simulate(intent, model, tape, tape_digest):
             order.update(stop_price=threshold,stop_price_units=threshold_units,scale=scale,
                          trigger_side=side.upper())
     result["order"] = order
+    horizon = end if cutoff_ms is None else min(end,cutoff_ms)
     if tape is None:
-        return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
+        return result | {"status":"PENDING_AT_CUTOFF" if horizon==begin else "INSUFFICIENT_QUOTE_COVERAGE"}
     if tape.symbol!=intent["symbol"]:
         raise ValueError("Execution quote symbol does not match the published intent")
-    relevant = [quote for quote in tape.quotes if begin<quote.time_ms<=quote.available_at_ms<=end]
+    visible = tape.quotes if cutoff_ms is None else [q for q in tape.quotes if q.available_at_ms<=cutoff_ms]
+    if market_v1 and len({q.source_order for q in visible})!=len(visible):
+        return result | {"status":"AMBIGUOUS_QUOTE_ORDER"}
+    if horizon==begin:
+        return result | {"status":"PENDING_AT_CUTOFF"}
+    relevant = [quote for quote in visible if begin<quote.time_ms<=quote.available_at_ms<=horizon]
     qualifying = relevant
     if kind=="LIMIT":
         qualifying = [quote for quote in relevant
@@ -206,11 +220,15 @@ def simulate(intent, model, tape, tape_digest):
         qualifying = [quote for quote in relevant
                       if (quote.ask_units>=threshold_units if buy else quote.bid_units<=threshold_units)]
     chosen = min(qualifying,key=quote_priority,default=None)
-    needed = chosen.available_at_ms if chosen else end
+    needed = chosen.available_at_ms if chosen else horizon
     if not covered(tape.complete_delivery_intervals,begin+1,needed):
         return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
+    # V1 requires sequence uniqueness even outside the order window. An unseen
+    # suffix can still invalidate both an apparent fill and a terminal expiry.
+    if market_v1 and len(visible)<len(tape.quotes) and (chosen is not None or horizon==end):
+        return result | {"status":"PENDING_POLICY_VERIFICATION"}
     if chosen is None:
-        return result | {"status":"VERIFIED_EXPIRED"}
+        return result | {"status":"VERIFIED_EXPIRED" if horizon==end else "PENDING_AT_CUTOFF"}
 
     # At the first possible touch or trigger, inspect all eligible rows at its priority,
     # including rows that miss the threshold.
@@ -227,8 +245,7 @@ def simulate(intent, model, tape, tape_digest):
     return result | {"status":"SIMULATED_FILLED"}
 
 
-def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=None):
-    """Validate published intents without changing their ledger or qualification status."""
+def pin_tape(tape, tape_sha256):
     if tape is None:
         if tape_sha256 is not None:
             raise ValueError("Execution fingerprint requires a synthetic quote tape")
@@ -238,23 +255,33 @@ def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=No
         digest = fingerprint(tape.model_dump(mode="json"))
         if digest!=tape_sha256:
             raise ValueError("Synthetic execution tape fingerprint mismatch")
+    return tape,digest
 
+
+def published_entry_intents(db, run_id, identity, model):
+    attempts,qualified = db.execute("""SELECT COUNT(*),COUNT(*) FILTER (WHERE state='TRIGGER_QUALIFIED')
+                                      FROM historical_strategy_attempts WHERE run_id=?""",(run_id,)).fetchone()
+    rows = db.execute("""SELECT i.id AS intent_id,i.payload AS intent,i.attempt_id,i.decision_id,
+                a.run_id AS attempt_run,a.state AS attempt_state,a.decision_id AS attempt_decision,
+                d.run_id AS decision_run,d.attempt_id AS decision_attempt,d.state AS decision_state,
+                d.cutoff,d.payload AS decision
+                FROM historical_strategy_intents i
+                JOIN historical_strategy_attempts a ON a.id=i.attempt_id
+                JOIN historical_strategy_decisions d ON d.id=i.decision_id
+                WHERE i.run_id=? ORDER BY d.cutoff""",(run_id,)).fetchall()
+    if len(rows)!=qualified or any(row["decision_id"]!=row["attempt_decision"] for row in rows):
+        raise ValueError("Published run qualification ledger does not reconcile")
+    intents = [verify_intent(run_id,identity,model,row) for row in rows]
+    return attempts,qualified,intents
+
+
+def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=None):
+    """Validate published intents without changing their ledger or qualification status."""
+    tape,digest = pin_tape(tape,tape_sha256)
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
         identity,model = verify_run(db,run_id)
-        attempts,qualified = db.execute("""SELECT COUNT(*),COUNT(*) FILTER (WHERE state='TRIGGER_QUALIFIED')
-                                          FROM historical_strategy_attempts WHERE run_id=?""",(run_id,)).fetchone()
-        rows = db.execute("""SELECT i.id AS intent_id,i.payload AS intent,i.attempt_id,i.decision_id,
-                    a.run_id AS attempt_run,a.state AS attempt_state,a.decision_id AS attempt_decision,
-                    d.run_id AS decision_run,d.attempt_id AS decision_attempt,d.state AS decision_state,
-                    d.cutoff,d.payload AS decision
-                    FROM historical_strategy_intents i
-                    JOIN historical_strategy_attempts a ON a.id=i.attempt_id
-                    JOIN historical_strategy_decisions d ON d.id=i.decision_id
-                    WHERE i.run_id=? ORDER BY d.cutoff""",(run_id,)).fetchall()
-        if len(rows)!=qualified or any(row["decision_id"]!=row["attempt_decision"] for row in rows):
-            raise ValueError("Published run qualification ledger does not reconcile")
-        intents = [verify_intent(run_id,identity,model,row) for row in rows]
+        attempts,qualified,intents = published_entry_intents(db,run_id,identity,model)
         selected = [intent for intent in intents if intent_id is None or intent["id"]==intent_id]
         if intent_id is not None and not selected:
             raise ValueError("Intent does not belong to the published run")
@@ -276,6 +303,14 @@ def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=No
             "simulated_fills":sum(item["fill"] is not None for item in results),"results":results}
 
 
+def read_tape_file(path):
+    with path.open("rb") as stream:
+        raw = stream.read(TAPE_LIMIT_BYTES+1)
+    if len(raw)>TAPE_LIMIT_BYTES:
+        raise ValueError("Synthetic quote tape exceeds the offline file limit")
+    return SyntheticTape.model_validate_json(raw)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run",required=True)
@@ -284,13 +319,7 @@ def main():
     parser.add_argument("--sha256",help="SHA-256 of the canonical validated synthetic tape")
     args = parser.parse_args()
     try:
-        tape = None
-        if args.tape:
-            with args.tape.open("rb") as stream:
-                raw = stream.read(TAPE_LIMIT_BYTES+1)
-            if len(raw)>TAPE_LIMIT_BYTES:
-                raise ValueError("Synthetic quote tape exceeds the offline file limit")
-            tape = SyntheticTape.model_validate_json(raw)
+        tape = read_tape_file(args.tape) if args.tape else None
         initialize()
         result = validate_market_entries(args.run,tape=tape,tape_sha256=args.sha256,intent_id=args.intent)
     except (ValueError,OSError) as error:
