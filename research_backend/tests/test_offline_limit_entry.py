@@ -100,8 +100,9 @@ def test_first_limit_touch_and_coverage(publish):
           "SIMULATED_FILLED","ASK",(earlier_observed,110307,"1.10307"))
 
     touching_conflict = quote(Q+1,Q+1,4,110306,110310)
-    later_touch = quote(Q+3,Q+3,6,110305,110308)
-    later_miss = quote(Q+3,Q+3,6,110309,110312)
+    later_priority = {"time_ms":Q+3,"available_at_ms":Q+3,"source_order":6}
+    later_touch = touching_conflict | later_priority
+    later_miss = miss | later_priority
     for order,arrange in (("forward",list),("reverse",lambda rows:list(reversed(rows)))):
         check(published,f"touch/miss conflict first, {order}",tape(arrange([miss,touching_conflict,hit])),
               "AMBIGUOUS_QUOTE_ORDER","ASK")
