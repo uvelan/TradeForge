@@ -148,12 +148,18 @@ def test_stop_target_conflict_before_and_after_a_certain_exit(position):
     sealed = [(Q+1,CUTOFF)]
     certain = quote(Q+3,Q+3,6,110514,110520)
     late = {"time_ms":Q+5,"available_at_ms":Q+5,"source_order":8}
+    certain_rows = []
     for label, arrange in (("forward",list),("reverse",lambda rows:list(reversed(rows)))):
         check(published,f"stop/target conflict first {label}",tape(arrange([ENTRY_LONG,LONG_STOP,LONG_TARGET,certain | late]),sealed),
               "AMBIGUOUS_QUOTE_ORDER")
-        check(published,f"stop/target conflict after certain exit {label}",
+        row = check(published,f"stop/target conflict after certain exit {label}",
               tape(arrange([ENTRY_LONG,certain,LONG_STOP | late,LONG_TARGET | late]),sealed),
               "SIMULATED_EXIT",winner=(certain,"REWARD_TARGET","1.10514","1.10514"))
+        certain_rows.append(row)
+    first,reverse = certain_rows
+    assert first["identity"]["execution_data_fingerprint"]!=reverse["identity"]["execution_data_fingerprint"]
+    for key in ("quote","reason","side","price_units","time_ms"):
+        assert reverse["exit"][key]==first["exit"][key]
 
 
 @pytest.mark.parametrize("rule,value",[
@@ -274,9 +280,74 @@ def test_market_v1_persisted_fill_keeps_its_original_identity(publish,monkeypatc
                       "entry_fill_id":old["fill"]["id"],"exit":exit_row["exit"]},sort_keys=True))
 
     conflicting = tape([market_quote,LONG_STOP,LONG_STOP | {"bid_units":110211}],[(Q+1,CUTOFF)])
-    with monkeypatch.context() as legacy:
-        # A fabricated V1-tagged fill on a tape the original V1 policy would reject.
-        legacy.setitem(offline_market_entry.POLICY,"version",1)
-        forged, = validate(run,conflicting,intent["id"])["results"]
-    with pytest.raises(ValueError,match="tape-wide sequence policy"):
+    modern, = validate(run,conflicting,intent["id"])["results"]
+    assert modern["status"]=="SIMULATED_FILLED"
+    identity = modern["identity"] | {"policy":old["identity"]["policy"]}
+    identifier = "ME-"+fingerprint(identity)
+    fill = modern["fill"] | {"id":"MF-"+fingerprint([identifier,modern["fill"]["quote"]])}
+    forged = modern | {"identity":identity,"id":identifier,"fill":fill}
+    with transaction() as db:
+        db.execute("INSERT INTO offline_market_entry_results VALUES (?,?,?,?)",
+                   (identifier,run,intent["id"],canonical(forged)))
+    with pytest.raises(ValueError,match="does not match verified replay"):
         calculate(run,conflicting,forged)
+
+def test_no_fill_cutoff_filters_expiry_and_late_conflict(publish):
+    run,intent = publish()
+    for quotes,expected in (
+        ([], "VERIFIED_EXPIRED"),
+        ([quote(EXPIRY,EXPIRY,2),quote(EXPIRY,EXPIRY,2,110302,110315)], "AMBIGUOUS_QUOTE_ORDER"),
+    ):
+        data = tape(quotes)
+        entry, = validate(run,data)["results"]
+        before = snapshots(run,entry)
+        assert entry["status"]==expected
+        with pytest.raises(ValueError,match="precedes intent qualification"):
+            calculate(run,data,entry,Q-1)
+        for cutoff,status in ((Q,"PENDING_AT_CUTOFF"),(Q+1,"PENDING_AT_CUTOFF"),
+                              (EXPIRY-1,"PENDING_AT_CUTOFF"),(EXPIRY,expected)):
+            result = calculate(run,data,entry,cutoff)
+            assert (result["simulated_orders"],result["simulated_fills"],result["simulated_exits"])==(1,0,0)
+            assert result["results"][0]["entry_status"]==status
+            assert calculate(run,data,entry,cutoff)==result
+        assert snapshots(run,entry)==before
+    with transaction() as db:
+        assert db.execute("SELECT count(*) FROM offline_first_exit_results").fetchone()[0]==0
+
+
+@pytest.mark.parametrize("kind,version,scenario",[
+    ("MARKET",1,"contradiction"),("MARKET",99,"unknown"),("MARKET",1,"duplicate"),
+    ("LIMIT",1,"unsupported"),("LIMIT",2,"unsupported"),("STOP",1,"unsupported"),("STOP",2,"unsupported"),
+])
+def test_historical_no_fill_policy_verification(publish,kind,version,scenario):
+    from research_backend.app.offline_market_entry import POLICY
+
+    run,intent = publish(kind=kind,entry_price=None if kind=="MARKET" else 1.10310)
+    quotes = [ENTRY_SHORT,SHORT_STOP]
+    if scenario=="duplicate":
+        quotes[1] = SHORT_STOP | {"source_order":ENTRY_SHORT["source_order"]}
+    data = tape(quotes)
+    current, = validate(run,data)["results"]
+    identity = current["identity"] | {"policy":POLICY | {"version":version}}
+    status = {"contradiction":"VERIFIED_EXPIRED","unknown":"VERIFIED_EXPIRED",
+              "duplicate":"AMBIGUOUS_QUOTE_ORDER","unsupported":"UNSUPPORTED_ENTRY_TYPE"}[scenario]
+    old = current | {"id":"ME-"+fingerprint(identity),"identity":identity,"status":status,"fill":None,
+                     "order":None if scenario=="unsupported" else current["order"]}
+    with transaction() as db:
+        db.execute("INSERT INTO offline_market_entry_results VALUES (?,?,?,?)",
+                   (old["id"],run,intent["id"],canonical(old)))
+    before = snapshots(run,old)
+    if scenario in ("contradiction","unknown"):
+        message = "does not match verified replay" if scenario=="contradiction" else "Unverifiable historical entry policy"
+        with pytest.raises(ValueError,match=message):
+            calculate(run,data,old)
+    else:
+        result = calculate(run,data,old)
+        assert result["results"][0]["entry_status"]==status
+        assert result["simulated_orders"]==int(scenario=="duplicate")
+        assert result["simulated_fills"]==result["simulated_exits"]==0
+        if scenario=="duplicate":
+            assert calculate(run,data,old,Q+3)["results"][0]["entry_status"]=="PENDING_POLICY_VERIFICATION"
+    assert snapshots(run,old)==before
+    with transaction() as db:
+        assert db.execute("SELECT count(*) FROM offline_first_exit_results").fetchone()[0]==0

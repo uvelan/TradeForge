@@ -61,3 +61,34 @@ For a filled entry, pass its persisted result ID and the same pinned synthetic q
 This validates one simulated exit reason, price and time. Position sizing, account P&L, paper-account publication and broker routing are deferred. Public admission stays at 160 cutoffs. Historical intents retain `AWAITING_EXECUTION_VALIDATION`. Production recorded trading remains `BLOCKED`.
 
 After merge, revert this PR as a unit to disable first-exit validation. Retain the additive immutable exit table and its rows for audit. Entry result and historical tables require no rollback migration.
+
+## PR #25 verification correction
+
+Baseline HEAD was `6558eadff256de17cf36f3ff4126bb2624a538ef`. The capture used the entry service from `a844bcbacf6b279104ccdbe6816756938d8dd73a` to write the V1 SHORT. A separate database copy, made before entry insertion, received the same payload with only status and fill changed. Both databases used the same published intent and tape. The table reports the public first-exit service response.
+
+| Case | Reviewed head | Corrected service |
+| --- | --- | --- |
+| Genuine MARKET V1 SHORT | 1 order, 1 fill, 1 protective exit | Identical fill and exit, 1.10406 ASK at 1577973320004, sequence 7 |
+| Same V1 identity falsely reporting expiry | 1 order, VERIFIED_EXPIRED, 0 exits | Rejected: Persisted entry does not match verified replay. No exit row |
+| V2 sealed empty at Q−1 | 1 order, VERIFIED_EXPIRED | Rejected: Exit cutoff precedes intent qualification |
+| Q+1 | 1 order, VERIFIED_EXPIRED | 1 order, PENDING_AT_CUTOFF, 0 exits |
+| expiry−1 | 1 order, VERIFIED_EXPIRED | 1 order, PENDING_AT_CUTOFF, 0 exits |
+| expiry | 1 order, VERIFIED_EXPIRED | 1 order, VERIFIED_EXPIRED, 0 exits |
+| Conflicting V2 quotes delivered exactly at expiry | — | PENDING_AT_CUTOFF one millisecond earlier, AMBIGUOUS_QUOTE_ORDER at delivery, 0 exits |
+
+Genuine V1 tape SHA-256 `11f06eb2c59ca0dcca00e48d55edfb1e7f0e20516b2785c70365c5dd51d8ba36`, entry `ME-aa69d8d28506b70a644e4a875e169daa8081ec88676fd9dcc2f3ebfa1b55d379`, fill `MF-1ce45c4b223eac5262cc6310b20e3aaeae3db82cca4c334e1ab5d6042316bba5`, exit `XF-8de84d98ceaa5e184c75631b9d7061176d5a163077382ae23fce244ecb68fa2e`. Entry bid was 110306 points. The winning exit quote was 110400/110406, scale 100000.
+
+Verification replays the complete recognized policy and compares the canonical payload before projecting the order status from evidence available at the cutoff. A V1 prefix with a possible fill and unseen records can report PENDING_POLICY_VERIFICATION because duplicate source sequences anywhere on that tape invalidate the fill. Genuine pre-support LIMIT and STOP payloads from historical writers return UNSUPPORTED_ENTRY_TYPE with zero orders. Unknown policies and contradictory payloads are rejected before writing an exit.
+
+### Correction commands
+
+The archive-writer capture requires a checkout containing the cited historical commits. To reproduce the baseline, copy the correction's capture module onto the reviewed head and select only `::test_capture`. The normal regression suite runs independently of Git history.
+
+```powershell
+.venv/Scripts/python.exe -m pytest -q -s research_backend/tests/capture_first_exit_verification.py
+.venv/Scripts/python.exe -m pytest -q research_backend/tests/test_offline_first_exit.py research_backend/tests/test_offline_market_entry.py research_backend/tests/test_offline_limit_entry.py research_backend/tests/test_offline_stop_entry.py research_backend/tests/benchmark_dukascopy_nov13.py::test_nov13_market_entry_negative_control
+.venv/Scripts/python.exe -m pytest -q
+git diff --check
+```
+
+The earlier fabricated-fill test depended on retagging the current simulator. Once it actually executed V1, that setup produced a genuine ambiguity. The regression now inserts a V2 fill with a self-consistent V1 identity and verifies its rejection. The change is read-side verification with no schema migration. To roll back only the correction, revert its commit and preserve the immutable source, entry and exit tables.

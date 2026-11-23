@@ -157,15 +157,23 @@ def quote_priority(quote: Quote) -> tuple[int,int,int]:
     return quote.available_at_ms,quote.time_ms,quote.source_order
 
 
-def simulate(intent, model, tape, tape_digest):
+def simulate(intent, model, tape, tape_digest, *, policy=None, cutoff_ms=None):
     kind = intent["entry"]["kind"]
-    policy = ENTRY_POLICIES.get(kind,POLICY)
+    current = ENTRY_POLICIES.get(kind,POLICY)
+    policy = current if policy is None else policy
+    legacy_market = POLICY | {"version":1}
+    market_v1 = canonical(policy)==canonical(legacy_market)
+    # Before fixed-price support, MARKET V1/V2 recorded an unsupported outcome
+    # under its own policy identity for those entry kinds.
+    if canonical(policy) not in (canonical(current),canonical(POLICY)) and not market_v1:
+        raise ValueError("Unverifiable historical entry policy")
+
     identity = {"intent":intent["id"],"execution_data_fingerprint":tape_digest,"policy":dict(policy)}
     identifier = "ME-"+fingerprint(identity)
     result = {"id":identifier,"identity":identity,"source":intent,
               "source_execution_policy":model.execution.model_dump(mode="json"),
               "order":None,"fill":None}
-    if kind not in ENTRY_POLICIES:
+    if kind not in ENTRY_POLICIES or (kind!="MARKET" and (market_v1 or policy==POLICY)):
         return result | {"status":"UNSUPPORTED_ENTRY_TYPE"}
     expiry = intent["order_expiry"]
     scale = POINT_SCALES.get(intent["symbol"])
@@ -193,11 +201,17 @@ def simulate(intent, model, tape, tape_digest):
             order.update(stop_price=threshold,stop_price_units=threshold_units,scale=scale,
                          trigger_side=side.upper())
     result["order"] = order
+    horizon = end if cutoff_ms is None else min(end,cutoff_ms)
     if tape is None:
-        return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
+        return result | {"status":"PENDING_AT_CUTOFF" if horizon==begin else "INSUFFICIENT_QUOTE_COVERAGE"}
     if tape.symbol!=intent["symbol"]:
         raise ValueError("Execution quote symbol does not match the published intent")
-    relevant = [quote for quote in tape.quotes if begin<quote.time_ms<=quote.available_at_ms<=end]
+    visible = tape.quotes if cutoff_ms is None else [q for q in tape.quotes if q.available_at_ms<=cutoff_ms]
+    if market_v1 and len({q.source_order for q in visible})!=len(visible):
+        return result | {"status":"AMBIGUOUS_QUOTE_ORDER"}
+    if horizon==begin:
+        return result | {"status":"PENDING_AT_CUTOFF"}
+    relevant = [quote for quote in visible if begin<quote.time_ms<=quote.available_at_ms<=horizon]
     qualifying = relevant
     if kind=="LIMIT":
         qualifying = [quote for quote in relevant
@@ -206,11 +220,15 @@ def simulate(intent, model, tape, tape_digest):
         qualifying = [quote for quote in relevant
                       if (quote.ask_units>=threshold_units if buy else quote.bid_units<=threshold_units)]
     chosen = min(qualifying,key=quote_priority,default=None)
-    needed = chosen.available_at_ms if chosen else end
+    needed = chosen.available_at_ms if chosen else horizon
     if not covered(tape.complete_delivery_intervals,begin+1,needed):
         return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
+    # V1 requires sequence uniqueness even outside the order window. An unseen
+    # suffix can still invalidate both an apparent fill and a terminal expiry.
+    if market_v1 and len(visible)<len(tape.quotes) and (chosen is not None or horizon==end):
+        return result | {"status":"PENDING_POLICY_VERIFICATION"}
     if chosen is None:
-        return result | {"status":"VERIFIED_EXPIRED"}
+        return result | {"status":"VERIFIED_EXPIRED" if horizon==end else "PENDING_AT_CUTOFF"}
 
     # At the first possible touch or trigger, inspect all eligible rows at its priority,
     # including rows that miss the threshold.

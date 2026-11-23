@@ -8,7 +8,7 @@ from pathlib import Path
 from .analysis_evidence import canonical
 from .db import initialize, transaction
 from .offline_market_entry import (
-    ENTRY_POLICIES, Quote, covered, pin_tape, published_entry_intents, quote_priority,
+    Quote, covered, pin_tape, published_entry_intents, quote_priority,
     read_tape_file, simulate, verify_run,
 )
 from .risk import PIP_SIZE
@@ -40,22 +40,8 @@ def verified_entry(db, run_id, entry_result_id, intents, model, tape, digest):
             or entry["source_execution_policy"]!=model.execution.model_dump(mode="json")
             or (tape is not None and tape.symbol!=intent["symbol"])):
         raise ValueError("Entry result does not match the source intent and pinned execution tape")
-    kind = intent["entry"]["kind"]
-    policy = identity["policy"]
-    if policy==ENTRY_POLICIES.get(kind):
-        expected = simulate(intent,model,tape,digest)
-    elif entry["fill"] is None and entry["status"]!="SIMULATED_FILLED":
-        return entry
-    elif kind=="MARKET" and policy==(ENTRY_POLICIES["MARKET"] | {"version":1}) and tape is not None:
-        expected = simulate(intent,model,tape,digest) | {"id":entry_result_id,"identity":identity}
-        if len({quote.source_order for quote in tape.quotes})!=len(tape.quotes):
-            raise ValueError("Legacy MARKET fill conflicts with tape-wide sequence policy")
-        elif expected["fill"] is not None:
-            fill = expected["fill"]
-            expected["fill"] = fill | {"id":"MF-"+fingerprint([entry_result_id,fill["quote"]])}
-    else:
-        raise ValueError("Filled entry uses an unsupported entry policy version")
-    if entry!=expected:
+    expected = simulate(intent,model,tape,digest,policy=identity["policy"])
+    if canonical(entry)!=canonical(expected):
         raise ValueError("Persisted entry does not match verified replay")
     return entry
 
@@ -155,10 +141,14 @@ def validate_first_exit(run_id, *, cutoff_ms, entry_result_id=None, tape=None, t
             return summary
 
         entry = verified_entry(db,run_id,entry_result_id,intents,model,tape,digest)
+        if cutoff_ms<entry["source"]["qualified_at"]*1000:
+            raise ValueError("Exit cutoff precedes intent qualification")
         summary["simulated_orders"] = int(entry["order"] is not None)
         if entry["status"]!="SIMULATED_FILLED":
+            visible = simulate(entry["source"],model,tape,digest,policy=entry["identity"]["policy"],
+                               cutoff_ms=cutoff_ms)
             summary["results"] = [{"status":"NO_ENTRY_FILL","entry_result_id":entry_result_id,
-                                   "entry_status":entry["status"],"exit":None}]
+                                   "entry_status":visible["status"],"exit":None}]
             return summary
         if cutoff_ms<entry["fill"]["time_ms"]:
             raise ValueError("Exit cutoff precedes the entry fill")
