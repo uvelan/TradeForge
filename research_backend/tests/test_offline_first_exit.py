@@ -134,6 +134,14 @@ def test_exit_activation_cutoff_and_continuous_coverage(position):
     assert open_row["id"]!=closed["id"]
     assert open_row["identity"]["entry_fill_id"]==closed["identity"]["entry_fill_id"]
 
+    data = tape([ENTRY_LONG,LONG_STOP,LONG_TARGET | {"time_ms":Q+5,"available_at_ms":Q+5,"source_order":8}],
+                [(Q+1,Q+4)])
+    winner = (LONG_STOP,"PROTECTIVE_STOP","1.10214","1.10210")
+    first = check(published,"stop recorded at first eligible cutoff",data,"SIMULATED_EXIT",cutoff=Q+4,winner=winner)
+    later = check(published,"extend cutoff after recorded stop",data,"SIMULATED_EXIT",winner=winner)
+    assert first["id"]!=later["id"]
+    assert first["exit"]==later["exit"]
+
 
 def test_stop_target_conflict_before_and_after_a_certain_exit(position):
     published = position()

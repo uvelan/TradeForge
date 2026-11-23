@@ -130,7 +130,8 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
         return result | {"status":"AMBIGUOUS_QUOTE_ORDER"}
     units = getattr(quote,price_key)
     reference = quote.model_dump(mode="json") | {"scale":scale}
-    result["exit"] = {"id":"XF-"+fingerprint([identifier,reason,reference]),
+    event_identity = {key:value for key,value in identity.items() if key!="cutoff_ms"}
+    result["exit"] = {"id":"XF-"+fingerprint([event_identity,reason,reference]),
                       "reason":reason,"threshold_units":threshold,"threshold_price":price_text(threshold,scale),
                       "side":side.upper(),"price_units":units,"price":price_text(units,scale),
                       "time_ms":quote.available_at_ms,"quote":reference}
