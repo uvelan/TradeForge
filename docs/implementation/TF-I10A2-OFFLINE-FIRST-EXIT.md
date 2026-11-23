@@ -92,3 +92,34 @@ git diff --check
 ```
 
 The earlier fabricated-fill test depended on retagging the current simulator. Once it actually executed V1, that setup produced a genuine ambiguity. The regression now inserts a V2 fill with a self-consistent V1 identity and verifies its rejection. The change is read-side verification with no schema migration. To roll back only the correction, revert its commit and preserve the immutable source, entry and exit tables.
+
+## MARKET V1 cutoff verification on a persisted fill
+
+Starting head `25a6942f4aa8c27528e3bbd06c72cf899511ae36`. On separate checksum-pinned tapes for the same published SHORT, the original writer (`a844bcbacf6b279104ccdbe6816756938d8dd73a`) saw identical input through Q+7. The final row has the same delivery, observation, bid and ask. Only its source sequence changes. V1 requires tape-wide sequence uniqueness. Full replay establishes the stored result's integrity. Replay through the requested cutoff now gates every fill count and every exit write.
+
+Each cell shows service status and cumulative persisted exit-result rows for that entry after two identical requests. Every response has one order. A simulated exit has one fill and one exit. All other responses have zero fills and zero exits.
+
+| Final sequence | Cutoff (ms) | Reviewed head | Corrected |
+| --- | --- | --- | --- |
+| 8 | Q+4 | SIMULATED_EXIT / 1 | PENDING_POLICY_VERIFICATION / 0 |
+| 8 | Q+7 | SIMULATED_EXIT / 2 | PENDING_POLICY_VERIFICATION / 0 |
+| 8 | Q+8 | SIMULATED_EXIT / 3 | SIMULATED_EXIT / 1 |
+| 5 | Q+4 and Q+7 | PENDING_POLICY_VERIFICATION / 0 | PENDING_POLICY_VERIFICATION / 0 |
+| 5 | Q+8 | AMBIGUOUS_QUOTE_ORDER / 0 | AMBIGUOUS_QUOTE_ORDER / 0 |
+
+At Q+8 the unique tape verifies the original Q+2 BID fill (110306 points, sequence 5) and Q+4 protective stop (110406 ASK, sequence 7, delivery 1577973320004). Repeated requests return identical result and event IDs. The historical records and stored entries remain byte-identical. The gate precedes cache lookup and persistence, so repeating an early request also bypasses any premature exit row left by the reviewed revision. Original immutable rows are preserved.
+
+| Reference | Unique sequence | Duplicate sequence |
+| --- | --- | --- |
+| Tape SHA-256 | `210fab28af3ef824673a9f47f046acd4516a64bb50e552e45a9bbb7c62594cb9` | `e41542620f5fbfce626050d0d5ca182e0bd4ffed61aa03fdf019680ce9db408e` |
+| Entry payload SHA-256 | `00bdefdba3fdc18eec3aa324227a1a1fad85b491b4109d9cac0afb3bccca02b0` | `24e670c910ee7f00397dfafe9ffde0cbb9118eb5e6bca011a331a1b725ddcc2f` |
+
+The archive capture prints every result and quote. The offline CI regression pins both full entry payload hashes from that writer. Run the capture test against the starting head with the new test files to reproduce the failing assertion, then run the following on the correction.
+
+```powershell
+.venv/Scripts/python.exe -m pytest -q -s research_backend/tests/capture_first_exit_verification.py research_backend/tests/test_offline_first_exit.py::test_market_v1_fill_requires_visible_tape_before_publishing_exit
+.venv/Scripts/python.exe -m pytest -q -s research_backend/tests/test_offline_first_exit.py research_backend/tests/test_offline_market_entry.py research_backend/tests/test_offline_limit_entry.py research_backend/tests/test_offline_stop_entry.py research_backend/tests/benchmark_dukascopy_nov13.py::test_nov13_market_entry_negative_control
+.venv/Scripts/python.exe -m pytest -q
+```
+
+Roll back by reverting the cutoff-gate commit. No schema or source-data changes are required. Reverting reintroduces the premature V1 exit.

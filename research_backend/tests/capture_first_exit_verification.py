@@ -80,3 +80,10 @@ def test_archived_no_fill_writers(publish):
         print("ARCHIVED",sha,kind,status,result["simulated_orders"],result["simulated_exits"])
     with db.transaction() as conn:
         assert conn.execute("SELECT count(*) FROM offline_first_exit_results").fetchone()[0]==0
+
+
+def test_archived_v1_fill_cutoff_pair(publish,monkeypatch):
+    from test_offline_first_exit import assert_paired_v1_cutoffs, paired_v1_observations
+
+    writer = historical_writer("a844bcbacf6b279104ccdbe6816756938d8dd73a")
+    assert_paired_v1_cutoffs(paired_v1_observations(publish,monkeypatch,writer))

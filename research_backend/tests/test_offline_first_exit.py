@@ -311,6 +311,13 @@ def test_no_fill_cutoff_filters_expiry_and_late_conflict(publish):
             assert result["results"][0]["entry_status"]==status
             assert calculate(run,data,entry,cutoff)==result
         assert snapshots(run,entry)==before
+    gap = tape([],[(Q+1,Q+2),(Q+4,EXPIRY)])
+    entry, = validate(run,gap)["results"]
+    assert entry["status"]=="INSUFFICIENT_QUOTE_COVERAGE"
+    for cutoff,status in ((Q+2,"PENDING_AT_CUTOFF"),(Q+3,"INSUFFICIENT_QUOTE_COVERAGE")):
+        response = calculate(run,gap,entry,cutoff)
+        assert response["results"][0]["entry_status"]==status
+        assert response["simulated_fills"]==response["simulated_exits"]==0
     with transaction() as db:
         assert db.execute("SELECT count(*) FROM offline_first_exit_results").fetchone()[0]==0
 
@@ -351,3 +358,55 @@ def test_historical_no_fill_policy_verification(publish,kind,version,scenario):
     assert snapshots(run,old)==before
     with transaction() as db:
         assert db.execute("SELECT count(*) FROM offline_first_exit_results").fetchone()[0]==0
+
+
+def paired_v1_observations(publish,monkeypatch,write_entry):
+    ids = count(1)
+    monkeypatch.setattr("research_backend.app.strategy_routes.uuid4",lambda:UUID(int=next(ids)))
+    run,intent = publish()
+    outcomes = {}
+    for sequence in (8,5):
+        data = tape([ENTRY_SHORT,SHORT_STOP,quote(Q+8,Q+8,sequence,110300,110309)])
+        entry, = write_entry(run,tape=data,tape_sha256=fingerprint(data))["results"]
+        # Entire payload hashes from the original MARKET V1 writer, including its IDs.
+        expected_hash = {8:"00bdefdba3fdc18eec3aa324227a1a1fad85b491b4109d9cac0afb3bccca02b0",
+                         5:"24e670c910ee7f00397dfafe9ffde0cbb9118eb5e6bca011a331a1b725ddcc2f"}
+        assert fingerprint(entry)==expected_hash[sequence]
+        assert entry["source"]==intent
+        original = snapshots(run,entry)
+        for offset in (4,7,8):
+            response = calculate(run,data,entry,Q+offset)
+            assert calculate(run,data,entry,Q+offset)==response
+            result, = response["results"]
+            with transaction() as db:
+                stored = db.execute("SELECT count(*) FROM offline_first_exit_results WHERE entry_result_id=?",
+                                    (entry["id"],)).fetchone()[0]
+            observed = (result.get("entry_status",result["status"]),response["simulated_orders"],
+                        response["simulated_fills"],response["simulated_exits"],result["exit"],stored)
+            outcomes[sequence,offset] = observed
+            print(json.dumps({"sequence":sequence,"offset_ms":offset,"entry_id":entry["id"],
+                              "entry_payload_sha256":fingerprint(entry),"fill_id":entry["fill"]["id"] if entry["fill"] else None,
+                              "tape_sha256":fingerprint(data),"result_id":result.get("id"),"observed":observed}))
+        assert snapshots(run,entry)==original
+    return outcomes
+
+
+def assert_paired_v1_cutoffs(outcomes):
+    for offset in (4,7):
+        assert outcomes[8,offset]==outcomes[5,offset]==("PENDING_POLICY_VERIFICATION",1,0,0,None,0)
+    assert outcomes[5,8]==("AMBIGUOUS_QUOTE_ORDER",1,0,0,None,0)
+    status,orders,fills,exits,winner,stored = outcomes[8,8]
+    assert (status,orders,fills,exits,stored)==("SIMULATED_EXIT",1,1,1,1)
+    assert (winner["reason"],winner["side"],winner["price"],winner["time_ms"])==(
+        "PROTECTIVE_STOP","ASK","1.10406",Q+4)
+    assert winner["quote"]==SHORT_STOP | {"scale":100000}
+
+def test_market_v1_fill_requires_visible_tape_before_publishing_exit(publish,monkeypatch):
+    from research_backend.app import offline_market_entry
+
+    def write_v1(*args,**kwargs):
+        with monkeypatch.context() as legacy:
+            legacy.setitem(offline_market_entry.POLICY,"version",1)
+            return offline_market_entry.validate_market_entries(*args,**kwargs)
+
+    assert_paired_v1_cutoffs(paired_v1_observations(publish,monkeypatch,write_v1))

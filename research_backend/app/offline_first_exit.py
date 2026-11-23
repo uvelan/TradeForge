@@ -143,15 +143,17 @@ def validate_first_exit(run_id, *, cutoff_ms, entry_result_id=None, tape=None, t
         entry = verified_entry(db,run_id,entry_result_id,intents,model,tape,digest)
         if cutoff_ms<entry["source"]["qualified_at"]*1000:
             raise ValueError("Exit cutoff precedes intent qualification")
-        summary["simulated_orders"] = int(entry["order"] is not None)
-        if entry["status"]!="SIMULATED_FILLED":
-            visible = simulate(entry["source"],model,tape,digest,policy=entry["identity"]["policy"],
-                               cutoff_ms=cutoff_ms)
+        if entry["fill"] is not None and cutoff_ms<entry["fill"]["time_ms"]:
+            raise ValueError("Exit cutoff precedes the entry fill")
+        visible = simulate(entry["source"],model,tape,digest,policy=entry["identity"]["policy"],
+                           cutoff_ms=cutoff_ms)
+        summary["simulated_orders"] = int(visible["order"] is not None)
+        if visible["fill"] is None:
             summary["results"] = [{"status":"NO_ENTRY_FILL","entry_result_id":entry_result_id,
                                    "entry_status":visible["status"],"exit":None}]
             return summary
-        if cutoff_ms<entry["fill"]["time_ms"]:
-            raise ValueError("Exit cutoff precedes the entry fill")
+        if visible["fill"]!=entry["fill"]:
+            raise ValueError("Cutoff replay fill does not match the verified entry")
 
         result = simulate_first_exit(entry,model.management,tape,digest,cutoff_ms)
         payload = canonical(result)
