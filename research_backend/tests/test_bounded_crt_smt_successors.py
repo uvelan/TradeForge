@@ -53,9 +53,13 @@ def bounded_definition(delay=LATE):
 def canonical_successors(client,monkeypatch):
     monkeypatch.setattr("research_backend.app.historical_strategy_worker.claim",lambda _:None)
 
-    def build(delay=LATE,missing=False,extra=0):
+    def build(delay=LATE,missing=False,extra=0,confirmation_high=None):
         lanes = []
         primary,comparison = fixture_bars()
+        if confirmation_high is not None:
+            open_,high,low,close = comparison[CONFIRMATION_BAR]
+            assert high==25 and confirmation_high>=max(open_,close)
+            comparison[CONFIRMATION_BAR] = (open_,confirmation_high,low,close)
         primary.extend([primary[-1]]*extra)
         comparison.extend([comparison[-1]]*extra)
         frozen_candles(lanes,"EURUSD","M5",BASE,primary)
@@ -414,3 +418,45 @@ def test_unsupported_or_incomplete_successors_rejected_before_queue(client,canon
         print(case,response.status_code,response.json())
         assert response.status_code==422 and expected in response.text
     assert one("SELECT COUNT(*) AS total FROM historical_worker_state")["total"]==0
+
+
+def test_offline_archive_cache_keeps_exact_prefix_and_public_limit(canonical_successors):
+    from research_backend.app import historical_strategy_engine as engine
+    from research_backend.app.historical_strategy_inputs import HistoricalInput, prepare_historical, verified_evidence
+    from research_backend.app.offline_crt_smt_replay import ReplayArchive, run_offline
+    from test_historical_strategy_runs import execute
+
+    request,model,_ = canonical_successors()
+    run = prepare_historical(HistoricalInput.model_validate(successor_request(request)))
+    horizon = verified_evidence(model,run)
+    original,checkpoints = execute(run,model,horizon,17)
+    archive = ReplayArchive()
+    actual,observed = [],[]
+    def publish(snapshot,cutoff,entries,done,metrics):
+        actual.extend(entries)
+    run_offline(run,horizon,model,publish,archive=archive,chunk_size=17,
+                observe=lambda cutoff,decision:observed.append(cutoff))
+    assert actual==original
+    assert len(observed)==json.loads(checkpoints[-1]["payload"])["processed"]
+    assert archive.archive.counts["partition_decodes"]==2
+    assert run["identity"]["budgets"]["oracle_cutoffs"]==160
+
+    for offset,qualified in ((14119,False),(14120,True)):
+        cutoff = BASE+offset
+        selection = engine.asof_selection(run["selection"],cutoff)
+        a = collect(model,selection,cutoff,START)
+        b = collect(model,selection,cutoff,START,replay_archive=archive)
+        assert a.events==b.events and a.coverage==b.coverage and a.metrics==b.metrics
+        prior = original[0]["trace"]["bound_crt"]["evidence"]["family"]
+        decisions = [engine.make_machine(run,prefix,model,BASE+7200,[prior]).run(cutoff) for prefix in (a,b)]
+        assert decisions[0]==decisions[1]
+        assert bool(decisions[0]["entry_intent"])==qualified
+
+    from research_backend.app import storage
+    from research_backend.app.db import one
+    primary = run["selection"]["series"]["PRIMARY:M5"]["partitions"][0]
+    stored = one("SELECT relative_path FROM datasets WHERE id=?",(primary["id"],))
+    with (storage.MARKET_DIR/stored["relative_path"]).open("ab") as stream:
+        stream.write(b"corrupted offline source")
+    with pytest.raises(ValueError,match="failed verification"):
+        collect(model,selection,cutoff,START,replay_archive=ReplayArchive())

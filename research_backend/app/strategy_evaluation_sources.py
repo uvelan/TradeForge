@@ -140,8 +140,8 @@ class AnalyticalEvidence:
 
 
 class StrategyCoordinator(AnalysisCoordinator):
-    def __init__(self, request):
-        super().__init__(request,load_reference,event_sink=self.capture)
+    def __init__(self, request, replay_archive=None):
+        super().__init__(request,load_reference,event_sink=self.capture,replay_archive=replay_archive)
         self.events = defaultdict(list)
         self.views = {}
         self.last_views = {}
@@ -206,10 +206,10 @@ def indicator_request(feed, cutoff, spec):
                       cutoff=cutoff,frozen=True,load_reference=True,indicators=[spec],candles=[])
 
 
-def collect(definition, selection, cutoff, evaluation_start, *, check_budget=None):
+def collect(definition, selection, cutoff, evaluation_start, *, check_budget=None, replay_archive=None):
     feeds = {key:FrozenFeed.model_validate(feed) for key,feed in selection["series"].items()}
     coordinator = StrategyCoordinator(indicator_request(next(iter(feeds.values())),cutoff,
-                                                         IndicatorSpec(id="market_structure")))
+                                                         IndicatorSpec(id="market_structure")),replay_archive)
     coverage = {}
     for key,feed in feeds.items():
         if check_budget:

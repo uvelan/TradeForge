@@ -90,7 +90,8 @@ class EvidenceIndex:
 
 
 class ArchiveSession:
-    def __init__(self,reserve=None):
+    def __init__(self,reserve=None,*,replay=None):
+        self.replay=replay
         self.partitions={}
         self.counts=Counter()
         self.reserve=reserve
@@ -106,24 +107,24 @@ class ArchiveSession:
         if self.reserve is not None:
             self.reserve(part["rows_count"]*512)
         self.counts["checksum_attempts"]+=1
-        decoded=reader(part)
+        decoded=self.replay.read(part,reader) if self.replay is not None else reader(part)
         self.counts["partition_decodes"]+=1
         self.counts["decoded_records"]+=len(decoded)
         if self.counts["decoded_records"]>30_000:
             raise ResourceLimit("Combined analytical decoded records budget exceeded")
         if len(decoded)!=part["rows_count"]:
             raise ValueError("Verified partition row count mismatch")
-        rows=tuple(MappingProxyType(row) for row in decoded)
+        rows=decoded if self.replay is not None else tuple(MappingProxyType(row) for row in decoded)
         self.partitions[key]=rows
         return rows
 
 
 class AnalysisCoordinator:
-    def __init__(self, request, loader, *, event_sink=None):
+    def __init__(self, request, loader, *, event_sink=None, replay_archive=None):
         self.request=request
         self.loader=loader
         self.reserved_bytes=0
-        self.archive=ArchiveSession(self.reserve)
+        self.archive=ArchiveSession(self.reserve,replay=replay_archive)
         self.archive_aware=loader is not None and "archive_session" in signature(loader).parameters
         self.histories={}
         self.computed={}
