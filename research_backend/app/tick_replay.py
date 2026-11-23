@@ -6,6 +6,14 @@ from decimal import Decimal
 from .backtest import breakout_signal
 
 
+def executable_side(buy: bool) -> str:
+    return "ask" if buy else "bid"
+
+
+def executable_price(quote: dict, buy: bool) -> Decimal:
+    return Decimal(quote[f"{executable_side(buy)}_units"]) / quote["scale"]
+
+
 def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r: float, *,
                     slip_bps: Decimal, commission_bps: Decimal, max_bars: int = 12,
                     max_quote_gap_seconds: int = 60) -> dict:
@@ -66,7 +74,7 @@ def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r:
         stop = Decimal(str(stop_price))
         direction = 1 if side == "BUY" else -1
         first = ordered[start_index]
-        entry_quote = Decimal(first["ask_units"] if direction > 0 else first["bid_units"]) / first["scale"]
+        entry_quote = executable_price(first, direction > 0)
         entry = entry_quote * (1 + direction * slip)
         risk = direction * (entry - stop)
         if risk <= 0:
@@ -82,7 +90,7 @@ def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r:
                                    "next_quote_time_ms": quote["time_ms"]})
                 break
             previous_time = quote["time_ms"]
-            exit_quote = Decimal(quote["bid_units"] if direction > 0 else quote["ask_units"]) / quote["scale"]
+            exit_quote = executable_price(quote, direction < 0)
             stop_hit = direction * (exit_quote - stop) <= 0
             target_hit = direction * (exit_quote - target) >= 0
             time_limit = quote["time_ms"] >= deadline

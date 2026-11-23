@@ -290,3 +290,47 @@ def test_nov13_equivalence_and_recovery(client,pinned):
     print("exact cutoff comparison",len(observed),"first divergence",None,
           "material interruption",frontier,"CRT checks",len(crt),"SMT checks",len(smt),
           "nonqualifying terminal reasons",zero_intent_reasons)
+
+
+def test_nov13_market_entry_negative_control(client,pinned):
+    from research_backend.app.offline_market_entry import validate_market_entries
+
+    _,run,model,datasets = pinned
+    evidence_dir = ROOT/"docs"/"implementation"/"evidence"/"TF-I10A1-dukascopy-nov13"
+    approved_pin = json.loads((evidence_dir/"pin.json").read_text(encoding="utf-8"))
+    approved_result = json.loads((evidence_dir/"verification.json").read_text(encoding="utf-8"))
+    assert run==approved_pin["run"]
+    coverage,_ = inspect_archive(pinned)
+    assert fingerprint(coverage)==fingerprint(approved_pin["coverage"])
+    identifier = store.enqueue(run)
+    owner = "nov13-offline-market-entry"
+    assert store.claim(owner)==identifier
+    entries = []
+    last_refresh = 0.0
+
+    def renew():
+        nonlocal last_refresh
+        now = perf_counter()
+        if now-last_refresh>=2:
+            assert store.heartbeat(identifier,owner)
+            last_refresh = now
+
+    def commit(snapshot,cutoff,batch,completed,metrics):
+        store.publish(identifier,owner,snapshot,cutoff,batch,completed,metrics)
+        entries.extend(batch)
+
+    run_offline(run,verified_evidence(model,run),model,commit,chunk_size=23,check=renew)
+    assert fingerprint(entries)==approved_result["ledger_digest"]
+    before = client.get(f"{API}/{identifier}/decisions",params={"limit":100}).json()
+    assert len(before)==14
+    assert client.get(f"{API}/{identifier}/intents").json()==[]
+    expected = {"run_id":identifier,"historical_attempts":14,"qualified_intents":0,
+                "simulated_orders":0,"simulated_fills":0,"results":[]}
+    assert validate_market_entries(identifier)==expected
+    assert validate_market_entries(identifier)==expected
+    assert client.get(f"{API}/{identifier}/decisions",params={"limit":100}).json()==before
+    assert client.get(f"{API}/{identifier}/intents").json()==[]
+    assert one("SELECT COUNT(*) AS total FROM offline_market_entry_results")["total"]==0
+    print(json.dumps({"execution":expected,"historical_ledger_sha256":fingerprint(entries),
+                      "archive_catalog_sha256":NOV13_FINGERPRINT,
+                      "partition_sha256":{item["symbol"]:item["sha256"] for item in datasets}},sort_keys=True))

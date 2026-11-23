@@ -115,6 +115,14 @@ def make_machine(run, evidence, definition, after=None, spent=()):
                              rearm_after=after,spent_families=spent)
 
 
+def historical_decision_id(run_id,trace):
+    identity = {key:value for key,value in trace.items() if key!="resource_counts"}
+    if identity["entry_intent"]:
+        identity["entry_intent"] = {key:value for key,value in identity["entry_intent"].items()
+                                    if key not in {"historical_run_id","decision_id","evidence_references"}}
+    return "HD-"+fingerprint(identity | {"run_id":run_id})
+
+
 def ledger_entry(run, machine, frontier):
     trace = machine.decision(frontier,0)
     if trace["attempt_id"]:
@@ -123,8 +131,7 @@ def ledger_entry(run, machine, frontier):
             state if state in {"TRIGGER_QUALIFIED","INVALIDATED","EXPIRED","INSUFFICIENT_EVIDENCE"}
             else "PENDING_AT_END"
         )
-    decision_id = "HD-"+fingerprint({key:value for key,value in trace.items() if key!="resource_counts"} |
-                                   {"run_id":run["run_id"]})
+    decision_id = historical_decision_id(run["run_id"],trace)
     intent = trace["entry_intent"]
     if intent:
         intent.update(historical_run_id=run["run_id"],decision_id=decision_id,

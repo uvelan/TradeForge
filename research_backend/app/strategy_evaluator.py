@@ -131,6 +131,20 @@ def predicate(rule, spec, event):
     return OPERATORS[rule.operator](value,rule.expected)
 
 
+def qualified_entry_intent(definition,identity,attempt,qualified):
+    trade = definition.trade_intent
+    binding = definition.instruments.primary if trade.role=="PRIMARY" else definition.instruments.comparison
+    return {"id":"INT-"+fingerprint([attempt,qualified]),
+            "status":"AWAITING_EXECUTION_VALIDATION","attempt_id":attempt,
+            "strategy_version_id":identity["strategy_version_id"],"role":trade.role,"symbol":binding.symbol,
+            "direction":trade.direction,"entry":trade.entry.model_dump(mode="json"),
+            "price_basis":definition.execution.price_basis,"qualified_at":qualified,
+            "earliest_policy":trade.earliest,"strictly_after":qualified,
+            "order_expiry":trade.expiry.model_dump(mode="json"),
+            "risk_policy_fingerprint":fingerprint(definition.risk.model_dump(mode="json")),
+            "management_policy_fingerprint":fingerprint(definition.management.model_dump(mode="json"))}
+
+
 class EvaluationMachine:
     def __init__(self, definition, evidence, identity, start, selection_end, *, check_budget=None,
                  rearm_rule=None, rearm_after=None, spent_families=()):
@@ -575,17 +589,7 @@ class EvaluationMachine:
     def intent(self):
         if self.trigger_at is None:
             return None
-        trade = self.definition.trade_intent
-        binding = self.definition.instruments.primary if self.role=="PRIMARY" else self.definition.instruments.comparison
-        return {"id":"INT-"+fingerprint([self.attempt,self.trigger_at]),
-                "status":"AWAITING_EXECUTION_VALIDATION","attempt_id":self.attempt,
-                "strategy_version_id":self.identity["strategy_version_id"],"role":self.role,"symbol":binding.symbol,
-                "direction":trade.direction,"entry":trade.entry.model_dump(mode="json"),
-                "price_basis":self.definition.execution.price_basis,"qualified_at":self.trigger_at,
-                "earliest_policy":trade.earliest,"strictly_after":self.trigger_at,
-                "order_expiry":trade.expiry.model_dump(mode="json"),
-                "risk_policy_fingerprint":fingerprint(self.definition.risk.model_dump(mode="json")),
-                "management_policy_fingerprint":fingerprint(self.definition.management.model_dump(mode="json"))}
+        return qualified_entry_intent(self.definition,self.identity,self.attempt,self.trigger_at)
 
     def expire_during_uncertainty(self, cutoff):
         if self.state != "INSUFFICIENT_EVIDENCE" or self.definition.expiry.unit != "SECONDS":
