@@ -6,7 +6,7 @@ from starlette.concurrency import run_in_threadpool
 
 from .analysis_evidence import ResourceLimit
 from .db import one, rows, transaction
-from .historical_strategy_engine import successor_schedule
+from .historical_strategy_engine import successor_schedule, unresolved_reasons
 from .historical_strategy_inputs import CRT_SMT_METHOD, RUN_VERSION, HistoricalInput, prepare_historical, verified_evidence, approved_partition
 from .historical_strategy_store import cancel, enqueue, latest_checkpoint, resume
 from .strategy_definitions import StrategyDefinitionV2
@@ -115,7 +115,8 @@ def get_run(run_id:str):
                 accounting = {"status":"COLLECTED","version":progress["version"],
                               "total":sum(dispositions.values()),"by_disposition":dispositions,
                               "by_reason":[dict(item) for item in breakdown],
-                              "unresolved_inspections":progress["unresolved_inspections"]}
+                              "unresolved_inspections":progress["unresolved_inspections"],
+                              "unresolved_by_reason":unresolved_reasons(progress)}
         return {key:result[key] for key in ("run_id","identity","selection")} | {
             "created_at":row["created_at"],"worker":worker,"results_published":completed,
             "attempt_counts":{entry["state"]:entry["count"] for entry in counts},

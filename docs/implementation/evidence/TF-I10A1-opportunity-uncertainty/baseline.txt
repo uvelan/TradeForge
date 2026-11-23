@@ -1,0 +1,27 @@
+single inspection 2700 eligible families 0 gap NOT_SATISFIED NO_MATCH_COMPLETE_COVERAGE context NOT_SATISFIED decision HD-3d4c06cf17fcd0732259956fad124017f192852767ad63fa308bc2f138744944 summary {'status': 'COLLECTED', 'version': 1, 'total': 0, 'by_disposition': {'BOUND': 0, 'SUPPRESSED': 0, 'UNRESOLVED': 0}, 'by_reason': [], 'unresolved_inspections': 0}
+Fsingle inspection 3300 eligible families 2 gap UNKNOWN CANDIDATE_LIMIT_EXCEEDED context NOT_SATISFIED decision HD-b63c01da96b447a02d564cfc622eca0c0b05734f0158b025563db8fb78323610 summary {'status': 'COLLECTED', 'version': 1, 'total': 0, 'by_disposition': {'BOUND': 0, 'SUPPRESSED': 0, 'UNRESOLVED': 0}, 'by_reason': [], 'unresolved_inspections': 0}
+F
+================================== FAILURES ===================================
+_ test_false_context_sibling_does_not_mask_opportunity_uncertainty[2700-NOT_SATISFIED-NO_MATCH_COMPLETE_COVERAGE-0-0] _
+research_backend\tests\test_historical_strategy_runs.py:355: in test_false_context_sibling_does_not_mask_opportunity_uncertainty
+    assert summary["unresolved_by_reason"]==({expected_reason:unresolved} if unresolved else {})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'unresolved_by_reason'
+_ test_false_context_sibling_does_not_mask_opportunity_uncertainty[3300-UNKNOWN-CANDIDATE_LIMIT_EXCEEDED-2-1] _
+research_backend\tests\test_historical_strategy_runs.py:354: in test_false_context_sibling_does_not_mask_opportunity_uncertainty
+    assert summary["unresolved_inspections"]==unresolved
+E   assert 0 == 1
+============================== warnings summary ===============================
+.venv\Lib\site-packages\_pytest\config\__init__.py:1507
+  K:\Projects\TradeForge\.venv\Lib\site-packages\_pytest\config\__init__.py:1507: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+research_backend/tests/test_historical_strategy_runs.py::test_false_context_sibling_does_not_mask_opportunity_uncertainty[2700-NOT_SATISFIED-NO_MATCH_COMPLETE_COVERAGE-0-0]
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED research_backend/tests/test_historical_strategy_runs.py::test_false_context_sibling_does_not_mask_opportunity_uncertainty[2700-NOT_SATISFIED-NO_MATCH_COMPLETE_COVERAGE-0-0]
+FAILED research_backend/tests/test_historical_strategy_runs.py::test_false_context_sibling_does_not_mask_opportunity_uncertainty[3300-UNKNOWN-CANDIDATE_LIMIT_EXCEEDED-2-1]
+2 failed, 2 warnings in 1.10s

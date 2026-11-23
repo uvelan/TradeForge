@@ -1,0 +1,11 @@
+single inspection 2700 eligible families 0 gap NOT_SATISFIED NO_MATCH_COMPLETE_COVERAGE context NOT_SATISFIED decision HD-3d4c06cf17fcd0732259956fad124017f192852767ad63fa308bc2f138744944 summary {'status': 'COLLECTED', 'version': 1, 'total': 0, 'by_disposition': {'BOUND': 0, 'SUPPRESSED': 0, 'UNRESOLVED': 0}, 'by_reason': [], 'unresolved_inspections': 0, 'unresolved_by_reason': {}}
+.single inspection 3300 eligible families 2 gap UNKNOWN CANDIDATE_LIMIT_EXCEEDED context NOT_SATISFIED decision HD-b63c01da96b447a02d564cfc622eca0c0b05734f0158b025563db8fb78323610 summary {'status': 'COLLECTED', 'version': 1, 'total': 0, 'by_disposition': {'BOUND': 0, 'SUPPRESSED': 0, 'UNRESOLVED': 0}, 'by_reason': [], 'unresolved_inspections': 1, 'unresolved_by_reason': {'CANDIDATE_LIMIT_EXCEEDED': 1}}
+.overflow replay committed {'CANDIDATE_LIMIT_EXCEEDED': 1} resumed {'status': 'COLLECTED', 'version': 1, 'total': 1, 'by_disposition': {'BOUND': 0, 'SUPPRESSED': 1, 'UNRESOLVED': 0}, 'by_reason': [{'disposition': 'SUPPRESSED', 'reason': 'CONTEXT_NOT_SATISFIED', 'total': 1}], 'unresolved_inspections': 2, 'unresolved_by_reason': {'CANDIDATE_LIMIT_EXCEEDED': 2}} established family 0d50691803870041892dfe45ea95c25d578a95e6cd0396887ea0652e9f46d96a decision HD-bba0747b448b8b0ec318e349ce3f558c29de30f891caa7a0c1923cb3ffb02013
+.
+============================== warnings summary ===============================
+research_backend/tests/test_historical_strategy_runs.py::test_false_context_sibling_does_not_mask_opportunity_uncertainty[2700-NOT_SATISFIED-NO_MATCH_COMPLETE_COVERAGE-0-0]
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 1 warning in 1.69s

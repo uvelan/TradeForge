@@ -1,6 +1,8 @@
 """Verified producer, replay and worker fencing regressions."""
 import json
 from copy import deepcopy
+from itertools import count
+from uuid import UUID
 
 import pytest
 
@@ -283,3 +285,122 @@ def test_warmup_candidates_follow_existing_selection_without_extra_attempts(prep
     assert any(row["evidence_reference"]["available_at"]<start for row in items)
     assert all(row["cutoff"]==start for row in items)
     assert all(row["attempt_id"] is None for row in competing)
+
+
+@pytest.fixture
+def overflow_context(client,monkeypatch):
+    # Reuse deterministic strategy identities when replaying the reviewed baseline.
+    identifiers = count(1)
+    monkeypatch.setattr("research_backend.app.strategy_routes.uuid4",lambda:UUID(int=next(identifiers)))
+    monkeypatch.setattr("research_backend.app.historical_strategy_worker.claim",lambda _:None)
+    lanes = []
+    bars = [(99,100,97,99)]*8 + [
+        (100,108,100,108),(106,110,105,109),(109,111,109,110),(110,112,110,111),
+    ]
+    frozen_candles(lanes,"EURUSD","M5",BASE,bars)
+    archive = selection(monkeypatch,lanes,len(bars)*300)
+    monkeypatch.setattr("research_backend.app.historical_strategy_inputs.selection_catalog",lambda:[archive])
+
+    def build(begin,end):
+        definition = fvg_strategy()
+        definition["attempt"]["candidate_limit"] = 1
+        definition["context"]["children"].append(condition("false-sibling","FVG_STATE","fvg","FULLY_MITIGATED"))
+        request = request_body(client,archive,definition,BASE+end)
+        request.update(evaluation_start=BASE+begin,rearm="NEW_CONTEXT_FAMILY",
+                       max_attempts=2,context_alias="bound_gap")
+        admitted = client.post(API+"/validate",json=request)
+        assert admitted.status_code==200,admitted.text
+        queued = client.post(API,json=request)
+        assert queued.status_code==202,queued.text
+        run = prepare_historical(HistoricalInput.model_validate(request))
+        assert queued.json()["run_id"]==run["run_id"]
+        model = StrategyDefinitionV2.model_validate(run["definition"])
+        return run,model,verified_evidence(model,run)
+    return build
+
+
+@pytest.mark.parametrize("offset,expected_outcome,expected_reason,families,unresolved",[
+    (2700,"NOT_SATISFIED","NO_MATCH_COMPLETE_COVERAGE",0,0),
+    (3300,"UNKNOWN","CANDIDATE_LIMIT_EXCEEDED",2,1),
+])
+def test_false_context_sibling_does_not_mask_opportunity_uncertainty(
+    client,overflow_context,offset,expected_outcome,expected_reason,families,unresolved
+):
+    run,model,evidence = overflow_context(offset,offset)
+    cutoff = BASE+offset
+    view = evidence.views["fvg"]
+    assert all(lane.at(cutoff)["status"]=="COMPLETE" for lane in evidence.coverage.values())
+    active = {view.records[row["id"]].family for row in evidence.events[view.snapshot].get("fvg",((),()))[1]
+              if row["state"]=="ACTIVE" and view.eligible(row,cutoff,current=True,purpose=view.purpose)}
+    assert len(active)==families
+    assert engine.successor_schedule(run,evidence,model)=={cutoff}
+    identifier = run["run_id"]
+    assert store.claim("worker")==identifier
+    engine.run_chunks(run,evidence,model,lambda *args:store.publish(identifier,"worker",*args))
+    detail = client.get(f"{API}/{identifier}").json()
+    decision = client.get(f"{API}/{identifier}/decisions/{cutoff}").json()
+    rules = {item["id"]:item for item in decision["rules"]}
+    assert (rules["gap"]["outcome"],rules["gap"]["reason"])==(expected_outcome,expected_reason)
+    assert rules["false-sibling"]["outcome"]=="NOT_SATISFIED"
+    assert decision["phase_results"]["context"]=="NOT_SATISFIED"
+    assert decision["attempt_id"] is None and decision["entry_intent"] is None
+    assert detail["qualified_intents"]==0 and detail["attempt_counts"]=={}
+    summary = detail["opportunity_accounting"]
+    assert detail["results_published"] and summary["status"]=="COLLECTED" and summary["total"]==0
+    assert summary["by_disposition"]=={"BOUND":0,"SUPPRESSED":0,"UNRESOLVED":0}
+    assert client.get(f"{API}/{identifier}/opportunities").json()==[]
+    print("single inspection",offset,"eligible families",len(active),"gap",expected_outcome,expected_reason,
+          "context",decision["phase_results"]["context"],"decision",decision["decision_id"],"summary",summary)
+    assert summary["unresolved_inspections"]==unresolved
+    assert summary["unresolved_by_reason"]==({expected_reason:unresolved} if unresolved else {})
+
+
+def test_masked_overflow_recovery_preserves_counts_and_established_family(client,overflow_context):
+    run,model,evidence = overflow_context(3000,3600)
+    identifier = run["run_id"]
+    uninterrupted,snapshots = execute(run,model,evidence,93)
+    original = {key:value for key,value in run.items() if key!="opportunity_accounting_version"}
+    assert execute(original,model,evidence,1)[0]==uninterrupted
+    expected_progress = json.loads(snapshots[-1]["payload"])["opportunity_accounting"]
+    assert expected_progress["unresolved_inspections"]==2
+    assert expected_progress["unresolved_by_reason"]=={"CANDIDATE_LIMIT_EXCEEDED":2}
+    assert len(expected_progress["families"])==1
+
+    assert store.claim("worker")==identifier
+    def interrupt(snapshot,frontier,entries,completed,metrics):
+        store.publish(identifier,"worker",snapshot,frontier,entries,completed,metrics)
+        if frontier==BASE+3300:
+            store.publish(identifier,"worker",snapshot,frontier,entries,completed,metrics)
+            raise RuntimeError("interrupt after overflow checkpoint")
+
+    with pytest.raises(RuntimeError,match="after overflow checkpoint"):
+        engine.run_chunks(run,evidence,model,interrupt,chunk_size=1)
+    store.finish(identifier,"worker","FAILED","interrupted")
+    saved = store.latest_checkpoint(identifier)
+    assert saved["frontier"]==BASE+3300
+    progress = json.loads(saved["payload"])["opportunity_accounting"]
+    assert progress["unresolved_inspections"]==1
+    assert progress["unresolved_by_reason"]=={"CANDIDATE_LIMIT_EXCEEDED":1}
+    assert progress["families"]==expected_progress["families"]
+    assert client.get(f"{API}/{identifier}").json()["opportunity_accounting"]=={"status":"NOT_PUBLISHED"}
+    assert client.get(f"{API}/{identifier}/checkpoint").status_code==409
+    assert client.get(f"{API}/{identifier}/opportunities").json()==[]
+    assert client.post(f"{API}/{identifier}/resume").status_code==200
+    assert store.claim("resumed")==identifier
+    engine.run_chunks(run,evidence,model,lambda *args:store.publish(identifier,"resumed",*args),
+                      saved=saved,chunk_size=7)
+    detail = client.get(f"{API}/{identifier}").json()
+    summary = detail["opportunity_accounting"]
+    assert summary["unresolved_inspections"]==expected_progress["unresolved_inspections"]
+    assert summary["unresolved_by_reason"]==expected_progress["unresolved_by_reason"]
+    assert summary["by_disposition"]=={"BOUND":0,"SUPPRESSED":1,"UNRESOLVED":0}
+    row, = client.get(f"{API}/{identifier}/opportunities").json()
+    assert row["family"]==next(iter(progress["families"]))
+    assert row["first"]["evidence_reference"]["available_at"]==BASE+3000
+    assert row["reason"]=="CONTEXT_NOT_SATISFIED"
+    final, = uninterrupted
+    decision = client.get(f"{API}/{identifier}/decisions/{BASE+3600}").json()
+    assert decision=={"decision_id":final["id"],**final["trace"]}
+    assert client.get(f"{API}/{identifier}/intents").json()==[]
+    print("overflow replay", "committed",progress["unresolved_by_reason"],"resumed",summary,
+          "established family",row["family"],"decision",decision["decision_id"])

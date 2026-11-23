@@ -63,6 +63,14 @@ def checkpoint(run, evidence, frontier, attempts, spent, terminal_time, processe
     return (encoded,fingerprint(payload),observations) if accounting is not None else (encoded,fingerprint(payload))
 
 
+def unresolved_reasons(accounting):
+    """Older collected checkpoints retained a count without its cause."""
+    if "unresolved_by_reason" in accounting:
+        return accounting["unresolved_by_reason"]
+    count = accounting["unresolved_inspections"]
+    return {"NOT_RECORDED":count} if count else {}
+
+
 def restore(run, evidence, saved):
     data = json.loads(saved["payload"])
     identity = run["identity"]
@@ -90,6 +98,11 @@ def restore(run, evidence, saved):
                 or sorted(item[0] for item in progress.values())!=list(range(1,len(progress)+1))
                 or any(item[1] not in {0,1,2} for item in progress.values())):
             raise ValueError("Historical checkpoint has invalid opportunity accounting")
+        reasons = unresolved_reasons(accounting)
+        if (not isinstance(reasons,dict)
+                or any(not reason or type(count) is not int or count<1 for reason,count in reasons.items())
+                or sum(reasons.values())!=accounting["unresolved_inspections"]):
+            raise ValueError("Historical checkpoint has invalid opportunity uncertainty counts")
     return data
 
 
@@ -141,6 +154,7 @@ def account_cutoff(run, machine, cutoff, prior_terminal, accounting, observation
     probe = EvaluationMachine(machine.definition,machine.evidence,identity,machine.start,machine.end,check_budget=check)
     candidates = {}
     context = UNKNOWN
+    unresolved_reason = "REQUIRED_SOURCE_COVERAGE_UNKNOWN"
     if all(lane.at(cutoff)["status"]=="COMPLETE" for lane in probe.evidence.coverage.values()):
         def observe(choices):
             # Store the earliest exact qualifying observation for each family.
@@ -151,12 +165,21 @@ def account_cutoff(run, machine, cutoff, prior_terminal, accounting, observation
         probe.observe_candidates = rule_id,observe
         lower = identity["warmup_start"] if prior_terminal is None else prior_terminal+1
         context = probe.phase("context",cutoff,lower)
+        designated = probe.results[rule_id]
+        # ALL can be false because of a sibling while the designated rule
+        # still cannot enumerate its otherwise eligible families.
+        if designated.outcome==UNKNOWN:
+            unresolved_reason = designated.reason
+        else:
+            unresolved_reason = "CONTEXT_OUTCOME_UNKNOWN" if context==UNKNOWN else None
 
     binding = machine.bindings.get(rule_id) if machine.attempt else None
     bound_family = binding.proof.family if binding else None
     if binding:
         candidates.setdefault(bound_family,binding.proof)
-    if context==UNKNOWN:
+    if unresolved_reason is not None:
+        reasons = accounting.setdefault("unresolved_by_reason",unresolved_reasons(accounting))
+        reasons[unresolved_reason] = reasons.get(unresolved_reason,0)+1
         accounting["unresolved_inspections"] += 1
     for family,proof in sorted(candidates.items()):
         attempt_id = None

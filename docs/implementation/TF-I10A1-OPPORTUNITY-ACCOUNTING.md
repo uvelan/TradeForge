@@ -51,3 +51,20 @@ The chunk sizes 1, 7, 17 and 93 produced identical opportunity events, decisions
 The local backend pass reported 722 tests and verified all 44 inventoried archive files were unchanged. That invocation started before the additional warmup competition regression was added. The final targeted suite included the warmup case and passed 67 tests. TypeScript compilation, production build and all eight Vitest cases passed. The initial concurrent Chromium check passed 70 cases and failed one simulator chart assertion while the page showed “Loading datasets…”. The isolated simulator check passed with zero retries. The full rerun passed all 71 Chromium tests with zero retries.
 
 For rollback, drain the accounting-enabled queue or leave interrupted accounting-enabled runs paused. Revert implementation commit `3afbe66eb3f1c6bb4e8353d89e435c1765383c76` through GitHub and retain the additive accounting table and completed evidence for audit. Resume interrupted accounting-enabled runs with the accounting-capable version. Historical intents retain `AWAITING_EXECUTION_VALIDATION` and production recorded trading remains `BLOCKED`.
+
+## Follow-up on uncertainty masked by a false sibling
+
+The correction starts from the reviewed head `6d57bbec049e3c257467bc8821033c9a3628ac7b`. Both baseline cases were admitted as bounded FVG `NEW_CONTEXT_FAMILY` runs using `candidate_limit=1` and the same false mandatory sibling. Each run had exactly one scheduler inspection.
+
+| Case | Designated ACTIVE rule | ALL context | Baseline unresolved inspections | Corrected summary |
+| --- | --- | --- | ---: | --- |
+| Two eligible ACTIVE families at +3300 | `UNKNOWN / CANDIDATE_LIMIT_EXCEEDED` | `NOT_SATISFIED` | 0 | 1, with `CANDIDATE_LIMIT_EXCEEDED: 1` |
+| Complete coverage with zero ACTIVE families at +2700 | `NOT_SATISFIED / NO_MATCH_COMPLETE_COVERAGE` | `NOT_SATISFIED` | 0 | 0, with empty reason counts |
+
+Both API responses published zero opportunity rows, suppressions, attempts and intents. The baseline overflow assertion failed on 0 versus 1. The corrected accounting consults the designated rule before falling back to the combined context outcome. An overflow contributes one inspection with its specific reason, irrespective of whether a sibling settles the ALL context. The selector yields no partial candidate list. Existing family rows and the decision path are preserved. Older collected checkpoints that lack reasons retain their counts under `NOT_RECORDED`. Completed legacy runs still report `NOT_COLLECTED`.
+
+Recovery verified that the duplicate delivery of the +3300 checkpoint kept one unresolved inspection private. Resume through +3600 matched the uninterrupted two-inspection total and its reason breakdown. The previously established +3000 family retained its original proof. Completed responses distinguish true zero from overflow.
+
+The baseline replay pinned strategy/version IDs. Both single-inspection decision IDs matched exactly before and after. These single-inspection cases emitted zero intents. The CRT and FVG instrumented/uninstrumented ledger controls preserved decisions, intent IDs and proofs. CRT/SMT still produced four families, three bound attempts, one terminal-boundary suppression and one intent. The existing FVG competition, chunk-size, pagination, and rollback cases passed.
+
+Local verification passed three API baseline-correction/recovery cases, 70 focused regressions, TypeScript compilation and production build, and eight Vitest tests. [Baseline failure](evidence/TF-I10A1-opportunity-uncertainty/baseline.txt) · [Corrected API output](evidence/TF-I10A1-opportunity-uncertainty/corrected.txt) · [Exact commands](evidence/TF-I10A1-opportunity-uncertainty/commands.md)

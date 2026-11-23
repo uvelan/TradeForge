@@ -12,7 +12,7 @@ type Source={id:string;fingerprint:string;start:number;end:number};
 type Summary={run_id:string;state:string;frontier:number|null};
 type OpportunityAccounting = {status:'NOT_COLLECTED'|'NOT_PUBLISHED'} | {
   status:'COLLECTED';total:number;by_disposition:Record<string,number>;
-  by_reason:{disposition:string;reason:string;total:number}[];unresolved_inspections:number;
+  by_reason:{disposition:string;reason:string;total:number}[];unresolved_inspections:number;unresolved_by_reason?:Record<string,number>;
 };
 type Run={run_id:string;identity:{historical_version:number;evaluator_version:number;method:string;evaluation_start:number;warmup_start:number;cutoff:number;rearm:string;strategy_version_id:string};
   selection:{series:Record<string,{symbol:string;timeframe:string;feed_id:string;delay_seconds:number;price_basis:string}>};
@@ -190,8 +190,11 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
           human(state)+' '+count).join(' · ')}</p>
         <ul>{run.opportunity_accounting.by_reason.map(item=>
           <li key={item.disposition+item.reason}>{human(item.reason)} · {item.total}</li>)}</ul>
-        {run.opportunity_accounting.unresolved_inspections>0&&
-          <p>Inspections with unresolved context evidence {run.opportunity_accounting.unresolved_inspections}</p>}
+        {run.opportunity_accounting.unresolved_inspections>0&&<>
+          <p>Inspections with unresolved opportunity evidence {run.opportunity_accounting.unresolved_inspections}</p>
+          <ul>{Object.entries(run.opportunity_accounting.unresolved_by_reason??{}).map(([reason,count])=>
+            <li key={reason}>{human(reason)} · {count}</li>)}</ul>
+        </>}
       </details>}
       {run.identity.rearm==='NEW_CONTEXT_FAMILY'&&run.opportunity_accounting?.status==='NOT_COLLECTED'&&
         <p>Opportunity accounting was not collected for this run.</p>}
