@@ -35,10 +35,15 @@ The pinned MARKET V2 request used the same tape. It retained result ID `ME-23b6e
 
 ## Reproduction
 
-The baseline capture was run before editing the simulator using the command below. The capture fixture has since moved to `research_backend/tests/capture_offline_entry_baseline.py` to keep it out of the normal suite. To repeat the capture in isolation, use the merged simulator at the SHA above with this PR's two fixture helpers and run the capture file explicitly. The replay comparison loads the committed capture as an independent expected payload.
+Run the baseline capture against the pre-LIMIT simulator at merge revision `117d939cfafeb7b67e97091af11c5a4c582b55eb`. In an isolated checkout or source archive of that revision, copy these test fixtures from the STOP follow-up branch into `research_backend/tests/` and leave the simulator at the baseline revision: `capture_offline_entry_baseline.py`, `test_offline_market_entry.py` and `test_bounded_crt_smt_successors.py`. Use the project's Python environment to run the capture. This procedure reproduced the committed baseline byte-for-byte.
 
 ```powershell
-.venv/Scripts/python.exe -m pytest -q -s --tb=short research_backend/tests/test_capture_limit_baseline.py
+python -m pytest -q -s --tb=short research_backend/tests/capture_offline_entry_baseline.py::test_capture_limit_baseline
+```
+
+Run the regression suite on the implementation revision.
+
+```powershell
 .venv/Scripts/python.exe -m pytest -q -s --tb=short research_backend/tests/test_offline_limit_entry.py research_backend/tests/test_offline_market_entry.py research_backend/tests/benchmark_dukascopy_nov13.py::test_nov13_market_entry_negative_control
 .venv/Scripts/python.exe -m pytest -q
 git diff --check
@@ -48,4 +53,4 @@ The November 13 negative control requires the approved local private Dukascopy a
 
 ## Rollback and scope
 
-Revert this increment's commit to restore the merged MARKET V2 behavior and its unsupported LIMIT result. Keep the additive execution result table and existing immutable rows. Existing historical intents, decisions, proofs and provider data require no migration. This increment covers only offline entry price and time. STOP stays unsupported. Public admission remains capped at 160 cutoffs. Historical intents retain `AWAITING_EXECUTION_VALIDATION`. Production recorded trading remains `BLOCKED`.
+Revert this increment's commit to restore the merged MARKET V2 behavior and its unsupported LIMIT result. Keep the additive execution result table and existing immutable rows. Existing historical intents, decisions, proofs and provider data require no migration. This increment covers only offline entry price and time. The later [STOP follow-up](TF-I10A2-OFFLINE-FIXED-PRICE-STOP.md) uses a separate policy identity. Public admission remains capped at 160 cutoffs. Historical intents retain `AWAITING_EXECUTION_VALIDATION`. Production recorded trading remains `BLOCKED`.

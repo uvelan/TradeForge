@@ -146,14 +146,11 @@ def test_reference_and_fingerprint_rejection(publish):
         assert db.execute("SELECT count(*) FROM offline_market_entry_results").fetchone()[0]==0
 
 
-def test_unsupported_entry_and_cross_run_identity(publish):
-    identifier,intent = publish(kind="STOP")
-    assert intent["entry"]["kind"]=="STOP"
-    response = validate(identifier,tape([quote(Q+1,Q+1,1)]))
-    assert response["results"][0]["status"]=="UNSUPPORTED_ENTRY_TYPE"
-    assert response["simulated_fills"]==response["simulated_orders"]==0
+def test_cross_run_intent_rejection(publish):
+    identifier,_ = publish()
+    _,other = publish(direction="bullish")
     with pytest.raises(ValueError,match="does not belong"):
-        validate_market_entries(identifier,intent_id="intent-from-another-run")
+        validate_market_entries(identifier,intent_id=other["id"])
 
 
 def test_first_eligible_quote_is_decisive(publish,monkeypatch):
