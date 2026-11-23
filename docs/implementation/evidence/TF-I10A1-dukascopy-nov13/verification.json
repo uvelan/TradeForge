@@ -1,0 +1,68 @@
+{
+  "run_id": "HR-a02d7f7b896d82d8e874e402f398bec9e8e5b0e128966fe8690e8e276704756f",
+  "ordered_cutoffs": 556,
+  "first_divergence": null,
+  "ledger_digest": "eea705c1c9a4d307460801b1864c91343ebf18221b657e69ab86f53fe49d9a7f",
+  "opportunity_digest": "44ba3dabf6ed7c7e34bc82baa87893d067f69ac54f8c18a2c8d4d5e987fdb7b1",
+  "independent_crt": [
+    {
+      "evidence_id": "e7a8a6f638ca093b615c7dc2e1ea3bf34843e90717441bed734fb5cfaea48472",
+      "checked_constituents": 12,
+      "complete_ohlc_match": true,
+      "availability_match": true,
+      "expected_available_at": 1794535200,
+      "actual_activation": 1794535200
+    }
+  ],
+  "independent_smt_confirmations": [],
+  "nonqualifying_terminal_reasons": {
+    "SETUP_EXPIRY_REACHED": 7,
+    "BOUND_REFERENCE_TERMINAL": 6,
+    "SETUP_NOT_ESTABLISHED": 1
+  },
+  "nonqualifying_setup_activations": 2,
+  "nonqualifying_terminal_smt_reasons": {
+    "SMT_ABSENCE_NOT_ESTABLISHED": 2
+  },
+  "intents": 0,
+  "opportunity_summary": {
+    "status": "COLLECTED",
+    "version": 1,
+    "total": 21,
+    "by_disposition": {
+      "BOUND": 14,
+      "SUPPRESSED": 7,
+      "UNRESOLVED": 0
+    },
+    "by_reason": [
+      {
+        "disposition": "BOUND",
+        "reason": "ATTEMPT_BOUND",
+        "total": 14
+      },
+      {
+        "disposition": "SUPPRESSED",
+        "reason": "TERMINAL_BOUNDARY",
+        "total": 7
+      }
+    ],
+    "unresolved_inspections": 17,
+    "unresolved_by_reason": {
+      "CRT_REVISION_UNCERTAIN": 13,
+      "EVIDENCE_WINDOW_STALE": 4
+    }
+  },
+  "recovery": {
+    "interrupted_frontier": 1794538800,
+    "retry_idempotent": true,
+    "resume_chunk_size": 23,
+    "exact_published_records": true,
+    "partial_results_private": true
+  },
+  "public": {
+    "validate": 422,
+    "enqueue": 422,
+    "runs_created": 0,
+    "cutoff_budget": 160
+  }
+}
