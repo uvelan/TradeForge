@@ -11,12 +11,14 @@ from .strategy_definitions import Contract, Digest, Key
 from .strategy_evaluation_routes import load_definition
 from .strategy_evaluation_sources import EvaluationInput, collect, freeze_selection, selection_catalog
 from .strategy_evaluator import RuleGraph
+from .strategy_catalog import DEFAULTS, FAMILY_CATEGORIES, OBSERVATIONS, ROLE_OBSERVATIONS
 from .strategy_evidence import fingerprint
 
 RUN_VERSION = 2
 CHECKPOINT_VERSION = 2
 MAX_ATTEMPTS = 32
 MAX_ORACLE_CUTOFFS = 160
+CRT_SMT_METHOD = "CRT_SMT_ASOF_REFERENCE"
 MAX_WORKERS = 1
 MAX_QUEUE = 8
 MAX_SAVED_RUNS = 256
@@ -87,6 +89,31 @@ def mandatory_alias(group, alias):
     return None
 
 
+def bounded_crt_smt(definition, selection, rule):
+    """Admit the producer and feed configuration established by the reference fixture."""
+    if (len(definition.indicators)!=2 or set(selection["series"])!={"PRIMARY:M5","COMPARISON:M5"}
+            or definition.instruments.calendar.kind!="continuous"
+            or definition.trade_intent.direction!="SHORT" or definition.trade_intent.role!="PRIMARY"
+            or definition.attempt.context_mode!="LATCHED" or definition.attempt.crt_reference_alias!=rule.alias
+            or rule.observation!="CRT_REFERENCE" or rule.expected!="ACTIVE"):
+        return False
+    feeds = selection["series"]
+    primary,peer = (feeds[f"{role}:M5"] for role in ("PRIMARY","COMPARISON"))
+    if ((primary["symbol"],peer["symbol"],primary["delay_seconds"],peer["delay_seconds"])!=("EURUSD","GBPUSD",0,20)
+            or primary["feed_id"]!=peer["feed_id"]
+            or any((feed["source"],feed["price_basis"],len(feed["partitions"]))!=("DUKASCOPY_SAVED","BID",1)
+                   for feed in (primary,peer))):
+        return False
+    producers = {dep.indicator:dep for dep in definition.indicators}
+    if set(producers)!={"CRT","SMT"}:
+        return False
+    crt,smt = producers["CRT"],producers["SMT"]
+    return ((crt.role,crt.timeframe,smt.role,smt.timeframe)==("PRIMARY","M5","PAIR","M5")
+            and crt.id==rule.dependency
+            and crt.settings=={**DEFAULTS["CRT"],"max_ranges":4}
+            and smt.settings=={**DEFAULTS["SMT"],"period":2,"alignment_bars":0})
+
+
 def prepare_historical(request):
     definition = load_definition(request)
     source = workspace_selection(request,definition) if request.partitions else None
@@ -105,29 +132,32 @@ def prepare_historical(request):
         if request.cutoff% (FRAME_MIN[feed["timeframe"]]*60):
             raise ValueError("Historical end must align to each required timeframe")
     graph = RuleGraph(definition)
+    method = "REFERENCE_SINGLE"
     if request.rearm=="NEW_CONTEXT_FAMILY":
         if not request.context_alias:
             raise ValueError("Rearm requires an explicit mandatory positive context-family alias")
         rule = mandatory_alias(graph.groups["context"],request.context_alias)
-        from .strategy_catalog import FAMILY_CATEGORIES, OBSERVATIONS, ROLE_OBSERVATIONS
         if not rule or (OBSERVATIONS|ROLE_OBSERVATIONS)[rule.observation]["category"] not in FAMILY_CATEGORIES:
             raise ValueError("Rearm requires a mandatory positive context-family alias in ALL groups")
         only_fvg = len(definition.indicators)==1 and definition.indicators[0]
-        if (not only_fvg or (only_fvg.indicator,only_fvg.role,only_fvg.timeframe)!=("FVG","PRIMARY","M5")
-                or definition.instruments.primary.symbol!="EURUSD" or definition.trade_intent.role!="PRIMARY"
-                or set(selection["series"])!={"PRIMARY:M5"} or rule.dependency!=only_fvg.id
-                or rule.observation not in {"FVG_STATE","FVG_ACTIVE"} or rule.expected!="ACTIVE"):
-            raise ValueError("Successor publication supports one primary EURUSD M5 FVG producer with an ACTIVE context alias. "
-                             "Use SINGLE_ATTEMPT for CRT, SMT and other producer combinations.")
-        # Family identity follows the pinned feed rather than the archive file
-        # count. Exact contributing partition digests remain in each proof.
-        selection["series"]["PRIMARY:M5"]["dataset_id"] = None
+        if (only_fvg and (only_fvg.indicator,only_fvg.role,only_fvg.timeframe)==("FVG","PRIMARY","M5")
+                and definition.instruments.primary.symbol=="EURUSD" and definition.trade_intent.role=="PRIMARY"
+                and set(selection["series"])=={"PRIMARY:M5"} and rule.dependency==only_fvg.id
+                and rule.observation in {"FVG_STATE","FVG_ACTIVE"} and rule.expected=="ACTIVE"):
+            # Preserve the established FVG feed-level family identity.
+            selection["series"]["PRIMARY:M5"]["dataset_id"] = None
+            method = "FVG_ASOF_REFERENCE"
+        elif bounded_crt_smt(definition,selection,rule):
+            method = CRT_SMT_METHOD
+        else:
+            raise ValueError("Successor publication supports one primary EURUSD M5 FVG producer, or the bounded SHORT "
+                             "EURUSD/GBPUSD M5 CRT/SMT configuration with 0s/20s delay. "
+                             "Use SINGLE_ATTEMPT for other configurations.")
     else:
         rule = None
         if request.context_alias is not None or request.max_attempts!=1:
             raise ValueError("Single-attempt runs have one attempt and no rearm alias")
     producers = {dep.id:{"kind":dep.indicator,"algorithm_version":dep.algorithm_version} for dep in definition.indicators}
-    method = "REFERENCE_SINGLE" if request.rearm=="SINGLE_ATTEMPT" else "FVG_ASOF_REFERENCE"
     frozen_definition = definition.model_dump(mode="json")
     identity = {**request.model_dump(mode="json"),"frozen_selection":fingerprint(selection),
                 "frozen_definition":fingerprint(frozen_definition),"rearm_rule":rule.id if rule else None,

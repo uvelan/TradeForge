@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 from .analysis_evidence import ResourceLimit, canonical
 from .db import one
-from .historical_strategy_inputs import CHECKPOINT_VERSION, MAX_CHECKPOINT_BYTES, MAX_ORACLE_CUTOFFS
+from .historical_strategy_inputs import CHECKPOINT_VERSION, CRT_SMT_METHOD, MAX_CHECKPOINT_BYTES, MAX_ORACLE_CUTOFFS
 from .market import FRAME_MIN
 from .strategy_evaluation_sources import collect
 from .strategy_evaluator import EvaluationMachine, TERMINAL
@@ -106,6 +106,21 @@ def ledger_entry(run, machine, frontier):
     return {"id":decision_id,"trace":trace,"intent":intent}
 
 
+def successor_schedule(run, evidence, definition):
+    identity = run["identity"]
+    end = identity["cutoff"]
+    schedule = make_machine(run,evidence,definition).boundaries(end)
+    reserve = 0
+    if identity["method"]==CRT_SMT_METHOD:
+        # One initial reference and at most one new H1 root per subsequent hour.
+        # Each attempt can schedule one setup release and one expiry boundary.
+        possible = 1+end//3600-identity["evaluation_start"]//3600
+        reserve = 2*min(possible,identity["max_attempts"])
+    if len(schedule)+reserve>MAX_ORACLE_CUTOFFS:
+        raise ResourceLimit(f"Successor window exceeds 160 as-of cutoffs ({len(schedule)} scheduled, {reserve} reserved)")
+    return schedule
+
+
 def run_chunks(run, evidence, definition, publish, *, saved=None, chunk_size=32, check=lambda:None):
     identity = run["identity"]
     start,end = identity["evaluation_start"],identity["cutoff"]
@@ -118,14 +133,12 @@ def run_chunks(run, evidence, definition, publish, *, saved=None, chunk_size=32,
         publish(checkpoint(run,evidence,end,0,[],None,1,()),
                 end,[ledger_entry(run,machine,end)],True,evidence.metrics)
         return
-    if identity["method"]!="FVG_ASOF_REFERENCE":
+    if identity["method"] not in {"FVG_ASOF_REFERENCE",CRT_SMT_METHOD}:
         raise ValueError("This run uses an unsupported historical calculation")
 
     # Full-window evidence validates coverage and identifies reachable cutoffs.
     # Decisions and persisted proofs always come from a fresh as-of archive.
-    schedule = make_machine(run,evidence,definition).boundaries(end)
-    if len(schedule)>MAX_ORACLE_CUTOFFS:
-        raise ResourceLimit("FVG successor evaluation requires at most 160 as-of cutoffs")
+    schedule = successor_schedule(run,evidence,definition)
     data = restore(run,evidence,saved) if saved else None
     frontier = data["frontier"] if data else start-1
     attempts,spent,terminal_time,processed,dynamic = (
