@@ -1,5 +1,6 @@
 """A canonical, bounded three-opportunity CRT/SMT fixture and reference."""
 from collections import Counter
+import json
 from time import perf_counter
 
 import pytest
@@ -235,11 +236,14 @@ def exact_smt(evidence):
     return [row for row in events(evidence,"smt","smt") if row.get("direction")=="bearish"]
 
 
-def test_scheduler_equivalence_and_completion_gate(client,canonical_successors,monkeypatch):
+@pytest.mark.parametrize("interruption",[7200,14100])
+def test_scheduler_equivalence_and_completion_gate(client,canonical_successors,monkeypatch,interruption):
     from research_backend.app import historical_strategy_engine as engine
     from research_backend.app import historical_strategy_store as store
+    from research_backend.app.analysis_evidence import canonical
+    from research_backend.app.db import one
     from research_backend.app.historical_strategy_inputs import HistoricalInput, prepare_historical, verified_evidence
-    from test_historical_strategy_runs import API, execute
+    from test_historical_strategy_runs import API
 
     request,model,_ = canonical_successors()
     request = successor_request(request)
@@ -262,7 +266,15 @@ def test_scheduler_equivalence_and_completion_gate(client,canonical_successors,m
 
     monkeypatch.setattr(EvaluationMachine,"decision",observe)
     clock = perf_counter()
-    result,checkpoints = execute(run,model,evidence,7)
+    def uninterrupted(calculation,chunk):
+        entries,observations = [],[]
+        def publish(snapshot,frontier,batch,completed,metrics):
+            entries.extend(batch)
+            observations.extend(snapshot[2] if len(snapshot)==3 else ())
+        engine.run_chunks(calculation,evidence,model,publish,chunk_size=chunk)
+        return entries,observations
+
+    result,observations = uninterrupted(run,7)
     elapsed = perf_counter()-clock
     first_successor = min(stamp for stamp in seen if stamp>BASE+7200)
     first_trace = seen[first_successor][0]
@@ -289,19 +301,77 @@ def test_scheduler_equivalence_and_completion_gate(client,canonical_successors,m
     print("scheduler_cutoffs",len(seen),"elapsed_seconds",round(elapsed,3))
     assert [row["trace"]["state"] for row in result[:-1]]==["EXPIRED","TRIGGER_QUALIFIED","INVALIDATED"]
     assert sum(bool(item["intent"]) for item in result)==1
-    for chunk in (1,17,93):
-        assert execute(run,model,evidence,chunk)[0]==result
+    # Build all four expected rows from the independently planned roots and
+    # freshly collected exact prefixes, before inspecting the accounting output.
+    expected = []
+    for root,cutoff,disposition,reason in (
+        (0,3600,"BOUND","ATTEMPT_BOUND"),
+        (3600,7200,"SUPPRESSED","TERMINAL_BOUNDARY"),
+        (7200,10800,"BOUND","ATTEMPT_BOUND"),
+        (10800,14400,"BOUND","ATTEMPT_BOUND"),
+    ):
+        prefix = collect(model,run["selection"],BASE+cutoff,START)
+        event, = [row for row in events(prefix,"crt","crt") if row["state"]=="ACTIVE"
+                  and row["reference_start"]==BASE+root]
+        assert event["available_at"]==BASE+cutoff
+        expected.append((event["range_id"],BASE+cutoff,disposition,reason,event["evidence_reference"]))
+    assert [(item["family"],item["cutoff"],item["disposition"],item["reason"],item["evidence_reference"])
+            for item in observations]==expected
+    assert len({item["id"] for item in observations})==4
+    assert [item["attempt_id"] for item in observations if item["disposition"]=="BOUND"]==[
+        entry["trace"]["attempt_id"] for entry in result if entry["trace"]["attempt_id"]]
+    assert sum(item["reason"]=="TERMINAL_BOUNDARY" for item in observations)==1
+    print("opportunity rows",[(item["family"],item["cutoff"]-BASE,item["disposition"],item["reason"])
+                              for item in observations])
+
+    if interruption==7200:
+        print("B boundary proof",json.dumps(observations[1],sort_keys=True))
+        for chunk in (1,17,93):
+            assert uninterrupted(run,chunk)==(result,observations)
+        legacy = {key:value for key,value in run.items() if key!="opportunity_accounting_version"}
+        assert uninterrupted(legacy,7)==(result,[])
+        # Repeat B's real accounting inspection deliberately. Its candidate
+        # is still eligible for observation, and its family must remain unique.
+        cutoff = BASE+7200
+        prefix = collect(model,run["selection"],cutoff,START)
+        machine = engine.make_machine(run,prefix,model)
+        machine.run(cutoff)
+        progress = {"families":{},"unresolved_inspections":0}
+        repeated = []
+        engine.account_cutoff(run,machine,cutoff,None,progress,repeated,lambda:None)
+        engine.account_cutoff(run,machine,cutoff,None,progress,repeated,lambda:None)
+        assert [item["family"] for item in repeated].count(expected[1][0])==1
     assert store.claim("first")==identifier
 
     def interrupt(snapshot,frontier,batch,completed,metrics):
+        if interruption==7200 and frontier==BASE+7200:
+            previous = store.latest_checkpoint(identifier)
+            altered = [*snapshot[2],{**snapshot[2][0],"cutoff":frontier+1}]
+            checkpoint = json.loads(snapshot[0])
+            checkpoint["opportunity_accounting"]["batch_digest"] = fingerprint(altered)
+            with pytest.raises(ValueError,match="Opportunity is outside"):
+                store.publish(identifier,"first",(canonical(checkpoint),fingerprint(checkpoint),altered),
+                              frontier,batch,completed,metrics)
+            assert store.latest_checkpoint(identifier)==previous
+            assert not one("SELECT id FROM historical_strategy_decisions WHERE run_id=? AND cutoff=?",
+                           (identifier,frontier))
+            assert not one("SELECT ordinal FROM historical_strategy_opportunities WHERE run_id=? AND cutoff=?",
+                           (identifier,frontier))
         store.publish(identifier,"first",snapshot,frontier,batch,completed,metrics)
-        if frontier==BASE+14100:
-            raise RuntimeError("interrupted before confirming peer candle")
+        if frontier==BASE+7200:
+            store.publish(identifier,"first",snapshot,frontier,batch,completed,metrics)
+            assert one("""SELECT COUNT(*) AS total FROM historical_strategy_opportunities
+                          WHERE run_id=? AND reason='TERMINAL_BOUNDARY'""",(identifier,))["total"]==1
+        if frontier==BASE+interruption:
+            raise RuntimeError("interrupted after committing checkpoint")
 
-    with pytest.raises(RuntimeError,match="before confirming peer"):
+    with pytest.raises(RuntimeError,match="after committing checkpoint"):
         engine.run_chunks(run,evidence,model,interrupt,chunk_size=1)
     store.finish(identifier,"first","FAILED","test interruption")
-    assert store.latest_checkpoint(identifier)["frontier"]==BASE+14100
+    assert store.latest_checkpoint(identifier)["frontier"]==BASE+interruption
+    assert client.get(f"{API}/{identifier}/opportunities").json()==[]
+    assert client.get(f"{API}/{identifier}").json()["opportunity_accounting"]=={"status":"NOT_PUBLISHED"}
+    assert client.get(f"{API}/{identifier}/checkpoint").status_code==409
     assert client.get(f"{API}/{identifier}/decisions").json()==[]
     assert client.get(f"{API}/{identifier}/intents").json()==[]
     assert client.post(f"{API}/{identifier}/resume").status_code==200
@@ -314,7 +384,21 @@ def test_scheduler_equivalence_and_completion_gate(client,canonical_successors,m
     assert intent==next(item["intent"] for item in result if item["intent"])
     assert intent["status"]=="AWAITING_EXECUTION_VALIDATION"
     saved = client.get(f"{API}/{identifier}/decisions/{BASE+14120}").json()
-    assert saved["supporting_events"]==seen[BASE+14120][0]["supporting_events"]
+    qualified = next(item["trace"] for item in result if item["intent"])
+    assert saved["supporting_events"]==qualified["supporting_events"]
+    page = client.get(f"{API}/{identifier}/opportunities",params={"limit":2}).json()
+    tail = client.get(f"{API}/{identifier}/opportunities",params={"after":page[-1]["cursor"]}).json()
+    assert len(page)==len(tail)==2
+    assert page+tail==[{**item,"first":{key:item[key] for key in
+        ("cutoff","disposition","reason","evidence_reference")}} for item in observations]
+    summary = client.get(f"{API}/{identifier}").json()["opportunity_accounting"]
+    assert summary["status"]=="COLLECTED" and summary["total"]==4
+    assert summary["by_disposition"]=={"BOUND":3,"SUPPRESSED":1,"UNRESOLVED":0}
+    assert summary["by_reason"]==[
+        {"disposition":"BOUND","reason":"ATTEMPT_BOUND","total":3},
+        {"disposition":"SUPPRESSED","reason":"TERMINAL_BOUNDARY","total":1},
+    ]
+    print("resumed after",interruption,"published",summary)
 
 
 @pytest.mark.parametrize("case",["missing","zero-delay","too-long"])

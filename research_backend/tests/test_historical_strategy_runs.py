@@ -224,3 +224,62 @@ def test_supervisor_terminates_uncooperative_process(prepared, monkeypatch, reas
     diagnostic = {"deadline":"External process deadline","memory":"Sampled working-set limit",
                   "cancel":"Worker lease or cancellation"}[reason]
     assert outcome["diagnostic"]==diagnostic
+
+
+@pytest.mark.parametrize("legacy",[False,True])
+def test_opportunity_accounting_fvg_and_legacy_api(client,prepared,legacy):
+    _,run,model,evidence = prepared()
+    if legacy:
+        run.pop("opportunity_accounting_version")
+    identifier = store.enqueue(run)
+    assert store.claim("test-worker")==identifier
+    engine.run_chunks(run,evidence,model,lambda *args:store.publish(identifier,"test-worker",*args),chunk_size=2)
+    response = client.get(f"{API}/{identifier}").json()
+    items = client.get(f"{API}/{identifier}/opportunities").json()
+    attempts = client.get(f"{API}/{identifier}/attempts").json()
+    assert response["results_published"] and len(attempts)>=3
+    if legacy:
+        assert response["opportunity_accounting"]=={"status":"NOT_COLLECTED"}
+        assert items==[]
+    else:
+        assert response["opportunity_accounting"]["status"]=="COLLECTED"
+        assert response["opportunity_accounting"]["total"]==len(items)
+        assert len({row["family"] for row in items})==len(items)
+        assert {row["attempt_id"] for row in items if row["disposition"]=="BOUND"}=={a["id"] for a in attempts}
+        assert all(row["first"]["evidence_reference"]["category"]=="fvg" for row in items)
+        print("FVG rows",[(row["cutoff"]-BASE,row["disposition"],row["reason"]) for row in items])
+
+
+def test_measured_zero_opportunities(client,prepared):
+    request,*_ = prepared()
+    run = prepare_historical(HistoricalInput.model_validate({**request,"cutoff":BASE+2100}))
+    model = StrategyDefinitionV2.model_validate(run["definition"])
+    evidence = verified_evidence(model,run)
+    identifier = store.enqueue(run)
+    assert store.claim("test-worker")==identifier
+    engine.run_chunks(run,evidence,model,lambda *args:store.publish(identifier,"test-worker",*args))
+    summary = client.get(f"{API}/{identifier}").json()["opportunity_accounting"]
+    assert summary["status"]=="COLLECTED" and summary["total"]==0
+    assert summary["by_disposition"]=={"BOUND":0,"SUPPRESSED":0,"UNRESOLVED":0}
+    assert client.get(f"{API}/{identifier}/opportunities").json()==[]
+
+
+def test_warmup_candidates_follow_existing_selection_without_extra_attempts(prepared):
+    request,*_ = prepared()
+    start = BASE+5100
+    run = prepare_historical(HistoricalInput.model_validate({**request,"evaluation_start":start}))
+    model = StrategyDefinitionV2.model_validate(run["definition"])
+    prefix = collect(model,run["selection"],start,start)
+    reference = engine.make_machine(run,prefix,model)
+    reference.run(start)
+    winner = reference.bindings[run["rearm_rule"]].proof
+    items = []
+    engine.account_cutoff(run,reference,start,None,{"families":{},"unresolved_inspections":0},items,lambda:None)
+    bound, = [row for row in items if row["disposition"]=="BOUND"]
+    competing = [row for row in items if row["reason"]=="SELECTION_POLICY"]
+    assert competing
+    assert {row["family"] for row in items}=={bound["family"],*(row["family"] for row in competing)}
+    assert bound["family"]==winner.family
+    assert any(row["evidence_reference"]["available_at"]<start for row in items)
+    assert all(row["cutoff"]==start for row in items)
+    assert all(row["attempt_id"] is None for row in competing)

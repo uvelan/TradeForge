@@ -5,6 +5,7 @@ from time import time
 from .analysis_evidence import ResourceLimit, canonical
 from .db import one, transaction, utc_now
 from .historical_strategy_inputs import LEASE_SECONDS, MAX_LEDGER_BYTES, MAX_QUEUE, MAX_SAVED_RUNS
+from .strategy_evidence import fingerprint
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS historical_strategy_runs (
@@ -52,11 +53,30 @@ CREATE TABLE IF NOT EXISTS historical_strategy_intents (
     attempt_id TEXT NOT NULL UNIQUE REFERENCES historical_strategy_attempts(id),
     payload TEXT NOT NULL CHECK(json_valid(payload))
 );
+CREATE TABLE IF NOT EXISTS historical_strategy_opportunities (
+    run_id TEXT NOT NULL,
+    ordinal INTEGER NOT NULL CHECK(ordinal>0),
+    revision INTEGER NOT NULL CHECK(revision BETWEEN 0 AND 2),
+    cutoff INTEGER NOT NULL,
+    disposition TEXT NOT NULL CHECK(disposition IN ('BOUND','SUPPRESSED','UNRESOLVED')),
+    reason TEXT NOT NULL,
+    payload TEXT NOT NULL CHECK(json_valid(payload)),
+    PRIMARY KEY(run_id,ordinal,revision),
+    FOREIGN KEY(run_id) REFERENCES historical_strategy_runs(id)
+);
+CREATE VIEW IF NOT EXISTS historical_current_opportunities AS
+SELECT latest.*, first.payload AS first_payload
+FROM (SELECT run_id,ordinal,MIN(revision) AS first_revision,MAX(revision) AS last_revision
+      FROM historical_strategy_opportunities GROUP BY run_id,ordinal) revisions
+JOIN historical_strategy_opportunities first ON
+    (first.run_id,first.ordinal,first.revision)=(revisions.run_id,revisions.ordinal,revisions.first_revision)
+JOIN historical_strategy_opportunities latest ON
+    (latest.run_id,latest.ordinal,latest.revision)=(revisions.run_id,revisions.ordinal,revisions.last_revision);
 CREATE INDEX IF NOT EXISTS historical_attempt_run ON historical_strategy_attempts(run_id,id);
 CREATE INDEX IF NOT EXISTS historical_intent_run ON historical_strategy_intents(run_id,id);
 """
 IMMUTABLE = ("historical_strategy_runs","historical_strategy_checkpoints","historical_strategy_decisions",
-             "historical_strategy_attempts","historical_strategy_intents")
+             "historical_strategy_attempts","historical_strategy_intents","historical_strategy_opportunities")
 
 
 class LeaseLost(Exception):
@@ -158,16 +178,25 @@ def latest_checkpoint(run_id):
 
 
 def publish(run_id, owner, snapshot, frontier, entries, completed, metrics):
-    payload,digest = snapshot
+    payload,digest = snapshot[:2]
+    observations = snapshot[2] if len(snapshot)==3 else ()
+    opportunity_rows = [(item,canonical(item)) for item in observations]
     encoded = [(entry,canonical(entry["trace"]),canonical(entry["intent"]) if entry["intent"] else None)
                for entry in entries]
     size = len(payload.encode())+sum(len(trace.encode())+(len(intent.encode()) if intent else 0)
                                      for _,trace,intent in encoded)
+    size += sum(len(data.encode()) for _,data in opportunity_rows)
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
         lease = db.execute("SELECT * FROM historical_worker_state WHERE run_id=?",(run_id,)).fetchone()
         if (not lease or lease["state"]!="RUNNING" or lease["owner"]!=owner or lease["lease_until"]<=time()):
             raise LeaseLost()
+        checkpoint = json.loads(payload)
+        accounting = checkpoint.get("opportunity_accounting")
+        if len(snapshot)==3 or accounting is not None:
+            if (accounting is None or fingerprint(checkpoint)!=digest
+                    or accounting["batch_digest"]!=fingerprint(observations)):
+                raise ValueError("Opportunity batch does not match its checkpoint")
         previous = lease["frontier"]
         if previous is not None and frontier<=previous:
             prior = db.execute("SELECT digest FROM historical_strategy_checkpoints WHERE run_id=? AND frontier=?",
@@ -190,6 +219,11 @@ def publish(run_id, owner, snapshot, frontier, entries, completed, metrics):
             if intent_json:
                 db.execute("INSERT INTO historical_strategy_intents VALUES (?,?,?,?,?)",
                            (entry["intent"]["id"],run_id,entry["id"],trace["attempt_id"],intent_json))
+        for item,data in opportunity_rows:
+            if item["cutoff"]>frontier or previous is not None and item["cutoff"]<=previous:
+                raise ValueError("Opportunity is outside its committed checkpoint interval")
+            db.execute("INSERT INTO historical_strategy_opportunities VALUES (?,?,?,?,?,?,?)",
+                       (run_id,item["cursor"],item["revision"],item["cutoff"],item["disposition"],item["reason"],data))
         db.execute("INSERT INTO historical_strategy_checkpoints VALUES (?,?,?,?)",(run_id,frontier,digest,payload))
         if lease["lease_until"]<=time():
             raise LeaseLost()

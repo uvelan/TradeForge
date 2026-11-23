@@ -101,10 +101,25 @@ def get_run(run_id:str):
                                WHERE run_id=? GROUP BY state""",(run_id,)).fetchall() if completed else ()
         intent_count = db.execute("SELECT COUNT(*) FROM historical_strategy_intents WHERE run_id=?",
                                   (run_id,)).fetchone()[0] if completed else 0
+        accounting = {"status":"NOT_PUBLISHED" if not completed else "NOT_COLLECTED"}
+        if completed and result.get("opportunity_accounting_version"):
+            final = db.execute("""SELECT payload FROM historical_strategy_checkpoints
+                                  WHERE run_id=? ORDER BY frontier DESC LIMIT 1""",(run_id,)).fetchone()
+            if final and (progress:=json.loads(final["payload"]).get("opportunity_accounting")) is not None:
+                breakdown = db.execute("""SELECT disposition,reason,COUNT(*) AS total
+                    FROM historical_current_opportunities WHERE run_id=? GROUP BY disposition,reason
+                    ORDER BY disposition,reason""",(run_id,)).fetchall()
+                dispositions = {key:0 for key in ("BOUND","SUPPRESSED","UNRESOLVED")}
+                for item in breakdown:
+                    dispositions[item["disposition"]] += item["total"]
+                accounting = {"status":"COLLECTED","version":progress["version"],
+                              "total":sum(dispositions.values()),"by_disposition":dispositions,
+                              "by_reason":[dict(item) for item in breakdown],
+                              "unresolved_inspections":progress["unresolved_inspections"]}
         return {key:result[key] for key in ("run_id","identity","selection")} | {
             "created_at":row["created_at"],"worker":worker,"results_published":completed,
             "attempt_counts":{entry["state"]:entry["count"] for entry in counts},
-            "qualified_intents":intent_count}
+            "qualified_intents":intent_count,"opportunity_accounting":accounting}
 
 
 @router.post("/{run_id}/cancel")
@@ -150,6 +165,22 @@ def attempts(run_id:str,after:int=Query(0,ge=0),limit:int=Query(30,ge=1,le=100))
     return rows("""SELECT a.id,a.state,d.cutoff,d.id AS decision_id FROM historical_strategy_attempts a
                    JOIN historical_strategy_decisions d ON d.id=a.decision_id
                    WHERE a.run_id=? AND d.cutoff>? ORDER BY d.cutoff LIMIT ?""",(run_id,after,limit))
+
+
+@router.get("/{run_id}/opportunities")
+def opportunities(run_id:str,after:int=Query(0,ge=0),limit:int=Query(30,ge=1,le=100)):
+    if run_state(run_id)!="COMPLETED":
+        return []
+    final = latest_checkpoint(run_id)
+    if not final or json.loads(final["payload"]).get("opportunity_accounting") is None:
+        return []
+    result = []
+    for row in rows("""SELECT payload,first_payload FROM historical_current_opportunities
+                       WHERE run_id=? AND ordinal>? ORDER BY ordinal LIMIT ?""",(run_id,after,limit)):
+        final,first = json.loads(row["payload"]),json.loads(row["first_payload"])
+        result.append({**final,"first":{key:first[key] for key in
+            ("cutoff","disposition","reason","evidence_reference")}})
+    return result
 
 
 @router.get("/{run_id}/intents")

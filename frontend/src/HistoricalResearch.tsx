@@ -10,9 +10,13 @@ const epoch=(value:string)=>Date.parse(value+'Z')/1000;
 const human=(value:string)=>value.toLowerCase().replaceAll('_',' ');
 type Source={id:string;fingerprint:string;start:number;end:number};
 type Summary={run_id:string;state:string;frontier:number|null};
+type OpportunityAccounting = {status:'NOT_COLLECTED'|'NOT_PUBLISHED'} | {
+  status:'COLLECTED';total:number;by_disposition:Record<string,number>;
+  by_reason:{disposition:string;reason:string;total:number}[];unresolved_inspections:number;
+};
 type Run={run_id:string;identity:{historical_version:number;evaluator_version:number;method:string;evaluation_start:number;warmup_start:number;cutoff:number;rearm:string;strategy_version_id:string};
   selection:{series:Record<string,{symbol:string;timeframe:string;feed_id:string;delay_seconds:number;price_basis:string}>};
-  results_published:boolean;worker:{state:string;frontier:number|null;diagnostic:string|null};attempt_counts:Record<string,number>;qualified_intents:number};
+  results_published:boolean;worker:{state:string;frontier:number|null;diagnostic:string|null};attempt_counts:Record<string,number>;qualified_intents:number;opportunity_accounting?:OpportunityAccounting};
 type Decision={id:string;cutoff:number;state:string;attempt_id:string|null};
 type Reference={calculation_snapshot:string;event_id:string;source:string[];participants?:{primary:string[]}};
 type Proof={state?:string;type?:string;timing:{observation_start:number};evidence_reference:Reference};
@@ -180,6 +184,17 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
       <p>{Object.values(run.selection.series).map(lane=>lane.symbol+' '+lane.timeframe+' '+lane.feed_id+' '+lane.price_basis+' · '+lane.delay_seconds+'s modeled delay').join(' | ')}</p>
       {run.worker.diagnostic&&<p role="alert">{run.worker.diagnostic}</p>}
       <p>Qualified intents {run.qualified_intents} · {Object.entries(run.attempt_counts).map(([state,count])=>human(state)+' '+count).join(' · ')}</p>
+      {run.opportunity_accounting?.status==='COLLECTED'&&<details>
+        <summary>Context opportunities {run.opportunity_accounting.total}</summary>
+        <p>{Object.entries(run.opportunity_accounting.by_disposition).map(([state,count])=>
+          human(state)+' '+count).join(' · ')}</p>
+        <ul>{run.opportunity_accounting.by_reason.map(item=>
+          <li key={item.disposition+item.reason}>{human(item.reason)} · {item.total}</li>)}</ul>
+        {run.opportunity_accounting.unresolved_inspections>0&&
+          <p>Inspections with unresolved context evidence {run.opportunity_accounting.unresolved_inspections}</p>}
+      </details>}
+      {run.identity.rearm==='NEW_CONTEXT_FAMILY'&&run.opportunity_accounting?.status==='NOT_COLLECTED'&&
+        <p>Opportunity accounting was not collected for this run.</p>}
       <div className="strategy-actions">
         {['QUEUED','RUNNING'].includes(run.worker.state)&&<button className="small-tool" disabled={busy} onClick={()=>void action(async()=>{
           setRun(await api.post<Run>(endpoint+'/'+runId+'/cancel',{}));
