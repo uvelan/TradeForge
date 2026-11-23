@@ -5,10 +5,10 @@ from datetime import UTC, datetime
 
 from .analysis_evidence import ResourceLimit, canonical
 from .db import one
-from .historical_strategy_inputs import CHECKPOINT_VERSION, CRT_SMT_METHOD, MAX_CHECKPOINT_BYTES, MAX_ORACLE_CUTOFFS
+from .historical_strategy_inputs import CHECKPOINT_VERSION, CRT_SMT_METHOD, MAX_CHECKPOINT_BYTES, MAX_ORACLE_CUTOFFS, OPPORTUNITY_ACCOUNTING_VERSION
 from .market import FRAME_MIN
 from .strategy_evaluation_sources import collect
-from .strategy_evaluator import EvaluationMachine, TERMINAL
+from .strategy_evaluator import EvaluationMachine, NO, TERMINAL, UNKNOWN
 from .strategy_evidence import fingerprint
 
 
@@ -50,15 +50,25 @@ def asof_selection(selection, cutoff):
     return {**selection,"series":series}
 
 
-def checkpoint(run, evidence, frontier, attempts, spent, terminal_time, processed, dynamic):
+def checkpoint(run, evidence, frontier, attempts, spent, terminal_time, processed, dynamic, accounting=None, observations=()):
     payload = {"version":CHECKPOINT_VERSION,"run_id":run["run_id"],
                "selection":run["identity"]["frozen_selection"],"frontier":frontier,"attempts":attempts,
                "spent":spent,"terminal_time":terminal_time,"processed":processed,"dynamic":sorted(dynamic),
                "snapshots":{key:view.snapshot for key,view in evidence.views.items()}}
+    if accounting is not None:
+        payload["opportunity_accounting"] = {**accounting,"batch_digest":fingerprint(observations)}
     encoded = canonical(payload)
     if len(encoded.encode())>MAX_CHECKPOINT_BYTES:
         raise ResourceLimit("Historical checkpoint exceeds the byte budget")
-    return encoded,fingerprint(payload)
+    return (encoded,fingerprint(payload),observations) if accounting is not None else (encoded,fingerprint(payload))
+
+
+def unresolved_reasons(accounting):
+    """Older collected checkpoints retained a count without its cause."""
+    if "unresolved_by_reason" in accounting:
+        return accounting["unresolved_by_reason"]
+    count = accounting["unresolved_inspections"]
+    return {"NOT_RECORDED":count} if count else {}
 
 
 def restore(run, evidence, saved):
@@ -78,7 +88,23 @@ def restore(run, evidence, saved):
             or len(data["dynamic"])>2
             or any(not data["frontier"]<stamp<=identity["cutoff"] for stamp in data["dynamic"])):
         raise ValueError("Historical checkpoint is corrupt or incompatible")
+    accounting = data.get("opportunity_accounting")
+    if (run.get("opportunity_accounting_version") is not None)!=(accounting is not None):
+        raise ValueError("Historical checkpoint has incompatible opportunity accounting")
+    if accounting is not None:
+        progress = accounting.get("families",{})
+        if (accounting.get("version")!=OPPORTUNITY_ACCOUNTING_VERSION
+                or not 0<=accounting.get("unresolved_inspections",-1)<=data["processed"]
+                or sorted(item[0] for item in progress.values())!=list(range(1,len(progress)+1))
+                or any(item[1] not in {0,1,2} for item in progress.values())):
+            raise ValueError("Historical checkpoint has invalid opportunity accounting")
+        reasons = unresolved_reasons(accounting)
+        if (not isinstance(reasons,dict)
+                or any(not reason or type(count) is not int or count<1 for reason,count in reasons.items())
+                or sum(reasons.values())!=accounting["unresolved_inspections"]):
+            raise ValueError("Historical checkpoint has invalid opportunity uncertainty counts")
     return data
+
 
 
 def make_machine(run, evidence, definition, after=None, spent=()):
@@ -121,6 +147,69 @@ def successor_schedule(run, evidence, definition):
     return schedule
 
 
+def account_cutoff(run, machine, cutoff, prior_terminal, accounting, observations, check):
+    """Audit the designated rule in isolation from the decision machine's state."""
+    rule_id = run["rearm_rule"]
+    identity = run["identity"]
+    probe = EvaluationMachine(machine.definition,machine.evidence,identity,machine.start,machine.end,check_budget=check)
+    candidates = {}
+    context = UNKNOWN
+    unresolved_reason = "REQUIRED_SOURCE_COVERAGE_UNKNOWN"
+    if all(lane.at(cutoff)["status"]=="COMPLETE" for lane in probe.evidence.coverage.values()):
+        def observe(choices):
+            # Store the earliest exact qualifying observation for each family.
+            for proof in sorted(choices,key=lambda item:(item.reference.available_at,item.observed_at,
+                                                         item.reference.event_id)):
+                if proof.family:
+                    candidates.setdefault(proof.family,proof)
+        probe.observe_candidates = rule_id,observe
+        lower = identity["warmup_start"] if prior_terminal is None else prior_terminal+1
+        context = probe.phase("context",cutoff,lower)
+        designated = probe.results[rule_id]
+        # ALL can be false because of a sibling while the designated rule
+        # still cannot enumerate its otherwise eligible families.
+        if designated.outcome==UNKNOWN:
+            unresolved_reason = designated.reason
+        else:
+            unresolved_reason = "CONTEXT_OUTCOME_UNKNOWN" if context==UNKNOWN else None
+
+    binding = machine.bindings.get(rule_id) if machine.attempt else None
+    bound_family = binding.proof.family if binding else None
+    if binding:
+        candidates.setdefault(bound_family,binding.proof)
+    if unresolved_reason is not None:
+        reasons = accounting.setdefault("unresolved_by_reason",unresolved_reasons(accounting))
+        reasons[unresolved_reason] = reasons.get(unresolved_reason,0)+1
+        accounting["unresolved_inspections"] += 1
+    for family,proof in sorted(candidates.items()):
+        attempt_id = None
+        if family==bound_family:
+            rank,disposition,reason = 2,"BOUND","ATTEMPT_BOUND"
+            attempt_id = machine.attempt
+        elif machine.attempt and machine.state in TERMINAL and proof.reference.available_at==cutoff:
+            rank,disposition,reason = 1,"SUPPRESSED","TERMINAL_BOUNDARY"
+        elif machine.attempt:
+            reason = "SELECTION_POLICY" if machine.context_at==cutoff else "ATTEMPT_IN_PROGRESS"
+            rank,disposition = 1,"SUPPRESSED"
+        elif context==NO:
+            rank,disposition,reason = 1,"SUPPRESSED","CONTEXT_NOT_SATISFIED"
+        else:
+            rank,disposition,reason = 0,"UNRESOLVED","CONTEXT_DISPOSITION_UNRESOLVED"
+
+        families = accounting["families"]
+        prior = families.get(family)
+        if prior and prior[1]>=rank:
+            continue
+        ordinal = prior[0] if prior else len(families)+1
+        families[family] = [ordinal,rank]
+        reference = proof.reference.model_dump(mode="json",exclude_none=True)
+        observations.append({"id":"HO-"+fingerprint([run["run_id"],rule_id,family]),"rule":rule_id,
+            "family":family,"cursor":ordinal,"revision":rank,"cutoff":cutoff,"disposition":disposition,
+            "reason":reason,"attempt_id":attempt_id,"evidence_reference":reference,
+            **({"binding_evidence_reference":binding.proof.reference.model_dump(mode="json",exclude_none=True)}
+               if attempt_id else {})})
+
+
 def run_chunks(run, evidence, definition, publish, *, saved=None, chunk_size=32, check=lambda:None):
     identity = run["identity"]
     start,end = identity["evaluation_start"],identity["cutoff"]
@@ -147,6 +236,11 @@ def run_chunks(run, evidence, definition, publish, *, saved=None, chunk_size=32,
     if attempts>=identity["max_attempts"] and frontier<end:
         raise ResourceLimit("Historical attempt budget reached before the final cutoff")
     pending = set(point for point in schedule if point>frontier)
+    accounting = None
+    if run.get("opportunity_accounting_version")==OPPORTUNITY_ACCOUNTING_VERSION:
+        accounting = data["opportunity_accounting"] if data else {
+            "version":OPPORTUNITY_ACCOUNTING_VERSION,"families":{},"unresolved_inspections":0}
+    observations = []
     batch = []
     while pending or dynamic:
         check()
@@ -158,6 +252,8 @@ def run_chunks(run, evidence, definition, publish, *, saved=None, chunk_size=32,
         machine = make_machine(run,prefix,definition,terminal_time,spent)
         machine.check_budget = check
         machine.run(frontier)
+        if accounting is not None:
+            account_cutoff(run,machine,frontier,terminal_time,accounting,observations,check)
         if machine.state in TERMINAL and machine.attempt:
             batch.append(ledger_entry(run,machine,frontier))
             binding = machine.bindings[run["rearm_rule"]]
@@ -173,9 +269,11 @@ def run_chunks(run, evidence, definition, publish, *, saved=None, chunk_size=32,
         if done and (not batch or batch[-1]["trace"]["cutoff"]!=frontier):
             batch.append(ledger_entry(run,machine,frontier))
         if done or limit_hit or processed%chunk_size==0:
-            publish(checkpoint(run,evidence,frontier,attempts,spent,terminal_time,processed,dynamic),
+            publish(checkpoint(run,evidence,frontier,attempts,spent,terminal_time,processed,dynamic,
+                               accounting,observations),
                     frontier,batch,done,{**evidence.metrics,"processed_cutoffs":processed,
                                          "oracle_prefixes":processed,"spent_context_families":len(spent)})
             batch = []
+            observations = []
         if limit_hit:
             raise ResourceLimit("Historical attempt budget reached before the final cutoff")

@@ -136,6 +136,7 @@ class EvaluationMachine:
                  rearm_rule=None, rearm_after=None, spent_families=()):
         self.definition = definition
         self.check_budget = check_budget
+        self.observe_candidates = None
         self.rearm_rule = rearm_rule
         self.rearm_after = rearm_after
         self.spent_families = frozenset(spent_families)
@@ -328,7 +329,9 @@ class EvaluationMachine:
             outcome,proof = select_candidate(self.evidence.registry,eligible,snapshot=view.snapshot,
                 cutoff=cutoff,policy=policy,age=rule.evidence.max_age_seconds,
                 limit=self.definition.attempt.candidate_limit,current=False,
-                bound=bound,coverage_known=True,purpose=SIMULATION_MODE)
+                bound=bound,coverage_known=True,purpose=SIMULATION_MODE,
+                observe=(self.observe_candidates[1] if self.observe_candidates
+                         and self.observe_candidates[0]==rule.id else None))
             if outcome==YES:
                 event = next(row for row in eligible if row["id"]==proof.reference.event_id)
                 previous = self.results.get(rule.id)

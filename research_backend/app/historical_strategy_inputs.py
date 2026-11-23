@@ -16,6 +16,7 @@ from .strategy_evidence import fingerprint
 
 RUN_VERSION = 2
 CHECKPOINT_VERSION = 2
+OPPORTUNITY_ACCOUNTING_VERSION = 1
 MAX_ATTEMPTS = 32
 MAX_ORACLE_CUTOFFS = 160
 CRT_SMT_METHOD = "CRT_SMT_ASOF_REFERENCE"
@@ -168,7 +169,8 @@ def prepare_historical(request):
                            "ledger_bytes":MAX_LEDGER_BYTES}}
     run_id = "HR-"+fingerprint(identity)
     return {"run_id":run_id,"identity":identity,"selection":selection,
-            "definition":frozen_definition,"rearm_rule":identity["rearm_rule"]}
+            "definition":frozen_definition,"rearm_rule":identity["rearm_rule"],
+            **({"opportunity_accounting_version":OPPORTUNITY_ACCOUNTING_VERSION} if rule else {})}
 
 
 def verified_evidence(definition, run, check_budget=None):

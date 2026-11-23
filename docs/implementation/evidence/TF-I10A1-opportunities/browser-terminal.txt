@@ -1,0 +1,22 @@
+
+> e2e
+> playwright test e2e/terminal.spec.ts --retries=0 --reporter=line --output=C:\Users\Uday\AppData\Local\Temp\tradeforge-opportunities-serial-7f87f043-a6c5-4053-8329-cece82bcad14/terminal
+
+
+[WebServer] INFO:     Started server process [13324]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8223 (Press CTRL+C to quit)
+
+
+[WebServer] (node:20424) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+
+(node:33648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[1/1] e2e\terminal.spec.ts:3:1 › generates a simulated dataset and reopens it after reload
+  1 passed (7.6s)

@@ -1,0 +1,22 @@
+
+> build
+> tsc --noEmit && vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 3013 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/catalog.html                    0.45 kB │ gzip:   0.31 kB
+dist/index.html                      0.53 kB │ gzip:   0.33 kB
+dist/assets/terminal-CBK_TtMD.css   41.47 kB │ gzip:  10.12 kB
+dist/assets/catalog-BtfC513C.js    237.06 kB │ gzip:  74.93 kB
+dist/assets/terminal-QCMUbaCL.js   294.23 kB │ gzip:  81.37 kB
+dist/assets/timezone-C1I9y4LN.js   399.92 kB │ gzip: 127.18 kB
+
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@mui/material/utils/index.mjs" may not be preserved when bundling.
+
+[Remaining bundler diagnostics omitted]
+
+✓ built in 2.79s
+build exit 0

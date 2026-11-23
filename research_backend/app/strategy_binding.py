@@ -96,7 +96,7 @@ def verified_family(registry, evidence):
 
 
 def select_candidate(registry, events, *, snapshot, cutoff, policy: Selection, age, limit,
-                     current=False, bound=None, coverage_known, purpose=None):
+                     current=False, bound=None, coverage_known, purpose=None, observe=None):
     """Order an already predicate-matched, causally complete prefix for one rule.
 
     A caller owns the attempt, positive proof and availability cursor. Overflow
@@ -135,6 +135,8 @@ def select_candidate(registry, events, *, snapshot, cutoff, policy: Selection, a
         choices[ref["event_id"]] = evidence
     if not choices:
         return Outcome.UNKNOWN, None
+    if observe is not None:
+        observe(choices.values())
     order = lambda evidence: (evidence.reference.available_at, evidence.observed_at, evidence.reference.event_id)
     choose = max if policy == "LATEST_ELIGIBLE" else min
     return Outcome.SATISFIED, choose(choices.values(), key=order)
