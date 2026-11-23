@@ -1,0 +1,78 @@
+{
+  "cutoff_ms": 1577973320004,
+  "legacy_rows": {
+    "partial_exit": {
+      "entry_result_id": "ME-bdaf5e8a7009c587a415e4d3761c4279b1fc58247acd24a38131601fb792a1a7",
+      "management": {
+        "partial_exit": {
+          "at_r": 1.5,
+          "percent": 12.5
+        },
+        "target": {
+          "kind": "REWARD_MULTIPLE",
+          "multiple": 3
+        }
+      },
+      "payload": "{\"direction\":\"LONG\",\"exit\":null,\"id\":\"FX-ae55033396f99211f21a1a7c3009ab31bb35ac9843fd98148a86b05768a2aa3a\",\"identity\":{\"cutoff_ms\":1577973320004,\"entry_fill_id\":\"MF-79fe94804de54f154914d331236788c6e6e7068f6c187c3a3cc2b56db00a1a52\",\"entry_result_id\":\"ME-bdaf5e8a7009c587a415e4d3761c4279b1fc58247acd24a38131601fb792a1a7\",\"execution_data_fingerprint\":\"2652ae303066b2fe4535c3ea2671b96bb7f46406a016002039e32ff43d94e242\",\"management_policy_fingerprint\":\"933cb0ef62896efe1e515a2445b909552dece45614a74b45f9bce9ff3937722c\",\"policy\":{\"activation\":\"ENTRY_QUOTE_THEN_LATER_PRIORITY_OBSERVED_AT_OR_AFTER_ENTRY_DELIVERY\",\"coverage\":\"CONTINUOUS_FROM_ENTRY_DELIVERY\",\"cutoff\":\"INCLUSIVE_DELIVERY_UTC_MS\",\"execution\":\"ACTUAL_CLOSING_QUOTE\",\"id\":\"OFFLINE_FIXED_FIRST_EXIT\",\"levels\":\"EXACT_FILL_ANCHORED_FIXED_PIPS_AND_REWARD_MULTIPLE\",\"version\":1}},\"intent_id\":\"INT-2f60f1ca20bf8797ef6fe89974633e1b92329143fff422915a44b5a0948c95b8\",\"levels\":null,\"management_policy\":{\"break_even_at_r\":null,\"initial_stop\":{\"distance\":10.0,\"kind\":\"FIXED_PIPS\"},\"partial_exit\":{\"at_r\":1.5,\"percent\":12.5},\"target\":{\"kind\":\"REWARD_MULTIPLE\",\"multiple\":3.0},\"time_exit\":null,\"trailing_pips\":null},\"status\":\"UNSUPPORTED_EXIT_MANAGEMENT\",\"symbol\":\"EURUSD\",\"unsupported_rules\":[\"partial_exit\"]}",
+      "result_id": "FX-ae55033396f99211f21a1a7c3009ab31bb35ac9843fd98148a86b05768a2aa3a",
+      "uuid_seed": 2704
+    },
+    "time_exit": {
+      "entry_result_id": "ME-bd23da4aecdba64780ee954ea3728e49b5430cec5db8143eeffb181a0302c69a",
+      "management": {
+        "time_exit": {
+          "count": 1,
+          "unit": "SECONDS"
+        }
+      },
+      "payload": "{\"direction\":\"LONG\",\"exit\":null,\"id\":\"FX-bf4c91f77ffafebf2ad067297b2ddd834b1c7badae4a3d43f0aad22f31752b72\",\"identity\":{\"cutoff_ms\":1577973320004,\"entry_fill_id\":\"MF-d84b8436b5648a66c3257b966ccf9a17764f763106d377b35ded010c4b131669\",\"entry_result_id\":\"ME-bd23da4aecdba64780ee954ea3728e49b5430cec5db8143eeffb181a0302c69a\",\"execution_data_fingerprint\":\"2652ae303066b2fe4535c3ea2671b96bb7f46406a016002039e32ff43d94e242\",\"management_policy_fingerprint\":\"c23a7db080ceba53fc6431e24c00656815356146b59a338c1ecb66e428836175\",\"policy\":{\"activation\":\"ENTRY_QUOTE_THEN_LATER_PRIORITY_OBSERVED_AT_OR_AFTER_ENTRY_DELIVERY\",\"coverage\":\"CONTINUOUS_FROM_ENTRY_DELIVERY\",\"cutoff\":\"INCLUSIVE_DELIVERY_UTC_MS\",\"execution\":\"ACTUAL_CLOSING_QUOTE\",\"id\":\"OFFLINE_FIXED_FIRST_EXIT\",\"levels\":\"EXACT_FILL_ANCHORED_FIXED_PIPS_AND_REWARD_MULTIPLE\",\"version\":1}},\"intent_id\":\"INT-1a73911195becf42ce518dbbeab95a21186d7a022d13d25e9068a810d38354f8\",\"levels\":null,\"management_policy\":{\"break_even_at_r\":null,\"initial_stop\":{\"distance\":10.0,\"kind\":\"FIXED_PIPS\"},\"partial_exit\":null,\"target\":{\"kind\":\"REWARD_MULTIPLE\",\"multiple\":2.0},\"time_exit\":{\"count\":1,\"timeframe\":null,\"unit\":\"SECONDS\"},\"trailing_pips\":null},\"status\":\"UNSUPPORTED_EXIT_MANAGEMENT\",\"symbol\":\"EURUSD\",\"unsupported_rules\":[\"time_exit\"]}",
+      "result_id": "FX-bf4c91f77ffafebf2ad067297b2ddd834b1c7badae4a3d43f0aad22f31752b72",
+      "uuid_seed": 2707
+    },
+    "trailing_pips": {
+      "entry_result_id": "ME-d490e50cd807c3e891c0bddf5e284e9f73cb60fa7c730a65f68f7be9b841a652",
+      "management": {
+        "trailing_pips": 5
+      },
+      "payload": "{\"direction\":\"LONG\",\"exit\":null,\"id\":\"FX-17ab8d9f143344634934024c2a55781739f65394f720cc6c0feb93e513dff10d\",\"identity\":{\"cutoff_ms\":1577973320004,\"entry_fill_id\":\"MF-899ee3629ddc01cf46074cd5b658f34f1d52ce3f47be0fa9fb220b2ac08e8772\",\"entry_result_id\":\"ME-d490e50cd807c3e891c0bddf5e284e9f73cb60fa7c730a65f68f7be9b841a652\",\"execution_data_fingerprint\":\"2652ae303066b2fe4535c3ea2671b96bb7f46406a016002039e32ff43d94e242\",\"management_policy_fingerprint\":\"a617b7165ab0676fe5b0d586ce9b37cc3cd3c960e3407c294e27d45b8732eb78\",\"policy\":{\"activation\":\"ENTRY_QUOTE_THEN_LATER_PRIORITY_OBSERVED_AT_OR_AFTER_ENTRY_DELIVERY\",\"coverage\":\"CONTINUOUS_FROM_ENTRY_DELIVERY\",\"cutoff\":\"INCLUSIVE_DELIVERY_UTC_MS\",\"execution\":\"ACTUAL_CLOSING_QUOTE\",\"id\":\"OFFLINE_FIXED_FIRST_EXIT\",\"levels\":\"EXACT_FILL_ANCHORED_FIXED_PIPS_AND_REWARD_MULTIPLE\",\"version\":1}},\"intent_id\":\"INT-8030adcd328bcf14256a93a16cf004d40d14dff77402788b8cdb72ba6cba396a\",\"levels\":null,\"management_policy\":{\"break_even_at_r\":null,\"initial_stop\":{\"distance\":10.0,\"kind\":\"FIXED_PIPS\"},\"partial_exit\":null,\"target\":{\"kind\":\"REWARD_MULTIPLE\",\"multiple\":2.0},\"time_exit\":null,\"trailing_pips\":5.0},\"status\":\"UNSUPPORTED_EXIT_MANAGEMENT\",\"symbol\":\"EURUSD\",\"unsupported_rules\":[\"trailing_pips\"]}",
+      "result_id": "FX-17ab8d9f143344634934024c2a55781739f65394f720cc6c0feb93e513dff10d",
+      "uuid_seed": 2701
+    }
+  },
+  "source_commit": "b0a7c47a74a1d5f710415b63b145953e4ba13dd0",
+  "tape": {
+    "complete_delivery_intervals": [
+      {
+        "end_ms": 1577973620000,
+        "start_ms": 1577973320001
+      }
+    ],
+    "kind": "SYNTHETIC_EXECUTABLE_QUOTES_V1",
+    "quotes": [
+      {
+        "ask_units": 110314,
+        "available_at_ms": 1577973320002,
+        "bid_units": 110311,
+        "source_order": 5,
+        "time_ms": 1577973320002
+      },
+      {
+        "ask_units": 110470,
+        "available_at_ms": 1577973320003,
+        "bid_units": 110464,
+        "source_order": 6,
+        "time_ms": 1577973320003
+      },
+      {
+        "ask_units": 110220,
+        "available_at_ms": 1577973320004,
+        "bid_units": 110210,
+        "source_order": 7,
+        "time_ms": 1577973320004
+      }
+    ],
+    "scale": 100000,
+    "source_id": "TF-I10A2-synthetic-entry-quotes",
+    "symbol": "EURUSD"
+  }
+}
