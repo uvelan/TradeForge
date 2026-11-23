@@ -17,6 +17,7 @@ from research_backend.app import strategy_evaluation_sources as sources
 from research_backend.app.analysis_evidence import AnalysisCoordinator, ResourceLimit
 from research_backend.app.historical_strategy_inputs import HistoricalInput, prepare_historical, verified_evidence
 from research_backend.app.historical_strategy_worker import working_set
+from research_backend.app.indicator_coverage import MarketSchedule, open_intervals
 from research_backend.app.offline_crt_smt_replay import OFFLINE_CUTOFFS, ReplayArchive, run_offline
 from research_backend.app.strategy_evaluator import CATALOG, EvaluationMachine, TERMINAL
 from research_backend.app.strategy_evidence import fingerprint
@@ -27,11 +28,16 @@ from test_strategy_evaluator import BASE
 END = BASE+90_000
 
 
-def points(evidence, model, first, end):
-    """Independent M5 arrival grid, publication availability and predicate age edges."""
-    stamps = {START,end}
-    for binding in (model.instruments.primary,model.instruments.comparison):
-        stamps.update(stamp+binding.modeled_delay_seconds for stamp in range(BASE+300,end+1,300))
+def modeled_arrivals(selection):
+    return {stamp+300+feed["delay_seconds"]
+            for feed in selection["series"].values()
+            for begin,end in open_intervals(feed["start"],feed["end"],MarketSchedule(**feed["calendar"]))
+            for stamp in range(begin,end,300)}
+
+
+def points(evidence, model, first, end, *, start, arrivals):
+    """Independently combine calendar arrivals, publications and predicate age edges."""
+    stamps = {start,end} | arrivals
     for lanes in evidence.events.values():
         for times,_ in lanes.values():
             stamps.update(times)
@@ -66,8 +72,9 @@ def timers(machine, frontier, end):
 
 
 def fresh(run,horizon,model,check,observe):
-    end = run["identity"]["cutoff"]
-    pending = points(horizon,model,START,end)
+    start,end = run["identity"]["evaluation_start"],run["identity"]["cutoff"]
+    arrivals = modeled_arrivals(run["selection"])
+    pending = points(horizon,model,start,end,start=start,arrivals=arrivals)
     dynamic = set()
     terminal = None
     spent = set()
@@ -82,12 +89,12 @@ def fresh(run,horizon,model,check,observe):
         frontier = min(pending|dynamic)
         pending.discard(frontier)
         # Both pinned single partitions contribute at every inspected cutoff.
-        prefix = sources.collect(model,run["selection"],frontier,START,check_budget=check)
-        begin = START if terminal is None else terminal+1
+        prefix = sources.collect(model,run["selection"],frontier,start,check_budget=check)
+        begin = start if terminal is None else terminal+1
         machine = EvaluationMachine(model,prefix,run["identity"],begin,end,check_budget=check,
                                     rearm_rule=None if terminal is None else run["rearm_rule"],
                                     rearm_after=terminal,spent_families=spent)
-        dues = points(prefix,model,begin,frontier)
+        dues = points(prefix,model,begin,frontier,start=start,arrivals=arrivals)
         known = set(dues)
         while dues:
             stamp = min(dues)
@@ -136,14 +143,32 @@ def session_run(client,canonical_successors,monkeypatch):
     return run,model
 
 
-def measured(path,run,model,monkeypatch):
+def measured(path,run,model,monkeypatch,*,inspect=None):
     calls,times = Counter(),Counter()
     rows = []
     started = perf_counter()
     cutoff_seconds = 300 if path=="fresh" else 150
+    frontier = run["identity"]["cutoff"]
+    next_sample = started
     def check():
-        if perf_counter()-started>cutoff_seconds:
-            raise ResourceLimit(f"{path} exhausted its {cutoff_seconds}-second benchmark deadline")
+        nonlocal next_sample
+        now = perf_counter()
+        def exceeded(reason):
+            raise ResourceLimit(f"{path} at frontier {frontier}: {reason}; "
+                                f"elapsed {now-started:.3f} s; peak bytes {working_set(os.getpid())}")
+        if now-started>cutoff_seconds:
+            exceeded(f"{cutoff_seconds}-second deadline exceeded")
+        if now>=next_sample:
+            next_sample = now+1
+            peak = working_set(os.getpid())
+            if peak is not None and peak>768*1024**2:
+                exceeded("768 MiB working-set ceiling exceeded")
+
+    original_collect = sources.collect
+    def at_cutoff(definition,selection,cutoff,start,**kwargs):
+        nonlocal frontier
+        frontier = cutoff
+        return original_collect(definition,selection,cutoff,start,**kwargs)
     def timed(name,method):
         @wraps(method)
         def invoke(*args,**kwargs):
@@ -156,7 +181,11 @@ def measured(path,run,model,monkeypatch):
         return invoke
     def observe(cutoff,decision):
         rows.append([cutoff,fingerprint(decision),decision["state"],decision["reason"]])
+        if inspect is not None:
+            inspect(cutoff,decision)
     with monkeypatch.context() as patch:
+        patch.setattr(sources,"collect",at_cutoff)
+        patch.setattr(offline,"collect",at_cutoff)
         patch.setattr(sources,"read_partition",timed("verified_archive_decodes",sources.read_partition))
         patch.setattr(sources,"load_reference",timed("history_load",sources.load_reference))
         patch.setattr(sources,"evaluate",timed("crt",sources.evaluate))
@@ -164,6 +193,7 @@ def measured(path,run,model,monkeypatch):
         patch.setattr(EvaluationMachine,"step",timed("evaluator_step",EvaluationMachine.step))
         horizon = verified_evidence(model,run,check)
         result = (fresh if path=="fresh" else optimized)(run,horizon,model,check,observe)
+        check()
     elapsed = perf_counter()-started
     peak = working_set(os.getpid())
     return {"elapsed_seconds":round(elapsed,4),"peak_process_bytes":peak,"counts":dict(calls),
