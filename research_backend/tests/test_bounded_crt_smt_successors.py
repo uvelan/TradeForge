@@ -53,9 +53,13 @@ def bounded_definition(delay=LATE):
 def canonical_successors(client,monkeypatch):
     monkeypatch.setattr("research_backend.app.historical_strategy_worker.claim",lambda _:None)
 
-    def build(delay=LATE,missing=False,extra=0):
+    def build(delay=LATE,missing=False,extra=0,confirmation_high=None):
         lanes = []
         primary,comparison = fixture_bars()
+        if confirmation_high is not None:
+            open_,high,low,close = comparison[CONFIRMATION_BAR]
+            assert high==25 and confirmation_high>=max(open_,close)
+            comparison[CONFIRMATION_BAR] = (open_,confirmation_high,low,close)
         primary.extend([primary[-1]]*extra)
         comparison.extend([comparison[-1]]*extra)
         frozen_candles(lanes,"EURUSD","M5",BASE,primary)

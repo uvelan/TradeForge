@@ -11,6 +11,7 @@ from uuid import UUID
 import pytest
 
 from research_backend.app import historical_strategy_engine as engine
+from research_backend.app import offline_crt_smt_replay as offline
 from research_backend.app import historical_strategy_store as store
 from research_backend.app import strategy_evaluation_sources as sources
 from research_backend.app.analysis_evidence import AnalysisCoordinator, ResourceLimit
@@ -19,7 +20,7 @@ from research_backend.app.historical_strategy_worker import working_set
 from research_backend.app.offline_crt_smt_replay import OFFLINE_CUTOFFS, ReplayArchive, run_offline
 from research_backend.app.strategy_evaluator import CATALOG, EvaluationMachine, TERMINAL
 from research_backend.app.strategy_evidence import fingerprint
-from test_bounded_crt_smt_successors import START, canonical_successors, successor_request
+from test_bounded_crt_smt_successors import CONFIRMATION_BAR, START, canonical_successors, successor_request
 from test_historical_strategy_runs import API
 from test_strategy_evaluator import BASE
 
@@ -110,8 +111,8 @@ def fresh(run,horizon,model,check,observe):
     return entries,observations,accounting
 
 
-def optimized(run,horizon,model,check,observe):
-    archive = ReplayArchive()
+def optimized(run,horizon,model,check,observe,*,archive=None):
+    archive = ReplayArchive() if archive is None else archive
     entries,observations = [],[]
     final = {}
     def publish(snapshot,frontier,batch,done,metrics):
@@ -302,3 +303,183 @@ def test_session_recovery_and_equivalence(client,session_run):
         print("delayed peer",offset,state,"family",decisions[0][2],"proof",decisions[0][1],
               "intent",bool(decisions[0][0]["entry_intent"]))
     assert b["cutoff"]==b["evidence_reference"]["available_at"]==BASE+7200
+
+
+REVISION_OPEN = BASE+CONFIRMATION_BAR*300
+REVISION_ARRIVAL = REVISION_OPEN+300+20
+
+
+def market_proof(value):
+    """Keep market-event identity and timing, separating only pinned reference coordinates."""
+    if isinstance(value,dict):
+        if {"event_id","calculation_snapshot","calculation_id","source","category"}<=value.keys():
+            pinned = {"source","participants","calculation_snapshot","calculation_id"}
+            return {key:item for key,item in value.items() if key not in pinned}
+        return {key:market_proof(item) for key,item in value.items()}
+    if isinstance(value,(list,tuple)):
+        return [market_proof(item) for item in value]
+    return value
+
+
+def strategy_projection(decision):
+    omitted = {"attempt_id","producers","resource_counts","supporting_events","bound_crt","entry_intent"}
+    projected = {key:market_proof(item) for key,item in decision.items() if key not in omitted}
+    projected["has_attempt"] = decision["attempt_id"] is not None
+    projected["bound_crt"] = market_proof({key:item for key,item in decision["bound_crt"].items()
+                                          if key!="attempt_id"}) if decision["bound_crt"] else None
+    projected["supporting_events"] = sorted((market_proof(row) for row in decision["supporting_events"].values()),
+                                           key=lambda row:row["id"])
+    intent = decision["entry_intent"]
+    projected["entry_intent"] = ({key:item for key,item in intent.items() if key not in {"id","attempt_id"}}
+                                 if intent else None)
+    return projected
+
+
+def observe_revision_session(run,model,mode,high,monkeypatch):
+    peer = run["selection"]["series"]["COMPARISON:M5"]["partitions"][0]
+    archive = ReplayArchive() if mode=="cached" else None
+    horizon = verified_evidence(model,run)
+    real_collect = sources.collect
+    real_history = sources.load_reference
+    inspections,material,cache_trace = {},{},{}
+    spent = first_rows = None
+    started = perf_counter()
+    def check():
+        if perf_counter()-started>150:
+            raise ResourceLimit("In-window revision evaluation exceeded 150 seconds")
+
+    def inspect_prefix(definition,selection,cutoff,start,**options):
+        nonlocal first_rows
+        observed,changed = [],set()
+        @wraps(real_history)
+        def tap(request,begin,end,step,**kwargs):
+            result = real_history(request,begin,end,step,**kwargs)
+            bars = [(bar.model_dump(mode="json"),available) for bar,available in result["rows"]]
+            observed.append((request.symbol,request.timeframe,begin,end,step,bars))
+            if request.symbol=="GBPUSD":
+                changed.update((bar["high"],available) for bar,available in bars if bar["time"]==REVISION_OPEN)
+            return result
+        with monkeypatch.context() as patch:
+            patch.setattr(sources,"load_reference",tap)
+            prefix = real_collect(definition,selection,cutoff,start,**options)
+        events = {dependency:{category:rows for category,(_,rows) in prefix.events[view.snapshot].items()}
+                  for dependency,view in prefix.views.items()}
+        inspections[cutoff] = {"candles":fingerprint(observed),"market_events":fingerprint(market_proof(events)),
+                               "raw_events":fingerprint(events)}
+        if archive is not None:
+            rows, = [data for key,data in archive.archive.partitions.items() if key[0]==peer["id"]]
+            if first_rows is None:
+                first_rows = rows
+                cache_trace["first_decode_cutoff"] = cutoff-BASE
+                pinned, = [row for row in rows if row["time"]==REVISION_OPEN]
+                assert pinned["high"]==high
+                cache_trace["decoded_high"] = pinned["high"]
+            assert rows is first_rows, "The peer partition must reuse the same cached rows"
+            if cutoff in (REVISION_ARRIVAL-1,REVISION_ARRIVAL):
+                cache_trace[str(cutoff-BASE)] = {
+                    "same_decoded_object":rows is first_rows,
+                    "verified_decodes":archive.archive.counts["partition_decodes"],
+                    "reuses":archive.archive.counts["partition_reuses"],
+                }
+        if cutoff<REVISION_ARRIVAL:
+            assert not changed, ("future candle visible",cutoff-BASE)
+        if cutoff in (REVISION_ARRIVAL-1,REVISION_ARRIVAL):
+            latest = [row for row in events["smt"]["smt"] if row["direction"]=="bearish"
+                      and row["available_at"]<=cutoff][-1]
+            material[str(cutoff-BASE)] = {"visible_candle":sorted(changed),
+                                          "revision":latest}
+        if cutoff==REVISION_ARRIVAL:
+            assert changed=={(high,REVISION_ARRIVAL)}, "Arrived candle was stale or missing"
+        return prefix
+
+    def collect_inspection(definition,selection,cutoff,start,**options):
+        before = REVISION_ARRIVAL-1
+        if cutoff==REVISION_ARRIVAL:
+            assert spent is not None
+            early = inspect_prefix(definition,selection,before,start,**options)
+            machine = engine.make_machine(run,early,definition,BASE+7200,[spent])
+            observe(before,machine.run(before))
+        return inspect_prefix(definition,selection,cutoff,start,**options)
+
+    def observe(cutoff,decision):
+        nonlocal spent
+        if cutoff==BASE+7200:
+            spent = decision["bound_crt"]["evidence"]["family"]
+        inspections[cutoff].update(strategy=fingerprint(strategy_projection(decision)),
+                                   raw_trace=fingerprint(decision),state=decision["state"],reason=decision["reason"])
+        if cutoff in (REVISION_ARRIVAL-1,REVISION_ARRIVAL):
+            material[str(cutoff-BASE)]["trace"] = decision
+
+    with monkeypatch.context() as patch:
+        patch.setattr(sources,"collect",collect_inspection)
+        patch.setattr(offline,"collect",collect_inspection)
+        result = (fresh(run,horizon,model,check,observe) if archive is None else
+                  optimized(run,horizon,model,check,observe,archive=archive))
+    if archive is not None:
+        assert cache_trace["first_decode_cutoff"]<REVISION_ARRIVAL-BASE-1
+        assert cache_trace["14119"]["verified_decodes"]==cache_trace["14120"]["verified_decodes"]==2
+        assert cache_trace["14120"]["reuses"]>cache_trace["14119"]["reuses"]
+    return inspections,material,result,cache_trace
+
+
+def test_in_window_confirmation_revision(canonical_successors,monkeypatch):
+    """Freeze the expectation before evaluating any path: the revised high invalidates at arrival."""
+    identities = count(1)
+    monkeypatch.setattr("research_backend.app.strategy_routes.uuid4",lambda:UUID(int=next(identities)))
+    snapshots,results = {},{}
+    for name,high in (("original",25),("revised",31)):
+        request,model,_ = canonical_successors(extra=249,confirmation_high=high)
+        if name=="original":
+            strategy = {key:request[key] for key in ("strategy_id","strategy_version_id","configuration_fingerprint")}
+        else:
+            request.update(strategy)
+        run = prepare_historical(HistoricalInput.model_validate({**successor_request(request),"max_attempts":32}))
+        assert run["identity"]["cutoff"]==END
+        snapshots[name] = {key:run[key] for key in ("run_id","identity","selection")}
+        paths = {mode:observe_revision_session(run,model,mode,high,monkeypatch) for mode in ("fresh","cached")}
+        # Include complete terminal records, all exact references, per-cutoff
+        # trace digests and the opportunity accounting checkpoint projection.
+        assert paths["fresh"][:3]==paths["cached"][:3]
+        for mode,(_,material,_,_) in paths.items():
+            candidate,at = material["14119"],material["14120"]
+            assert candidate["revision"]["state"]=="SMT_CANDIDATE"
+            assert candidate["trace"]["entry_intent"] is None
+            assert at["revision"]["market_event_id"]==candidate["revision"]["market_event_id"]
+            assert at["revision"]["available_at"]==REVISION_ARRIVAL
+            assert at["revision"]["state"]==("SMT_CONFIRMED" if name=="original" else "SMT_INVALIDATED")
+            assert (at["trace"]["entry_intent"] is not None)==(name=="original")
+            print(name,mode,"+14119",candidate["revision"]["state"],candidate["trace"]["state"],"intent",False,
+                  "+14120",at["revision"]["state"],at["trace"]["state"],"intent",bool(at["trace"]["entry_intent"]))
+        results[name] = paths
+
+    original,revised = (results[name]["fresh"][0] for name in ("original","revised"))
+    before = lambda rows: {key for key in rows if key<REVISION_ARRIVAL}
+    assert before(original)==before(revised)
+    semantic_fields = ("candles","market_events","strategy")
+    for cutoff in sorted(before(original)):
+        assert {key:original[cutoff][key] for key in semantic_fields}=={
+            key:revised[cutoff][key] for key in semantic_fields},("early semantic divergence",cutoff-BASE)
+    assert any(original[cutoff]["raw_events"]!=revised[cutoff]["raw_events"] for cutoff in before(original))
+    assert snapshots["original"]["run_id"]!=snapshots["revised"]["run_id"]
+    first_difference = min(cutoff for cutoff in original.keys() & revised.keys()
+                           if any(original[cutoff][key]!=revised[cutoff][key] for key in semantic_fields))
+    assert first_difference==REVISION_ARRIVAL
+    print("matched earlier inspections",len(before(original)),"first semantic divergence",first_difference-BASE)
+    output = Path(os.environ["TRADEFORGE_BENCH_OUTPUT"])
+    evidence = {"snapshots":snapshots,"first_semantic_divergence":first_difference,"earlier_inspections":len(before(original)),
+                "paths":{f"{name}/{mode}":{"material":material,"inspections":inspections,"cache":cache,
+                         "result_digest":fingerprint(result)}
+                         for name,paths in results.items() for mode,(inspections,material,result,cache) in paths.items()}}
+    (output/"in-window-revision.json").write_text(json.dumps(evidence,indent=2)+"\n",encoding="utf-8")
+
+    # Supply the original four-way test's independently verified artifacts to
+    # the existing full-session recovery and publication-fence test.
+    for mode,filename in (("fresh","fresh"),("cached","optimized")):
+        inspections,_,(decisions,opportunities,accounting),_ = results["original"][mode]
+        trace = []
+        for cutoff,inspection in sorted(inspections.items()):
+            if cutoff!=REVISION_ARRIVAL-1:
+                trace.append([cutoff,inspection["raw_trace"],inspection["state"],inspection["reason"]])
+        payload = {key:snapshots["original"][key] for key in ("identity","selection")} | {
+            "trace":trace,"decisions":decisions,"opportunities":opportunities,"accounting":accounting}
+        (output/f"{filename}.json").write_text(json.dumps(payload)+"\n",encoding="utf-8")

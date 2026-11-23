@@ -46,3 +46,24 @@ The focused backend run passed 71 tests. The separately rerun archive-integrity 
 [Commands and captured results](evidence/TF-I10A1-offline-session/)
 
 Rollback by reverting implementation commit `5c69d75f9b845125c6f5a498f20cd25b1b6c97f6` and retaining the evidence. The offline prototype is opt-in and adds no database migration. Full-session public admission remains capped at 160. TF-I10A.2 remains pending, historical intents retain `AWAITING_EXECUTION_VALIDATION`, and production recorded trading remains `BLOCKED`.
+
+## In-window revision acceptance plan
+
+The follow-up starts from reviewed PR #20 head `1be6f64abeb2baf31849939f1b6e9bfceab8ebf8`. Use the same 24-hour session and rewrite only the high of GBPUSD candle 46, opened at +13800, from 25 to 31. Its modeled availability remains +14120. The replacement is a newly checksummed partition that supplies the same preceding warmup and in-window candles.
+
+Expected before any comparison: both versions have the same visible market observations and strategy outcomes at all earlier inspections, including +14119. C's bearish SMT family remains a candidate with no intent at +14119. At +14120 the original wick confirms C and qualifies its intent. The revised GBPUSD high breaches the laggard reference, so the same family publishes an invalidation at +14120 instead of confirming, and C produces no intent then. Fresh and cached paths must each reproduce these outcomes. Exact proof references can differ between archive versions because the rewritten contributing partition changes the pinned source and snapshot. They must remain exact within each version.
+
+### Observed in-window results
+
+| Path | +14119, before arrival | +14120, first semantic divergence |
+| --- | --- | --- |
+| Original, fresh | `SMT_CANDIDATE`, `INSUFFICIENT_EVIDENCE`, 0 intents | `SMT_CONFIRMED`, `TRIGGER_QUALIFIED`, 1 intent |
+| Original, cached | `SMT_CANDIDATE`, `INSUFFICIENT_EVIDENCE`, 0 intents | `SMT_CONFIRMED`, `TRIGGER_QUALIFIED`, 1 intent |
+| Revised, fresh | `SMT_CANDIDATE`, `INSUFFICIENT_EVIDENCE`, 0 intents | `SMT_INVALIDATED`, `INSUFFICIENT_EVIDENCE`, 0 intents |
+| Revised, cached | `SMT_CANDIDATE`, `INSUFFICIENT_EVIDENCE`, 0 intents | `SMT_INVALIDATED`, `INSUFFICIENT_EVIDENCE`, 0 intents |
+
+Each cached arm decoded the GBPUSD partition at +3600 and validated the changed row's high in the cached bytes. Both kept that same decoded object across the boundary. The cache had two physical decodes total at both inspections. Reuse counts rose from 152 at +14119 to 154 at +14120. Instrumenting the actual history loader showed that no earlier calculation could see the row, and the correct high was visible at +14120.
+
+The two archive versions agreed on the actual visible candles, producer market evidence and strategy outcomes at all 77 earlier inspections, including +14119. The cross-version projection retains event identifiers and timing. The raw hashes and full material records retain the changed pinned GBPUSD partition, calculation ID, snapshot and run ID. For example, +14119 already contains different snapshot identifiers while C's market event ID and candidate revision ID agree. Within each archive, fresh and cached agreed exactly at all inspections and in final decisions, intents, opportunity rows, accounting state and proof references. There were 612 inspections for each original path and 610 for each revised path, including the explicit +14119 probe. The schedules can differ after the revised candle becomes visible.
+
+The four-path test, 56 focused regressions, and original 611-cutoff independent equivalence and recovery test passed. Recovery retained exact published records after interruptions at +7200 and +14100. The test changes leave production code and the public 160-cutoff cap unchanged. Real full-session coverage and TF-I10A.2 remain pending. [Four-path evidence](evidence/TF-I10A1-in-window-revision/in-window-revision.json) · [Commands and logs](evidence/TF-I10A1-in-window-revision/)
