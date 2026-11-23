@@ -2,6 +2,8 @@
 from datetime import UTC, datetime
 import json
 
+from pydantic import ValidationError
+
 from .analysis_evidence import ResourceLimit
 from .archive_provenance import SYNTHETIC_MANIFESTS, SYNTHETIC_SESSIONS
 from .arrival_policy import (CLOCK_POLICY, LEGACY_MODE, LEGACY_RECORDED_ARRIVAL, MODE_VERSIONS, PUBLICATION_POLICY,
@@ -16,6 +18,14 @@ from .storage import read_partition
 MAX_BARS = 10_080
 MAX_PARTITIONS = 50
 MAX_DECODED = 30_000
+
+
+def normalized_bar(raw, step, mode, attestation, delay):
+    bar = EvidenceBar.model_validate(dict(raw))
+    if mode == LEGACY_MODE:
+        return bar
+    arrival = admitted_arrival(raw,step,mode=mode,attestation=attestation,delay=delay)
+    return bar.model_copy(update={"available_at":arrival})
 
 
 def load_reference(request, start, end, step, *, archive_limits=None, archive_session=None, include_observations=False):
@@ -163,6 +173,7 @@ def load_reference(request, start, end, step, *, archive_limits=None, archive_se
         else:
             return refused("HISTORY_UNAVAILABLE", "NO_COMPATIBLE_HISTORICAL_SOURCE")
         observed = {}
+        replay = getattr(archive_session,"replay",None) if mode == SIMULATION_MODE else None
         for member in bars:
             raw, attestation = (member,None) if mode == LEGACY_MODE else member
             if not start <= raw["time"] < end:
@@ -170,16 +181,18 @@ def load_reference(request, start, end, step, *, archive_limits=None, archive_se
             if mode == SIMULATION_MODE and raw.get("complete_m1") is False:
                 # A tick-derived M5 candle can contain observations without having all five minutes.
                 continue
-            bar = EvidenceBar.model_validate(dict(raw))
-            if mode != LEGACY_MODE:
-                try:
-                    arrival = admitted_arrival(raw,step,mode=mode,attestation=attestation,delay=delay)
-                except ValueError as error:
-                    return refused("SOURCE_INTEGRITY_FAILURE",str(error))
-                bar = bar.model_copy(update={"available_at":arrival})
-                if mode == SIMULATION_MODE and (bar.time not in allowed or
-                                                bar.time+step > int(datetime.now(UTC).timestamp())):
-                    return refused("UNKNOWN_COVERAGE", "SIMULATION_CANDLE_OUTSIDE_COMPLETED_MARKET_SLOT")
+            # Keep archive validation and cutoff filtering per request. Only
+            # immutable candle normalization can be shared by offline prefixes.
+            try:
+                bar = (normalized_bar(raw,step,mode,attestation,delay) if replay is None else
+                       replay.simulated_bar(raw,step,delay,normalized_bar))
+            except ValidationError:
+                raise
+            except ValueError as error:
+                return refused("SOURCE_INTEGRITY_FAILURE",str(error))
+            if mode == SIMULATION_MODE and (bar.time not in allowed or
+                                            bar.time+step > int(datetime.now(UTC).timestamp())):
+                return refused("UNKNOWN_COVERAGE", "SIMULATION_CANDLE_OUTSIDE_COMPLETED_MARKET_SLOT")
             available = max(bar.time + step, bar.available_at or 0)
             if attestation and available > request.cutoff:
                 continue

@@ -71,7 +71,7 @@ def unresolved_reasons(accounting):
     return {"NOT_RECORDED":count} if count else {}
 
 
-def restore(run, evidence, saved):
+def restore(run, evidence, saved, *, cutoff_budget=MAX_ORACLE_CUTOFFS):
     data = json.loads(saved["payload"])
     identity = run["identity"]
     if (fingerprint(data)!=saved["digest"] or data["version"]!=CHECKPOINT_VERSION
@@ -84,7 +84,7 @@ def restore(run, evidence, saved):
             or bool(data["attempts"])!=(data["terminal_time"] is not None)
             or (data["terminal_time"] is not None and
                 not identity["evaluation_start"]<=data["terminal_time"]<=data["frontier"])
-            or not 1<=data["processed"]<=MAX_ORACLE_CUTOFFS
+            or not 1<=data["processed"]<=cutoff_budget
             or len(data["dynamic"])>2
             or any(not data["frontier"]<stamp<=identity["cutoff"] for stamp in data["dynamic"])):
         raise ValueError("Historical checkpoint is corrupt or incompatible")
@@ -228,7 +228,15 @@ def run_chunks(run, evidence, definition, publish, *, saved=None, chunk_size=32,
     # Full-window evidence validates coverage and identifies reachable cutoffs.
     # Decisions and persisted proofs always come from a fresh as-of archive.
     schedule = successor_schedule(run,evidence,definition)
-    data = restore(run,evidence,saved) if saved else None
+    _run_successor_chunks(run,evidence,definition,publish,schedule,MAX_ORACLE_CUTOFFS,
+                          saved=saved,chunk_size=chunk_size,check=check)
+
+
+def _run_successor_chunks(run,evidence,definition,publish,schedule,cutoff_budget,*,
+                          saved,chunk_size,check,collector=collect,observe=None):
+    identity = run["identity"]
+    start,end = identity["evaluation_start"],identity["cutoff"]
+    data = restore(run,evidence,saved,cutoff_budget=cutoff_budget) if saved else None
     frontier = data["frontier"] if data else start-1
     attempts,spent,terminal_time,processed,dynamic = (
         (data["attempts"],data["spent"],data["terminal_time"],data["processed"],set(data["dynamic"]))
@@ -246,12 +254,14 @@ def run_chunks(run, evidence, definition, publish, *, saved=None, chunk_size=32,
         check()
         frontier = min(pending | dynamic)
         pending.discard(frontier)
-        if processed>=MAX_ORACLE_CUTOFFS:
+        if processed>=cutoff_budget:
             raise ResourceLimit("Historical oracle cutoff budget exceeded")
-        prefix = collect(definition,asof_selection(run["selection"],frontier),frontier,start,check_budget=check)
+        prefix = collector(definition,asof_selection(run["selection"],frontier),frontier,start,check_budget=check)
         machine = make_machine(run,prefix,definition,terminal_time,spent)
         machine.check_budget = check
-        machine.run(frontier)
+        decision = machine.run(frontier)
+        if observe is not None:
+            observe(frontier,decision)
         if accounting is not None:
             account_cutoff(run,machine,frontier,terminal_time,accounting,observations,check)
         if machine.state in TERMINAL and machine.attempt:
