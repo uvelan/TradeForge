@@ -1,0 +1,60 @@
+bounded one-pass profiled seconds 3.9883356000000276
+         1948660 function calls (1824712 primitive calls) in 3.972 seconds
+
+   Ordered by: cumulative time
+   List reduced from 561 to 22 due to restriction <'collect|read_partition|evaluate_strict_smt|indicator_engine.py:.*evaluate|strategy_evaluator.py:.*run|account_cutoff|load_reference|fingerprint|publish|validate'>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    87/86    0.022    0.000    3.374    0.039 strategy_evaluation_sources.py:209(collect)
+      342    0.097    0.000    1.869    0.005 indicator_history.py:21(load_reference)
+       86    0.019    0.000    1.299    0.015 smt_causal.py:318(evaluate_strict_smt)
+       86    0.006    0.000    0.395    0.005 indicator_engine.py:372(evaluate)
+      732    0.029    0.000    0.314    0.000 strategy_evidence.py:220(publish)
+      172    0.025    0.000    0.296    0.002 storage.py:80(read_partition)
+      476    0.007    0.000    0.240    0.001 crt.py:171(publish)
+       86    0.004    0.000    0.182    0.002 strategy_evaluator.py:617(run)
+     8903    0.013    0.000    0.175    0.000 strategy_evidence.py:40(fingerprint)
+16216/16044    0.064    0.000    0.082    0.000 {method 'validate_python' of 'pydantic_core._pydantic_core.SchemaValidator' objects}
+    14330    0.008    0.000    0.063    0.000 main.py:748(model_validate)
+      344    0.012    0.000    0.039    0.000 strategy_evidence.py:44(history_fingerprint)
+       86    0.001    0.000    0.021    0.000 historical_strategy_engine.py:150(account_cutoff)
+      172    0.002    0.000    0.019    0.000 <frozen _collections_abc>:1041(__contains__)
+     1548    0.001    0.000    0.013    0.000 <frozen _collections_abc>:1031(__iter__)
+      688    0.003    0.000    0.003    0.000 smt_causal.py:45(validate_window)
+      172    0.000    0.000    0.000    0.000 crt.py:41(validate_contract)
+      946    0.000    0.000    0.000    0.000 indicator_coverage.py:18(validate_timezone)
+      595    0.000    0.000    0.000    0.000 {method 'append' of 'collections.deque' objects}
+       13    0.000    0.000    0.000    0.000 test_bounded_crt_smt_successors.py:271(publish)
+       24    0.000    0.000    0.000    0.000 {method 'popleft' of 'collections.deque' objects}
+        4    0.000    0.000    0.000    0.000 {method 'remove' of 'collections.deque' objects}
+
+
+first scheduled inspection 7201 WAITING_FOR_CONTEXT bound None
+cutoff 3600 WAITING_FOR_SETUP c4c1d8b038b813bb6291fbac799a7280fdd5b86d8dc09e4a3572e08db42e91b9 SETUP_NOT_ESTABLISHED None False
+cutoff 7200 EXPIRED c4c1d8b038b813bb6291fbac799a7280fdd5b86d8dc09e4a3572e08db42e91b9 SETUP_EXPIRY_REACHED None False
+cutoff 7500 WAITING_FOR_CONTEXT None CONTEXT_OR_REFERENCE_UNAVAILABLE None False
+cutoff 10800 WAITING_FOR_SETUP aab6bf210d43457cbf431b3363188eb6c125eae362c345dabdedf7c9ab2d3601 SETUP_NOT_ESTABLISHED None False
+cutoff 12900 WAITING_FOR_TRIGGER aab6bf210d43457cbf431b3363188eb6c125eae362c345dabdedf7c9ab2d3601 TRIGGER_REQUIRES_LATER_EVIDENCE None False
+cutoff 13500 INSUFFICIENT_EVIDENCE aab6bf210d43457cbf431b3363188eb6c125eae362c345dabdedf7c9ab2d3601 TRIGGER_NOT_ESTABLISHED None False
+cutoff 13520 INSUFFICIENT_EVIDENCE aab6bf210d43457cbf431b3363188eb6c125eae362c345dabdedf7c9ab2d3601 TRIGGER_NOT_ESTABLISHED None False
+cutoff 14100 INSUFFICIENT_EVIDENCE aab6bf210d43457cbf431b3363188eb6c125eae362c345dabdedf7c9ab2d3601 TRIGGER_NOT_ESTABLISHED None False
+cutoff 14120 TRIGGER_QUALIFIED aab6bf210d43457cbf431b3363188eb6c125eae362c345dabdedf7c9ab2d3601 CANONICAL_TRIGGER_QUALIFIED 1577973320 True
+cutoff 14400 WAITING_FOR_SETUP 548971615ef6666c2482781a10ef89eb080c1bd4a02928b629fa31482b68a479 SETUP_NOT_ESTABLISHED None False
+cutoff 14700 WAITING_FOR_TRIGGER 548971615ef6666c2482781a10ef89eb080c1bd4a02928b629fa31482b68a479 TRIGGER_REQUIRES_LATER_EVIDENCE None False
+cutoff 15000 INVALIDATED 548971615ef6666c2482781a10ef89eb080c1bd4a02928b629fa31482b68a479 BOUND_REFERENCE_TERMINAL None False
+scheduler_cutoffs 86 elapsed_seconds 3.999
+opportunity rows [('c4c1d8b038b813bb6291fbac799a7280fdd5b86d8dc09e4a3572e08db42e91b9', 3600, 'BOUND', 'ATTEMPT_BOUND'), ('2038d1c13a1759734855370ccfb9cdc06c0657bc163066ba34b1136a0db9bf45', 7200, 'SUPPRESSED', 'TERMINAL_BOUNDARY'), ('aab6bf210d43457cbf431b3363188eb6c125eae362c345dabdedf7c9ab2d3601', 10800, 'BOUND', 'ATTEMPT_BOUND'), ('548971615ef6666c2482781a10ef89eb080c1bd4a02928b629fa31482b68a479', 14400, 'BOUND', 'ATTEMPT_BOUND')]
+B boundary proof {"attempt_id": null, "cursor": 2, "cutoff": 1577966400, "disposition": "SUPPRESSED", "evidence_reference": {"availability_mode": "HISTORICAL_SIMULATION", "available_at": 1577966400, "calculation_id": "76ab741ed97d09ec4662262d1b9252cedc7a00f4a0d7420f259155dedbdd21bc", "calculation_snapshot": "31bad5da07e9c3bf38df3bd642e83542f493e8067b39402a83b0a9560922464e", "category": "crt", "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676", "event_id": "bc5ac487454a591e37ea673a88545b037e11d66702f0f178b049510d3e7124ad", "source": ["DUKASCOPY_SAVED", "EURUSD", "M5", "isolated-evaluator-fixture", "BID", "2c71449046d944900a357504327eae28a5c986076f0185edafeeaefe9b78c5ea"], "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY", "version": 1}, "family": "2038d1c13a1759734855370ccfb9cdc06c0657bc163066ba34b1136a0db9bf45", "id": "HO-8c2569fbc341c28e06f0c9f0afa35434a2cf3fc20c1e14f40f9e993906f7143c", "reason": "TERMINAL_BOUNDARY", "revision": 1, "rule": "reference"}
+resumed after 7200 published {'status': 'COLLECTED', 'version': 1, 'total': 4, 'by_disposition': {'BOUND': 3, 'SUPPRESSED': 1, 'UNRESOLVED': 0}, 'by_reason': [{'disposition': 'BOUND', 'reason': 'ATTEMPT_BOUND', 'total': 3}, {'disposition': 'SUPPRESSED', 'reason': 'TERMINAL_BOUNDARY', 'total': 1}], 'unresolved_inspections': 0, 'unresolved_by_reason': {}}
+.
+============================== warnings summary ===============================
+.venv\Lib\site-packages\_pytest\config\__init__.py:1507
+  K:\Projects\TradeForge\.venv\Lib\site-packages\_pytest\config\__init__.py:1507: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+research_backend/tests/test_bounded_crt_smt_successors.py::test_scheduler_equivalence_and_completion_gate[7200]
+  K:\Projects\TradeForge\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 2 warnings in 21.63s
