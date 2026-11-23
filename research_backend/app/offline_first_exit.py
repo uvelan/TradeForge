@@ -1,8 +1,9 @@
-"""Offline validation of the first fixed stop or reward target after a persisted fill."""
+"""Offline first-exit validation with fixed levels and optional break-even activation."""
 import argparse
 import json
 from decimal import Decimal
 from fractions import Fraction
+from itertools import groupby
 from pathlib import Path
 
 from .analysis_evidence import canonical
@@ -23,7 +24,12 @@ POLICY = {
     "levels":"EXACT_FILL_ANCHORED_FIXED_PIPS_AND_REWARD_MULTIPLE",
     "execution":"ACTUAL_CLOSING_QUOTE",
 }
-UNSUPPORTED_MANAGEMENT = ("break_even_at_r","trailing_pips","partial_exit","time_exit")
+BREAK_EVEN_POLICY = POLICY | {
+    "id":"OFFLINE_BREAK_EVEN_FIRST_EXIT",
+    "stop_activation":"EXIT_FIRST_THEN_ARM_AT_R_EFFECTIVE_NEXT_PRIORITY",
+    "armed_stop":"VERIFIED_ENTRY_PRICE_BEFORE_FEES",
+}
+UNSUPPORTED_MANAGEMENT = ("trailing_pips","partial_exit","time_exit")
 
 
 def verified_entry(db, run_id, entry_result_id, intents, model, tape, digest):
@@ -65,8 +71,7 @@ def protective_levels(fill_units, scale, pip_size, management, long):
     }
 
 
-def closing_trigger(units, levels, long):
-    stop,target = levels["stop_units"],levels["target_units"]
+def closing_trigger(units, stop, target, long):
     if (units<=stop if long else units>=stop):
         return "PROTECTIVE_STOP",stop
     if (units>=target if long else units<=target):
@@ -78,9 +83,11 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
     fill = entry["fill"]
     intent = entry["source"]
     frozen = management.model_dump(mode="json")
+    activation_r = management.break_even_at_r
+    policy = POLICY if activation_r is None else BREAK_EVEN_POLICY
     identity = {"entry_result_id":entry["id"],"entry_fill_id":fill["id"],
                 "management_policy_fingerprint":fingerprint(frozen),"execution_data_fingerprint":digest,
-                "cutoff_ms":cutoff_ms,"policy":dict(POLICY)}
+                "cutoff_ms":cutoff_ms,"policy":dict(policy)}
     identifier = "FX-"+fingerprint(identity)
     result = {"id":identifier,"identity":identity,"intent_id":intent["id"],"symbol":intent["symbol"],
               "direction":intent["direction"],"management_policy":frozen,"levels":None,"exit":None}
@@ -102,21 +109,51 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
     relevant = [entry_quote] + [quote for quote in tape.quotes
                                 if start<=quote.time_ms and quote.available_at_ms<=cutoff_ms
                                 and quote_priority(quote)>quote_priority(entry_quote)]
-    candidates = ((quote,closing_trigger(getattr(quote,price_key),levels,long)) for quote in relevant)
-    winner = min((candidate for candidate in candidates if candidate[1] is not None),
-                 key=lambda item:quote_priority(item[0]),default=None)
-    end = winner[0].available_at_ms if winner else cutoff_ms
-    if not covered(tape.complete_delivery_intervals,start,end):
-        return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
-    if winner is None:
+    active_stop = levels["stop_units"]
+    target = levels["target_units"]
+    arm_threshold = None
+    event_identity = {key:value for key,value in identity.items() if key!="cutoff_ms"}
+    if activation_r is not None:
+        entry_units = fill["price_units"]
+        threshold = entry_units + (entry_units-active_stop)*Fraction(str(activation_r))
+        if threshold.denominator!=1:
+            return result | {"status":"UNREPRESENTABLE_EXIT_LEVELS"}
+        arm_threshold = int(threshold)
+        result.update(arm_threshold_units=arm_threshold,active_stop_units=active_stop,activation=None)
+
+    # A priority is indivisible. Inspect all tied rows before accepting a transition.
+    for _,group in groupby(sorted(relevant,key=quote_priority),key=quote_priority):
+        rows = list(group)
+        for quote in rows:
+            units = getattr(quote,price_key)
+            trigger = closing_trigger(units,active_stop,target,long)
+            arms = arm_threshold is not None and (units>=arm_threshold if long else units<=arm_threshold)
+            if trigger or arms:
+                break
+        else:
+            continue
+        if not covered(tape.complete_delivery_intervals,start,quote.available_at_ms):
+            return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
+        if any(row!=quote for row in rows):
+            return result | {"status":"AMBIGUOUS_QUOTE_ORDER"}
+        if trigger:
+            reason,threshold = trigger
+            if reason=="PROTECTIVE_STOP" and result.get("activation"):
+                reason = "BREAK_EVEN_STOP"
+            break
+
+        reference = quote.model_dump(mode="json") | {"scale":scale}
+        result["activation"] = {"id":"BA-"+fingerprint([event_identity,reference]),
+                                "side":side.upper(),"quote":reference}
+        active_stop = fill["price_units"]
+        result["active_stop_units"] = active_stop
+        arm_threshold = None
+    else:
+        if not covered(tape.complete_delivery_intervals,start,cutoff_ms):
+            return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
         return result | {"status":"OPEN_AT_CUTOFF"}
-    quote, (reason,threshold) = winner
-    priority = quote_priority(quote)
-    if any(quote_priority(row)==priority and row!=quote for row in relevant):
-        return result | {"status":"AMBIGUOUS_QUOTE_ORDER"}
     units = getattr(quote,price_key)
     reference = quote.model_dump(mode="json") | {"scale":scale}
-    event_identity = {key:value for key,value in identity.items() if key!="cutoff_ms"}
     result["exit"] = {"id":"XF-"+fingerprint([event_identity,reason,reference]),
                       "reason":reason,"threshold_units":threshold,"threshold_price":price_text(threshold,scale),
                       "side":side.upper(),"price_units":units,"price":price_text(units,scale),

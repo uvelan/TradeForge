@@ -163,7 +163,7 @@ def test_stop_target_conflict_before_and_after_a_certain_exit(position):
 
 
 @pytest.mark.parametrize("rule,value",[
-    ("break_even_at_r",1),("trailing_pips",8),("partial_exit",{"at_r":1.5,"percent":25}),
+    ("trailing_pips",8),("partial_exit",{"at_r":1.5,"percent":25}),
     ("time_exit",{"unit":"SECONDS","count":120}),
 ])
 def test_management_extensions_are_explicitly_unsupported(position,rule,value):
