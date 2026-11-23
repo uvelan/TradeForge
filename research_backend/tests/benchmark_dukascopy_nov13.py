@@ -293,6 +293,7 @@ def test_nov13_equivalence_and_recovery(client,pinned):
 
 
 def test_nov13_market_entry_negative_control(client,pinned):
+    from research_backend.app.offline_first_exit import validate_first_exit
     from research_backend.app.offline_market_entry import validate_market_entries
 
     _,run,model,datasets = pinned
@@ -331,6 +332,10 @@ def test_nov13_market_entry_negative_control(client,pinned):
     assert client.get(f"{API}/{identifier}/decisions",params={"limit":100}).json()==before
     assert client.get(f"{API}/{identifier}/intents").json()==[]
     assert one("SELECT COUNT(*) AS total FROM offline_market_entry_results")["total"]==0
-    print(json.dumps({"execution":expected,"historical_ledger_sha256":fingerprint(entries),
+    exit_expected = expected | {"simulated_exits":0}
+    assert validate_first_exit(identifier,cutoff_ms=END*1000)==exit_expected
+    assert validate_first_exit(identifier,cutoff_ms=END*1000)==exit_expected
+    assert one("SELECT COUNT(*) AS total FROM offline_first_exit_results")["total"]==0
+    print(json.dumps({"execution":exit_expected,"historical_ledger_sha256":fingerprint(entries),
                       "archive_catalog_sha256":NOV13_FINGERPRINT,
                       "partition_sha256":{item["symbol"]:item["sha256"] for item in datasets}},sort_keys=True))

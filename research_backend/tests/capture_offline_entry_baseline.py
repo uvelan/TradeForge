@@ -40,3 +40,13 @@ def test_capture_stop_baseline(publish,monkeypatch):
         ("LIMIT","bullish",1.10310,"SIMULATED_FILLED"),
         ("STOP","bullish",1.10310,"UNSUPPORTED_ENTRY_TYPE"),
     ))
+
+
+def test_capture_first_exit_entry_baseline(publish,monkeypatch):
+    data = tape([quote(Q+1,Q+1,4,110306,110309),quote(Q+2,Q+2,5,110311,110314),
+                 quote(Q+4,Q+4,6,110514,110520)])
+    capture(publish,monkeypatch,data,(
+        ("MARKET","bearish",None,"SIMULATED_FILLED"),
+        ("LIMIT","bullish",1.10310,"SIMULATED_FILLED"),
+        ("STOP","bullish",1.10310,"SIMULATED_FILLED"),
+    ))
