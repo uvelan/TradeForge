@@ -35,13 +35,13 @@ The wide-spread LONG entry with ask 1.10314 and bid 1.10210 exits immediately at
 
 The four unsupported management extensions and fractional stop or target levels produce explicit zero-exit outcomes. Expired, ambiguous, unsupported and uncovered entry results produce no exit records. Cross-run entry results, altered fill evidence, a different tape and a cutoff before entry were rejected.
 
-Exit records use a separate immutable table. Their IDs bind the entry result and fill, frozen management policy, tape fingerprint, cutoff and exit policy version. An identical replay returns the same result and exit IDs and one stored row. A different cutoff can have a different result without changing the fill. The regression verified the source and entry bytes around the exit call, including pinned MARKET V2, LIMIT V1 and STOP V1 payloads captured on merged main. Filled entry records from older policy versions require a supported replay before they can be used here.
+Exit records use a separate immutable table. Their IDs bind the entry result and fill, frozen management policy, tape fingerprint, cutoff and exit policy version. An identical replay returns the same result and exit IDs and one stored row. A different cutoff can have a different result without changing the fill. The regression verified the source and entry bytes around the exit call, including pinned MARKET V2, LIMIT V1 and STOP V1 payloads captured on merged main. The verifier also recognizes MARKET V1 fills with their original tape-wide sequence rule. Other unrecognized filled policy versions require a supported replay.
 
 [Raw expected and observed results, fingerprints and winning quotes](evidence/TF-I10A2-first-exit/focused.txt) · [Pinned entry payloads from merged main](evidence/TF-I10A2-first-exit/merged-entry-baseline.json)
 
 ## Exact verification commands
 
-The baseline capture used an isolated `git archive` of `57fb880f4f91211f21ee8b29bf9c14c3a9872574` with only the updated capture test copied into it. Run the first command on that isolated baseline using the project's Python environment. The focused suite passed 31 tests. The November 13 control used the approved local Dukascopy archive and returned 14 attempts, zero intents, zero orders, zero fills and zero exits. The historical ledger and original archive checksums matched.
+The baseline capture used an isolated `git archive` of `57fb880f4f91211f21ee8b29bf9c14c3a9872574` with only the updated capture test copied into it. Run the first command on that isolated baseline using the project's Python environment. The focused suite passed 32 tests. The November 13 control used the approved local Dukascopy archive and returned 14 attempts, zero intents, zero orders, zero fills and zero exits. The historical ledger and original archive checksums matched.
 
 ```powershell
 python -m pytest -q -s --tb=short research_backend/tests/capture_offline_entry_baseline.py::test_capture_first_exit_entry_baseline

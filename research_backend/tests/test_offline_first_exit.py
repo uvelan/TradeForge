@@ -242,3 +242,33 @@ def test_market_limit_stop_entry_payloads_match_merged_main_after_exit(publish,m
         print(json.dumps({"case":f"{kind} merged compatibility","tape_sha256":fingerprint(data),
                           "result_id":entry["id"],"fill_id":entry["fill"]["id"],
                           "payload_bytes":len(before[1]),"byte_identical":True},sort_keys=True))
+
+
+def test_market_v1_persisted_fill_keeps_its_original_identity(publish,monkeypatch):
+    from research_backend.app import offline_market_entry
+
+    run,intent = publish(direction="bullish")
+    market_quote = quote(Q+1,Q+1,4,110311,110314)
+    data = tape([market_quote,LONG_STOP],[(Q+1,CUTOFF)])
+    with monkeypatch.context() as legacy:
+        # Unique sequences give the same entry under V1, with its original IDs.
+        legacy.setitem(offline_market_entry.POLICY,"version",1)
+        old, = validate(run,data,intent["id"])["results"]
+    assert old["identity"]["policy"]["version"]==1
+    before = snapshots(run,old)
+    result = calculate(run,data,old)
+    assert result["simulated_exits"]==1
+    exit_row, = result["results"]
+    assert exit_row["identity"]["entry_fill_id"]==old["fill"]["id"]
+    assert exit_row["exit"]["price"]=="1.10210" and exit_row["exit"]["side"]=="BID"
+    assert snapshots(run,old)==before
+    print(json.dumps({"case":"MARKET V1 replay","tape_sha256":fingerprint(data),
+                      "entry_fill_id":old["fill"]["id"],"exit":exit_row["exit"]},sort_keys=True))
+
+    conflicting = tape([market_quote,LONG_STOP,LONG_STOP | {"bid_units":110211}],[(Q+1,CUTOFF)])
+    with monkeypatch.context() as legacy:
+        # A fabricated V1-tagged fill on a tape the original V1 policy would reject.
+        legacy.setitem(offline_market_entry.POLICY,"version",1)
+        forged, = validate(run,conflicting,intent["id"])["results"]
+    with pytest.raises(ValueError,match="tape-wide sequence policy"):
+        calculate(run,conflicting,forged)

@@ -40,11 +40,23 @@ def verified_entry(db, run_id, entry_result_id, intents, model, tape, digest):
             or entry["source_execution_policy"]!=model.execution.model_dump(mode="json")
             or (tape is not None and tape.symbol!=intent["symbol"])):
         raise ValueError("Entry result does not match the source intent and pinned execution tape")
-    if identity["policy"]==ENTRY_POLICIES.get(intent["entry"]["kind"]):
-        if entry!=simulate(intent,model,tape,digest):
-            raise ValueError("Persisted entry does not match verified replay")
-    elif entry["fill"] is not None or entry["status"]=="SIMULATED_FILLED":
+    kind = intent["entry"]["kind"]
+    policy = identity["policy"]
+    if policy==ENTRY_POLICIES.get(kind):
+        expected = simulate(intent,model,tape,digest)
+    elif entry["fill"] is None and entry["status"]!="SIMULATED_FILLED":
+        return entry
+    elif kind=="MARKET" and policy==(ENTRY_POLICIES["MARKET"] | {"version":1}) and tape is not None:
+        expected = simulate(intent,model,tape,digest) | {"id":entry_result_id,"identity":identity}
+        if len({quote.source_order for quote in tape.quotes})!=len(tape.quotes):
+            raise ValueError("Legacy MARKET fill conflicts with tape-wide sequence policy")
+        elif expected["fill"] is not None:
+            fill = expected["fill"]
+            expected["fill"] = fill | {"id":"MF-"+fingerprint([entry_result_id,fill["quote"]])}
+    else:
         raise ValueError("Filled entry uses an unsupported entry policy version")
+    if entry!=expected:
+        raise ValueError("Persisted entry does not match verified replay")
     return entry
 
 
