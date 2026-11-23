@@ -53,7 +53,7 @@ def bounded_definition(delay=LATE,*,direction="bearish",kind="MARKET"):
 def canonical_successors(client,monkeypatch):
     monkeypatch.setattr("research_backend.app.historical_strategy_worker.claim",lambda _:None)
 
-    def build(delay=LATE,missing=False,extra=0,confirmation_high=None,*,direction="bearish",kind="MARKET"):
+    def build(delay=LATE,missing=False,extra=0,confirmation_high=None,*,direction="bearish",kind="MARKET",entry_price=None):
         lanes = []
         primary,comparison = fixture_bars()
         if confirmation_high is not None:
@@ -75,7 +75,10 @@ def canonical_successors(client,monkeypatch):
             frozen_candles(lanes,"GBPUSD","M5",BASE,comparison,mirrored)
         end = END+300*extra
         archive = selection(monkeypatch,lanes,end-BASE)
-        request = request_body(client,archive,bounded_definition(delay,direction=direction,kind=kind),end)
+        definition = bounded_definition(delay,direction=direction,kind=kind)
+        if entry_price is not None:
+            definition["trade_intent"]["entry"]["price"]["value"] = entry_price
+        request = request_body(client,archive,definition,end)
         request.update(evaluation_start=START)
         from research_backend.app.strategy_evaluation_routes import load_definition
         model = load_definition(EvaluationInput.model_validate(request))
