@@ -1,0 +1,436 @@
+{
+  "request": {
+    "evaluator_version": 6,
+    "purpose": "HISTORICAL_SIMULATION",
+    "strategy_id": "ST-00000000000000000000000000000001",
+    "strategy_version_id": "SV-00000000000000000000000000000002",
+    "configuration_fingerprint": "a19cc436df44a79891d0d0d1cbde20d34620316b0f25001513af2110ef1085f8",
+    "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+    "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+    "warmup_start": 1794528000,
+    "evaluation_start": 1794535200,
+    "cutoff": 1794607200,
+    "rearm": "NEW_CONTEXT_FAMILY",
+    "context_alias": "crt_reference",
+    "max_attempts": 32
+  },
+  "run": {
+    "run_id": "HR-a02d7f7b896d82d8e874e402f398bec9e8e5b0e128966fe8690e8e276704756f",
+    "identity": {
+      "evaluator_version": 6,
+      "strategy_id": "ST-00000000000000000000000000000001",
+      "strategy_version_id": "SV-00000000000000000000000000000002",
+      "configuration_fingerprint": "a19cc436df44a79891d0d0d1cbde20d34620316b0f25001513af2110ef1085f8",
+      "purpose": "HISTORICAL_SIMULATION",
+      "selection_id": "DUKASCOPY_BID_2026_11_13_V1",
+      "selection_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+      "warmup_start": 1794528000,
+      "evaluation_start": 1794535200,
+      "cutoff": 1794607200,
+      "historical_version": 2,
+      "rearm": "NEW_CONTEXT_FAMILY",
+      "context_alias": "crt_reference",
+      "max_attempts": 32,
+      "partitions": [],
+      "frozen_selection": "d01e7fa7d88373ccf0bdb74c701bb6b535918a7737dfcb241520990c2c755803",
+      "frozen_definition": "a8b20ad458ddddb4ea778841adbffaed2100be0080390ce4af03e13576104003",
+      "rearm_rule": "reference",
+      "binding_policy_version": 2,
+      "strategy_schema": 2,
+      "availability": "HISTORICAL_SIMULATION",
+      "producer_versions": {
+        "crt": {
+          "kind": "CRT",
+          "algorithm_version": 1
+        },
+        "smt": {
+          "kind": "SMT",
+          "algorithm_version": 2
+        }
+      },
+      "method": "CRT_SMT_NOV13_OFFLINE_V1",
+      "checkpoint_version": 2,
+      "budgets": {
+        "oracle_cutoffs": 800,
+        "hard_seconds": 150,
+        "memory_bytes": 805306368,
+        "checkpoint_bytes": 262144,
+        "ledger_bytes": 16777216
+      }
+    },
+    "selection": {
+      "id": "DUKASCOPY_BID_2026_11_13_V1",
+      "catalog_fingerprint": "cdd3678ceaf2d950af43dd462da6aaf6270702fb68f16966e9a45eb859814524",
+      "start": 1794528000,
+      "end": 1794607200,
+      "authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+      "availability_policy": "SIMULATED_NOMINAL_CLOSE_PLUS_DELAY_V1",
+      "series": {
+        "COMPARISON:M5": {
+          "source": "DUKASCOPY_SAVED",
+          "symbol": "GBPUSD",
+          "timeframe": "M5",
+          "feed_id": "dukascopy-web-m1-v1",
+          "dataset_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+          "price_basis": "BID",
+          "calendar": {
+            "kind": "forex_weekly",
+            "timezone": "America/New_York",
+            "sunday_open": "17:00",
+            "friday_close": "17:00"
+          },
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "start": 1794528000,
+          "end": 1794607200,
+          "arrival_manifest": null,
+          "delay_seconds": 20
+        },
+        "PRIMARY:M5": {
+          "source": "DUKASCOPY_SAVED",
+          "symbol": "EURUSD",
+          "timeframe": "M5",
+          "feed_id": "dukascopy-web-m1-v1",
+          "dataset_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+          "price_basis": "BID",
+          "calendar": {
+            "kind": "forex_weekly",
+            "timezone": "America/New_York",
+            "sunday_open": "17:00",
+            "friday_close": "17:00"
+          },
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "start": 1794528000,
+          "end": 1794607200,
+          "arrival_manifest": null,
+          "delay_seconds": 0
+        }
+      }
+    },
+    "definition": {
+      "schema_version": 2,
+      "defaults_policy": "STRATEGY_DEFAULTS_V2",
+      "name": "November 13 offline CRT and SMT successors",
+      "description": "Research template. No optional filters enabled. Configure trigger, invalidation and execution policies.",
+      "status": "READY_FOR_EVALUATION",
+      "availability_modes": [
+        "HISTORICAL_SIMULATION"
+      ],
+      "instruments": {
+        "primary": {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "price_basis": "BID",
+          "modeled_delay_seconds": 0
+        },
+        "comparison": {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "price_basis": "BID",
+          "modeled_delay_seconds": 20
+        },
+        "calendar": {
+          "kind": "forex_weekly",
+          "timezone": "America/New_York",
+          "sunday_open": "17:00",
+          "friday_close": "17:00"
+        },
+        "data_selection": "FROZEN_VERIFIED_PARTITIONS"
+      },
+      "timeframes": {
+        "context": "M5",
+        "trigger": "M5"
+      },
+      "indicators": [
+        {
+          "id": "crt",
+          "indicator": "CRT",
+          "algorithm_version": 1,
+          "role": "PRIMARY",
+          "timeframe": "M5",
+          "settings": {
+            "reference_frame": "H1",
+            "reference_mode": "aggregated",
+            "daily_timezone": "UTC",
+            "daily_boundary": "00:00",
+            "history_bars": 2000,
+            "max_ranges": 4,
+            "max_age": 96,
+            "candidate_age": 3,
+            "min_penetration": 0.0,
+            "min_reclaim": 0.0,
+            "invalidate": "sweep_extreme",
+            "include_context": false
+          },
+          "producers": []
+        },
+        {
+          "id": "smt",
+          "indicator": "SMT",
+          "algorithm_version": 2,
+          "role": "PAIR",
+          "timeframe": "M5",
+          "settings": {
+            "relationship": "POSITIVE",
+            "period": 2,
+            "alignment_bars": 0,
+            "tolerance_bps": 0.5,
+            "confirmation_bars": 1,
+            "expiry_bars": 64
+          },
+          "producers": []
+        }
+      ],
+      "context": {
+        "type": "GROUP",
+        "id": "context",
+        "operator": "ALL",
+        "children": [
+          {
+            "type": "RULE",
+            "id": "reference",
+            "dependency": "crt",
+            "observation": "CRT_REFERENCE",
+            "operator": "EQ",
+            "expected": "ACTIVE",
+            "evidence": {
+              "state": "HISTORICAL",
+              "purpose": "HISTORICAL_SIMULATION",
+              "max_age_seconds": 3600
+            },
+            "selection": "EARLIEST_ELIGIBLE",
+            "alias": "crt_reference",
+            "same_family_as": null
+          }
+        ],
+        "unknown_policy": null,
+        "within": null
+      },
+      "setup": {
+        "type": "GROUP",
+        "id": "setup",
+        "operator": "ALL",
+        "children": [
+          {
+            "type": "RULE",
+            "id": "reclaim",
+            "dependency": "crt",
+            "observation": "CRT_RECLAIM",
+            "operator": "EQ",
+            "expected": "HIGH_SWEPT_RECLAIMED",
+            "evidence": {
+              "state": "HISTORICAL",
+              "purpose": "HISTORICAL_SIMULATION",
+              "max_age_seconds": 3600
+            },
+            "selection": "BOUND_FAMILY",
+            "alias": "crt_reclaim",
+            "same_family_as": "crt_reference"
+          }
+        ],
+        "unknown_policy": null,
+        "within": null
+      },
+      "trigger": {
+        "type": "GROUP",
+        "id": "trigger",
+        "operator": "ALL",
+        "children": [
+          {
+            "type": "RULE",
+            "id": "expand",
+            "dependency": "crt",
+            "observation": "CRT_STATE",
+            "operator": "EQ",
+            "expected": "EXPANSION_OBSERVED",
+            "evidence": {
+              "state": "HISTORICAL",
+              "purpose": "HISTORICAL_SIMULATION",
+              "max_age_seconds": 3600
+            },
+            "selection": "BOUND_FAMILY",
+            "alias": null,
+            "same_family_as": "crt_reference"
+          },
+          {
+            "type": "RULE",
+            "id": "divergence",
+            "dependency": "smt",
+            "observation": "SMT_CONFIRMED",
+            "operator": "EQ",
+            "expected": "bearish",
+            "evidence": {
+              "state": "HISTORICAL",
+              "purpose": "HISTORICAL_SIMULATION",
+              "max_age_seconds": 3600
+            },
+            "selection": "EARLIEST_ELIGIBLE",
+            "alias": "smt_confirmation",
+            "same_family_as": null
+          }
+        ],
+        "unknown_policy": null,
+        "within": null
+      },
+      "invalidation": {
+        "type": "GROUP",
+        "id": "invalidation",
+        "operator": "ALL",
+        "children": [
+          {
+            "type": "RULE",
+            "id": "completed",
+            "dependency": "crt",
+            "observation": "CRT_STATE",
+            "operator": "EQ",
+            "expected": "OPPOSITE_BOUNDARY_REACHED",
+            "evidence": {
+              "state": "HISTORICAL",
+              "purpose": "HISTORICAL_SIMULATION",
+              "max_age_seconds": 3600
+            },
+            "selection": "BOUND_FAMILY",
+            "alias": null,
+            "same_family_as": "crt_reference"
+          }
+        ],
+        "unknown_policy": null,
+        "within": null
+      },
+      "temporal": [
+        {
+          "first": "reclaim",
+          "then": "divergence",
+          "relation": "AFTER",
+          "within": null
+        }
+      ],
+      "expiry": {
+        "unit": "SECONDS",
+        "count": 3599,
+        "timeframe": null
+      },
+      "risk": {
+        "account_risk_pct": 0.5,
+        "max_simultaneous_exposure_pct": 1.0,
+        "max_session_loss_pct": 2.0,
+        "min_reward_risk": 2.0,
+        "instrument_limits": [
+          {
+            "role": "PRIMARY",
+            "max_risk_percent": 1.0
+          },
+          {
+            "role": "COMPARISON",
+            "max_risk_percent": 1.0
+          }
+        ]
+      },
+      "execution": {
+        "price_basis": "BID",
+        "spread_bps": 1.0,
+        "slippage_bps": 0.0,
+        "commission_bps": 0.0,
+        "intrabar": "REJECT_AMBIGUOUS"
+      },
+      "management": {
+        "initial_stop": {
+          "kind": "FIXED_PIPS",
+          "distance": 10.0
+        },
+        "target": {
+          "kind": "REWARD_MULTIPLE",
+          "multiple": 2.0
+        },
+        "break_even_at_r": null,
+        "partial_exit": null,
+        "trailing_pips": null,
+        "time_exit": null
+      },
+      "trade_intent": {
+        "role": "PRIMARY",
+        "direction": "SHORT",
+        "entry": {
+          "kind": "MARKET"
+        },
+        "earliest": "AFTER_CAUSAL_AVAILABILITY",
+        "expiry": {
+          "unit": "SECONDS",
+          "count": 300,
+          "timeframe": null
+        }
+      },
+      "attempt": {
+        "context_mode": "LATCHED",
+        "candidate_limit": 32,
+        "expiry_origin": "CONTEXT_ACTIVATION",
+        "crt_reference_alias": "crt_reference"
+      }
+    },
+    "rearm_rule": "reference",
+    "opportunity_accounting_version": 1
+  },
+  "coverage": {
+    "COMPARISON:M5": {
+      "calendar": {
+        "kind": "forex_weekly",
+        "timezone": "America/New_York",
+        "sunday_open": "17:00",
+        "friday_close": "17:00"
+      },
+      "open_intervals": [
+        [
+          1794528000,
+          1794607200
+        ]
+      ],
+      "slots": 264,
+      "warmup_observed": 23,
+      "eligible_at_cutoff": 263,
+      "last_eligible_open": 1794606600,
+      "last_eligible_arrival": 1794606920,
+      "last_archive_open": 1794606900,
+      "last_archive_arrival": 1794607220,
+      "partition": {
+        "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+        "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+      },
+      "feed": "dukascopy-web-m1-v1"
+    },
+    "PRIMARY:M5": {
+      "calendar": {
+        "kind": "forex_weekly",
+        "timezone": "America/New_York",
+        "sunday_open": "17:00",
+        "friday_close": "17:00"
+      },
+      "open_intervals": [
+        [
+          1794528000,
+          1794607200
+        ]
+      ],
+      "slots": 264,
+      "warmup_observed": 24,
+      "eligible_at_cutoff": 264,
+      "last_eligible_open": 1794606900,
+      "last_eligible_arrival": 1794607200,
+      "last_archive_open": 1794606900,
+      "last_archive_arrival": 1794607200,
+      "partition": {
+        "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+        "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+      },
+      "feed": "dukascopy-web-m1-v1"
+    }
+  }
+}

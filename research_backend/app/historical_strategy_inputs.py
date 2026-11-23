@@ -92,8 +92,12 @@ def mandatory_alias(group, alias):
 
 def bounded_crt_smt(definition, selection, rule):
     """Admit the producer and feed configuration established by the reference fixture."""
+    return (definition.instruments.calendar.kind=="continuous"
+            and crt_smt_configuration(definition,selection,rule))
+
+
+def crt_smt_configuration(definition,selection,rule):
     if (len(definition.indicators)!=2 or set(selection["series"])!={"PRIMARY:M5","COMPARISON:M5"}
-            or definition.instruments.calendar.kind!="continuous"
             or definition.trade_intent.direction!="SHORT" or definition.trade_intent.role!="PRIMARY"
             or definition.attempt.context_mode!="LATCHED" or definition.attempt.crt_reference_alias!=rule.alias
             or rule.observation!="CRT_REFERENCE" or rule.expected!="ACTIVE"):
@@ -158,13 +162,17 @@ def prepare_historical(request):
         rule = None
         if request.context_alias is not None or request.max_attempts!=1:
             raise ValueError("Single-attempt runs have one attempt and no rearm alias")
+    return historical_record(request,definition,selection,rule,method,MAX_ORACLE_CUTOFFS)
+
+
+def historical_record(request,definition,selection,rule,method,cutoff_budget):
     producers = {dep.id:{"kind":dep.indicator,"algorithm_version":dep.algorithm_version} for dep in definition.indicators}
     frozen_definition = definition.model_dump(mode="json")
     identity = {**request.model_dump(mode="json"),"frozen_selection":fingerprint(selection),
                 "frozen_definition":fingerprint(frozen_definition),"rearm_rule":rule.id if rule else None,
                 "binding_policy_version":2,"strategy_schema":2,"availability":SIMULATION_MODE,
                 "producer_versions":producers,"method":method,"checkpoint_version":CHECKPOINT_VERSION,
-                "budgets":{"oracle_cutoffs":MAX_ORACLE_CUTOFFS,"hard_seconds":HARD_SECONDS,
+                "budgets":{"oracle_cutoffs":cutoff_budget,"hard_seconds":HARD_SECONDS,
                            "memory_bytes":MEMORY_BYTES,"checkpoint_bytes":MAX_CHECKPOINT_BYTES,
                            "ledger_bytes":MAX_LEDGER_BYTES}}
     run_id = "HR-"+fingerprint(identity)
