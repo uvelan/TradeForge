@@ -35,8 +35,8 @@ def fixture_bars():
     return primary,comparison
 
 
-def bounded_definition(delay=LATE):
-    definition = ready_entry()
+def bounded_definition(delay=LATE,*,direction="bearish",kind="MARKET"):
+    definition = ready_entry(kind=kind,direction=direction)
     definition["name"] = "Bounded bearish CRT and SMT successors"
     definition["instruments"]["comparison"]["modeled_delay_seconds"] = delay
     definition["timeframes"]["trigger"] = "M5"
@@ -53,7 +53,7 @@ def bounded_definition(delay=LATE):
 def canonical_successors(client,monkeypatch):
     monkeypatch.setattr("research_backend.app.historical_strategy_worker.claim",lambda _:None)
 
-    def build(delay=LATE,missing=False,extra=0,confirmation_high=None):
+    def build(delay=LATE,missing=False,extra=0,confirmation_high=None,*,direction="bearish",kind="MARKET"):
         lanes = []
         primary,comparison = fixture_bars()
         if confirmation_high is not None:
@@ -62,7 +62,8 @@ def canonical_successors(client,monkeypatch):
             comparison[CONFIRMATION_BAR] = (open_,confirmation_high,low,close)
         primary.extend([primary[-1]]*extra)
         comparison.extend([comparison[-1]]*extra)
-        frozen_candles(lanes,"EURUSD","M5",BASE,primary)
+        mirrored = direction=="bullish"
+        frozen_candles(lanes,"EURUSD","M5",BASE,primary,mirrored)
         if missing:
             from research_backend.app.storage import write_partition
             feed = lanes[0]["feed_id"]
@@ -71,10 +72,10 @@ def canonical_successors(client,monkeypatch):
             part = write_partition("DUKASCOPY",feed,"GBPUSD","candles","M5","BID",rows)
             lanes.append({**lanes[0],"symbol":"GBPUSD","partitions":[{key:part[key] for key in ("id","sha256")}]})
         else:
-            frozen_candles(lanes,"GBPUSD","M5",BASE,comparison)
+            frozen_candles(lanes,"GBPUSD","M5",BASE,comparison,mirrored)
         end = END+300*extra
         archive = selection(monkeypatch,lanes,end-BASE)
-        request = request_body(client,archive,bounded_definition(delay),end)
+        request = request_body(client,archive,bounded_definition(delay,direction=direction,kind=kind),end)
         request.update(evaluation_start=START)
         from research_backend.app.strategy_evaluation_routes import load_definition
         model = load_definition(EvaluationInput.model_validate(request))

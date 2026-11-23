@@ -53,6 +53,12 @@ CREATE TABLE IF NOT EXISTS historical_strategy_intents (
     attempt_id TEXT NOT NULL UNIQUE REFERENCES historical_strategy_attempts(id),
     payload TEXT NOT NULL CHECK(json_valid(payload))
 );
+CREATE TABLE IF NOT EXISTS offline_market_entry_results (
+    id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL REFERENCES historical_strategy_runs(id),
+    intent_id TEXT NOT NULL REFERENCES historical_strategy_intents(id),
+    payload TEXT NOT NULL CHECK(json_valid(payload))
+);
 CREATE TABLE IF NOT EXISTS historical_strategy_opportunities (
     run_id TEXT NOT NULL,
     ordinal INTEGER NOT NULL CHECK(ordinal>0),
@@ -76,7 +82,8 @@ CREATE INDEX IF NOT EXISTS historical_attempt_run ON historical_strategy_attempt
 CREATE INDEX IF NOT EXISTS historical_intent_run ON historical_strategy_intents(run_id,id);
 """
 IMMUTABLE = ("historical_strategy_runs","historical_strategy_checkpoints","historical_strategy_decisions",
-             "historical_strategy_attempts","historical_strategy_intents","historical_strategy_opportunities")
+             "historical_strategy_attempts","historical_strategy_intents","historical_strategy_opportunities",
+             "offline_market_entry_results")
 
 
 class LeaseLost(Exception):
