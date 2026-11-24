@@ -18,7 +18,7 @@ from .catalog import CatalogIntegrityError, verify_artifact
 from .market import Timeframe
 
 CONTRACT_VERSION = 1
-MANIFEST_VERSION = 2
+MANIFEST_VERSION = 3
 APP_ID = 0x5446534D
 TABLES = {"fixed": "dataset_versions", "research": "datasets"}
 SCHEMA = (
@@ -192,6 +192,14 @@ def describe(source, row, archive_root, reader, has_imports):
     return contract
 
 
+def claim_generation(out, generation):
+    # A retry can supersede an interrupted writer. Fence both batch and final
+    # publication under the write lock, including the empty-catalog case.
+    out.execute("BEGIN IMMEDIATE")
+    if out.execute("SELECT generation FROM registration WHERE id=1").fetchone() != (generation,):
+        raise ValueError("Registration superseded by another run")
+
+
 def register(fixed_root, research_db, research_market, manifest, batch_size=64, *, after_batch=None):
     if not 1 <= batch_size <= 1024:
         raise ValueError("batch size must be between 1 and 1024")
@@ -222,7 +230,7 @@ def register(fixed_root, research_db, research_market, manifest, batch_size=64, 
                 out.executemany("INSERT INTO sources VALUES(?,?,?)", pins.values())
             schema_version = out.execute("PRAGMA user_version").fetchone()[0]
             if (out.execute("PRAGMA application_id").fetchone()[0] != APP_ID
-                    or schema_version not in (1, MANIFEST_VERSION)
+                    or schema_version not in (1, 2, MANIFEST_VERSION)
                     or sorted(out.execute("SELECT * FROM sources")) != sorted(pins.values())):
                 raise ValueError("Manifest version or source snapshot mismatch")
             if schema_version == 1:
@@ -231,7 +239,14 @@ def register(fixed_root, research_db, research_market, manifest, batch_size=64, 
                 out.execute("""ALTER TABLE mappings ADD COLUMN diagnostic_rowid INTEGER
                     CHECK ((legacy_id IS NULL) = (diagnostic_rowid IS NOT NULL))""")
                 out.execute("CREATE UNIQUE INDEX diagnostic_identity ON mappings(catalog, diagnostic_rowid)")
+            if schema_version < MANIFEST_VERSION:
+                out.execute("""CREATE TABLE registration(
+                    id INTEGER PRIMARY KEY CHECK(id=1), generation INTEGER NOT NULL,
+                    complete INTEGER NOT NULL CHECK(complete IN (0,1)))""")
+                out.execute("INSERT INTO registration VALUES(1,0,0)")
                 out.execute(f"PRAGMA user_version={MANIFEST_VERSION}")
+            generation, = out.execute("""UPDATE registration SET generation=generation+1, complete=0
+                WHERE id=1 RETURNING generation""").fetchone()
         for name, (db, root) in sources.items():
             with closing(sqlite3.connect(db.resolve().as_uri() + "?mode=ro&immutable=1", uri=True)) as reader:
                 reader.row_factory = sqlite3.Row
@@ -241,6 +256,7 @@ def register(fixed_root, research_db, research_market, manifest, batch_size=64, 
                 cursor = reader.execute(f"SELECT rowid AS _snapshot_rowid, * FROM {TABLES[name]} ORDER BY id, rowid")
                 while batch := cursor.fetchmany(batch_size):
                     with out:
+                        claim_generation(out, generation)
                         for record in batch:
                             row = dict(record)
                             source_rowid = row.pop("_snapshot_rowid")
@@ -267,9 +283,13 @@ def register(fixed_root, research_db, research_market, manifest, batch_size=64, 
                                          source_rowid if unidentified else None))
                     if after_batch:
                         after_batch(name, batch[-1]["id"])
-        return {name: dict(zip(("inspected","mapped","unresolved"), out.execute(
-            "SELECT count(*), count(revision), count(reason) FROM mappings WHERE catalog=?", (name,)
-        ).fetchone())) for name in sources}
+        with out:
+            claim_generation(out, generation)
+            summary = {name: dict(zip(("inspected","mapped","unresolved"), out.execute(
+                "SELECT count(*), count(revision), count(reason) FROM mappings WHERE catalog=?", (name,)
+            ).fetchone())) for name in sources}
+            out.execute("UPDATE registration SET complete=1 WHERE id=1")
+        return summary
 
 
 def main():

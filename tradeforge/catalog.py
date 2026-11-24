@@ -154,6 +154,17 @@ class Catalog:
         verify_artifact(path, checksum, snapshot)
 
     def read(self, dataset_id: str, cutoff: int | None):
+        from .shadow_reads import manifest_path, open_resolver
+
+        path = manifest_path()
+        if path is not None:
+            with open_resolver(path, "fixed", self.root / "database/trading.sqlite3",
+                               self.root / "market-data") as resolver:
+                entries = resolver.rows("SELECT * FROM dataset_versions WHERE id=?", (dataset_id,))
+                if not entries:
+                    raise KeyError(dataset_id)
+                with resolver.artifact(entries[0]) as snapshot:
+                    return self._project(snapshot, entries[0], cutoff)
         with self.engine.connect() as connection:
             entry = self._entry(connection, dataset_id)
         if entry is None:
@@ -161,9 +172,13 @@ class Catalog:
         with TemporaryFile() as snapshot:
             self._verify_artifact(entry["relative_path"], entry["sha256"], snapshot)
             snapshot.seek(0)
-            candles = pl.scan_parquet(snapshot).with_columns(
-                pl.col("time", "available_at").dt.epoch("s")
-            )
-            if cutoff is not None:
-                candles = candles.filter(pl.col("available_at") <= cutoff)
-            return {"dataset": dict(entry), "candles": candles.collect().to_dicts()}
+            return self._project(snapshot, entry, cutoff)
+
+    @staticmethod
+    def _project(snapshot, entry, cutoff):
+        candles = pl.scan_parquet(snapshot).with_columns(
+            pl.col("time", "available_at").dt.epoch("s")
+        )
+        if cutoff is not None:
+            candles = candles.filter(pl.col("available_at") <= cutoff)
+        return {"dataset": dict(entry), "candles": candles.collect().to_dicts()}

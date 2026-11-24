@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .catalog import Catalog, CatalogIntegrityError
+from .shadow_reads import ShadowReadError
 from .database import open_database
 from .market import MT5Connection, MT5Unavailable, Simulator, Timeframe
 
@@ -112,6 +113,8 @@ def create_app(storage: Path | None = None, broker: MT5Connection | None = None)
     def read(dataset_id: str, cutoff: int | None = None):
         try:
             return app.state.catalog.read(dataset_id, cutoff)
+        except ShadowReadError as error:
+            raise HTTPException(409, str(error)) from error
         except KeyError as error:
             raise HTTPException(404, "Dataset not found") from error
         except (OSError, ValueError) as error:
