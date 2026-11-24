@@ -51,7 +51,6 @@ def bounded_definition(delay=LATE,*,direction="bearish",kind="MARKET"):
 
 @pytest.fixture
 def canonical_successors(client,monkeypatch):
-    monkeypatch.setattr("research_backend.app.historical_strategy_worker.claim",lambda _:None)
 
     def build(delay=LATE,missing=False,extra=0,confirmation_high=None,*,direction="bearish",kind="MARKET",entry_price=None,management=None):
         lanes = []

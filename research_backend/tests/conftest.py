@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 @pytest.fixture
-def client(tmp_path,monkeypatch):
+def client(tmp_path,monkeypatch,request):
     # Config path must be overridden before importing backend app modules.
     from research_backend.app import db,config,domain,storage
     path=tmp_path/'test.sqlite3'
@@ -17,6 +17,10 @@ def client(tmp_path,monkeypatch):
     monkeypatch.setattr(domain,'JOURNAL_FILE',tmp_path/'journal'/'Forex Intraday Trading - Master Learning Journal.md')
     from fastapi.testclient import TestClient
     from research_backend.app.main import app
+    if "canonical_successors" in request.fixturenames:
+        # These fixtures drive claim/publish themselves. Install the guard before
+        # lifespan can submit its first real claim to the background executor.
+        monkeypatch.setattr("research_backend.app.historical_strategy_worker.claim",lambda _:None)
     with TestClient(app) as c:
         yield c
 
