@@ -11,11 +11,11 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "24"
           cache: npm
@@ -43,7 +43,7 @@ jobs:
           npm run e2e
       - name: Upload TF-D01 browser evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: TF-D01-browser-evidence
           path: frontend/test-results/drawing-placement-*/**
@@ -51,7 +51,7 @@ jobs:
           retention-days: 14
       - name: Upload TF-D02 browser evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: TF-D02-browser-evidence
           path: frontend/test-results/drawing-edit-*/**
@@ -60,7 +60,7 @@ jobs:
 
       - name: Upload TF-I01 browser evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: TF-I01-browser-evidence
           path: |

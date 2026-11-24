@@ -1,0 +1,38 @@
+{
+  "samples": 5,
+  "instrument": "EURUSD",
+  "quote_count": 10000,
+  "simulate_first_exit": {
+    "fixed": {
+      "median_ms": 8.651,
+      "max_ms": 56.203,
+      "status": "OPEN_AT_CUTOFF"
+    },
+    "break_even": {
+      "median_ms": 8.071,
+      "max_ms": 9.824,
+      "status": "OPEN_AT_CUTOFF"
+    },
+    "trailing": {
+      "median_ms": 18.484,
+      "max_ms": 21.379,
+      "status": "OPEN_AT_CUTOFF"
+    },
+    "elapsed": {
+      "median_ms": 7.693,
+      "max_ms": 7.865,
+      "status": "SIMULATED_EXIT"
+    },
+    "partial": {
+      "median_ms": 12.293,
+      "max_ms": 13.281,
+      "status": "OPEN_AT_CUTOFF"
+    }
+  },
+  "catalog_duplicate_ingest": {
+    "median_ms": 58.246,
+    "max_ms": 113.575,
+    "rows": 10000,
+    "parquet_bytes": 138217
+  }
+}

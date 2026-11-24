@@ -1,0 +1,182 @@
+{
+  "repository": "uvelan/TradeForge",
+  "baseline_sha": "c3e4ae28fe152530e2b4fc3c4c0eec826737fbf0",
+  "integration_branch": "feature/tradeforge-complete-integration",
+  "approval_basis": "The owner requested completion of the previously named pending work, then required one independently reviewed integration. Existing branches are candidate implementations, not approval records. Follow documented safety decisions and do not infer authority for undecided policies.",
+  "features": [
+    {
+      "id": "TF-I10A2-FIXED",
+      "description": "Offline market, limit, and stop entry and fixed first exit",
+      "requirement_source": "docs/implementation/TF-I10A2-OFFLINE-FIRST-EXIT.md",
+      "implementation_status": "merged_baseline; additional regression candidate",
+      "source_branch_or_pr": "#22 through #25",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "A tied trigger/miss is ambiguous in either tape order; a later tie cannot alter a certain exit"
+      ],
+      "risk": "high",
+      "implementation_agent": "implementation engineer",
+      "reviewer": "independent code reviewer",
+      "tester": "adversarial QA",
+      "implementation_sha": "378cdeaa2de99a10b19687aa2a9781ba68b4a264",
+      "test_evidence": "24 isolated first-exit tests; new case failed under narrowed ambiguity mutation",
+      "review_status": "pending aggregate review",
+      "integration_status": "selected for draft integration; aggregate gate pending"
+    },
+    {
+      "id": "TF-I10A2-BE",
+      "description": "Offline break-even stop",
+      "requirement_source": "docs/implementation/TF-I10A2-OFFLINE-BREAK-EVEN.md",
+      "implementation_status": "implemented candidate",
+      "source_branch_or_pr": "#26",
+      "dependencies": [
+        "TF-I10A2-FIXED"
+      ],
+      "acceptance_criteria": [
+        "Verify exact closing side and no activation effect at its own priority",
+        "Preserve fixed policy identities"
+      ],
+      "risk": "high",
+      "implementation_agent": "existing #26 implementation",
+      "reviewer": "independent code reviewer",
+      "tester": "adversarial QA",
+      "implementation_sha": "b0a7c47a74a1d5f710415b63b145953e4ba13dd0",
+      "test_evidence": "GitHub Actions 45215570000; candidate suite re-run required",
+      "review_status": "independent static review found no high/critical; no formal GitHub approval",
+      "integration_status": "selected for draft integration; aggregate gate pending"
+    },
+    {
+      "id": "TF-I10A2-MGMT",
+      "description": "Independent offline trailing stop, elapsed-seconds exit, and one partial reduction",
+      "requirement_source": "docs/implementation/TF-I10A2-OFFLINE-FIRST-EXIT.md and subsequent owner request",
+      "implementation_status": "implemented candidate",
+      "source_branch_or_pr": "#28",
+      "dependencies": [
+        "TF-I10A2-BE"
+      ],
+      "acceptance_criteria": [
+        "Executable-side quote and exact price/fraction",
+        "No look-ahead; contradictory priority fails closed",
+        "Versioned identities, retained legacy payloads",
+        "Do not infer candle count, mixes, fees or broker sizes"
+      ],
+      "risk": "high",
+      "implementation_agent": "offline implementation engineers",
+      "reviewer": "independent code reviewer",
+      "tester": "adversarial QA",
+      "implementation_sha": "d8a06c798c0223a0d27665f3a759f8cc6c1c3c1b",
+      "test_evidence": "800 backend, 56 focused, 8 frontend unit tests on exact code tree; 6 independent adversarial probes",
+      "review_status": "separate reviewer found no high/critical; independent QA added legacy coexistence evidence",
+      "integration_status": "selected for draft integration; aggregate gate pending"
+    },
+    {
+      "id": "T03-DUP",
+      "description": "Fail closed on corrupt or missing registered catalog artifacts and avoid orphan overwrite",
+      "requirement_source": "docs/research/05_REMEDIATION_PLAN.md T03",
+      "implementation_status": "implemented with independent review follow-up",
+      "source_branch_or_pr": null,
+      "dependencies": [],
+      "acceptance_criteria": [
+        "Valid repeats retain ID and file",
+        "Missing/corrupt registered artifact rejected without mutation",
+        "Exact orphan reused; different orphan preserved and rejected; no published row or staging residue"
+      ],
+      "risk": "high",
+      "implementation_agent": "implementation engineer",
+      "reviewer": "independent code reviewer",
+      "tester": "adversarial QA",
+      "implementation_sha": "14749cf7a92730880955da8f449d6787a04a1149",
+      "test_evidence": "40 focused before file-type follow-up; final terminal module 18 passed",
+      "review_status": "defensive follow-up ba3e9c62 independently re-reviewed; no high or critical finding remains",
+      "integration_status": "selected for draft integration; aggregate gate pending"
+    },
+    {
+      "id": "T11-RESTORE",
+      "description": "Isolated two-catalog recovery rehearsal",
+      "requirement_source": "docs/research/08_IMPLEMENTATION_ROADMAP.md M5; docs/research/05_REMEDIATION_PLAN.md T11",
+      "implementation_status": "implemented candidate",
+      "source_branch_or_pr": "#27 restore files only",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "Online SQLite backup with committed WAL; immutable SHA-256 manifests; restore and read both catalogs; reject corrupt Parquet"
+      ],
+      "risk": "medium",
+      "implementation_agent": "recovery engineer",
+      "reviewer": "risk/security reviewer",
+      "tester": "adversarial QA",
+      "implementation_sha": "a590a6722c2a414a05b1e4458d5bfc6e88d6dc77",
+      "test_evidence": "11 local core tests on #27; independently rerun restore rehearsal passed",
+      "review_status": "No high issue; controlled-fixture only",
+      "integration_status": "selected for draft integration; aggregate gate pending"
+    },
+    {
+      "id": "T04-T06",
+      "description": "Canonical catalog migration, durable monitor and scalable tick replay",
+      "requirement_source": "docs/research/05_REMEDIATION_PLAN.md T04\u2013T06 and docs/research/07_MIGRATION_PLAN.md",
+      "implementation_status": "partially implemented already; residual review required",
+      "source_branch_or_pr": null,
+      "dependencies": [
+        "T03-DUP"
+      ],
+      "acceptance_criteria": [
+        "Legacy manifests and IDs retained; parity before writer changes",
+        "Fenced catch-up with real MT5 replay validation",
+        "Deterministic bounded multi-partition merges under authoritative calendar or unresolved coverage"
+      ],
+      "risk": "high",
+      "implementation_agent": null,
+      "reviewer": "architect",
+      "tester": null,
+      "implementation_sha": null,
+      "test_evidence": "Baseline already resolves multiple tick partitions and polls while app server runs",
+      "review_status": "not accepted for release; cutover sign-off and real evidence required",
+      "integration_status": "excluded"
+    },
+    {
+      "id": "T07-T08-REAL",
+      "description": "Execution-grade costs, broker-verified sizing, and reconciled P&L",
+      "requirement_source": "docs/research/05_REMEDIATION_PLAN.md T07\u2013T08; docs/research/09_DECISION_LOG.md D12",
+      "implementation_status": "awaiting approved policy and evidence",
+      "source_branch_or_pr": null,
+      "dependencies": [
+        "TF-I10A2-MGMT",
+        "T04-T06"
+      ],
+      "acceptance_criteria": [
+        "Dated specs and available-at FX; agreement to authorized redacted broker statement; no live execution"
+      ],
+      "risk": "high",
+      "implementation_agent": null,
+      "reviewer": "architect and risk reviewer",
+      "tester": null,
+      "implementation_sha": null,
+      "test_evidence": null,
+      "review_status": "blocked externally",
+      "integration_status": "excluded"
+    },
+    {
+      "id": "T09-T12-EXT",
+      "description": "Atomic AI export and metric lineage, broader UI acceptance, acquisition and optional analytics",
+      "requirement_source": "docs/research/05_REMEDIATION_PLAN.md T09\u2013T12",
+      "implementation_status": "mixed baseline functionality and proposals",
+      "source_branch_or_pr": null,
+      "dependencies": [
+        "T04-T06",
+        "T07-T08-REAL"
+      ],
+      "acceptance_criteria": [
+        "Atomic source/revision snapshots; gated historical metrics",
+        "Scope UX work separately; do not adopt optional analytics libraries or acquire data absent rights and applicable approval"
+      ],
+      "risk": "medium",
+      "implementation_agent": null,
+      "reviewer": "architect",
+      "tester": null,
+      "implementation_sha": null,
+      "test_evidence": null,
+      "review_status": "scope and gates pending",
+      "integration_status": "excluded"
+    }
+  ],
+  "validated_source_tree_base": "173af0580d8c6e176fd632ab9560c59ba5d35bd7"
+}

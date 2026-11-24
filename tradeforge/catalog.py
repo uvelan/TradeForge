@@ -1,9 +1,10 @@
 import hashlib
 import json
 import os
+import stat
 from dataclasses import asdict
 from pathlib import Path
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryFile
 
 import polars as pl
 import pyarrow as pa
@@ -33,6 +34,10 @@ def validate(rows: list[Candle], start: int, end: int, step: int, *, allow_gaps=
         if not (0 < row.low <= min(row.open, row.close) <= max(row.open, row.close) <= row.high):
             raise ValueError("Invalid candle price bounds")
         previous = row.time
+
+
+class CatalogIntegrityError(ValueError):
+    """A registered or pre-existing immutable catalog artifact cannot be verified."""
 
 
 class Catalog:
@@ -67,6 +72,7 @@ class Catalog:
         dataset_id = hashlib.sha256(json.dumps(identity, separators=(",", ":")).encode()).hexdigest()
         relative = Path("market-data", dataset_id[:2], f"{dataset_id}.parquet")
         path = self.root / relative
+        self._artifact_path(relative)
         path.parent.mkdir(parents=True, exist_ok=True)
         with NamedTemporaryFile(dir=path.parent, delete=False, suffix=".tmp") as file:
             temporary = Path(file.name)
@@ -85,7 +91,17 @@ class Catalog:
                     relative_path=relative.as_posix(), sha256=checksum,
                     row_count=len(rows), validation_status=status,
                 ).on_conflict_do_nothing(index_elements=["id"]))
-                if result.rowcount:
+                if not result.rowcount:
+                    # The writer transaction serializes registration and validation.
+                    entry = self._entry(connection, dataset_id)
+                    if entry is None:
+                        raise CatalogIntegrityError("Dataset registration cannot be verified")
+                    self._verify_artifact(entry["relative_path"], entry["sha256"])
+                elif path.exists() or path.is_symlink():
+                    # A rename can survive an interrupted SQLite commit. Retain the
+                    # original bytes and claim only an exact match to the staged file.
+                    self._verify_artifact(relative, checksum)
+                else:
                     os.replace(temporary, path)
         finally:
             temporary.unlink(missing_ok=True)
@@ -96,20 +112,54 @@ class Catalog:
             query = select(self.table).order_by(self.table.c.acquired_utc.desc()).limit(100)
             return [dict(row) for row in connection.execute(query).mappings()]
 
+    def _entry(self, connection, dataset_id):
+        query = select(self.table).where(self.table.c.id == dataset_id)
+        return connection.execute(query).mappings().one_or_none()
+
+    def _artifact_path(self, relative):
+        try:
+            path = (self.root / relative).resolve()
+        except OSError as error:
+            raise CatalogIntegrityError("Invalid catalog path") from error
+        if not path.is_relative_to(self.root / "market-data"):
+            raise CatalogIntegrityError("Invalid catalog path")
+        return path
+
+    def _verify_artifact(self, relative, checksum, snapshot=None):
+        path = self._artifact_path(relative)
+        try:
+            if not path.is_file():
+                raise CatalogIntegrityError("Dataset artifact is not a regular file")
+            # POSIX nonblocking protects the SQLite writer if a FIFO replaces the
+            # path between the preliminary type check and the open.
+            def nonblocking(name, flags):
+                return os.open(name, flags | getattr(os, "O_NONBLOCK", 0))
+
+            with open(path, "rb", opener=nonblocking) as file:
+                if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
+                    raise CatalogIntegrityError("Dataset artifact is not a regular file")
+                digest = hashlib.sha256()
+                while block := file.read(1024 * 1024):
+                    digest.update(block)
+                    if snapshot is not None:
+                        snapshot.write(block)
+                actual = digest.hexdigest()
+        except OSError as error:
+            raise CatalogIntegrityError("Dataset artifact cannot be read") from error
+        if actual != checksum:
+            raise CatalogIntegrityError("Dataset checksum mismatch")
+
     def read(self, dataset_id: str, cutoff: int | None):
         with self.engine.connect() as connection:
-            entry = connection.execute(select(self.table).where(self.table.c.id == dataset_id)).mappings().one_or_none()
+            entry = self._entry(connection, dataset_id)
         if entry is None:
             raise KeyError(dataset_id)
-        path = (self.root / entry["relative_path"]).resolve()
-        if not path.is_relative_to(self.root / "market-data"):
-            raise ValueError("Invalid catalog path")
-        with path.open("rb") as file:
-            if hashlib.file_digest(file, "sha256").hexdigest() != entry["sha256"]:
-                raise ValueError("Dataset checksum mismatch")
-        candles = pl.scan_parquet(path).with_columns(
-            pl.col("time", "available_at").dt.epoch("s")
-        )
-        if cutoff is not None:
-            candles = candles.filter(pl.col("available_at") <= cutoff)
-        return {"dataset": dict(entry), "candles": candles.collect().to_dicts()}
+        with TemporaryFile() as snapshot:
+            self._verify_artifact(entry["relative_path"], entry["sha256"], snapshot)
+            snapshot.seek(0)
+            candles = pl.scan_parquet(snapshot).with_columns(
+                pl.col("time", "available_at").dt.epoch("s")
+            )
+            if cutoff is not None:
+                candles = candles.filter(pl.col("available_at") <= cutoff)
+            return {"dataset": dict(entry), "candles": candles.collect().to_dicts()}
