@@ -24,7 +24,7 @@ def clone_row(conn, table, original, **changes):
 
 def dump(path):
     with closing(sqlite3.connect(path)) as conn:
-        return (conn.execute("SELECT * FROM mappings ORDER BY catalog, legacy_id").fetchall(),
+        return (conn.execute("SELECT catalog,legacy_id,legacy_record,revision,reason FROM mappings ORDER BY catalog,legacy_id,diagnostic_rowid").fetchall(),
                 conn.execute("SELECT * FROM artifacts ORDER BY revision").fetchall())
 
 
@@ -276,3 +276,74 @@ def test_registration_surfaces_operational_failures(catalog_pair, tmp_path, monk
         conn.execute("ALTER TABLE historical_imports DROP COLUMN acquired_at")
     with pytest.raises(sqlite3.OperationalError, match="acquired_at"):
         register(*args, tmp_path/"new-snapshot.sqlite")
+
+def malformed_clone(args, rid, key, *, blob=False, label="malformed"):
+    _, database, market = args
+    with closing(sqlite3.connect(database)) as conn, conn:
+        conn.row_factory = sqlite3.Row
+        relative, = conn.execute("SELECT relative_path FROM datasets WHERE id=?", (rid,)).fetchone()
+        dest = f"{label}.parquet"
+        shutil.copyfile(market / relative, market / dest)
+        clone_row(conn, "datasets", rid, id=key, relative_path=dest,
+                  price_basis=b"BID" if blob else "BID")
+
+@pytest.mark.parametrize("case", ["null", "two-null", "blob"])
+def test_unidentified_and_typed_rows_reconcile_on_retry(catalog_pair, tmp_path, case):
+    args, _, _, rid = catalog_pair
+    blob = case == "blob"
+    malformed_clone(args, rid, "blob" if blob else None, blob=blob)
+    if case == "two-null":
+        malformed_clone(args, rid, None, label="second-null")
+    before = source_hashes(args)
+    clean, resumed = tmp_path / "fresh.sqlite", tmp_path / "resumed.sqlite"
+    databases = {"fixed": (args[0] / "database/trading.sqlite3", "dataset_versions"),
+                 "research": (args[1], "datasets")}
+    counts = {}
+    for catalog, (path, table) in databases.items():
+        with closing(sqlite3.connect(path.as_uri() + "?mode=ro&immutable=1", uri=True)) as src:
+            counts[catalog], = src.execute(f"SELECT count(*) FROM {table}").fetchone()
+    assert counts == {"fixed": 8, "research": 5 if case == "two-null" else 4}
+
+    def check(output):
+        summary = register(*args, output, batch_size=1)
+        for name, count in counts.items():
+            stat = summary[name]
+            assert count == stat["inspected"] == stat["mapped"] + stat["unresolved"]
+        assert summary["fixed"]["mapped"] == 5
+        assert summary["research"]["mapped"] == 1
+        with closing(sqlite3.connect(output)) as conn:
+            rows = conn.execute("""SELECT legacy_id, diagnostic_rowid, legacy_record, reason FROM mappings
+                WHERE catalog='research' AND (legacy_id IS NULL OR legacy_id='blob')
+                ORDER BY diagnostic_rowid""").fetchall()
+        assert len(rows) == (2 if case == "two-null" else 1)
+        for key, diagnostic, raw, reason in rows:
+            record = json.loads(raw)
+            if blob:
+                assert key == record["id"] == "blob" and diagnostic is None
+                assert reason == "INVALID_PRICE_BASIS_TYPE"
+                assert record["price_basis"] == {"sqlite_type":"blob", "hex":"424944"}
+            else:
+                assert key is record["id"] is None and reason == "MISSING_LEGACY_ID"
+                with closing(sqlite3.connect(args[1].as_uri()+"?mode=ro&immutable=1", uri=True)) as src:
+                    assert src.execute("SELECT relative_path FROM datasets WHERE rowid=? AND id IS NULL",
+                                       (diagnostic,)).fetchone() == (record["relative_path"],)
+        return rows, dump(output)
+
+    expected = check(clean)
+    def stop_after_malformed(catalog, key):
+        if catalog == "research" and (key is None or key == "blob"):
+            raise InterruptedError
+    with pytest.raises(InterruptedError):
+        register(*args, resumed, batch_size=1, after_batch=stop_after_malformed)
+    for _ in range(3):  # resume plus two identical retries
+        assert check(resumed) == expected
+    assert source_hashes(args) == before
+
+
+def test_raw_record_sqlite_scalar_types():
+    from tradeforge.shadow_manifest import raw_record
+    tagged_text = '{"sqlite_type":"blob","hex":"424944"}'
+    result = json.loads(raw_record({"raw":b"\x00\xff", "text":tagged_text, "real":float("-inf")}))
+    assert bytes.fromhex(result["raw"]["hex"]) == b"\x00\xff"
+    assert result["text"] == tagged_text
+    assert result["real"] == {"sqlite_type":"real", "hex":"-inf"}

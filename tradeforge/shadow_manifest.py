@@ -17,7 +17,8 @@ from research_backend.app.archive_provenance import SYNTHETIC_PARTITIONS
 from .catalog import CatalogIntegrityError, verify_artifact
 from .market import Timeframe
 
-VERSION = 1
+CONTRACT_VERSION = 1
+MANIFEST_VERSION = 2
 APP_ID = 0x5446534D
 TABLES = {"fixed": "dataset_versions", "research": "datasets"}
 SCHEMA = (
@@ -31,6 +32,19 @@ SCHEMA = (
 
 def packed(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+
+def raw_record(row):
+    # SQLite columns contain scalars. An object in a column value therefore
+    # cannot collide with legitimate text, including JSON-looking text.
+    def encode(value):
+        if isinstance(value, bytes):
+            return {"sqlite_type": "blob", "hex": value.hex()}
+        if isinstance(value, float) and not math.isfinite(value):
+            return {"sqlite_type": "real", "hex": value.hex()}
+        return value
+
+    return packed({name: encode(value) for name, value in row.items()})
 
 
 class Unresolved(ValueError):
@@ -101,6 +115,7 @@ def describe(source, row, archive_root, reader, has_imports):
         feed = row["feed" if fixed else "feed_id"]
         for name, value in (("FEED", feed), ("PROVIDER", row["provider"]),
                             ("SYMBOL", row["symbol"]), ("PRICE_BASIS", row["price_basis"])):
+            require(value is None or isinstance(value, str), "INVALID_" + name + "_TYPE")
             require(isinstance(value, str) and value.strip(), "MISSING_" + name)
         require(row["price_basis"].lower() in {"bid", "ask", "synthetic_bid"}, "UNSUPPORTED_BASIS")
         require(row["timeframe"] in Timeframe._value2member_map_, "UNSUPPORTED_TIMEFRAME")
@@ -155,7 +170,7 @@ def describe(source, row, archive_root, reader, has_imports):
             require((utc_seconds(row["first_time"]), utc_seconds(row["last_time"])) == (first, last),
                     "EVENT_RANGE_MISMATCH")
     contract = {key: row[key] for key in ("provider", "symbol", "timeframe", "price_basis", "sha256")}
-    contract.update(version=VERSION, source_catalog=source, feed=feed, kind=kind, rows=count,
+    contract.update(version=CONTRACT_VERSION, source_catalog=source, feed=feed, kind=kind, rows=count,
                     event_bounds_utc_s=[first, last], missing_interior_grid_slots=missing_grid_slots,
                     availability_bounds_utc_s=[first + step, last + step] if fixed else None,
                     availability_policy="BAR_CLOSE_MODEL" if fixed else None,
@@ -203,25 +218,36 @@ def register(fixed_root, research_db, research_market, manifest, batch_size=64, 
                 for sql in SCHEMA:
                     out.execute(sql)
                 out.execute(f"PRAGMA application_id={APP_ID}")
-                out.execute(f"PRAGMA user_version={VERSION}")
+                out.execute("PRAGMA user_version=1")
                 out.executemany("INSERT INTO sources VALUES(?,?,?)", pins.values())
+            schema_version = out.execute("PRAGMA user_version").fetchone()[0]
             if (out.execute("PRAGMA application_id").fetchone()[0] != APP_ID
-                    or out.execute("PRAGMA user_version").fetchone()[0] != VERSION
+                    or schema_version not in (1, MANIFEST_VERSION)
                     or sorted(out.execute("SELECT * FROM sources")) != sorted(pins.values())):
                 raise ValueError("Manifest version or source snapshot mismatch")
+            if schema_version == 1:
+                if out.execute("SELECT 1 FROM mappings WHERE legacy_id IS NULL LIMIT 1").fetchone():
+                    raise ValueError("V1 mappings contain unidentified rows; use a fresh shadow output")
+                out.execute("""ALTER TABLE mappings ADD COLUMN diagnostic_rowid INTEGER
+                    CHECK ((legacy_id IS NULL) = (diagnostic_rowid IS NOT NULL))""")
+                out.execute("CREATE UNIQUE INDEX diagnostic_identity ON mappings(catalog, diagnostic_rowid)")
+                out.execute(f"PRAGMA user_version={MANIFEST_VERSION}")
         for name, (db, root) in sources.items():
             with closing(sqlite3.connect(db.resolve().as_uri() + "?mode=ro&immutable=1", uri=True)) as reader:
                 reader.row_factory = sqlite3.Row
                 has_imports = name == "research" and reader.execute(
                     "SELECT 1 FROM sqlite_master WHERE type='table' AND name='historical_imports'"
                 ).fetchone()
-                cursor = reader.execute(f"SELECT * FROM {TABLES[name]} ORDER BY id")
+                cursor = reader.execute(f"SELECT rowid AS _snapshot_rowid, * FROM {TABLES[name]} ORDER BY id, rowid")
                 while batch := cursor.fetchmany(batch_size):
                     with out:
                         for record in batch:
                             row = dict(record)
+                            source_rowid = row.pop("_snapshot_rowid")
+                            unidentified = row["id"] is None
                             revision = reason = None
                             try:
+                                require(not unidentified, "MISSING_LEGACY_ID")
                                 contract = packed(describe(name, row, root.resolve(), reader, has_imports))
                             except Unresolved as error:
                                 reason = str(error)
@@ -232,10 +258,13 @@ def register(fixed_root, research_db, research_market, manifest, batch_size=64, 
                             else:
                                 revision = hashlib.sha256(contract.encode()).hexdigest()
                                 out.execute("INSERT OR IGNORE INTO artifacts VALUES(?,?)", (revision, contract))
-                            out.execute("""INSERT INTO mappings VALUES(?,?,?,?,?)
-                                ON CONFLICT(catalog,legacy_id) DO UPDATE SET
-                                revision=excluded.revision, reason=excluded.reason""",
-                                        (name, row["id"], packed(row), revision, reason))
+                            out.execute("""INSERT INTO mappings
+                                (catalog, legacy_id, legacy_record, revision, reason, diagnostic_rowid)
+                                VALUES(?,?,?,?,?,?)
+                                ON CONFLICT DO UPDATE SET
+                                legacy_record=excluded.legacy_record, revision=excluded.revision, reason=excluded.reason""",
+                                        (name, row["id"], raw_record(row), revision, reason,
+                                         source_rowid if unidentified else None))
                     if after_batch:
                         after_batch(name, batch[-1]["id"])
         return {name: dict(zip(("inspected","mapped","unresolved"), out.execute(

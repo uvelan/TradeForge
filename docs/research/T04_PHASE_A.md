@@ -87,3 +87,26 @@ python -m pytest -q
 ```
 
 The historical-writer test requires a Git clone containing the reviewed commit. To roll back, stop registration and retain the separate manifest for audit. Use a fresh output if rerunning the previous writer; reverting the code restores its earlier classification of the three contradictory rows.
+
+## Malformed legacy rows and schema V2
+
+On reviewed head `81448271a0085475272191bde383cea383951588`, SQLite allowed repeated NULL keys in the composite mapping primary key. A separate four-row research fixture failed while serializing the raw BLOB after classifying its price basis. Both reproductions used the normal registrar and writer-generated candle files copied to distinct locators.
+
+| Research fixture | Source rows | Reviewed writer, first registration | Reviewed writer, retry | Corrected writer, including retries (inspected / mapped / unresolved) |
+|---|---:|---|---|---|
+| One NULL ID | 4 | 4 / 2 / 2 | 5 / 3 / 2 | 4 / 1 / 3 |
+| BLOB basis containing BID | 4 | TypeError serializing bytes; no reconciliation returned | Same serialization failure | 4 / 1 / 3 |
+| Two distinct NULL IDs | 5 | — | — | 5 / 1 / 4 |
+
+The fixed catalog in each fixture has eight source rows, five mapped and three unresolved. SHA-256 comparisons cover both SQLite inputs and every Parquet fixture before and after fresh registration, an interruption after committing a malformed row, resume and two identical retries. The two four-row fixtures each include 12 Parquet files; the two-NULL control includes 13. These are committed fixture results.
+
+Schema V2 stores a missing ID as SQL NULL and retains JSON null in the original record. The diagnostic key is the pinned source database SHA-256, catalog, and original SQLite rowid. Query `mappings` by catalog and `diagnostic_rowid` to find the exact unidentified row and its `MISSING_LEGACY_ID` reason. The source rowid is meaningful only within that database snapshot. A unique index prevents repeat inspections from inserting a second mapping. Genuine legacy IDs occupy a separate column.
+
+The raw evidence encoder preserves existing JSON scalars. SQLite BLOB values use a JSON object with `sqlite_type="blob"` and lowercase hexadecimal bytes. Nonfinite SQLite REAL values use `sqlite_type="real"` and Python's reversible float.hex representation. A text column containing the spelling of a tag remains a JSON string. The BLOB price basis receives `INVALID_PRICE_BASIS_TYPE`. Operational errors still interrupt registration.
+
+On first use the registrar upgrades a pinned V1 manifest transactionally if it contains no NULL-key mappings. The artifact contract remains V1. Comparison against the actual reviewed writer matched the valid mapping payloads, contract bytes and revision IDs. For a V1 manifest already containing NULL-key mappings, retain it for audit and rerun against the same immutable inputs with a new output filename. The registrar explicitly refuses that upgrade before modifying the old file. To roll back to the reviewed code, use a separate V1 output.
+
+```sh
+python -m pytest -q tests/test_shadow_manifest.py tests/test_restore_rehearsal.py tests/capture_shadow_v1_retry.py tests/capture_shadow_malformed_retry.py
+python -m pytest -q
+```
