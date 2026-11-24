@@ -40,7 +40,6 @@ LIMIT_POLICY = POLICY | {
 
 
 RECORDED_LIMIT_POLICY = LIMIT_POLICY | RECORDED_RULES | {"id": "OFFLINE_RECORDED_FIXED_PRICE_LIMIT_ENTRY"}
-RECORDED_POLICIES = {"MARKET": RECORDED_POLICY, "LIMIT": RECORDED_LIMIT_POLICY}
 
 
 STOP_POLICY = POLICY | {
@@ -49,6 +48,8 @@ STOP_POLICY = POLICY | {
     "stop_grid":"EXACT_INSTRUMENT_POINTS",
     "execution":"STOP_MARKET_AT_TRIGGER_QUOTE",
 }
+RECORDED_STOP_POLICY = STOP_POLICY | RECORDED_RULES | {"id": "OFFLINE_RECORDED_FIXED_PRICE_STOP_ENTRY"}
+RECORDED_POLICIES = {"MARKET": RECORDED_POLICY, "LIMIT": RECORDED_LIMIT_POLICY, "STOP": RECORDED_STOP_POLICY}
 ENTRY_POLICIES = {"MARKET":POLICY,"LIMIT":LIMIT_POLICY,"STOP":STOP_POLICY}
 
 
@@ -174,6 +175,10 @@ def limit_touched(buy, bid, ask, limit_units):
     return ask <= limit_units if buy else bid >= limit_units
 
 
+def stop_touched(buy, bid, ask, stop_units):
+    return ask >= stop_units if buy else bid <= stop_units
+
+
 def simulate(intent, model, tape, tape_digest, *, policy=None, cutoff_ms=None):
     kind = intent["entry"]["kind"]
     current = ENTRY_POLICIES.get(kind,POLICY)
@@ -235,7 +240,7 @@ def simulate(intent, model, tape, tape_digest, *, policy=None, cutoff_ms=None):
                       if limit_touched(buy, quote.bid_units, quote.ask_units, threshold_units)]
     elif kind=="STOP":
         qualifying = [quote for quote in relevant
-                      if (quote.ask_units>=threshold_units if buy else quote.bid_units<=threshold_units)]
+                      if stop_touched(buy, quote.bid_units, quote.ask_units, threshold_units)]
     chosen = min(qualifying,key=quote_priority,default=None)
     needed = chosen.available_at_ms if chosen else horizon
     if not covered(tape.complete_delivery_intervals,begin+1,needed):

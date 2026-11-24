@@ -1,0 +1,9 @@
+# T07 recorded fixed-price STOP entry
+
+This follows the bounded archival BI5 reader and the recorded LIMIT prefix check. It validates published fixed absolute STOP intents with seconds expiry. LONG requires ask at or above the stop; SHORT requires bid at or below it. The fill is at that executable quote, including adverse gaps. Off-grid thresholds create neither simulated order nor fill. Quote availability remains modeled zero-delay, not recorded broker delivery.
+
+The resolver checks the original BI5 source and selected partition fingerprints, then verifies all observations before the earliest possible trigger against the pinned provider observations. At a possible trigger priority an independently matching original observation and unchanged nonprice metadata are required. A differing price variant at that same priority yields no simulated fill; missing, added, or altered earlier observations reject the entire request. Coverage must be established from the bracketing observations and calendar; expiry needs a sufficient horizon even if no quote triggers. Equality at expiry may trigger if the rest of the order and evidence is valid.
+
+Results have a dedicated `OFFLINE_RECORDED_FIXED_PRICE_STOP_ENTRY` policy. No changes to archived MARKET/LIMIT policy identities, synthetic STOP identities, source records, or public admission. No live order, broker account, or recorded exit is enabled by this entry work.
+
+Run `python -m pytest -q research_backend/tests/test_recorded_stop_entry.py research_backend/tests/test_recorded_limit_entry.py research_backend/tests/test_recorded_market_entry.py research_backend/tests/test_offline_stop_entry.py`. The STOP fixtures use local generated BI5 records, not data from a live provider. To roll back, revert the STOP commit; keep existing immutable results and archived source data.
