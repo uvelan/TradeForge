@@ -18,6 +18,7 @@ from .db import initialize, rows, one, transaction, utc_now
 from .market import mt5_connection, mt5_rates, mt5_recent_deals,mt5_quote,mt5_symbols,demo_candles,BASE,FRAME_MIN
 from .storage import write_partition, read_partition
 from .historical_import import import_bi5
+from .legacy_quote_evidence import read_v2_quote_evidence
 from .domain import create_trade,get_trade,revise,decline_trade,close_trade,list_trades,analytics,export_ai,import_ai,journal_add,journal_list,journal_materialize
 from .risk import evaluate
 from .backtest import breakout_backtest
@@ -441,7 +442,7 @@ def load_backtest(run_id:str):
 
 
 @app.get('/api/backtest/runs/{run_id}/trades/{trade_index}/quotes')
-def run_quotes(run_id:str,trade_index:int,offset:int=Query(0,ge=0,le=500_000),limit:int=Query(250,ge=1,le=2000)):
+def run_quotes(run_id:str,trade_index:int,response:Response,offset:int=Query(0,ge=0,le=500_000),limit:int=Query(250,ge=1,le=2000)):
     snapshot = load_backtest(run_id)
     result = snapshot["result"]
     if not 0<=trade_index<len(result["trades"]):
@@ -458,8 +459,12 @@ def run_quotes(run_id:str,trade_index:int,offset:int=Query(0,ge=0,le=500_000),li
             raise HTTPException(409,"Original quote partition unavailable")
         datasets.append(row)
     try:
-        period = result.get("replay_coverage", {}).get("required_period")
-        quotes = read_tick_partitions(datasets, period=period)
+        if result["execution_model"].get("version") == 2:
+            quotes = read_v2_quote_evidence(datasets)
+            response.headers["X-TradeForge-Quote-Order"] = "historical-v2"
+        else:
+            period = result.get("replay_coverage", {}).get("required_period")
+            quotes = read_tick_partitions(datasets, period=period)
     except (RuntimeError,OSError,ValueError,KeyError) as error:
         raise HTTPException(409,f"Original quote partitions failed verification: {error}") from error
     start = (trade["entry_time_ms"],trade["entry_source_order"])
