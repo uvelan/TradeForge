@@ -4,11 +4,10 @@ import os
 import stat
 from dataclasses import asdict
 from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryFile
+from tempfile import TemporaryFile
 
 import polars as pl
 import pyarrow as pa
-import pyarrow.parquet as pq
 from sqlalchemy import MetaData, Table, select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.engine import Engine
@@ -65,8 +64,9 @@ def verify_artifact(path: Path, checksum: str, snapshot=None):
 
 
 class Catalog:
-    def __init__(self, root: Path, engine: Engine):
+    def __init__(self, root: Path, engine: Engine, publication_database: Path | None = None):
         self.root = root.resolve()
+        self.publication_database = publication_database or self.root / 'research/tradeforge.sqlite3'
         self.engine = engine
         self.table = Table("dataset_versions", MetaData(), autoload_with=engine)
 
@@ -95,40 +95,26 @@ class Catalog:
                     symbol, timeframe, start, end, 1, candles]
         dataset_id = hashlib.sha256(json.dumps(identity, separators=(",", ":")).encode()).hexdigest()
         relative = Path("market-data", dataset_id[:2], f"{dataset_id}.parquet")
-        path = self.root / relative
-        self._artifact_path(relative)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with NamedTemporaryFile(dir=path.parent, delete=False, suffix=".tmp") as file:
-            temporary = Path(file.name)
-        try:
-            table = pa.Table.from_pylist(candles, schema=CANDLE_SCHEMA)
-            pq.write_table(table, temporary, compression="zstd")
-            with temporary.open("rb+") as file:
-                checksum = hashlib.file_digest(file, "sha256").hexdigest()
-                os.fsync(file.fileno())
-            with self.engine.begin() as connection:
-                result = connection.execute(insert(self.table).values(
-                    id=dataset_id, provider=provider, feed=feed,
-                    symbol=symbol, timeframe=timeframe, price_basis=basis,
-                    price_scale=scale, start_utc=start, end_utc=end,
-                    acquired_utc=utc_now().isoformat(), schema_version=1,
-                    relative_path=relative.as_posix(), sha256=checksum,
-                    row_count=len(rows), validation_status=status,
-                ).on_conflict_do_nothing(index_elements=["id"]))
-                if not result.rowcount:
-                    # The writer transaction serializes registration and validation.
-                    entry = self._entry(connection, dataset_id)
-                    if entry is None:
-                        raise CatalogIntegrityError("Dataset registration cannot be verified")
-                    self._verify_artifact(entry["relative_path"], entry["sha256"])
-                elif path.exists() or path.is_symlink():
-                    # A rename can survive an interrupted SQLite commit. Retain the
-                    # original bytes and claim only an exact match to the staged file.
-                    self._verify_artifact(relative, checksum)
-                else:
-                    os.replace(temporary, path)
-        finally:
-            temporary.unlink(missing_ok=True)
+        from .publication import encoded_partition, owner_transaction, publish
+
+        table = pa.Table.from_pylist(candles, schema=CANDLE_SCHEMA)
+        with encoded_partition(table) as (spool, checksum), self.engine.begin() as connection:
+            # Serialize compatibility projections; only the canonical owner may
+            # install bytes. A retry can recreate a missing projection verbatim.
+            connection.exec_driver_sql("BEGIN IMMEDIATE")
+            existing = self._entry(connection, dataset_id)
+            record = dict(existing) if existing else dict(
+                id=dataset_id, provider=provider, feed=feed, symbol=symbol, timeframe=timeframe,
+                price_basis=basis, price_scale=scale, start_utc=start, end_utc=end,
+                acquired_utc=utc_now().isoformat(), schema_version=1,
+                relative_path=relative.as_posix(), sha256=checksum, row_count=len(rows),
+                validation_status=status)
+            self._artifact_path(record["relative_path"])
+            with owner_transaction(self.publication_database) as db:
+                record = publish(db, "fixed", self.root/"market-data", record, spool,
+                                 registered=existing is not None)
+                if existing is None:
+                    connection.execute(insert(self.table).values(**record))
         return dataset_id
 
     def list(self):

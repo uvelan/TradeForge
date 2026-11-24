@@ -124,10 +124,22 @@ def test_signal_explorer_returns_latest_and_pins_requested_revision(client, plan
     import json
     import zipfile
 
+    import hashlib
+    import subprocess
+    from types import ModuleType
+    from research_backend.app import storage
+    path = "research_backend/app/storage.py"
+    legacy = ModuleType("research_backend.app.phase_b_storage")
+    legacy.__package__ = "research_backend.app"
+    source = subprocess.check_output(["git","show","a632a002d82162a50079c188aba1a5e507ccc2c4:"+path])
+    exec(compile(source,path,"exec"),legacy.__dict__)
+    legacy.MARKET_DIR = storage.MARKET_DIR
+    historical = []
     request = dict(RULES)
     for side, symbol, prices in [("primary","EURUSD",LEFT+[12]),("comparison","GBPUSD",RIGHT+[31])]:
         sequence = candles(prices, 0)
-        dataset = write_partition("DUKASCOPY", "test", symbol, "candles", "M1", "BID", sequence)
+        dataset = legacy.write_partition("DUKASCOPY", "test", symbol, "candles", "M1", "BID", sequence)
+        historical.append((symbol, sequence, dataset))
         request[side] = sequence
         request[f"{side}_feed"] = {"symbol":symbol,"source":"DUKASCOPY_SAVED","feed_id":"test","price_basis":"BID",
                                   "dataset_id":dataset["id"]}
@@ -153,6 +165,16 @@ def test_signal_explorer_returns_latest_and_pins_requested_revision(client, plan
     response = client.get(f"/api/ai/packages/{package['package_id']}/download")
     with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
         assert json.loads(archive.read("data/signal.json"))["event_key"] == key
+    for symbol, sequence, dataset in historical:
+        artifact = storage.MARKET_DIR/dataset["relative_path"]
+        assert hashlib.sha256(artifact.read_bytes()).hexdigest() == dataset["sha256"]
+        assert write_partition("DUKASCOPY","test",symbol,"candles","M1","BID",sequence) == dataset
+        assert hashlib.sha256(artifact.read_bytes()).hexdigest() == dataset["sha256"]
+        print("historical_signal_partition", symbol, dataset["id"], dataset["sha256"])
+    assert client.get(f"{base}/signals/{key}/candles",params={"status":"SMT_CONFIRMED"}).json() == original
+    replayed = client.get(f"/api/ai/packages/{package['package_id']}/download")
+    assert replayed.content == response.content
+    assert hashlib.sha256(replayed.content).hexdigest() == package["sha256"]
     assert client.get(base+"/signals",params={"q":trade_id}).json()["items"][0]["event_key"] == key
     journal = client.post("/api/journal", json={"kind":"CHART","title":"SMT observation",
                           "content":"The later candle invalidated the signal.", "signal_reference":link})

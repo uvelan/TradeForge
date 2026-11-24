@@ -4,12 +4,10 @@ from contextlib import nullcontext
 from datetime import datetime,timezone,timedelta
 import hashlib
 import json
-import os
 import struct
 import lzma
 import math
 import re
-import uuid
 from pathlib import Path
 from .config import MARKET_DIR
 from .db import transaction, utc_now
@@ -23,7 +21,6 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
     if not re.fullmatch(r'[A-Za-z0-9_-]{1,60}',feed_id):raise ValueError('Invalid feed identifier')
     try:
         import pyarrow as pa
-        import pyarrow.parquet as pq
     except ImportError as exc:
         raise RuntimeError('pyarrow is required for Parquet import: pip install -r requirements.txt') from exc
     records=sorted(records,key=lambda r:r['time'])
@@ -33,48 +30,43 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
         if timeframe not in {"M1", "M3", "M5", "M15", "M30", "H1", "H4", "D1"}:
             raise ValueError('Invalid timeframe')
         folder=folder/f'timeframe={timeframe}'
-    folder.mkdir(parents=True,exist_ok=True)
-    temp=folder/f'.part-{uuid.uuid4()}.pending'
-    table=pa.Table.from_pylist(records)
-    try:
-        pq.write_table(table,temp,compression='zstd',row_group_size=row_group_size)
-        with temp.open('rb+') as f:
-            digest = hashlib.file_digest(f, 'sha256').hexdigest()
-            os.fsync(f.fileno())
+    from . import db as catalog_db
+    from tradeforge.catalog import CatalogIntegrityError
+    from tradeforge.publication import encoded_partition, publish
+
+    if connection is not None:
+        owner_file = connection.execute("PRAGMA database_list").fetchone()[2]
+        if not owner_file or Path(owner_file).resolve() != catalog_db.DATABASE.resolve():
+            raise ValueError("Import transaction belongs to a different partition publication owner")
+    table = pa.Table.from_pylist(records)
+    with encoded_partition(table, row_group_size) as (spool, digest):
         identity = json.dumps([provider, feed_id, symbol, kind, timeframe, price_basis, digest, 1])
         new_id = hashlib.sha256(identity.encode()).hexdigest()
-        path=folder/f'part-{new_id}.parquet'
-        relative=str(path.relative_to(MARKET_DIR))
+        path = folder/f'part-{new_id}.parquet'
         with (transaction() if connection is None else nullcontext(connection)) as db:
-            if connection is None:
+            if not db.in_transaction:
                 db.execute("BEGIN IMMEDIATE")
-            existing = db.execute("""SELECT id, relative_path FROM datasets
+            existing = db.execute("""SELECT * FROM datasets
                 WHERE provider=? AND feed_id=? AND symbol=? AND kind=? AND timeframe IS ?
                 AND price_basis=? AND sha256=? ORDER BY created_at LIMIT 1""",
                 (provider,feed_id,symbol,kind,timeframe,price_basis,digest)).fetchone()
-            if existing and (MARKET_DIR / existing['relative_path']).is_file():
-                with (MARKET_DIR / existing['relative_path']).open('rb') as published:
-                    if hashlib.file_digest(published, 'sha256').hexdigest() != digest:
-                        raise RuntimeError("UNTRUSTED: existing partition checksum mismatch")
-                return {'id':existing['id'],'provider':provider,'symbol':symbol,'rows':len(records),
-                        'relative_path':existing['relative_path'],'sha256':digest}
-            if existing:
-                raise RuntimeError("A cataloged copy is missing from disk")
-            db.execute('''INSERT INTO datasets(id,provider,feed_id,symbol,kind,timeframe,price_basis,rows_count,first_time,last_time,relative_path,sha256,created_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''', (new_id,provider,feed_id,symbol,kind,timeframe,price_basis,len(records),
-              datetime.fromtimestamp(int(records[0]['time']),timezone.utc).isoformat(),
-              datetime.fromtimestamp(int(records[-1]['time']),timezone.utc).isoformat(),relative,digest,utc_now()))
-            if path.exists():
-                # Recover a complete file left by a rolled-back catalog
-                # commit. A different file at the immutable path is refused.
-                with path.open('rb') as orphan:
-                    if hashlib.file_digest(orphan, 'sha256').hexdigest() != digest:
-                        raise RuntimeError("UNTRUSTED: orphan partition checksum mismatch")
-            else:
-                os.replace(temp,path)
-        return {'id':new_id,'provider':provider,'symbol':symbol,'rows':len(records),'relative_path':relative,'sha256':digest}
-    finally:
-        temp.unlink(missing_ok=True)
+            record = dict(existing) if existing else dict(
+                id=new_id, provider=provider, feed_id=feed_id, symbol=symbol, kind=kind,
+                timeframe=timeframe, price_basis=price_basis, rows_count=len(records),
+                first_time=datetime.fromtimestamp(int(records[0]['time']),timezone.utc).isoformat(),
+                last_time=datetime.fromtimestamp(int(records[-1]['time']),timezone.utc).isoformat(),
+                relative_path=str(path.relative_to(MARKET_DIR)), sha256=digest, created_at=utc_now())
+            try:
+                record = publish(db, "research", MARKET_DIR, record, spool, registered=existing is not None)
+            except CatalogIntegrityError as error:
+                raise RuntimeError(f"UNTRUSTED: {error}") from error
+            if existing is None:
+                db.execute("""INSERT INTO datasets(id,provider,feed_id,symbol,kind,timeframe,price_basis,
+                    rows_count,first_time,last_time,relative_path,sha256,created_at)
+                    VALUES(:id,:provider,:feed_id,:symbol,:kind,:timeframe,:price_basis,:rows_count,
+                    :first_time,:last_time,:relative_path,:sha256,:created_at)""", record)
+        return {'id':record["id"],'provider':provider,'symbol':symbol,'rows':len(records),
+                'relative_path':record["relative_path"],'sha256':digest}
 
 
 def read_partition(dataset:dict,max_rows:int=2000)->list[dict]:
