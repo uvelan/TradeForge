@@ -167,14 +167,10 @@ def test_same_priority_conflict_before_and_after_a_certain_exit(position,other_q
 
 
 @pytest.mark.parametrize("rule,value",[
-    ("partial_exit",{"at_r":1.5,"percent":25}),
     ("time_exit",{"unit":"ELIGIBLE_BARS","count":2,"timeframe":"M5"}),
 ])
 def test_management_extensions_are_explicitly_unsupported(position,rule,value):
     management = {rule:value}
-    if rule=="partial_exit":
-        management["break_even_at_r"] = 1
-        management["target"] = {"kind":"REWARD_MULTIPLE","multiple":3}
     published = position(management=management)
     row = check(published,f"unsupported {rule}",tape([ENTRY_LONG,LONG_TARGET],[(Q+1,CUTOFF)]),
                 "UNSUPPORTED_EXIT_MANAGEMENT",levels=False)

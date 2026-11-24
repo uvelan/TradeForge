@@ -1,5 +1,6 @@
 """Offline first-exit validation with fixed levels and optional research management rules."""
 import argparse
+from bisect import bisect_right
 import json
 from decimal import Decimal
 from fractions import Fraction
@@ -12,7 +13,7 @@ from .offline_market_entry import (
     Quote, covered, pin_tape, published_entry_intents, quote_priority,
     read_tape_file, simulate, verify_run,
 )
-from .offline_partial_exit import simulate_partial_exit
+from .offline_partial_exit import ratio
 from .risk import PIP_SIZE
 from .strategy_evidence import fingerprint
 from .tick_replay import executable_side
@@ -26,12 +27,14 @@ POLICY = {
     "execution":"ACTUAL_CLOSING_QUOTE",
 }
 BREAK_EVEN_POLICY = POLICY | {
-    "id":"OFFLINE_BREAK_EVEN_FIRST_EXIT",
+    "id":"OFFLINE_BREAK_EVEN_FIRST_EXIT","version":2,
+    "stop_clock":"MOVE_DELIVERY_THROUGH_OBSERVATION_STRICT_LATER_PRIORITY",
     "stop_activation":"EXIT_FIRST_THEN_ARM_AT_R_EFFECTIVE_NEXT_PRIORITY",
     "armed_stop":"VERIFIED_ENTRY_PRICE_BEFORE_FEES",
 }
 TRAILING_POLICY = POLICY | {
-    "id":"OFFLINE_TRAILING_FIRST_EXIT",
+    "id":"OFFLINE_TRAILING_FIRST_EXIT","version":2,
+    "stop_clock":"MOVE_DELIVERY_THROUGH_OBSERVATION_STRICT_LATER_PRIORITY",
     "stop_update":"EXIT_FIRST_THEN_RATCHET_FROM_CLOSING_QUOTE_EFFECTIVE_NEXT_PRIORITY",
     "distance":"EXACT_PIPS_NO_ROUNDING",
 }
@@ -45,7 +48,10 @@ PARTIAL_POLICY = POLICY | {
     "precedence":"TERMINAL_QUOTE_FIRST_THEN_ONE_PARTIAL",
     "quantity":"EXACT_FRACTION_OF_INITIAL_NORMALIZED_EXPOSURE",
 }
-UNSUPPORTED_MANAGEMENT = ("trailing_pips","partial_exit","time_exit")
+COMBINED_POLICY = POLICY | {
+    "id":"OFFLINE_COMBINED_MANAGEMENT",
+    "precedence":"OBSERVATION_STOP_TARGET_TIME_THEN_PARTIAL_THEN_TIGHTEST_MOVE",
+}
 
 
 def verified_entry(db, run_id, entry_result_id, intents, model, tape, digest):
@@ -100,24 +106,20 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
     intent = entry["source"]
     frozen = management.model_dump(mode="json")
     activation_r = management.break_even_at_r
-    # Keep previously persisted unsupported combinations on their original policy.
-    extensions = {field for field in UNSUPPORTED_MANAGEMENT if frozen[field] is not None}
-    trailing = duration = partial = supported = None
-    policy = POLICY if activation_r is None else BREAK_EVEN_POLICY
-    if activation_r is None and management.initial_stop and management.target:
-        if extensions=={"trailing_pips"}:
-            trailing,policy,supported = management.trailing_pips,TRAILING_POLICY,"trailing_pips"
-        elif extensions=={"partial_exit"}:
-            partial,policy,supported = management.partial_exit,PARTIAL_POLICY,"partial_exit"
-        elif extensions=={"time_exit"} and management.time_exit.unit=="SECONDS" and not management.time_exit.timeframe:
-            duration,policy,supported = management.time_exit.count,TIME_POLICY,"time_exit"
+    partial = management.partial_exit
+    trailing = management.trailing_pips
+    timer = management.time_exit
+    duration = timer.count if timer and timer.unit=="SECONDS" and not timer.timeframe else None
+    policies = [policy for value,policy in ((activation_r,BREAK_EVEN_POLICY),(partial,PARTIAL_POLICY),
+                (trailing,TRAILING_POLICY),(duration,TIME_POLICY)) if value is not None]
+    policy = COMBINED_POLICY if len(policies)>1 else next(iter(policies),POLICY)
     identity = {"entry_result_id":entry["id"],"entry_fill_id":fill["id"],
                 "management_policy_fingerprint":fingerprint(frozen),"execution_data_fingerprint":digest,
                 "cutoff_ms":cutoff_ms,"policy":dict(policy)}
     identifier = "FX-"+fingerprint(identity)
     result = {"id":identifier,"identity":identity,"intent_id":intent["id"],"symbol":intent["symbol"],
               "direction":intent["direction"],"management_policy":frozen,"levels":None,"exit":None}
-    unsupported = [field for field in UNSUPPORTED_MANAGEMENT if field in extensions and field!=supported]
+    unsupported = ["time_exit"] if timer and duration is None else []
     if management.initial_stop is None or management.target is None or unsupported:
         return result | {"status":"UNSUPPORTED_EXIT_MANAGEMENT","unsupported_rules":unsupported}
 
@@ -138,11 +140,20 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
     relevant = [entry_quote] + [quote for quote in tape.quotes
                                 if start<=quote.time_ms and quote.available_at_ms<=cutoff_ms
                                 and quote_priority(quote)>quote_priority(entry_quote)]
-    if partial is not None:
-        return simulate_partial_exit(result=result,identity=identity,partial=partial,fill=fill,levels=levels,
-                                     long=long,side=side,relevant=relevant,tape=tape,cutoff_ms=cutoff_ms,
-                                     closing_trigger=closing_trigger,price_text=price_text)
+    tracks_exposure = partial is not None or policy==COMBINED_POLICY
+    remaining = Fraction(1)
+    if tracks_exposure:
+        result["remaining_fraction"] = ratio(remaining)
+    partial_threshold = None
+    if partial:
+        threshold = fill["price_units"]+(fill["price_units"]-levels["stop_units"])*Fraction(str(partial.at_r))
+        if threshold.denominator!=1 or not min(fill["price_units"],levels["target_units"])<threshold<max(fill["price_units"],levels["target_units"]):
+            return result | {"status":"UNREPRESENTABLE_EXIT_LEVELS"}
+        partial_threshold = int(threshold)
+        result.update(partial_threshold_units=partial_threshold,partial_exit=None)
     active_stop = levels["stop_units"]
+    if policy==COMBINED_POLICY:
+        result["active_stop_units"] = active_stop
     target = levels["target_units"]
     arm_threshold = None
     event_identity = {key:value for key,value in identity.items() if key!="cutoff_ms"}
@@ -162,19 +173,32 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
         trail_distance = int(distance)
         result.update(trailing_distance_units=trail_distance,active_stop_units=active_stop,ratchet=None)
 
-    # A priority is indivisible. Inspect all tied rows before accepting a transition.
+    def event(reason,threshold,quote):
+        reference = quote.model_dump(mode="json") | {"scale":scale}
+        units = getattr(quote,price_key)
+        return {"id":"XF-"+fingerprint([event_identity,reason,reference]),"reason":reason,
+                "threshold_units":threshold,"threshold_price":None if threshold is None else price_text(threshold,scale),
+                "side":side.upper(),"price_units":units,"price":price_text(units,scale),
+                "time_ms":quote.available_at_ms,"quote":reference}
+
+    # Only previously processed priorities enter the timeline. At equal milliseconds
+    # bisect_right includes all moves already delivered at that observation time.
+    move_times = [start]
+    stops = [(active_stop,"PROTECTIVE_STOP",fill["quote"])]
     for _,group in groupby(sorted(relevant,key=quote_priority),key=quote_priority):
         rows = list(group)
         for quote in rows:
             units = getattr(quote,price_key)
-            trigger = closing_trigger(units,active_stop,target,long)
+            applicable,stop_reason,stop_quote = stops[bisect_right(move_times,quote.time_ms)-1]
+            trigger = closing_trigger(units,applicable,target,long)
             if trigger is None and deadline is not None and quote.time_ms>=deadline:
                 trigger = "TIME_EXIT",None
             arms = arm_threshold is not None and (units>=arm_threshold if long else units<=arm_threshold)
             trail = (units-trail_distance if long else units+trail_distance) if trail_distance else None
             tightens = (trail is not None and quote!=entry_quote
                         and (trail>active_stop if long else trail<active_stop))
-            if trigger or arms or tightens:
+            reduce = partial_threshold is not None and (units>=partial_threshold if long else units<=partial_threshold)
+            if trigger or reduce or arms or tightens:
                 break
         else:
             continue
@@ -182,38 +206,47 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
             return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
         if any(row!=quote for row in rows):
             return result | {"status":"AMBIGUOUS_QUOTE_ORDER"}
+        reference = quote.model_dump(mode="json") | {"scale":scale}
         if trigger:
             reason,threshold = trigger
-            if reason=="PROTECTIVE_STOP" and result.get("activation"):
-                reason = "BREAK_EVEN_STOP"
-            if reason=="PROTECTIVE_STOP" and result.get("ratchet"):
-                reason = "TRAILING_STOP"
-            break
+            stop_hit = reason=="PROTECTIVE_STOP"
+            final = event(stop_reason if stop_hit else reason,threshold,quote)
+            if stop_hit and (trailing or activation_r or policy==COMBINED_POLICY):
+                final["stop_quote"] = stop_quote
+            if tracks_exposure:
+                final["closed_fraction"] = ratio(remaining)
+                result["remaining_fraction"] = ratio(Fraction(0))
+            result["exit"] = final
+            return result | {"status":"SIMULATED_EXIT"}
 
-        reference = quote.model_dump(mode="json") | {"scale":scale}
-        if tightens:
+        if reduce:
+            closed = Fraction(str(partial.percent))/100
+            result["partial_exit"] = event("PARTIAL_REWARD",partial_threshold,quote) | {"closed_fraction":ratio(closed)}
+            remaining -= closed
+            result["remaining_fraction"] = ratio(remaining)
+            partial_threshold = None
+
+        new_stop = active_stop
+        if arms:
+            result["activation"] = {"id":"BA-"+fingerprint([event_identity,reference]),
+                                    "side":side.upper(),"quote":reference}
+            arm_threshold = None
+            improves = fill["price_units"]>active_stop if long else fill["price_units"]<active_stop
+            if improves:
+                new_stop,reason = fill["price_units"],"BREAK_EVEN_STOP"
+        if tightens and (trail>new_stop if long else trail<new_stop):
+            new_stop,reason = trail,"TRAILING_STOP"
             result["ratchet"] = {"id":"TR-"+fingerprint([event_identity,trail,reference]),
                                  "stop_units":trail,"side":side.upper(),"quote":reference}
-            active_stop = trail
+        if new_stop!=active_stop:
+            active_stop = new_stop
             result["active_stop_units"] = active_stop
-            continue
-        result["activation"] = {"id":"BA-"+fingerprint([event_identity,reference]),
-                                "side":side.upper(),"quote":reference}
-        active_stop = fill["price_units"]
-        result["active_stop_units"] = active_stop
-        arm_threshold = None
-    else:
-        if not covered(tape.complete_delivery_intervals,start,cutoff_ms):
-            return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
-        status = "AWAITING_TIME_EXIT_QUOTE" if deadline is not None and cutoff_ms>=deadline else "OPEN_AT_CUTOFF"
-        return result | {"status":status}
-    units = getattr(quote,price_key)
-    reference = quote.model_dump(mode="json") | {"scale":scale}
-    result["exit"] = {"id":"XF-"+fingerprint([event_identity,reason,reference]),
-                      "reason":reason,"threshold_units":threshold,"threshold_price":None if threshold is None else price_text(threshold,scale),
-                      "side":side.upper(),"price_units":units,"price":price_text(units,scale),
-                      "time_ms":quote.available_at_ms,"quote":reference}
-    return result | {"status":"SIMULATED_EXIT"}
+            move_times.append(quote.available_at_ms)
+            stops.append((active_stop,reason,reference))
+    if not covered(tape.complete_delivery_intervals,start,cutoff_ms):
+        return result | {"status":"INSUFFICIENT_QUOTE_COVERAGE"}
+    status = "AWAITING_TIME_EXIT_QUOTE" if deadline is not None and cutoff_ms>=deadline else "OPEN_AT_CUTOFF"
+    return result | {"status":status}
 
 
 def validate_first_exit(run_id, *, cutoff_ms, entry_result_id=None, tape=None, tape_sha256=None):
@@ -258,7 +291,7 @@ def validate_first_exit(run_id, *, cutoff_ms, entry_result_id=None, tape=None, t
             db.execute("INSERT INTO offline_first_exit_results VALUES (?,?,?)",
                        (result["id"],entry_result_id,payload))
         summary.update(simulated_fills=1,simulated_exits=int(result["exit"] is not None),results=[result])
-        if result["identity"]["policy"]["id"]==PARTIAL_POLICY["id"]:
+        if model.management.partial_exit is not None:
             summary["simulated_partial_exits"] = int(result.get("partial_exit") is not None)
         return summary
 

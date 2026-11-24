@@ -4,7 +4,7 @@ import os
 import stat
 from dataclasses import asdict
 from pathlib import Path
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryFile
 
 import polars as pl
 import pyarrow as pa
@@ -125,7 +125,7 @@ class Catalog:
             raise CatalogIntegrityError("Invalid catalog path")
         return path
 
-    def _verify_artifact(self, relative, checksum):
+    def _verify_artifact(self, relative, checksum, snapshot=None):
         path = self._artifact_path(relative)
         try:
             if not path.is_file():
@@ -138,22 +138,28 @@ class Catalog:
             with open(path, "rb", opener=nonblocking) as file:
                 if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
                     raise CatalogIntegrityError("Dataset artifact is not a regular file")
-                actual = hashlib.file_digest(file, "sha256").hexdigest()
+                digest = hashlib.sha256()
+                while block := file.read(1024 * 1024):
+                    digest.update(block)
+                    if snapshot is not None:
+                        snapshot.write(block)
+                actual = digest.hexdigest()
         except OSError as error:
             raise CatalogIntegrityError("Dataset artifact cannot be read") from error
         if actual != checksum:
             raise CatalogIntegrityError("Dataset checksum mismatch")
-        return path
 
     def read(self, dataset_id: str, cutoff: int | None):
         with self.engine.connect() as connection:
             entry = self._entry(connection, dataset_id)
         if entry is None:
             raise KeyError(dataset_id)
-        path = self._verify_artifact(entry["relative_path"], entry["sha256"])
-        candles = pl.scan_parquet(path).with_columns(
-            pl.col("time", "available_at").dt.epoch("s")
-        )
-        if cutoff is not None:
-            candles = candles.filter(pl.col("available_at") <= cutoff)
-        return {"dataset": dict(entry), "candles": candles.collect().to_dicts()}
+        with TemporaryFile() as snapshot:
+            self._verify_artifact(entry["relative_path"], entry["sha256"], snapshot)
+            snapshot.seek(0)
+            candles = pl.scan_parquet(snapshot).with_columns(
+                pl.col("time", "available_at").dt.epoch("s")
+            )
+            if cutoff is not None:
+                candles = candles.filter(pl.col("available_at") <= cutoff)
+            return {"dataset": dict(entry), "candles": candles.collect().to_dicts()}

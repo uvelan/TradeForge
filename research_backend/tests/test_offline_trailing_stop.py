@@ -72,10 +72,10 @@ def test_gap_before_ratchet_cannot_publish(trailing_case):
         "INSUFFICIENT_QUOTE_COVERAGE",initial,None,0)
 
 
-def test_fractional_trail_and_combination_fail_closed(position):
+def test_fractional_trail_rejected_and_combination_admitted(position):
     for management,status in (
         ({"trailing_pips":5.01},"UNREPRESENTABLE_EXIT_LEVELS"),
-        ({"trailing_pips":5,"break_even_at_r":1},"UNSUPPORTED_EXIT_MANAGEMENT"),
+        ({"trailing_pips":5,"break_even_at_r":1},"OPEN_AT_CUTOFF"),
     ):
         run,intent = position(management=management)
         row,n = replay((run,intent),[ENTRY_LONG],3)

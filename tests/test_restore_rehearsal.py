@@ -108,3 +108,28 @@ def test_restore_two_catalogs_from_verified_backup(tmp_path, monkeypatch):
     (storage.MARKET_DIR / part["relative_path"]).write_bytes(b"damaged fixture")
     with pytest.raises(RuntimeError, match="checksum mismatch"):
         storage.read_partition(partition)
+
+
+def test_catalog_decode_uses_verified_snapshot(tmp_path, monkeypatch):
+    from tradeforge import catalog as module
+
+    engine = open_database(tmp_path)
+    try:
+        catalog = Catalog(tmp_path, engine)
+        identifier = catalog.ingest(Simulator(), "EURUSD", Timeframe.M1, 900, 1080)
+        expected = catalog.read(identifier, 1020)
+        other = catalog.ingest(Simulator(), "EURUSD", Timeframe.M1, 1080, 1260)
+        replacement = tmp_path / catalog.read(other, None)["dataset"]["relative_path"]
+        original = tmp_path / expected["dataset"]["relative_path"]
+        scan = module.pl.scan_parquet
+
+        def replace_before_decode(source):
+            original.write_bytes(replacement.read_bytes())
+            return scan(source)
+
+        monkeypatch.setattr(module.pl, "scan_parquet", replace_before_decode)
+        assert catalog.read(identifier, 1020)==expected
+        with pytest.raises(module.CatalogIntegrityError,match="checksum mismatch"):
+            catalog.read(identifier, 1020)
+    finally:
+        engine.dispose()
