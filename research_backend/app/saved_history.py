@@ -176,7 +176,14 @@ def tick_origin(quote, file_id, manifests):
     return ("source", fingerprint)
 
 
-def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execution_only=False, period=None) -> list[dict]:
+class TickOrderError(ValueError):
+    def __init__(self, message, time_ms, ordinal):
+        super().__init__(message)
+        self.priority = (time_ms, ordinal)
+
+
+def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execution_only=False, period=None, through_priority=None,
+                         required_source=None) -> list[dict]:
     if len(partitions) > 50 or sum(part["rows_count"] for part in partitions) > TICK_REPLAY_LIMIT:
         raise ValueError("Selected tick partitions exceed the 500,000 quote replay limit or 50 files")
     if len({(p["provider"], p["feed_id"], p["symbol"], p["price_basis"]) for p in partitions}) != 1:
@@ -189,22 +196,37 @@ def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execu
         # Multi-file ties need the entire source row for exact duplicate verification.
         columns = [*TICK_FIELDS, "source_sha256"] if execution_only and len(partitions) == 1 else None
         bounds_ms = None if period is None else (period[0] * 1000, period[1] * 1000)
+        if through_priority is not None:
+            if bounds_ms is None:
+                raise ValueError("A terminal priority requires a pinned period")
+            bounds_ms = (bounds_ms[0], min(bounds_ms[1], through_priority[0] + 1))
         streams = [handles.enter_context(closing(ordered_partition(part, columns, bounds_ms))) for part in partitions]
         merged = merge(*streams, key=lambda item: item[:3])
         for ms, at_ms in groupby(merged, key=lambda item: item[0]):
             origin = None
             for ordinal, tied in groupby(at_ms, key=lambda item: item[1]):
+                if through_priority is not None and origin is not None and (ms, ordinal) > through_priority:
+                    # Later ordinals are comparable only within the winning source.
+                    if any(tick_origin(q, file_id, source_manifests) != origin
+                           for _, _, file_id, q in tied):
+                        raise TickOrderError(f"Ambiguous tick source order at {ms}", *through_priority)
+                    continue
                 previous_file = None
                 winner = None
                 for _, _, file_id, quote in tied:
                     current_origin = tick_origin(quote, file_id, source_manifests)
+                    if required_source is not None:
+                        if current_origin != ("source", required_source):
+                            raise ValueError("Recorded quote lacks the pinned BI5 source identity")
+                        # An import manifest and a shard row can attest the same original.
+                        quote = quote | {"source_sha256": required_source}
                     if origin is not None and current_origin != origin:
-                        raise ValueError(f"Ambiguous tick source order at {ms}")
+                        raise TickOrderError(f"Ambiguous tick source order at {ms}", ms, ordinal)
                     origin = current_origin
                     if previous_file == file_id:
-                        raise ValueError("Tick source order is ambiguous within a partition")
+                        raise TickOrderError("Tick source order is ambiguous within a partition", ms, ordinal)
                     if winner is not None and quote != winner:
-                        raise ValueError("Conflicting tick quotes in overlapping partitions")
+                        raise TickOrderError("Conflicting tick quotes in overlapping partitions", ms, ordinal)
                     previous_file, winner = file_id, quote
                 if scale is None:
                     scale = winner["scale"]
