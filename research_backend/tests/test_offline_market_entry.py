@@ -30,7 +30,7 @@ def tape(quotes, intervals=((Q+1,EXPIRY),)):
 
 
 @pytest.fixture
-def publish(client,canonical_successors):
+def publish(client,canonical_successors,monkeypatch):
     def run(*, direction="bearish",kind="MARKET", entry_price=None, management=None, incomplete=False, bad_proof=False):
         request,model,_ = canonical_successors(direction=direction,kind=kind,entry_price=entry_price,management=management)
         if direction=="bearish" and kind=="MARKET":
@@ -45,7 +45,6 @@ def publish(client,canonical_successors):
         if incomplete:
             return identifier,None
         owner = "entry-fixture"
-        assert store.claim(owner)==identifier
 
         def commit(snapshot,frontier,entries,completed,metrics):
             if bad_proof:
@@ -55,7 +54,13 @@ def publish(client,canonical_successors):
                             **entry["intent"]["evidence_references"][0],"event_id":"unrelated-proof"}
             store.publish(identifier,owner,snapshot,frontier,entries,completed,metrics)
 
-        engine.run_chunks(prepared,verified_evidence(model,prepared),model,commit,chunk_size=7)
+        # The normal worker renews its lease while the engine runs. This
+        # fixture drives the same persistence path without a supervisor, so
+        # hold only the lease store clock steady while it owns the run.
+        with monkeypatch.context() as lease_clock:
+            lease_clock.setattr(store, "time", lambda: 1_800_000_000.0)
+            assert store.claim(owner)==identifier
+            engine.run_chunks(prepared,verified_evidence(model,prepared),model,commit,chunk_size=7)
         response = client.get(f"{API}/{identifier}/intents")
         assert response.status_code==200,response.text
         rows = response.json()
