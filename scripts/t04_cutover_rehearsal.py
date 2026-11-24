@@ -75,7 +75,7 @@ def reconcile(root):
             for row in conn.execute(f"SELECT * FROM {table} ORDER BY id"):
                 locator = PureWindowsPath(row["relative_path"]).as_posix()
                 name = locator if lane == "fixed" else "research/market/" + locator
-                if files.get(name) != row["sha256"] or row["id"] in rows[lane]:
+                if name not in files or files[name] != row["sha256"] or row["id"] in rows[lane]:
                     raise ValueError(f"Invalid legacy dataset {lane}/{row['id']}")
                 rows[lane][row["id"]] = dict(row)
     counts = {lane: len(items) for lane, items in rows.items()}
@@ -98,13 +98,19 @@ def reconcile(root):
                 if rows["research"][part["id"]]["sha256"] != part["sha256"]:
                     raise ValueError("Import evidence digest mismatch")
                 counts["import_refs"] += 1
-        for payload, in conn.execute("SELECT payload FROM smt_event_history"):
+        for event_key, payload in conn.execute("SELECT event_key,payload FROM smt_event_history"):
             counts["smt_revisions"] += 1
             for lane in ("primary", "comparison"):
                 ref = json.loads(payload)["provenance"][lane]
                 ids = set(ref.get("dataset_ids") or [])
-                if ref.get("dataset_id"):
-                    ids.add(ref["dataset_id"])
+                dataset_id = ref.get("dataset_id")
+                if not ref.get("archive_range") and (dataset_id is not None or ref.get("sha256") is not None):
+                    verified = rows["research"].get(dataset_id)
+                    if verified is None or verified["sha256"] != ref.get("sha256"):
+                        raise ValueError(f"Invalid SMT partition pin: event={event_key} "
+                                         f"lane={lane} dataset={dataset_id}")
+                if dataset_id is not None:
+                    ids.add(dataset_id)
                 for part in ref.get("partitions") or []:
                     ids.add(part["id"])
                     if rows["research"][part["id"]]["sha256"] != part["sha256"]:

@@ -39,3 +39,16 @@ Remove-Item Env:T04_REHEARSAL_SOURCE,Env:T04_REHEARSAL_OUTPUT
 Use an unused output filename. The local workspace run passed in 4.87 seconds. The four-file focused run passed all 24 tests in 9.53 seconds. Raw evidence output stays local unless explicitly selected for review.
 
 Rollback in the isolated API process consists of clearing `TRADEFORGE_CANDLE_SHADOW_MANIFEST` and repeating the same GET requests. This recovered the complete legacy responses for existing and newly published partitions with their original IDs. Keep the catalogs, archive files, receipts and manifests. This PR adds only rehearsal code, tests and evidence; reverting it removes the rehearsal. Reader cutover and writer retirement each require separate signoff. Phase D compaction was unnecessary.
+
+## PR #33 single-partition SMT pin correction
+
+The restored signal-candles API uses the lane's recorded dataset ID and SHA-256. At reviewed head `de075891a7a7978aa344e40f1efdc77273754a15`, setting only the confirmed comparison lane's saved checksum to 64 zeros left reconciliation successful while the endpoint returned HTTP 409, `Recorded evidence unavailable: Original partition unavailable`. The catalog rows and both Parquet files were identical before and after this controlled corruption.
+
+The corrected reconciliation checks the pin against the restored catalog row whose file bytes passed SHA-256 verification. The mismatched fixture rejects event `cc053b428e20262e1fff15f26411a02e74c7042b900a25423b0f5d4fdea8c781`, lane `comparison`, dataset `ba55f3a9f52fcdce23863c8fa23be4c85e6d4b707ab4912cd2800f880aaaa5f3`. Its actual GBPUSD Parquet SHA-256 is `e9e493e2f724a2eefbdf71d26bff03f083732a98a06e347ffd411542815c24db`. The endpoint returned the same 409 after the correction. With genuine pins, reconciliation verified four lane references across two saved revisions. HTTP 200 returned the original ten EURUSD and ten GBPUSD M1 candles, including their OHLC values, from the restored database and archive.
+
+The workspace rerun reproduced the checkpoint counts above: 36 and 39 exact HTTP matches, 36 and 39 rollback matches, two expected rejections each, zero unexplained differences. Each checkpoint had 260 genuinely unpinned historical lanes and zero dangling receipts. Every Parquet checksum matched the committed checkpoint evidence. The second checkpoint includes new acquisition timestamps.
+
+| Workspace rerun | Fixed SQLite SHA-256 | Research SQLite SHA-256 |
+|---|---|---|
+| 1 | `ada4bd670bbd60a1f6b564b73acfa4a7df3e63c65223b2e2014f5eaa8cce63a9` | `68ff962a230b45f9ccf9a2b61add60b292b183c7dfc913de5f5ec64fc56cb2a3` |
+| 2 | `0fede100b8f30e05626bcaaa16ca8c693cd76a6f3487a44b672ec2dc98899771` | `b0b23dc10f88edad31a8c847f6560c13ccbf6bbf75d9f63bf5a39286880ea4e0` |
