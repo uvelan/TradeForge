@@ -84,3 +84,23 @@ def test_gap_after_partial_preserves_verified_reduction(partial_case):
     assert (row["status"],n,exits)==("INSUFFICIENT_QUOTE_COVERAGE",1,0)
     assert row["partial_exit"]["quote"]==c[3] | {"scale":100000}
     assert row["remaining_fraction"]=={"numerator":7,"denominator":8}
+
+
+@pytest.mark.parametrize("direction",["bullish","bearish"])
+@pytest.mark.parametrize("combined",[False,True])
+def test_off_grid_partial_payload_respects_policy_contract(position,direction,combined):
+    management = {"target":{"kind":"REWARD_MULTIPLE","multiple":3},"partial_exit":{"at_r":1.333,"percent":25}}
+    if combined:
+        management["break_even_at_r"] = 1
+    run,intent = position(direction,management=management)
+    data = tape([ENTRY_LONG if direction=="bullish" else ENTRY_SHORT])
+    entry, = validate(run,data,intent["id"])["results"]
+    result = calculate(run,data,entry,Q+4)
+    row, = result["results"]
+    assert row["status"]=="UNREPRESENTABLE_EXIT_LEVELS"
+    if combined:
+        assert row["remaining_fraction"]=={"numerator":1,"denominator":1}
+    else:
+        assert "remaining_fraction" not in row
+    assert result["simulated_partial_exits"]==result["simulated_exits"]==0
+    assert calculate(run,data,entry,Q+4)==result

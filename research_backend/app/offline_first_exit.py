@@ -142,7 +142,7 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
                                 and quote_priority(quote)>quote_priority(entry_quote)]
     tracks_exposure = partial is not None or policy==COMBINED_POLICY
     remaining = Fraction(1)
-    if tracks_exposure:
+    if policy==COMBINED_POLICY:
         result["remaining_fraction"] = ratio(remaining)
     partial_threshold = None
     if partial:
@@ -150,7 +150,8 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
         if threshold.denominator!=1 or not min(fill["price_units"],levels["target_units"])<threshold<max(fill["price_units"],levels["target_units"]):
             return result | {"status":"UNREPRESENTABLE_EXIT_LEVELS"}
         partial_threshold = int(threshold)
-        result.update(partial_threshold_units=partial_threshold,partial_exit=None)
+        # Partial-only V1 records exposure only after validating its threshold.
+        result.update(partial_threshold_units=partial_threshold,partial_exit=None,remaining_fraction=ratio(remaining))
     active_stop = levels["stop_units"]
     if policy==COMBINED_POLICY:
         result["active_stop_units"] = active_stop

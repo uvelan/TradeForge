@@ -36,3 +36,26 @@ Reads copy blocks into a private temporary file as SHA-256 is calculated. Polars
 ```
 
 Rollback before merge by reverting the correction commit and, if necessary, the separate workflow commit. After an approved merge, revert its merge commit with mainline parent 1 through a reviewed PR. Retain immutable result rows, catalogs and provider files. Public admission remains at 160 cutoffs; historical intents await execution validation. Production recorded trading remains BLOCKED.
+
+## Partial-only V1 compatibility correction
+
+The reviewed partial-only writer at `3fcd2ec9c00101d0bc09ebac52ebe7581fb662d0` persisted UNREPRESENTABLE_EXIT_LEVELS before initializing normalized exposure. On the integration head `a7f700ced34a1df6491a001395d1074d05e0f221`, the same identity acquired an extra remaining_fraction field. Replaying either LONG or SHORT against that original row raised `ValueError: Offline exit result identity conflict`. Both cases reproduced before editing the service; the other six comparisons passed.
+
+The correction restores the original V1 serialization and retains the combined policy's initial quantity. The service still compares the entire persisted payload before returning an existing result. It never rewrites an immutable row. A noncanonical off-grid row created by the intermediate integration revision will therefore continue to fail verification if encountered.
+
+The historical-writer regression runs on a clone containing the reviewed revision. For each direction it uses a verified EURUSD entry, a 10-pip stop, 3R target and 25% partial. At 1.333R the 133.3-point offset is off-grid. The other three cases use 1.5R. Each test first commits the original writer's result, runs the current service twice on exactly the same inputs and compares the result ID, canonical UTF-8 payload and stored blob. There is exactly one row in each database after both retries.
+
+| Case, both directions | Observed result | Simulated partials / final exits |
+| --- | --- | --- |
+| 1.333R, off-grid | UNREPRESENTABLE_EXIT_LEVELS | 0 / 0 |
+| 1.5R, before touch | OPEN_AT_CUTOFF | 0 / 0 |
+| 1.5R, after partial | OPEN_AT_CUTOFF | 1 / 0 |
+| After subsequent protective stop | SIMULATED_EXIT | 1 / 1 |
+
+```powershell
+.venv/Scripts/python.exe -m pytest -q research_backend/tests/capture_integration_legacy.py -k partial_only --tb=short
+.venv/Scripts/python.exe -m pytest -q research_backend/tests/capture_integration_legacy.py research_backend/tests/test_offline_partial_exit.py research_backend/tests/test_offline_combined_management.py research_backend/tests/test_offline_management_ordering.py research_backend/tests/test_offline_break_even.py research_backend/tests/test_offline_trailing_stop.py research_backend/tests/test_offline_time_exit.py
+.venv/Scripts/python.exe -m pytest -q
+```
+
+Revert the partial-only correction commit to restore the intermediate behavior; doing so reintroduces the original-row conflict. No migration or mutation of historical rows is involved.
