@@ -50,3 +50,35 @@ Remove-Item Env:TRADEFORGE_T07_REAL_BI5
 ```
 
 The ordinary suite generates BI5 controls in an isolated database. The real run checks the original archive hash before replay. Roll back by omitting the opt-in recorded argument or reverting the T07 commit. Preserve the immutable result table and archives. No migration is required.
+
+## Re-review of the winning conflict
+
+At reviewed head `4906828f29e800d58fe91fc54c1fd4c301b37ee5`, a conflict prevented the list of selected quotes from returning to the verifier. The corrected service compares each ordered observation with the pinned BI5 prefix as it is read. A conflict at the winning priority can become an execution result only after every strictly earlier reference row has matched.
+
+Each row below uses a completed controlled historical run, the same conflicting winning prices, two genuine Parquet shards, both selection orders and two identical calls per order. Counts come from a fresh SQLite connection after each call.
+
+| Earlier observations | Reviewed service / stored rows | Corrected service / stored rows |
+| --- | --- | --- |
+| Exact | Ambiguous, zero fills / 1 | Ambiguous, zero fills / 1 |
+| Omit the prequalification observation | Ambiguous, zero fills / 1 | Rejected for missing observation / 0 |
+| Insert a lower ordinal at the winning millisecond | Ambiguous, zero fills / 1 | Rejected for extra observation / 0 |
+| Change the earlier ask volume only | Ambiguous, zero fills / 1 | Rejected for source row disagreement / 0 |
+
+The historical run, attempts, decision proofs and intent payloads matched their original stored values in all four cases. The November 13 archive again gave ordinal 2971 at 1763042121403 ms for both directions, with identical observation and modeled delivery times. Identical requests reproduced each result and fill ID.
+
+### Identifying previously written results
+
+The accepted record format and policy identity are unchanged. On an isolated database copy, list candidate results written with the opt-in recorded policy and a noncanonical physical selection:
+
+```sql
+SELECT id, run_id, intent_id, json_extract(payload, '$.status') AS status,
+       json_extract(payload, '$.recorded_evidence') AS evidence
+FROM offline_market_entry_results
+WHERE json_extract(payload, '$.identity.policy.id') = 'OFFLINE_RECORDED_MARKET_ENTRY'
+  AND json_extract(payload, '$.identity.policy.version') = 1
+  AND (json_array_length(payload, '$.recorded_evidence.partitions') > 1 OR
+       json_extract(payload, '$.recorded_evidence.partitions[0].id') <>
+       json_extract(payload, '$.recorded_evidence.source.id'));
+```
+
+The old writer did not record whether it took the conflict branch. The query conservatively includes all statuses because insufficient coverage could also mask a malformed prefix. From each row's evidence, pass exactly `source`, `source_sha256`, `partitions`, `start`, and `end` to `validate_market_entries(run_id, intent_id=intent_id, recorded=window)`. A prefix omission, addition or source disagreement identifies a result unsupported by its pins. A valid replay reuses its original ID. Missing or damaged archives leave verification unresolved. Preserve original rows for audit. A rollback to the reviewed revision reintroduces the defect. Omit the opt-in recorded argument to disable this path.

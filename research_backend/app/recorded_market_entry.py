@@ -1,4 +1,5 @@
 """Resolve a bounded archival BI5 execution window against its original import."""
+from contextlib import closing
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -6,7 +7,7 @@ from pydantic import Field, StrictInt, model_validator
 
 from .historical_import import FEED
 from .indicator_coverage import MarketSchedule, open_intervals
-from .saved_history import TickOrderError, read_tick_partitions, tick_source_manifests
+from .saved_history import TickOrderError, iter_tick_partitions, read_tick_partitions, tick_source_manifests
 from .storage import POINT_SCALES
 from .strategy_definitions import Contract
 
@@ -88,19 +89,31 @@ def resolve_window(db, spec, intent):
         shard_origins = tick_source_manifests(parts)
         if any(m["source_sha256"] != spec.source_sha256 for m in shard_origins.values()):
             raise ValueError("Partition registered to a different BI5 source")
-        try:
-            selected = read_tick_partitions(parts, source_manifests=shard_origins, period=(start, end),
-                                            through_priority=boundary, required_source=spec.source_sha256)
-        except TickOrderError as exc:
-            if boundary is None or exc.priority != boundary or following["time_ms"] > deadline:
-                raise
-            ambiguous = True
-        else:
-            if len(selected) != len(expected):
-                raise ValueError("Recorded partition selection omits or adds source observations")
-            for actual, original in zip(selected, expected, strict=True):
-                if actual != original and actual != original | {"source_sha256": spec.source_sha256}:
-                    raise ValueError("Recorded partition selection disagrees with verified BI5 source")
+        selected = iter_tick_partitions(parts, source_manifests=shard_origins, period=(start, end),
+                                       through_priority=boundary, required_source=spec.source_sha256)
+        matched = 0
+        missing_or_extra = "Recorded partition selection omits or adds source observations"
+        with closing(selected):
+            try:
+                for row in selected:
+                    if matched == len(expected):
+                        raise ValueError(missing_or_extra)
+                    original = expected[matched]
+                    if (row["time_ms"], row["source_order"]) != (original["time_ms"], original["source_order"]):
+                        raise ValueError(missing_or_extra)
+                    if row != original | {"source_sha256": spec.source_sha256}:
+                        raise ValueError("Recorded partition selection disagrees with verified BI5 source")
+                    matched += 1
+            except TickOrderError as exc:
+                if boundary is None or exc.priority != boundary or following["time_ms"] > deadline:
+                    raise
+                # The iterator may raise at the winner before yielding its row.
+                if matched < len(expected) - 1:
+                    raise ValueError(missing_or_extra) from exc
+                ambiguous = True
+            else:
+                if matched != len(expected):
+                    raise ValueError(missing_or_extra)
     intervals = []
     quotes = []
     if following:

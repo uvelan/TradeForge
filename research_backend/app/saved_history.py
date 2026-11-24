@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from contextlib import ExitStack, closing
 from datetime import UTC, datetime
 from heapq import merge
@@ -184,13 +185,18 @@ class TickOrderError(ValueError):
 
 def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execution_only=False, period=None, through_priority=None,
                          required_source=None) -> list[dict]:
+    return list(iter_tick_partitions(partitions, source_manifests=source_manifests, execution_only=execution_only,
+                                    period=period, through_priority=through_priority, required_source=required_source))
+
+
+def iter_tick_partitions(partitions: list[dict], *, source_manifests=None, execution_only=False,
+                         period=None, through_priority=None, required_source=None) -> Iterator[dict]:
     if len(partitions) > 50 or sum(part["rows_count"] for part in partitions) > TICK_REPLAY_LIMIT:
         raise ValueError("Selected tick partitions exceed the 500,000 quote replay limit or 50 files")
     if len({(p["provider"], p["feed_id"], p["symbol"], p["price_basis"]) for p in partitions}) != 1:
         raise ValueError("Incompatible tick partition source or basis")
     if source_manifests is None:
         source_manifests = tick_source_manifests(partitions)
-    result = []
     scale = None
     with ExitStack() as handles:
         # Multi-file ties need the entire source row for exact duplicate verification.
@@ -232,5 +238,4 @@ def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execu
                     scale = winner["scale"]
                 if type(scale) is not int or scale <= 0 or winner["scale"] != scale:
                     raise ValueError("Inconsistent tick price scale")
-                result.append({k: winner[k] for k in TICK_FIELDS} if execution_only else winner)
-    return result
+                yield {k: winner[k] for k in TICK_FIELDS} if execution_only else winner

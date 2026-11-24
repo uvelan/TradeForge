@@ -92,6 +92,7 @@ def test_recorded_layouts(controlled, direction, side, units):
         fill = result["fill"]
         assert (fill["time_ms"], fill["quote"]["source_order"], fill["side"], fill["price_units"]) == (
             Q+1403, 2971 if path else 1, side, units)
+        assert fill["quote"]["time_ms"] == fill["quote"]["available_at_ms"] == fill["time_ms"]
         results.append(result)
     assert results[1] == results[2]
     assert results[0]["id"] != results[1]["id"]
@@ -150,3 +151,42 @@ def test_recorded_suffix_and_retry_integrity(controlled):
         validate_market_entries(run, recorded=spec)
     with transaction() as db:
         assert db.execute("SELECT count(*) FROM offline_market_entry_results").fetchone()[0] == 1
+
+
+@pytest.mark.parametrize("prior", ["exact", "omitted", "added", "changed"])
+def test_winning_conflict_requires_verified_prefix(controlled, prior):
+    run, _ = controlled()
+    before = source_records(run)
+    spec, (anchor, winner, suffix) = prepare(generated())
+    # The inserted observation shares the winner's millisecond but precedes its ordinal.
+    earlier = {
+        "exact": [anchor],
+        "omitted": [],
+        "added": [anchor, winner | {"source_order": 0}],
+        "changed": [anchor | {"ask_volume": 2.0}],
+    }[prior]
+    shards = [shard([*earlier, winner, suffix]), shard([winner | {"bid_units": 116169}])]
+    outcomes = []
+    for parts in (shards, shards[::-1]):
+        for _ in range(2):
+            try:
+                response = validate_market_entries(run, recorded=spec | {"partitions": parts})
+            except ValueError as exc:
+                outcome = (str(exc), None, None)
+            else:
+                result, = response["results"]
+                outcome = (result["status"], response["simulated_fills"], result["id"])
+            with transaction() as db:
+                count = db.execute("SELECT count(*) FROM offline_market_entry_results").fetchone()[0]
+            outcomes.append((*outcome, count))
+    assert len(set(outcomes)) == 1
+    assert source_records(run) == before
+    status, fills, identifier, count = outcomes[0]
+    print(prior, status, fills, count)
+    if prior == "exact":
+        assert (status, fills, count) == ("AMBIGUOUS_QUOTE_ORDER", 0, 1)
+        assert identifier.startswith("ME-")
+    else:
+        reason = ("disagrees with verified BI5 source" if prior == "changed"
+                  else "omits or adds source observations")
+        assert reason in status and (fills, identifier, count) == (None, None, 0)
