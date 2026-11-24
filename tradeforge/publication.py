@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import shutil
 import sqlite3
+import stat
 from tempfile import TemporaryFile
 
 import pyarrow.parquet as pq
@@ -38,15 +39,31 @@ def encoded_partition(table, row_group_size=None):
         yield spool, checksum
 
 
-def install(spool, checksum, path):
-    # Only the transaction owner may touch this staging name. A complete stage
-    # survives a process kill immediately before rename and is reusable.
-    stage = path.with_name(f".{path.name}.{checksum}.pending")
-    if stage.is_symlink():
+def complete_stage(stage, spool):
+    """Under the owner lock, reuse a full stage or discard a verified prefix."""
+    try:
+        info = stage.lstat()
+    except FileNotFoundError:
+        return False
+    if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+            or getattr(info, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
         raise CatalogIntegrityError("Invalid publication stage")
-    if stage.exists():
-        verify_artifact(stage, checksum)
-    else:
+    with stage.open("rb") as partial:
+        if not os.path.samestat(info, os.fstat(partial.fileno())):
+            raise CatalogIntegrityError("Publication stage changed")
+        while block := partial.read(1024 * 1024):
+            if spool.read(len(block)) != block:
+                raise CatalogIntegrityError("Publication stage checksum mismatch")
+        if not spool.read(1):
+            return True
+    spool.seek(0)
+    stage.unlink()
+    return False
+
+
+def install(spool, checksum, path):
+    stage = path.with_name(f".{path.name}.{checksum}.pending")
+    if not complete_stage(stage, spool):
         output = stage.open("xb")
         try:
             with output:

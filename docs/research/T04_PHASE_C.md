@@ -42,8 +42,23 @@ The historical fixed metadata and cutoff response matched exactly. A saved signa
 .venv/Scripts/python.exe -m pytest -q
 ```
 
+## PR #32 correction evidence
+
+At reviewed head `d77143fa7e0b73acbfd3c74dd61c51b112b908a0`, a child process terminated after writing and flushing 83 bytes through each real adapter. Each catalog showed zero receipts and zero datasets, but both identical retries under test failed checksum verification on the existing stage. Separately, catching an injected staging ENOSPC inside a research import and committing the enclosing transaction persisted one receipt, zero datasets, and the unrelated row.
+
+On the correction, the same interrupted writes started at 0 receipts / 0 datasets. Two identical requests per adapter produced 1 receipt / 1 readable dataset with stable metadata, no pending stage, and byte-identical Parquet to an independent clean publication:
+
+| Synthetic fixture | Recovered and clean SHA-256 |
+|---|---|
+| Fixed M1 | `971a977835511f1676485ebfbbbff266e9e07a406c7a20d48f4b6cb6d3a8a5f4` |
+| Research M1 | `e833af390c98bb4a69c879cdc934e60d1fec1486a2f87a699b56cf46f76baa84` |
+
+The owner compares the stage with the request's verified spool in bounded blocks. A complete stage is reusable. A matching prefix can be unlinked and recreated exclusively. Directories, links and divergent stage bytes fail closed. Final-file mismatches continue to fail verification.
+
+The research adapter uses a savepoint inside a supplied connection's transaction. After the caller catches ENOSPC and commits, a fresh connection sees the unrelated row and 0 receipts / 0 datasets. Retrying twice yields 1 / 1. Explicit caller rollback after a successful write also yields 0 / 0; retry verifies and adopts the complete file. These isolated tests cover new writes. They do not repair dangling receipts committed by the reviewed implementation.
+
 ## Rollback and limits
 
-Pause ingestion. Finish any interrupted fixed projection using an identical retry on this version. Preserve the owner database, compatibility database and files, then run the PR #31 release with ingestion paused for read-only access. Avoid simultaneous old and new writers. Resume canonical ingestion by redeploying this version. Never overwrite a mismatched file as part of recovery. A torn stage from an untested interruption mid-copy requires inspection if its checksum fails. Reserve temporary space for the encoded spool plus the staged file. The kill tests cover process failure on the local filesystem; controller failure and power-loss durability on production storage require separate validation.
+Pause ingestion. Finish any interrupted fixed projection using an identical retry on this version. Preserve the owner database, compatibility database and files, then run the PR #31 release with ingestion paused for read-only access. Avoid simultaneous old and new writers. Resume canonical ingestion by redeploying this version. Never overwrite a mismatched file as part of recovery. An identical retry can replace a private stage whose bytes match a strict prefix of the encoded artifact. Inspect a mismatched stage or final file before taking any recovery action. Reserve temporary space for the encoded spool plus the staged file. The kill tests cover process failure on the local filesystem; controller failure and power-loss durability on production storage require separate validation.
 
 Public admission remains 160 cutoffs, historical intents retain AWAITING_EXECUTION_VALIDATION and production recorded trading remains BLOCKED.

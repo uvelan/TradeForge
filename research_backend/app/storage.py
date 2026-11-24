@@ -1,6 +1,6 @@
 """Immutable Parquet partitions with separate SQLite metadata registration."""
 from __future__ import annotations
-from contextlib import nullcontext
+from contextlib import contextmanager
 from datetime import datetime,timezone,timedelta
 import hashlib
 import json
@@ -11,6 +11,28 @@ import re
 from pathlib import Path
 from .config import MARKET_DIR
 from .db import transaction, utc_now
+
+
+@contextmanager
+def _partition_transaction(connection):
+    if connection is None:
+        with transaction() as db:
+            db.execute("BEGIN IMMEDIATE")
+            yield db
+        return
+
+    # Releasing the savepoint must leave final commit authority with the caller.
+    if not connection.in_transaction:
+        connection.execute("BEGIN IMMEDIATE")
+    connection.execute("SAVEPOINT research_partition_write")
+    try:
+        yield connection
+        connection.execute("RELEASE research_partition_write")
+    except BaseException:
+        if connection.in_transaction:
+            connection.execute("ROLLBACK TO research_partition_write")
+            connection.execute("RELEASE research_partition_write")
+        raise
 
 
 def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|None,price_basis:str,records:list[dict], *, connection=None, row_group_size=None)->dict:
@@ -43,9 +65,7 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
         identity = json.dumps([provider, feed_id, symbol, kind, timeframe, price_basis, digest, 1])
         new_id = hashlib.sha256(identity.encode()).hexdigest()
         path = folder/f'part-{new_id}.parquet'
-        with (transaction() if connection is None else nullcontext(connection)) as db:
-            if not db.in_transaction:
-                db.execute("BEGIN IMMEDIATE")
+        with _partition_transaction(connection) as db:
             existing = db.execute("""SELECT * FROM datasets
                 WHERE provider=? AND feed_id=? AND symbol=? AND kind=? AND timeframe IS ?
                 AND price_basis=? AND sha256=? ORDER BY created_at LIMIT 1""",

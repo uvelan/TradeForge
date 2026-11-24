@@ -66,6 +66,13 @@ def child():
     root, lane, point = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
     db.DATABASE = root/"research/tradeforge.sqlite3"
     storage.MARKET_DIR = root/"research/market"
+    if point == "mid_copy":
+        def crash_during_copy(src, dst, **kwargs):
+            dst.write(src.read(83))
+            dst.flush()
+            os.fsync(dst.fileno())
+            os._exit(75)
+        publication.shutil.copyfileobj = crash_during_copy
     rename = os.replace
     def crash_at_rename(src, dest):
         if point == "before_rename":
@@ -132,6 +139,102 @@ def test_stage_failure(tmp_path,monkeypatch,lane,failure):
     assert not list(tmp_path.rglob("*.parquet")) and not list(tmp_path.rglob("*.pending"))
     key = write(tmp_path,lane)
     assert read(tmp_path,lane,key)[1] and counts(tmp_path,lane) == (1,1)
+
+
+@pytest.mark.parametrize("lane", ["fixed", "research"])
+def test_torn_stage(tmp_path, monkeypatch, lane):
+    reference = tmp_path / "reference"
+    reference.mkdir()
+    configure(reference, monkeypatch)
+    ref_key = write(reference, lane)
+    ref_record, ref_rows = read(reference, lane, ref_key)
+    expected = next(reference.rglob("*.parquet")).read_bytes()
+
+    root = tmp_path / "interrupted"
+    root.mkdir()
+    configure(root, monkeypatch)
+    code = "import runpy; runpy.run_path('tests/test_partition_publication.py',run_name='__main__')"
+    result = subprocess.run([sys.executable, "-c", code, str(root), lane, "mid_copy"])
+    assert result.returncode == 75
+    stage, = root.rglob("*.pending")
+    assert stage.read_bytes() == expected[:83] and len(expected) > 83
+    assert counts(root, lane) == (0, 0)
+    assert not list(root.rglob("*.parquet"))
+    assert write(root, lane) == ref_key
+    record, rows = read(root, lane, ref_key)
+    assert rows == ref_rows and record["sha256"] == ref_record["sha256"]
+    assert write(root, lane) == ref_key
+    assert read(root, lane, ref_key) == (record, rows)
+    assert counts(root, lane) == (1, 1)
+    assert not list(root.rglob("*.pending"))
+    assert next(root.rglob("*.parquet")).read_bytes() == expected
+    print("torn stage recovered", lane, record["sha256"])
+
+
+def test_caught_failure_inside_import(tmp_path, monkeypatch):
+    configure(tmp_path, monkeypatch)
+    def fail(src, dst, **kwargs):
+        dst.write(src.read(83))
+        raise OSError(errno.ENOSPC, "stage full")
+    with db.transaction() as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute("CREATE TABLE unrelated(value)")
+        conn.execute("INSERT INTO unrelated VALUES(123)")
+        with monkeypatch.context() as patch:
+            patch.setattr(publication.shutil, "copyfileobj", fail)
+            with pytest.raises(OSError, match="stage full"):
+                write(tmp_path, "research", connection=conn)
+    assert db.one("SELECT value FROM unrelated")["value"] == 123
+    assert counts(tmp_path, "research") == (0, 0)
+    key = write(tmp_path, "research")
+    assert write(tmp_path, "research") == key
+    assert read(tmp_path, "research", key)[1] and counts(tmp_path, "research") == (1, 1)
+
+
+def test_caller_rolls_back_successful_publication(tmp_path, monkeypatch):
+    configure(tmp_path, monkeypatch)
+    with db.transaction() as conn:
+        key = write(tmp_path, "research", connection=conn)
+        assert conn.execute("SELECT count(*) FROM partition_publications_v1").fetchone()[0] == 1
+        assert conn.execute("SELECT count(*) FROM datasets").fetchone()[0] == 1
+        conn.rollback()
+    assert counts(tmp_path, "research") == (0, 0)
+    assert write(tmp_path, "research") == key
+    assert counts(tmp_path, "research") == (1, 1)
+
+
+@pytest.mark.parametrize("obstacle", ["directory", "hardlink", "different-bytes", "conflicting-final"])
+def test_refuse_unsafe_recovery(tmp_path, monkeypatch, obstacle):
+    configure(tmp_path, monkeypatch)
+    with db.transaction() as conn:
+        write(tmp_path, "research", connection=conn)
+        conn.rollback()
+    final, = tmp_path.rglob("*.parquet")
+    original = final.read_bytes()
+    checksum = hashlib.sha256(original).hexdigest()
+    stage = final.with_name(f".{final.name}.{checksum}.pending")
+    final.unlink()
+    if obstacle == "directory":
+        stage.mkdir()
+    elif obstacle == "hardlink":
+        external = tmp_path / "independent-file"
+        external.write_bytes(original[:83])
+        os.link(external, stage)
+    elif obstacle == "different-bytes":
+        stage.write_bytes(b"wrong")
+    else:
+        final.write_bytes(b"wrong")
+    with pytest.raises(RuntimeError, match="UNTRUSTED"):
+        write(tmp_path, "research")
+    assert counts(tmp_path, "research") == (0, 0)
+    if obstacle == "conflicting-final":
+        assert final.read_bytes() == b"wrong"
+    elif obstacle == "hardlink":
+        assert stage.samefile(external) and external.read_bytes() == original[:83]
+    elif obstacle == "directory":
+        assert stage.is_dir()
+    else:
+        assert stage.read_bytes() == b"wrong"
 
 
 def test_sqlite_full_aborts_outer_import(tmp_path,monkeypatch):
