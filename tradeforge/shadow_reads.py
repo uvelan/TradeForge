@@ -31,7 +31,7 @@ class CandleResolver:
         return [dict(row) for row in self.source.execute(query, params)]
 
     @contextmanager
-    def artifact(self, entry):
+    def artifact(self, entry, *, max_rows=None):
         row = dict(entry)
         rowid = row.pop("_snapshot_rowid", None)
         key = row["id"]
@@ -64,6 +64,8 @@ class CandleResolver:
             required["source_claim_id"] = key
         if any(claim.get(k) != v for k,v in required.items()):
             raise ShadowReadError("SHADOW_REVISION_BINDING_MISMATCH")
+        if max_rows is not None and claim["rows"] > max_rows:
+            raise ShadowReadError("Partition exceeds the bounded range reader")
         relative = PureWindowsPath(row["relative_path"])
         parts = relative.parts
         if relative.anchor or ".." in parts or (fixed and parts[:1] != ("market-data",)):
@@ -92,9 +94,15 @@ def open_resolver(path, catalog, database, archive_root):
     try:
         with closing(sqlite3.connect(path.resolve().as_uri()+"?mode=ro", uri=True)) as manifest:
             manifest.execute("BEGIN")
-            if (manifest.execute("PRAGMA application_id").fetchone()[0] != APP_ID or
-                    manifest.execute("PRAGMA user_version").fetchone()[0] != MANIFEST_VERSION):
+            version = manifest.execute("PRAGMA user_version").fetchone()[0]
+            if manifest.execute("PRAGMA application_id").fetchone()[0] != APP_ID:
                 raise ShadowReadError("SHADOW_MANIFEST_VERSION_MISMATCH")
+            if version == 2:
+                raise ShadowReadError("SHADOW_REGISTRATION_INCOMPLETE: rerun registration")
+            if version != MANIFEST_VERSION:
+                raise ShadowReadError("SHADOW_MANIFEST_VERSION_MISMATCH")
+            if manifest.execute("SELECT complete FROM registration WHERE id=1").fetchone() != (1,):
+                raise ShadowReadError("SHADOW_REGISTRATION_INCOMPLETE: rerun registration")
             pin = manifest.execute("SELECT database_sha256,archive_root FROM sources WHERE catalog=?",
                                    (catalog,)).fetchone()
             if not pin or Path(pin[1]) != root or has_journal():

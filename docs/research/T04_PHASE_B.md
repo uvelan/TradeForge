@@ -18,7 +18,7 @@ Remove-Item Env:TRADEFORGE_CANDLE_SHADOW_MANIFEST
 
 ## Read contract
 
-One request holds one read transaction on a Phase A V2 manifest. The resolver compares the archive root with the source pin, copies the source catalog through SHA-256 verification, and selects from that private read-only SQLite snapshot. A nonempty source WAL or rollback journal is rejected. Use offline copies; the command is intended for parity trials. Each request requires temporary disk space for the source database and the largest selected Parquet partition and rehashes both. There is no performance or live-data acceptance claim.
+One request holds one read transaction on a completed V3 shadow manifest. The resolver compares the archive root with the source pin, copies the source catalog through SHA-256 verification, and selects from that private read-only SQLite snapshot. A nonempty source WAL or rollback journal is rejected. Use offline copies; the command is intended for parity trials. Each request requires temporary disk space for the source database and the largest selected Parquet partition and rehashes both. There is no performance or live-data acceptance claim.
 
 Each selected source row must match its recorded raw evidence. Missing IDs use the pinned research rowid to retrieve their diagnostic. The resolver rejects unresolved or absent mappings, verifies the artifact contract's revision hash and source claims, confines the locator to the pinned archive root, and decodes only the bytes that passed checksum verification. An enabled failure returns an error to the caller. The parity tests replace the corresponding legacy artifact reader with a failing sentinel during every flag-on comparison.
 
@@ -54,3 +54,29 @@ Research successes cover the exclusive end, overlapping explicit and automatic r
 ```
 
 The independent Phase C decision covers writer cutover. Public admission remains 160 cutoffs, historical intents retain AWAITING_EXECUTION_VALIDATION, and production recorded trading remains BLOCKED.
+
+## Registration completion and research diagnostics
+
+**Compatibility and recovery.** Stop older registrar processes before upgrading an offline manifest. Run the same registration command against its original pinned inputs and output path. Existing V2 files require a complete reinspection before the corrected reader accepts them. The registrar upgrades eligible V1 and V2 files in place. The existing fresh-output requirement still applies to V1 files containing unidentified mappings. Artifact contract encoding and revision identity retain their existing version.
+
+The V3 schema migration and the start of an incomplete registration generation commit together. Each subsequent batch acquires SQLite write ownership and verifies that it still owns that generation. A successful pass publishes the completion marker after both catalog scans. A reader checks eligibility and reads mappings in the same SQLite transaction. A killed registrar leaves durable batches for inspection. Rerunning the identical command performs an idempotent full scan. A superseded registrar cannot write another batch or publish the final marker.
+
+**HTTP regression evidence.** The tests ran the original writer at `a9014d71e102a55e8f5b2ab38b4dfad6ea2e1430` against the committed false-complete fixture and terminated the upgrading CLI immediately after each specified SQLite commit. They also exercised a genuine V2 manifest from reviewed PR head `1b335e644ce83ae8df04c396ea4e5fc118424eab`.
+
+| Public request | Reviewed head | Corrected head |
+|---|---|---|
+| False-complete fixed row after schema commit | 200 | 409 SHADOW_REGISTRATION_INCOMPLETE |
+| Same row after one reclassification batch | 200 | 409 SHADOW_REGISTRATION_INCOMPLETE |
+| Same row after resumed registration | — | 409 FIXED_COVERAGE_MISMATCH |
+| Fully covered fixed row after resume, cutoff 1020 | Legacy 200 | 200, complete response matches legacy |
+| Research BLOB rows_count, explicit and automatic recent windows | 500 in both | 409 ROW_COUNT_MISMATCH in both |
+| Valid 2,001-row partition, same two windows | 409 bounded-reader error in both | Same 409 in both |
+
+For the two research rejection cases, test sentinels failed on either legacy fallback or attempted Parquet decoding. The tests compared the source databases and every Parquet SHA-256 before and after. [Per-file hashes from the focused run](T04_PHASE_B_upgrade_sha256.json) are grouped by writer and interruption commit or research case. SQLite creation timestamps differ across freshly generated fixtures.
+
+```powershell
+.venv/Scripts/python.exe -m pytest -qs tests/test_shadow_read_eligibility.py tests/test_shadow_candle_reads.py tests/test_shadow_manifest.py tests/test_restore_rehearsal.py tests/capture_shadow_v1_retry.py tests/capture_shadow_malformed_retry.py
+.venv/Scripts/python.exe -m pytest -q
+```
+
+**Rollback.** Unset the shadow-reader flag and restart the API. Retain the V3 manifest for audit. An older binary requires its own compatible offline output. Legacy source databases and archives need no restoration.

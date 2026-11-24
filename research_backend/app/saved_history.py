@@ -39,12 +39,12 @@ def saved_range(provider: str, symbol: str, timeframe: str, start: int, end: int
     candles = {}
     duplicates = 0
     for partition in partitions:
-        if partition["rows_count"] > 2000:
-            raise ValueError("Partition exceeds the bounded range reader")
         if resolver:
-            with resolver.artifact(partition) as snapshot:
+            with resolver.artifact(partition, max_rows=2000) as snapshot:
                 values = read_partition_tail(snapshot, 2000)
         else:
+            if partition["rows_count"] > 2000:
+                raise ValueError("Partition exceeds the bounded range reader")
             values = read_partition(partition)
         for bar in values:
             timestamp = bar["time"]

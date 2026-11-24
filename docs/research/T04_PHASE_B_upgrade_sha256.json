@@ -1,0 +1,60 @@
+{
+  "1b335e6 1": {
+    "fixed/database/trading.sqlite3": "f4ae390dbc5bd7bf2c69be81cb6dcdc2ba28d05b3b04ffe01f38c33d22a88f6c",
+    "fixed/market-data/0e/0ec33a02af2bcd45d489c7c00e0d49e36da2b260a38a6793a8cc6c35f71de83e.parquet": "a90add991f30f807075baee839f7a39c5ed836b70fbc7ec7a703aaf41ec1a7a9",
+    "fixed/market-data/2e/2ecb1e9f73aabb2a646b006b72f6f3d5c017d9815932b9438fa0e1335fca27cd.parquet": "8469d6eb259309e281a2aa8ae865b3f6e65a2ac75a9c3d2d6b26e934b8e68dc8",
+    "fixed/market-data/5b/5b1042c9d8f590e539e31dfb9f3f05a062110d61954a4226f55534e6119d10c4.parquet": "ed1f7d7eee9db71696e10a59c8177178e5d52089c3b662b2995be3c8a0243b2b",
+    "fixed/market-data/9d/9d5d471070c1ff475eebf8552e282f309e987a12795d60dee57141c8cdb8f0a4.parquet": "971a977835511f1676485ebfbbbff266e9e07a406c7a20d48f4b6cb6d3a8a5f4",
+    "fixed/market-data/false-complete-0.parquet": "ed1f7d7eee9db71696e10a59c8177178e5d52089c3b662b2995be3c8a0243b2b",
+    "fixed/market-data/false-complete-1.parquet": "8469d6eb259309e281a2aa8ae865b3f6e65a2ac75a9c3d2d6b26e934b8e68dc8",
+    "fixed/market-data/false-complete-2.parquet": "a90add991f30f807075baee839f7a39c5ed836b70fbc7ec7a703aaf41ec1a7a9",
+    "fixed/market-data/same-origin.parquet": "971a977835511f1676485ebfbbbff266e9e07a406c7a20d48f4b6cb6d3a8a5f4",
+    "research-market/dukascopy/feed=fixture/symbol=EURUSD/candles/year=1970/month=01/timeframe=M1/part-0206d5f46f952e630ba97e53857b425972d066a3c0d94353b400ba6120498bbf.parquet": "486fba5ee8ab47fa5f8d3b8ef25ddf7b4008122f91a6d5fd170a98e596dd8e7c",
+    "research-market/two-parents.parquet": "486fba5ee8ab47fa5f8d3b8ef25ddf7b4008122f91a6d5fd170a98e596dd8e7c",
+    "research-market/wrong-checksum.parquet": "486fba5ee8ab47fa5f8d3b8ef25ddf7b4008122f91a6d5fd170a98e596dd8e7c",
+    "research.sqlite": "d2d4f7739ac2665e922d77e5c42bf9c604a800d87cb56d16dc47de5d175adb08"
+  },
+  "a9014d7 1": {
+    "fixed/database/trading.sqlite3": "bad901be6b454440d85f7af5f069a51a420343d5ecf11f97932744115ff9e459",
+    "fixed/market-data/0e/0ec33a02af2bcd45d489c7c00e0d49e36da2b260a38a6793a8cc6c35f71de83e.parquet": "a90add991f30f807075baee839f7a39c5ed836b70fbc7ec7a703aaf41ec1a7a9",
+    "fixed/market-data/2e/2ecb1e9f73aabb2a646b006b72f6f3d5c017d9815932b9438fa0e1335fca27cd.parquet": "8469d6eb259309e281a2aa8ae865b3f6e65a2ac75a9c3d2d6b26e934b8e68dc8",
+    "fixed/market-data/5b/5b1042c9d8f590e539e31dfb9f3f05a062110d61954a4226f55534e6119d10c4.parquet": "ed1f7d7eee9db71696e10a59c8177178e5d52089c3b662b2995be3c8a0243b2b",
+    "fixed/market-data/9d/9d5d471070c1ff475eebf8552e282f309e987a12795d60dee57141c8cdb8f0a4.parquet": "971a977835511f1676485ebfbbbff266e9e07a406c7a20d48f4b6cb6d3a8a5f4",
+    "fixed/market-data/false-complete-0.parquet": "ed1f7d7eee9db71696e10a59c8177178e5d52089c3b662b2995be3c8a0243b2b",
+    "fixed/market-data/false-complete-1.parquet": "8469d6eb259309e281a2aa8ae865b3f6e65a2ac75a9c3d2d6b26e934b8e68dc8",
+    "fixed/market-data/false-complete-2.parquet": "a90add991f30f807075baee839f7a39c5ed836b70fbc7ec7a703aaf41ec1a7a9",
+    "fixed/market-data/same-origin.parquet": "971a977835511f1676485ebfbbbff266e9e07a406c7a20d48f4b6cb6d3a8a5f4",
+    "research-market/dukascopy/feed=fixture/symbol=EURUSD/candles/year=1970/month=01/timeframe=M1/part-0206d5f46f952e630ba97e53857b425972d066a3c0d94353b400ba6120498bbf.parquet": "486fba5ee8ab47fa5f8d3b8ef25ddf7b4008122f91a6d5fd170a98e596dd8e7c",
+    "research-market/two-parents.parquet": "486fba5ee8ab47fa5f8d3b8ef25ddf7b4008122f91a6d5fd170a98e596dd8e7c",
+    "research-market/wrong-checksum.parquet": "486fba5ee8ab47fa5f8d3b8ef25ddf7b4008122f91a6d5fd170a98e596dd8e7c",
+    "research.sqlite": "8197214181691a2b55ab06122b3a3dcaa30004ccfb7febe198e3de2752fa719e"
+  },
+  "a9014d7 2": {
+    "fixed/database/trading.sqlite3": "d55e971f482bef4d306a0c38b0113537ffdbe1a08043f2b2372b95551690114c",
+    "fixed/market-data/0e/0ec33a02af2bcd45d489c7c00e0d49e36da2b260a38a6793a8cc6c35f71de83e.parquet": "a90add991f30f807075baee839f7a39c5ed836b70fbc7ec7a703aaf41ec1a7a9",
+    "fixed/market-data/2e/2ecb1e9f73aabb2a646b006b72f6f3d5c017d9815932b9438fa0e1335fca27cd.parquet": "8469d6eb259309e281a2aa8ae865b3f6e65a2ac75a9c3d2d6b26e934b8e68dc8",
+    "fixed/market-data/5b/5b1042c9d8f590e539e31dfb9f3f05a062110d61954a4226f55534e6119d10c4.parquet": "ed1f7d7eee9db71696e10a59c8177178e5d52089c3b662b2995be3c8a0243b2b",
+    "fixed/market-data/9d/9d5d471070c1ff475eebf8552e282f309e987a12795d60dee57141c8cdb8f0a4.parquet": "971a977835511f1676485ebfbbbff266e9e07a406c7a20d48f4b6cb6d3a8a5f4",
+    "fixed/market-data/false-complete-0.parquet": "ed1f7d7eee9db71696e10a59c8177178e5d52089c3b662b2995be3c8a0243b2b",
+    "fixed/market-data/false-complete-1.parquet": "8469d6eb259309e281a2aa8ae865b3f6e65a2ac75a9c3d2d6b26e934b8e68dc8",
+    "fixed/market-data/false-complete-2.parquet": "a90add991f30f807075baee839f7a39c5ed836b70fbc7ec7a703aaf41ec1a7a9",
+    "fixed/market-data/same-origin.parquet": "971a977835511f1676485ebfbbbff266e9e07a406c7a20d48f4b6cb6d3a8a5f4",
+    "research-market/dukascopy/feed=fixture/symbol=EURUSD/candles/year=1970/month=01/timeframe=M1/part-0206d5f46f952e630ba97e53857b425972d066a3c0d94353b400ba6120498bbf.parquet": "486fba5ee8ab47fa5f8d3b8ef25ddf7b4008122f91a6d5fd170a98e596dd8e7c",
+    "research-market/two-parents.parquet": "486fba5ee8ab47fa5f8d3b8ef25ddf7b4008122f91a6d5fd170a98e596dd8e7c",
+    "research-market/wrong-checksum.parquet": "486fba5ee8ab47fa5f8d3b8ef25ddf7b4008122f91a6d5fd170a98e596dd8e7c",
+    "research.sqlite": "fe41fbfc948d992867a5f33a15fc7b0874544e9760c6fe9a7e94a3f44a754b18"
+  },
+  "blob": {
+    "fixed/database/trading.sqlite3": "7e329f68e45cd29a8a8f29e803fda6c09f543eb5d61d33a0675930781f150f3e",
+    "fixed/market-data/d4/d483229e496a92f2b34baf67e91410446fb43df66c2771ac9149aa32a2a359e3.parquet": "985102d9ef5e4e7393b066a577a6877b5c82f3c6f6ec99ccea2abd4866e78b21",
+    "market/dukascopy/feed=fixture/symbol=EURUSD/candles/year=1970/month=01/timeframe=M5/part-a974a548888affadd99194003407328b7b6d2afb09216aa1fbc0f25f9c68b214.parquet": "062dcc3d9293b43d331f6820b34e8334f5e319bcb3666e96a2080044f6ae2502",
+    "research.sqlite": "5aca7445532048cbf5dc170406199d84151d759d37c9d0a2b508429aa0b62b64"
+  },
+  "oversized": {
+    "fixed/database/trading.sqlite3": "2bfc36ae2ede0b2abed248a2920fda1b050507fe39ce0a85204638f2a6f4bac2",
+    "fixed/market-data/d4/d483229e496a92f2b34baf67e91410446fb43df66c2771ac9149aa32a2a359e3.parquet": "985102d9ef5e4e7393b066a577a6877b5c82f3c6f6ec99ccea2abd4866e78b21",
+    "market/dukascopy/feed=fixture/symbol=EURUSD/candles/year=1970/month=01/timeframe=M5/part-a974a548888affadd99194003407328b7b6d2afb09216aa1fbc0f25f9c68b214.parquet": "062dcc3d9293b43d331f6820b34e8334f5e319bcb3666e96a2080044f6ae2502",
+    "market/dukascopy/feed=fixture/symbol=GBPUSD/candles/year=1970/month=01/timeframe=M5/part-9d8c8f87eac230b18fab3dd43db3e39da05c6d317ed6c18ec4a2b904f1beeebc.parquet": "8d5a4e0fcf0f591caff7ec8a1a5754e75964ae3eab9439f321082877743bd0b7",
+    "research.sqlite": "e300eb98a4a16dec84c49fd2eeb4c77adda33fb8ff77592e90933a5b3ee216ef"
+  }
+}

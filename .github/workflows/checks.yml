@@ -12,6 +12,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Replay historical Phase A writers in the manifest upgrade regressions.
+          fetch-depth: 0
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
