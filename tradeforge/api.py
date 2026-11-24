@@ -38,7 +38,11 @@ def create_app(storage: Path | None = None, broker: MT5Connection | None = None)
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         engine = open_database(root)
-        app.state.catalog = Catalog(root, engine)
+        if research_app is None:
+            app.state.catalog = Catalog(root, engine)
+        else:
+            from research_backend.app.db import DATABASE
+            app.state.catalog = Catalog(root, engine, publication_database=DATABASE)
         logger.info("event=storage_ready")
         try:
             if research_app is None:
