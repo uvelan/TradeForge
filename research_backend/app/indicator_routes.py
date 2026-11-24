@@ -19,6 +19,7 @@ from .smt_causal import StrictSmtRequest, evaluate_strict_smt
 from .analysis_evidence import ResourceLimit
 from .db import one, rows, transaction
 from .smt_history import event_identity, record_smt, scope_key
+from .smt_monitor_lease import MonitorLease, claim, finish
 from .storage import read_partition
 from .saved_history import saved_range
 
@@ -105,7 +106,7 @@ def live_smt(request: LiveSmtCalculation):
     return capture_live_smt(request)
 
 
-def capture_live_smt(request: LiveSmtCalculation, monitor_token: int | None = None):
+def capture_live_smt(request: LiveSmtCalculation, monitor_lease: MonitorLease | None = None):
     validate_watch(request)
     step = FRAME_MIN[request.timeframe] * 60
     now = int(datetime.now(UTC).timestamp())
@@ -145,7 +146,7 @@ def capture_live_smt(request: LiveSmtCalculation, monitor_token: int | None = No
         events, scope, provenance, rules, alert_after=alert_after, capture_step=step,
         capture={"primary": [bar.model_dump() for bar in primary],
                  "comparison": [bar.model_dump() for bar in comparison]}, observed_at=now,
-        monitor_token=monitor_token,
+        monitor_lease=monitor_lease,
     )
     events = [event for event in events if event["id"] not in corrected]
     for event in events:
@@ -219,16 +220,22 @@ def poll_monitor(state: dict):
     configuration = monitor_configuration()
     if configuration is None:
         return
+    token = configuration["enabled_at"]
+    lease = claim(token)
+    if lease is None:
+        return
     now = int(datetime.now(UTC).timestamp())
     try:
-        token = configuration["enabled_at"]
         capture = LiveSmtCalculation(**{**configuration, "available_through": now,
                                        "alert_after": token // 1_000_000_000})
-        response = capture_live_smt(capture, monitor_token=token)
+        response = capture_live_smt(capture, monitor_lease=lease)
         result = {"last_poll_at": now, "error": None, "scope": response["scope"]}
     except HTTPException as error:
         result = {"last_poll_at": now, "error": str(error.detail)}
-    state.update(configuration=configuration, result=result)
+    finally:
+        current = finish(lease)
+    if current:
+        state.update(configuration=configuration, result=result)
 
 
 async def run_smt_monitor(stop: asyncio.Event, state: dict):

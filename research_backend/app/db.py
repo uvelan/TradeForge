@@ -41,6 +41,12 @@ CREATE TABLE IF NOT EXISTS smt_monitor (
     configuration TEXT NOT NULL CHECK(json_valid(configuration)),
     enabled_at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS smt_monitor_lease (
+    id INTEGER PRIMARY KEY CHECK(id=1) REFERENCES smt_monitor(id) ON DELETE CASCADE,
+    generation INTEGER NOT NULL,
+    owner TEXT NOT NULL,
+    expires_ns INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS trades (
     id TEXT PRIMARY KEY,
     symbol TEXT NOT NULL CHECK(symbol IN ('EURUSD','GBPUSD','USDJPY','XAUUSD')),

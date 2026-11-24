@@ -4,6 +4,7 @@ from hashlib import sha256
 import json
 
 from .db import transaction
+from .smt_monitor_lease import MonitorLease, owns
 
 
 def scope_key(provenance: dict, rules: dict) -> str:
@@ -56,13 +57,11 @@ def event_identity(scope: str, event: dict) -> str:
 def record_smt(events: list[dict], scope: str, provenance: dict, rules: dict, *,
                alert_after: int | None = None, capture_step: int | None = None,
                capture: dict | None = None, observed_at: int | None = None,
-               monitor_token: int | None = None) -> tuple[list[dict], set[str]]:
+               monitor_lease: MonitorLease | None = None) -> tuple[list[dict], set[str]]:
     alerts = []
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
-        if monitor_token is not None and not db.execute(
-            "SELECT 1 FROM smt_monitor WHERE id=1 AND enabled_at=?", (monitor_token,)
-        ).fetchone():
+        if monitor_lease is not None and not owns(db, monitor_lease):
             return alerts, set()
         corrected = record_source_corrections(db, scope, capture, observed_at) if capture is not None else set()
         for event in events:
