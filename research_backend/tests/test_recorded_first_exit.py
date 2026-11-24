@@ -91,3 +91,34 @@ def test_later_ordinal_at_fill_millisecond_can_exit(controlled):
     close = result["results"][0]["exit"]
     assert (close["reason"],close["price_units"],close["time_ms"],close["quote"]["source_order"])==(
         "PROTECTIVE_STOP",116174,QUAL+400,2)
+
+
+def test_pre_fill_ordinal_cannot_trigger_exit_at_same_millisecond(controlled):
+    run,_ = controlled(direction="bullish",kind="STOP",entry_price=1.16274,management=FIXED)
+    spec,rows = prepare(bi5([(-1000,116270,116273),(400,116160,116273),
+                            (400,116270,116274),(400,116575,116580)]),14,QUAL)
+    spec = spec | {"partitions":[shard(rows[:3])]}
+    saved, = validate_market_entries(run,recorded=spec)["results"]
+    assert saved["fill"]["quote"]["source_order"] == 2
+    result = validate_first_exit(run,recorded=spec,entry_result_id=saved["id"],cutoff_ms=QUAL+400)
+    close = result["results"][0]["exit"]
+    # Ordinal 1 would hit the stop if it were (incorrectly) observed after fill.
+    assert (close["reason"],close["price_units"],close["time_ms"],close["quote"]["source_order"])==(
+        "REWARD_TARGET",116575,QUAL+400,3)
+
+
+def test_recorded_first_exit_replays_entire_persisted_entry_proof(controlled):
+    from research_backend.app.analysis_evidence import canonical
+
+    run,_ = controlled(direction="bullish",management=FIXED)
+    spec,_ = prepare(bi5([(-1000,116270,116274),(400,116270,116274),(700,116165,116170)]),14,QUAL)
+    saved, = validate_market_entries(run,recorded=spec)["results"]
+    changed = saved | {"recorded_evidence": saved["recorded_evidence"] | {"following_observation_ms":QUAL+401}}
+    # Simulate a damaged test archive without changing its outer result identity.
+    with transaction() as db:
+        db.execute("DROP TRIGGER protect_offline_market_entry_results_update")
+        db.execute("UPDATE offline_market_entry_results SET payload=? WHERE id=?",
+                   (canonical(changed),saved["id"]))
+    with pytest.raises(ValueError,match="Persisted recorded entry does not match verified replay"):
+        validate_first_exit(run,recorded=spec,entry_result_id=saved["id"],cutoff_ms=QUAL+700)
+    assert len(totals()[0])==1 and not totals()[1]
