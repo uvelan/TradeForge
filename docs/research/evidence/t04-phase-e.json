@@ -1,0 +1,1387 @@
+{
+  "checkpoints": [
+    {
+      "counts": {
+        "exports": 0,
+        "fixed": 2,
+        "import_refs": 36,
+        "receipts": 0,
+        "research": 42,
+        "smt_refs": 0,
+        "smt_revisions": 130,
+        "unpinned_lanes": 260
+      },
+      "dangling_receipts": [],
+      "expected_http_rejections": [
+        {
+          "detail": "SHADOW_REGISTRATION_INCOMPLETE: rerun registration"
+        },
+        {
+          "detail": "SHADOW_REGISTRATION_INCOMPLETE: rerun registration"
+        }
+      ],
+      "files": {
+        "database/trading.sqlite3": "ada4bd670bbd60a1f6b564b73acfa4a7df3e63c65223b2e2014f5eaa8cce63a9",
+        "market-data/13/1328977ac9c7d55f83243307d6dfff54b40690d697ff31734d1566f27a0b8c62.parquet": "90439f9f45656ae735897d1da25458d62ed2f3c6df25c42f3d37512a4a572f37",
+        "market-data/6c/6c55c5d55d2808605e217e0dba957e9c0c926d3a126f12d9a5df14d21d72265c.parquet": "12fe0e24136a62f1f844202f1b08675e74aa891474b57580b8e2a83370a6d3dd",
+        "research/market/dukascopy/feed=clock-EURUSD/symbol=EURUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-4c8074e974bc4c3917dd42b60795c01efb057a50fc0ca90537903e6c88e7a78e.parquet": "227efbab59c9e8b23654b055da23e0d966190da36d56573d17cc480cf9470315",
+        "research/market/dukascopy/feed=clock-EURUSD/symbol=EURUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-a9e77d99541046a732380c9cd1354cabfc98a3187b83af77a8d16e17fd937c75.parquet": "4f73e06de4c638c7374626336a23e87166963c567ee42e4558887c758b72c82f",
+        "research/market/dukascopy/feed=clock-EURUSD/symbol=EURUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-c0140058b9ba488d025e9315307b085984a457d122f8719b33544762156dd166.parquet": "372449be9e3d5508b87e48cc9dd4fda97af2f2b33be68662a3cd2b20065b8da7",
+        "research/market/dukascopy/feed=clock-GBPUSD/symbol=GBPUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-3e5069cea4cba889a9c33d474fda1830521ac02e653cd18764786858e92da1c0.parquet": "b56a5a8293ad760afce9fdc044d51f245ab86b62a95a4ecc442d0d4947fd64fa",
+        "research/market/dukascopy/feed=clock-GBPUSD/symbol=GBPUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-48c6826566954e48bbe2ddac15822276b0edb749e75dba278f7c41b6f1f887e7.parquet": "b2375519e4d881f1f5d432f6042da5152928f8f17627512c0f874816e86f3872",
+        "research/market/dukascopy/feed=clock-GBPUSD/symbol=GBPUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-9be8025129411b0ddcb62fb1ed5e652fe31890446dc488744638a8c5b27806df.parquet": "f1613b9cac89b02cc27ed1664b84bbcf6404cfce54a84d20ea7a51ef03b8879f",
+        "research/market/dukascopy/feed=dukascopy-web-ask-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-d1fa18041afe71de34cf96e95953dbba2f2c73e5ce22b23bc5653131cc4ea967.parquet": "8fd4a2f48040ea4da6f7a8c72aa818aea2ebd583133385a1cb41da44eed3b93e",
+        "research/market/dukascopy/feed=dukascopy-web-ask-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-6a2089ea4aa8b7a5b16fc3cad2e31c200074baf2de84e97fb6554a8312f49fc6.parquet": "234a604ac993e1e637a4e7c4ad49eb92a573c53d6b2f84663300dc72035e034b",
+        "research/market/dukascopy/feed=dukascopy-web-ask-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-34e06d605e562ec0231905d6fc0fde1c8baa9c594fbb2c82e252f76319085392.parquet": "8bbcadb1dc38299e9110d337d3dcb70076a89fb373c9c88de8aebe6464487a5a",
+        "research/market/dukascopy/feed=dukascopy-web-ask-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-f027e07c491f0f6a0f13af00606f406e234356524256df19434476c54c74a639.parquet": "4ea4d80d64b6e366a5ad0ba427621c35ea404f2ba3b50bf87c8bd1c3b9ef7518",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-089975ac99528fe2eb78654bdd483d1aeca5c58883fcbecbe8f760c83a81a2f7.parquet": "40384cd7efc21b86454515001c9b539346998641195fd47fe06f849dcb60aed4",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-2bf3a4ec7a539509db3b7ce9797a8f5b7fbdee6df30aeebc14da7a19abb32c75.parquet": "6e4a82a08ab8483a613a8a4b55a80ef7b149ac75b60ad203b437d6920c2965fa",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-5857ff8df129c59dc9f92a20f85d2bb0c58225328ee4ca115a93d249e3308783.parquet": "c830c3475967a004992f22436d1f182e6b77b962cfe9360df86928d396385e96",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-5c9f312ac2a3e600df0ed7a766c3d8ec126789d26acc4bf39c601c08f948d0bc.parquet": "895da62f8035c6a4799d475e5494bff592fe657cb7d4dcf1a2edcd015a801ba8",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee.parquet": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-8ba6dbcf4cab08a5d4e4e504de792c8d46c6663ec34b4637c1525311d31764c6.parquet": "d99e5d4db40c068051b0f061fcb9ea0ed7cb2f82cbac85570246f0f3e28fc856",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-c07ba1902596db1e2d24442cb50fcfade7fc2088c21f52c2991bd367453c2ad9.parquet": "8a4607d768b0c2c3768f4034c1fa44a497fc783f1eb8791adaa9e051e11695c5",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-e2cbd6a9139b69211b80ce5c77abf267c280de63dca1a20dbcba5f89368634bd.parquet": "61ef0bbc2262b9e859f56d202de4c0777a5a6524dfd9dc261434b75721771e1d",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-690dd9a65118d99848cd7083e808b7f7cde4eee5635522961217705d71f3a958.parquet": "4e8e035ecdaa4d46f1eb88b7bd618ea2fc44cbfa3573aa66b5d4c2d362415cee",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-74da2b5a1df3f3c595d09c031e071b2a0e7a6484bb886b410423d2cb120f5997.parquet": "253e72e89a1cfda09653a7c20cb2205d87f0160b78466c3539674665c0f4a818",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-a49eb413dde18237282d271d0634db5393ea3654fc1cb2c6699bc073510c43a5.parquet": "c793040e0b9e5f8360b5f69791cbd8f20a1718c23db9d9cd1812d0b9c49b8eeb",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-b0d10e1cc14af77fc8d484bc63034a608cec654b52ce15f9a351a19b3a5352d5.parquet": "08a5fe051a312091688a780be5bcd3f72e1d97d61b862dcd5f5b1c3d5bf2f6fd",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e.parquet": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-db03af5b54618526652f0b8bac3b473d39bde1985318ba2ca37f9e9a1b0917c4.parquet": "6605e8636b2776925d41a23a94b101f39d05b38c460850f6d59d4b57870f3ec1",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-eb3af24738e240057b7f1496b7c957c96fb826ba1b2505a2dc55d05a7c0403d1.parquet": "262c4bcbbd5b7c260df1b7441664ffe7fb4beed3b2941b38ccd105b613a7ab91",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-ed2c6ccdce7de1355a21e10d0bd715f6673e454b2899b46d7c69e117cffbc951.parquet": "7f42f6d0d43fd87066aabc4470d52e6fe70a6c6cac14b3032eb9a1e25e0477f7",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-0e4cb47e35b32bb7706595c9f1916a1ff54b2cab7f28e397b6e7d95a9d7ca3da.parquet": "02c10b5d005443d762c79fd2c8c04a85029ff47e19ae074f8ffe298f808036af",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-3e207fbfef644290646375603d76552368b69778a1d0b19aeca7de721057bdd3.parquet": "c1d0413ff15f450bafec237dafd6e1008203462efe0a842abb7d763e09a0b727",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-4ee8cd31b8e13be20347d97115e493d13772c4b3f8d3fc560d3b273b5e53d419.parquet": "c9352c167a5bc7f31418734fb22f2d5b246ad4ca6a7d50d0f17225566f741ddc",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733.parquet": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-b5db8bd345060a2e25ef9dfcff470c4985cf002f75c0e7e053e8dcdc129f26d1.parquet": "a53a51f861a8231f7cf2189dbf8aed3f211ebfee29a30b5802b503ce73c2d68b",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-bc436b9c5ae4ea9589a5de76b7293c689a3ee2ead09e06d2ada1c816bf15f48e.parquet": "9faeef167f56d47d64f883660e64437d9edb536e1da8da868ea419ec5bfedaef",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-d5c1d2149080d9dead8d5dd51325e1d59f1f509a036ab30c21a6cd1790766a0c.parquet": "94f7b9623632df54c29e9bbb5d90cc0602a37ace0530b6936820daf43340dbc4",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-fa206b3f8f3b4305cb7a019d5813d4e5b35a81928382ffc1183c240372fb78ef.parquet": "1fc7759e527e0f67a4c0430234780d73bb80e0d468bcfe923053df647e5ad366",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-15b31cd0a5769f401394cda4d39f39ed86779359f120c667b68fb8a3e57c98aa.parquet": "2df341f64ff2a92d6bf5d0aed49c795ea5b78f7c9c70a97e6f907456cb252868",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0.parquet": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-257d868228b2fc313ab1e53aa2d9e47077b4eec89f8fdbf93296b18ad181741b.parquet": "6fb37f6f3308203226ff3bd917a3008d0857385b5e85a212d31361bb17c860b0",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-664754fe64aeb4c3da58c980671dc58ba28fb9d8d5628047f2e435ead83acad5.parquet": "b427ade21c11af8262cc09ecb0160f3e4932ffca2579d745be8ed3ccbef19373",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-9fc9a9e89822ef69df0f232c54234710dfa8d6e090bbaa6ce3b1de83fcdae7d6.parquet": "f685ddda306a03be57ab3fc055873eb48ae2db2819568951c0c057a129647d8c",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-c0d69de19ec548402036521818a5d51bdd2cf9e3e1787d06ed21a1d9869133ea.parquet": "2de18c43361cc2f445e7f185df6ce83772723971ef480dada2cfb685cb4add57",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-cfb19c19152cc55bc463d75a7eacf0a9f4dcd13904e3bee8fba23fe5be1ffc36.parquet": "f19187fb65e535d5da6283cc5b1b328f3de8c1bc2535af2420751bafe3328b31",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-f7f42baae5304ee21f5a11cfd2d6233338c877fa6d6b69674ff51c201d238515.parquet": "18db7664b67a1c659b8acd887c231591f7d0f83b687f703d7d97e5b88df4f14b",
+        "research/tradeforge.sqlite3": "68ff962a230b45f9ccf9a2b61add60b292b183c7dfc913de5f5ec64fc56cb2a3"
+      },
+      "parity": {
+        "fixed": 4,
+        "research": 32
+      },
+      "registration": {
+        "fixed": {
+          "inspected": 2,
+          "mapped": 2,
+          "unresolved": 0
+        },
+        "research": {
+          "inspected": 42,
+          "mapped": 36,
+          "unresolved": 6
+        }
+      },
+      "registration_rejections": [
+        [
+          "research",
+          "UNSUPPORTED_KIND",
+          6
+        ]
+      ],
+      "responses": {
+        "fixed/1328977ac9c7d55f83243307d6dfff54b40690d697ff31734d1566f27a0b8c62/1763943299": "815f5ad979fe199494aec756907635a35deef243b765bbe3d0918573f2014e6b",
+        "fixed/1328977ac9c7d55f83243307d6dfff54b40690d697ff31734d1566f27a0b8c62/1763943300": "38186a26cff2cd9aa71c8ff36f6767b9635a7d4242468f97a18cadbad0bdacd9",
+        "fixed/6c55c5d55d2808605e217e0dba957e9c0c926d3a126f12d9a5df14d21d72265c/1764028799": "42f3821999000bacc9254f87ce57d90354cc4787deed5f2c4d99a0d1ef63ccfd",
+        "fixed/6c55c5d55d2808605e217e0dba957e9c0c926d3a126f12d9a5df14d21d72265c/1764028800": "8d51b7d57065152268af9249c1784d3b210ddfe1fd95a5c1f4d6527eebbd3fb9",
+        "research/089975ac99528fe2eb78654bdd483d1aeca5c58883fcbecbe8f760c83a81a2f7": "633eb8c3cccb896373c364900711f1f340eff7a5f409e4113a2c0e2ee4686b66",
+        "research/0e4cb47e35b32bb7706595c9f1916a1ff54b2cab7f28e397b6e7d95a9d7ca3da": "b5dfee20fbb9863b13e49f1c2a6fd9e1f016dd8b54dc31224c2912c54a662bf0",
+        "research/15b31cd0a5769f401394cda4d39f39ed86779359f120c667b68fb8a3e57c98aa": "4158f498b1bd55ff57003fdc4d92090e31fa89ef59fe751b2b44469f8f012dde",
+        "research/1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0": "520c1ff403095b6bb07c6a487542b7322054b7c8c9217729935ffc569b413015",
+        "research/257d868228b2fc313ab1e53aa2d9e47077b4eec89f8fdbf93296b18ad181741b": "0485a250856ce2ccb32b7d877883b5843412c6f4871441624d433fa5f29b86cc",
+        "research/2bf3a4ec7a539509db3b7ce9797a8f5b7fbdee6df30aeebc14da7a19abb32c75": "c5ce7b8d499859d63cbff47aa2eab3f822e99da723fef5edad3816cb3b949d89",
+        "research/3e207fbfef644290646375603d76552368b69778a1d0b19aeca7de721057bdd3": "862caddb275bfdd5759ecf73efd3bce7691f99fb563e7579bf232d3846ceaf17",
+        "research/4ee8cd31b8e13be20347d97115e493d13772c4b3f8d3fc560d3b273b5e53d419": "8d0ae79793415ac79df587342c9570c6112e19a00c7c06f90292e12ff43250c9",
+        "research/5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733": "a5729c9f02384685bb305882d1838184fb87d4e32cda2240a1271bc89b7e85b8",
+        "research/5857ff8df129c59dc9f92a20f85d2bb0c58225328ee4ca115a93d249e3308783": "36f46709171ba4a34d53bf147ec80174e79d10ac04cf64c51a701a716504a7c6",
+        "research/5c9f312ac2a3e600df0ed7a766c3d8ec126789d26acc4bf39c601c08f948d0bc": "2c009531aeb81c209b2eeaba0f96de71edf9776901d53296fd7d370d47bd662d",
+        "research/664754fe64aeb4c3da58c980671dc58ba28fb9d8d5628047f2e435ead83acad5": "2d363fa6e51356f0473c0d2875246b5d87c71db32cb2a6f13dda48691ef8eeb9",
+        "research/690dd9a65118d99848cd7083e808b7f7cde4eee5635522961217705d71f3a958": "a0a28120f586a49c4fb5bd2a98b8a14554eb886ed7d211ae7098eccb412af47e",
+        "research/6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee": "c31b67fa74f635acbc686be312215ff5f2d4d4bf652d8f4d755acde71494bed7",
+        "research/74da2b5a1df3f3c595d09c031e071b2a0e7a6484bb886b410423d2cb120f5997": "f6b8283e2301cc4b5c9718251ccd74622b9b0bc96a579048f17b272f38909c02",
+        "research/8ba6dbcf4cab08a5d4e4e504de792c8d46c6663ec34b4637c1525311d31764c6": "4af12f3ed4727d902acdefaf866770659fe459fe68897583134e7e29a52f58a2",
+        "research/9fc9a9e89822ef69df0f232c54234710dfa8d6e090bbaa6ce3b1de83fcdae7d6": "4325f898daaec8bf41e40240275abdaebd390478949b5e4b1adbc8fe1efcab7c",
+        "research/a49eb413dde18237282d271d0634db5393ea3654fc1cb2c6699bc073510c43a5": "dde8d53485c80c4b31f51aa073085cb7c596d2f31230810310bad268e89f183a",
+        "research/b0d10e1cc14af77fc8d484bc63034a608cec654b52ce15f9a351a19b3a5352d5": "115ba457fcdd037616d09b071825a70aa1ea8e6fe3b6776383627de9f15e6466",
+        "research/b5db8bd345060a2e25ef9dfcff470c4985cf002f75c0e7e053e8dcdc129f26d1": "e069911f20c1dfd9aed2af4b4613f0b3f96822e3a68e874321b3557b4edccd2d",
+        "research/bc436b9c5ae4ea9589a5de76b7293c689a3ee2ead09e06d2ada1c816bf15f48e": "190ed41de0ce91713963667d1a44974706f383e7a7ea841415e0b2a4a49c594f",
+        "research/c07ba1902596db1e2d24442cb50fcfade7fc2088c21f52c2991bd367453c2ad9": "7c55a558789671ae84e92d1f76862130b4d0731fb2a6015d91c7ea379afbe62c",
+        "research/c0d69de19ec548402036521818a5d51bdd2cf9e3e1787d06ed21a1d9869133ea": "c449cbe576bad1516f3a5c036c639b9c0b11e78e5acd9460d3009a03580df662",
+        "research/ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e": "c83fff9d4a3a94c1cf890ac1161964e19b08e75adf31bee89111eddb46703a95",
+        "research/cfb19c19152cc55bc463d75a7eacf0a9f4dcd13904e3bee8fba23fe5be1ffc36": "512dcd7568f2adddc5b8213fb2542dde907b9717f9ed2bb0c8a6fab79c930b47",
+        "research/d5c1d2149080d9dead8d5dd51325e1d59f1f509a036ab30c21a6cd1790766a0c": "4a318227067887a8c312762f57278effbc25c9e0f8e509ee7523d110aabfa2cb",
+        "research/db03af5b54618526652f0b8bac3b473d39bde1985318ba2ca37f9e9a1b0917c4": "1232ceb8dbba31177a677e03ea9c553d15b5d89a64fe8cf8cb975753f911469b",
+        "research/e2cbd6a9139b69211b80ce5c77abf267c280de63dca1a20dbcba5f89368634bd": "92d0cf3640e97dfbaa7ad97a858c060788a6060bccb748b9c9a70251e8718185",
+        "research/eb3af24738e240057b7f1496b7c957c96fb826ba1b2505a2dc55d05a7c0403d1": "4f16e87991fee46c3bb32100049c7583ecdfdcb7fecf7f66fa10fb02da99fa36",
+        "research/ed2c6ccdce7de1355a21e10d0bd715f6673e454b2899b46d7c69e117cffbc951": "7d830f068e0d525089425814cacb5a523540b9d5b94756b239232fdd51d1b5fa",
+        "research/f7f42baae5304ee21f5a11cfd2d6233338c877fa6d6b69674ff51c201d238515": "faba97999354e6eaf6d2938793428c5fde05b074ce5667fc14a90e009baa7e7a",
+        "research/fa206b3f8f3b4305cb7a019d5813d4e5b35a81928382ffc1183c240372fb78ef": "6724fb2f5d1c514b088f3f0561d7053660707e0d0b581be69389c63dac39de07"
+      }
+    },
+    {
+      "counts": {
+        "exports": 0,
+        "fixed": 3,
+        "import_refs": 36,
+        "receipts": 2,
+        "research": 43,
+        "smt_refs": 0,
+        "smt_revisions": 130,
+        "unpinned_lanes": 260
+      },
+      "dangling_receipts": [],
+      "expected_http_rejections": [
+        {
+          "detail": "SHADOW_REGISTRATION_INCOMPLETE: rerun registration"
+        },
+        {
+          "detail": "SHADOW_REGISTRATION_INCOMPLETE: rerun registration"
+        }
+      ],
+      "files": {
+        "database/trading.sqlite3": "d6a022d37f1ef1bca7aa4d2b1ff56d91b6cc791b529eefb20851c797a8d07ef5",
+        "market-data/13/1328977ac9c7d55f83243307d6dfff54b40690d697ff31734d1566f27a0b8c62.parquet": "90439f9f45656ae735897d1da25458d62ed2f3c6df25c42f3d37512a4a572f37",
+        "market-data/6c/6c55c5d55d2808605e217e0dba957e9c0c926d3a126f12d9a5df14d21d72265c.parquet": "12fe0e24136a62f1f844202f1b08675e74aa891474b57580b8e2a83370a6d3dd",
+        "market-data/d4/d483229e496a92f2b34baf67e91410446fb43df66c2771ac9149aa32a2a359e3.parquet": "985102d9ef5e4e7393b066a577a6877b5c82f3c6f6ec99ccea2abd4866e78b21",
+        "research/market/dukascopy/feed=clock-EURUSD/symbol=EURUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-4c8074e974bc4c3917dd42b60795c01efb057a50fc0ca90537903e6c88e7a78e.parquet": "227efbab59c9e8b23654b055da23e0d966190da36d56573d17cc480cf9470315",
+        "research/market/dukascopy/feed=clock-EURUSD/symbol=EURUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-a9e77d99541046a732380c9cd1354cabfc98a3187b83af77a8d16e17fd937c75.parquet": "4f73e06de4c638c7374626336a23e87166963c567ee42e4558887c758b72c82f",
+        "research/market/dukascopy/feed=clock-EURUSD/symbol=EURUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-c0140058b9ba488d025e9315307b085984a457d122f8719b33544762156dd166.parquet": "372449be9e3d5508b87e48cc9dd4fda97af2f2b33be68662a3cd2b20065b8da7",
+        "research/market/dukascopy/feed=clock-GBPUSD/symbol=GBPUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-3e5069cea4cba889a9c33d474fda1830521ac02e653cd18764786858e92da1c0.parquet": "b56a5a8293ad760afce9fdc044d51f245ab86b62a95a4ecc442d0d4947fd64fa",
+        "research/market/dukascopy/feed=clock-GBPUSD/symbol=GBPUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-48c6826566954e48bbe2ddac15822276b0edb749e75dba278f7c41b6f1f887e7.parquet": "b2375519e4d881f1f5d432f6042da5152928f8f17627512c0f874816e86f3872",
+        "research/market/dukascopy/feed=clock-GBPUSD/symbol=GBPUSD/arrival_candles/year=1970/month=01/timeframe=M1/part-9be8025129411b0ddcb62fb1ed5e652fe31890446dc488744638a8c5b27806df.parquet": "f1613b9cac89b02cc27ed1664b84bbcf6404cfce54a84d20ea7a51ef03b8879f",
+        "research/market/dukascopy/feed=dukascopy-web-ask-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-d1fa18041afe71de34cf96e95953dbba2f2c73e5ce22b23bc5653131cc4ea967.parquet": "8fd4a2f48040ea4da6f7a8c72aa818aea2ebd583133385a1cb41da44eed3b93e",
+        "research/market/dukascopy/feed=dukascopy-web-ask-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-6a2089ea4aa8b7a5b16fc3cad2e31c200074baf2de84e97fb6554a8312f49fc6.parquet": "234a604ac993e1e637a4e7c4ad49eb92a573c53d6b2f84663300dc72035e034b",
+        "research/market/dukascopy/feed=dukascopy-web-ask-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-34e06d605e562ec0231905d6fc0fde1c8baa9c594fbb2c82e252f76319085392.parquet": "8bbcadb1dc38299e9110d337d3dcb70076a89fb373c9c88de8aebe6464487a5a",
+        "research/market/dukascopy/feed=dukascopy-web-ask-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-f027e07c491f0f6a0f13af00606f406e234356524256df19434476c54c74a639.parquet": "4ea4d80d64b6e366a5ad0ba427621c35ea404f2ba3b50bf87c8bd1c3b9ef7518",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-089975ac99528fe2eb78654bdd483d1aeca5c58883fcbecbe8f760c83a81a2f7.parquet": "40384cd7efc21b86454515001c9b539346998641195fd47fe06f849dcb60aed4",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-2bf3a4ec7a539509db3b7ce9797a8f5b7fbdee6df30aeebc14da7a19abb32c75.parquet": "6e4a82a08ab8483a613a8a4b55a80ef7b149ac75b60ad203b437d6920c2965fa",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-5857ff8df129c59dc9f92a20f85d2bb0c58225328ee4ca115a93d249e3308783.parquet": "c830c3475967a004992f22436d1f182e6b77b962cfe9360df86928d396385e96",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-5c9f312ac2a3e600df0ed7a766c3d8ec126789d26acc4bf39c601c08f948d0bc.parquet": "895da62f8035c6a4799d475e5494bff592fe657cb7d4dcf1a2edcd015a801ba8",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee.parquet": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-8ba6dbcf4cab08a5d4e4e504de792c8d46c6663ec34b4637c1525311d31764c6.parquet": "d99e5d4db40c068051b0f061fcb9ea0ed7cb2f82cbac85570246f0f3e28fc856",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-c07ba1902596db1e2d24442cb50fcfade7fc2088c21f52c2991bd367453c2ad9.parquet": "8a4607d768b0c2c3768f4034c1fa44a497fc783f1eb8791adaa9e051e11695c5",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M1/part-e2cbd6a9139b69211b80ce5c77abf267c280de63dca1a20dbcba5f89368634bd.parquet": "61ef0bbc2262b9e859f56d202de4c0777a5a6524dfd9dc261434b75721771e1d",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-690dd9a65118d99848cd7083e808b7f7cde4eee5635522961217705d71f3a958.parquet": "4e8e035ecdaa4d46f1eb88b7bd618ea2fc44cbfa3573aa66b5d4c2d362415cee",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-74da2b5a1df3f3c595d09c031e071b2a0e7a6484bb886b410423d2cb120f5997.parquet": "253e72e89a1cfda09653a7c20cb2205d87f0160b78466c3539674665c0f4a818",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-a49eb413dde18237282d271d0634db5393ea3654fc1cb2c6699bc073510c43a5.parquet": "c793040e0b9e5f8360b5f69791cbd8f20a1718c23db9d9cd1812d0b9c49b8eeb",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-b0d10e1cc14af77fc8d484bc63034a608cec654b52ce15f9a351a19b3a5352d5.parquet": "08a5fe051a312091688a780be5bcd3f72e1d97d61b862dcd5f5b1c3d5bf2f6fd",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e.parquet": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-db03af5b54618526652f0b8bac3b473d39bde1985318ba2ca37f9e9a1b0917c4.parquet": "6605e8636b2776925d41a23a94b101f39d05b38c460850f6d59d4b57870f3ec1",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-eb3af24738e240057b7f1496b7c957c96fb826ba1b2505a2dc55d05a7c0403d1.parquet": "262c4bcbbd5b7c260df1b7441664ffe7fb4beed3b2941b38ccd105b613a7ab91",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=EURUSD/candles/year=2026/month=11/timeframe=M5/part-ed2c6ccdce7de1355a21e10d0bd715f6673e454b2899b46d7c69e117cffbc951.parquet": "7f42f6d0d43fd87066aabc4470d52e6fe70a6c6cac14b3032eb9a1e25e0477f7",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-0e4cb47e35b32bb7706595c9f1916a1ff54b2cab7f28e397b6e7d95a9d7ca3da.parquet": "02c10b5d005443d762c79fd2c8c04a85029ff47e19ae074f8ffe298f808036af",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-3e207fbfef644290646375603d76552368b69778a1d0b19aeca7de721057bdd3.parquet": "c1d0413ff15f450bafec237dafd6e1008203462efe0a842abb7d763e09a0b727",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-4ee8cd31b8e13be20347d97115e493d13772c4b3f8d3fc560d3b273b5e53d419.parquet": "c9352c167a5bc7f31418734fb22f2d5b246ad4ca6a7d50d0f17225566f741ddc",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733.parquet": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-b5db8bd345060a2e25ef9dfcff470c4985cf002f75c0e7e053e8dcdc129f26d1.parquet": "a53a51f861a8231f7cf2189dbf8aed3f211ebfee29a30b5802b503ce73c2d68b",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-bc436b9c5ae4ea9589a5de76b7293c689a3ee2ead09e06d2ada1c816bf15f48e.parquet": "9faeef167f56d47d64f883660e64437d9edb536e1da8da868ea419ec5bfedaef",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-d5c1d2149080d9dead8d5dd51325e1d59f1f509a036ab30c21a6cd1790766a0c.parquet": "94f7b9623632df54c29e9bbb5d90cc0602a37ace0530b6936820daf43340dbc4",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M1/part-fa206b3f8f3b4305cb7a019d5813d4e5b35a81928382ffc1183c240372fb78ef.parquet": "1fc7759e527e0f67a4c0430234780d73bb80e0d468bcfe923053df647e5ad366",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-15b31cd0a5769f401394cda4d39f39ed86779359f120c667b68fb8a3e57c98aa.parquet": "2df341f64ff2a92d6bf5d0aed49c795ea5b78f7c9c70a97e6f907456cb252868",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0.parquet": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-257d868228b2fc313ab1e53aa2d9e47077b4eec89f8fdbf93296b18ad181741b.parquet": "6fb37f6f3308203226ff3bd917a3008d0857385b5e85a212d31361bb17c860b0",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-664754fe64aeb4c3da58c980671dc58ba28fb9d8d5628047f2e435ead83acad5.parquet": "b427ade21c11af8262cc09ecb0160f3e4932ffca2579d745be8ed3ccbef19373",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-9fc9a9e89822ef69df0f232c54234710dfa8d6e090bbaa6ce3b1de83fcdae7d6.parquet": "f685ddda306a03be57ab3fc055873eb48ae2db2819568951c0c057a129647d8c",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-c0d69de19ec548402036521818a5d51bdd2cf9e3e1787d06ed21a1d9869133ea.parquet": "2de18c43361cc2f445e7f185df6ce83772723971ef480dada2cfb685cb4add57",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-cfb19c19152cc55bc463d75a7eacf0a9f4dcd13904e3bee8fba23fe5be1ffc36.parquet": "f19187fb65e535d5da6283cc5b1b328f3de8c1bc2535af2420751bafe3328b31",
+        "research/market/dukascopy/feed=dukascopy-web-m1-v1/symbol=GBPUSD/candles/year=2026/month=11/timeframe=M5/part-f7f42baae5304ee21f5a11cfd2d6233338c877fa6d6b69674ff51c201d238515.parquet": "18db7664b67a1c659b8acd887c231591f7d0f83b687f703d7d97e5b88df4f14b",
+        "research/market/dukascopy/feed=phase-e-fixture/symbol=EURUSD/candles/year=1970/month=01/timeframe=M5/part-930f420c101b74f223dec05cd33df0bdca1dc67503088f4d98d53f46328cc63e.parquet": "062dcc3d9293b43d331f6820b34e8334f5e319bcb3666e96a2080044f6ae2502",
+        "research/tradeforge.sqlite3": "7498b88f6a19d80fd23022362b1820517e9e4708b772549431ada231728a2fa3"
+      },
+      "parity": {
+        "fixed": 6,
+        "research": 33
+      },
+      "registration": {
+        "fixed": {
+          "inspected": 3,
+          "mapped": 3,
+          "unresolved": 0
+        },
+        "research": {
+          "inspected": 43,
+          "mapped": 37,
+          "unresolved": 6
+        }
+      },
+      "registration_rejections": [
+        [
+          "research",
+          "UNSUPPORTED_KIND",
+          6
+        ]
+      ],
+      "responses": {
+        "fixed/1328977ac9c7d55f83243307d6dfff54b40690d697ff31734d1566f27a0b8c62/1763943299": "815f5ad979fe199494aec756907635a35deef243b765bbe3d0918573f2014e6b",
+        "fixed/1328977ac9c7d55f83243307d6dfff54b40690d697ff31734d1566f27a0b8c62/1763943300": "38186a26cff2cd9aa71c8ff36f6767b9635a7d4242468f97a18cadbad0bdacd9",
+        "fixed/6c55c5d55d2808605e217e0dba957e9c0c926d3a126f12d9a5df14d21d72265c/1764028799": "42f3821999000bacc9254f87ce57d90354cc4787deed5f2c4d99a0d1ef63ccfd",
+        "fixed/6c55c5d55d2808605e217e0dba957e9c0c926d3a126f12d9a5df14d21d72265c/1764028800": "8d51b7d57065152268af9249c1784d3b210ddfe1fd95a5c1f4d6527eebbd3fb9",
+        "fixed/d483229e496a92f2b34baf67e91410446fb43df66c2771ac9149aa32a2a359e3/36299": "ad5e6f85ceea1cf15122152ceaaca44fb35fa37ee3b7edd06cac9a7156e490d6",
+        "fixed/d483229e496a92f2b34baf67e91410446fb43df66c2771ac9149aa32a2a359e3/36300": "0fb891b797d872b9109719c976606fb83740620e98745b9255a94fca24e3e590",
+        "research/089975ac99528fe2eb78654bdd483d1aeca5c58883fcbecbe8f760c83a81a2f7": "633eb8c3cccb896373c364900711f1f340eff7a5f409e4113a2c0e2ee4686b66",
+        "research/0e4cb47e35b32bb7706595c9f1916a1ff54b2cab7f28e397b6e7d95a9d7ca3da": "b5dfee20fbb9863b13e49f1c2a6fd9e1f016dd8b54dc31224c2912c54a662bf0",
+        "research/15b31cd0a5769f401394cda4d39f39ed86779359f120c667b68fb8a3e57c98aa": "4158f498b1bd55ff57003fdc4d92090e31fa89ef59fe751b2b44469f8f012dde",
+        "research/1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0": "520c1ff403095b6bb07c6a487542b7322054b7c8c9217729935ffc569b413015",
+        "research/257d868228b2fc313ab1e53aa2d9e47077b4eec89f8fdbf93296b18ad181741b": "0485a250856ce2ccb32b7d877883b5843412c6f4871441624d433fa5f29b86cc",
+        "research/2bf3a4ec7a539509db3b7ce9797a8f5b7fbdee6df30aeebc14da7a19abb32c75": "c5ce7b8d499859d63cbff47aa2eab3f822e99da723fef5edad3816cb3b949d89",
+        "research/3e207fbfef644290646375603d76552368b69778a1d0b19aeca7de721057bdd3": "862caddb275bfdd5759ecf73efd3bce7691f99fb563e7579bf232d3846ceaf17",
+        "research/4ee8cd31b8e13be20347d97115e493d13772c4b3f8d3fc560d3b273b5e53d419": "8d0ae79793415ac79df587342c9570c6112e19a00c7c06f90292e12ff43250c9",
+        "research/5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733": "a5729c9f02384685bb305882d1838184fb87d4e32cda2240a1271bc89b7e85b8",
+        "research/5857ff8df129c59dc9f92a20f85d2bb0c58225328ee4ca115a93d249e3308783": "36f46709171ba4a34d53bf147ec80174e79d10ac04cf64c51a701a716504a7c6",
+        "research/5c9f312ac2a3e600df0ed7a766c3d8ec126789d26acc4bf39c601c08f948d0bc": "2c009531aeb81c209b2eeaba0f96de71edf9776901d53296fd7d370d47bd662d",
+        "research/664754fe64aeb4c3da58c980671dc58ba28fb9d8d5628047f2e435ead83acad5": "2d363fa6e51356f0473c0d2875246b5d87c71db32cb2a6f13dda48691ef8eeb9",
+        "research/690dd9a65118d99848cd7083e808b7f7cde4eee5635522961217705d71f3a958": "a0a28120f586a49c4fb5bd2a98b8a14554eb886ed7d211ae7098eccb412af47e",
+        "research/6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee": "c31b67fa74f635acbc686be312215ff5f2d4d4bf652d8f4d755acde71494bed7",
+        "research/74da2b5a1df3f3c595d09c031e071b2a0e7a6484bb886b410423d2cb120f5997": "f6b8283e2301cc4b5c9718251ccd74622b9b0bc96a579048f17b272f38909c02",
+        "research/8ba6dbcf4cab08a5d4e4e504de792c8d46c6663ec34b4637c1525311d31764c6": "4af12f3ed4727d902acdefaf866770659fe459fe68897583134e7e29a52f58a2",
+        "research/930f420c101b74f223dec05cd33df0bdca1dc67503088f4d98d53f46328cc63e": "9edb2540b9f6de06061041de26edf33f7bf82143f45a2579e7ea165d0803942a",
+        "research/9fc9a9e89822ef69df0f232c54234710dfa8d6e090bbaa6ce3b1de83fcdae7d6": "4325f898daaec8bf41e40240275abdaebd390478949b5e4b1adbc8fe1efcab7c",
+        "research/a49eb413dde18237282d271d0634db5393ea3654fc1cb2c6699bc073510c43a5": "dde8d53485c80c4b31f51aa073085cb7c596d2f31230810310bad268e89f183a",
+        "research/b0d10e1cc14af77fc8d484bc63034a608cec654b52ce15f9a351a19b3a5352d5": "115ba457fcdd037616d09b071825a70aa1ea8e6fe3b6776383627de9f15e6466",
+        "research/b5db8bd345060a2e25ef9dfcff470c4985cf002f75c0e7e053e8dcdc129f26d1": "e069911f20c1dfd9aed2af4b4613f0b3f96822e3a68e874321b3557b4edccd2d",
+        "research/bc436b9c5ae4ea9589a5de76b7293c689a3ee2ead09e06d2ada1c816bf15f48e": "190ed41de0ce91713963667d1a44974706f383e7a7ea841415e0b2a4a49c594f",
+        "research/c07ba1902596db1e2d24442cb50fcfade7fc2088c21f52c2991bd367453c2ad9": "7c55a558789671ae84e92d1f76862130b4d0731fb2a6015d91c7ea379afbe62c",
+        "research/c0d69de19ec548402036521818a5d51bdd2cf9e3e1787d06ed21a1d9869133ea": "c449cbe576bad1516f3a5c036c639b9c0b11e78e5acd9460d3009a03580df662",
+        "research/ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e": "c83fff9d4a3a94c1cf890ac1161964e19b08e75adf31bee89111eddb46703a95",
+        "research/cfb19c19152cc55bc463d75a7eacf0a9f4dcd13904e3bee8fba23fe5be1ffc36": "512dcd7568f2adddc5b8213fb2542dde907b9717f9ed2bb0c8a6fab79c930b47",
+        "research/d5c1d2149080d9dead8d5dd51325e1d59f1f509a036ab30c21a6cd1790766a0c": "4a318227067887a8c312762f57278effbc25c9e0f8e509ee7523d110aabfa2cb",
+        "research/db03af5b54618526652f0b8bac3b473d39bde1985318ba2ca37f9e9a1b0917c4": "1232ceb8dbba31177a677e03ea9c553d15b5d89a64fe8cf8cb975753f911469b",
+        "research/e2cbd6a9139b69211b80ce5c77abf267c280de63dca1a20dbcba5f89368634bd": "92d0cf3640e97dfbaa7ad97a858c060788a6060bccb748b9c9a70251e8718185",
+        "research/eb3af24738e240057b7f1496b7c957c96fb826ba1b2505a2dc55d05a7c0403d1": "4f16e87991fee46c3bb32100049c7583ecdfdcb7fecf7f66fa10fb02da99fa36",
+        "research/ed2c6ccdce7de1355a21e10d0bd715f6673e454b2899b46d7c69e117cffbc951": "7d830f068e0d525089425814cacb5a523540b9d5b94756b239232fdd51d1b5fa",
+        "research/f7f42baae5304ee21f5a11cfd2d6233338c877fa6d6b69674ff51c201d238515": "faba97999354e6eaf6d2938793428c5fde05b074ce5667fc14a90e009baa7e7a",
+        "research/fa206b3f8f3b4305cb7a019d5813d4e5b35a81928382ffc1183c240372fb78ef": "6724fb2f5d1c514b088f3f0561d7053660707e0d0b581be69389c63dac39de07"
+      }
+    }
+  ],
+  "payloads": {
+    "0485a250856ce2ccb32b7d877883b5843412c6f4871441624d433fa5f29b86cc": {
+      "candles": [
+        {
+          "close": 1.31984,
+          "high": 1.3205,
+          "low": 1.31981,
+          "open": 1.32046,
+          "time": 1794960000,
+          "volume": 271680000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794960300,
+        "gaps": [],
+        "start": 1794960000,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "257d868228b2fc313ab1e53aa2d9e47077b4eec89f8fdbf93296b18ad181741b",
+          "sha256": "6fb37f6f3308203226ff3bd917a3008d0857385b5e85a212d31361bb17c860b0"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "0fb891b797d872b9109719c976606fb83740620e98745b9255a94fca24e3e590": {
+      "candles": [
+        {
+          "available_at": 36300,
+          "close": 110311,
+          "high": 110312,
+          "low": 110308,
+          "open": 110310,
+          "time": 36000
+        }
+      ],
+      "dataset": {
+        "acquired_utc": "2026-11-24T11:28:25.848060+00:00",
+        "end_utc": 36600,
+        "feed": "deterministic-eurusd-v1",
+        "id": "d483229e496a92f2b34baf67e91410446fb43df66c2771ac9149aa32a2a359e3",
+        "price_basis": "synthetic_bid",
+        "price_scale": 100000,
+        "provider": "simulator",
+        "relative_path": "market-data/d4/d483229e496a92f2b34baf67e91410446fb43df66c2771ac9149aa32a2a359e3.parquet",
+        "row_count": 2,
+        "schema_version": 1,
+        "sha256": "985102d9ef5e4e7393b066a577a6877b5c82f3c6f6ec99ccea2abd4866e78b21",
+        "start_utc": 36000,
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "validation_status": "VERIFIED"
+      }
+    },
+    "115ba457fcdd037616d09b071825a70aa1ea8e6fe3b6776383627de9f15e6466": {
+      "candles": [
+        {
+          "close": 1.10918,
+          "high": 1.10958,
+          "low": 1.10913,
+          "open": 1.10943,
+          "time": 1794441600,
+          "volume": 557500000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794441900,
+        "gaps": [],
+        "start": 1794441600,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "b0d10e1cc14af77fc8d484bc63034a608cec654b52ce15f9a351a19b3a5352d5",
+          "sha256": "08a5fe051a312091688a780be5bcd3f72e1d97d61b862dcd5f5b1c3d5bf2f6fd"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "1232ceb8dbba31177a677e03ea9c553d15b5d89a64fe8cf8cb975753f911469b": {
+      "candles": [
+        {
+          "close": 1.09844,
+          "high": 1.09928,
+          "low": 1.09844,
+          "open": 1.09925,
+          "time": 1794960000,
+          "volume": 1210730000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794960300,
+        "gaps": [],
+        "start": 1794960000,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "db03af5b54618526652f0b8bac3b473d39bde1985318ba2ca37f9e9a1b0917c4",
+          "sha256": "6605e8636b2776925d41a23a94b101f39d05b38c460850f6d59d4b57870f3ec1"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "190ed41de0ce91713963667d1a44974706f383e7a7ea841415e0b2a4a49c594f": {
+      "candles": [
+        {
+          "close": 1.32035,
+          "high": 1.3205,
+          "low": 1.32028,
+          "open": 1.32046,
+          "time": 1794960000,
+          "volume": 61670000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794960060,
+        "gaps": [],
+        "start": 1794960000,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "bc436b9c5ae4ea9589a5de76b7293c689a3ee2ead09e06d2ada1c816bf15f48e",
+          "sha256": "9faeef167f56d47d64f883660e64437d9edb536e1da8da868ea419ec5bfedaef"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "2c009531aeb81c209b2eeaba0f96de71edf9776901d53296fd7d370d47bd662d": {
+      "candles": [
+        {
+          "close": 1.10256,
+          "high": 1.10261,
+          "low": 1.10243,
+          "open": 1.10247,
+          "time": 1794787200,
+          "volume": 100980000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794787260,
+        "gaps": [],
+        "start": 1794787200,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "5c9f312ac2a3e600df0ed7a766c3d8ec126789d26acc4bf39c601c08f948d0bc",
+          "sha256": "895da62f8035c6a4799d475e5494bff592fe657cb7d4dcf1a2edcd015a801ba8"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "2d363fa6e51356f0473c0d2875246b5d87c71db32cb2a6f13dda48691ef8eeb9": {
+      "candles": [
+        {
+          "close": 1.33465,
+          "high": 1.33481,
+          "low": 1.33461,
+          "open": 1.33478,
+          "time": 1794355200,
+          "volume": 296640000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794355500,
+        "gaps": [],
+        "start": 1794355200,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "664754fe64aeb4c3da58c980671dc58ba28fb9d8d5628047f2e435ead83acad5",
+          "sha256": "b427ade21c11af8262cc09ecb0160f3e4932ffca2579d745be8ed3ccbef19373"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "36f46709171ba4a34d53bf147ec80174e79d10ac04cf64c51a701a716504a7c6": {
+      "candles": [
+        {
+          "close": 1.11479,
+          "high": 1.11489,
+          "low": 1.11468,
+          "open": 1.1147,
+          "time": 1794182400,
+          "volume": 185860000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794182460,
+        "gaps": [],
+        "start": 1794182400,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "5857ff8df129c59dc9f92a20f85d2bb0c58225328ee4ca115a93d249e3308783",
+          "sha256": "c830c3475967a004992f22436d1f182e6b77b962cfe9360df86928d396385e96"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "38186a26cff2cd9aa71c8ff36f6767b9635a7d4242468f97a18cadbad0bdacd9": {
+      "candles": [
+        {
+          "available_at": 1763943300,
+          "close": 108537,
+          "high": 108542,
+          "low": 108528,
+          "open": 108539,
+          "time": 1763942400
+        }
+      ],
+      "dataset": {
+        "acquired_utc": "2026-11-14T14:09:21.832184+00:00",
+        "end_utc": 1764115200,
+        "feed": "deterministic-eurusd-v1",
+        "id": "1328977ac9c7d55f83243307d6dfff54b40690d697ff31734d1566f27a0b8c62",
+        "price_basis": "synthetic_bid",
+        "price_scale": 100000,
+        "provider": "simulator",
+        "relative_path": "market-data/13/1328977ac9c7d55f83243307d6dfff54b40690d697ff31734d1566f27a0b8c62.parquet",
+        "row_count": 192,
+        "schema_version": 1,
+        "sha256": "90439f9f45656ae735897d1da25458d62ed2f3c6df25c42f3d37512a4a572f37",
+        "start_utc": 1763942400,
+        "symbol": "EURUSD",
+        "timeframe": "M15",
+        "validation_status": "VERIFIED"
+      }
+    },
+    "4158f498b1bd55ff57003fdc4d92090e31fa89ef59fe751b2b44469f8f012dde": {
+      "candles": [
+        {
+          "close": 1.31858,
+          "high": 1.31864,
+          "low": 1.31829,
+          "open": 1.3184,
+          "time": 1794873600,
+          "volume": 152270000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794873900,
+        "gaps": [],
+        "start": 1794873600,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "15b31cd0a5769f401394cda4d39f39ed86779359f120c667b68fb8a3e57c98aa",
+          "sha256": "2df341f64ff2a92d6bf5d0aed49c795ea5b78f7c9c70a97e6f907456cb252868"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "42f3821999000bacc9254f87ce57d90354cc4787deed5f2c4d99a0d1ef63ccfd": {
+      "candles": [],
+      "dataset": {
+        "acquired_utc": "2026-11-14T14:10:41.672391+00:00",
+        "end_utc": 1764115200,
+        "feed": "deterministic-eurusd-v1",
+        "id": "6c55c5d55d2808605e217e0dba957e9c0c926d3a126f12d9a5df14d21d72265c",
+        "price_basis": "synthetic_bid",
+        "price_scale": 100000,
+        "provider": "simulator",
+        "relative_path": "market-data/6c/6c55c5d55d2808605e217e0dba957e9c0c926d3a126f12d9a5df14d21d72265c.parquet",
+        "row_count": 2,
+        "schema_version": 1,
+        "sha256": "12fe0e24136a62f1f844202f1b08675e74aa891474b57580b8e2a83370a6d3dd",
+        "start_utc": 1763942400,
+        "symbol": "EURUSD",
+        "timeframe": "D1",
+        "validation_status": "VERIFIED"
+      }
+    },
+    "4325f898daaec8bf41e40240275abdaebd390478949b5e4b1adbc8fe1efcab7c": {
+      "candles": [
+        {
+          "close": 1.34399,
+          "high": 1.34414,
+          "low": 1.34399,
+          "open": 1.34406,
+          "time": 1794268800,
+          "volume": 236620000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794269100,
+        "gaps": [],
+        "start": 1794268800,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "9fc9a9e89822ef69df0f232c54234710dfa8d6e090bbaa6ce3b1de83fcdae7d6",
+          "sha256": "f685ddda306a03be57ab3fc055873eb48ae2db2819568951c0c057a129647d8c"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "4a318227067887a8c312762f57278effbc25c9e0f8e509ee7523d110aabfa2cb": {
+      "candles": [
+        {
+          "close": 1.33478,
+          "high": 1.33481,
+          "low": 1.33471,
+          "open": 1.33478,
+          "time": 1794355200,
+          "volume": 76390000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794355260,
+        "gaps": [],
+        "start": 1794355200,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "d5c1d2149080d9dead8d5dd51325e1d59f1f509a036ab30c21a6cd1790766a0c",
+          "sha256": "94f7b9623632df54c29e9bbb5d90cc0602a37ace0530b6936820daf43340dbc4"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "4af12f3ed4727d902acdefaf866770659fe459fe68897583134e7e29a52f58a2": {
+      "candles": [
+        {
+          "close": 1.1168,
+          "high": 1.11685,
+          "low": 1.11676,
+          "open": 1.11685,
+          "time": 1794355200,
+          "volume": 99410000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794355260,
+        "gaps": [],
+        "start": 1794355200,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "8ba6dbcf4cab08a5d4e4e504de792c8d46c6663ec34b4637c1525311d31764c6",
+          "sha256": "d99e5d4db40c068051b0f061fcb9ea0ed7cb2f82cbac85570246f0f3e28fc856"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "4f16e87991fee46c3bb32100049c7583ecdfdcb7fecf7f66fa10fb02da99fa36": {
+      "candles": [
+        {
+          "close": 1.1167,
+          "high": 1.11685,
+          "low": 1.11667,
+          "open": 1.11685,
+          "time": 1794355200,
+          "volume": 459570000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794355500,
+        "gaps": [],
+        "start": 1794355200,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "eb3af24738e240057b7f1496b7c957c96fb826ba1b2505a2dc55d05a7c0403d1",
+          "sha256": "262c4bcbbd5b7c260df1b7441664ffe7fb4beed3b2941b38ccd105b613a7ab91"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "512dcd7568f2adddc5b8213fb2542dde907b9717f9ed2bb0c8a6fab79c930b47": {
+      "candles": [
+        {
+          "close": 1.3361,
+          "high": 1.33622,
+          "low": 1.3359,
+          "open": 1.33597,
+          "time": 1794182400,
+          "volume": 811870000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794182700,
+        "gaps": [],
+        "start": 1794182400,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "cfb19c19152cc55bc463d75a7eacf0a9f4dcd13904e3bee8fba23fe5be1ffc36",
+          "sha256": "f19187fb65e535d5da6283cc5b1b328f3de8c1bc2535af2420751bafe3328b31"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "520c1ff403095b6bb07c6a487542b7322054b7c8c9217729935ffc569b413015": {
+      "candles": [
+        {
+          "close": 1.32302,
+          "high": 1.32308,
+          "low": 1.32284,
+          "open": 1.32308,
+          "time": 1794528000,
+          "volume": 337720000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794528300,
+        "gaps": [],
+        "start": 1794528000,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+          "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "633eb8c3cccb896373c364900711f1f340eff7a5f409e4113a2c0e2ee4686b66": {
+      "candles": [
+        {
+          "close": 1.09909,
+          "high": 1.09928,
+          "low": 1.09905,
+          "open": 1.09925,
+          "time": 1794960000,
+          "volume": 323970000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794960060,
+        "gaps": [],
+        "start": 1794960000,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "089975ac99528fe2eb78654bdd483d1aeca5c58883fcbecbe8f760c83a81a2f7",
+          "sha256": "40384cd7efc21b86454515001c9b539346998641195fd47fe06f849dcb60aed4"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "6724fb2f5d1c514b088f3f0561d7053660707e0d0b581be69389c63dac39de07": {
+      "candles": [
+        {
+          "close": 1.33621,
+          "high": 1.33622,
+          "low": 1.3359,
+          "open": 1.33597,
+          "time": 1794182400,
+          "volume": 209200000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794182460,
+        "gaps": [],
+        "start": 1794182400,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "fa206b3f8f3b4305cb7a019d5813d4e5b35a81928382ffc1183c240372fb78ef",
+          "sha256": "1fc7759e527e0f67a4c0430234780d73bb80e0d468bcfe923053df647e5ad366"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "7c55a558789671ae84e92d1f76862130b4d0731fb2a6015d91c7ea379afbe62c": {
+      "candles": [
+        {
+          "close": 1.09982,
+          "high": 1.09983,
+          "low": 1.09967,
+          "open": 1.09979,
+          "time": 1794873600,
+          "volume": 125790000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794873660,
+        "gaps": [],
+        "start": 1794873600,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "c07ba1902596db1e2d24442cb50fcfade7fc2088c21f52c2991bd367453c2ad9",
+          "sha256": "8a4607d768b0c2c3768f4034c1fa44a497fc783f1eb8791adaa9e051e11695c5"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "7d830f068e0d525089425814cacb5a523540b9d5b94756b239232fdd51d1b5fa": {
+      "candles": [
+        {
+          "close": 1.10007,
+          "high": 1.10012,
+          "low": 1.09967,
+          "open": 1.09979,
+          "time": 1794873600,
+          "volume": 749040000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794873900,
+        "gaps": [],
+        "start": 1794873600,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "ed2c6ccdce7de1355a21e10d0bd715f6673e454b2899b46d7c69e117cffbc951",
+          "sha256": "7f42f6d0d43fd87066aabc4470d52e6fe70a6c6cac14b3032eb9a1e25e0477f7"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "815f5ad979fe199494aec756907635a35deef243b765bbe3d0918573f2014e6b": {
+      "candles": [],
+      "dataset": {
+        "acquired_utc": "2026-11-14T14:09:21.832184+00:00",
+        "end_utc": 1764115200,
+        "feed": "deterministic-eurusd-v1",
+        "id": "1328977ac9c7d55f83243307d6dfff54b40690d697ff31734d1566f27a0b8c62",
+        "price_basis": "synthetic_bid",
+        "price_scale": 100000,
+        "provider": "simulator",
+        "relative_path": "market-data/13/1328977ac9c7d55f83243307d6dfff54b40690d697ff31734d1566f27a0b8c62.parquet",
+        "row_count": 192,
+        "schema_version": 1,
+        "sha256": "90439f9f45656ae735897d1da25458d62ed2f3c6df25c42f3d37512a4a572f37",
+        "start_utc": 1763942400,
+        "symbol": "EURUSD",
+        "timeframe": "M15",
+        "validation_status": "VERIFIED"
+      }
+    },
+    "862caddb275bfdd5759ecf73efd3bce7691f99fb563e7579bf232d3846ceaf17": {
+      "candles": [
+        {
+          "close": 1.31846,
+          "high": 1.31846,
+          "low": 1.31829,
+          "open": 1.3184,
+          "time": 1794873600,
+          "volume": 53120000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794873660,
+        "gaps": [],
+        "start": 1794873600,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "3e207fbfef644290646375603d76552368b69778a1d0b19aeca7de721057bdd3",
+          "sha256": "c1d0413ff15f450bafec237dafd6e1008203462efe0a842abb7d763e09a0b727"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "8d0ae79793415ac79df587342c9570c6112e19a00c7c06f90292e12ff43250c9": {
+      "candles": [
+        {
+          "close": 1.34406,
+          "high": 1.3441,
+          "low": 1.34404,
+          "open": 1.34406,
+          "time": 1794268800,
+          "volume": 69670000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794268860,
+        "gaps": [],
+        "start": 1794268800,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "4ee8cd31b8e13be20347d97115e493d13772c4b3f8d3fc560d3b273b5e53d419",
+          "sha256": "c9352c167a5bc7f31418734fb22f2d5b246ad4ca6a7d50d0f17225566f741ddc"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "8d51b7d57065152268af9249c1784d3b210ddfe1fd95a5c1f4d6527eebbd3fb9": {
+      "candles": [
+        {
+          "available_at": 1764028800,
+          "close": 108585,
+          "high": 108588,
+          "low": 108574,
+          "open": 108581,
+          "time": 1763942400
+        }
+      ],
+      "dataset": {
+        "acquired_utc": "2026-11-14T14:10:41.672391+00:00",
+        "end_utc": 1764115200,
+        "feed": "deterministic-eurusd-v1",
+        "id": "6c55c5d55d2808605e217e0dba957e9c0c926d3a126f12d9a5df14d21d72265c",
+        "price_basis": "synthetic_bid",
+        "price_scale": 100000,
+        "provider": "simulator",
+        "relative_path": "market-data/6c/6c55c5d55d2808605e217e0dba957e9c0c926d3a126f12d9a5df14d21d72265c.parquet",
+        "row_count": 2,
+        "schema_version": 1,
+        "sha256": "12fe0e24136a62f1f844202f1b08675e74aa891474b57580b8e2a83370a6d3dd",
+        "start_utc": 1763942400,
+        "symbol": "EURUSD",
+        "timeframe": "D1",
+        "validation_status": "VERIFIED"
+      }
+    },
+    "92d0cf3640e97dfbaa7ad97a858c060788a6060bccb748b9c9a70251e8718185": {
+      "candles": [
+        {
+          "close": 1.12219,
+          "high": 1.12225,
+          "low": 1.12219,
+          "open": 1.12219,
+          "time": 1794268800,
+          "volume": 103040000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794268860,
+        "gaps": [],
+        "start": 1794268800,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "e2cbd6a9139b69211b80ce5c77abf267c280de63dca1a20dbcba5f89368634bd",
+          "sha256": "61ef0bbc2262b9e859f56d202de4c0777a5a6524dfd9dc261434b75721771e1d"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "9edb2540b9f6de06061041de26edf33f7bf82143f45a2579e7ea165d0803942a": {
+      "candles": [
+        {
+          "close": 1.10311,
+          "high": 1.10312,
+          "low": 1.10308,
+          "open": 1.1031,
+          "time": 36000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 36300,
+        "gaps": [],
+        "start": 36000,
+        "truncated": false
+      },
+      "feed_id": "phase-e-fixture",
+      "partitions": [
+        {
+          "id": "930f420c101b74f223dec05cd33df0bdca1dc67503088f4d98d53f46328cc63e",
+          "sha256": "062dcc3d9293b43d331f6820b34e8334f5e319bcb3666e96a2080044f6ae2502"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "a0a28120f586a49c4fb5bd2a98b8a14554eb886ed7d211ae7098eccb412af47e": {
+      "candles": [
+        {
+          "close": 1.1148,
+          "high": 1.11489,
+          "low": 1.11466,
+          "open": 1.1147,
+          "time": 1794182400,
+          "volume": 1054520000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794182700,
+        "gaps": [],
+        "start": 1794182400,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "690dd9a65118d99848cd7083e808b7f7cde4eee5635522961217705d71f3a958",
+          "sha256": "4e8e035ecdaa4d46f1eb88b7bd618ea2fc44cbfa3573aa66b5d4c2d362415cee"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "a5729c9f02384685bb305882d1838184fb87d4e32cda2240a1271bc89b7e85b8": {
+      "candles": [
+        {
+          "close": 1.32305,
+          "high": 1.32308,
+          "low": 1.32289,
+          "open": 1.32308,
+          "time": 1794528000,
+          "volume": 134180000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794528060,
+        "gaps": [],
+        "start": 1794528000,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "5573dc1388325a1a09d053c0b9a5f01cd625e10de7e0581d8a606cf430000733",
+          "sha256": "c78281a20c9f23703061a2edb4f70e5288fab22c09d473ab385b1a724ea64aff"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "ad5e6f85ceea1cf15122152ceaaca44fb35fa37ee3b7edd06cac9a7156e490d6": {
+      "candles": [],
+      "dataset": {
+        "acquired_utc": "2026-11-24T11:28:25.848060+00:00",
+        "end_utc": 36600,
+        "feed": "deterministic-eurusd-v1",
+        "id": "d483229e496a92f2b34baf67e91410446fb43df66c2771ac9149aa32a2a359e3",
+        "price_basis": "synthetic_bid",
+        "price_scale": 100000,
+        "provider": "simulator",
+        "relative_path": "market-data/d4/d483229e496a92f2b34baf67e91410446fb43df66c2771ac9149aa32a2a359e3.parquet",
+        "row_count": 2,
+        "schema_version": 1,
+        "sha256": "985102d9ef5e4e7393b066a577a6877b5c82f3c6f6ec99ccea2abd4866e78b21",
+        "start_utc": 36000,
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "validation_status": "VERIFIED"
+      }
+    },
+    "b5dfee20fbb9863b13e49f1c2a6fd9e1f016dd8b54dc31224c2912c54a662bf0": {
+      "candles": [
+        {
+          "close": 1.32168,
+          "high": 1.32171,
+          "low": 1.32151,
+          "open": 1.3216,
+          "time": 1794787200,
+          "volume": 129890000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794787260,
+        "gaps": [],
+        "start": 1794787200,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "0e4cb47e35b32bb7706595c9f1916a1ff54b2cab7f28e397b6e7d95a9d7ca3da",
+          "sha256": "02c10b5d005443d762c79fd2c8c04a85029ff47e19ae074f8ffe298f808036af"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "c31b67fa74f635acbc686be312215ff5f2d4d4bf652d8f4d755acde71494bed7": {
+      "candles": [
+        {
+          "close": 1.10489,
+          "high": 1.10498,
+          "low": 1.10475,
+          "open": 1.10497,
+          "time": 1794528000,
+          "volume": 173070000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794528060,
+        "gaps": [],
+        "start": 1794528000,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "6d36dccb1163bec3a3a41dce9667109b139d5c31b8f1f319e207baedee3431ee",
+          "sha256": "31ff002aed2e30215513334e8ca322cd53d7fb4f399dd37c489b09737ca7a015"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "c449cbe576bad1516f3a5c036c639b9c0b11e78e5acd9460d3009a03580df662": {
+      "candles": [
+        {
+          "close": 1.32729,
+          "high": 1.32767,
+          "low": 1.32726,
+          "open": 1.32758,
+          "time": 1794441600,
+          "volume": 776100000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794441900,
+        "gaps": [],
+        "start": 1794441600,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "c0d69de19ec548402036521818a5d51bdd2cf9e3e1787d06ed21a1d9869133ea",
+          "sha256": "2de18c43361cc2f445e7f185df6ce83772723971ef480dada2cfb685cb4add57"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "c5ce7b8d499859d63cbff47aa2eab3f822e99da723fef5edad3816cb3b949d89": {
+      "candles": [
+        {
+          "close": 1.10942,
+          "high": 1.10947,
+          "low": 1.10914,
+          "open": 1.10943,
+          "time": 1794441600,
+          "volume": 189950000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794441660,
+        "gaps": [],
+        "start": 1794441600,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "2bf3a4ec7a539509db3b7ce9797a8f5b7fbdee6df30aeebc14da7a19abb32c75",
+          "sha256": "6e4a82a08ab8483a613a8a4b55a80ef7b149ac75b60ad203b437d6920c2965fa"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "c83fff9d4a3a94c1cf890ac1161964e19b08e75adf31bee89111eddb46703a95": {
+      "candles": [
+        {
+          "close": 1.10491,
+          "high": 1.10498,
+          "low": 1.10475,
+          "open": 1.10497,
+          "time": 1794528000,
+          "volume": 860120000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794528300,
+        "gaps": [],
+        "start": 1794528000,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+          "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "dde8d53485c80c4b31f51aa073085cb7c596d2f31230810310bad268e89f183a": {
+      "candles": [
+        {
+          "close": 1.12204,
+          "high": 1.12225,
+          "low": 1.12203,
+          "open": 1.12219,
+          "time": 1794268800,
+          "volume": 413500000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794269100,
+        "gaps": [],
+        "start": 1794268800,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "a49eb413dde18237282d271d0634db5393ea3654fc1cb2c6699bc073510c43a5",
+          "sha256": "c793040e0b9e5f8360b5f69791cbd8f20a1718c23db9d9cd1812d0b9c49b8eeb"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "e069911f20c1dfd9aed2af4b4613f0b3f96822e3a68e874321b3557b4edccd2d": {
+      "candles": [
+        {
+          "close": 1.32756,
+          "high": 1.32759,
+          "low": 1.32729,
+          "open": 1.32758,
+          "time": 1794441600,
+          "volume": 191530000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794441660,
+        "gaps": [],
+        "start": 1794441600,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "b5db8bd345060a2e25ef9dfcff470c4985cf002f75c0e7e053e8dcdc129f26d1",
+          "sha256": "a53a51f861a8231f7cf2189dbf8aed3f211ebfee29a30b5802b503ce73c2d68b"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "f6b8283e2301cc4b5c9718251ccd74622b9b0bc96a579048f17b272f38909c02": {
+      "candles": [
+        {
+          "close": 1.10264,
+          "high": 1.10267,
+          "low": 1.10231,
+          "open": 1.10247,
+          "time": 1794787200,
+          "volume": 813910000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794787500,
+        "gaps": [],
+        "start": 1794787200,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "74da2b5a1df3f3c595d09c031e071b2a0e7a6484bb886b410423d2cb120f5997",
+          "sha256": "253e72e89a1cfda09653a7c20cb2205d87f0160b78466c3539674665c0f4a818"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    },
+    "faba97999354e6eaf6d2938793428c5fde05b074ce5667fc14a90e009baa7e7a": {
+      "candles": [
+        {
+          "close": 1.3218,
+          "high": 1.32182,
+          "low": 1.32139,
+          "open": 1.3216,
+          "time": 1794787200,
+          "volume": 492540000
+        }
+      ],
+      "coverage": {
+        "duplicate_bars": 0,
+        "end": 1794787500,
+        "gaps": [],
+        "start": 1794787200,
+        "truncated": false
+      },
+      "feed_id": "dukascopy-web-m1-v1",
+      "partitions": [
+        {
+          "id": "f7f42baae5304ee21f5a11cfd2d6233338c877fa6d6b69674ff51c201d238515",
+          "sha256": "18db7664b67a1c659b8acd887c231591f7d0f83b687f703d7d97e5b88df4f14b"
+        }
+      ],
+      "price_basis": "BID",
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false
+    }
+  },
+  "restored": {
+    "counts": {
+      "exports": 0,
+      "fixed": 2,
+      "import_refs": 36,
+      "receipts": 0,
+      "research": 42,
+      "smt_refs": 0,
+      "smt_revisions": 130,
+      "unpinned_lanes": 260
+    },
+    "dangling_receipts": []
+  }
+}
