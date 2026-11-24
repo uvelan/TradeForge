@@ -50,8 +50,34 @@ class ExecutionWindow:
     complete_delivery_intervals: list
 
 
+def execution_quote(row, scale):
+    from .offline_market_entry import Quote
+
+    if row["scale"] != scale:
+        raise ValueError("Recorded quote point scale differs from the instrument")
+    return Quote(**{key: row[key] for key in ("time_ms", "source_order", "bid_units", "ask_units")},
+                 available_at_ms=row["time_ms"])
+
+
+def limit_conflict_rows(error, original, source_sha256, buy, units):
+    """Allow price disagreement at a possible touch only with the source observation present."""
+    from .offline_market_entry import limit_touched
+
+    pinned = original | {"source_sha256": source_sha256}
+    if pinned not in error.variants:
+        raise ValueError("Conflicting selection lacks the pinned BI5 observation") from error
+    for variant in error.variants:
+        if variant | {"bid_units": original["bid_units"], "ask_units": original["ask_units"]} != pinned:
+            raise ValueError("Conflicting selection changes BI5 source metadata") from error
+        execution_quote(variant, original["scale"])
+    if units is None or not any(limit_touched(buy, r["bid_units"], r["ask_units"], units)
+                                for r in error.variants):
+        raise error
+    return error.variants
+
+
 def resolve_window(db, spec, intent):
-    from .offline_market_entry import DeliveryInterval, Quote
+    from .offline_market_entry import DeliveryInterval, fixed_price_units, limit_touched
 
     symbol = intent["symbol"]
     start, end = spec.start, spec.end
@@ -79,18 +105,30 @@ def resolve_window(db, spec, intent):
     reference = read_tick_partitions([source], source_manifests=origins, period=(start, end))
     prior = next((row for row in reversed(reference) if row["time_ms"] <= begin), None)
     following = next((row for row in reference if row["time_ms"] > begin), None)
+    is_limit = intent["entry"]["kind"] == "LIMIT"
+    buy = intent["direction"] == "LONG"
+    if is_limit:
+        price = intent["entry"]["price"]
+        if not price or price["kind"] != "FIXED_ABSOLUTE":
+            raise ValueError("Recorded LIMIT requires a fixed absolute price")
+        units = fixed_price_units(price, POINT_SCALES[symbol])
+        # Keep the first post-expiry witness when no executable side touched.
+        following = next((r for r in reference if r["time_ms"] > begin and
+                          (r["time_ms"] > deadline or
+                           (units is not None and limit_touched(buy, r["bid_units"], r["ask_units"], units)))), None)
     boundary = None if following is None else (following["time_ms"], following["source_order"])
     # Even expiry needs a verified observation bracketing the quiet interval.
     # Include that observation when proving the layout contains the same prefix.
     expected = [row for row in reference if boundary is None or
                 (row["time_ms"], row["source_order"]) <= boundary]
     ambiguous = False
+    decision_rows = expected
     if len(parts) != 1 or parts[0]["id"] != source["id"]:
         shard_origins = tick_source_manifests(parts)
         if any(m["source_sha256"] != spec.source_sha256 for m in shard_origins.values()):
             raise ValueError("Partition registered to a different BI5 source")
         selected = iter_tick_partitions(parts, source_manifests=shard_origins, period=(start, end),
-                                       through_priority=boundary, required_source=spec.source_sha256)
+                                       through_priority=boundary, required_source=spec.source_sha256, inspect_ties=is_limit)
         matched = 0
         missing_or_extra = "Recorded partition selection omits or adds source observations"
         with closing(selected):
@@ -105,30 +143,47 @@ def resolve_window(db, spec, intent):
                         raise ValueError("Recorded partition selection disagrees with verified BI5 source")
                     matched += 1
             except TickOrderError as exc:
-                if boundary is None or exc.priority != boundary or following["time_ms"] > deadline:
+                if is_limit:
+                    if matched >= len(expected) or not begin < exc.priority[0] <= deadline:
+                        raise
+                    original = expected[matched]
+                    if exc.priority != (original["time_ms"], original["source_order"]):
+                        raise ValueError(missing_or_extra) from exc
+                    variants = limit_conflict_rows(exc, original, spec.source_sha256, buy, units)
+                    decision_rows = expected[:matched] + variants
+                elif boundary is None or exc.priority != boundary or following["time_ms"] > deadline:
                     raise
                 # The iterator may raise at the winner before yielding its row.
-                if matched < len(expected) - 1:
+                elif matched < len(expected) - 1:
                     raise ValueError(missing_or_extra) from exc
-                ambiguous = True
+                else:
+                    ambiguous = True
             else:
                 if matched != len(expected):
                     raise ValueError(missing_or_extra)
     intervals = []
     quotes = []
-    if following:
-        if following["scale"] != POINT_SCALES[symbol]:
-            raise ValueError("Recorded quote point scale differs from the instrument")
-        quotes.append(Quote(**{k: following[k] for k in
-                              ("time_ms", "source_order", "bid_units", "ask_units")},
-                            available_at_ms=following["time_ms"]))
-        if prior and following["time_ms"] - prior["time_ms"] <= MAX_GAP_MS:
-            left, right = prior["time_ms"] // 1000, following["time_ms"] // 1000 + 1
-            if open_intervals(left, right, MarketSchedule(kind="forex_weekly")) == [(left, right)]:
-                intervals.append(DeliveryInterval(start_ms=begin+1, end_ms=following["time_ms"]))
+    rows = ([r for r in decision_rows if r["time_ms"] > begin] if is_limit
+            else [following] if following else [])
+    previous = prior
+    frontier = begin
+    for row in rows:
+        quotes.append(execution_quote(row, POINT_SCALES[symbol]))
+        if previous is not None and row["time_ms"] - previous["time_ms"] <= MAX_GAP_MS:
+            frontier = row["time_ms"]
+            previous = row
+        else:
+            previous = None
+    if frontier > begin:
+        left, right = prior["time_ms"] // 1000, frontier // 1000 + 1
+        if open_intervals(left, right, MarketSchedule(kind="forex_weekly")) == [(left, right)]:
+            intervals.append(DeliveryInterval(start_ms=begin+1, end_ms=frontier))
     evidence = spec.model_dump(mode="json")
     evidence["partitions"].sort(key=lambda pin: pin["id"])
     evidence.update(feed_id=FEED, symbol=symbol, price_basis="BID_ASK_UNITS",
                     prior_observation_ms=prior["time_ms"] if prior else None,
                     following_observation_ms=following["time_ms"] if following else None)
+    if is_limit:
+        evidence["following_observation_ms"] = rows[0]["time_ms"] if rows else None
+        evidence["last_inspected_priority"] = [rows[-1]["time_ms"], rows[-1]["source_order"]] if rows else None
     return ExecutionWindow(symbol, POINT_SCALES[symbol], quotes, intervals), evidence, ambiguous
