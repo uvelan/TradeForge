@@ -46,7 +46,7 @@ def open_intervals(start: int, end: int, schedule: MarketSchedule):
             local = datetime.combine(date, time.fromisoformat(clock))
             candidates = {int(local.replace(tzinfo=zone, fold=fold).timestamp()) for fold in (0, 1)}
             valid = {stamp for stamp in candidates
-                     if datetime.fromtimestamp(stamp, zone).replace(tzinfo=None) == local}
+                     if (datetime(1970, 1, 1, tzinfo=UTC) + timedelta(seconds=stamp)).astimezone(zone).replace(tzinfo=None) == local}
             if len(valid) != 1:
                 return None
             bounds.append(valid.pop())

@@ -2,8 +2,12 @@
 
 from bisect import bisect_left
 from decimal import Decimal
+from itertools import pairwise
+from operator import itemgetter
 
 from .backtest import breakout_signal
+from .indicator_coverage import MarketSchedule, open_intervals
+from .historical_import import FEED
 
 
 def executable_side(buy: bool) -> str:
@@ -14,9 +18,65 @@ def executable_price(quote: dict, buy: bool) -> Decimal:
     return Decimal(quote[f"{executable_side(buy)}_units"]) / quote["scale"]
 
 
+def effective_tick_period(market):
+    candles, coverage = market["candles"], market["coverage"]
+    start = candles[0]["time"] if coverage["truncated"] else coverage["start"]
+    return start, coverage["end"]
+
+
+def classify_gap(start, end, sessions):
+    if sessions is None:
+        yield dict(start=start, end=end, status="UNKNOWN_SCHEDULE")
+        return
+    cursor = start
+    for opens, closes in sessions:
+        if opens >= end:
+            break
+        left, right = max(cursor, opens), min(end, closes)
+        if left < right:
+            if cursor < left:
+                yield dict(start=cursor, end=left, status="KNOWN_CLOSED")
+            yield dict(start=left, end=right, status="MISSING_OPEN")
+            cursor = right
+    if cursor < end:
+        yield dict(start=cursor, end=end, status="KNOWN_CLOSED")
+
+
+def replay_coverage(market, ticks, provider, symbol, step, gap_seconds):
+    candles, coverage = market["candles"], market["coverage"]
+    start, end = effective_tick_period(market)
+    known = provider == "DUKASCOPY" and market["feed_id"] == FEED and symbol in ("EURUSD", "GBPUSD")
+    calendar = MarketSchedule(kind="forex_weekly" if known else "unknown")
+    sessions = open_intervals(start, end, calendar)
+    gaps = []
+    for gap in coverage["gaps"]:
+        left, right = max(start, gap["start"]), min(end, gap["end"])
+        if left < right:
+            gaps.extend(classify_gap(left, right, sessions))
+    frontier = next((gap["start"] for gap in gaps if gap["status"] != "KNOWN_CLOSED"), None)
+    first = bisect_left(ticks, start * 1000, key=lambda q: q["time_ms"])
+    last = bisect_left(ticks, end * 1000, key=lambda q: q["time_ms"])
+    if sessions is not None:
+        # A contradictory observation makes the calendar unsafe to use.
+        for left, right in zip([start, *(b for _, b in sessions)], [*(a for a, _ in sessions), end]):
+            if left >= right:
+                continue
+            index = bisect_left(ticks, left * 1000, key=lambda q: q["time_ms"])
+            if ((index < last and ticks[index]["time_ms"] < right * 1000)
+                    or any(c["time"] < right and left < c["time"] + step for c in candles)):
+                raise ValueError("UNTRUSTED: archive contradicts weekly session calendar")
+    return dict(calendar_version="DUKASCOPY_FX_NY17_V1" if known else "UNKNOWN_V1",
+                schedule=calendar.model_dump(), provider=provider, symbol=symbol, feed=market["feed_id"],
+                required_period=[start, end], first_unverified_candle_s=frontier, observed_quotes=last-first,
+                first_quote_ms=ticks[first]["time_ms"] if first < last else None,
+                last_quote_ms=ticks[last-1]["time_ms"] if first < last else None, gaps=gaps,
+                gap_policy="BOUNDED_QUOTE_GAP_V1", requested_gap_seconds=gap_seconds,
+                max_quote_gap_ms=1000 * min(step, gap_seconds, 60))
+
+
 def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r: float, *,
                     slip_bps: Decimal, commission_bps: Decimal, max_bars: int = 12,
-                    max_quote_gap_seconds: int = 60) -> dict:
+                    max_quote_gap_seconds: int = 60, coverage=None) -> dict:
     if len(candles) < 25 or not ticks:
         raise ValueError("Tick replay requires at least 25 closed candles and archived quotes")
     if step <= 0 or max_bars < 1 or max_quote_gap_seconds < 1:
@@ -33,9 +93,10 @@ def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r:
         session_ends[index] = (session_ends[index + 1]
                                if candle_end == candle_times[index + 1] else candle_end)
     max_gap_ms = min(step, max_quote_gap_seconds) * 1000
-    ordered = sorted(ticks, key=lambda quote: (quote["time_ms"], quote["source_order"]))
+    priority = itemgetter("time_ms", "source_order")
+    ordered = ticks if coverage is not None else sorted(ticks, key=priority)
     times = [quote["time_ms"] for quote in ordered]
-    if len({(quote["time_ms"], quote["source_order"]) for quote in ordered}) != len(ordered):
+    if any(priority(a) >= priority(b) for a, b in pairwise(ordered)):
         raise ValueError("Tick source order is ambiguous")
     if any(not 0 < quote["bid_units"] <= quote["ask_units"] or quote["scale"] <= 0 for quote in ordered):
         raise ValueError("Tick archive contains invalid bid/ask prices")
@@ -45,8 +106,15 @@ def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r:
     trades = []
     unresolved = []
     next_entry = 0
+    gaps = coverage["gaps"] if coverage else []
+    frontier = coverage["first_unverified_candle_s"] if coverage else None
+    reopenings = {gap["end"] for gap in gaps if gap["status"] == "KNOWN_CLOSED"}
     for index in range(2, len(candles) - 1):
         signal = candles[index]
+        if frontier is not None and signal["time"] >= frontier:
+            break
+        if signal["time"] in reopenings:
+            continue
         setup = breakout_signal(candles[index - 1], signal)
         if not setup:
             continue
@@ -120,14 +188,15 @@ def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r:
     total = sum(realized)
     count = len(trades)
     conditional = round(total/count, 4) if count else None
-    expectancy = None if missing else conditional
+    incomplete = bool(missing) or frontier is not None
+    expectancy = None if incomplete else conditional
     return {
         "strategy":"Previous-bar breakout with bid/ask tick execution", "trades":trades, "count":count,
         "eligible_signals":count+missing, "missing_tick_windows":missing, "unresolved_outcomes":unresolved, "ambiguous_excluded":0,
-        "ambiguous_rate":0 if count else None, "expectancy_r":expectancy,
+        "ambiguous_rate":0 if count and not incomplete else None, "expectancy_r":expectancy,
         "expectancy_bounds_r":{"worst":expectancy,"best":expectancy} if expectancy is not None else None,
-        "total_r":None if missing else round(total,4),
-        "win_rate":round(sum(value>0 for value in realized)/count*100,2) if count and not missing else None,
+        "total_r":None if incomplete else round(total,4),
+        "win_rate":round(sum(value>0 for value in realized)/count*100,2) if count and not incomplete else None,
         "data_note":"Quoted bid/ask, adverse slippage and commission per side. Execution uses continuous matching-feed candle intervals and bounded quote gaps. Replay stops at the first unresolved window. Quote coverage does not prove executable size.",
         "execution_model":{"version":2,"max_quote_gap_ms":max_gap_ms,"slippage_bps":str(slip_bps),"commission_bps_per_side":str(commission_bps)},
     }

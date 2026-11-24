@@ -1,0 +1,35 @@
+{
+  "seconds": 2.070858099999896,
+  "python_peak_bytes": 35617386,
+  "process_peak_bytes": 154791936,
+  "python": "3.13.14",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "input_evidence": "t06-eurusd-bi5.json",
+  "ordering": "UTC_MS_SOURCE_ORDINAL_V2",
+  "equal_fields": [
+    "ambiguous_excluded",
+    "ambiguous_rate",
+    "count",
+    "data_note",
+    "eligible_signals",
+    "expectancy_bounds_r",
+    "expectancy_r",
+    "lineage",
+    "missing_tick_windows",
+    "replay_coverage",
+    "source",
+    "strategy",
+    "symbol",
+    "synthetic",
+    "timeframe",
+    "total_r",
+    "trades",
+    "unresolved_outcomes",
+    "win_rate"
+  ],
+  "deltas": {
+    "seconds": 0.08915870000055293,
+    "python_peak_bytes": 10,
+    "process_peak_bytes": 16384
+  }
+}
