@@ -62,14 +62,20 @@ def test_recorded_first_exit_uses_pinned_original_after_entry_shard(
         validate_first_exit(run,cutoff_ms=QUAL+700,**(kwargs | {"recorded": spec | {"end":spec["end"]-1}}))
 
 
-def test_recorded_first_exit_does_not_bridge_missing_interval(controlled):
+@pytest.mark.parametrize("interval,status", [(60000,"SIMULATED_EXIT"),(60001,"INSUFFICIENT_QUOTE_COVERAGE")])
+def test_recorded_first_exit_respects_exact_quote_gap(controlled,interval,status):
     run,_ = controlled(direction="bullish",management=FIXED)
-    spec,_ = prepare(bi5([(-1000,116270,116274),(400,116270,116274),(61000,116160,116165)]),14,QUAL)
+    ending = 400+interval
+    spec,_ = prepare(bi5([(-1000,116270,116274),(400,116270,116274),(ending,116160,116165)]),14,QUAL)
     saved, = validate_market_entries(run,recorded=spec)["results"]
     assert saved["fill"]["time_ms"]==QUAL+400
-    result = validate_first_exit(run,recorded=spec,entry_result_id=saved["id"],cutoff_ms=QUAL+61000)
-    assert result["simulated_exits"]==0 and result["results"][0]["status"]=="INSUFFICIENT_QUOTE_COVERAGE"
-    assert result["results"][0]["exit"] is None
+    result = validate_first_exit(run,recorded=spec,entry_result_id=saved["id"],cutoff_ms=QUAL+ending)
+    r, = result["results"]
+    assert r["status"]==status
+    if interval==60000:
+        assert result["simulated_exits"]==1 and r["exit"]["price_units"]==116160
+    else:
+        assert result["simulated_exits"]==0 and r["exit"] is None
 
 
 def test_recorded_first_exit_rejects_unapproved_management(controlled):
@@ -116,9 +122,13 @@ def test_recorded_first_exit_replays_entire_persisted_entry_proof(controlled):
     changed = saved | {"recorded_evidence": saved["recorded_evidence"] | {"following_observation_ms":QUAL+401}}
     # Simulate a damaged test archive without changing its outer result identity.
     with transaction() as db:
+        trigger = db.execute("SELECT sql FROM sqlite_master WHERE name=?",
+                             ("protect_offline_market_entry_results_update",)).fetchone()[0]
+        db.execute("BEGIN IMMEDIATE")
         db.execute("DROP TRIGGER protect_offline_market_entry_results_update")
         db.execute("UPDATE offline_market_entry_results SET payload=? WHERE id=?",
                    (canonical(changed),saved["id"]))
+        db.execute(trigger)
     with pytest.raises(ValueError,match="Persisted recorded entry does not match verified replay"):
         validate_first_exit(run,recorded=spec,entry_result_id=saved["id"],cutoff_ms=QUAL+700)
     assert len(totals()[0])==1 and not totals()[1]
