@@ -167,12 +167,9 @@ def analytics():
       'note':'Manual journal outcomes; not a reconciled broker performance statement'}
 
 
-def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
+def _package_files(t:dict,package_id:str,cutoff:str,signal,snapshot)->dict[str,bytes]:
     latest=t['versions'][0]
     plan=latest['plan']; validated=TradePlan.model_validate(plan);risk=evaluate(validated)
-    with transaction() as db:
-        signal = linked_signal(db, validated)
-        snapshot = validate_plan_snapshot(db,validated)
     evidence_refs = ['PLAN','RISK','TIMELINE']
     if signal is not None:
         cutoff_epoch = datetime.fromisoformat(cutoff).timestamp()
@@ -183,9 +180,12 @@ def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
         if snapshot[2]>cutoff:
             raise HTTPException(422,"Linked chart snapshot occurred after package cutoff")
         evidence_refs.append("CHART_CAPTURE")
-    events=[e for e in t['events'] if e['at']<=cutoff]
-    # The latest plan must have existed at cutoff.
-    if latest['created_at']>cutoff:raise HTTPException(422,'Plan was created after knowledge cutoff')
+    events=t['events']
+    # A bad clock must not produce a timeline with silently skipped sequence entries.
+    if latest['created_at']>cutoff:
+        raise HTTPException(422,'Plan was created after knowledge cutoff')
+    if any(event["at"]>cutoff for event in events):
+        raise HTTPException(422,"Trade timeline extends beyond knowledge cutoff")
     pieces=[
       '# TRADEFORGE · PRE-TRADE REVIEW',
       f'Package: {package_id} | Trade: {t["id"]} | Plan v{latest["version"]}',
@@ -214,27 +214,44 @@ def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
         pieces.append("\n## Linked signal\nSee data/signal.json for the recorded revision and source lineage.")
     if snapshot is not None:
         pieces.append("\n## User chart capture\nSee data/chart.png and data/chart_metadata.json.")
-    return {**({"data/chart.png":snapshot[1],"data/chart_metadata.json":_json(snapshot[0]).encode()}
+    files = {**({"data/chart.png":snapshot[1],"data/chart_metadata.json":_json(snapshot[0]).encode()}
               if snapshot is not None else {}),
         **({"data/signal.json": _json(signal).encode()} if signal is not None else {}), 'AI_CONTEXT.md':'\n'.join(pieces).encode(),
         'data/trade_plan.json':json.dumps(plan,indent=2).encode(),
         'data/risk_metrics.json':json.dumps(risk,indent=2).encode(),
         'data/timeline.jsonl':'\n'.join(json.dumps(e) for e in events).encode(),
-        'response/AI_REVIEW_TEMPLATE.json':json.dumps(template,indent=2).encode(),
-        'manifest.json':json.dumps(manifest,indent=2).encode()}
+        'response/AI_REVIEW_TEMPLATE.json':json.dumps(template,indent=2).encode()}
+    manifest["evidence_snapshot"] = {
+        "policy":"SQLITE_READ_SNAPSHOT_V1",
+        "through_event_sequence":max((e["sequence"] for e in events),default=0),
+        "components_sha256":{name:hashlib.sha256(content).hexdigest() for name,content in files.items()},
+    }
+    return files | {"manifest.json":json.dumps(manifest,indent=2).encode()}
 
 
 def export_ai(uid:str, plan_version:int|None=None)->dict:
-    t=get_trade(uid)
-    if t["outcome"] is not None:
-        raise HTTPException(422, "Pre-trade review packages require an open plan")
-    latest=t['versions'][0]
-    if plan_version is not None and latest["version"] != plan_version:
-        raise HTTPException(409, "Plan version changed. Refresh the plan before exporting.")
-    # Strictly bound to the current time, after latest plan was created.
-    cutoff=utc_now()
-    package_id=_id('PKG')
-    items=_package_files(t,package_id,cutoff)
+    with transaction() as db:
+        # An explicit read transaction pins the SQLite/WAL view on the first SELECT.
+        db.execute("BEGIN")
+        trade=db.execute("SELECT status FROM trades WHERE id=?",(uid,)).fetchone()
+        cutoff=utc_now()
+        if trade is None:
+            raise HTTPException(404,"Trade not found")
+        if trade["status"] not in ("PLANNED","REVIEWED"):
+            raise HTTPException(422,"Pre-trade review packages require an open plan")
+        latest=dict(db.execute(
+            "SELECT version,payload,created_at FROM plan_versions WHERE trade_id=? ORDER BY version DESC LIMIT 1",
+            (uid,)).fetchone())
+        if plan_version is not None and latest["version"] != plan_version:
+            raise HTTPException(409,"Plan version changed. Refresh the plan before exporting.")
+        latest["plan"]=json.loads(latest.pop("payload"))
+        events=[dict(e,payload=json.loads(e["payload"])) for e in db.execute(
+            "SELECT * FROM trade_events WHERE trade_id=? ORDER BY sequence",(uid,))]
+        plan=TradePlan.model_validate(latest["plan"])
+        signal=linked_signal(db,plan)
+        snapshot=validate_plan_snapshot(db,plan)
+    package_id=_id("PKG")
+    items=_package_files({"id":uid,"versions":[latest],"events":events},package_id,cutoff,signal,snapshot)
     path=EXPORT_DIR/f'{package_id}.zip';partial=path.with_suffix('.pending')
     with zipfile.ZipFile(partial,'w',compression=zipfile.ZIP_DEFLATED) as z:
         for name,content in items.items():z.writestr(name,content)
