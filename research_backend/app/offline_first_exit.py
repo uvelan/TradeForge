@@ -11,9 +11,10 @@ from .analysis_evidence import canonical
 from .db import initialize, transaction
 from .offline_market_entry import (
     Quote, covered, pin_tape, published_entry_intents, quote_priority,
-    read_tape_file, simulate, verify_run,
+    read_tape_file, replay_recorded_entry, simulate, verify_run,
 )
 from .offline_partial_exit import ratio
+from .recorded_market_entry import ExecutionWindow, MAX_GAP_MS, RecordedWindow, resolve_exit_window
 from .risk import PIP_SIZE
 from .strategy_evidence import fingerprint
 from .tick_replay import executable_side
@@ -25,6 +26,12 @@ POLICY = {
     "coverage":"CONTINUOUS_FROM_ENTRY_DELIVERY",
     "levels":"EXACT_FILL_ANCHORED_FIXED_PIPS_AND_REWARD_MULTIPLE",
     "execution":"ACTUAL_CLOSING_QUOTE",
+}
+RECORDED_EXIT_POLICY = POLICY | {
+    "id":"OFFLINE_RECORDED_FIXED_FIRST_EXIT",
+    "availability":"BI5_OBSERVATION_PLUS_MODELED_ZERO_DELAY",
+    "coverage":"ORIGINAL_IMPORT_CONTIGUOUS_OBSERVED_THROUGH_CUTOFF_V1",
+    "max_quote_gap_ms":MAX_GAP_MS, "calendar":"DUKASCOPY_FX_NY17_V1",
 }
 BREAK_EVEN_POLICY = POLICY | {
     "id":"OFFLINE_BREAK_EVEN_FIRST_EXIT","version":2,
@@ -54,13 +61,18 @@ COMBINED_POLICY = POLICY | {
 }
 
 
-def verified_entry(db, run_id, entry_result_id, intents, model, tape, digest):
+def entry_record(db, run_id, entry_result_id, intents):
     record = db.execute("SELECT * FROM offline_market_entry_results WHERE id=? AND run_id=?",
                         (entry_result_id,run_id)).fetchone()
     if record is None:
         raise ValueError("Entry result does not belong to the completed historical run")
     intent = next((row for row in intents if row["id"]==record["intent_id"]),None)
     entry = json.loads(record["payload"])
+    return entry, intent
+
+
+def verified_entry(db, run_id, entry_result_id, intents, model, tape, digest):
+    entry, intent = entry_record(db, run_id, entry_result_id, intents)
     identity = entry["identity"]
     if (intent is None or entry["source"]!=intent or identity["intent"]!=intent["id"]
             or identity["execution_data_fingerprint"]!=digest
@@ -112,7 +124,12 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
     duration = timer.count if timer and timer.unit=="SECONDS" and not timer.timeframe else None
     policies = [policy for value,policy in ((activation_r,BREAK_EVEN_POLICY),(partial,PARTIAL_POLICY),
                 (trailing,TRAILING_POLICY),(duration,TIME_POLICY)) if value is not None]
-    policy = COMBINED_POLICY if len(policies)>1 else next(iter(policies),POLICY)
+    if isinstance(tape, ExecutionWindow):
+        if any(value is not None for value in (activation_r,partial,trailing,timer)):
+            raise ValueError("Recorded first exit supports fixed protective stop and target only")
+        policy = RECORDED_EXIT_POLICY
+    else:
+        policy = COMBINED_POLICY if len(policies)>1 else next(iter(policies),POLICY)
     identity = {"entry_result_id":entry["id"],"entry_fill_id":fill["id"],
                 "management_policy_fingerprint":fingerprint(frozen),"execution_data_fingerprint":digest,
                 "cutoff_ms":cutoff_ms,"policy":dict(policy)}
@@ -250,10 +267,17 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
     return result | {"status":status}
 
 
-def validate_first_exit(run_id, *, cutoff_ms, entry_result_id=None, tape=None, tape_sha256=None):
+def validate_first_exit(run_id, *, cutoff_ms, entry_result_id=None, tape=None, tape_sha256=None,
+                        recorded=None):
     """Validate at most one exit for a specifically selected persisted entry result."""
     if type(cutoff_ms) is not int or not 0<=cutoff_ms<=32503680000000:
         raise ValueError("Exit cutoff must be a UTC epoch millisecond integer")
+    if recorded is not None:
+        if tape is not None or tape_sha256 is not None:
+            raise ValueError("Select one execution source")
+        recorded = RecordedWindow.model_validate(recorded)
+        if entry_result_id is None:
+            raise ValueError("Recorded first exit requires a verified simulated entry fill")
     tape,digest = pin_tape(tape,tape_sha256)
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
@@ -266,22 +290,37 @@ def validate_first_exit(run_id, *, cutoff_ms, entry_result_id=None, tape=None, t
                 raise ValueError("Select a persisted entry result for exit validation")
             return summary
 
-        entry = verified_entry(db,run_id,entry_result_id,intents,model,tape,digest)
-        if cutoff_ms<entry["source"]["qualified_at"]*1000:
-            raise ValueError("Exit cutoff precedes intent qualification")
-        if entry["fill"] is not None and cutoff_ms<entry["fill"]["time_ms"]:
-            raise ValueError("Exit cutoff precedes the entry fill")
-        visible = simulate(entry["source"],model,tape,digest,policy=entry["identity"]["policy"],
-                           cutoff_ms=cutoff_ms)
-        summary["simulated_orders"] = int(visible["order"] is not None)
-        if visible["fill"] is None:
-            summary["results"] = [{"status":"NO_ENTRY_FILL","entry_result_id":entry_result_id,
-                                   "entry_status":visible["status"],"exit":None}]
-            return summary
-        if visible["fill"]!=entry["fill"]:
-            raise ValueError("Cutoff replay fill does not match the verified entry")
+        if recorded is not None:
+            entry, intent = entry_record(db,run_id,entry_result_id,intents)
+            if intent is None or entry.get("id")!=entry_result_id or not entry.get("recorded_evidence"):
+                raise ValueError("Recorded first exit requires a verified simulated entry fill")
+            expected = replay_recorded_entry(db,recorded,intent,model)
+            if canonical(entry)!=canonical(expected):
+                raise ValueError("Persisted recorded entry does not match verified replay")
+            if entry["fill"] is None:
+                raise ValueError("Recorded first exit requires a verified simulated entry fill")
+            tape,evidence = resolve_exit_window(db,recorded,entry,cutoff_ms)
+            digest = fingerprint(evidence)
+            summary["simulated_orders"] = 1
+        else:
+            entry = verified_entry(db,run_id,entry_result_id,intents,model,tape,digest)
+            if cutoff_ms<entry["source"]["qualified_at"]*1000:
+                raise ValueError("Exit cutoff precedes intent qualification")
+            if entry["fill"] is not None and cutoff_ms<entry["fill"]["time_ms"]:
+                raise ValueError("Exit cutoff precedes the entry fill")
+            visible = simulate(entry["source"],model,tape,digest,policy=entry["identity"]["policy"],
+                               cutoff_ms=cutoff_ms)
+            summary["simulated_orders"] = int(visible["order"] is not None)
+            if visible["fill"] is None:
+                summary["results"] = [{"status":"NO_ENTRY_FILL","entry_result_id":entry_result_id,
+                                       "entry_status":visible["status"],"exit":None}]
+                return summary
+            if visible["fill"]!=entry["fill"]:
+                raise ValueError("Cutoff replay fill does not match the verified entry")
 
         result = simulate_first_exit(entry,model.management,tape,digest,cutoff_ms)
+        if recorded is not None:
+            result["recorded_evidence"] = evidence
         payload = canonical(result)
         prior = db.execute("SELECT payload FROM offline_first_exit_results WHERE id=?",
                            (result["id"],)).fetchone()
@@ -304,12 +343,14 @@ def main():
     parser.add_argument("--cutoff-ms",required=True,type=int)
     parser.add_argument("--tape",type=Path)
     parser.add_argument("--sha256",help="SHA-256 of the canonical validated synthetic tape")
+    parser.add_argument("--recorded",type=Path,help="Same pinned RecordedWindow JSON used for the entry")
     args = parser.parse_args()
     try:
         tape = read_tape_file(args.tape) if args.tape else None
+        recorded = RecordedWindow.model_validate_json(args.recorded.read_bytes()) if args.recorded else None
         initialize()
         result = validate_first_exit(args.run,entry_result_id=args.entry_result,cutoff_ms=args.cutoff_ms,
-                                     tape=tape,tape_sha256=args.sha256)
+                                     tape=tape,tape_sha256=args.sha256,recorded=recorded)
     except (ValueError,OSError) as error:
         parser.exit(2,f"{error}\n")
     print(json.dumps(result,indent=2))

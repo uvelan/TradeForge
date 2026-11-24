@@ -297,6 +297,17 @@ def published_entry_intents(db, run_id, identity, model):
     return attempts,qualified,intents
 
 
+def replay_recorded_entry(db, recorded, intent, model):
+    kind = intent["entry"]["kind"]
+    if kind not in RECORDED_POLICIES or intent["order_expiry"]["unit"] != "SECONDS":
+        raise ValueError("Recorded execution requires MARKET, fixed-price LIMIT, or fixed-price STOP with seconds expiry")
+    window, evidence, ambiguous = resolve_window(db, recorded, intent)
+    result = simulate(intent, model, window, fingerprint(evidence), policy=RECORDED_POLICIES[kind])
+    if ambiguous and result["status"] == "SIMULATED_FILLED":
+        result.update(status="AMBIGUOUS_QUOTE_ORDER", fill=None)
+    return result | {"recorded_evidence": evidence}
+
+
 def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=None, recorded=None):
     """Validate published intents without changing their ledger or qualification status."""
     if recorded is not None:
@@ -316,14 +327,7 @@ def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=No
             if recorded is None:
                 result = simulate(intent,model,tape,digest)
             else:
-                kind = intent["entry"]["kind"]
-                if kind not in RECORDED_POLICIES or intent["order_expiry"]["unit"] != "SECONDS":
-                    raise ValueError("Recorded execution requires MARKET or fixed-price LIMIT with seconds expiry")
-                window, evidence, ambiguous = resolve_window(db, recorded, intent)
-                result = simulate(intent, model, window, fingerprint(evidence), policy=RECORDED_POLICIES[kind])
-                if ambiguous and result["status"] == "SIMULATED_FILLED":
-                    result.update(status="AMBIGUOUS_QUOTE_ORDER", fill=None)
-                result["recorded_evidence"] = evidence
+                result = replay_recorded_entry(db, recorded, intent, model)
             payload = canonical(result)
             prior = db.execute("SELECT payload FROM offline_market_entry_results WHERE id=?",
                                (result["id"],)).fetchone()

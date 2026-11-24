@@ -74,6 +74,26 @@ def fixed_conflict_rows(error, original, source_sha256, touched, buy, units):
     return error.variants
 
 
+def recorded_partition(db, pin, symbol):
+    row = db.execute("SELECT * FROM datasets WHERE id=?", (pin.id,)).fetchone()
+    if row is None or row["sha256"] != pin.sha256:
+        raise ValueError("Recorded partition pin mismatch")
+    if tuple(row[k] for k in ("provider", "feed_id", "symbol", "kind", "price_basis")) != (
+            "DUKASCOPY", FEED, symbol, "ticks", "BID_ASK_UNITS"):
+        raise ValueError("Incompatible recorded quote source")
+    return dict(row)
+
+
+def recorded_reference(db, spec, symbol):
+    source = recorded_partition(db, spec.source, symbol)
+    origins = tick_source_manifests([source])
+    origin = origins.get(source["id"])
+    if not origin or origin["source_sha256"] != spec.source_sha256 or not (
+            origin["source_start"] <= spec.start < spec.end <= origin["source_end"]):
+        raise ValueError("Recorded window does not match a completed BI5 source import")
+    return source, read_tick_partitions([source], source_manifests=origins, period=(spec.start, spec.end))
+
+
 def resolve_window(db, spec, intent):
     from .offline_market_entry import DeliveryInterval, fixed_price_units, limit_touched, stop_touched
 
@@ -84,23 +104,8 @@ def resolve_window(db, spec, intent):
     if not start * 1000 <= begin < end * 1000:
         raise ValueError("Qualification outside pinned recorded window")
 
-    def lookup(pin):
-        row = db.execute("SELECT * FROM datasets WHERE id=?", (pin.id,)).fetchone()
-        if row is None or row["sha256"] != pin.sha256:
-            raise ValueError("Recorded partition pin mismatch")
-        if tuple(row[k] for k in ("provider", "feed_id", "symbol", "kind", "price_basis")) != (
-                "DUKASCOPY", FEED, symbol, "ticks", "BID_ASK_UNITS"):
-            raise ValueError("Incompatible recorded quote source")
-        return dict(row)
-
-    source = lookup(spec.source)
-    parts = [lookup(pin) for pin in sorted(spec.partitions, key=lambda p: p.id)]
-    origins = tick_source_manifests([source])
-    origin = origins.get(source["id"])
-    if not origin or origin["source_sha256"] != spec.source_sha256 or not (
-            origin["source_start"] <= start < end <= origin["source_end"]):
-        raise ValueError("Recorded window does not match a completed BI5 source import")
-    reference = read_tick_partitions([source], source_manifests=origins, period=(start, end))
+    source, reference = recorded_reference(db, spec, symbol)
+    parts = [recorded_partition(db, pin, symbol) for pin in sorted(spec.partitions, key=lambda p: p.id)]
     prior = next((row for row in reversed(reference) if row["time_ms"] <= begin), None)
     following = next((row for row in reference if row["time_ms"] > begin), None)
     kind = intent["entry"]["kind"]
@@ -187,3 +192,42 @@ def resolve_window(db, spec, intent):
         evidence["following_observation_ms"] = rows[0]["time_ms"] if rows else None
         evidence["last_inspected_priority"] = [rows[-1]["time_ms"], rows[-1]["source_order"]] if rows else None
     return ExecutionWindow(symbol, POINT_SCALES[symbol], quotes, intervals), evidence, ambiguous
+
+
+def resolve_exit_window(db, spec, entry, cutoff_ms):
+    """Use the pinned original import, not the entry selection's truncated shards."""
+    from .offline_market_entry import DeliveryInterval, quote_priority
+
+    symbol = entry["source"]["symbol"]
+    fill = entry["fill"]
+    start, scale = fill["time_ms"], POINT_SCALES[symbol]
+    if not spec.start * 1000 <= start <= cutoff_ms < spec.end * 1000:
+        raise ValueError("Exit cutoff and entry fill must belong to the pinned recorded window")
+    _, reference = recorded_reference(db, spec, symbol)
+    priority = (start, start, fill["quote"]["source_order"])
+    quotes = [execution_quote(row, scale) for row in reference
+              if (start, fill["quote"]["source_order"]) <= (row["time_ms"], row["source_order"])
+              and row["time_ms"] <= cutoff_ms]
+    if (not quotes or quote_priority(quotes[0]) != priority
+            or quotes[0].model_dump(mode="json") | {"scale": scale} != fill["quote"]):
+        raise ValueError("Entry fill does not match an original BI5 observation")
+
+    # Do not use observations after cutoff, bridge a long absence, or cross a
+    # calendar closure with an open position. Preserve earlier certain exits.
+    observed = start
+    second = start // 1000
+    schedule = open_intervals(second, cutoff_ms // 1000 + 1, MarketSchedule(kind="forex_weekly"))
+    intervals = []
+    if schedule and schedule[0][0] == second:
+        market_end = schedule[0][1] * 1000
+        for quote in quotes[1:]:
+            if quote.time_ms >= market_end or quote.time_ms - observed > MAX_GAP_MS:
+                break
+            observed = quote.time_ms
+        intervals.append(DeliveryInterval(start_ms=start, end_ms=observed))
+    evidence = {
+        "source": spec.source.model_dump(mode="json"),
+        "source_sha256": spec.source_sha256, "start": spec.start, "end": spec.end,
+        "feed_id": FEED, "symbol": symbol, "price_basis": "BID_ASK_UNITS",
+    }
+    return ExecutionWindow(symbol, scale, quotes, intervals), evidence
