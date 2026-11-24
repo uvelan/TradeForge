@@ -1,0 +1,28 @@
+# TradeForge plan integration: scope and gates
+
+Baseline: `517f8122b633f9143324f99dd7b075c7c689df3f`. This work reconciles the master product plan with the repository's [remediation plan](../../research/05_REMEDIATION_PLAN.md), [roadmap](../../research/08_IMPLEMENTATION_ROADMAP.md), and verified merged history. “Included” means this PR implements the stated increment, not every acceptance gate under the task ID.
+
+| Plan item | Existing or included | Remaining acceptance or decision |
+|---|---|---|
+| TF-000, TF-D01, TF-D02 | Existing baseline and drawing lifecycle evidence. | Keep existing browser gates passing; no replacement of the drawings architecture. |
+| TF-U01 | Existing synchronization and pane tooling. This PR fences queued crosshair updates against a removed or replaced pane identity. | Full chart-lifecycle, persisted panel and 100-cycle/viewport soak requirements are not established by a limited code change. |
+| TF-I01, TF-I02, T02, T10 | Existing multi-instance UX and causal ICT/SMC/CRT. This PR adds ADX/DMI, Stochastic, Stochastic RSI, CCI, Keltner Channels and SuperTrend. | Remaining math goldens, independent TA-Lib oracle, indicator gaps and full lifecycle/viewport parity. Unsupported volume remains unsupported. |
+| TF-S01 | Existing causal strict SMT and evidence display. | Optional separately versioned multi-peer/sweep/session/inverse semantics and exact owner-approved matching semantics. Do not overwrite v2. |
+| T01 | Existing replay rejects contradictions in partial covered intervals. | Full OHLC certification needs actual per-bar source completeness, not assumed from a calendar or quote spacing. Keep untrusted metrics suppressed. |
+| T03, T04, TF-R01, T11 | Existing checksum-pinned publication, shadow manifest and offline restoration. This PR handles a reproducible disappearing-WAL exception without bypassing actual journal/hash checks. | The historical Windows 404 cause is unconfirmed. Writable-app per-reader cutover, stable manifest generation, writer retirement, storage quotas, independent clean-profile drill, and real scale measurements remain separate. Provider acquisition requires explicit rights, cost and network guardrails. |
+| T05 | This PR adds durable single-watch lease and transaction-time fencing for the background monitor. | Frontier, catch-up/revision rules and real MT5 evidence still require separate acceptance. Stop older unfenced workers before any rollout. |
+| T06 | Multi-file replay and DST corrections already in main. This PR restores historical V2 quote inspection under the original display order, while retaining V3 provenance requirements for new runs. | Month-archive I/O/memory and quote-page validation, authoritative calendars beyond the established scope. |
+| T07 | Recorded MARKET already in main. This PR reuses the exact reviewed LIMIT candidate, adds recorded fixed STOP and fixed first stop/target exit validation, with stronger BI5 provenance and fail-closed coverage. | Recorded dynamic management, accounting/realized P&L, empirical arrival/slippage/liquidity, verified fees, policy-level aggregation and archive-scale measurements. Do not equate audit alternatives with fills. |
+| T08 | No new broker accounting or verified metrics. | Dated contract/account specs, available-at FX, redacted reconciled statement and minor-unit reconciliation. Keep simulated and broker-authoritative execution IDs separate. |
+| T09 | Existing byte-exact review upload remains. This PR adds one read snapshot and a versioned local operator decision stream, independent of review/package immutability. | Historical metrics package lineage requires upstream gates; no AI calls. |
+| TF-L01 | This PR adds a synthetic blind SMT drill with hypothesis before reveal and a linked locally persisted journal. | Full syllabus/voice, spaced review, real chart replay links and wider proficiency evidence. |
+| TF-P01 | This PR adds a separate durable deterministic paper ledger with no broker or route. | Operator UI, multi-instrument/fees/portfolio, broader risk and paper fill rules require separate acceptance. No broker exposure. |
+| TF-E01 | This PR adds broker-neutral read-only evidence and deterministic offline risk contract tests. | A real adapter and practical evidence are not included; risk evaluation cannot authorize routing. |
+| TF-E02, TF-E03 | Nothing enabled. | Explicit owner demo account authorization/evidence or separately authorized live enablement with hard risk gates. |
+| T12 | No optional production engines or packages added. | Scope/pilot and benchmark acceptance, plus T07–T11 and trustworthy accounting lineage where relevant. |
+
+The one-PR packaging decision does not waive proof, separate authorizations, or the repository's trading limits. The public admission cap remains 160 cutoffs. Do not deploy or enable a broker as part of merging these changes.
+
+## Rollback
+
+Leave existing SQLite and Parquet evidence intact; do not reverse new tables destructively. Revert the integration merge through a reviewed PR if necessary. For the offline rehearsal, keep the shadow flag off in normal writable app until reader selection and stable snapshot rollout are separately verified. The paper database can be archived separately. Test the rollback against a disposable workspace before any operational action.
