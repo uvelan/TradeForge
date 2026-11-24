@@ -130,13 +130,14 @@ class IndicatorDefinition(TypedDict):
 def catalog() -> list[IndicatorDefinition]:
     definitions: list[IndicatorDefinition] = []
     for key, item in REGISTRY.items():
-        fields = ["high", "low", "close"] if key in {"atr", "natr"} else (
+        fields = ["high", "low", "close"] if key in {"atr", "natr", "adx", "stochastic", "cci", "keltner", "supertrend"} else (
             ["high", "low"] if key in {"swings", "donchian"} else ["close"]
         )
         price_source = "wick_and_close" if "close" in fields and len(fields) > 1 else (
             "close" if fields == ["close"] else "wick"
         )
-        unit = "percent" if key in {"rsi", "roc", "natr"} else "price"
+        unit = ("percent" if key in {"rsi", "roc", "natr", "adx", "stochastic", "stochrsi"}
+                else "index" if key == "cci" else "price")
         definitions.append({
             "id": key, "label": item.label, "version": 1, "render": item.render,
             "period": item.period, "warmup_bars": item.warmup(item.period),

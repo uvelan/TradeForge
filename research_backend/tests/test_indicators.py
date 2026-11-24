@@ -49,3 +49,53 @@ def test_indicator_api_rejects_nonordered_candles(client):
     assert response.json()["series"]["EMA"] == [{"time": 60, "value": 11}, {"time": 120, "value": 13}]
     body["candles"].reverse()
     assert client.post("/api/indicators/calculate", json=body).status_code == 422
+
+
+def test_new_indicator_hand_calculated_goldens():
+    data = bars([10, 12, 14, 16, 12, 7])
+    periods = 2
+    expected = {
+        "adx": {"ADX": [(180, 100.0)], "+DI": [(120, 200 / 3)], "-DI": [(120, 0)]},
+        "stochastic": {"%K": [(60, 75), (240, 100 / 6)], "%D": [(180, 75)]},
+        "stochrsi": {"%K": [(180, 50), (240, 0), (300, 0)], "%D": [(300, 50 / 3)]},
+        "cci": {"CCI": [(60, 200 / 3), (240, -200 / 3)]},
+        "keltner": {"Basis": [(60, 11), (120, 13)], "Upper": [(60, 16), (120, 18.5)],
+                    "Lower": [(60, 6), (120, 7.5)]},
+    }
+    # Close=20 first crosses the still-current 19.5 stop. The active long
+    # line ratchets to 11.59375 before the close at 10 switches it back.
+    trend = calculate(bars([10, 12, 14, 16, 20, 22, 10]), "supertrend", periods)["series"]
+    assert [p["time"] for p in trend["SuperTrend"]] == [60, 120, 180, 240, 300, 360]
+    assert [p["value"] for p in trend["SuperTrend"]] == pytest.approx(
+        [19.5, 19.5, 19.5, 8.1875, 11.59375, 32.40625])
+    for name, series in expected.items():
+        observed = calculate(data, name, periods)["series"]
+        for line, values in series.items():
+            points = {p["time"]: p["value"] for p in observed[line]}
+            for timestamp, target in values:
+                assert points[timestamp] == pytest.approx(target), (name, line, timestamp)
+            assert min(points) == values[0][0]
+
+
+@pytest.mark.parametrize("name", ["adx", "stochastic", "stochrsi", "cci", "keltner", "supertrend"])
+def test_new_indicators_flat_short_and_empty(name):
+    flat = [Bar(time=60*i, open=10, high=10, low=10, close=10) for i in range(8)]
+    expected = {"adx": 0, "stochastic": 50, "stochrsi": 50, "cci": 0, "keltner": 10, "supertrend": 10}[name]
+    assert all(points == [] for points in calculate([], name, 2)["series"].values())
+    assert all(points == [] for points in calculate(flat[:1], name, 2)["series"].values())
+    assert all(points and all(p["value"] == expected for p in points)
+               for points in calculate(flat, name, 2)["series"].values())
+
+
+def test_new_indicators_remain_unverified_in_public_preview(client):
+    definition = client.get("/api/indicators").json()
+    by_id = {entry["id"]:entry for entry in definition}
+    for name in ["adx", "stochastic", "stochrsi", "cci", "keltner", "supertrend"]:
+        assert by_id[name]["version"] == 1
+        assert "volume" not in by_id[name]["required_fields"]
+        payload = {"indicator":name,"period":2,"source":"DEMO","timeframe":"M1",
+                   "candles":[bar.model_dump() for bar in bars([10, 12, 14, 16, 12, 7])]}
+        response = client.post("/api/indicators/calculate", json=payload)
+        assert response.status_code == 200
+        assert response.json()["authority"] == "CLIENT_SUPPLIED_UNVERIFIED"
+    assert "vwap" not in by_id
