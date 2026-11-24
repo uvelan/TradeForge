@@ -40,6 +40,30 @@ class CatalogIntegrityError(ValueError):
     """A registered or pre-existing immutable catalog artifact cannot be verified."""
 
 
+def verify_artifact(path: Path, checksum: str, snapshot=None):
+    try:
+        if not path.is_file():
+            raise CatalogIntegrityError("Dataset artifact is not a regular file")
+        # POSIX nonblocking protects the SQLite writer if a FIFO replaces the
+        # path between the preliminary type check and the open.
+        def nonblocking(name, flags):
+            return os.open(name, flags | getattr(os, "O_NONBLOCK", 0))
+
+        with open(path, "rb", opener=nonblocking) as file:
+            if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
+                raise CatalogIntegrityError("Dataset artifact is not a regular file")
+            digest = hashlib.sha256()
+            while block := file.read(1024 * 1024):
+                digest.update(block)
+                if snapshot is not None:
+                    snapshot.write(block)
+            actual = digest.hexdigest()
+    except OSError as error:
+        raise CatalogIntegrityError("Dataset artifact cannot be read") from error
+    if actual != checksum:
+        raise CatalogIntegrityError("Dataset checksum mismatch")
+
+
 class Catalog:
     def __init__(self, root: Path, engine: Engine):
         self.root = root.resolve()
@@ -127,27 +151,7 @@ class Catalog:
 
     def _verify_artifact(self, relative, checksum, snapshot=None):
         path = self._artifact_path(relative)
-        try:
-            if not path.is_file():
-                raise CatalogIntegrityError("Dataset artifact is not a regular file")
-            # POSIX nonblocking protects the SQLite writer if a FIFO replaces the
-            # path between the preliminary type check and the open.
-            def nonblocking(name, flags):
-                return os.open(name, flags | getattr(os, "O_NONBLOCK", 0))
-
-            with open(path, "rb", opener=nonblocking) as file:
-                if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
-                    raise CatalogIntegrityError("Dataset artifact is not a regular file")
-                digest = hashlib.sha256()
-                while block := file.read(1024 * 1024):
-                    digest.update(block)
-                    if snapshot is not None:
-                        snapshot.write(block)
-                actual = digest.hexdigest()
-        except OSError as error:
-            raise CatalogIntegrityError("Dataset artifact cannot be read") from error
-        if actual != checksum:
-            raise CatalogIntegrityError("Dataset checksum mismatch")
+        verify_artifact(path, checksum, snapshot)
 
     def read(self, dataset_id: str, cutoff: int | None):
         with self.engine.connect() as connection:
