@@ -481,5 +481,9 @@ def indicator(request: Calculation):
         raise HTTPException(422, "Unknown indicator")
     if any(left.time >= right.time for left, right in zip(request.candles, request.candles[1:])):
         raise HTTPException(422, "Candle times must be strictly increasing")
-    return {**calculate(request.candles, request.indicator, request.period),
+    try:
+        result = calculate(request.candles, request.indicator, request.period)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    return {**result,
             "source": request.source, "timeframe": request.timeframe, "authority": "CLIENT_SUPPLIED_UNVERIFIED"}

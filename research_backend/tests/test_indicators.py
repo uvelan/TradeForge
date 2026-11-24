@@ -99,3 +99,13 @@ def test_new_indicators_remain_unverified_in_public_preview(client):
         assert response.status_code == 200
         assert response.json()["authority"] == "CLIENT_SUPPLIED_UNVERIFIED"
     assert "vwap" not in by_id
+
+
+@pytest.mark.parametrize("name", ["adx", "stochastic", "cci", "keltner", "supertrend"])
+def test_preview_rejects_nonfinite_calculated_quotes(client, name):
+    payload = {"indicator": name, "period": 2, "source": "DEMO", "timeframe": "M1",
+               "candles": [{"time": 60 * i, "open": 1e307, "low": 1e307,
+                            "high": 1e308, "close": 1e308} for i in range(5)]}
+    response = client.post("/api/indicators/calculate", json=payload)
+    assert response.status_code == 422, response.text
+    assert response.json()["detail"] == "Indicator calculation exceeded supported numeric range"

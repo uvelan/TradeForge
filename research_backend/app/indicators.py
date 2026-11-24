@@ -1,7 +1,7 @@
 """Causal indicator definitions for ordered OHLC bars."""
 
 from dataclasses import dataclass
-from math import sqrt
+from math import isfinite, sqrt
 from typing import Callable
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, model_validator
@@ -253,11 +253,17 @@ REGISTRY = {
 def calculate(bars: list[Bar], name: str, period: int) -> dict:
     definition = REGISTRY[name]
     series = {}
-    for label, values in definition.calculate(bars, period).items():
+    try:
+        calculated = definition.calculate(bars, period)
+    except (OverflowError, ZeroDivisionError) as error:
+        raise ValueError("Indicator calculation exceeded supported numeric range") from error
+    for label, values in calculated.items():
         points = []
         for index, value in enumerate(values):
             if value is None:
                 continue
+            if not isfinite(value):
+                raise ValueError("Indicator calculation exceeded supported numeric range")
             point = {"time": bars[index].time, "value": value}
             if name == "swings":
                 point["pivot_time"] = bars[index - period].time
