@@ -71,6 +71,11 @@ def test_archive_tick_run_merges_and_pins_verified_partitions(client):
     for tick in ticks:
         tick["time"] = tick["time_ms"] // 1000
     write_partition("DUKASCOPY", "test", "EURUSD", "candles", "M1", "BID", candles)
+    from hashlib import sha256
+    import json
+    origin = sha256(json.dumps(ticks, sort_keys=True).encode()).hexdigest()
+    for quote in ticks:
+        quote["source_sha256"] = origin
     inputs_by_partition = [ticks[:2], ticks[1:]]
     shards = [
         write_partition("DUKASCOPY", "test", "EURUSD", "ticks", None, "BID_ASK_UNITS", quotes)

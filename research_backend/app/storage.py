@@ -118,7 +118,7 @@ def read_partition_tail(file, max_rows):
     return table.slice(max(0, table.num_rows - max_rows)).to_pylist()
 
 
-def iter_complete_partition(dataset, *, max_rows, batch_size=8192):
+def iter_complete_partition(dataset, *, max_rows, batch_size=8192, columns=None):
     """Verify and read every row in bounded batches, without the chart tail limit."""
     import pyarrow.parquet as pq
 
@@ -131,15 +131,20 @@ def iter_complete_partition(dataset, *, max_rows, batch_size=8192):
     path = (MARKET_DIR / dataset["relative_path"]).resolve()
     if not path.is_relative_to(MARKET_DIR.resolve()):
         raise ValueError("Invalid stored dataset path")
-    with path.open("rb") as file:
-        if hashlib.file_digest(file, "sha256").hexdigest() != dataset["sha256"]:
-            raise RuntimeError("Dataset checksum mismatch")
+    from tempfile import TemporaryFile
+    from tradeforge.catalog import CatalogIntegrityError, verify_artifact
+
+    with TemporaryFile() as file:
+        try:
+            verify_artifact(path, dataset["sha256"], file)
+        except CatalogIntegrityError as exc:
+            raise RuntimeError(str(exc)) from exc
         file.seek(0)
         parquet = pq.ParquetFile(file)
         if parquet.metadata.num_rows != expected:
             raise ValueError("Partition row count differs from its manifest")
         count = 0
-        for batch in parquet.iter_batches(batch_size=batch_size):
+        for batch in parquet.iter_batches(batch_size=batch_size, columns=columns):
             count += batch.num_rows
             if count > expected:
                 raise ValueError("Partition row count differs from its manifest")

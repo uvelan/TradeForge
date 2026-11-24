@@ -1,0 +1,372 @@
+{
+  "inputs": [
+    {
+      "hour": 13,
+      "raw_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+      "raw_bytes": 15332,
+      "partition": {
+        "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+        "provider": "DUKASCOPY",
+        "symbol": "EURUSD",
+        "rows": 3171,
+        "relative_path": "dukascopy\\feed=dukascopy-bi5-v2\\symbol=EURUSD\\ticks\\year=2025\\month=11\\part-713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2.parquet",
+        "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+      },
+      "parquet_bytes": 38231
+    },
+    {
+      "hour": 14,
+      "raw_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+      "raw_bytes": 24809,
+      "partition": {
+        "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+        "provider": "DUKASCOPY",
+        "symbol": "EURUSD",
+        "rows": 5465,
+        "relative_path": "dukascopy\\feed=dukascopy-bi5-v2\\symbol=EURUSD\\ticks\\year=2025\\month=11\\part-8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02.parquet",
+        "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+      },
+      "parquet_bytes": 62062
+    }
+  ],
+  "measurement": {
+    "seconds": 1.9816993999993429,
+    "python_peak_bytes": 35617376,
+    "process_peak_bytes": 154775552,
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "result": {
+      "strategy": "Previous-bar breakout with bid/ask tick execution",
+      "trades": [
+        {
+          "entry_time": 1763038980,
+          "entry_time_ms": 1763038980377,
+          "exit_time_ms": 1763039458510,
+          "entry_source_order": 342,
+          "exit_source_order": 797,
+          "side": "SELL",
+          "entry": 1.16212,
+          "stop": 1.16231,
+          "target": 1.16174,
+          "exit": 1.16174,
+          "result_r": 2.0,
+          "exit_reason": "TARGET"
+        },
+        {
+          "entry_time": 1763039460,
+          "entry_time_ms": 1763039460504,
+          "exit_time_ms": 1763039533240,
+          "entry_source_order": 800,
+          "exit_source_order": 890,
+          "side": "SELL",
+          "entry": 1.16174,
+          "stop": 1.16205,
+          "target": 1.16112,
+          "exit": 1.16206,
+          "result_r": -1.0323,
+          "exit_reason": "STOP"
+        },
+        {
+          "entry_time": 1763039584,
+          "entry_time_ms": 1763039584172,
+          "exit_time_ms": 1763040300396,
+          "entry_source_order": 943,
+          "exit_source_order": 1297,
+          "side": "BUY",
+          "entry": 1.16197,
+          "stop": 1.16166,
+          "target": 1.16259,
+          "exit": 1.16204,
+          "result_r": 0.2258,
+          "exit_reason": "TIME_LIMIT"
+        },
+        {
+          "entry_time": 1763040360,
+          "entry_time_ms": 1763040360216,
+          "exit_time_ms": 1763041081023,
+          "entry_source_order": 1363,
+          "exit_source_order": 1970,
+          "side": "SELL",
+          "entry": 1.16179,
+          "stop": 1.16213,
+          "target": 1.16111,
+          "exit": 1.1615,
+          "result_r": 0.8529,
+          "exit_reason": "TIME_LIMIT"
+        },
+        {
+          "entry_time": 1763041200,
+          "entry_time_ms": 1763041200137,
+          "exit_time_ms": 1763041208237,
+          "entry_source_order": 2056,
+          "exit_source_order": 2066,
+          "side": "SELL",
+          "entry": 1.1614,
+          "stop": 1.16149,
+          "target": 1.16122,
+          "exit": 1.16149,
+          "result_r": -1.0,
+          "exit_reason": "STOP"
+        },
+        {
+          "entry_time": 1763041260,
+          "entry_time_ms": 1763041260577,
+          "exit_time_ms": 1763041517952,
+          "entry_source_order": 2125,
+          "exit_source_order": 2412,
+          "side": "SELL",
+          "entry": 1.16131,
+          "stop": 1.16153,
+          "target": 1.16087,
+          "exit": 1.16153,
+          "result_r": -1.0,
+          "exit_reason": "STOP"
+        },
+        {
+          "entry_time": 1763041560,
+          "entry_time_ms": 1763041560920,
+          "exit_time_ms": 1763041598716,
+          "entry_source_order": 2477,
+          "exit_source_order": 2529,
+          "side": "BUY",
+          "entry": 1.16157,
+          "stop": 1.16133,
+          "target": 1.16205,
+          "exit": 1.16132,
+          "result_r": -1.0417,
+          "exit_reason": "STOP"
+        },
+        {
+          "entry_time": 1763041800,
+          "entry_time_ms": 1763041800304,
+          "exit_time_ms": 1763042400938,
+          "entry_source_order": 2702,
+          "exit_source_order": 3,
+          "side": "BUY",
+          "entry": 1.16157,
+          "stop": 1.16131,
+          "target": 1.16209,
+          "exit": 1.16209,
+          "result_r": 2.0,
+          "exit_reason": "TARGET"
+        },
+        {
+          "entry_time": 1763042460,
+          "entry_time_ms": 1763042460327,
+          "exit_time_ms": 1763042830526,
+          "entry_source_order": 65,
+          "exit_source_order": 558,
+          "side": "BUY",
+          "entry": 1.16231,
+          "stop": 1.16188,
+          "target": 1.16317,
+          "exit": 1.16186,
+          "result_r": -1.0465,
+          "exit_reason": "STOP"
+        },
+        {
+          "entry_time": 1763042880,
+          "entry_time_ms": 1763042880414,
+          "exit_time_ms": 1763043600332,
+          "entry_source_order": 617,
+          "exit_source_order": 1347,
+          "side": "SELL",
+          "entry": 1.16199,
+          "stop": 1.16217,
+          "target": 1.16163,
+          "exit": 1.16204,
+          "result_r": -0.2778,
+          "exit_reason": "TIME_LIMIT"
+        },
+        {
+          "entry_time": 1763043842,
+          "entry_time_ms": 1763043842161,
+          "exit_time_ms": 1763044221275,
+          "entry_source_order": 1675,
+          "exit_source_order": 2132,
+          "side": "SELL",
+          "entry": 1.16177,
+          "stop": 1.16197,
+          "target": 1.16137,
+          "exit": 1.16197,
+          "result_r": -1.0,
+          "exit_reason": "STOP"
+        },
+        {
+          "entry_time": 1763044260,
+          "entry_time_ms": 1763044260026,
+          "exit_time_ms": 1763044428233,
+          "entry_source_order": 2226,
+          "exit_source_order": 2490,
+          "side": "BUY",
+          "entry": 1.16196,
+          "stop": 1.16183,
+          "target": 1.16222,
+          "exit": 1.16224,
+          "result_r": 2.1538,
+          "exit_reason": "TARGET"
+        },
+        {
+          "entry_time": 1763044440,
+          "entry_time_ms": 1763044440127,
+          "exit_time_ms": 1763045118118,
+          "entry_source_order": 2501,
+          "exit_source_order": 3531,
+          "side": "BUY",
+          "entry": 1.16228,
+          "stop": 1.16189,
+          "target": 1.16306,
+          "exit": 1.16306,
+          "result_r": 2.0,
+          "exit_reason": "TARGET"
+        },
+        {
+          "entry_time": 1763045160,
+          "entry_time_ms": 1763045160247,
+          "exit_time_ms": 1763045225217,
+          "entry_source_order": 3623,
+          "exit_source_order": 3794,
+          "side": "BUY",
+          "entry": 1.16309,
+          "stop": 1.16253,
+          "target": 1.16421,
+          "exit": 1.16251,
+          "result_r": -1.0357,
+          "exit_reason": "STOP"
+        },
+        {
+          "entry_time": 1763045640,
+          "entry_time_ms": 1763045640390,
+          "exit_time_ms": 1763045741584,
+          "entry_source_order": 4740,
+          "exit_source_order": 4938,
+          "side": "SELL",
+          "entry": 1.16245,
+          "stop": 1.16282,
+          "target": 1.16171,
+          "exit": 1.16282,
+          "result_r": -1.0,
+          "exit_reason": "STOP"
+        },
+        {
+          "entry_time": 1763045760,
+          "entry_time_ms": 1763045760169,
+          "exit_time_ms": 1763045859879,
+          "entry_source_order": 4972,
+          "exit_source_order": 5182,
+          "side": "BUY",
+          "entry": 1.16286,
+          "stop": 1.16245,
+          "target": 1.16368,
+          "exit": 1.16245,
+          "result_r": -1.0,
+          "exit_reason": "STOP"
+        },
+        {
+          "entry_time": 1763045881,
+          "entry_time_ms": 1763045881597,
+          "exit_time_ms": 1763045999154,
+          "entry_source_order": 5215,
+          "exit_source_order": 5459,
+          "side": "SELL",
+          "entry": 1.16261,
+          "stop": 1.16284,
+          "target": 1.16215,
+          "exit": 1.16285,
+          "result_r": -1.0435,
+          "exit_reason": "STOP"
+        }
+      ],
+      "count": 17,
+      "eligible_signals": 17,
+      "missing_tick_windows": 0,
+      "unresolved_outcomes": [],
+      "ambiguous_excluded": 0,
+      "ambiguous_rate": 0,
+      "expectancy_r": -0.0732,
+      "expectancy_bounds_r": {
+        "worst": -0.0732,
+        "best": -0.0732
+      },
+      "total_r": -1.245,
+      "win_rate": 35.29,
+      "data_note": "Quoted bid/ask, adverse slippage and commission per side. Execution uses continuous matching-feed candle intervals and bounded quote gaps. Replay stops at the first unresolved window. Quote coverage does not prove executable size.",
+      "execution_model": {
+        "version": 3,
+        "max_quote_gap_ms": 60000,
+        "slippage_bps": "0",
+        "commission_bps_per_side": "0",
+        "ordering": "UTC_MS_SOURCE_ORDINAL_V1"
+      },
+      "replay_coverage": {
+        "calendar_version": "DUKASCOPY_FX_NY17_V1",
+        "schedule": {
+          "kind": "forex_weekly",
+          "timezone": "America/New_York",
+          "sunday_open": "17:00",
+          "friday_close": "17:00"
+        },
+        "provider": "DUKASCOPY",
+        "symbol": "EURUSD",
+        "feed": "dukascopy-bi5-v2",
+        "required_period": [
+          1763038800,
+          1763046000
+        ],
+        "observed_quotes": 8636,
+        "first_quote_ms": 1763038800089,
+        "last_quote_ms": 1763045999825,
+        "gaps": [],
+        "gap_policy": "BOUNDED_QUOTE_GAP_V1",
+        "requested_gap_seconds": 60,
+        "max_quote_gap_ms": 60000
+      },
+      "lineage": {
+        "candle_partitions": [
+          {
+            "id": "01ed0c190b45128cfa61de57e68c0bb2153791a68809ad7e043ceb41ac33642e",
+            "sha256": "ba88a9e1d9912492d00ee904ae0e0cb9342fffd6280ec0a0ce73cdd77682831a"
+          },
+          {
+            "id": "3402d457f6de2f770ab2dedf31a951a9fcb8c90c4d8c186dc82d6f019f5d6d11",
+            "sha256": "351b64a92b7e292fd6c6026a5b92134623a38f62b997216c58f81fa67fe5d549"
+          }
+        ],
+        "tick_partitions": [
+          {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          {
+            "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+            "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+          }
+        ],
+        "source_manifests": [
+          {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276",
+            "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+            "feed_id": "dukascopy-bi5-v2",
+            "symbol": "EURUSD",
+            "source_start": 1763038800,
+            "source_end": 1763042400
+          },
+          {
+            "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+            "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8",
+            "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+            "feed_id": "dukascopy-bi5-v2",
+            "symbol": "EURUSD",
+            "source_start": 1763042400,
+            "source_end": 1763046000
+          }
+        ]
+      },
+      "source": "DUKASCOPY_SAVED",
+      "synthetic": false,
+      "symbol": "EURUSD",
+      "timeframe": "M1"
+    }
+  }
+}

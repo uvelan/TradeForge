@@ -21,7 +21,7 @@ from .historical_import import import_bi5
 from .domain import create_trade,get_trade,revise,decline_trade,close_trade,list_trades,analytics,export_ai,import_ai,journal_add,journal_list,journal_materialize
 from .risk import evaluate
 from .backtest import breakout_backtest
-from .tick_replay import replay_breakout, validate_bid_extremes
+from .tick_replay import replay_breakout, replay_coverage, validate_bid_extremes
 from .schemas import TradePlan,Outcome,ReviewInput,ReviewV1,JournalInput,RiskInput,SignalReference
 from . import domain
 from .drawings import router as drawing_router
@@ -33,7 +33,7 @@ from .strategy_evaluation_routes import router as strategy_evaluation_router
 from .historical_strategy_routes import router as historical_strategy_router
 from .historical_strategy_worker import supervise as supervise_strategy_history
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
-from .saved_history import chart_range, tick_partitions, read_tick_partitions
+from .saved_history import chart_range, tick_partitions, read_tick_partitions, tick_source_manifests
 
 
 @asynccontextmanager
@@ -383,17 +383,20 @@ def calculate_backtest(request: BacktestRequest):
                         or dataset["price_basis"] != "BID_ASK_UNITS"):
                     raise ValueError("Choose saved bid candles and a bid/ask tick partition from the same feed and symbol")
                 datasets = [dataset]
-            ticks = read_tick_partitions(datasets)
+            manifests = tick_source_manifests(datasets)
+            ticks = read_tick_partitions(datasets, source_manifests=manifests, execution_only=True)
             validate_bid_extremes(m["candles"], ticks, step)
+            audit = replay_coverage(m, ticks, source.removesuffix("_SAVED"), symbol, step, request.max_quote_gap_seconds)
             result = replay_breakout(m["candles"], ticks, step, target_r,
                                      slip_bps=request.slippage_bps, commission_bps=request.commission_bps,
-                                     max_quote_gap_seconds=request.max_quote_gap_seconds)
+                                     max_quote_gap_seconds=request.max_quote_gap_seconds, coverage=audit)
+            result["replay_coverage"] = audit
+            result["execution_model"].update(version=3, ordering="UTC_MS_SOURCE_ORDINAL_V1")
             if coverage and coverage["gaps"]:
                 result["candle_gaps"] = coverage["gaps"]
-                # With no verified calendar, gaps may hide signals even if no open trade spans them.
-                result.update(expectancy_r=None, expectancy_bounds_r=None, total_r=None, win_rate=None)
             tick_lineage = [{"id": part["id"], "sha256": part["sha256"]} for part in datasets]
-            result["lineage"] = {"candle_partitions": m["partitions"], "tick_partitions": tick_lineage}
+            result["lineage"] = {"candle_partitions": m["partitions"], "tick_partitions": tick_lineage,
+                                 "source_manifests": list(manifests.values())}
             if tick_dataset_id is not None:
                 result["lineage"]["tick_partition"] = tick_lineage[0]
     except (ValueError, RuntimeError, OSError, KeyError) as error:
