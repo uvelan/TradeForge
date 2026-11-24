@@ -18,3 +18,10 @@ Estimates are focused engineer-days including tests. Features are opt-in until t
 | T12 | P3 / T07-T10, T11 for large queries | G9/G12. Advanced analytics and research remain optional. | Add read-only result jobs, immutable strategy folds, results manifests, opaque source hashes and optional reporting adapters. QuantStats uses reconciled cash-flow-adjusted equity only, DuckDB queries existing Parquet, NautilusTrader remains isolated and gated. | [04](04_FRAMEWORK_DECISION.md) thresholds and [06](06_TEST_AND_BENCHMARK_PLAN.md) workload tests. Drop process/wrapper with no new authoritative data store. 1-10d per adapter. Avoid overfit, false claims and wheel drift. |
 
 Start T01-T03 independently. Let T04 establish the shared identity frontier before scale or reconciliation. T05 watch recovery and T06/T07 replay can proceed in separate increments against the contract. Never substitute a library result for missing evidence.
+
+### Engineering backlog
+
+Investigate the intermittent Windows mixed-feed shadow candle diagnostic in
+`test_shadow_candle_reads.py::test_research_matrix[mixed-feed]`. The push job
+returned HTTP 404 where the test expected 409. PR CI and the push retry passed
+on the same T06 head. [Failed job, attempt 1](https://github.com/uvelan/TradeForge/actions/runs/45426413415/job/138559519381).

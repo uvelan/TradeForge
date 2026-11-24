@@ -15,6 +15,7 @@ from .storage import POINT_SCALES
 from .strategy_definitions import Contract, ExactEvidenceReference, StrategyDefinitionV2, validate_definition
 from .strategy_evaluator import qualified_entry_intent
 from .strategy_evidence import fingerprint
+from .recorded_market_entry import RECORDED_RULES, ExecutionWindow, RecordedWindow, resolve_window
 from .tick_replay import executable_price, executable_side
 
 TAPE_LIMIT_BYTES = 4 * 1024**2
@@ -26,6 +27,9 @@ POLICY = {
     "coverage":"SEALED_SYNTHETIC_DELIVERY_INTERVALS",
     "pricing":"EXACT_EXECUTABLE_SIDE_POINTS_ZERO_SLIPPAGE",
 }
+
+
+RECORDED_POLICY = POLICY | RECORDED_RULES
 
 
 LIMIT_POLICY = POLICY | {
@@ -165,7 +169,8 @@ def simulate(intent, model, tape, tape_digest, *, policy=None, cutoff_ms=None):
     market_v1 = canonical(policy)==canonical(legacy_market)
     # Before fixed-price support, MARKET V1/V2 recorded an unsupported outcome
     # under its own policy identity for those entry kinds.
-    if canonical(policy) not in (canonical(current),canonical(POLICY)) and not market_v1:
+    recorded_market = policy == RECORDED_POLICY and isinstance(tape, ExecutionWindow) and kind == "MARKET"
+    if canonical(policy) not in (canonical(current),canonical(POLICY)) and not (market_v1 or recorded_market):
         raise ValueError("Unverifiable historical entry policy")
 
     identity = {"intent":intent["id"],"execution_data_fingerprint":tape_digest,"policy":dict(policy)}
@@ -275,8 +280,12 @@ def published_entry_intents(db, run_id, identity, model):
     return attempts,qualified,intents
 
 
-def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=None):
+def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=None, recorded=None):
     """Validate published intents without changing their ledger or qualification status."""
+    if recorded is not None:
+        if tape is not None or tape_sha256 is not None:
+            raise ValueError("Select one execution source")
+        recorded = RecordedWindow.model_validate(recorded)
     tape,digest = pin_tape(tape,tape_sha256)
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
@@ -287,7 +296,16 @@ def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=No
             raise ValueError("Intent does not belong to the published run")
         results = []
         for intent in selected:
-            result = simulate(intent,model,tape,digest)
+            if recorded is None:
+                result = simulate(intent,model,tape,digest)
+            else:
+                if intent["entry"]["kind"] != "MARKET" or intent["order_expiry"]["unit"] != "SECONDS":
+                    raise ValueError("Recorded execution supports MARKET with seconds expiry only")
+                window, evidence, ambiguous = resolve_window(db, recorded, intent)
+                result = simulate(intent, model, window, fingerprint(evidence), policy=RECORDED_POLICY)
+                if ambiguous and result["status"] == "SIMULATED_FILLED":
+                    result.update(status="AMBIGUOUS_QUOTE_ORDER", fill=None)
+                result["recorded_evidence"] = evidence
             payload = canonical(result)
             prior = db.execute("SELECT payload FROM offline_market_entry_results WHERE id=?",
                                (result["id"],)).fetchone()
@@ -317,11 +335,13 @@ def main():
     parser.add_argument("--intent")
     parser.add_argument("--tape",type=Path)
     parser.add_argument("--sha256",help="SHA-256 of the canonical validated synthetic tape")
+    parser.add_argument("--recorded",type=Path,help="RecordedWindow JSON with BI5 source and partition pins")
     args = parser.parse_args()
     try:
         tape = read_tape_file(args.tape) if args.tape else None
+        recorded = RecordedWindow.model_validate_json(args.recorded.read_bytes()) if args.recorded else None
         initialize()
-        result = validate_market_entries(args.run,tape=tape,tape_sha256=args.sha256,intent_id=args.intent)
+        result = validate_market_entries(args.run,tape=tape,tape_sha256=args.sha256,intent_id=args.intent,recorded=recorded)
     except (ValueError,OSError) as error:
         parser.exit(2,f"{error}\n")
     print(json.dumps(result,indent=2))
