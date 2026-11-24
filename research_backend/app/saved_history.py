@@ -136,7 +136,7 @@ def tick_source_manifests(partitions):
 TICK_FIELDS = ("time", "time_ms", "source_order", "bid_units", "ask_units", "scale")
 
 
-def ordered_partition(part, columns):
+def ordered_partition(part, columns, bounds_ms):
     # The legacy writer sorts by whole second. Sort the bounded equal-second
     # groups by the finer recorded clock and ordinal without sorting the archive.
     previous = -1
@@ -145,11 +145,17 @@ def ordered_partition(part, columns):
             if type(second) is not int or second <= previous:
                 raise ValueError("Invalid tick partition time order")
             previous = second
-            batch = list(group)
-            for quote in batch:
-                ms, ordinal = quote.get("time_ms"), quote.get("source_order")
-                if type(ms) is not int or ms // 1000 != second or type(ordinal) is not int or ordinal < 0:
+            batch = []
+            for quote in group:
+                ms = quote.get("time_ms")
+                if type(ms) is not int or ms // 1000 != second:
                     raise ValueError("Invalid tick timestamp or source order")
+                if bounds_ms is not None and not bounds_ms[0] <= ms < bounds_ms[1]:
+                    continue
+                ordinal = quote.get("source_order")
+                if type(ordinal) is not int or ordinal < 0:
+                    raise ValueError("Invalid tick timestamp or source order")
+                batch.append(quote)
             batch.sort(key=lambda row: (row["time_ms"], row["source_order"]))
             for quote in batch:
                 yield quote["time_ms"], quote["source_order"], part["id"], quote
@@ -182,11 +188,10 @@ def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execu
     with ExitStack() as handles:
         # Multi-file ties need the entire source row for exact duplicate verification.
         columns = [*TICK_FIELDS, "source_sha256"] if execution_only and len(partitions) == 1 else None
-        streams = [handles.enter_context(closing(ordered_partition(part, columns))) for part in partitions]
+        bounds_ms = None if period is None else (period[0] * 1000, period[1] * 1000)
+        streams = [handles.enter_context(closing(ordered_partition(part, columns, bounds_ms))) for part in partitions]
         merged = merge(*streams, key=lambda item: item[:3])
         for ms, at_ms in groupby(merged, key=lambda item: item[0]):
-            if period is not None and not period[0] * 1000 <= ms < period[1] * 1000:
-                continue
             origin = None
             for ordinal, tied in groupby(at_ms, key=lambda item: item[1]):
                 previous_file = None

@@ -78,3 +78,18 @@ Each fixture kept one pre-gap target exit at 2.5R and suppressed expectancy, exp
 Genuine Parquet with an integer and a NULL ordinal at the same millisecond returned 500/500 for GET/POST when packed, versus 422/422 when split. The same happened with a NULL millisecond. Validation now runs before sorting each second. The single-ID shorthand, packed range, split range and reversed split range all return 422/422 with only `Invalid tick timestamp or source order`; zero saved rows. Valid same-source order and duplicate controls continue to pass.
 
 The focused command above, including `research_backend/tests/test_t06_layout.py`, passed 52 tests. The November 13, 2025 benchmark used the same pinned inputs and reproduced all 17 trades across 8,636 quotes. The only response difference was the new null missing-candle frontier. Compared with the reviewed revision, elapsed time was 2.054 vs 2.071 s, Python peak allocation 35,616,953 vs 35,617,386 bytes, and peak process memory 154,976,256 vs 154,791,936 bytes. Each is a single fresh-process observation. No schema migration is required; the released rollback remains the PR #33 merge and the single-ID workflow described above.
+
+### Ordinal validation at the replay boundaries
+
+The reader verifies the complete selected partition and validates each timestamp against its recorded second. Only quotes in the half-open replay interval need a usable source ordinal. The Parquet regression exercises a single dataset ID, one-file range, split range and reversed split selection through both public endpoints.
+
+| NULL ordinal location | Backtest GET | Saved-run POST | Observed result in all four layouts |
+| --- | --- | --- | --- |
+| One millisecond before start | 200 | 201 | Matches clean trades, metrics and coverage |
+| Exactly at start | 422 | 422 | Invalid tick timestamp or source order, zero saved runs |
+| One millisecond before end | 422 | 422 | Invalid tick timestamp or source order, zero saved runs |
+| Exactly at end | 200 | 201 | Matches clean trades, metrics and coverage |
+
+At reviewed head `01987663`, the new matrix failed both outside cases and passed both inside cases. After correction the five focused test modules passed all 56 cases, including the calendar frontier and conflicting-origin controls. Reproduce the matrix with `python -m pytest -q research_backend/tests/test_t06_layout.py -k ordinal_boundary`.
+
+The pinned November 13 benchmark (`python -m scripts.benchmark_t06 --source storage/t06-input`) reproduced the previous input fingerprints and complete replay result across 8,636 quotes and 17 trades. Single measured elapsed times were 2.054 s previously and 2.006 s here. This run peaked at 35,614,866 bytes of traced Python allocations and 153,559,040 bytes process memory.

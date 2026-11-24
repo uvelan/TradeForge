@@ -129,3 +129,60 @@ def test_mixed_calendar_gap(client, friday, sunday, before_close):
     trade, = result["trades"]
     assert trade["exit_time_ms"] == (last_end - 179) * 1000 and trade["result_r"] == 2.5
     assert all(result[k] is None for k in ("expectancy_r", "expectancy_bounds_r", "total_r", "win_rate"))
+
+
+@pytest.mark.parametrize("boundary", ["before_start", "start", "before_end", "end"])
+def test_ordinal_boundary(client, monkeypatch, boundary):
+    start = int(datetime.fromisoformat("2025-01-10T12:00Z").timestamp())
+    end = start + 1800
+    bars, quotes = inputs()
+    bars[3].update(high=106, low=98)
+    for bar in bars:
+        bar["time"] += start
+    for row in quotes:
+        row["time_ms"] += start * 1000
+        row.update(time=row["time_ms"] // 1000, source_sha256="a" * 64)
+    archive("candles", bars)
+    params = dict(source="DUKASCOPY_SAVED", timeframe="M1", start=start, end=end)
+    clean = archive("ticks", quotes)
+    control = client.get("/api/backtest", params=params | {"tick_dataset_id": clean["id"]})
+    assert control.status_code == 200
+    expected = control.json()
+    assert expected["trades"][0]["exit_time_ms"] == (start + 181) * 1000
+
+    def uncatalog(part):
+        with db.transaction() as conn:
+            conn.execute("DELETE FROM datasets WHERE id=?", (part["id"],))
+
+    uncatalog(clean)
+    ms = {"before_start": start * 1000 - 1, "start": start * 1000,
+          "before_end": end * 1000 - 1, "end": end * 1000}[boundary]
+    bad = dict(quotes[0], time_ms=ms, time=ms // 1000, source_order=None)
+    packed = archive("ticks", [*quotes, bad])
+
+    def probe(**choice):
+        request = params | choice
+        return (client.get("/api/backtest", params=request),
+                client.post("/api/backtest/runs", json=request))
+
+    responses = [probe(tick_dataset_id=packed["id"]), probe(tick_archive_range=True)]
+    uncatalog(packed)
+    archive("ticks", quotes[:2])
+    archive("ticks", [*quotes[2:], bad])
+    responses.append(probe(tick_archive_range=True))
+    select = main.tick_partitions
+    monkeypatch.setattr(main, "tick_partitions", lambda *args: select(*args)[::-1])
+    responses.append(probe(tick_archive_range=True))
+    outside = boundary in ("before_start", "end")
+    statuses = [(get.status_code, post.status_code) for get, post in responses]
+    assert statuses == ([(200, 201)] if outside else [(422, 422)]) * 4
+    for get, post in responses:
+        if outside:
+            result = get.json()
+            assert post.json()["result"] == result
+            assert {k: v for k, v in result.items() if k != "lineage"} == {
+                k: v for k, v in expected.items() if k != "lineage"}
+        else:
+            assert get.json() == post.json() == {"detail": "Invalid tick timestamp or source order"}
+    if not outside:
+        assert db.one("SELECT count(*) AS n FROM backtest_runs")["n"] == 0
