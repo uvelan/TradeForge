@@ -149,3 +149,67 @@ def test_superseded_registration_cannot_write_or_publish(fixture,monkeypatch,tak
     assert blocked.status_code == 409 and "SHADOW_REGISTRATION_INCOMPLETE" in blocked.json()["detail"]
     register(*args,manifest)
     assert fixed_request(args,valid).status_code == 200
+
+
+@pytest.mark.parametrize("column", ["last_time", "first_time"])
+def test_recent_checks_registered_bounds_before_parsing(fixture, monkeypatch, column):
+    args, _, part, manifest = fixture
+    neighbor = storage.write_partition("DUKASCOPY", "fixture", "EURUSD", "candles", "M5", "BID",
+                                       [research_bar(T+600)])
+    with closing(sqlite3.connect(args[1])) as conn, conn:
+        conn.execute(f"UPDATE datasets SET {column}=CAST({column} AS BLOB) WHERE id=?", (part["id"],))
+    before = inventory(args)
+    register(*args, manifest)
+    with closing(sqlite3.connect(manifest)) as conn:
+        reason, = conn.execute("SELECT reason FROM mappings WHERE catalog='research' AND legacy_id=?",
+                               (part["id"],)).fetchone()
+        assert reason == "INVALID_UTC_TIMESTAMP"
+        assert conn.execute("SELECT revision FROM mappings WHERE legacy_id=?", (neighbor["id"],)).fetchone()[0]
+    monkeypatch.setenv(FLAG, str(manifest))
+    forbid_legacy(monkeypatch)
+    def no_decode(*args):
+        pytest.fail("Recent-window rejection reached Parquet decoding")
+    detail = f"SHADOW_UNRESOLVED: {reason} (research, {part['id']})"
+    params = {"source":"DUKASCOPY_SAVED", "symbol":"EURUSD", "timeframe":"M5"}
+    with TestClient(research_app, base_url="http://localhost", raise_server_exceptions=False) as api:
+        # Explicit SQL windows retain their existing event-time membership.
+        # A BLOB first_time sorts after every TEXT upper endpoint in SQLite.
+        monkeypatch.setattr("research_backend.app.saved_history.read_partition_tail",no_decode)
+        explicit = api.get("/api/market/candles", params=params | {"start":T,"end":T+300})
+        print(column, "explicit", explicit.status_code, explicit.text)
+        if column == "last_time":
+            assert explicit.status_code == 409 and explicit.json()["detail"] == detail
+        else:
+            assert explicit.status_code == 404
+        recent = api.get("/api/market/candles",params=params)
+        print(column, "recent", recent.status_code, recent.text)
+        assert recent.status_code == 409 and recent.json()["detail"] == detail
+    assert inventory(args) == before
+    print("HASHES",column,json.dumps(before,sort_keys=True))
+
+
+@pytest.mark.parametrize("excluded", ["older-than-50", "other-feed", "ask"])
+def test_recent_validates_only_selected_bounds(fixture, monkeypatch, excluded):
+    args, _, part, manifest = fixture
+    count = 50 if excluded == "older-than-50" else 1
+    for index in range(count):
+        storage.write_partition("DUKASCOPY", "fixture", "EURUSD", "candles", "M5", "BID",
+                                [research_bar(T+600+index*300)])
+    with closing(sqlite3.connect(args[1])) as conn, conn:
+        conn.execute("UPDATE datasets SET first_time=CAST(first_time AS BLOB) WHERE id=?", (part["id"],))
+        if excluded == "other-feed":
+            conn.execute("UPDATE datasets SET feed_id='another-feed' WHERE id=?", (part["id"],))
+        elif excluded == "ask":
+            conn.execute("UPDATE datasets SET price_basis='ASK' WHERE id=?", (part["id"],))
+    before = inventory(args)
+    register(*args,manifest)
+    with TestClient(research_app,base_url="http://localhost") as api:
+        params = {"symbol":"EURUSD","source":"DUKASCOPY_SAVED","timeframe":"M5"}
+        legacy = api.get("/api/market/candles",params=params)
+        assert legacy.status_code == 200
+        monkeypatch.setenv(FLAG,str(manifest))
+        forbid_legacy(monkeypatch)
+        shadow = api.get("/api/market/candles",params=params)
+    assert shadow.status_code == 200 and shadow.json() == legacy.json()
+    assert shadow.json()["candles"] == [research_bar(T+600+i*300) for i in range(count)]
+    assert inventory(args) == before

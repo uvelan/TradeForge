@@ -4,8 +4,10 @@ from .db import rows
 from .storage import iter_complete_partition, read_partition, read_partition_tail
 
 
-def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int, *, query=rows) -> tuple[int, int]:
-    partitions = query("""SELECT first_time, last_time, feed_id, price_basis FROM datasets
+def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int, *, resolver=None) -> tuple[int, int]:
+    query = resolver.rows if resolver else rows
+    columns = "rowid AS _snapshot_rowid, *" if resolver else "first_time, last_time, feed_id, price_basis"
+    partitions = query(f"""SELECT {columns} FROM datasets
         WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles' AND (provider<>'DUKASCOPY' OR price_basis='BID')
         ORDER BY last_time DESC, created_at DESC LIMIT 50""", (provider, symbol, timeframe))
     if not partitions:
@@ -13,6 +15,9 @@ def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int, 
     latest = partitions[0]
     compatible = [part for part in partitions if (part["feed_id"], part["price_basis"]) ==
                   (latest["feed_id"], latest["price_basis"])]
+    if resolver:
+        for part in compatible:
+            resolver.resolve_mapping(part)
     start = min(int(datetime.fromisoformat(part["first_time"]).timestamp()) for part in compatible)
     end = int(datetime.fromisoformat(latest["last_time"]).timestamp()) + step
     return start, end
@@ -80,7 +85,7 @@ def chart_range(provider, symbol, timeframe, start, end, step, limit):
     if path is not None:
         with open_resolver(path, "research", db.DATABASE, storage.MARKET_DIR) as resolver:
             if start is None:
-                start, end = recent_archive_range(provider, symbol, timeframe, step, query=resolver.rows)
+                start, end = recent_archive_range(provider, symbol, timeframe, step, resolver=resolver)
             return saved_range(provider, symbol, timeframe, start, end, step, limit, resolver=resolver)
     if start is None:
         start, end = recent_archive_range(provider, symbol, timeframe, step)

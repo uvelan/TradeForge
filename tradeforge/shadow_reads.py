@@ -30,8 +30,8 @@ class CandleResolver:
     def rows(self, query, params):
         return [dict(row) for row in self.source.execute(query, params)]
 
-    @contextmanager
-    def artifact(self, entry, *, max_rows=None):
+    def resolve_mapping(self, entry):
+        """Check the pinned source row and revision without opening its Parquet file."""
         row = dict(entry)
         rowid = row.pop("_snapshot_rowid", None)
         key = row["id"]
@@ -64,9 +64,15 @@ class CandleResolver:
             required["source_claim_id"] = key
         if any(claim.get(k) != v for k,v in required.items()):
             raise ShadowReadError("SHADOW_REVISION_BINDING_MISMATCH")
+        return claim
+
+    @contextmanager
+    def artifact(self, entry, *, max_rows=None):
+        claim = self.resolve_mapping(entry)
         if max_rows is not None and claim["rows"] > max_rows:
             raise ShadowReadError("Partition exceeds the bounded range reader")
-        relative = PureWindowsPath(row["relative_path"])
+        relative = PureWindowsPath(entry["relative_path"])
+        fixed = self.catalog == "fixed"
         parts = relative.parts
         if relative.anchor or ".." in parts or (fixed and parts[:1] != ("market-data",)):
             raise ShadowReadError("SHADOW_INVALID_PATH")

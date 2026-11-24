@@ -80,3 +80,29 @@ For the two research rejection cases, test sentinels failed on either legacy fal
 ```
 
 **Rollback.** Unset the shadow-reader flag and restart the API. Retain the V3 manifest for audit. An older binary requires its own compatible offline output. Legacy source databases and archives need no restoration.
+
+
+## Automatic recent-window diagnostics
+
+On reviewed head `f38215c972d37cca1a94429a041f7c02f5c34900`, the recent range selector parsed source bounds before resolving their Phase A mapping. The test writes an ordinary checksummed M5 partition, copies its original ISO text bytes into a SQLite BLOB in one timestamp field, adds a later valid partition on the same feed, and runs registration. The registrar records `INVALID_UTC_TIMESTAMP` for partition `a974a548888affadd99194003407328b7b6d2afb09216aa1fbc0f25f9c68b214` in both fixtures.
+
+| BLOB field | Request | Reviewed HTTP | Corrected HTTP |
+|---|---|---|---|
+| last_time | Explicit [36000,36300) | 409 with recorded reason and ID | Same 409 |
+| last_time | Recent | 500 | 409 with recorded reason and ID |
+| first_time | Explicit [36000,36300) | 404 | Same 404 |
+| first_time | Recent | 500 | 409 with recorded reason and ID |
+
+For the explicit first_time case, SQLite's existing range predicate excludes a BLOB first_time when it compares it to a TEXT upper bound. The later neighbor also lies outside that explicit window. Automatic selection includes both partitions and checks each compatible mapping before parsing any time. The shadow reader reuses the artifact reader's mapping and revision verification without opening a Parquet file. Separate selection controls check the latest-50 limit, feed compatibility and Dukascopy BID filter against the complete legacy HTTP response.
+
+SHA-256 values below matched before registration and after the HTTP requests. These are isolated fixture measurements. Database hashes can vary between runs because the writers record creation times.
+
+| Source | last_time fixture | first_time fixture |
+|---|---|---|
+| Research database | `de6e012ceb6a86933106826434c612f82c166eb9b07ffdfc89a8a1a3deb3274f` | `f6ec52a993b5552a45315b1137af3cd7406f512c9573d3d807739f3ca7fc0fc7` |
+| Fixed database | `a9fbe5694ec507427d1f0760f6033989f60e2126c0b1d4283509faee3a9e8e4b` | `06be46e7224fd4c1e8d463bf0a17b1c6e3b0eaab4ab9191b680d2fcd2f0c8739` |
+| Affected research Parquet | `062dcc3d9293b43d331f6820b34e8334f5e319bcb3666e96a2080044f6ae2502` | Same |
+| Neighboring research Parquet | `eaaface7e9d7c8e82ed7d000791c411b4899752ad696694ee9d7877da789bf67` | Same |
+| Fixed Parquet | `985102d9ef5e4e7393b066a577a6877b5c82f3c6f6ec99ccea2abd4866e78b21` | Same |
+
+Reproduce the two failures on the reviewed reader or the corrected responses on this branch with the new test file and `python -m pytest -qs tests/test_shadow_read_eligibility.py -k registered_bounds`. Include `-k "registered_bounds or selected_bounds"` to run all five new cases.
