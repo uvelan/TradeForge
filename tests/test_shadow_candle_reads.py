@@ -1,6 +1,7 @@
 """HTTP-level parity on immutable local fixture catalogs."""
 from contextlib import closing
 import json
+from pathlib import Path
 import shutil
 import sqlite3
 
@@ -79,6 +80,69 @@ def test_shadow_boundary(fixture, monkeypatch):
     forbid_legacy(monkeypatch)
     assert boundary(fixture) == expected
     assert source_hashes(args) == before
+
+@pytest.mark.parametrize("case", ["clean-disappears", "active-before", "active-after", "unreadable"])
+def test_research_wal_observation_is_fail_closed(fixture, monkeypatch, case):
+    from tradeforge import shadow_reads
+
+    args, _, _, manifest = fixture
+    _, database, _ = args
+    # Exercise the HTTP route without a background reader racing the fixture.
+    with closing(TestClient(research_app, base_url="http://localhost")) as client:
+        legacy = request_range(client, T, T+300)
+        assert legacy.status_code == 200
+        register(*args, manifest)
+        monkeypatch.setenv(FLAG, str(manifest))
+        forbid_legacy(monkeypatch)
+
+        wal = Path(str(database) + "-wal")
+        removed = []
+        if case == "clean-disappears":
+            wal.touch(exist_ok=False)
+            stat = Path.stat
+
+            def close_reader(path, *args, **kwargs):
+                result = stat(path, *args, **kwargs)
+                if path == wal:
+                    assert result.st_size == 0
+                    path.unlink()
+                    removed.append(path)
+                return result
+
+            monkeypatch.setattr(Path, "stat", close_reader)
+        elif case == "active-before":
+            wal.write_bytes(b"synthetic nonempty WAL")
+        elif case == "active-after":
+            verify = shadow_reads.verify_artifact
+
+            def create_wal_after_verified_copy(path, *args, **kwargs):
+                verify(path, *args, **kwargs)
+                if path == database:
+                    wal.write_bytes(b"synthetic nonempty WAL")
+
+            monkeypatch.setattr(shadow_reads, "verify_artifact", create_wal_after_verified_copy)
+        else:
+            stat = Path.stat
+
+            def unreadable(path, *args, **kwargs):
+                if path == wal:
+                    raise PermissionError("synthetic inaccessible WAL")
+                return stat(path, *args, **kwargs)
+
+            monkeypatch.setattr(Path, "stat", unreadable)
+
+        result = request_range(client, T, T+300)
+        if case == "clean-disappears":
+            assert removed == [wal]
+            assert result.status_code == 200, result.text
+            assert result.json() == legacy.json()
+        else:
+            stage = "after" if case == "active-after" else "before"
+            assert result.status_code == 409, result.text
+            detail = result.json()["detail"]
+            assert detail.startswith("SHADOW_SOURCE_SNAPSHOT_MISMATCH:")
+            assert f"{stage} source copy" in detail
+
 
 def fixed_request(args, key, **params):
     with TestClient(create_app(args[0]),base_url="http://localhost") as client:
