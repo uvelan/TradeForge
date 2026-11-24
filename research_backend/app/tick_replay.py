@@ -24,6 +24,24 @@ def effective_tick_period(market):
     return start, coverage["end"]
 
 
+def classify_gap(start, end, sessions):
+    if sessions is None:
+        yield dict(start=start, end=end, status="UNKNOWN_SCHEDULE")
+        return
+    cursor = start
+    for opens, closes in sessions:
+        if opens >= end:
+            break
+        left, right = max(cursor, opens), min(end, closes)
+        if left < right:
+            if cursor < left:
+                yield dict(start=cursor, end=left, status="KNOWN_CLOSED")
+            yield dict(start=left, end=right, status="MISSING_OPEN")
+            cursor = right
+    if cursor < end:
+        yield dict(start=cursor, end=end, status="KNOWN_CLOSED")
+
+
 def replay_coverage(market, ticks, provider, symbol, step, gap_seconds):
     candles, coverage = market["candles"], market["coverage"]
     start, end = effective_tick_period(market)
@@ -34,9 +52,8 @@ def replay_coverage(market, ticks, provider, symbol, step, gap_seconds):
     for gap in coverage["gaps"]:
         left, right = max(start, gap["start"]), min(end, gap["end"])
         if left < right:
-            status = "UNKNOWN_SCHEDULE" if sessions is None else (
-                "MISSING_OPEN" if any(a < right and left < b for a, b in sessions) else "KNOWN_CLOSED")
-            gaps.append(dict(start=left, end=right, status=status))
+            gaps.extend(classify_gap(left, right, sessions))
+    frontier = next((gap["start"] for gap in gaps if gap["status"] != "KNOWN_CLOSED"), None)
     first = bisect_left(ticks, start * 1000, key=lambda q: q["time_ms"])
     last = bisect_left(ticks, end * 1000, key=lambda q: q["time_ms"])
     if sessions is not None:
@@ -50,7 +67,7 @@ def replay_coverage(market, ticks, provider, symbol, step, gap_seconds):
                 raise ValueError("UNTRUSTED: archive contradicts weekly session calendar")
     return dict(calendar_version="DUKASCOPY_FX_NY17_V1" if known else "UNKNOWN_V1",
                 schedule=calendar.model_dump(), provider=provider, symbol=symbol, feed=market["feed_id"],
-                required_period=[start, end], observed_quotes=last-first,
+                required_period=[start, end], first_unverified_candle_s=frontier, observed_quotes=last-first,
                 first_quote_ms=ticks[first]["time_ms"] if first < last else None,
                 last_quote_ms=ticks[last-1]["time_ms"] if first < last else None, gaps=gaps,
                 gap_policy="BOUNDED_QUOTE_GAP_V1", requested_gap_seconds=gap_seconds,
@@ -90,7 +107,7 @@ def replay_breakout(candles: list[dict], ticks: list[dict], step: int, target_r:
     unresolved = []
     next_entry = 0
     gaps = coverage["gaps"] if coverage else []
-    frontier = next((gap["start"] for gap in gaps if gap["status"] != "KNOWN_CLOSED"), None)
+    frontier = coverage["first_unverified_candle_s"] if coverage else None
     reopenings = {gap["end"] for gap in gaps if gap["status"] == "KNOWN_CLOSED"}
     for index in range(2, len(candles) - 1):
         signal = candles[index]

@@ -145,11 +145,14 @@ def ordered_partition(part, columns):
             if type(second) is not int or second <= previous:
                 raise ValueError("Invalid tick partition time order")
             previous = second
-            for quote in sorted(group, key=lambda row: (row["time_ms"], row["source_order"])):
-                ms, ordinal = quote["time_ms"], quote["source_order"]
+            batch = list(group)
+            for quote in batch:
+                ms, ordinal = quote.get("time_ms"), quote.get("source_order")
                 if type(ms) is not int or ms // 1000 != second or type(ordinal) is not int or ordinal < 0:
                     raise ValueError("Invalid tick timestamp or source order")
-                yield ms, ordinal, part["id"], quote
+            batch.sort(key=lambda row: (row["time_ms"], row["source_order"]))
+            for quote in batch:
+                yield quote["time_ms"], quote["source_order"], part["id"], quote
 
 
 def tick_origin(quote, file_id, manifests):

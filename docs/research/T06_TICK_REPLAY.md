@@ -62,3 +62,19 @@ Selection, observation filtering and the calendar audit now share the effective 
 The pinned November 13, 2025 benchmark repeated the same 8,636 quotes and two input hashes. All 17 trades, coverage, timestamps and aggregate metrics matched. Only the execution-model ordering label changed in the response. One traced fresh-process measurement took 2.071 s versus 1.982 s (+0.089 s). Peak Python allocation rose by 10 bytes to 35,617,386 bytes; peak process memory rose by 16,384 bytes to 154,791,936 bytes. These are individual observations. [Measurement and compared fields](evidence/t06-layout-benchmark.json)
 
 Reproduction adds `research_backend/tests/test_t06_layout.py` to the focused pytest command above. The expanded suite passed 47 tests, and the six layout regressions passed again after adding an out-of-window tie and duplicated shard boundary. For rollback to a released version use the PR #33 merge and single-ID workflow described above. Reverting only this correction restores both reviewed layout defects.
+
+## Mixed calendar gaps and malformed tick priorities
+
+Reproduced on `932ebc5ea94f0cfcc62c9e823f18e24ff5fd0bc9`. Both public endpoints placed the entire mixed gap in MISSING_OPEN. The corrected GET (200), saved POST (201), and subsequent saved-run GET (200) agree on these half-open UTC intervals. The replay uses the persisted `first_unverified_candle_s` as its missing-candle frontier.
+
+| Fixture | Stored intervals in chronological order | Frontier (UTC) |
+|---|---|---|
+| Winter reopening one minute late | KNOWN_CLOSED [Jan 10 22:00, Jan 12 22:00); MISSING_OPEN [Jan 12 22:00, 22:01) | Jan 12 22:00, 2025 |
+| Spring DST reopening one minute late | KNOWN_CLOSED [Mar 7 22:00, Mar 9 21:00); MISSING_OPEN [Mar 9 21:00, 21:01) | Mar 9 21:00, 2025 |
+| Last Friday minute missing | MISSING_OPEN [Jan 10 21:59, 22:00); KNOWN_CLOSED [Jan 10 22:00, Jan 12 22:00) | Jan 10 21:59, 2025 |
+
+Each fixture kept one pre-gap target exit at 2.5R and suppressed expectancy, expectancy bounds, win rate and total R. The later setup produced no fill.
+
+Genuine Parquet with an integer and a NULL ordinal at the same millisecond returned 500/500 for GET/POST when packed, versus 422/422 when split. The same happened with a NULL millisecond. Validation now runs before sorting each second. The single-ID shorthand, packed range, split range and reversed split range all return 422/422 with only `Invalid tick timestamp or source order`; zero saved rows. Valid same-source order and duplicate controls continue to pass.
+
+The focused command above, including `research_backend/tests/test_t06_layout.py`, passed 52 tests. The November 13, 2025 benchmark used the same pinned inputs and reproduced all 17 trades across 8,636 quotes. The only response difference was the new null missing-candle frontier. Compared with the reviewed revision, elapsed time was 2.054 vs 2.071 s, Python peak allocation 35,616,953 vs 35,617,386 bytes, and peak process memory 154,976,256 vs 154,791,936 bytes. Each is a single fresh-process observation. No schema migration is required; the released rollback remains the PR #33 merge and the single-ID workflow described above.

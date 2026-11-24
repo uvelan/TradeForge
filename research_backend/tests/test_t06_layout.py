@@ -9,7 +9,7 @@ from test_tick_replay import inputs, tick
 
 
 @pytest.mark.parametrize("case", [
-    "trailing", "leading", "exclusive_end", "clean_weekend", "distinct_sources", "ordinal_collision",
+    "trailing", "leading", "exclusive_end", "clean_weekend", "distinct_sources", "ordinal_collision", "null_ordinal", "null_ms",
 ])
 def test_public_layout_equivalence(client, monkeypatch, case):
     close = int(datetime.fromisoformat("2025-01-10T22:00Z").timestamp())
@@ -30,6 +30,8 @@ def test_public_layout_equivalence(client, monkeypatch, case):
         ticks[3]["source_sha256"] = "b" * 64
         if case == "ordinal_collision":
             ticks[3]["source_order"] = ticks[2]["source_order"]
+    if case in ("null_ordinal", "null_ms"):
+        ticks[3]["source_order" if case == "null_ordinal" else "time_ms"] = None
     pieces = [ticks[:3], ticks[3:]]
     if case in ("leading", "trailing", "exclusive_end"):
         time = {"leading": reopen - 60, "trailing": close + 60, "exclusive_end": end}[case]
@@ -72,7 +74,10 @@ def test_public_layout_equivalence(client, monkeypatch, case):
         details = {o[2]["detail"] for o in observations.values()}
         assert len(details) == 1
         reason = "calendar" if case in ("leading", "trailing") else "source order"
-        assert reason in details.pop()
+        if case in ("null_ordinal", "null_ms"):
+            assert details == {"Invalid tick timestamp or source order"}
+        else:
+            assert reason in details.pop()
         assert db.one("SELECT count(*) AS n FROM backtest_runs")["n"] == 0
     else:
         assert set(statuses.values()) == {(200, 201)}, statuses
@@ -85,3 +90,42 @@ def test_public_layout_equivalence(client, monkeypatch, case):
             trade, = result["trades"]
             assert (trade["exit_reason"], trade["exit_time_ms"], trade["result_r"]) == (
                 "TARGET", (first + 181)*1000, 2.5)
+
+@pytest.mark.parametrize("friday,sunday,before_close", [
+    ("2025-01-10T22:00Z", "2025-01-12T22:00Z", False),
+    ("2025-03-07T22:00Z", "2025-03-09T21:00Z", False),
+    ("2025-01-10T22:00Z", "2025-01-12T22:00Z", True),
+])
+def test_mixed_calendar_gap(client, friday, sunday, before_close):
+    close, reopen = [int(datetime.fromisoformat(t).timestamp()) for t in (friday, sunday)]
+    last_end = close - 60 if before_close else close
+    first_open = reopen if before_close else reopen + 60
+    bars, _ = inputs()
+    for i, bar in enumerate(bars):
+        bar["time"] = (last_end if i < 6 else first_open) + (i - 6) * 60
+    bars[3]["high"] = bars[9]["high"] = 106
+    bars[8].update(high=104, close=103)
+    quotes = []
+    for entry in (last_end - 180, first_open + 180):
+        for second, bid in enumerate((100, 106)):
+            t = entry + second
+            quotes.append(dict(tick(t * 1000, len(quotes), bid, bid + 1), time=t))
+    archive("candles", bars)
+    archive("ticks", quotes)
+    params = dict(source="DUKASCOPY_SAVED", timeframe="M1", start=bars[0]["time"],
+                  end=bars[-1]["time"] + 60, tick_archive_range=True)
+    get = client.get("/api/backtest", params=params)
+    post = client.post("/api/backtest/runs", json=params)
+    assert (get.status_code, post.status_code) == (200, 201)
+    stored = client.get("/api/backtest/runs/" + post.json()["id"])
+    result = get.json()
+    assert result == post.json()["result"] == stored.json()["result"]
+    known = dict(start=close, end=reopen, status="KNOWN_CLOSED")
+    missing = (dict(start=last_end, end=close, status="MISSING_OPEN") if before_close else
+               dict(start=reopen, end=first_open, status="MISSING_OPEN"))
+    audit = result["replay_coverage"]
+    assert audit["gaps"] == ([missing, known] if before_close else [known, missing])
+    assert audit["first_unverified_candle_s"] == missing["start"]
+    trade, = result["trades"]
+    assert trade["exit_time_ms"] == (last_end - 179) * 1000 and trade["result_r"] == 2.5
+    assert all(result[k] is None for k in ("expectancy_r", "expectancy_bounds_r", "total_r", "win_rate"))
