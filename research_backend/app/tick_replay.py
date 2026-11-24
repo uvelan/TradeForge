@@ -18,10 +18,15 @@ def executable_price(quote: dict, buy: bool) -> Decimal:
     return Decimal(quote[f"{executable_side(buy)}_units"]) / quote["scale"]
 
 
-def replay_coverage(market, ticks, provider, symbol, step, gap_seconds):
+def effective_tick_period(market):
     candles, coverage = market["candles"], market["coverage"]
     start = candles[0]["time"] if coverage["truncated"] else coverage["start"]
-    end = coverage["end"]
+    return start, coverage["end"]
+
+
+def replay_coverage(market, ticks, provider, symbol, step, gap_seconds):
+    candles, coverage = market["candles"], market["coverage"]
+    start, end = effective_tick_period(market)
     known = provider == "DUKASCOPY" and market["feed_id"] == FEED and symbol in ("EURUSD", "GBPUSD")
     calendar = MarketSchedule(kind="forex_weekly" if known else "unknown")
     sessions = open_intervals(start, end, calendar)

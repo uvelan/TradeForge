@@ -21,7 +21,7 @@ from .historical_import import import_bi5
 from .domain import create_trade,get_trade,revise,decline_trade,close_trade,list_trades,analytics,export_ai,import_ai,journal_add,journal_list,journal_materialize
 from .risk import evaluate
 from .backtest import breakout_backtest
-from .tick_replay import replay_breakout, replay_coverage, validate_bid_extremes
+from .tick_replay import effective_tick_period, replay_breakout, replay_coverage, validate_bid_extremes
 from .schemas import TradePlan,Outcome,ReviewInput,ReviewV1,JournalInput,RiskInput,SignalReference
 from . import domain
 from .drawings import router as drawing_router
@@ -371,11 +371,12 @@ def calculate_backtest(request: BacktestRequest):
             if m["price_basis"] != "BID":
                 raise ValueError("Tick replay requires saved bid candles")
             step = FRAME_MIN[timeframe] * 60
+            if not m["candles"]:
+                raise ValueError("No saved bid candles in the selected range")
+            period = effective_tick_period(m)
             if request.tick_archive_range:
-                if not m["candles"]:
-                    raise ValueError("No saved bid candles in the selected range")
                 datasets = tick_partitions(source.removesuffix("_SAVED"), symbol, m["feed_id"],
-                                           m["candles"][0]["time"], m["candles"][-1]["time"] + step)
+                                           *period)
             else:
                 dataset = one("SELECT * FROM datasets WHERE id=?", (tick_dataset_id,))
                 if (not dataset or dataset["kind"] != "ticks" or dataset["symbol"] != symbol
@@ -384,14 +385,14 @@ def calculate_backtest(request: BacktestRequest):
                     raise ValueError("Choose saved bid candles and a bid/ask tick partition from the same feed and symbol")
                 datasets = [dataset]
             manifests = tick_source_manifests(datasets)
-            ticks = read_tick_partitions(datasets, source_manifests=manifests, execution_only=True)
+            ticks = read_tick_partitions(datasets, source_manifests=manifests, execution_only=True, period=period)
             validate_bid_extremes(m["candles"], ticks, step)
             audit = replay_coverage(m, ticks, source.removesuffix("_SAVED"), symbol, step, request.max_quote_gap_seconds)
             result = replay_breakout(m["candles"], ticks, step, target_r,
                                      slip_bps=request.slippage_bps, commission_bps=request.commission_bps,
                                      max_quote_gap_seconds=request.max_quote_gap_seconds, coverage=audit)
             result["replay_coverage"] = audit
-            result["execution_model"].update(version=3, ordering="UTC_MS_SOURCE_ORDINAL_V1")
+            result["execution_model"].update(version=3, ordering="UTC_MS_SOURCE_ORDINAL_V2")
             if coverage and coverage["gaps"]:
                 result["candle_gaps"] = coverage["gaps"]
             tick_lineage = [{"id": part["id"], "sha256": part["sha256"]} for part in datasets]
@@ -457,7 +458,8 @@ def run_quotes(run_id:str,trade_index:int,offset:int=Query(0,ge=0,le=500_000),li
             raise HTTPException(409,"Original quote partition unavailable")
         datasets.append(row)
     try:
-        quotes = read_tick_partitions(datasets)
+        period = result.get("replay_coverage", {}).get("required_period")
+        quotes = read_tick_partitions(datasets, period=period)
     except (RuntimeError,OSError,ValueError,KeyError) as error:
         raise HTTPException(409,f"Original quote partitions failed verification: {error}") from error
     start = (trade["entry_time_ms"],trade["entry_source_order"])

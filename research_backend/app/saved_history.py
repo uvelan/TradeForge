@@ -152,7 +152,22 @@ def ordered_partition(part, columns):
                 yield ms, ordinal, part["id"], quote
 
 
-def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execution_only=False) -> list[dict]:
+def tick_origin(quote, file_id, manifests):
+    fingerprint = quote.get("source_sha256")
+    registered = manifests.get(file_id)
+    if registered:
+        if fingerprint is not None and fingerprint != registered["source_sha256"]:
+            raise ValueError("Tick row contradicts source manifest")
+        fingerprint = registered["source_sha256"]
+    if fingerprint is None:
+        # A legacy unpinned ordinal is only comparable inside its original partition.
+        return ("partition", file_id)
+    if not isinstance(fingerprint, str) or not re.fullmatch(r"[0-9a-f]{64}", fingerprint):
+        raise ValueError("Invalid tick source fingerprint")
+    return ("source", fingerprint)
+
+
+def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execution_only=False, period=None) -> list[dict]:
     if len(partitions) > 50 or sum(part["rows_count"] for part in partitions) > TICK_REPLAY_LIMIT:
         raise ValueError("Selected tick partitions exceed the 500,000 quote replay limit or 50 files")
     if len({(p["provider"], p["feed_id"], p["symbol"], p["price_basis"]) for p in partitions}) != 1:
@@ -167,33 +182,25 @@ def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execu
         streams = [handles.enter_context(closing(ordered_partition(part, columns))) for part in partitions]
         merged = merge(*streams, key=lambda item: item[:3])
         for ms, at_ms in groupby(merged, key=lambda item: item[0]):
-            origins = set()
-            files = set()
+            if period is not None and not period[0] * 1000 <= ms < period[1] * 1000:
+                continue
+            origin = None
             for ordinal, tied in groupby(at_ms, key=lambda item: item[1]):
                 previous_file = None
                 winner = None
                 for _, _, file_id, quote in tied:
+                    current_origin = tick_origin(quote, file_id, source_manifests)
+                    if origin is not None and current_origin != origin:
+                        raise ValueError(f"Ambiguous tick source order at {ms}")
+                    origin = current_origin
                     if previous_file == file_id:
                         raise ValueError("Tick source order is ambiguous within a partition")
                     if winner is not None and quote != winner:
                         raise ValueError("Conflicting tick quotes in overlapping partitions")
                     previous_file, winner = file_id, quote
-                    files.add(file_id)
-                    registered = source_manifests.get(file_id)
-                    origin = quote.get("source_sha256")
-                    if registered:
-                        if origin is not None and origin != registered["source_sha256"]:
-                            raise ValueError("Tick row contradicts source manifest")
-                        origin = registered["source_sha256"]
-                    if origin is not None and not isinstance(origin, str):
-                        raise ValueError("Invalid tick source fingerprint")
-                    origins.add(origin)
                 if scale is None:
                     scale = winner["scale"]
                 if type(scale) is not int or scale <= 0 or winner["scale"] != scale:
                     raise ValueError("Inconsistent tick price scale")
                 result.append({k: winner[k] for k in TICK_FIELDS} if execution_only else winner)
-            if len(files) > 1 and (len(origins) != 1 or
-                                   not re.fullmatch(r"[0-9a-f]{64}", next(iter(origins)) or "")):
-                raise ValueError(f"Ambiguous cross-partition source order at {ms}")
     return result

@@ -45,3 +45,20 @@ The focused run passed 41 tests; all ten T06 cases also passed after adding a re
 ## Rollback
 
 Restore the PR #33 merge revision for new requests and use `tick_dataset_id` for the previous version-2 single-file workflow. Retain all SQLite records and archives, including the execution model recorded in each immutable saved run. Historical multi-file paths without common-source evidence at a tied millisecond may now return an integrity error; those archives need independent provenance to establish tie order. No database migration, reader cutover, new broker route or writer retirement is involved. Public admission is capped at 160 cutoffs. Production recorded trading remains BLOCKED.
+
+## PR #34 partition-layout correction
+
+At reviewed head `25778352e268c8686105266a6d077e830f31412d`, the replay audited the requested period but selected partitions only between the first and last observed candles. A Friday 22:01 UTC quote after the 22:00 close, or a Sunday 21:59 quote before the 22:00 reopening, could therefore disappear when split into its own Parquet file. A second defect checked provenance only when file IDs differed. Opposite target and stop quotes observed in the same millisecond could acquire an apparent order solely by being packed into one file.
+
+| Evidence | Reviewed GET / saved POST | Corrected GET / saved POST |
+|---|---|---|
+| Trailing or leading closure contradiction | One file 422/422; split 200/201 | 422/422 in every layout, zero saved runs |
+| Different source fingerprints, opposite prices, distinct ordinals at one millisecond | One file 200/201; split 422/422 | 422/422 in every layout, same ambiguity diagnostic, zero saved runs |
+| Different source fingerprints reusing an ordinal | 422/422 with layout-dependent diagnostics | 422/422 with the same ambiguity diagnostic |
+| Clean weekend or quotes exactly at exclusive end | Admitted clean controls | 200/201; complete trades, timestamps, coverage and metrics match across layouts, including an exact boundary duplicate in the shards |
+
+Selection, observation filtering and the calendar audit now share the effective half-open period. The period starts at the first returned candle only for a truncated chart range. File integrity and input budgets continue to cover complete selected files. Ordering policy `UTC_MS_SOURCE_ORDINAL_V2` checks source identity before comparing ordinals within each millisecond. Unpinned legacy ordinals retain file-local scope. Conflicting explicit sources cannot acquire a common order even in one file. The saved quote route reapplies the recorded period when available.
+
+The pinned November 13, 2025 benchmark repeated the same 8,636 quotes and two input hashes. All 17 trades, coverage, timestamps and aggregate metrics matched. Only the execution-model ordering label changed in the response. One traced fresh-process measurement took 2.071 s versus 1.982 s (+0.089 s). Peak Python allocation rose by 10 bytes to 35,617,386 bytes; peak process memory rose by 16,384 bytes to 154,791,936 bytes. These are individual observations. [Measurement and compared fields](evidence/t06-layout-benchmark.json)
+
+Reproduction adds `research_backend/tests/test_t06_layout.py` to the focused pytest command above. The expanded suite passed 47 tests, and the six layout regressions passed again after adding an out-of-window tie and duplicated shard boundary. For rollback to a released version use the PR #33 merge and single-ID workflow described above. Reverting only this correction restores both reviewed layout defects.

@@ -93,7 +93,7 @@ def test_unverified_cross_file_tie(client, scope):
     archive("ticks", ticks[:3])
     archive("ticks", ticks[3:])
     result = endpoint(client, bars, tick_archive_range=True)
-    assert result.status_code == 422 and "Ambiguous cross-partition" in result.text
+    assert result.status_code == 422 and "Ambiguous tick source order" in result.text
 
 
 def test_open_trade_stops_at_dst_weekend(client):
