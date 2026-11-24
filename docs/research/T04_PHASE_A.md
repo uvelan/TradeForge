@@ -59,3 +59,31 @@ python -m pytest -q
 ```
 
 Rollback consists of ceasing registration and retiring the separate shadow SQLite file after closing its connection. Phase B reader selection and production writer cutover require separate decisions.
+
+## Correction and retry on a Phase A manifest
+
+Bootstrap checks for an empty output after acquiring SQLite's writer lock. The schema, application ID, version and source pins commit together. A process killed immediately after opening the output or after creating the first table can rerun the same command. A nonempty foreign database or a different pinned input snapshot is rejected.
+
+Companion lookup extracts partition IDs only from object members of the candle dataset array. An unrelated string member cannot affect the revision of a valid partition. A matching claim that disagrees with the registered feed, symbol or checksum returns `IMPORT_LINEAGE_MISMATCH`. Multiple matching claims, including conflicting parent IDs, return `AMBIGUOUS_IMPORT_LINEAGE`. Operational failures such as a database query failure or exhausted snapshot storage stop the run; retry after resolving the cause.
+
+For fixed candles, registration checks unique aligned observations against the aligned half-open request. `VERIFIED` requires every requested slot. Only the fixed MT5 writer admits `VERIFIED_WITH_GAPS`, and that status requires at least one missing slot. Contradictions return `FIXED_COVERAGE_MISMATCH`. Legitimate gaps now add `request_grid_gaps` with leading, interior and trailing slot counts to the artifact contract. Scheduled market coverage remains unknown.
+
+The SQLite schema remains V1. On retry with the same inputs, previously accepted false-complete mappings lose their active revision. Legitimate gapped fixed records receive new revision IDs because the hashed contract now includes gap counts. Fully covered fixed records, their true aliases, and unaffected research records retain their IDs. Earlier artifact contracts remain available; use the mapping to find the current outcome.
+
+### Correction evidence
+
+The regression fixture uses normal catalog writers and isolated files. The leading, interior and trailing fixtures each omit one of the three M1 observations requested in [900, 1080). Each valid gapped row has a companion with the same bytes labeled VERIFIED. On the reviewed writer all six mapped. After correction the three legitimate rows map with gap counts (1,0,0), (0,1,0), and (0,0,1); all three false claims receive the coverage mismatch reason.
+
+| Correction fixture catalog | Inspected | Mapped | Unresolved |
+| --- | ---: | ---: | ---: |
+| Fixed | 8 | 5 | 3 |
+| Research | 3 | 1 | 2 |
+
+Adding the unrelated malformed member to the source backup preserves the good research revision and both row-specific reasons. Crash recovery at both bootstrap boundaries reproduced the fresh manifest's source pins, mappings and artifacts. SHA-256 comparisons matched for both source databases and all 11 Parquet files before and after registration. The historical-writer check creates a manifest using the reviewed source at `a9014d7`, reuses it with the corrected writer, and compares active mappings to a fresh corrected registration. These correction counts are from fixtures; the local backup counts above are from the original Phase A run.
+
+```sh
+python -m pytest -q tests/test_shadow_manifest.py tests/test_restore_rehearsal.py tests/capture_shadow_v1_retry.py
+python -m pytest -q
+```
+
+The historical-writer test requires a Git clone containing the reviewed commit. To roll back, stop registration and retain the separate manifest for audit. Use a fresh output if rerunning the previous writer; reverting the code restores its earlier classification of the three contradictory rows.

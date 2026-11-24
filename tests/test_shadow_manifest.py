@@ -114,3 +114,165 @@ def test_restored_catalogs_interruption_retry_and_reader_parity(tmp_path, monkey
     monkeypatch.setattr(db,"DATABASE",copy / rdb)
     monkeypatch.setattr(storage,"MARKET_DIR",copy / market)
     assert read_range() == expected_research
+
+
+@pytest.fixture
+def catalog_pair(tmp_path, monkeypatch):
+    """Quiescent catalogs with real checksummed candles and known source claims."""
+    fixed = tmp_path / "fixed"
+    market = tmp_path / "research-market"
+    rdb = tmp_path / "research.sqlite"
+    monkeypatch.setattr(db, "DATABASE", rdb)
+    monkeypatch.setattr(storage, "MARKET_DIR", market)
+    db.initialize()
+    engine = open_database(fixed)
+    try:
+        catalog = Catalog(fixed, engine)
+        candles = Simulator().candles("EURUSD", Timeframe.M1, 900, 1080)
+        fid = catalog.ingest(Simulator(), "EURUSD", Timeframe.M1, 900, 1080)
+        gaps = [catalog.publish("mt5", "fixture", "bid", 100000, "EURUSD", Timeframe.M1,
+                                900, 1080, candles[:i] + candles[i+1:]) for i in range(3)]
+    finally:
+        engine.dispose()
+    bar = dict(time=900, open=1.1, high=1.2, low=1., close=1.15)
+    rid = storage.write_partition("DUKASCOPY", "fixture", "EURUSD", "candles", "M1", "BID", [bar])["id"]
+    fdb = fixed / "database/trading.sqlite3"
+    with closing(sqlite3.connect(fdb)) as conn, conn:
+        conn.row_factory = sqlite3.Row
+        for original, alias, status in [(fid, "same-origin", "VERIFIED")] + [
+            (dataset, f"false-complete-{i}", "VERIFIED") for i, dataset in enumerate(gaps)
+        ]:
+            path = conn.execute("SELECT relative_path FROM dataset_versions WHERE id=?", (original,)).fetchone()[0]
+            dest = f"market-data/{alias}.parquet"
+            shutil.copyfile(fixed / path, fixed / dest)
+            clone_row(conn, "dataset_versions", original, id=alias, relative_path=dest, validation_status=status)
+    with closing(sqlite3.connect(rdb)) as conn, conn:
+        conn.row_factory = sqlite3.Row
+        path, checksum = conn.execute("SELECT relative_path, sha256 FROM datasets WHERE id=?", (rid,)).fetchone()
+        for alias in ("wrong-checksum", "two-parents"):
+            dest = f"{alias}.parquet"
+            shutil.copyfile(market / path, market / dest)
+            clone_row(conn, "datasets", rid, id=alias, relative_path=dest)
+        for i, (identifier, digest, parent) in enumerate([
+            (rid, checksum, "parent"), ("wrong-checksum", "0"*64, "parent"),
+            ("two-parents", checksum, "first"), ("two-parents", checksum, "second")
+        ]):
+            claim = {"candle_datasets":[{"id":identifier, "sha256":digest}], "tick_dataset":{"id":parent}}
+            conn.execute("INSERT INTO historical_imports VALUES (?,?,?,?,?,?,?)",
+                         ("fixture","EURUSD",900+i,960+i,"a"*64,"fixture",json.dumps(claim)))
+    return (fixed, rdb, market), fid, gaps, rid
+
+
+def source_hashes(args):
+    fixed, research, market = args
+    files = [fixed/"database/trading.sqlite3", research, *(fixed/"market-data").rglob("*.parquet"),
+             *market.rglob("*.parquet")]
+    return {f:_digest(f) for f in files}
+
+
+def test_fixed_grid_and_import_lineage(catalog_pair, tmp_path):
+    args, fid, gaps, rid = catalog_pair
+    clean = tmp_path/"clean.sqlite"
+    register(*args, clean)
+    def lookup(manifest, key):
+        with closing(sqlite3.connect(manifest)) as conn:
+            return conn.execute("SELECT revision,reason,contract FROM mappings LEFT JOIN artifacts USING(revision) "
+                                "WHERE legacy_id=?", (key,)).fetchone()
+    original = lookup(clean, rid)
+    assert json.loads(original[2])["parents"] == ["parent"]
+    with closing(sqlite3.connect(args[1])) as conn, conn:
+        conn.execute("INSERT INTO historical_imports VALUES(?,?,?,?,?,?,?)",
+                     ("unrelated","EURUSD",0,60,"b"*64,"fixture",'{"candle_datasets":["bad-shape"]}'))
+    before = source_hashes(args)
+    manifest = tmp_path/"shadow.sqlite"
+    expected = {"fixed":{"inspected":8,"mapped":5,"unresolved":3},
+                "research":{"inspected":3,"mapped":1,"unresolved":2}}
+    assert register(*args, manifest) == expected
+    assert lookup(manifest, rid) == original
+    assert lookup(manifest, "wrong-checksum")[1] == "IMPORT_LINEAGE_MISMATCH"
+    assert lookup(manifest, "two-parents")[1] == "AMBIGUOUS_IMPORT_LINEAGE"
+    assert lookup(manifest, "same-origin") == lookup(manifest, fid)
+    for i, dataset in enumerate(gaps):
+        assert lookup(manifest, f"false-complete-{i}")[0:2] == (None, "FIXED_COVERAGE_MISMATCH")
+        claim = json.loads(lookup(manifest, dataset)[2])
+        assert claim["scheduled_coverage"] is None
+        assert claim["event_bounds_utc_s"] == ([960,1020], [900,1020], [900,960])[i]
+        assert claim["request_grid_gaps"] == dict(leading=int(i==0), interior=int(i==1), trailing=int(i==2))
+    assert register(*args, manifest, batch_size=1) == expected
+    assert source_hashes(args) == before
+
+
+@pytest.mark.parametrize("stop_at", ["after_open", "after_first_ddl"])
+def test_bootstrap_crash_and_retry(catalog_pair, tmp_path, stop_at):
+    import subprocess
+    import sys
+    args, *_ = catalog_pair
+    output, clean = tmp_path/"interrupted.sqlite", tmp_path/"clean.sqlite"
+    # Terminate a real child without connection cleanup or transaction rollback.
+    child = """
+import os, sqlite3, sys
+from pathlib import Path
+from tradeforge.shadow_manifest import register
+fixed, research, market, output = map(Path, sys.argv[1:5])
+connect = sqlite3.connect
+class Connection(sqlite3.Connection):
+    def execute(self, sql, *args):
+        result = super().execute(sql, *args)
+        if sql.startswith('CREATE TABLE sources') and sys.argv[5]=='after_first_ddl':
+            os._exit(75)
+        return result
+def crashable_connect(path, *args, **kwargs):
+    if path == output:
+        conn = connect(path, *args, factory=Connection, **kwargs)
+        if sys.argv[5]=='after_open':
+            os._exit(75)
+        return conn
+    return connect(path, *args, **kwargs)
+sqlite3.connect = crashable_connect
+register(fixed,research,market,output)
+"""
+    before = source_hashes(args)
+    run = subprocess.run([sys.executable,"-c",child,*map(str,args),str(output),stop_at])
+    assert run.returncode == 75 and output.exists()
+    assert register(*args, output) == register(*args, clean)
+    assert dump(output) == dump(clean)
+    with closing(sqlite3.connect(output)) as a, closing(sqlite3.connect(clean)) as b:
+        assert a.execute("SELECT * FROM sources ORDER BY catalog").fetchall() == b.execute(
+            "SELECT * FROM sources ORDER BY catalog").fetchall()
+    assert source_hashes(args) == before
+
+
+def test_refuse_foreign_database_and_changed_inputs(catalog_pair, tmp_path):
+    args, *_ = catalog_pair
+    unrelated, manifest = tmp_path/"other.sqlite", tmp_path/"shadow.sqlite"
+    with closing(sqlite3.connect(unrelated)) as conn, conn:
+        conn.execute("CREATE TABLE keep(value TEXT)")
+        conn.execute("INSERT INTO keep VALUES('untouched')")
+    digest = _digest(unrelated)
+    with pytest.raises(ValueError, match="snapshot mismatch"):
+        register(*args, unrelated)
+    assert _digest(unrelated) == digest
+    register(*args, manifest)
+    digest = _digest(manifest)
+    with closing(sqlite3.connect(args[1])) as conn:
+        conn.execute("CREATE TABLE intervening(value TEXT)")
+    with pytest.raises(ValueError, match="snapshot mismatch"):
+        register(*args, manifest)
+    assert _digest(manifest) == digest
+
+
+def test_registration_surfaces_operational_failures(catalog_pair, tmp_path, monkeypatch):
+    from tradeforge import shadow_manifest
+
+    args, *_ = catalog_pair
+    manifest = tmp_path/"shadow.sqlite"
+    with monkeypatch.context() as patch:
+        def disk_full(*_):
+            raise OSError("fixture snapshot storage exhausted")
+        patch.setattr(shadow_manifest, "TemporaryFile", disk_full)
+        with pytest.raises(OSError, match="storage exhausted"):
+            register(*args, manifest)
+    with closing(sqlite3.connect(args[1])) as conn:
+        conn.execute("ALTER TABLE historical_imports DROP COLUMN acquired_at")
+    with pytest.raises(sqlite3.OperationalError, match="acquired_at"):
+        register(*args, tmp_path/"new-snapshot.sqlite")

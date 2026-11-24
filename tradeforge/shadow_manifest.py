@@ -55,7 +55,9 @@ def import_claim(reader, row):
         i.feed_id, i.symbol, json_extract(i.manifest,'$.tick_dataset.id'),
         json_extract(i.manifest,'$.aggregation_policy'), json_extract(part.value,'$.sha256')
         FROM historical_imports i, json_each(i.manifest,'$.candle_datasets') part
-        WHERE json_extract(part.value,'$.id')=? ORDER BY i.source_sha256 LIMIT 2""", (row["id"],)).fetchall()
+        WHERE json_type(i.manifest,'$.candle_datasets')='array'
+        AND CASE WHEN part.type='object' THEN json_extract(part.value,'$.id') END=?
+        ORDER BY i.source_sha256 LIMIT 2""", (row["id"],)).fetchall()
     if not matches:
         return None
     require(len(matches) == 1, "AMBIGUOUS_IMPORT_LINEAGE")
@@ -86,6 +88,9 @@ def describe(source, row, archive_root, reader, has_imports):
         try:
             verify_artifact(path, checksum, snapshot)
         except CatalogIntegrityError as error:
+            if isinstance(error.__cause__, OSError) and not isinstance(
+                    error.__cause__, (FileNotFoundError, PermissionError)):
+                raise error.__cause__ from None
             raise Unresolved({"Dataset checksum mismatch": "CHECKSUM_MISMATCH",
                               "Dataset artifact is not a regular file": "WRONG_FILE_TYPE"}
                              .get(str(error), "UNREADABLE_FILE")) from error
@@ -133,8 +138,19 @@ def describe(source, row, archive_root, reader, has_imports):
                 if first is None:
                     first = event
                 last = event
+        request_gaps = None
         if fixed:
-            require(row["start_utc"] <= first <= last < row["end_utc"], "EVENT_RANGE_MISMATCH")
+            start, end = row["start_utc"], row["end_utc"]
+            require(type(start) is int and type(end) is int and 0 < start < end
+                    and start % step == end % step == 0, "INVALID_REQUEST_GRID")
+            require(start <= first <= last < end, "EVENT_RANGE_MISMATCH")
+            missing = (end - start) // step - count
+            expected_status = "VERIFIED_WITH_GAPS" if missing else "VERIFIED"
+            require(row["validation_status"] == expected_status and (not missing or row["provider"] == "mt5"),
+                    "FIXED_COVERAGE_MISMATCH")
+            if missing:
+                request_gaps = dict(leading=(first-start)//step, interior=missing_grid_slots,
+                                    trailing=(end-last)//step-1)
         else:
             require((utc_seconds(row["first_time"]), utc_seconds(row["last_time"])) == (first, last),
                     "EVENT_RANGE_MISMATCH")
@@ -147,6 +163,8 @@ def describe(source, row, archive_root, reader, has_imports):
                     price_scale=row.get("price_scale"), scheduled_coverage=None,
                     parents=None, raw_source_sha256=None, instrument_spec_version=None,
                     schema_version=row.get("schema_version"))
+    if request_gaps is not None:
+        contract["request_grid_gaps"] = request_gaps
     # Only the fixed deterministic producer attests reproducible origin from the
     # same feed, interval and contents. Other legacy claims keep their own ID.
     if not (fixed and row["provider"] == "simulator" and feed == "deterministic-eurusd-v1"
@@ -175,21 +193,22 @@ def register(fixed_root, research_db, research_market, manifest, batch_size=64, 
             raise ValueError("Use a quiescent SQLite backup without WAL or rollback journals")
         with db.open("rb") as handle:
             pins[name] = (name, hashlib.file_digest(handle, "sha256").hexdigest(), str(root))
-    existed = manifest.exists()
     with closing(sqlite3.connect(manifest)) as out:
         out.execute("PRAGMA foreign_keys=ON")
-        if not existed:
-            with out:
-                out.execute("BEGIN IMMEDIATE")
+        with out:
+            out.execute("BEGIN IMMEDIATE")
+            # A crash before the schema commit leaves an empty file. Decide
+            # after SQLite recovers any journal and serializes initializers.
+            if manifest.stat().st_size == 0:
                 for sql in SCHEMA:
                     out.execute(sql)
                 out.execute(f"PRAGMA application_id={APP_ID}")
                 out.execute(f"PRAGMA user_version={VERSION}")
                 out.executemany("INSERT INTO sources VALUES(?,?,?)", pins.values())
-        if (out.execute("PRAGMA application_id").fetchone()[0] != APP_ID
-                or out.execute("PRAGMA user_version").fetchone()[0] != VERSION
-                or sorted(out.execute("SELECT * FROM sources")) != sorted(pins.values())):
-            raise ValueError("Manifest version or source snapshot mismatch")
+            if (out.execute("PRAGMA application_id").fetchone()[0] != APP_ID
+                    or out.execute("PRAGMA user_version").fetchone()[0] != VERSION
+                    or sorted(out.execute("SELECT * FROM sources")) != sorted(pins.values())):
+                raise ValueError("Manifest version or source snapshot mismatch")
         for name, (db, root) in sources.items():
             with closing(sqlite3.connect(db.resolve().as_uri() + "?mode=ro&immutable=1", uri=True)) as reader:
                 reader.row_factory = sqlite3.Row
@@ -208,8 +227,6 @@ def register(fixed_root, research_db, research_market, manifest, batch_size=64, 
                                 reason = str(error)
                             except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
                                 reason = "INVALID_PARQUET"
-                            except OSError:
-                                reason = "UNREADABLE_FILE"
                             except (ValueError, TypeError, OverflowError):
                                 reason = "INVALID_METADATA"
                             else:
