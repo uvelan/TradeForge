@@ -33,7 +33,7 @@ from .strategy_evaluation_routes import router as strategy_evaluation_router
 from .historical_strategy_routes import router as historical_strategy_router
 from .historical_strategy_worker import supervise as supervise_strategy_history
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
-from .saved_history import recent_archive_range, saved_range, tick_partitions, read_tick_partitions
+from .saved_history import chart_range, tick_partitions, read_tick_partitions
 
 
 @asynccontextmanager
@@ -105,9 +105,7 @@ def market_candles(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',limi
         provider=source.split('_')[0]
         try:
             step = FRAME_MIN[timeframe] * 60
-            if start is None or end is None:
-                start, end = recent_archive_range(provider, symbol, timeframe, step)
-            result = saved_range(provider, symbol, timeframe, start, end, step, limit)
+            result = chart_range(provider, symbol, timeframe, start, end, step, limit)
         except FileNotFoundError as error:
             raise HTTPException(404, str(error)) from error
         except (ValueError, RuntimeError, OSError) as error:

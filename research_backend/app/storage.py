@@ -78,7 +78,6 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
 
 
 def read_partition(dataset:dict,max_rows:int=2000)->list[dict]:
-    import pyarrow.parquet as pq
     from .archive_provenance import require_market_partition
 
     require_market_partition(dataset["id"])
@@ -89,16 +88,22 @@ def read_partition(dataset:dict,max_rows:int=2000)->list[dict]:
         if hashlib.file_digest(file, 'sha256').hexdigest() != dataset['sha256']:
             raise RuntimeError('Dataset checksum mismatch')
         file.seek(0)
-        parquet = pq.ParquetFile(file)
-        groups = []
-        remaining = max_rows
-        for index in reversed(range(parquet.num_row_groups)):
-            if remaining <= 0:
-                break
-            groups.append(index)
-            remaining -= parquet.metadata.row_group(index).num_rows
-        table = parquet.read_row_groups(list(reversed(groups)))
-        return table.slice(max(0, table.num_rows - max_rows)).to_pylist()
+        return read_partition_tail(file, max_rows)
+
+
+def read_partition_tail(file, max_rows):
+    import pyarrow.parquet as pq
+
+    parquet = pq.ParquetFile(file)
+    groups = []
+    remaining = max_rows
+    for index in reversed(range(parquet.num_row_groups)):
+        if remaining <= 0:
+            break
+        groups.append(index)
+        remaining -= parquet.metadata.row_group(index).num_rows
+    table = parquet.read_row_groups(list(reversed(groups)))
+    return table.slice(max(0, table.num_rows - max_rows)).to_pylist()
 
 
 def iter_complete_partition(dataset, *, max_rows, batch_size=8192):
