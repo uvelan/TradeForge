@@ -1,3 +1,4 @@
+import LearningDrill from './LearningDrill';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import { Crosshair, Eraser,   ListFilter,  Minus,  Activity,Archive,ArrowDownToLine,ArrowRight,ArrowUpRight,BarChart3,BookOpen,BrainCircuit,CalendarClock,CheckCircle2,ChevronRight,Clock3,CloudOff,Database,Download,ExternalLink,FileCheck2,FileText,FlaskConical,FolderOpen,LayoutDashboard,Menu,MoreHorizontal,Plus,Radio,RefreshCw,Settings,ShieldCheck,ShieldAlert,Search,Target,TrendingUp,Upload, X, Zap} from 'lucide-react';
 import {api} from './api';
@@ -800,6 +801,8 @@ function Journal({refresh,incoming,clearLink,openSignal,initialEntry,initialCont
    supersedes:revisionEntry?.id,tags:tags.split(',').map(tag=>tag.trim()).filter(Boolean),
  });setMessage(`${e.id} appended to Master Journal`);setTitle('');setContent('');setTags('');setRevisionEntry(undefined);clearLink();await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  return <><PageHeading eyebrow="ACADEMY / REFLECTION" title="Master Learning Journal" subtitle="One cumulative history of questions, chart challenges, mistakes, and corrected reasoning." action={<a href="/research/api/journal/download" className="btn btn-secondary"><Download size={16}/> Export Markdown</a>}/>
+ <LearningDrill saved={()=>{void load();refresh()}}
+   openJournal={async id=>{setFocusEntry(await api.get<JournalEntry>('/journal/entries/'+encodeURIComponent(id)))}}/>
  <div className="two-column journal-layout"><Card><SectionTitle eyebrow="CAPTURE KNOWLEDGE" title={revisionEntry?'Revision of '+revisionEntry.id:'New journal entry'}/>
  {revisionEntry&&<button className="text-button" onClick={()=>{setRevisionEntry(undefined);setTitle('');setContent('');setTags('');}}>Cancel revision</button>}
  {initialContext?.plan_reference&&<p>Linked plan {initialContext.plan_reference.trade_id} · v{initialContext.plan_reference.version}</p>}

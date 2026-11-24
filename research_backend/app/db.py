@@ -218,6 +218,13 @@ CREATE TABLE IF NOT EXISTS journal_entry_context (
     entry_id TEXT PRIMARY KEY REFERENCES journal_entries(id),
     payload TEXT NOT NULL CHECK(json_valid(payload))
 );
+CREATE TABLE IF NOT EXISTS learning_attempts (
+    lesson_id TEXT PRIMARY KEY,
+    choice TEXT NOT NULL CHECK(choice IN ('confirmed','not_yet')),
+    hypothesis TEXT NOT NULL CHECK(length(hypothesis) BETWEEN 10 AND 1000),
+    journal_id TEXT NOT NULL UNIQUE REFERENCES journal_entries(id),
+    submitted_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS jobs (
     id TEXT PRIMARY KEY,
     kind TEXT NOT NULL,
@@ -290,7 +297,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 '''
 
 IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
-IMMUTABLE_TABLES += ["arrival_sessions", "arrival_observations", "arrival_receipts",
+IMMUTABLE_TABLES += ["learning_attempts", "arrival_sessions", "arrival_observations", "arrival_receipts",
                      "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
 
 

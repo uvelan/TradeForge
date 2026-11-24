@@ -30,6 +30,7 @@ from .arrival_capture import CaptureManager
 from .arrival_routes import router as arrival_router
 from .ai_review_decisions import router as review_decision_router
 from .workspace_routes import router as workspace_router
+from .learning import router as learning_router
 from .strategy_routes import router as strategy_router
 from .strategy_evaluation_routes import router as strategy_evaluation_router
 from .historical_strategy_routes import router as historical_strategy_router
@@ -60,6 +61,7 @@ app.include_router(arrival_router)
 app.include_router(review_decision_router)
 app.include_router(drawing_router)
 app.include_router(workspace_router)
+app.include_router(learning_router)
 app.include_router(strategy_router)
 app.include_router(strategy_evaluation_router)
 app.include_router(historical_strategy_router)
