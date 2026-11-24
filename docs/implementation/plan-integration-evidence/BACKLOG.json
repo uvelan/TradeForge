@@ -189,7 +189,10 @@
       "depends_on": [
         "TF-U01"
       ],
-      "tests": [],
+      "tests": [
+        "research_backend/tests/test_indicators.py",
+        "research_backend/tests/test_indicator_engine.py"
+      ],
       "remaining_or_boundary": "Six causal OHLC calculators; gated VWAP, optional HMA and external oracle remain."
     },
     {

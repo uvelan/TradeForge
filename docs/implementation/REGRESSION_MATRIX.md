@@ -14,3 +14,8 @@
 PR #1 follow-up verifies every golden tool anchor after reload, long and short risk/reward, refresh and chart-scope cleanup, and fullscreen/resize coordinate projection. [Review regression evidence](TF-D01-REVIEW-FOLLOWUP.md)
 
 The final review adds seven cases for mode exclusivity, single-anchor drag outcomes and invalid input. [Final regression evidence](TF-D01-FINAL-REVIEW.md)
+
+## 2026-11-24: subsequent drawing and integration evidence
+
+- TF-D02 added direct move/resize checks for the four golden tools, plus revision, Undo/Redo, reload, viewport and gesture-cancellation coverage. The [merged PR #2](https://github.com/uvelan/TradeForge/pull/2) and its [review report](TF-D02-REVIEW.md) record 77 backend, 8 frontend and 35 Chromium tests. These are historical results, not a new run.
+- For the draft master-plan integration, see the [status ledger](STATUS_LEDGER.md#2026-11-24-superseding-status) for exact-head CI links and the [feature matrix](plan-integration-evidence/FEATURE-MATRIX.md) for limits. The two TF-I01 backend suites are linked in the [backlog](plan-integration-evidence/BACKLOG.json); they do not establish independent indicator oracle parity or full chart lifecycle acceptance.
