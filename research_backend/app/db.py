@@ -115,6 +115,14 @@ CREATE TABLE IF NOT EXISTS ai_review_originals (
   body BLOB NOT NULL,
   sha256 TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ai_review_decisions (
+    review_id TEXT NOT NULL REFERENCES ai_reviews(id),
+    sequence INTEGER NOT NULL CHECK(sequence>0),
+    decision TEXT NOT NULL CHECK(decision IN ('ACCEPTED','REJECTED','NEEDS_FOLLOW_UP')),
+    rationale TEXT NOT NULL CHECK(length(rationale) BETWEEN 1 AND 2500),
+    created_at TEXT NOT NULL,
+    PRIMARY KEY(review_id, sequence)
+);
 CREATE TABLE IF NOT EXISTS trade_outcomes (
     trade_id TEXT PRIMARY KEY REFERENCES trades(id),
     pnl_usd TEXT NOT NULL,
@@ -281,7 +289,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 );
 '''
 
-IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
+IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 IMMUTABLE_TABLES += ["arrival_sessions", "arrival_observations", "arrival_receipts",
                      "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
 

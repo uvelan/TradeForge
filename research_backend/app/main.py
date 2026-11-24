@@ -28,6 +28,7 @@ from . import domain
 from .drawings import router as drawing_router
 from .arrival_capture import CaptureManager
 from .arrival_routes import router as arrival_router
+from .ai_review_decisions import router as review_decision_router
 from .workspace_routes import router as workspace_router
 from .strategy_routes import router as strategy_router
 from .strategy_evaluation_routes import router as strategy_evaluation_router
@@ -56,6 +57,7 @@ async def lifespan(app:FastAPI):
 app=FastAPI(title='TradeForge Local API',version='0.1.0',lifespan=lifespan)
 app.include_router(indicator_router)
 app.include_router(arrival_router)
+app.include_router(review_decision_router)
 app.include_router(drawing_router)
 app.include_router(workspace_router)
 app.include_router(strategy_router)
