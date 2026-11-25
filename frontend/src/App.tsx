@@ -1,3 +1,5 @@
+import {snapshotLane} from './snapshotLanes';
+import {SnapshotDetails} from './SnapshotDetails';
 import LearningDrill from './LearningDrill';
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import { Crosshair, Eraser,   ListFilter,  Minus,  Activity,Archive,ArrowDownToLine,ArrowRight,ArrowUpRight,BarChart3,BookOpen,BrainCircuit,CalendarClock,CheckCircle2,ChevronRight,Clock3,CloudOff,Database,Download,ExternalLink,FileCheck2,FileText,FlaskConical,FolderOpen,LayoutDashboard,Menu,MoreHorizontal,Plus,Radio,RefreshCw,Settings,ShieldCheck,ShieldAlert,Search,Target,TrendingUp,Upload, X, Zap} from 'lucide-react';
@@ -419,7 +421,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     compare,feedIdentity(comparison.feed),Boolean(comparison.candles?.length),placement,viewCount,
     replayActive,replaySession?.id,replayIndex,cutoff]);
   const canSaveCapture=loadedPrimaryGeneration===primaryLoadGeneration&&!busy&&!error&&!replayBusy&&
-    (!compare||Boolean(comparison.feed||comparison.error));
+    (!compare||(savedSource?Boolean(comparison.feed&&comparison.candles?.length):Boolean(comparison.feed||comparison.error)));
   const captureGeneration=useMemo(()=>({}),[captureKey,primaryLoadGeneration,canSaveCapture]);
   useLayoutEffect(()=>{
     liveCaptureGeneration.current=canSaveCapture?captureGeneration:null;
@@ -433,7 +435,11 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     const isCurrent=()=>liveCaptureGeneration.current===captureGeneration&&captureSequence.current===sequence;
     setCaptureState({generation:captureGeneration,saving:true,id:chartCapture});
     try {
-      const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff);
+      const lanes=savedSource&&compare?[
+        snapshotLane('primary',symbol,timeframe,indicatorFeed??undefined,visibleCandles),
+        snapshotLane('comparison',compare,timeframe,comparison.feed,comparison.candles??[]),
+      ]:undefined;
+      const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff,undefined,lanes);
       if(isCurrent())setCaptureState({generation:captureGeneration,saving:false,id:saved.id,status:'Chart capture saved'});
     } catch(error) {
       if(isCurrent())setCaptureState({generation:captureGeneration,saving:false,id:chartCapture,
@@ -717,6 +723,7 @@ function Planner({refresh,incoming,onConsume,onReview,initialLocation,onLesson}:
     <div className="form-grid"><TextField label="Strategy / model" value={plan.strategy} onChange={v=>modify('strategy',v)}/><label className="field"><span>Session</span><Select value={plan.session} onChange={v=>modify('session',v as Plan['session'])} options={['ASIA','LONDON','NEW_YORK','OTHER']}/></label></div>
     {plan.snapshot_id&&<p><a href={`/research/api/chart-snapshots/${plan.snapshot_id}/image`} target="_blank" rel="noreferrer">Open linked chart capture</a>
       <button className="text-button" onClick={()=>modify('snapshot_id',undefined)}>Remove chart capture</button></p>}
+    {plan.snapshot_id&&<SnapshotDetails id={plan.snapshot_id}/>}
     {plan.signal_reference&&<p role="status">Linked SMT revision · {plan.signal_reference.status} · {plan.signal_reference.event_key.slice(0,12)}</p>}
     <div className="form-subtitle">Evidence chain <button className="text-button" onClick={()=>setPlan(p=>({...p,...snippets}))}>Fill example wording (edit before saving)</button></div>
     {(['context','observation','evidence','hypothesis','setup','trigger','invalidation'] as const).map((key,index)=><TextArea key={key} label={`${String(index+1).padStart(2,'0')} · ${key.charAt(0).toUpperCase()+key.slice(1)}`} value={plan[key]} onChange={v=>modify(key,v)} placeholder={`Enter ${key} with observed levels, times, or rules` } rows={2}/>)}
@@ -840,6 +847,7 @@ function Journal({refresh,incoming,clearLink,openSignal,initialEntry,initialCont
  <div className="two-column journal-layout"><Card><SectionTitle eyebrow="CAPTURE KNOWLEDGE" title={revisionEntry?'Revision of '+revisionEntry.id:'New journal entry'}/>
  {revisionEntry&&<button className="text-button" onClick={()=>{setRevisionEntry(undefined);setTitle('');setContent('');setTags('');}}>Cancel revision</button>}
  {initialContext?.plan_reference&&<p>Linked plan {initialContext.plan_reference.trade_id} · v{initialContext.plan_reference.version}</p>}
+ {initialContext?.snapshot_id&&<SnapshotDetails id={initialContext.snapshot_id}/>}
  {initialContext?.snapshot_id&&<p><a href={`/research/api/chart-snapshots/${initialContext.snapshot_id}/image`} target="_blank" rel="noreferrer">Open attached chart capture</a></p>}
  {incoming&&<p>{signalSummary(incoming)} <button className="text-button" onClick={clearLink}>Remove signal link</button></p>}<label className="field"><span>Entry category</span><Select value={kind} onChange={setKind} options={['T','Q','CHART','RM','M','R']}/></label><TextField label="Title" value={title} onChange={setTitle} placeholder="What did you learn?"/><TextField label="Tags (comma separated)" value={tags} onChange={setTags}/><TextArea label="Observation / explanation" value={content} onChange={setContent} placeholder="Record the evidence, uncertainty, and what changed in your thinking." rows={7}/><button className="btn btn-primary full" disabled={busy||title.trim().length<2||content.trim().length<5} onClick={()=>void add()}><Plus size={17}/> Append to journal</button>{message&&<Success>{message}</Success>}{error&&<Notice tone="red">{error}</Notice>}</Card>
  <Card>{focusEntry&&<div className="data-trust">
@@ -855,6 +863,7 @@ function Journal({refresh,incoming,clearLink,openSignal,initialEntry,initialCont
  {e.supersedes&&<small>Supersedes {e.supersedes}</small>}
  {e.plan_reference&&<button className="text-button" onClick={()=>openPlan(e.plan_reference!.trade_id,e.plan_reference!.version)}>
    Open linked plan v{e.plan_reference.version}</button>}
+ {e.snapshot_id&&<SnapshotDetails id={e.snapshot_id}/>}
  {e.snapshot_id&&<a className="text-button" href={`/research/api/chart-snapshots/${e.snapshot_id}/image`} target="_blank" rel="noreferrer">Open chart capture</a>}
  {!entries.some(item=>item.supersedes===e.id)&&<button className="text-button" onClick={()=>{
    setRevisionEntry(e);setKind(e.kind);setTitle(e.title);setContent(e.content);setTags(e.tags?.join(', ')??'');

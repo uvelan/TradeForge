@@ -9,10 +9,10 @@ function port(value: string){
 }
 const apiPort=port(process.env.TRADEFORGE_E2E_API_PORT??"8000");
 const uiPort=port(process.env.TRADEFORGE_E2E_UI_PORT??"4180");
-const testStorage=mkdtempSync(join(tmpdir(), "tradeforge-e2e-"));
+
 const baseURL=`http://127.0.0.1:${uiPort}`;
 
-export function browserConfig(app: string) {
+export function browserConfig(app: string, testStorage=mkdtempSync(join(tmpdir(), "tradeforge-e2e-"))) {
   return defineConfig({
   use:{baseURL,trace:"retain-on-failure",screenshot:"only-on-failure",video:"retain-on-failure"},
   workers:1, // Suites share one isolated server and may write the same drawing scope.

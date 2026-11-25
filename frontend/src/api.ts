@@ -56,7 +56,7 @@ export const api={
   replay:(id:string)=>request<import('./types').ReplaySession>('/replay/sessions/'+encodeURIComponent(id)),
   saveCheckpoint:(id:string,position:number,bookmarks:number[])=>post('/replay/sessions/'+encodeURIComponent(id)+'/checkpoint',{position,bookmarks}),
   saveSnapshot:(png:string,symbol:string,timeframe:Timeframe,source:string,cutoff?:number,
-    signal_reference?:import('./types').SignalReference)=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference}),
+    signal_reference?:import('./types').SignalReference,lanes?:import('./snapshotLanes').SnapshotLane[])=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference,lanes}),
   importMt5:(symbol:SymbolName,timeframe:Timeframe,limit:number)=>post('/market/import/mt5',{symbol,timeframe,limit}),
   importBi5:async(symbol:SymbolName,day:string,file:File,hour:string)=>{
     const f=new FormData();f.append('file',file);

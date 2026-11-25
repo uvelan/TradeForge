@@ -1,3 +1,5 @@
+import {createHash} from 'node:crypto';
+import {writeFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {resolve} from 'node:path';
 import {expect,test} from '@playwright/test';
@@ -100,20 +102,68 @@ test('verified local M5 comparison follows the selected instruments and frozen c
   const savedNow=page.waitForResponse(r=>r.url().endsWith('/chart-snapshots')&&r.request().method()==='POST');
   await save.click();
   const before=await savedNow;expect(before.status()).toBe(201);
-  expect(await before.json()).toMatchObject({source,symbol:'EURUSD',timeframe:'M5'});
+  const current=await before.json();
+  expect(current).toMatchObject({source,symbol:'EURUSD',timeframe:'M5',lanes:[
+    {role:'primary',symbol:'EURUSD',partitions:[refs.EURUSD.partition]},
+    {role:'comparison',symbol:'GBPUSD',partitions:[refs.GBPUSD.partition]}]});
   release.resolve();await delivered.promise;
   await page.evaluate(()=>new Promise<void>(done=>requestAnimationFrame(()=>requestAnimationFrame(()=>done()))));
   await pair('EURUSD','GBPUSD');await inspect('EURUSD','GBPUSD');
   await expect(page.getByRole('button',{name:'Record chart lesson'})).toBeVisible();
-  await click('Bar replay');
-  const replay=page.getByLabel('Historical replay');
+  const receipts=[];
   const cutoff=start+3900;
-  await replay.getByLabel('Jump to UTC').fill(day+'T14:05');await replay.getByRole('button',{name:'Seek',exact:true}).click();
-  await expect(replay.locator('output')).toContainText(day+'T14:05:00.000Z');
-  await pair('EURUSD','GBPUSD',cutoff);
-  const saved=page.waitForResponse(r=>r.url().endsWith('/chart-snapshots')&&r.request().method()==='POST');
-  await save.click();const response=await saved;expect(response.status()).toBe(201);
-  const meta=await response.json();
-  expect(meta).toMatchObject({symbol:'EURUSD',timeframe:'M5',source,cutoff});
-  expect((await request.get('/research/api/chart-snapshots/'+meta.id+'/image')).ok()).toBe(true);
+  for(const [primarySymbol,peerSymbol] of [['EURUSD','GBPUSD'],['GBPUSD','EURUSD']] as const){
+    if(receipts.length){
+      await click('Market Terminal');
+      await page.locator('.market-watchlist button').filter({hasText:primarySymbol}).click();
+      await compare.selectOption(peerSymbol);await pair(primarySymbol,peerSymbol);
+    }
+    await click('Bar replay');
+    const replay=page.getByLabel('Historical replay');
+    await replay.getByLabel('Jump to UTC').fill(day+'T14:05');
+    await replay.getByRole('button',{name:'Seek',exact:true}).click();
+    await expect(replay.locator('output')).toContainText(day+'T14:05:00.000Z');
+    await pair(primarySymbol,peerSymbol,cutoff);
+    const saved=page.waitForResponse(r=>r.url().endsWith('/chart-snapshots')&&r.request().method()==='POST');
+    await save.click();const response=await saved;expect(response.status(),await response.text()).toBe(201);
+    const meta=await response.json();
+    expect(meta).toMatchObject({symbol:primarySymbol,timeframe:'M5',source,cutoff,lane_schema_version:1});
+    for(const [i,symbol] of [primarySymbol,peerSymbol].entries()){
+      const bars=refs[symbol].bars.filter(b=>b.time+300<=cutoff);
+      expect(meta.lanes[i]).toMatchObject({symbol,role:i?'comparison':'primary',feed_id:feed,price_basis:'BID',timeframe:'M5',
+        partitions:[refs[symbol].partition],last_bar:bars.at(-1),bar_times:bars.map(b=>b.time)});
+      expect(meta.lanes[i].last_bar.close).toBe(symbol==='EURUSD'?1.10527:1.32318);
+    }
+    const image=await request.get('/research/api/chart-snapshots/'+meta.id+'/image');expect(image.ok()).toBe(true);
+    const digest=createHash('sha256').update(await image.body()).digest('hex');
+    expect(createHash('sha256').update(Buffer.from(response.request().postDataJSON().png,'base64')).digest('hex')).toBe(digest);
+    await click('Record chart lesson');
+    const title='Frozen '+primarySymbol+' '+peerSymbol;
+    await page.getByLabel('Title',{exact:true}).fill(title);
+    await page.getByLabel('Observation / explanation').fill('Verified paired chart at 14:05 UTC.');
+    await click('Append to journal');
+    await expect(page.locator('.journal-item').filter({hasText:title}).getByRole('link',{name:'Open chart capture'}))
+      .toHaveAttribute('href','/research/api/chart-snapshots/'+meta.id+'/image');
+    receipts.push({meta,title,digest});
+  }
+  expect(receipts[0].meta.id).not.toBe(receipts[1].meta.id);
+  // Hold a genuine POST until its originating pair has been removed from the chart.
+  await click('Market Terminal');await pair('GBPUSD','EURUSD');
+  const submitted=Promise.withResolvers<void>(), finish=Promise.withResolvers<void>();
+  await page.route('**/research/api/chart-snapshots',async route=>{
+    submitted.resolve();await finish.promise;
+    await route.fulfill({response:await route.fetch()});
+  },{times:1});
+  const pendingSave=page.waitForResponse(r=>r.url().endsWith('/chart-snapshots')&&r.request().method()==='POST');
+  await save.click();await submitted.promise;await compare.selectOption('none');
+  await expect(compare).toHaveValue('none');
+  await expect.poll(async()=>(await read()).map(series=>series.data.map(ohlc))).toEqual([refs.GBPUSD.bars]);
+  finish.resolve();
+  const response=await pendingSave;expect(response.status()).toBe(201);
+  const captured=await response.json();
+  expect(captured.lanes.map((lane:{symbol:string})=>lane.symbol)).toEqual(['GBPUSD','EURUSD']);
+  const originalPng=Buffer.from(response.request().postDataJSON().png,'base64');
+  expect(await (await request.get('/research/api/chart-snapshots/'+captured.id+'/image')).body()).toEqual(originalPng);
+  await expect(page.getByRole('button',{name:'Record chart lesson'})).toHaveCount(0);
+  if(process.env.TRADEFORGE_PAIR_RECEIPTS)writeFileSync(process.env.TRADEFORGE_PAIR_RECEIPTS,JSON.stringify(receipts));
 });

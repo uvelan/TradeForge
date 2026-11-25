@@ -15,4 +15,5 @@ from research_backend.app.db import initialize
 from .recorded_browser_app import app
 
 initialize()
-reference(date.fromisoformat(os.environ["TRADEFORGE_COMPARISON_DAY"]), data)
+if os.environ.get("TRADEFORGE_PAIR_REOPEN") != "1":
+    reference(date.fromisoformat(os.environ["TRADEFORGE_COMPARISON_DAY"]), data)

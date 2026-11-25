@@ -1,3 +1,4 @@
+import {snapshotLane} from './snapshotLanes';
 import {useEffect,useState} from 'react';
 import {WorkspacePanels} from './WorkspacePanels';
 import {api} from './api';
@@ -210,7 +211,10 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
       </div>
       <CandleChart onSaveSnapshot={replay?undefined:async png=>{
         const saved=await api.saveSnapshot(png,primary.symbol,timeframe,primary.source,signal.transitions.at(-1)?.time,
-          {event_key:signal.event_key,status:signal.status});
+          {event_key:signal.event_key,status:signal.status},primary.source.endsWith('_SAVED')?[
+            snapshotLane('primary',primary.symbol,timeframe,primary,left),
+            snapshotLane('comparison',comparison.symbol,timeframe,comparison,right??[]),
+          ]:undefined);
         setSnapshot(saved.id);
         setCaptures(items=>[{id:saved.id,created_at:new Date().toISOString()},...items.filter(item=>item.id!==saved.id)]);
       }} candles={left} symbol={primary.symbol} timeframe={timeframe} focus={focus} height={360}
