@@ -86,3 +86,27 @@ npm run e2e -- chart-capture-context research.spec.ts --retries=0
 ~~~
 
 Development runs exposed a browser selector that also matched navigation buttons and a pre-existing mocked signal fixture with no archive IDs. The final tests scope the selector to signal results and include mock pins in the controlled rejection test. The real-data acceptance uses the original checksum-pinned files. Rollback is a revert of this correction and restart of the local services. It requires no data migration and would restore the old linked-cutoff defect.
+
+### Frozen signal revision availability
+
+On 755f96397b6f6f29d053ec2ec4ab44058e7d6d69 the saved EURUSD/GBPUSD SMT_CONFIRMED revision for event 3df489bb8467fee66de82634cf358b97701e780a8068133c958fb5f1b8bc08a3 had a server-resolved transition at **03:40:00 UTC on 13 November 2026** (1794541200). Both checksum-pinned M5 BID bars opened at 03:30:00 and became available at 03:35:00. The test held the PNG, bar lists and partition pins fixed.
+
+| POST /api/chart-snapshots | Baseline HTTP / inserted | Corrected HTTP / inserted | Identical retry |
+|---|---|---|---|
+| Signal linked, 03:39:59 | 201 / 1 | 409 / 0 | Same 409, zero rows |
+| Unlinked, 03:39:59 | Not measured | 201 / 1 | Same ID, zero additional rows |
+| Signal linked, 03:40:00 | Not measured | 201 / 1 | Same ID, zero additional rows |
+
+The corrected run ended with two receipts for these three requests. The exact-boundary receipt was de98fb15d371b61f783f5977c106be3473fd3429f23d6c342982e300f25a7a99. Reversing the instruments gave the same outcomes. All 16 earlier candle-cutoff cases passed. Backend tests independently exercised candidate, confirmed, invalidated and source-corrected revisions through both lane-bearing and lane-less requests.
+
+The baseline writer produced premature receipt 2ed01141c01ec11c4b56eadd377867b6f806f138b4f8d77bb3f8fa3a36f3f8ef. In the original disposable database, Learning Journal reopened its original image and showed that the signal revision occurred after the saved cutoff. Metadata SHA-256 was dfec8afdf319d64baccf2a933fe66c8e98a83880e485bc15ea608a26d2eb7c65 and PNG SHA-256 was eaa4a94ea300e0d2c775968cbe42f0b5b51ceafdeb73d64e9efddf6d4e880865. The repeatable compatibility check recreates those exact pre-fix bytes in isolated storage, verifies the hashes before insertion, opens the receipt in Chromium and checks SQLite bytes afterward. The warning is computed on display.
+
+~~~powershell
+.venv/Scripts/python.exe -m scripts.verify_signal_snapshot_cutoff --check-legacy-ui
+.venv/Scripts/python.exe scripts/verify_paired_snapshot_restart.py
+.venv/Scripts/python.exe -m pytest -q research_backend/tests/test_chart_snapshot_lanes.py research_backend/tests/test_smt_authority.py research_backend/tests/test_workspace_tools.py research_backend/tests/test_cutover_saved_refs.py research_backend/tests/test_ai_evidence_snapshot.py
+npm --prefix frontend test
+npm --prefix frontend run build
+~~~
+
+The first restart test clicked before Signal Explorer finished filtering. The test now waits for a single result and verifies the captured event key. Rollback is a revert of this revision and a local restart. No schema migration or historical record update is involved.

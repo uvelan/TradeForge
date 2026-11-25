@@ -172,6 +172,7 @@ test('verified local M5 comparison follows the selected instruments and frozen c
   expect(detected.ok()).toBe(true);
   const event=(await detected.json()).events.find((e:{confirmed_at:number})=>e.confirmed_at&&e.confirmed_at<cutoff);
   await page.getByLabel('Signal, dataset or trade ID').fill(event.event_key);await click('Search signals');
+  await expect(page.locator('.signal-results .signal-row')).toHaveCount(1);
   await page.locator('.signal-results .signal-row').click();
   const inspector=page.getByLabel('Evidence Inspector');
   await click('Open recorded chart');
@@ -179,6 +180,7 @@ test('verified local M5 comparison follows the selected instruments and frozen c
   await inspector.getByRole('button',{name:'Save chart evidence'}).click();
   const posted=await pendingSignal;expect(posted.status(),await posted.text()).toBe(201);
   const meta=await posted.json();
+  expect(meta.signal_reference.event_key).toBe(event.event_key);
   const latest=await (await request.get('/research/api/indicators/signals/'+event.event_key+'?status='+meta.signal_reference.status)).json();
   expect(meta).toMatchObject({cutoff:null,chart_context:'RETROSPECTIVE',signal_transition_at:latest.transitions.at(-1).time});
   expect(meta.chart_evidence_through).toBeGreaterThan(meta.signal_transition_at);

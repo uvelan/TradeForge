@@ -1,3 +1,4 @@
+import base64
 from copy import deepcopy
 from hashlib import sha256
 import json
@@ -9,8 +10,7 @@ from research_backend.app.storage import write_partition
 URL = "/api/chart-snapshots"
 
 
-def test_snapshot_archive_pins_and_legacy_identity(client):
-    import base64
+def png_bytes():
     import struct
     import zlib
 
@@ -19,6 +19,11 @@ def test_snapshot_archive_pins_and_legacy_identity(client):
 
     image = (bytes.fromhex("89504e470d0a1a0a") + chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 0, 0, 0, 0))
              + chunk(b"IDAT", zlib.compress(bytes(2))) + chunk(b"IEND", b""))
+    return image
+
+
+def test_snapshot_archive_pins_and_legacy_identity(client):
+    image = png_bytes()
     request = dict(symbol="EURUSD", source="DUKASCOPY_SAVED", timeframe="M5", cutoff=600,
                    png=base64.b64encode(image).decode())
     legacy = client.post(URL, json=request).json()
@@ -78,3 +83,38 @@ def test_snapshot_archive_pins_and_legacy_identity(client):
         "chart_context":"RETROSPECTIVE", "cutoff":None, "signal_transition_at":450, "chart_evidence_through":600}
     assert client.get(URL + "/" + original_id).json() == {"id":original_id, **original}
     assert one("SELECT metadata,png FROM chart_snapshots WHERE id=?", (original_id,)) == {"metadata":serialized,"png":image}
+
+
+def test_frozen_links_check_the_requested_transition_with_or_without_lanes(client):
+    lanes = []
+    provenance = {"timeframe":"M5"}
+    for role, symbol, price in [("primary","EURUSD",1.1), ("comparison","GBPUSD",1.3)]:
+        bar = dict(time=300, open=price, high=price, low=price, close=price)
+        part = write_partition("DUKASCOPY","test-feed",symbol,"candles","M5","BID",[bar])
+        lane = dict(symbol=symbol, partitions=[{"id":part["id"],"sha256":part["sha256"]}],
+                    feed_id="test-feed", price_basis="BID")
+        provenance[role] = {**lane, "source":"DUKASCOPY_SAVED"}
+        lanes.append({**lane, "role":role, "timeframe":"M5", "bars":[bar]})
+    request = dict(png=base64.b64encode(png_bytes()).decode(), symbol="EURUSD",
+                   timeframe="M5", source="DUKASCOPY_SAVED")
+    transitions = []
+    for i,status in enumerate(("SMT_CANDIDATE","SMT_CONFIRMED","SMT_INVALIDATED","SMT_SOURCE_CORRECTED")):
+        t = 700 + i*100
+        transitions.append({"status":status, "time":t})
+        ref = {"event_key":"d"*64, "status":status}
+        payload = json.dumps({"provenance":provenance, "transitions":transitions})
+        with transaction() as db:
+            if status == "SMT_SOURCE_CORRECTED":
+                db.execute("INSERT INTO smt_source_corrections VALUES(?,?,?,?)",(ref["event_key"],"scope",t,payload))
+            else:
+                db.execute("INSERT INTO smt_event_history VALUES(?,?,?,?,?)",(ref["event_key"],"scope",status,t,payload))
+        for fields in ({}, {"lanes":lanes}):
+            linked = {**request, **fields, "signal_reference":ref}
+            before = one("SELECT COUNT(*) AS n FROM chart_snapshots")["n"]
+            rejected = client.post(URL,json={**linked,"cutoff":t-1})
+            assert (rejected.status_code,rejected.json()["detail"]) == (409,"Signal revision unavailable at chart cutoff")
+            assert one("SELECT COUNT(*) AS n FROM chart_snapshots")["n"] == before
+            saved = client.post(URL,json={**linked,"cutoff":t})
+            assert saved.status_code == 201 and saved.json()["signal_transition_at"] == t
+            assert client.post(URL,json={**linked,"cutoff":t}).json() == saved.json()
+            assert one("SELECT COUNT(*) AS n FROM chart_snapshots")["n"] == before+1

@@ -126,6 +126,8 @@ def create_snapshot(request:ChartSnapshotRequest):
                                if t["status"] == request.signal_reference.status), None)
             if transition is None:
                 raise HTTPException(409, "Signal revision has no matching transition")
+            if request.cutoff is not None and transition["time"] > request.cutoff:
+                raise HTTPException(409, "Signal revision unavailable at chart cutoff")
             metadata["signal_transition_at"] = transition["time"]
             metadata["chart_context"] = "FROZEN" if request.cutoff is not None else "RETROSPECTIVE"
             if request.lanes is not None:

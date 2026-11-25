@@ -22,6 +22,8 @@ function MetadataView({id}:{id:string}){
     {data.chart_context==='RETROSPECTIVE'&&<p>Retrospective signal chart</p>}
     {data.cutoff!=null&&<p>{data.signal_reference&&!data.chart_context?'Legacy linked timestamp (cutoff semantics unverified)':'Frozen chart cutoff'}: {new Date(data.cutoff*1000).toISOString()}</p>}
     {data.signal_transition_at!=null&&<p>Signal transition: {new Date(data.signal_transition_at*1000).toISOString()}</p>}
+    {data.cutoff!=null&&data.signal_transition_at!=null&&data.signal_transition_at>data.cutoff&&
+      <p role="alert">This signal revision occurred after the saved chart cutoff. It was unavailable in the frozen view.</p>}
     {data.chart_evidence_through!=null&&<p>Latest plotted candle availability: {new Date(data.chart_evidence_through*1000).toISOString()}</p>}
     {data.lanes?data.lanes.map(lane=><section key={lane.role}>
       <strong>{lane.role} · {lane.symbol} · {lane.timeframe}</strong>

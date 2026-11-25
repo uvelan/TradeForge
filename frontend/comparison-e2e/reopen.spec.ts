@@ -27,7 +27,8 @@ test('saved lessons reopen with the same ordered archives and image after API re
   const {meta,digest}=JSON.parse(readFileSync(process.env.TRADEFORGE_PAIR_RECEIPTS+'.signal','utf8'));
   await page.getByRole('button',{name:'Signal Explorer',exact:true}).click();
   await page.getByLabel('Signal, dataset or trade ID').fill(meta.signal_reference.event_key);
-  await page.getByRole('button',{name:'Search signals'}).click();await page.locator('.signal-results .signal-row').click();
+  await page.getByRole('button',{name:'Search signals'}).click();await expect(page.locator('.signal-results .signal-row')).toHaveCount(1);
+  await page.locator('.signal-results .signal-row').click();
   await page.getByLabel('Chart capture evidence').selectOption(meta.id);
   await page.getByText('Chart capture details',{exact:true}).click();
   const details=page.getByLabel('Evidence Inspector').locator('details').filter({hasText:'Chart capture details'});
