@@ -92,6 +92,11 @@ CREATE TABLE IF NOT EXISTS plan_versions (
     UNIQUE(trade_id,version)
 );
 CREATE INDEX IF NOT EXISTS plan_signal_link ON plan_versions(json_extract(payload,'$.signal_reference.event_key'));
+CREATE TABLE IF NOT EXISTS plan_paper_events (
+    trade_id TEXT NOT NULL, version INTEGER NOT NULL, sequence INTEGER NOT NULL CHECK(sequence BETWEEN 1 AND 1024),
+    payload TEXT NOT NULL CHECK(json_valid(payload)), PRIMARY KEY(trade_id,sequence),
+    FOREIGN KEY(trade_id,version) REFERENCES plan_versions(trade_id,version)
+);
 CREATE TABLE IF NOT EXISTS trade_events (
     id TEXT PRIMARY KEY,
     trade_id TEXT NOT NULL REFERENCES trades(id),
@@ -314,7 +319,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 );
 '''
 
-IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
+IMMUTABLE_TABLES = ['plan_paper_events','plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 IMMUTABLE_TABLES += ["learning_attempts", "arrival_sessions", "arrival_observations", "arrival_receipts",
                      "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "historical_bi5_sources", "recorded_strategy_checkpoints", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
 

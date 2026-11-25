@@ -1,3 +1,4 @@
+import {JournalPaper} from './PlanPaper';
 import {snapshotLane} from './snapshotLanes';
 import {SnapshotDetails} from './SnapshotDetails';
 import LearningDrill from './LearningDrill';
@@ -137,11 +138,11 @@ function App(){
       {section==='terminal'&&<Terminal expanded onPlan={planFromChart} onSignal={openSignal} onChartLesson={snapshot_id=>journalFrom({snapshot_id})} initialLocation={chartLocation}/>}
       {section==='signals'&&<SignalExplorer selected={selectedSignal} onSelect={selectSignal} onOpenPlan={(id,version)=>{setPlanLocation({id,version});go("plans");}} onJournal={(signal,snapshot_id)=>journalFrom({snapshot_id},signal)} onPlan={(signal,snapshot_id)=>{
         const {primary,timeframe}=signal.provenance;
-        planFromChart({symbol:primary.symbol as SymbolName,timeframe,strategy:'SMT research',snapshot_id,
+        planFromChart({symbol:primary.symbol as SymbolName,timeframe,strategy:'SMT research',snapshot_id,knowledge_cutoff_utc:snapshot_id?undefined:new Date(signal.transitions.at(-1)!.time*1000).toISOString(),
           context:`${primary.source} · ${primary.feed_id} · ${primary.price_basis}`,
           evidence:signalSummary(signal),signal_reference:{event_key:signal.event_key,status:signal.status}});
       }}/>}
-      {section==='plans'&&<Planner refresh={refresh} initialLocation={planLocation} onLesson={plan_reference=>journalFrom({plan_reference})} incoming={incomingPlan} onConsume={()=>setIncomingPlan(undefined)} onReview={id=>{setReviewPlan(id);go("ai");}}/>}
+      {section==='plans'&&<Planner refresh={refresh} openSignal={openSignal} initialLocation={planLocation} onLesson={plan_reference=>journalFrom({plan_reference})} incoming={incomingPlan} onConsume={()=>setIncomingPlan(undefined)} onReview={id=>{setReviewPlan(id);go("ai");}}/>}
       {section==='ai'&&<AIPage refresh={refresh} initialTrade={reviewPlan}/>}
       {section==='lab'&&<><HistoricalResearch openChart={openChart}/><StrategyLab/></>}
       {section==='builder'&&<StrategyBuilder openChart={openChart}/>}
@@ -436,9 +437,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     const isCurrent=()=>liveCaptureGeneration.current===captureGeneration&&captureSequence.current===sequence;
     setCaptureState({generation:captureGeneration,saving:true,id:chartCapture});
     try {
-      const lanes=savedSource&&compare?[
+      const lanes=savedSource&&(compare||(cutoff!=null&&indicatorFeed?.feed_id==='dukascopy-bi5-v2'))?[
         snapshotLane('primary',symbol,timeframe,indicatorFeed??undefined,visibleCandles),
-        snapshotLane('comparison',compare,timeframe,comparison.feed,comparison.candles??[]),
+        ...(compare?[snapshotLane('comparison',compare,timeframe,comparison.feed,comparison.candles??[])]:[]),
       ]:undefined;
       const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff,undefined,lanes);
       if(isCurrent())setCaptureState({generation:captureGeneration,saving:false,id:saved.id,status:'Chart capture saved'});
@@ -522,7 +523,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
           }}>{picking?'Cancel level selection':'Select plan levels'}</button>
           {picking&&<span role="status">Click primary price for {['entry','stop','target'][picked.length]}</span>}
           <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>onPlan({
-            symbol:symbol as SymbolName,timeframe,snapshot_id:chartCapture,context:`${source} · ${data?.feed_id??'unverified feed'} · ${data?.price_basis??'unverified basis'}`,
+            symbol:symbol as SymbolName,timeframe,snapshot_id:chartCapture,knowledge_cutoff_utc:cutoff==null?undefined:new Date(cutoff*1000).toISOString(),context:`${source} · ${data?.feed_id??'unverified feed'} · ${data?.price_basis??'unverified basis'}`,
             entry:picked[0]??'',stop:picked[1]??'',target:picked[2]??'',
           })}>Create trade plan</button>
           {chartCapture&&onChartLesson&&<button className="small-tool" onClick={()=>onChartLesson(chartCapture)}>Record chart lesson</button>}
@@ -646,7 +647,7 @@ function Dashboard({overview,go}:{overview:Overview|null;go:(s:Section)=>void}){
   </>
 }
 
-function Planner({refresh,incoming,onConsume,onReview,initialLocation,onLesson}:{refresh:()=>void;incoming?:Plan;onConsume:()=>void;onReview:(id:string)=>void;initialLocation?:{id:string;version?:number};onLesson:(reference:import("./types").PlanReference)=>void}){
+function Planner({refresh,incoming,onConsume,onReview,initialLocation,onLesson,openSignal}:{openSignal:(reference:import('./types').SignalReference)=>Promise<void>;refresh:()=>void;incoming?:Plan;onConsume:()=>void;onReview:(id:string)=>void;initialLocation?:{id:string;version?:number};onLesson:(reference:import("./types").PlanReference)=>void}){
   const formatDate=useTimestampFormat();
  const [list,setList]=useState<Trade[]>([]);const [loading,setLoading]=useState(true);const [formOpen,setFormOpen]=useState(()=>Boolean(incoming||loadDraft()));const [plan,setPlan]=useState<Plan>(()=>incoming??loadDraft()??{...initialPlan});const [risk,setRisk]=useState<import('./types').Risk|null>(null);const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');const [error,setError]=useState('');const [closeId,setCloseId]=useState('');const [outcome,setOutcome]=useState({pnl:'0',r:'0',notes:''});
  useEffect(()=>{
@@ -703,10 +704,10 @@ function Planner({refresh,incoming,onConsume,onReview,initialLocation,onLesson}:
  return <><PageHeading eyebrow="TRADING / PLANNING" title="Trade planner" subtitle="A trade should exist as a written hypothesis before it exists as a position." action={<button className="btn btn-primary" onClick={()=>{setFormOpen(true);setMessage('');setError('')}}><Plus size={17}/> New Trade Plan</button>}/>
   <div className="pill-guidance"><ShieldCheck size={17}/><div><strong>Evidence-first workflow</strong><span>Context → Observation → Evidence → Hypothesis → Setup → Trigger → Invalidation → Risk → Execution → Review</span></div></div>
   {message&&<Success>{message}</Success>}{savedId&&<button className="small-tool" onClick={()=>onReview(savedId)}>Review saved plan</button>}{error&&<Notice tone="red">{error}</Notice>}
-  <Card><SectionTitle eyebrow="PLANNED DECISIONS" title="Your trade log" action={<Badge tone="neutral">{list.length} records</Badge>}/>{loading?<div className="loading-zone"><Spinner/></div>:list.length?<div className="table-scroll"><table><thead><tr><th>DECISION</th><th>SYMBOL</th><th>STRATEGY</th><th>RISK</th><th>STATUS</th><th>CREATED</th><th>ACTION</th></tr></thead><tbody>{list.map(t=><tr key={t.id}><td className="mono">{t.id}</td><td><strong>{t.symbol}</strong> <span className={t.direction==='BUY'?'positive':'negative'}>{t.direction}</span></td><td>{t.plan.strategy}</td><td>{t.plan.risk_percent}%</td><td><Badge tone={t.status==='CLOSED'?'blue':'green'}>{t.status}</Badge></td><td>{formatDate(t.created_at)}</td><td><button className="text-button" onClick={()=>{setHistoryVersion(undefined);void api.trade(t.id).then(setHistory).catch(reason=>setError(reason.message));}}>Versions</button>
+  <Card><SectionTitle eyebrow="PLANNED DECISIONS" title="Your trade log" action={<Badge tone="neutral">{list.length} records</Badge>}/>{loading?<div className="loading-zone"><Spinner/></div>:list.length?<div className="table-scroll"><table><thead><tr><th>DECISION</th><th>SYMBOL</th><th>STRATEGY</th><th>RISK</th><th>STATUS</th><th>CREATED</th><th>ACTION</th></tr></thead><tbody>{list.map(t=><tr key={t.id}><td className="mono">{t.id}</td><td><strong>{t.symbol}</strong> <span className={t.direction==='BUY'?'positive':'negative'}>{t.direction}</span></td><td>{t.plan.strategy}</td><td>{t.plan.risk_percent}%</td><td><Badge tone={t.status==='CLOSED'?'blue':'green'}>{t.status}</Badge></td><td>{formatDate(t.created_at)}</td><td><button className="text-button" onClick={()=>{setHistoryVersion(undefined);setHistory(undefined);void api.trade(t.id).then(setHistory).catch(reason=>setError(reason.message));}}>Versions</button>
   {t.status==='PLANNED'?<><button className="text-button" onClick={()=>setCloseId(t.id)}>Record outcome <ArrowRight size={14}/></button>
     <button className="text-button" onClick={()=>setDeclineId(t.id)}>No trade</button></>:t.outcome?`${t.outcome.result_r} R`:'—'}</td></tr>)}</tbody></table></div>:<Empty icon={<Target/>} title="Your trade log is empty" body="Start with a structured plan. Your decisions will be versioned and preserved here."/>}</Card>
-  {history&&<PlanHistory key={history.id+(history.versions?.[0]?.version??0)} trade={history} initialVersion={historyVersion} onRevise={editLatest} onLesson={version=>onLesson({trade_id:history.id,version})} onClose={()=>setHistory(undefined)}/>}
+  {history&&<PlanHistory key={history.id+(history.versions?.[0]?.version??0)} trade={history} onSignal={ref=>void openSignal(ref).catch(e=>setError(e.message))} initialVersion={historyVersion} onRevise={editLatest} onLesson={version=>onLesson({trade_id:history.id,version})} onClose={()=>setHistory(undefined)}/>}
   {declineId&&<div className="modal-shade"><section className="small-modal" role="dialog" aria-label="Record no-trade decision">
     <h2>Record no-trade decision</h2><TextArea label="Reason for passing" value={reason} onChange={setReason}/>
     <div className="research-controls"><button className="small-tool" onClick={()=>setDeclineId('')}>Cancel</button>
@@ -864,6 +865,7 @@ function Journal({refresh,incoming,clearLink,openSignal,initialEntry,initialCont
  {e.supersedes&&<small>Supersedes {e.supersedes}</small>}
  {e.plan_reference&&<button className="text-button" onClick={()=>openPlan(e.plan_reference!.trade_id,e.plan_reference!.version)}>
    Open linked plan v{e.plan_reference.version}</button>}
+ {e.plan_reference&&<JournalPaper trade={e.plan_reference.trade_id} version={e.plan_reference.version}/>}
  {e.snapshot_id&&<SnapshotDetails id={e.snapshot_id}/>}
  {e.snapshot_id&&<a className="text-button" href={`/research/api/chart-snapshots/${e.snapshot_id}/image`} target="_blank" rel="noreferrer">Open chart capture</a>}
  {!entries.some(item=>item.supersedes===e.id)&&<button className="text-button" onClick={()=>{

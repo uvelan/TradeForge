@@ -69,7 +69,7 @@ def dataset_detail(dataset_id:str):
 
 
 class ChartSnapshotRequest(BaseModel):
-    lanes: tuple[ChartLane, ChartLane] | None = None
+    lanes: tuple[ChartLane] | tuple[ChartLane, ChartLane] | None = None
     png: str = Field(min_length=40,max_length=2_000_000)
     symbol: str = Field(min_length=1,max_length=64)
     timeframe: str = Field(min_length=2,max_length=4)

@@ -11,6 +11,7 @@ export interface CandleResponse {source_completeness?:"UNVERIFIED";origin?:Archi
 export interface BrokerSymbol {name:string;description:string;digits:number}
 export type SignalReference={event_key:string;status:import("./SignalExplorer").SignalStatus};
 export interface Plan {
+ knowledge_cutoff_utc?:string;
  snapshot_id?:string;
  signal_reference?:SignalReference;
  symbol:SymbolName; direction:'BUY'|'SELL';strategy:string;session:'ASIA'|'LONDON'|'NEW_YORK'|'OTHER';timeframe:Timeframe;

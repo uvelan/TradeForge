@@ -118,6 +118,8 @@ def decline_trade(uid:str,reason:str)->dict:
         db.execute("BEGIN IMMEDIATE")
         trade=db.execute('SELECT status FROM trades WHERE id=?',(uid,)).fetchone()
         if trade is None:raise HTTPException(404,'Trade not found')
+        if db.execute("SELECT 1 FROM plan_paper_events WHERE trade_id=? LIMIT 1",(uid,)).fetchone():
+            raise HTTPException(409,"A submitted paper order already exists for this decision")
         if trade['status'] in ('CLOSED','CANCELLED'):raise HTTPException(409,'Decision is already finalized')
         sequence=db.execute('SELECT MAX(sequence)+1 FROM trade_events WHERE trade_id=?',(uid,)).fetchone()[0]
         now=utc_now()

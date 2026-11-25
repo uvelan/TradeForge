@@ -12,6 +12,7 @@ frontend/node_modules/
 frontend/dist/
 frontend/test-results/
 frontend/recorded-test-results/
+frontend/paper-test-results/
 frontend/playwright-report/
 frontend/.vite/
 *.tsbuildinfo

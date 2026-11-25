@@ -58,6 +58,8 @@ async def lifespan(app:FastAPI):
         await monitor
         await history
 app=FastAPI(title='TradeForge Local API',version='0.1.0',lifespan=lifespan)
+from .plan_paper import router as paper_router
+app.include_router(paper_router)
 app.include_router(indicator_router)
 app.include_router(arrival_router)
 app.include_router(review_decision_router)

@@ -30,9 +30,12 @@ class ChartLane(BaseModel):
 
 
 def verified_lanes(db, request, signal=None):
-    primary, peer = request.lanes
+    primary = request.lanes[0]
+    peer = request.lanes[1] if len(request.lanes)==2 else None
+    if signal is not None and peer is None:
+        raise HTTPException(422, "Linked SMT lane attestations require both instruments")
     if (request.source not in {"MT5_SAVED", "DUKASCOPY_SAVED"} or primary.role != "primary"
-            or peer.role != "comparison" or primary.symbol != request.symbol or peer.symbol == primary.symbol
+            or primary.symbol != request.symbol or (peer and (peer.role != "comparison" or peer.symbol == primary.symbol))
             or any(lane.timeframe != request.timeframe for lane in request.lanes)):
         raise HTTPException(422, "Snapshot lanes differ from chart context")
     result = []
