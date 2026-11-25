@@ -1,6 +1,7 @@
 """Causal indicator definitions for ordered OHLC bars."""
 
 from dataclasses import dataclass
+from decimal import Decimal
 from math import isfinite, sqrt
 from typing import Callable
 
@@ -174,13 +175,35 @@ def stochastic_rsi(bars: list[Bar], period: int) -> dict[str, Values]:
 
 
 def commodity_channel(bars: list[Bar], period: int) -> dict[str, Values]:
-    typical = [(bar.high + bar.low + bar.close) / 3 for bar in bars]
     values: Values = [None] * min(period - 1, len(bars))
+    if len(bars) < period:
+        return {"CCI": values}
+
+    # Preserve the preview's existing numeric-range limit for OHLC totals.
+    decimal_prices = []
+    for bar in bars:
+        if not isfinite(bar.high + bar.low + bar.close):
+            raise ValueError("Indicator calculation exceeded supported numeric range")
+        # Bar has already parsed positive finite floats. Its shortest round-trip
+        # spelling preserves distinct representable prices and the decimal
+        # relationships users supplied, e.g. 1.3 + 1.1 + 1.2 == 3 * 1.2.
+        decimal_prices.append([Decimal(str(price)).as_tuple()
+                               for price in (bar.high, bar.low, bar.close)])
+
+    # The common exact decimal scale and typical-price divisor (3) cancel.
+    # Integer totals avoid relying on the active Decimal precision context.
+    exponents = {price.exponent for row in decimal_prices for price in row}
+    exponent_floor = min(exponents)
+    scales = {exponent: 10 ** (exponent - exponent_floor) for exponent in exponents}
+    totals = [sum(int("".join(map(str, price.digits))) * scales[price.exponent] for price in row)
+              for row in decimal_prices]
     for index in range(period - 1, len(bars)):
-        window = typical[index-period+1:index+1]
-        mean = sum(window) / period
-        deviation = sum(abs(value - mean) for value in window) / period
-        values.append((typical[index] - mean) / (0.015 * deviation) if deviation else 0.0)
+        window = totals[index-period+1:index+1]
+        window_sum = sum(window)
+        deviation_sum = sum(abs(period * total - window_sum) for total in window)
+        current_delta = period * totals[index] - window_sum
+        # 0.015 = 3 / 200. Dividing by mean absolute deviation contributes period.
+        values.append(200 * period * current_delta / (3 * deviation_sum) if deviation_sum else 0.0)
     return {"CCI": values}
 
 

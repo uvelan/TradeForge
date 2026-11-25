@@ -193,9 +193,12 @@
       ],
       "tests": [
         "research_backend/tests/test_indicators.py",
-        "research_backend/tests/test_indicator_engine.py"
+        "research_backend/tests/test_indicator_engine.py",
+        "research_backend/tests/test_cci_precision.py",
+        "research_backend/tests/test_tf_i01_numerical_oracle.py",
+        "frontend/e2e/indicator-engine.spec.ts"
       ],
-      "remaining_or_boundary": "Six causal OHLC calculators; gated VWAP, optional HMA and external oracle remain."
+      "remaining_or_boundary": "Six causal OHLC calculators with bounded independent numerical acceptance; untested ranges, gated VWAP, optional HMA and broader chart lifecycle remain."
     },
     {
       "id": "TF-I02",
