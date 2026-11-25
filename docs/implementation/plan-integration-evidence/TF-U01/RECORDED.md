@@ -27,6 +27,10 @@ $env:TRADEFORGE_E2E_UI_PORT='4537'
 npm run e2e -- --config playwright.recorded.config.ts --retries=0
 ~~~
 
-CI adds `--fetch` to the reference command and verifies both files directly from the authorized public datafeed. Missing files and wrong checksums fail closed. Each file also has an all-zero pin rejection control. A local fetch probe received HTTP 429. The local pass used the existing pinned files. No provider binaries, price-bearing browser artifacts or account identifiers are uploaded. The historical server uses the production routes with MT5 disabled. No candle responses are intercepted.
+**PASS — local historical EURUSD verification.** Run the commands above against the original checksum-pinned files after a change to the covered reader, candle calculation, chart or replay behavior. Missing files and wrong checksums fail the local test. Both files also have an all-zero pin rejection control.
+
+At `e42336aae97252ae5c79aaabee253ab2e2a1dae7`, both standard Windows jobs passed. Hosted download rate-limited; recorded-data browser test did not run. Dukascopy returned HTTP 429. [Historical push run](https://github.com/uvelan/TradeForge/actions/runs/45599957503) and [historical PR run](https://github.com/uvelan/TradeForge/actions/runs/45599968713).
+
+For subsequent market-data changes, use historical provider data or a read-only local MT5 terminal. Verify MT5-specific claims on the terminal and cross-instrument claims with genuine data for each instrument. Use synthetic fixtures for controlled edge cases. Deployment remains a separate decision after local implementation and verification.
 
 Development checks caught a misencoded timezone separator and pointer coordinates sampled while fullscreen was resizing. The corrected test waits for the displayed UTC timestamp before reading OHLC. Revert the recorded-workspace commit to roll back the gate independently of the original workspace soak.
