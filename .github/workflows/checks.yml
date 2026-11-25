@@ -44,6 +44,12 @@ jobs:
           npx playwright install chromium
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm run e2e
+      - name: Verify pinned Dukascopy EURUSD chart workspace
+        run: |
+          ./.venv/Scripts/python.exe -m scripts.u01_recorded_quotes --source storage/t06-input --fetch | Out-Null
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cd frontend
+          npm run e2e -- --config playwright.recorded.config.ts --retries=0
       - name: Upload TF-D01 browser evidence
         if: always()
         uses: actions/upload-artifact@v6

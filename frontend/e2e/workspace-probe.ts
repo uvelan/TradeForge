@@ -5,7 +5,12 @@ export async function installProbe(page:Page) {
   await page.addInitScript(()=>{
     const counts={charts:0,subscriptions:0,observers:0,listeners:0,timers:0,frames:0};
     const live=new Map<Element,any>();
-    const audit={range:()=>Array.from(live.values())[0]?.timeScale().getVisibleLogicalRange(),counts,created:0,disposed:0,retain:false,retained:new Set<Function>(),linkedCursor:0,linkedRange:0,
+    const audit={bars:()=>Array.from(live.values(),api=>api.panes()[0].getSeries()[0].data()),
+      point:(time:number)=>{
+        const el=document.querySelector('.primary-chart .chart-input')!;
+        const api=live.get(el), rect=el.getBoundingClientRect();
+        return {x:rect.left+api.priceScale('left').width()+api.timeScale().timeToCoordinate(time),y:rect.top+rect.height*.65};
+      },range:()=>Array.from(live.values())[0]?.timeScale().getVisibleLogicalRange(),counts,created:0,disposed:0,retain:false,retained:new Set<Function>(),linkedCursor:0,linkedRange:0,
       chart:(factory:Function)=>(el:Element,options:unknown)=>{
         const api=factory(el,options);counts.charts++;audit.created++;live.set(el,api);
         function subscription(target:any, suffix:string) {
