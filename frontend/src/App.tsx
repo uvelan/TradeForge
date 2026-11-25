@@ -33,6 +33,7 @@ import {DrawingToolbox,tools,useDrawingBook,type Drawing} from './Drawings';
 import {PlanHistory} from './PlanHistory';
 import {StrategyBuilder} from './StrategyBuilder';
 import type {EvidenceChartLocation} from './StrategyEvaluation';
+import {MonthReplay} from './MonthReplay';
 import {HistoricalResearch} from './HistoricalResearch';
 
 type ChartLocation = Partial<EvidenceChartLocation> & {indicator?:string;sequence:number};
@@ -144,7 +145,7 @@ function App(){
       }}/>}
       {section==='plans'&&<Planner refresh={refresh} openSignal={openSignal} initialLocation={planLocation} onLesson={plan_reference=>journalFrom({plan_reference})} incoming={incomingPlan} onConsume={()=>setIncomingPlan(undefined)} onReview={id=>{setReviewPlan(id);go("ai");}}/>}
       {section==='ai'&&<AIPage refresh={refresh} initialTrade={reviewPlan}/>}
-      {section==='lab'&&<><HistoricalResearch openChart={openChart}/><StrategyLab/></>}
+      {section==='lab'&&<><MonthReplay/><HistoricalResearch openChart={openChart}/><StrategyLab/></>}
       {section==='builder'&&<StrategyBuilder openChart={openChart}/>}
       {section==='journal'&&<Journal refresh={refresh} initialEntry={journalLocation} incoming={journalSignal} initialContext={journalContext}
         clearLink={()=>{setJournalSignal(undefined);setJournalContext(undefined);}}

@@ -83,6 +83,13 @@ CREATE TABLE IF NOT EXISTS strategy_decisions (
     created_at TEXT NOT NULL,
     PRIMARY KEY(run_id,cutoff)
 );
+CREATE TABLE IF NOT EXISTS month_replay_manifests (
+    session TEXT PRIMARY KEY, month TEXT NOT NULL, binding TEXT NOT NULL CHECK(json_valid(binding))
+);
+CREATE TABLE IF NOT EXISTS month_replay_steps (
+    session TEXT NOT NULL, idx INTEGER NOT NULL, payload TEXT NOT NULL CHECK(json_valid(payload)),
+    digest TEXT NOT NULL, PRIMARY KEY(session,idx)
+);
 CREATE TABLE IF NOT EXISTS plan_versions (
     id TEXT PRIMARY KEY,
     trade_id TEXT NOT NULL REFERENCES trades(id),
@@ -325,7 +332,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 );
 '''
 
-IMMUTABLE_TABLES = ['decision_review_steps','plan_paper_events','plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
+IMMUTABLE_TABLES = ['month_replay_manifests','month_replay_steps','decision_review_steps','plan_paper_events','plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 IMMUTABLE_TABLES += ["learning_attempts", "arrival_sessions", "arrival_observations", "arrival_receipts",
                      "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "historical_bi5_sources", "recorded_strategy_checkpoints", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
 
