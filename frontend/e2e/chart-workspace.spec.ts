@@ -4,7 +4,7 @@ import {installProbe} from './workspace-probe';
 
 const empty={charts:0,subscriptions:0,observers:0,listeners:0,timers:0,frames:0};
 type Counts=typeof empty;
-type Probe={bars:()=>unknown[][];point:(time:number)=>{x:number;y:number};range:()=>unknown;counts:Counts;created:number;disposed:number;retain:boolean;retained:Set<Function>;linkedCursor:number;linkedRange:number};
+type Probe={comparisonSeries:()=>{title:string;data:{time:number;open:number;high:number;low:number;close:number}[]}[];viewRange:(from:number,to:number)=>void;bars:()=>unknown[][];point:(time:number)=>{x:number;y:number};range:()=>unknown;counts:Counts;created:number;disposed:number;retain:boolean;retained:Set<Function>;linkedCursor:number;linkedRange:number};
 declare global {interface Window {workspaceProbe:Probe}}
 const counts=(page:Page)=>page.evaluate(()=>({...window.workspaceProbe.counts}));
 const nav=(page:Page,name:string)=>page.getByRole('button',{name,exact:true}).click();

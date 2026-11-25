@@ -15,7 +15,7 @@ The independent reference decompresses each checksummed BI5, unpacks big-endian 
 | 14:00 | 1.16207 / 1.16232 / 1.16196 / 1.16220 | 1.16207 / 1.16232 / 1.16196 / 1.16220 |
 | 14:55 | 1.16263 / 1.16284 / 1.16244 / 1.16278 | 1.16263 / 1.16284 / 1.16244 / 1.16278 |
 
-Local Chromium completed 100 route cycles over one, two and four EURUSD M5 panes. Switching to an empty MT5_SAVED archive returned 404 and removed the candles. Switching back recovered both verified partitions. EMA requested the same feed, basis and partitions. The frozen chart showed only the first bar at 13:05 and two at 13:10. The saved 13:05 snapshot retained its source, symbol, timeframe and cutoff; fetching its image after navigation validated its immutable ID. The snapshot schema does not include partition hashes. Only EURUSD was supplied. Cross-instrument comparisons and live MT5 quotes remain UNVERIFIED. The local Python MT5 package was present but no running terminal was found.
+Local Chromium completed 100 route cycles over one, two and four EURUSD M5 panes. Switching to an empty MT5_SAVED archive returned 404 and removed the candles. Switching back recovered both verified partitions. EMA requested the same feed, basis and partitions. The frozen chart showed only the first bar at 13:05 and two at 13:10. The saved 13:05 snapshot retained its source, symbol, timeframe and cutoff; fetching its image after navigation validated its immutable ID. The snapshot schema does not include partition hashes. Only EURUSD was supplied. For 2025, cross-instrument comparisons remain UNVERIFIED. See the separate [2026 two-instrument verification](RECORDED-PAIR.md). Live MT5 quotes remain UNVERIFIED. The local Python MT5 package was present but no running terminal was found.
 
 ## Commands
 

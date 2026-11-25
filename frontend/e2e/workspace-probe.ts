@@ -5,7 +5,12 @@ export async function installProbe(page:Page) {
   await page.addInitScript(()=>{
     const counts={charts:0,subscriptions:0,observers:0,listeners:0,timers:0,frames:0};
     const live=new Map<Element,any>();
-    const audit={bars:()=>Array.from(live.values(),api=>api.panes()[0].getSeries()[0].data()),
+    const primary=()=>live.get(document.querySelector('.primary-chart .chart-input')!);
+    const audit={comparisonSeries:()=>primary()?.panes().flatMap((pane:any)=>pane.getSeries()
+      .filter((series:any)=>series.seriesType()==='Candlestick')
+      .map((series:any)=>({title:series.options().title,data:series.data()})))??[],
+      viewRange:(from:number,to:number)=>primary().timeScale().setVisibleRange({from,to}),
+      bars:()=>Array.from(live.values(),api=>api.panes()[0].getSeries()[0].data()),
       point:(time:number)=>{
         const el=document.querySelector('.primary-chart .chart-input')!;
         const api=live.get(el), rect=el.getBoundingClientRect();
