@@ -177,13 +177,14 @@
     },
     {
       "id": "TF-U01",
-      "status": "partial",
+      "status": "implemented",
       "depends_on": [],
       "tests": [
         "frontend/src/ChartLink.test.ts",
-        "frontend/e2e/chart-capture-context.spec.ts"
+        "frontend/e2e/chart-capture-context.spec.ts",
+        "frontend/e2e/chart-workspace.spec.ts"
       ],
-      "remaining_or_boundary": "Cancel stale linked crosshairs and prevent chart capture responses from attaching across contexts. No full panel or 100-navigation-cycle claim."
+      "remaining_or_boundary": "Desktop and narrow Chromium workspace acceptance. Resource counts cover chart-owned application registrations and observed chart surfaces."
     },
     {
       "id": "TF-I01",

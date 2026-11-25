@@ -70,7 +70,7 @@ test("touch places a horizontal drawing and its persisted anchor can be edited",
     const saved=await (await response).json();
     const edited=saved.items.find((item:{id:string})=>item.id===id);
     await page.reload();
-    await page.getByText(/^Drawing toolbox/).click();
+    await expect(page.getByLabel("Drawing tool", {exact:true})).toBeVisible();
     await expect(page.getByLabel("Select drawing").locator('option[value="'+id+'"]')).toContainText(edited.anchors[0].price);
   }finally{await context.close();}
 });
@@ -250,7 +250,7 @@ for(const {kind,points} of placementCases){
     const reloaded=page.waitForResponse(res=>res.url().includes(endpoint())&&res.request().method()==="GET");
     await page.reload();
     expect(await (await reloaded).json()).toEqual(previous);
-    await page.getByText(/^Drawing toolbox/).click();
+    await expect(page.getByLabel("Drawing tool", {exact:true})).toBeVisible();
     await expect(page.getByLabel("Select drawing").locator('option[value="'+item.id+'"]')).toHaveCount(1);
   });
 }
@@ -312,7 +312,7 @@ test("previews and saves both position directions and rejects an invalid edit",a
   const reloaded=page.waitForResponse(res=>res.url().includes(endpoint())&&res.request().method()==="GET");
   await page.reload();
   expect(await (await reloaded).json()).toEqual(expectedScene);
-  await page.getByText(/^Drawing toolbox/).click();
+  await expect(page.getByLabel("Drawing tool", {exact:true})).toBeVisible();
   for(const id of createdIds)
     await expect(page.getByLabel("Select drawing").locator('option[value="'+id+'"]')).toHaveCount(1);
 });

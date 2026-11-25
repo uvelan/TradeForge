@@ -2,6 +2,7 @@ import type {ChartLink} from "./ChartLink";
 import { useEffect, useMemo, useState } from "react";
 import { visibleAt } from "./ReplayControls";
 import { api } from "./api";
+import {useChartIndicator} from "./indicators";
 import { CandleChart, Select } from "./components";
 import type { CandleRange, CandleResponse, ChartSource, ReplayPane, Timeframe } from "./types";
 import { useWorkspacePreference } from "./useWorkspacePreference";
@@ -73,14 +74,21 @@ export function ChartView({number, mainSymbol, source, options, refresh, cutoff,
   );
   const frame=frozen?.timeframe??linkedFrame??savedFrame;
   const symbol = frozen?.symbol ?? linkedSymbol ?? (options.includes(savedSymbol) ? savedSymbol : mainSymbol);
-  const {candles, error} = useViewCandles(symbol, frame, source, refresh, cutoff,false,range,frozen);
+  const {candles, error, feed} = useViewCandles(symbol, frame, source, refresh, cutoff,false,range,frozen);
+  const [showIndicators,setShowIndicators]=useState(false);
+  const closed = feed?.latest_unconfirmed && !frozen ? candles?.filter(bar=>bar.time!==feed.candles.at(-1)?.time) : candles;
+  const last=closed?.at(-1);
+  const asOf=cutoff??Math.min(Math.floor(Date.now()/1000),Math.max((last?.time??0)+frameMinutes[frame]*60,last?.available_at??0));
+  const indicators=useChartIndicator(Boolean(last)&&source!=="BINANCE_SPOT",closed??[],source,frame,symbol,asOf,feed,Boolean(frozen),undefined,"view-"+number);
   return <section className="secondary-chart" aria-label={`Chart view ${number}`}>
     <div className="pane-label view-controls">
       {(frozen||linkedSymbol)?<span>{symbol}</span>:<Select label={`View ${number} instrument`} value={symbol} options={options} onChange={setSymbol}/>}
       {(frozen||linkedFrame)?<span>{frame}</span>:<Select label={`View ${number} timeframe`} value={frame} options={Object.keys(frameMinutes)} onChange={value=>setFrame(value as Timeframe)}/>}
     </div>
+    <details onToggle={e=>setShowIndicators(e.currentTarget.open)}><summary>View {number} indicators</summary>
+      {showIndicators&&indicators.controls}</details>
     {candles?.length ? <CandleChart key={`${symbol}-${frame}-${source}`} candles={candles} height={360}
-      symbol={symbol} timeframe={frame} precision={precision(symbol)} link={link} linkId={String(number)} showSnapshot/> :
+      symbol={symbol} timeframe={frame} indicators={indicators.data} precision={precision(symbol)} link={link} linkId={String(number)} showSnapshot/> :
       <div className="chart-loading" role="status">{error ?? (candles ? "No completed candles at this time" : "Loading candles…")}</div>}
   </section>;
 }

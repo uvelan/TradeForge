@@ -319,3 +319,22 @@
 .plan-diff td{white-space:pre-wrap;overflow-wrap:anywhere;max-width:30rem}
 .coverage-days{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:.35rem;padding:.6rem 0}.coverage-days button[aria-pressed=true]{border-color:#60dbc1;color:#d7fff5}
 .drawing-enabled .chart-input{touch-action:none;}
+
+.workspace-panel-options{margin:.5rem 0;color:var(--text-secondary);font-size:.85rem}
+.workspace-panel-options summary{cursor:pointer;width:fit-content}
+.workspace-panel-options>div{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
+.workspace-panel-options fieldset{display:flex;gap:.6rem;align-items:center;border:1px solid #324653;border-radius:6px}
+.panel-workspace .terminal-controls{height:var(--panel-toolbar,auto);overflow:auto;align-content:start}
+.panel-workspace .terminal-inspector,.panel-workspace .signal-evidence{height:var(--panel-inspector,auto);overflow:auto}
+.panel-workspace .chart-tool-rail{width:var(--panel-tools,48px)}
+.panel-workspace.hide-watchlist .market-watchlist,.panel-workspace.hide-toolbar .terminal-controls,
+.panel-workspace.hide-tools .chart-tool-rail,.panel-workspace.hide-tools .terminal-drawing-tools,
+.panel-workspace.hide-inspector .terminal-inspector,.panel-workspace.hide-inspector .signal-evidence{display:none}
+@media(min-width:1081px){
+  .panel-workspace .terminal-layout{grid-template-columns:minmax(0,1fr) var(--panel-watchlist,220px)}
+}
+@media(max-width:1080px){
+  .panel-workspace .market-watchlist{height:var(--panel-watchlist,auto);overflow:auto}
+}
+.panel-workspace.hide-watchlist .terminal-layout,.panel-workspace.hide-inspector .signal-layout{grid-template-columns:minmax(0,1fr)}
+.panel-workspace,.panel-workspace .terminal-core,.panel-workspace .terminal-chart-columns{min-width:0}

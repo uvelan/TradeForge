@@ -1,4 +1,5 @@
 import {useEffect,useState} from 'react';
+import {WorkspacePanels} from './WorkspacePanels';
 import {api} from './api';
 import {CandleChart,Notice} from './components';
 import {frameMinutes} from './chartViews';
@@ -71,7 +72,7 @@ export function SignalExplorer({selected,onSelect,onPlan,onJournal,onOpenPlan}: 
       <label>Until UTC<input type="datetime-local" value={draft.end} onChange={e=>setDraft({...draft,end:e.target.value})}/></label>
       <button className="btn btn-primary" type="submit">Search signals</button>
     </form>
-    <div className="signal-layout">
+    <WorkspacePanels inspectorOnly><div className="signal-layout">
       <div className="card signal-results">
         {error?<Notice tone="red">{error}</Notice>:!result?<p role="status">Loading signals…</p>:
           result.items.length===0?<p role="status">No recorded signals match these filters.</p>:
@@ -88,7 +89,7 @@ export function SignalExplorer({selected,onSelect,onPlan,onJournal,onOpenPlan}: 
         </div>
       </div>
       {selected&&<EvidenceInspector key={selected.event_key+selected.status} signal={selected} onPlan={onPlan} onJournal={onJournal} onOpenPlan={onOpenPlan}/>}
-    </div>
+    </div></WorkspacePanels>
   </section>;
 }
 

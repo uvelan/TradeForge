@@ -139,9 +139,9 @@ const coverageLabels: Record<string, string> = {
 
 const preference = "tradeforge.workspace.indicators-v1";
 const emptyResults: IndicatorResult[] = [];
-function stored(): Settings[] {
+function stored(key: string): Settings[] {
   try {
-    const value: unknown = JSON.parse(localStorage.getItem(preference) ?? "[]");
+    const value: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
     if (Array.isArray(value)) return value.filter((item): item is Settings =>
       Boolean(item && typeof item.id === "string" && item.id.length <= 40)).slice(0, 8);
   } catch { /* Use the primary indicator setting when storage is unavailable. */ }
@@ -149,12 +149,14 @@ function stored(): Settings[] {
 }
 
 export function useChartIndicator(enabled: boolean, candles: Candle[], source: ChartSource, timeframe: Timeframe,
-  symbol: string, cutoff: number, feed?: CandleResponse, frozen = false, request?: {indicator?: string; sequence: number}) {
-  const [timingPreference,setTimingPreference]=useWorkspacePreference<TimingPolicy>("analytical-timing","LEGACY_RESEARCH");
+  symbol: string, cutoff: number, feed?: CandleResponse, frozen = false, request?: {indicator?: string; sequence: number}, pane = "") {
+  const scope = pane ? pane+"-" : "";
+  const libraryKey = pane ? preference+"-"+pane : preference;
+  const [timingPreference,setTimingPreference]=useWorkspacePreference<TimingPolicy>(scope+"analytical-timing","LEGACY_RESEARCH");
   const timingPolicy:TimingPolicy=timingPreference==="STRICT_CAUSAL"?"STRICT_CAUSAL":"LEGACY_RESEARCH";
-  const [selected, setSelected] = useWorkspacePreference<string>("indicator", "none");
-  const [periodText, setPeriod] = useWorkspacePreference<string>("indicator-period", "");
-  const [settings, setSettings] = useState(stored);
+  const [selected, setSelected] = useWorkspacePreference<string>(scope+"indicator", "none");
+  const [periodText, setPeriod] = useWorkspacePreference<string>(scope+"indicator-period", "");
+  const [settings, setSettings] = useState(()=>stored(libraryKey));
   const [search, setSearch] = useState("");
   const [candidate, setCandidate] = useState("");
   const [definitions, setDefinitions] = useState<Definition[]>([]);
@@ -170,8 +172,8 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   useEffect(() => { if (request?.indicator) { setSelected(request.indicator); setPeriod(""); } },
     [request, setSelected, setPeriod]);
   useEffect(() => {
-    try { localStorage.setItem(preference, JSON.stringify(settings)); } catch { /* Keep editing in memory. */ }
-  }, [settings]);
+    try { localStorage.setItem(libraryKey, JSON.stringify(settings)); } catch { /* Keep editing in memory. */ }
+  }, [settings,libraryKey]);
 
   const scheduleScope = JSON.stringify([source, symbol, feed?.feed_id, feed?.price_basis]);
   const fvgSelectionScope = JSON.stringify([scheduleScope,timeframe,feed?.dataset_id,frozen,timingPolicy]);

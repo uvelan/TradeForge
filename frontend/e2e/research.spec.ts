@@ -187,7 +187,7 @@ for(const stressed of [false,true])test(
   await page.getByRole("button",{name:"Save chart evidence"}).click();
   await expect(page.getByText("Chart capture saved")).toBeVisible();
   await page.reload();
-  await page.getByText(/^Drawing toolbox/).click();
+  await expect(page.getByLabel("Drawing tool", {exact:true})).toBeVisible();
   await expect(page.getByLabel("Select drawing").locator(`option[value="${id}"]`)).toHaveCount(1);
   const replayBuilt=Promise.withResolvers<void>();
   const publishReplay=Promise.withResolvers<void>();

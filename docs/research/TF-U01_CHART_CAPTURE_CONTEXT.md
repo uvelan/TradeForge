@@ -20,5 +20,4 @@ same-key round trips, and replay cuts, check a stale failure on a comparison
 change, and let a current save beat the old reply. They inspect real plan and
 journal links. An additional paired-pane fixture holds both the alternate
 request and the fresh request for the original symbol, confirming the old
-pane cannot be saved. This fixes evidence ownership but does not close the broader
-TF-U01 panel layout or 100-cycle soak work.
+pane cannot be saved. The [workspace acceptance report](../implementation/plan-integration-evidence/TF-U01/README.md) covers the panel layout and 100-cycle soak.

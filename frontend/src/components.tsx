@@ -1,6 +1,6 @@
 import {FvgLayer} from './FvgLayer';
 import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
-import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType, type IChartApi, type ISeriesApi, type IPriceLine, type SeriesMarker, type UTCTimestamp} from 'lightweight-charts';
+import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType, type MouseEventParams, type IChartApi, type ISeriesApi, type IPriceLine, type SeriesMarker, type UTCTimestamp} from 'lightweight-charts';
 import type { IndicatorResult } from './indicators';
 import type { SmtEvent } from './smt';
 import {useCandleColors} from './candleColors';
@@ -211,21 +211,25 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     container.addEventListener('wheel',activate,{passive:true});
     container.addEventListener('pointerleave',leave);
     scale.subscribeVisibleLogicalRangeChange(viewport);
-    chart.subscribeCrosshairMove(param=>{
+    const onCrosshair=(param:MouseEventParams)=>{
       const time=typeof param.time==='number'?param.time:undefined;
       setCursorTime(time);
       if(linkId)link?.cursor(linkId,time);
-    });
-    chart.subscribeClick(param=>{
+    };
+    chart.subscribeCrosshairMove(onCrosshair);
+    const onClick=(param:MouseEventParams)=>{
       if(drawing.current)return;
       if(typeof param.hoveredObjectId==='string'&&param.hoveredObjectId.startsWith('smt:')){
         const event=markerEvents.current.find(item=>item.id===param.hoveredObjectId?.toString().slice(4));
         if(event?.event_key)markerSelection.current?.(event);
         return;
       }
-    });
+    };
+    chart.subscribeClick(onClick);
     return ()=>{
       container.removeEventListener('pointerenter',activate);
+      chart.unsubscribeClick(onClick);
+      chart.unsubscribeCrosshairMove(onCrosshair);
       input.dispose();placementReset.current=undefined;editReset.current=undefined;
       resize.disconnect();
       document.removeEventListener('fullscreenchange',input.cancelEdit);
