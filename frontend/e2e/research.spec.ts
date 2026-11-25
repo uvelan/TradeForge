@@ -52,8 +52,8 @@ test("navigates by keyboard and moves recorded signal evidence into a persisted 
     transitions:[{status:'SMT_CANDIDATE',time:540},{status:'SMT_CONFIRMED',time:600}],
     rules:{period:2,alignment_bars:0,tolerance_bps:0.5,confirmation_bars:1},
     provenance:{authority:'VERIFIED_SAVED_DATASET',timeframe:'M1',
-      primary:{symbol:'EURUSD',source:'DUKASCOPY_SAVED',feed_id:'test',price_basis:'BID'},
-      comparison:{symbol:'GBPUSD',source:'DUKASCOPY_SAVED',feed_id:'test',price_basis:'BID'}}};
+      primary:{symbol:'EURUSD',source:'DUKASCOPY_SAVED',feed_id:'test',price_basis:'BID',dataset_id:'fixture-eur',sha256:'e'.repeat(64)},
+      comparison:{symbol:'GBPUSD',source:'DUKASCOPY_SAVED',feed_id:'test',price_basis:'BID',dataset_id:'fixture-gbp',sha256:'b'.repeat(64)}}};
   await page.route('**/indicators/signals?*',route=>route.fulfill({json:{items:[signal],next_cursor:null}}));
   const bars=Array.from({length:10},(_,i)=>({time:i*60,open:10,high:14,low:9,close:11}));
   await page.route('**/indicators/signals/*/candles?*',route=>route.fulfill({json:{primary:bars,comparison:bars}}));

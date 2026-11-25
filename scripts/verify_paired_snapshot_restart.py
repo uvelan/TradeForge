@@ -21,6 +21,9 @@ def main():
         for phase in ("0", "1"):
             subprocess.run([npm, "run", "e2e", "--", "--config", "playwright.comparison.config.ts", "--retries=0"],
                            cwd=frontend, env={**env, "TRADEFORGE_PAIR_REOPEN": phase}, check=True)
+        signal = json.loads(Path(str(receipts) + ".signal").read_text())
+        print("Retrospective", signal["meta"]["id"], signal["meta"]["signal_transition_at"],
+              signal["meta"]["chart_evidence_through"], signal["digest"])
         for item in json.loads(receipts.read_text()):
             meta = item["meta"]
             print(meta["id"], item["digest"], meta["cutoff"],

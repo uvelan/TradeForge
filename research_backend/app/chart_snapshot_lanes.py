@@ -51,6 +51,7 @@ def verified_lanes(db, request, signal=None):
                     or expected_pins != [(pin.id, pin.sha256) for pin in lane.partitions]):
                 raise HTTPException(409, f"{lane.role} archive differs from linked signal")
         observed = {}
+        latest_availability = None
         for part in lane.partitions:
             row = db.execute("SELECT * FROM datasets WHERE id=?", (part.id,)).fetchone()
             expected = dict(provider=request.source.removesuffix("_SAVED"), kind="candles", symbol=lane.symbol,
@@ -68,7 +69,8 @@ def verified_lanes(db, request, signal=None):
                 available = bar.get("available_at")
                 if available is None:
                     available = t + FRAME_MIN[lane.timeframe] * 60
-                if request.cutoff is not None and signal is None and available > request.cutoff:
+                latest_availability = available if latest_availability is None else max(latest_availability, available)
+                if request.cutoff is not None and available > request.cutoff:
                     raise HTTPException(409, "Plotted archive bar unavailable at cutoff")
                 values = {key:bar[key] for key in ChartBar.model_fields}
                 if t in observed and observed[t] != values:
@@ -79,4 +81,6 @@ def verified_lanes(db, request, signal=None):
             raise HTTPException(409, f"{lane.role} plotted OHLC differs from pinned archive")
         result.append({**lane.model_dump(exclude={"bars"}), "bar_times":times, "last_bar":plotted[-1],
                        "ohlc_sha256":sha256(json.dumps(plotted,sort_keys=True,separators=(",",":")).encode()).hexdigest()})
+        if signal is not None:
+            result[-1]["latest_bar_available_at"] = latest_availability
     return result

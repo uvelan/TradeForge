@@ -165,5 +165,29 @@ test('verified local M5 comparison follows the selected instruments and frozen c
   const originalPng=Buffer.from(response.request().postDataJSON().png,'base64');
   expect(await (await request.get('/research/api/chart-snapshots/'+captured.id+'/image')).body()).toEqual(originalPng);
   await expect(page.getByRole('button',{name:'Record chart lesson'})).toHaveCount(0);
+  await click('Signal Explorer');
+  const feedFor=(symbol:SymbolName)=>({source,symbol,feed_id:feed,price_basis:'BID',dataset_id:refs[symbol].partition.id});
+  const detected=await request.post('/research/api/indicators/smt',{data:{timeframe:'M5',primary:refs.EURUSD.bars,
+    comparison:refs.GBPUSD.bars,primary_feed:feedFor('EURUSD'),comparison_feed:feedFor('GBPUSD')}});
+  expect(detected.ok()).toBe(true);
+  const event=(await detected.json()).events.find((e:{confirmed_at:number})=>e.confirmed_at&&e.confirmed_at<cutoff);
+  await page.getByLabel('Signal, dataset or trade ID').fill(event.event_key);await click('Search signals');
+  await page.locator('.signal-results .signal-row').click();
+  const inspector=page.getByLabel('Evidence Inspector');
+  await click('Open recorded chart');
+  const pendingSignal=page.waitForResponse(r=>r.url().endsWith('/chart-snapshots')&&r.request().method()==='POST');
+  await inspector.getByRole('button',{name:'Save chart evidence'}).click();
+  const posted=await pendingSignal;expect(posted.status(),await posted.text()).toBe(201);
+  const meta=await posted.json();
+  const latest=await (await request.get('/research/api/indicators/signals/'+event.event_key+'?status='+meta.signal_reference.status)).json();
+  expect(meta).toMatchObject({cutoff:null,chart_context:'RETROSPECTIVE',signal_transition_at:latest.transitions.at(-1).time});
+  expect(meta.chart_evidence_through).toBeGreaterThan(meta.signal_transition_at);
+  for(const [i,symbol] of symbols.entries()){
+    expect(meta.lanes[i].bar_times).toEqual(refs[symbol].bars.map(b=>b.time));
+    expect(meta.lanes[i].partitions).toEqual([refs[symbol].partition]);
+  }
+  expect(meta.chart_evidence_through).toBe(Math.max(...symbols.map(s=>refs[s].bars.at(-1)!.time+300)));
+  const digest=createHash('sha256').update(Buffer.from(posted.request().postDataJSON().png,'base64')).digest('hex');
+  if(process.env.TRADEFORGE_PAIR_RECEIPTS)writeFileSync(process.env.TRADEFORGE_PAIR_RECEIPTS+'.signal',JSON.stringify({meta,digest}));
   if(process.env.TRADEFORGE_PAIR_RECEIPTS)writeFileSync(process.env.TRADEFORGE_PAIR_RECEIPTS,JSON.stringify(receipts));
 });

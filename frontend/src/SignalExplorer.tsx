@@ -1,3 +1,4 @@
+import {SnapshotDetails} from './SnapshotDetails';
 import {snapshotLane} from './snapshotLanes';
 import {useEffect,useState} from 'react';
 import {WorkspacePanels} from './WorkspacePanels';
@@ -138,7 +139,7 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
     if(capture||loading)return;
     setLoading(true);setError('');
     try {
-      const data=await api.get<Capture>('/indicators/signals/'+signal.event_key+'/candles?status='+signal.status);
+      const data=await api.get<Capture>('/indicators/signals/'+signal.event_key+'/candles?status='+signal.status+(primary.source.endsWith('_SAVED')?'&view=retrospective':''));
       if(!data.primary.length||!data.comparison.length)throw new Error('Recorded candles are unavailable');
       setCapture(data);
     }catch(reason){setError((reason as Error).message);}finally{setLoading(false);}
@@ -196,7 +197,7 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
       <option value="">Choose a capture to attach</option>
       {captures.map(item=><option key={item.id} value={item.id}>{format(item.created_at)} · {item.id.slice(0,12)}</option>)}
     </select></label>}
-    {!replay&&snapshot&&<p><a href={`/research/api/chart-snapshots/${snapshot}/image`} target="_blank" rel="noreferrer">Open saved chart capture</a></p>}
+    {!replay&&snapshot&&<><p><a href={`/research/api/chart-snapshots/${snapshot}/image`} target="_blank" rel="noreferrer">Open saved chart capture</a></p><SnapshotDetails id={snapshot}/></>}
     {!replay&&<details onToggle={event=>{if(event.currentTarget.open)openRelated();}}>
       <summary>Related plans</summary>
       {relatedError?<p role="alert">{relatedError}</p>:!related?<p>Loading plan links</p>:!related.length?<p>No plans are linked to this record.</p>:
@@ -204,13 +205,14 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
           {item.trade_id} · v{item.version} · {item.strategy}</button> · {item.evidence_status}</p>)}
     </details>}
     {capture&&<div className="evidence-chart">
+      {!replay&&primary.source.endsWith('_SAVED')&&<p>Retrospective archive chart. Signal transition: {at(signal.transitions.at(-1)?.time)}.</p>}
       <div className="research-controls">
         {!replay&&<button className="small-tool" disabled={loading} onClick={()=>void replayEvidence()}>Replay recorded evidence</button>}
         <label><input type="checkbox" checked={showLines} onChange={e=>setShowLines(e.target.checked)}/> SMT lines</label>
         {replay&&<span role="status">{events.length?labels[events[0].status]:'No visible confirmation at this cutoff'}</span>}
       </div>
       <CandleChart onSaveSnapshot={replay?undefined:async png=>{
-        const saved=await api.saveSnapshot(png,primary.symbol,timeframe,primary.source,signal.transitions.at(-1)?.time,
+        const saved=await api.saveSnapshot(png,primary.symbol,timeframe,primary.source,undefined,
           {event_key:signal.event_key,status:signal.status},primary.source.endsWith('_SAVED')?[
             snapshotLane('primary',primary.symbol,timeframe,primary,left),
             snapshotLane('comparison',comparison.symbol,timeframe,comparison,right??[]),

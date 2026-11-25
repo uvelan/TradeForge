@@ -59,3 +59,30 @@ npm run e2e -- --config playwright.recorded.config.ts --retries=0
 ~~~
 
 Local results: paired capture and restart 2 passed, focused backend 10 passed, frontend unit suite 13 passed, production build passed, capture-context Chromium 7 passed, 2025 single-symbol Chromium 1 passed including 100 navigation cycles. All browser runs used zero retries. Rollback: revert the capture change and restart the local API and frontend. The prior version can still serve the PNGs. No database migration is required.
+
+### Signal-linked cutoff correction
+
+The baseline was 375a2dbec0c6a91068b8e3e125078f0ddd3f49f7. An isolated API registered the genuine November 13 partitions above, calculated SMT through the saved-data endpoint and resolved a saved confirmed revision. Two POSTs used identical PNG bytes, ordered lanes, archive pins, OHLC and cutoff. Adding only the signal reference changed the result:
+
+| EURUSD primary, GBPUSD comparison, 14:00 bar, chart cutoff 14:04:59 UTC | Baseline HTTP / rows added | Corrected HTTP / rows added |
+|---|---|---|
+| Unlinked | 409 / 0 | 409 / 0 |
+| Linked | 201 / 1 | 409 / 0 |
+
+The premature baseline receipt was 36456ab56c918ca5441d20f7c56b3158679d281fd669c7c90686248d9e11a8d0. The corrected service checks plotted availability on both lanes before inserting any row. At 14:05:00 the otherwise identical linked request returned 201 and inserted one row. The complete matrix exercised both symbol orders, linked and unlinked, and both lanes late versus only the comparison late. Eight requests at 14:04:59 each returned 409 and added zero rows. Eight requests at 14:05:00 each returned 201 and added exactly one.
+
+Signal Explorer explicitly requests the retrospective archive view. The default signal-candles API and replay continue to use the transition view. A retrospective save has null cutoff, the server-resolved revision transition time and the latest verified availability among all plotted candles. A frozen save enforces its supplied cutoff even when it carries the same signal reference. Older linked records keep their original identity and serialized metadata. Their old timestamp is labeled as unverified in the details.
+
+After restarting the API and browser, both frozen Lessons retained the IDs and image hashes in the previous table. The reopened retrospective Signal Explorer capture was 2e5c46f932f3e058bf7aee44d886a1e15ca560326544cfd6f6b0bf938f4999b3, with PNG SHA-256 24dcc846705e4f6bd9b7485d13e83c307d39112dd3202a30b55de2ed0772bc1c. It displayed the 05:45 UTC transition separately from the 22:00 UTC last plotted availability. Both full plotted timestamp lists and archive references matched the original partitions. The compatibility test additionally reads a receipt with the previous linked serialization and checks the SQLite metadata and PNG bytes remain identical after subsequent saves.
+
+~~~powershell
+.venv/Scripts/python.exe -m scripts.verify_signal_snapshot_cutoff
+.venv/Scripts/python.exe scripts/verify_paired_snapshot_restart.py
+.venv/Scripts/python.exe -m pytest -q research_backend/tests/test_chart_snapshot_lanes.py research_backend/tests/test_smt_authority.py research_backend/tests/test_workspace_tools.py research_backend/tests/test_cutover_saved_refs.py research_backend/tests/test_ai_evidence_snapshot.py
+npm --prefix frontend test
+npm --prefix frontend run build
+cd frontend
+npm run e2e -- chart-capture-context research.spec.ts --retries=0
+~~~
+
+Development runs exposed a browser selector that also matched navigation buttons and a pre-existing mocked signal fixture with no archive IDs. The final tests scope the selector to signal results and include mock pins in the controlled rejection test. The real-data acceptance uses the original checksum-pinned files. Rollback is a revert of this correction and restart of the local services. It requires no data migration and would restore the old linked-cutoff defect.

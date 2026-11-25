@@ -2,7 +2,7 @@ from copy import deepcopy
 from hashlib import sha256
 import json
 
-from research_backend.app.db import one
+from research_backend.app.db import one, transaction
 from research_backend.app.storage import write_partition
 
 
@@ -49,3 +49,32 @@ def test_snapshot_archive_pins_and_legacy_identity(client):
     assert one("SELECT COUNT(*) AS n FROM chart_snapshots")["n"] == 2
     assert client.get(URL + "/" + old_id).json() == legacy
     assert one("SELECT metadata,png FROM chart_snapshots WHERE id=?", (old_id,)) == {"metadata":raw,"png":image}
+
+    # A pre-fix linked receipt could describe a later bar at an earlier cutoff.
+    # Recreate its original serialization and keep the immutable row inspectable.
+    ref = {"event_key": "a"*64, "status": "SMT_CONFIRMED"}
+    provenance = {"timeframe": "M5"}
+    for lane in lanes:
+        provenance[lane["role"]] = {key: lane[key] for key in ("symbol","feed_id","price_basis","partitions")}
+        provenance[lane["role"]]["source"] = request["source"]
+    transition = {"status": ref["status"], "time": 450}
+    original = {k:v for k,v in saved.json().items() if k != "id"}
+    original.update(signal_reference=ref, cutoff=599)
+    serialized = json.dumps(original, sort_keys=True, separators=(",", ":"))
+    original_id = sha256(serialized.encode()+image).hexdigest()
+    with transaction() as db:
+        db.execute("INSERT INTO smt_event_history VALUES(?,?,?,?,?)",
+                   (ref["event_key"], "scope", ref["status"], 450, json.dumps(
+                       {"provenance":provenance, "transitions":[transition]})))
+        db.execute("INSERT INTO chart_snapshots VALUES(?,?,?,?)", (original_id, serialized, image, "2026-11-13"))
+    linked = {**request, "lanes":lanes, "signal_reference":ref}
+    assert client.post(URL, json={**linked, "cutoff":599}).status_code == 409
+    assert one("SELECT COUNT(*) AS n FROM chart_snapshots")["n"] == 3
+    frozen = client.post(URL, json=linked)
+    assert frozen.status_code == 201 and frozen.json()["chart_context"] == "FROZEN"
+    retro = client.post(URL, json={**linked, "cutoff":None})
+    assert retro.status_code == 201
+    assert {k:retro.json()[k] for k in ("chart_context","cutoff","signal_transition_at","chart_evidence_through")} == {
+        "chart_context":"RETROSPECTIVE", "cutoff":None, "signal_transition_at":450, "chart_evidence_through":600}
+    assert client.get(URL + "/" + original_id).json() == {"id":original_id, **original}
+    assert one("SELECT metadata,png FROM chart_snapshots WHERE id=?", (original_id,)) == {"metadata":serialized,"png":image}

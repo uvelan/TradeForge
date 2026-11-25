@@ -443,7 +443,8 @@ def signal_plans(event_key: str):
 
 @router.get("/signals/{event_key}/candles")
 def signal_candles(event_key: str, status: Literal["SMT_CANDIDATE", "SMT_CONFIRMED",
-                   "SMT_INVALIDATED", "SMT_SOURCE_CORRECTED"]):
+                   "SMT_INVALIDATED", "SMT_SOURCE_CORRECTED"],
+                   view: Literal["transition", "retrospective"] = "transition"):
     if status == "SMT_SOURCE_CORRECTED":
         correction = one("SELECT payload FROM smt_source_corrections WHERE event_key=?", (event_key,))
         if not correction:
@@ -479,7 +480,7 @@ def signal_candles(event_key: str, status: Literal["SMT_CANDIDATE", "SMT_CONFIRM
                     raise ValueError("Original partition unavailable")
                 values = read_partition(dataset)
             result[side] = [Bar.model_validate(bar).model_dump() for bar in values
-                            if bar["time"] + step <= event["transitions"][-1]["time"]]
+                            if view == "retrospective" or bar["time"] + step <= event["transitions"][-1]["time"]]
     except (OSError, RuntimeError, ValueError, KeyError) as error:
         raise HTTPException(409, f"Recorded evidence unavailable: {error}") from error
     return result

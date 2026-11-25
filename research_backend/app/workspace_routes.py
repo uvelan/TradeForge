@@ -121,6 +121,15 @@ def create_snapshot(request:ChartSnapshotRequest):
             raise HTTPException(422,"Snapshot context differs from linked signal")
         if request.lanes is not None:
             metadata.update(lane_schema_version=1, lanes=verified_lanes(db, request, signal))
+        if signal is not None:
+            transition = next((t for t in reversed(signal["transitions"])
+                               if t["status"] == request.signal_reference.status), None)
+            if transition is None:
+                raise HTTPException(409, "Signal revision has no matching transition")
+            metadata["signal_transition_at"] = transition["time"]
+            metadata["chart_context"] = "FROZEN" if request.cutoff is not None else "RETROSPECTIVE"
+            if request.lanes is not None:
+                metadata["chart_evidence_through"] = max(lane["latest_bar_available_at"] for lane in metadata["lanes"])
         data=json.dumps(metadata,sort_keys=True,separators=(",",":"))
         snapshot_id=sha256(data.encode()+png).hexdigest()
         db.execute("INSERT INTO chart_snapshots VALUES(?,?,?,?) ON CONFLICT(id) DO NOTHING",
