@@ -54,6 +54,18 @@ export function DataTrust({data,symbol,timeframe,error}: {
       <div><dt>Latest completed candle</dt><dd>{last?format((last.available_at??last.time+frameMinutes[timeframe]*60)*1000):'Unavailable'}</dd></div>
       {coverage&&<div><dt>Archive window</dt><dd>{format(coverage.start*1000)} to {format(coverage.end*1000)} · {coverage.duplicate_bars} duplicate bars{coverage.truncated?' · truncated':''}</dd></div>}
     </dl>
+    {data?.source_completeness==='UNVERIFIED'&&!data.origin&&<p>Provider quote completeness is unverified.</p>}
+    {data?.origin&&<section aria-label="Source coverage">
+      <p>{data.origin.reconstruction==='MATCHES_ARCHIVED_QUOTES'
+        ?data.origin.checked_bars+' candle(s) match the OHLC reconstructed from the archived quotes.'
+        :data.origin.reconstruction==='CANDLE_ARCHIVE'?'Provider candle archive.':'No linked quote manifest.'} Provider quote completeness is unverified.</p>
+      {data.origin.file_observations&&<p>{data.origin.file_observations==='ALL_RECORDS_VERIFIED'
+        ?'Every record in the checksum-verified BI5 file matched the stored quote series.'
+        :'The original BI5 file is unavailable for quote comparison.'}</p>}
+      {coverage&&<p>Observed archive interval (UTC): {new Date(coverage.start*1000).toISOString()} to {new Date(coverage.end*1000).toISOString()} (exclusive)</p>}
+      {data.origin.start!=null&&data.origin.end!=null&&<p>Import interval (UTC): {new Date(data.origin.start*1000).toISOString()} to {new Date(data.origin.end*1000).toISOString()} (exclusive). Missing candle slots: {data.origin.missing_slots?.length}.</p>}
+      {data.origin.source_sha256&&<p className="evidence-id">Source SHA-256 {data.origin.source_sha256}</p>}
+    </section>}
     {error&&<p role="status">{error}</p>}
     {data?.partitions?.map(part=><details key={part.id}><summary>Partition {part.id.slice(0,12)}</summary><p className="evidence-id">{part.id}<br/>{part.sha256}</p></details>)}
     {coverage&&coverage.end>coverage.start&&<CoverageCalendar key={coverage.start+":"+coverage.end} coverage={coverage}/>}

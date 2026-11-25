@@ -876,6 +876,16 @@ function DataLibrary({refresh,initialDataset}:{refresh:()=>void;initialDataset?:
  const [datasets,setDatasets]=useState<Dataset[]>([]);const [symbol,setSymbol]=useState<SymbolName>('EURUSD');const [timeframe,setTimeframe]=useState<Timeframe>('M5');const [day,setDay]=useState('2026-11-12');const [hour,setHour]=useState('');const [file,setFile]=useState<File|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [msg,setMsg]=useState('');
  const [inspected,setInspected]=useState<Dataset|undefined>(initialDataset);
  useEffect(()=>{if(initialDataset)setInspected(initialDataset);},[initialDataset]);
+ const [reviewedFile,setReviewedFile]=useState<File|null>(null);
+ async function registerReviewed(){
+   if(!reviewedFile)return;
+   setBusy(true);setMsg('');setError('');
+   try{
+     const receipt=await api.importReviewed(reviewedFile);
+     setMsg('Verified '+receipt.partitions.length+' partitions. Source SHA-256 '+receipt.source_sha256);
+     await load();refresh();
+   }catch(reason){setError((reason as Error).message)}finally{setBusy(false)}
+ }
  const [trust,setTrust]=useState<CandleResponse>();
  const [trustError,setTrustError]=useState('');
  useEffect(()=>{
@@ -891,6 +901,10 @@ function DataLibrary({refresh,initialDataset}:{refresh:()=>void;initialDataset?:
  async function importBi5(){if(!file)return;setBusy(true);setError('');try{const d=await api.importBi5(symbol,day,file,hour);setMsg(`Imported ${d.tick_dataset.rows} source ticks, ${d.candle_rows} M5 bars`);await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  return <><PageHeading eyebrow="STORAGE / PROVENANCE" title="Market data library" subtitle="Maintain separately sourced, checksummed datasets for research and replay." action={<a className="btn btn-secondary" href="/catalog.html">Open fixed-point catalog</a>}/>
  {error&&<Notice tone="red">{error}</Notice>}{msg&&<Success>{msg}</Success>}
+ <Card><SectionTitle title="Register a reviewed local archive"/>
+ <p>Choose an EURUSD BI5 hour from 13 November 2025 (13:00 or 14:00 UTC), or the EURUSD or GBPUSD M5 BID Parquet partition from 13 November 2026. Each file is identified by checksum. To resume an interrupted import, choose the same file again.</p>
+ <label className="field">Reviewed archive file<input type="file" accept=".bi5,.parquet" onChange={e=>setReviewedFile(e.target.files?.[0]??null)}/></label>
+ <button className="btn btn-secondary" disabled={busy||!reviewedFile} onClick={()=>void registerReviewed()}>Register or resume file</button></Card>
  <ArrivalPanel datasets={datasets}/>
  <Card><SectionTitle title="Inspect archived candle coverage"/>
    <label className="field">Candle partition <select value={inspected?.id??''}

@@ -58,6 +58,10 @@ export const api={
   saveSnapshot:(png:string,symbol:string,timeframe:Timeframe,source:string,cutoff?:number,
     signal_reference?:import('./types').SignalReference,lanes?:import('./snapshotLanes').SnapshotLane[])=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference,lanes}),
   importMt5:(symbol:SymbolName,timeframe:Timeframe,limit:number)=>post('/market/import/mt5',{symbol,timeframe,limit}),
+  importReviewed:(file:File)=>{
+    const body=new FormData();body.append('file',file);
+    return request<{source_sha256:string;partitions:{id:string}[]}>('/market/import/reviewed',{method:'POST',body});
+  },
   importBi5:async(symbol:SymbolName,day:string,file:File,hour:string)=>{
     const f=new FormData();f.append('file',file);
     const q=new URLSearchParams({symbol,day});if(hour)q.set('hour',hour);

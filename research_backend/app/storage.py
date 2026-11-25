@@ -46,47 +46,52 @@ def write_partition(provider:str,feed_id:str,symbol:str,kind:str,timeframe:str|N
     except ImportError as exc:
         raise RuntimeError('pyarrow is required for Parquet import: pip install -r requirements.txt') from exc
     records=sorted(records,key=lambda r:r['time'])
-    dt=datetime.fromtimestamp(int(records[0]['time']),timezone.utc)
-    folder=MARKET_DIR/provider.lower()/f'feed={feed_id}'/f'symbol={symbol}'/kind/f'year={dt.year:04d}'/f'month={dt.month:02d}'
-    if timeframe:
-        if timeframe not in {"M1", "M3", "M5", "M15", "M30", "H1", "H4", "D1"}:
-            raise ValueError('Invalid timeframe')
-        folder=folder/f'timeframe={timeframe}'
+    if timeframe and timeframe not in {"M1", "M3", "M5", "M15", "M30", "H1", "H4", "D1"}:
+        raise ValueError("Invalid timeframe")
+    from tradeforge.publication import encoded_partition
+    with encoded_partition(pa.Table.from_pylist(records), row_group_size) as (spool, digest):
+        return publish_encoded_partition(provider, feed_id, symbol, kind, timeframe, price_basis, records,
+                                spool, digest, connection)
+
+
+def publish_encoded_partition(provider, feed_id, symbol, kind, timeframe, price_basis, records, spool, digest, connection):
     from . import db as catalog_db
     from tradeforge.catalog import CatalogIntegrityError
-    from tradeforge.publication import encoded_partition, publish
+    from tradeforge.publication import publish
 
     if connection is not None:
         owner_file = connection.execute("PRAGMA database_list").fetchone()[2]
         if not owner_file or Path(owner_file).resolve() != catalog_db.DATABASE.resolve():
             raise ValueError("Import transaction belongs to a different partition publication owner")
-    table = pa.Table.from_pylist(records)
-    with encoded_partition(table, row_group_size) as (spool, digest):
-        identity = json.dumps([provider, feed_id, symbol, kind, timeframe, price_basis, digest, 1])
-        new_id = hashlib.sha256(identity.encode()).hexdigest()
-        path = folder/f'part-{new_id}.parquet'
-        with _partition_transaction(connection) as db:
-            existing = db.execute("""SELECT * FROM datasets
-                WHERE provider=? AND feed_id=? AND symbol=? AND kind=? AND timeframe IS ?
-                AND price_basis=? AND sha256=? ORDER BY created_at LIMIT 1""",
-                (provider,feed_id,symbol,kind,timeframe,price_basis,digest)).fetchone()
-            record = dict(existing) if existing else dict(
-                id=new_id, provider=provider, feed_id=feed_id, symbol=symbol, kind=kind,
-                timeframe=timeframe, price_basis=price_basis, rows_count=len(records),
-                first_time=datetime.fromtimestamp(int(records[0]['time']),timezone.utc).isoformat(),
-                last_time=datetime.fromtimestamp(int(records[-1]['time']),timezone.utc).isoformat(),
-                relative_path=str(path.relative_to(MARKET_DIR)), sha256=digest, created_at=utc_now())
-            try:
-                record = publish(db, "research", MARKET_DIR, record, spool, registered=existing is not None)
-            except CatalogIntegrityError as error:
-                raise RuntimeError(f"UNTRUSTED: {error}") from error
-            if existing is None:
-                db.execute("""INSERT INTO datasets(id,provider,feed_id,symbol,kind,timeframe,price_basis,
-                    rows_count,first_time,last_time,relative_path,sha256,created_at)
-                    VALUES(:id,:provider,:feed_id,:symbol,:kind,:timeframe,:price_basis,:rows_count,
-                    :first_time,:last_time,:relative_path,:sha256,:created_at)""", record)
-        return {'id':record["id"],'provider':provider,'symbol':symbol,'rows':len(records),
-                'relative_path':record["relative_path"],'sha256':digest}
+    identity = json.dumps([provider, feed_id, symbol, kind, timeframe, price_basis, digest, 1])
+    new_id = hashlib.sha256(identity.encode()).hexdigest()
+    dt=datetime.fromtimestamp(int(records[0]['time']),timezone.utc)
+    folder=MARKET_DIR/provider.lower()/f'feed={feed_id}'/f'symbol={symbol}'/kind/f'year={dt.year:04d}'/f'month={dt.month:02d}'
+    if timeframe:
+        folder=folder/f'timeframe={timeframe}'
+    path = folder/f'part-{new_id}.parquet'
+    with _partition_transaction(connection) as db:
+        existing = db.execute("""SELECT * FROM datasets
+            WHERE provider=? AND feed_id=? AND symbol=? AND kind=? AND timeframe IS ?
+            AND price_basis=? AND sha256=? ORDER BY created_at LIMIT 1""",
+            (provider,feed_id,symbol,kind,timeframe,price_basis,digest)).fetchone()
+        record = dict(existing) if existing else dict(
+            id=new_id, provider=provider, feed_id=feed_id, symbol=symbol, kind=kind,
+            timeframe=timeframe, price_basis=price_basis, rows_count=len(records),
+            first_time=datetime.fromtimestamp(int(records[0]['time']),timezone.utc).isoformat(),
+            last_time=datetime.fromtimestamp(int(records[-1]['time']),timezone.utc).isoformat(),
+            relative_path=str(path.relative_to(MARKET_DIR)), sha256=digest, created_at=utc_now())
+        try:
+            record = publish(db, "research", MARKET_DIR, record, spool, registered=existing is not None)
+        except CatalogIntegrityError as error:
+            raise RuntimeError(f"UNTRUSTED: {error}") from error
+        if existing is None:
+            db.execute("""INSERT INTO datasets(id,provider,feed_id,symbol,kind,timeframe,price_basis,
+                rows_count,first_time,last_time,relative_path,sha256,created_at)
+                VALUES(:id,:provider,:feed_id,:symbol,:kind,:timeframe,:price_basis,:rows_count,
+                :first_time,:last_time,:relative_path,:sha256,:created_at)""", record)
+    return {'id':record["id"],'provider':provider,'symbol':symbol,'rows':len(records),
+            'relative_path':record["relative_path"],'sha256':digest}
 
 
 def read_partition(dataset:dict,max_rows:int=2000)->list[dict]:

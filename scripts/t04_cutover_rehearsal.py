@@ -8,7 +8,7 @@ from contextlib import ExitStack, closing
 from pathlib import Path, PureWindowsPath
 
 DATABASES = ("database/trading.sqlite3", "research/tradeforge.sqlite3")
-ROOTS = ("market-data", "research/market", "research/ai-exports")
+ROOTS = ("market-data", "research/market", "research/ai-exports", "research/journal")
 
 
 def digest(path):
@@ -89,6 +89,10 @@ def reconcile(root):
                     dangling.append([lane, key])
                 elif rows[lane][key] != json.loads(metadata):
                     raise ValueError(f"Receipt mismatch: {lane}/{key}")
+        if conn.execute("SELECT 1 FROM sqlite_master WHERE name='historical_bi5_sources'").fetchone():
+            for pin, payload in conn.execute("SELECT sha256,payload FROM historical_bi5_sources"):
+                if hashlib.sha256(payload).hexdigest() != pin:
+                    raise ValueError(f"Retained BI5 source mismatch: {pin}")
         for manifest, in conn.execute("SELECT manifest FROM historical_imports"):
             item = json.loads(manifest)
             parts = list(item["candle_datasets"])
@@ -119,6 +123,16 @@ def reconcile(root):
                     raise ValueError("Missing SMT dataset")
                 counts["smt_refs"] += len(ids)
                 counts["unpinned_lanes"] += int(not ids)
+        # Old captures legitimately have no lane references. Always verify the original image identity.
+        for key, metadata, png in conn.execute("SELECT id,metadata,png FROM chart_snapshots"):
+            if hashlib.sha256(metadata.encode()+png).hexdigest() != key:
+                raise ValueError(f"Chart snapshot integrity failure: {key}")
+            for lane in json.loads(metadata).get("lanes", []):
+                for pin in lane["partitions"]:
+                    part = rows["research"].get(pin["id"])
+                    if (not part or part["sha256"] != pin["sha256"] or
+                            any(part[k] != lane[k] for k in ("symbol","feed_id","timeframe","price_basis"))):
+                        raise ValueError(f"Chart snapshot archive mismatch: {key}/{lane['role']}/{pin['id']}")
         for key, location, checksum in conn.execute("SELECT id,location,sha256 FROM ai_packages"):
             # Export locators are absolute. Match the issued basename and checksum
             # inside the restored archive without opening the old absolute path.

@@ -18,6 +18,8 @@ from .db import initialize, rows, one, transaction, utc_now
 from .market import mt5_connection, mt5_rates, mt5_recent_deals,mt5_quote,mt5_symbols,demo_candles,BASE,FRAME_MIN
 from .storage import write_partition, read_partition
 from .historical_import import import_bi5
+from .reviewed_archives import import_reviewed, candle_origin
+import errno
 from .legacy_quote_evidence import read_v2_quote_evidence
 from .domain import create_trade,get_trade,revise,decline_trade,close_trade,list_trades,analytics,export_ai,import_ai,journal_add,journal_list,journal_materialize
 from .risk import evaluate
@@ -115,7 +117,7 @@ def market_candles(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',limi
             raise HTTPException(404, str(error)) from error
         except (ValueError, RuntimeError, OSError) as error:
             raise HTTPException(409, str(error)) from error
-        return {"source":source, "synthetic":False, **result}
+        return {"source":source, "synthetic":False, "source_completeness":"UNVERIFIED", **result}
     raise HTTPException(422,'Unsupported source')
 
 
@@ -274,7 +276,7 @@ def dataset_coverage(dataset_id:str):
             gaps.append({"start": cursor, "end": end})
         return {"source":dataset["provider"]+"_SAVED","synthetic":False,"symbol":dataset["symbol"],
                 "timeframe":dataset["timeframe"],"feed_id":dataset["feed_id"],"price_basis":dataset["price_basis"],
-                "candles":values[-1:], "partitions":[{"id":dataset["id"],"sha256":dataset["sha256"]}],
+                "candles":values[-1:], "origin":candle_origin(dataset, values, step), "partitions":[{"id":dataset["id"],"sha256":dataset["sha256"]}],
                 "coverage":{"start":first,"end":end,"gaps":gaps,"duplicate_bars":duplicates,
                             "truncated":truncated}}
     except (RuntimeError, OSError, ValueError, KeyError) as error:
@@ -311,6 +313,23 @@ async def import_dukascopy_bi5(symbol:str,day:str,hour:int|None=Query(None,ge=0,
         payload=await file.read(40_000_001)
         return await asyncio.to_thread(import_bi5,payload,symbol,date,hour)
     except (RuntimeError,ValueError,ImportError) as ex:raise HTTPException(422,str(ex)) from ex
+
+
+@app.post('/api/market/import/reviewed')
+async def import_reviewed_archive(file: UploadFile = File(...)):
+    payload = await file.read(1_048_577)
+    if len(payload) > 1_048_576:
+        raise HTTPException(413, "Reviewed archive files must fit within 1 MiB")
+    try:
+        return await asyncio.to_thread(import_reviewed, payload)
+    except OSError as error:
+        if error.errno == errno.ENOSPC:
+            raise HTTPException(507, "Insufficient storage to publish the archive") from error
+        raise
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    except RuntimeError as error:
+        raise HTTPException(409, str(error)) from error
 
 
 @app.post('/api/market/import/mt5-deals')

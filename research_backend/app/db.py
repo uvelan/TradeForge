@@ -151,6 +151,10 @@ CREATE TABLE IF NOT EXISTS datasets (
     sha256 TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS historical_bi5_sources (
+    sha256 TEXT PRIMARY KEY NOT NULL,
+    payload BLOB NOT NULL CHECK(length(payload) BETWEEN 1 AND 40000000)
+);
 CREATE TABLE IF NOT EXISTS historical_imports (
     feed_id TEXT NOT NULL,
     symbol TEXT NOT NULL,
@@ -304,7 +308,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 
 IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 IMMUTABLE_TABLES += ["learning_attempts", "arrival_sessions", "arrival_observations", "arrival_receipts",
-                     "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
+                     "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "historical_bi5_sources", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
 
 
 def connect():

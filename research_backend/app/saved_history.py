@@ -9,8 +9,8 @@ from .db import rows
 from .storage import iter_complete_partition, read_partition, read_partition_tail
 
 
-def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int, *, resolver=None) -> tuple[int, int]:
-    query = resolver.rows if resolver else rows
+def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int, *, resolver=None, query=rows) -> tuple[int, int]:
+    query = resolver.rows if resolver else query
     columns = "rowid AS _snapshot_rowid, *" if resolver else "first_time, last_time, feed_id, price_basis"
     partitions = query(f"""SELECT {columns} FROM datasets
         WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles' AND (provider<>'DUKASCOPY' OR price_basis='BID')
@@ -28,13 +28,13 @@ def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int, 
     return start, end
 
 
-def saved_range(provider: str, symbol: str, timeframe: str, start: int, end: int, step: int, limit: int, *, resolver=None) -> dict:
+def saved_range(provider: str, symbol: str, timeframe: str, start: int, end: int, step: int, limit: int, *, resolver=None, query=rows) -> dict:
     def iso(timestamp: int) -> str:
         return datetime.fromtimestamp(timestamp, UTC).isoformat()
 
     if not 0 <= start < end <= int(datetime.now(UTC).timestamp()) or start % step or end % step:
         raise ValueError("Use an aligned, completed UTC range")
-    query = resolver.rows if resolver else rows
+    query = resolver.rows if resolver else query
     columns = "rowid AS _snapshot_rowid, *" if resolver else "*"
     partitions = query(f"""SELECT {columns} FROM datasets
         WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles' AND (provider<>'DUKASCOPY' OR price_basis='BID')
@@ -92,9 +92,13 @@ def chart_range(provider, symbol, timeframe, start, end, step, limit):
             if start is None:
                 start, end = recent_archive_range(provider, symbol, timeframe, step, resolver=resolver)
             return saved_range(provider, symbol, timeframe, start, end, step, limit, resolver=resolver)
-    if start is None:
-        start, end = recent_archive_range(provider, symbol, timeframe, step)
-    return saved_range(provider, symbol, timeframe, start, end, step, limit)
+    with db.transaction() as reader:
+        reader.execute("BEGIN")
+        def query(sql, args):
+            return [dict(row) for row in reader.execute(sql, args)]
+        if start is None:
+            start, end = recent_archive_range(provider, symbol, timeframe, step, query=query)
+        return saved_range(provider, symbol, timeframe, start, end, step, limit, query=query)
 
 
 TICK_REPLAY_LIMIT = 500_000
