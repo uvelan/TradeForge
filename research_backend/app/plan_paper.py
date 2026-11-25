@@ -12,6 +12,7 @@ from tradeforge.paper_ledger import PaperLedger, PaperOrder, PaperQuote, PaperSi
 from .db import transaction
 from .domain import resolve_snapshot, resolve_signal
 from .schemas import SignalReference
+from .reviewed_archives import candle_import_claim
 from .historical_import import FEED
 from .recorded_session import asof_tape, read_session
 from .strategy_evidence import fingerprint
@@ -47,6 +48,15 @@ def review(trade: str):
         return {"policy":POLICY,"events":history(db,trade)}
 
 
+@router.get("/{trade}/fills/{fill_id}")
+def fill_receipt(trade: str, fill_id: str):
+    with transaction() as db:
+        for event in history(db, trade):
+            if event["fill_id"] == fill_id:
+                return event
+    raise HTTPException(404, "Paper fill unavailable")
+
+
 def frozen_cutoff(db, plan):
     captured = resolve_snapshot(db,plan.get("snapshot_id"))
     if not captured:
@@ -58,12 +68,10 @@ def frozen_cutoff(db, plan):
         raise ValueError("Paper replay requires a frozen chart with recorded Dukascopy BI5 BID pins")
     # A free-form feed label alone cannot attest a chart to a verified BI5 import.
     for pin in lanes[0]["partitions"]:
-        catalogued=db.execute("""SELECT 1 FROM historical_imports h, json_each(h.manifest,'$.candle_datasets') p
-            WHERE h.symbol='EURUSD' AND h.feed_id=? AND json_extract(p.value,'$.id')=?
-            AND json_extract(p.value,'$.sha256')=? AND json_extract(p.value,'$.price_basis')='BID'
-            AND json_extract(p.value,'$.timeframe')=? LIMIT 1""",
-            (FEED,pin["id"],pin["sha256"],meta["timeframe"])).fetchone()
-        if not catalogued:
+        dataset = db.execute("SELECT * FROM datasets WHERE id=?", (pin["id"],)).fetchone()
+        if (not dataset or dataset["sha256"] != pin["sha256"] or dataset["symbol"] != "EURUSD"
+                or dataset["timeframe"] != meta["timeframe"] or dataset["feed_id"] != FEED
+                or dataset["price_basis"] != "BID" or not candle_import_claim(db, dataset)):
             raise ValueError("Chart partition lacks a matching recorded BI5 import")
     cutoff = meta["cutoff"]*1000
     for ref in (meta.get("signal_reference"),plan.get("signal_reference")):

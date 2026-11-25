@@ -844,6 +844,7 @@ function Journal({refresh,incoming,clearLink,openSignal,initialEntry,initialCont
    supersedes:revisionEntry?.id,tags:tags.split(',').map(tag=>tag.trim()).filter(Boolean),
  });setMessage(`${e.id} appended to Master Journal`);setTitle('');setContent('');setTags('');setRevisionEntry(undefined);clearLink();await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  return <><PageHeading eyebrow="ACADEMY / REFLECTION" title="Master Learning Journal" subtitle="One cumulative history of questions, chart challenges, mistakes, and corrected reasoning." action={<a href="/research/api/journal/download" className="btn btn-secondary"><Download size={16}/> Export Markdown</a>}/>
+ <a className="btn btn-secondary" href="?practice">Review a historical decision</a>
  <LearningDrill saved={()=>{void load();refresh()}}
    openJournal={async id=>{setFocusEntry(await api.get<JournalEntry>('/journal/entries/'+encodeURIComponent(id)))}}/>
  <div className="two-column journal-layout"><Card><SectionTitle eyebrow="CAPTURE KNOWLEDGE" title={revisionEntry?'Revision of '+revisionEntry.id:'New journal entry'}/>

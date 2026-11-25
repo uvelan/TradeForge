@@ -20,7 +20,7 @@ from scripts.u01_recorded_quotes import verify
 ROOT=Path(__file__).resolve().parents[1]
 
 
-def verify_journey(output):
+def verify_journey(output, reviews=False):
     raw=(ROOT/"storage/t06-input/13h_ticks.bi5").read_bytes()
     verify(raw,PINS[13])
     ticks=list(struct.iter_unpack(">IIIff",lzma.decompress(raw)))
@@ -41,7 +41,8 @@ def verify_journey(output):
         durations={}
         checkpoints=[]
         evidence=None
-        for phase in ("entry","partial","close","signal","signal-reopen"):
+        phases = ("entry","partial","close","signal","signal-reopen")
+        for phase in phases + (("review-blind","review-reveal","review-reopen") if reviews else ()):
             if phase=="signal":
                 subprocess.run([sys.executable,"-m","scripts.verify_archive_smt_watch","uninterrupted"],
                                cwd=ROOT,env={**env,"TRADEFORGE_DATA_DIR":str(root/"research")},check=True)
@@ -78,4 +79,6 @@ def verify_journey(output):
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output",type=Path)
-    verify_journey(parser.parse_args().output)
+    parser.add_argument("--reviews", action="store_true")
+    args = parser.parse_args()
+    verify_journey(args.output, args.reviews)

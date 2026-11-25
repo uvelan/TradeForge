@@ -5,7 +5,7 @@ from io import BytesIO
 import json
 from itertools import zip_longest
 
-from .db import one, rows
+from .db import one, transaction
 from .historical_import import FEED, MAX_TICKS, import_bi5
 from .storage import canonical_ticks, decode_bi5, fold_ticks, iter_complete_partition, publish_encoded_partition
 
@@ -36,18 +36,13 @@ def import_reviewed(payload):
     return {"source_sha256":digest, "partitions":parts}
 
 
-def candle_origin(dataset, bars, step):
-    """Check a BI5 candle against every quote in its pinned import, independently of file-grid coverage."""
-    result = {"source_completeness":"UNVERIFIED", "reconstruction":"CANDLE_ARCHIVE"}
-    if dataset["feed_id"] != FEED:
-        return result
-    result["reconstruction"] = "NO_LINKED_QUOTE_MANIFEST"
-    claims = rows("""SELECT i.manifest,i.source_sha256,i.source_start,i.source_end,i.feed_id,i.symbol,p.value AS pin
-        FROM historical_imports i, json_each(i.manifest,'$.candle_datasets') p
+def candle_import_claim(db, dataset):
+    claims = db.execute("""SELECT i.manifest,i.source_sha256,i.source_start,i.source_end,i.feed_id,i.symbol,p.value AS pin
+        FROM historical_imports i, json_each(CASE WHEN json_valid(i.manifest) THEN i.manifest END,'$.candle_datasets') p
         WHERE CASE WHEN p.type='object' THEN json_extract(p.value,'$.id') END=? LIMIT 2""",
-        (dataset["id"],))
+        (dataset["id"],)).fetchall()
     if not claims:
-        return result
+        return None
     row = claims[0]
     manifest = json.loads(row["manifest"])
     pin = json.loads(row["pin"])
@@ -61,6 +56,20 @@ def candle_origin(dataset, bars, step):
             or any(pin.get(k) != dataset[k] for k in ("sha256","price_basis","timeframe"))
             or pin.get("rows") != dataset["rows_count"]):
         raise ValueError(f"CONFLICTING_IMPORT_CLAIM: {dataset['id']}")
+    return row, manifest
+
+
+def candle_origin(dataset, bars, step):
+    """Check a BI5 candle against every quote in its pinned import, independently of file-grid coverage."""
+    result = {"source_completeness":"UNVERIFIED", "reconstruction":"CANDLE_ARCHIVE"}
+    if dataset["feed_id"] != FEED:
+        return result
+    result["reconstruction"] = "NO_LINKED_QUOTE_MANIFEST"
+    with transaction() as db:
+        claim = candle_import_claim(db, dataset)
+    if claim is None:
+        return result
+    row, manifest = claim
     tick = manifest.get("tick_dataset")
     if not tick:
         return result
