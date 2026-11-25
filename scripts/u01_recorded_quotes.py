@@ -6,9 +6,8 @@ import json
 import lzma
 from pathlib import Path
 import struct
+import subprocess
 from time import sleep
-from urllib.error import HTTPError
-from urllib.request import urlopen
 
 from scripts.benchmark_t06 import DAY, PINS
 
@@ -19,17 +18,20 @@ def verify(raw, pin):
 
 
 def download_hour(url):
+    # Use the runner's native HTTPS stack. Keep retries finite and leave integrity
+    # errors to the caller; a different archive can never satisfy a transport retry.
     for attempt in range(3):
-        try:
-            with urlopen(url, timeout=45) as response:
-                return response.read(100_000)
-        except HTTPError as exc:
-            if exc.code not in (429, 502, 503, 504) or attempt == 2:
-                raise
-            retry = exc.headers.get("Retry-After")
-            if retry and (not retry.isdigit() or int(retry) > 60):
-                raise
-            sleep(max(15 * (attempt + 1), int(retry or 0)))
+        response = subprocess.run(
+            ["curl", "--silent", "--show-error", "--fail", "--proto", "=https",
+             "--connect-timeout", "15", "--max-time", "45", "--max-filesize", "100000",
+             "--retry", "1", "--retry-max-time", "60", url],
+            stdout=subprocess.PIPE, check=False,
+        )
+        if response.returncode == 0:
+            return response.stdout
+        if attempt == 2 or response.returncode not in (7, 18, 28, 35, 52, 55, 56):
+            response.check_returncode()
+        sleep(10 * (attempt + 1))
 
 
 def reference(directory, download=False):
