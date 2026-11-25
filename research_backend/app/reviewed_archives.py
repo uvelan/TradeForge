@@ -5,7 +5,7 @@ from io import BytesIO
 import json
 from itertools import zip_longest
 
-from .db import one
+from .db import one, rows
 from .historical_import import FEED, MAX_TICKS, import_bi5
 from .storage import canonical_ticks, decode_bi5, fold_ticks, iter_complete_partition, publish_encoded_partition
 
@@ -42,16 +42,25 @@ def candle_origin(dataset, bars, step):
     if dataset["feed_id"] != FEED:
         return result
     result["reconstruction"] = "NO_LINKED_QUOTE_MANIFEST"
-    row = one("""SELECT manifest,source_sha256,source_start,source_end FROM historical_imports
-        WHERE feed_id=? AND symbol=? AND EXISTS (
-          SELECT 1 FROM json_each(manifest,'$.candle_datasets') WHERE json_extract(value,'$.id')=?)""",
-        (FEED,dataset["symbol"],dataset["id"]))
-    if not row:
+    claims = rows("""SELECT i.manifest,i.source_sha256,i.source_start,i.source_end,i.feed_id,i.symbol,p.value AS pin
+        FROM historical_imports i, json_each(i.manifest,'$.candle_datasets') p
+        WHERE CASE WHEN p.type='object' THEN json_extract(p.value,'$.id') END=? LIMIT 2""",
+        (dataset["id"],))
+    if not claims:
         return result
+    row = claims[0]
     manifest = json.loads(row["manifest"])
-    pin = next(p for p in manifest["candle_datasets"] if p["id"] == dataset["id"])
-    if pin["sha256"] != dataset["sha256"] or pin["rows"] != dataset["rows_count"]:
-        raise ValueError("Candle partition contradicts its import manifest")
+    pin = json.loads(row["pin"])
+    source = manifest.get("source")
+    if (len(claims) != 1 or not isinstance(source, dict)
+            or any(row[k] != dataset[k] for k in ("feed_id","symbol"))
+            or any(source.get(k) != dataset[k] for k in ("symbol","provider"))
+            or manifest.get("feed_id") != row["feed_id"]
+            or (source.get("start"),source.get("end"),source.get("sha256")) !=
+               (row["source_start"],row["source_end"],row["source_sha256"])
+            or any(pin.get(k) != dataset[k] for k in ("sha256","price_basis","timeframe"))
+            or pin.get("rows") != dataset["rows_count"]):
+        raise ValueError(f"CONFLICTING_IMPORT_CLAIM: {dataset['id']}")
     tick = manifest.get("tick_dataset")
     if not tick:
         return result

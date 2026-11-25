@@ -15,6 +15,12 @@ from .strategy_evaluation_routes import archived_evidence_chart, evaluation_lane
 from .strategy_evaluation_sources import EVALUATOR_VERSION, selection_catalog
 from .strategy_routes import envelope
 
+from pydantic import Field, StrictInt
+from .recorded_market_entry import PartitionPin
+from .recorded_session import replay
+from .strategy_definitions import Contract
+
+
 router = APIRouter(prefix="/api/historical-strategy-runs/v1")
 
 
@@ -213,3 +219,34 @@ def evidence(run_id:str,cutoff:int,snapshot:str,event_id:str):
 @router.get("/{run_id}/decisions/{cutoff}/evidence/{snapshot}/{event_id}/chart")
 def chart(run_id:str,cutoff:int,snapshot:str,event_id:str):
     return archived_evidence_chart(evidence(run_id,cutoff,snapshot,event_id),get_run(run_id)["selection"]["series"],cutoff)
+
+
+class RecordedReplayRequest(Contract):
+    start: StrictInt
+    end: StrictInt
+    cutoff_ms: StrictInt
+    partitions: list[PartitionPin] = Field(default_factory=list,max_length=50)
+    resume: str | None = Field(default=None,pattern=r"^RS-[0-9a-f]+$",max_length=80)
+
+
+@router.post("/{run_id}/recorded-replay")
+async def recorded_replay(run_id:str, request:Request):
+    require_published(run_id)
+    spec = await envelope(request,RecordedReplayRequest)
+    try:
+        return await run_in_threadpool(replay,run_id,spec.start,spec.end,spec.cutoff_ms,
+            selected=[p.model_dump() for p in spec.partitions], resume=spec.resume)
+    except (ValueError, RuntimeError, OSError) as error:
+        raise HTTPException(422,str(error)) from error
+
+@router.get("/{run_id}/recorded-replay")
+def latest_recorded_replay(run_id:str):
+    require_published(run_id)
+    row = one("""SELECT payload,payload_hash FROM recorded_strategy_checkpoints
+                 WHERE json_extract(payload,'$.binding.run_id')=? ORDER BY rowid DESC LIMIT 1""",(run_id,))
+    if not row:
+        return None
+    from hashlib import sha256
+    if sha256(row["payload"].encode()).hexdigest()!=row["payload_hash"]:
+        raise HTTPException(409,"Execution checkpoint integrity failure")
+    return json.loads(row["payload"])

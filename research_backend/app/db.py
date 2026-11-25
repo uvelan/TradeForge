@@ -151,6 +151,11 @@ CREATE TABLE IF NOT EXISTS datasets (
     sha256 TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS recorded_strategy_checkpoints (
+    session_id TEXT NOT NULL, cutoff_ms INTEGER NOT NULL, payload TEXT NOT NULL CHECK(json_valid(payload)),
+    payload_hash TEXT NOT NULL, PRIMARY KEY(session_id,cutoff_ms)
+);
+CREATE INDEX IF NOT EXISTS recorded_checkpoints_by_run ON recorded_strategy_checkpoints(json_extract(payload,'$.binding.run_id'));
 CREATE TABLE IF NOT EXISTS historical_bi5_sources (
     sha256 TEXT PRIMARY KEY NOT NULL,
     payload BLOB NOT NULL CHECK(length(payload) BETWEEN 1 AND 40000000)
@@ -308,7 +313,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 
 IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 IMMUTABLE_TABLES += ["learning_attempts", "arrival_sessions", "arrival_observations", "arrival_receipts",
-                     "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "historical_bi5_sources", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
+                     "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "historical_bi5_sources", "recorded_strategy_checkpoints", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
 
 
 def connect():

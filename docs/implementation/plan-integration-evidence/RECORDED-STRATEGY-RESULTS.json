@@ -1,0 +1,1262 @@
+{
+  "natural_strategy": {
+    "api_parquet_opens": 2,
+    "worker_open_count_and_peak_bytes": [
+      [
+        2,
+        83787776
+      ]
+    ],
+    "seconds": 1.7156160999984422,
+    "process_peak_bytes": 147144704,
+    "recipe": {
+      "evaluator_version": 6,
+      "purpose": "HISTORICAL_SIMULATION",
+      "selection_id": "WORKSPACE",
+      "selection_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+      "strategy_id": "ST-145f6568bc694a0fae49c2a914a274f2",
+      "strategy_version_id": "SV-cd38ba3165cf4de58eebf86fc0993593",
+      "configuration_fingerprint": "f8b850e6108bf37c308c66e22e243ffa0b0e79f1af35bf2117bbb62a0d1acd5b",
+      "partitions": [
+        "55e8bd216f5d2b9e2b130ddedd0579dce0aa54fd561cfb6e86a633228a127b0d",
+        "42d67cb27e0d1b3554cd2f787b4d3268f8fdd9b022a520e2ce68477a2b1f6ca4"
+      ],
+      "warmup_start": 1763038800,
+      "evaluation_start": 1763042400,
+      "cutoff": 1763046000
+    },
+    "decisions": [
+      {
+        "id": "HD-d48ac0c4b08b99504e795a4dac724248874ec25d68e69aeed0f97007372a1cf1",
+        "attempt_id": "ATT-0c83ba5354585f7e37cd37b90f49afd076e213b0c570aab9b0f1eb1c04db6752",
+        "state": "INVALIDATED",
+        "cutoff": 1763046000,
+        "reason": "EXPLICIT_INVALIDATION",
+        "available_at": 1763046000
+      }
+    ],
+    "positions": [],
+    "binding": {
+      "policy": "RECORDED_STRATEGY_POSITION_V1",
+      "run_id": "HR-63e0bc4cd60ef985c0a39d8d9105c153ee8785207e40d8091c3bb6dbcfe27a85",
+      "symbol": "EURUSD",
+      "feed": "dukascopy-bi5-v2",
+      "basis": "BID_ASK_UNITS",
+      "start": 1763038800,
+      "end": 1763046000,
+      "sources": [
+        {
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "start": 1763038800,
+          "end": 1763042400
+        },
+        {
+          "partition": {
+            "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+            "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+          },
+          "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+          "start": 1763042400,
+          "end": 1763046000
+        }
+      ],
+      "delay_ms": 0,
+      "spread": "OBSERVED_BID_ASK",
+      "slippage_bps": 0.0,
+      "declared_commission_bps": 0.0,
+      "quantity_unit": "FRACTION_OF_INITIAL_POSITION",
+      "max_gap_ms": 60000,
+      "calendar": "DUKASCOPY_FX_NY17_V1"
+    },
+    "unverified_intervals_ms": [
+      [
+        1763038800000,
+        1763038800089
+      ],
+      [
+        1763045999826,
+        1763046000000
+      ]
+    ],
+    "intervals": [
+      {
+        "start_ms": 1763038800089,
+        "end_ms": 1763045999825
+      }
+    ],
+    "observed_quotes": 8636,
+    "parquet_reads": 2,
+    "bi5_reads": 2
+  },
+  "controlled": [
+    {
+      "case": "test_fixed_price_entries_on_se0",
+      "kind": "LIMIT",
+      "session_id": "RS-2d3bb1626e715fb6eada56ed87d308a52f5e6e6a87ce53f26b903bcc09a8aea9",
+      "cutoff_ms": 1763045737210,
+      "layout": [
+        {
+          "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+          "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+        }
+      ],
+      "status": "OPEN_AT_CUTOFF",
+      "source": [
+        {
+          "end": 1763046000,
+          "partition": {
+            "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+            "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+          },
+          "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+          "start": 1763042400
+        }
+      ],
+      "decision_id": "HD-cf3e1d21570a0b5b139209489a9f8b2e7d3aec3ed622bb4cb419f6d2fc4eb862",
+      "intent_id": "INT-71e04f41e1a7ca8b7362dd528a3e3cfcd90ee85c4e4edc06ab1b3addca843bdc",
+      "entry_fill": {
+        "id": "MF-430700249ec8445d691013d428b3750d094e7433713b829060402bb27906235a",
+        "price": "1.16274",
+        "price_units": 116274,
+        "quote": {
+          "ask_units": 116274,
+          "available_at_ms": 1763045737210,
+          "bid_units": 116271,
+          "scale": 100000,
+          "source_order": 4932,
+          "time_ms": 1763045737210
+        },
+        "side": "ASK",
+        "status": "OFFLINE_SIMULATED_FILL",
+        "time_ms": 1763045737210
+      },
+      "exit": null,
+      "remaining": {
+        "denominator": 1,
+        "numerator": 1
+      },
+      "closed": {
+        "denominator": 1,
+        "numerator": 0
+      },
+      "quote_references": {
+        "entry": {
+          "ordinal": 4932,
+          "partition": {
+            "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+            "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+          },
+          "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+          "time_ms": 1763045737210
+        }
+      },
+      "partial": null,
+      "evidence_references": [
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763042400,
+          "calculation_id": "9180d2e6fccdf605daf76b11a4f03ffabf3f0321c37ef6314cbf54d3080a0897",
+          "calculation_snapshot": "2c0c1a9c8ccda98f9164e1f2a3cff12154e4a743660cecdef690c38905cfc3e7",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "9a3fea1b3ca6a1a6bc17a499c029ad20275375ad80ffecaf0885ae99f117d7c1",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "04c5335a6da94a101db47ab87dcf3426651c489d5a15a8acf4fff663ab12b575"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763044500,
+          "calculation_id": "9180d2e6fccdf605daf76b11a4f03ffabf3f0321c37ef6314cbf54d3080a0897",
+          "calculation_snapshot": "2c0c1a9c8ccda98f9164e1f2a3cff12154e4a743660cecdef690c38905cfc3e7",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "cd0a2ce2c19575ce18d657c2789a19ca894dc9dca8478836b32e59b743bf62ec",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "04c5335a6da94a101db47ab87dcf3426651c489d5a15a8acf4fff663ab12b575"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763045100,
+          "calculation_id": "9180d2e6fccdf605daf76b11a4f03ffabf3f0321c37ef6314cbf54d3080a0897",
+          "calculation_snapshot": "2c0c1a9c8ccda98f9164e1f2a3cff12154e4a743660cecdef690c38905cfc3e7",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "ee7d1d28c5b2968de06b0674bd141651d7b56b9a6f40eec4bd91f001caba0017",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "04c5335a6da94a101db47ab87dcf3426651c489d5a15a8acf4fff663ab12b575"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763045720,
+          "calculation_id": "d42630011458a77669276ed59b832c1300b9e572de6590888102cb82e2994789",
+          "calculation_snapshot": "48582f7acac2d1836b1b0e1143028d1cdd844c964d7224270745776cd1806ae0",
+          "category": "smt",
+          "configuration": "218e22911d2a4aa96742a0bb10d9e0c43667106cfb08ba002029d8508914cdb5",
+          "event_id": "a62791d6c48b7d82ac60753ffa9ef5c2fcfadbcf9935b6196abb44ff64a3a047",
+          "participants": {
+            "comparison": [
+              "DUKASCOPY_SAVED",
+              "GBPUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "a9b3cd6ef02e7e18e57c35fd4032f73201971423f6c583aa5840e94d72330c2d"
+            ],
+            "primary": [
+              "DUKASCOPY_SAVED",
+              "EURUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "04c5335a6da94a101db47ab87dcf3426651c489d5a15a8acf4fff663ab12b575"
+            ]
+          },
+          "source": [
+            "SMT_PAIR",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "M5",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "BID",
+            null
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "case": "test_fixed_price_entries_on_se1",
+      "kind": "STOP",
+      "session_id": "RS-fb64b2d763900a5bcf0fdcb1f3a199335147b6e54b4acbaa505d7098f2f3bf91",
+      "cutoff_ms": 1763045720449,
+      "layout": [
+        {
+          "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+          "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+        }
+      ],
+      "status": "OPEN_AT_CUTOFF",
+      "source": [
+        {
+          "end": 1763046000,
+          "partition": {
+            "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+            "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+          },
+          "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+          "start": 1763042400
+        }
+      ],
+      "decision_id": "HD-3c3ac2a67f25fbce52b94f67bf7f35dc1c1d7448122b41b62e967b29a9df320d",
+      "intent_id": "INT-04647b5236bb688d2059cea2448b8cac5c2edeff8ce51c56697fc0bd1af6d168",
+      "entry_fill": {
+        "id": "MF-0f68f7980fbdb7ba812f170273fbeaaa08b75135f6aeb9cf7fefa16a1b8fbcc5",
+        "price": "1.16276",
+        "price_units": 116276,
+        "quote": {
+          "ask_units": 116276,
+          "available_at_ms": 1763045720449,
+          "bid_units": 116271,
+          "scale": 100000,
+          "source_order": 4919,
+          "time_ms": 1763045720449
+        },
+        "side": "ASK",
+        "status": "OFFLINE_SIMULATED_FILL",
+        "time_ms": 1763045720449
+      },
+      "exit": null,
+      "remaining": {
+        "denominator": 1,
+        "numerator": 1
+      },
+      "closed": {
+        "denominator": 1,
+        "numerator": 0
+      },
+      "quote_references": {
+        "entry": {
+          "ordinal": 4919,
+          "partition": {
+            "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+            "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+          },
+          "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+          "time_ms": 1763045720449
+        }
+      },
+      "partial": null,
+      "evidence_references": [
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763042400,
+          "calculation_id": "9180d2e6fccdf605daf76b11a4f03ffabf3f0321c37ef6314cbf54d3080a0897",
+          "calculation_snapshot": "2c0c1a9c8ccda98f9164e1f2a3cff12154e4a743660cecdef690c38905cfc3e7",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "9a3fea1b3ca6a1a6bc17a499c029ad20275375ad80ffecaf0885ae99f117d7c1",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "04c5335a6da94a101db47ab87dcf3426651c489d5a15a8acf4fff663ab12b575"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763044500,
+          "calculation_id": "9180d2e6fccdf605daf76b11a4f03ffabf3f0321c37ef6314cbf54d3080a0897",
+          "calculation_snapshot": "2c0c1a9c8ccda98f9164e1f2a3cff12154e4a743660cecdef690c38905cfc3e7",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "cd0a2ce2c19575ce18d657c2789a19ca894dc9dca8478836b32e59b743bf62ec",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "04c5335a6da94a101db47ab87dcf3426651c489d5a15a8acf4fff663ab12b575"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763045100,
+          "calculation_id": "9180d2e6fccdf605daf76b11a4f03ffabf3f0321c37ef6314cbf54d3080a0897",
+          "calculation_snapshot": "2c0c1a9c8ccda98f9164e1f2a3cff12154e4a743660cecdef690c38905cfc3e7",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "ee7d1d28c5b2968de06b0674bd141651d7b56b9a6f40eec4bd91f001caba0017",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "04c5335a6da94a101db47ab87dcf3426651c489d5a15a8acf4fff663ab12b575"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763045720,
+          "calculation_id": "d42630011458a77669276ed59b832c1300b9e572de6590888102cb82e2994789",
+          "calculation_snapshot": "48582f7acac2d1836b1b0e1143028d1cdd844c964d7224270745776cd1806ae0",
+          "category": "smt",
+          "configuration": "218e22911d2a4aa96742a0bb10d9e0c43667106cfb08ba002029d8508914cdb5",
+          "event_id": "a62791d6c48b7d82ac60753ffa9ef5c2fcfadbcf9935b6196abb44ff64a3a047",
+          "participants": {
+            "comparison": [
+              "DUKASCOPY_SAVED",
+              "GBPUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "a9b3cd6ef02e7e18e57c35fd4032f73201971423f6c583aa5840e94d72330c2d"
+            ],
+            "primary": [
+              "DUKASCOPY_SAVED",
+              "EURUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "04c5335a6da94a101db47ab87dcf3426651c489d5a15a8acf4fff663ab12b575"
+            ]
+          },
+          "source": [
+            "SMT_PAIR",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "M5",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "BID",
+            null
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "case": "test_open_session_gap_blocks_l0",
+      "kind": "MARKET",
+      "session_id": "RS-e79760e28b7cac677d48458f69e2c1f75f001ce39fbc470910c65a0f8504ef66",
+      "cutoff_ms": 1763042180401,
+      "layout": [
+        {
+          "id": "4005e4b177d813cadb2f6c43bf8217619f25c6fd0f93059d9618eccab2c19556",
+          "sha256": "a0cfe06773ec5c15cb5ebb549cd1384860705f3e2a4a5605ba0ff02f01e9186f"
+        }
+      ],
+      "status": "INSUFFICIENT_QUOTE_COVERAGE",
+      "source": [
+        {
+          "end": 1763042400,
+          "partition": {
+            "id": "4005e4b177d813cadb2f6c43bf8217619f25c6fd0f93059d9618eccab2c19556",
+            "sha256": "a0cfe06773ec5c15cb5ebb549cd1384860705f3e2a4a5605ba0ff02f01e9186f"
+          },
+          "source_sha256": "d3f0a0807506f417c9d7707bc634da1edfb9d79b45ba4d197f38eb10d8752d0d",
+          "start": 1763038800
+        }
+      ],
+      "decision_id": "HD-567ee061d08110ea8ba0f2f23b2864bf2830d05f8c0a05705d2ceb4618dd343c",
+      "intent_id": "INT-41908541215f2709b2d3e4f515039f2ad638df349063893f6f148d595615a466",
+      "entry_fill": {
+        "id": "MF-57dbd73aa4d06532813dd3aa5ee1836d1b071515c62f59d91906de2672e46a8d",
+        "price": "1.16174",
+        "price_units": 116174,
+        "quote": {
+          "ask_units": 116174,
+          "available_at_ms": 1763042120400,
+          "bid_units": 116170,
+          "scale": 100000,
+          "source_order": 1,
+          "time_ms": 1763042120400
+        },
+        "side": "ASK",
+        "status": "OFFLINE_SIMULATED_FILL",
+        "time_ms": 1763042120400
+      },
+      "exit": null,
+      "remaining": {
+        "denominator": 1,
+        "numerator": 1
+      },
+      "closed": {
+        "denominator": 1,
+        "numerator": 0
+      },
+      "quote_references": {
+        "entry": {
+          "ordinal": 1,
+          "partition": {
+            "id": "4005e4b177d813cadb2f6c43bf8217619f25c6fd0f93059d9618eccab2c19556",
+            "sha256": "a0cfe06773ec5c15cb5ebb549cd1384860705f3e2a4a5605ba0ff02f01e9186f"
+          },
+          "source_sha256": "d3f0a0807506f417c9d7707bc634da1edfb9d79b45ba4d197f38eb10d8752d0d",
+          "time_ms": 1763042120400
+        }
+      },
+      "partial": null,
+      "evidence_references": [
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763042120,
+          "calculation_id": "31f1e460c55ecd4d8a11d109ca7ce1e7dbca7eadb46e99ba0dd6d6169e1dcfe1",
+          "calculation_snapshot": "1526fef17077cee33b42b8b9e618038096a33c13cb5fe77b2547188da0585ed5",
+          "category": "smt",
+          "configuration": "218e22911d2a4aa96742a0bb10d9e0c43667106cfb08ba002029d8508914cdb5",
+          "event_id": "819bf5ccc2293ac540db9ce1c6039fa991e2566fd10ab0997a807739efe4675a",
+          "participants": {
+            "comparison": [
+              "DUKASCOPY_SAVED",
+              "GBPUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "9ec663e3420e09750d086751e2576fcab8672288813f5997ef702377aee1729a"
+            ],
+            "primary": [
+              "DUKASCOPY_SAVED",
+              "EURUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+            ]
+          },
+          "source": [
+            "SMT_PAIR",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "M5",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "BID",
+            null
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763040900,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "13a858083f402cacbdf39d80b36d98eb31429f40f9a5a45dccc809f696ee0098",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763038800,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "6365167b3ef77bc6a6b0310775bf7d5755eabcb56135979d1a8355ef6bfd4696",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763041500,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "814cbd08ee8d1a9e1d36f5b375c4640e2c94aee188ba3a7253862147e4296168",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "case": "test_session_checkpoint_partit0",
+      "kind": "MARKET",
+      "session_id": "RS-7bd85c70faee3274471e0e508de03dcfc338db0cf1bde7575e047099c04c5724",
+      "cutoff_ms": 1763042181606,
+      "layout": [
+        {
+          "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+          "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+        }
+      ],
+      "status": "SIMULATED_EXIT",
+      "source": [
+        {
+          "end": 1763042400,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "start": 1763038800
+        }
+      ],
+      "decision_id": "HD-d382e330324d95b71ebcc7e64c7826328907a05d5a6e26624914ff5c0d01b23e",
+      "intent_id": "INT-ae2a3d830d1d81e6d80e86316ceabb9d0d1bedd7e429e0091bd99bd05e73db10",
+      "entry_fill": {
+        "id": "MF-1827e215da2bd5dae58f0c430f0912aeb9bc0c501779b173e5a1910600592d50",
+        "price": "1.16174",
+        "price_units": 116174,
+        "quote": {
+          "ask_units": 116174,
+          "available_at_ms": 1763042121403,
+          "bid_units": 116170,
+          "scale": 100000,
+          "source_order": 2971,
+          "time_ms": 1763042121403
+        },
+        "side": "ASK",
+        "status": "OFFLINE_SIMULATED_FILL",
+        "time_ms": 1763042121403
+      },
+      "exit": {
+        "closed_fraction": {
+          "denominator": 4,
+          "numerator": 3
+        },
+        "id": "XF-f7a44f3f7e742aeaf44b03c8d3ad12650130bde25a791f159670ac2e5d8e48a3",
+        "price": "1.16183",
+        "price_units": 116183,
+        "quote": {
+          "ask_units": 116184,
+          "available_at_ms": 1763042181606,
+          "bid_units": 116183,
+          "scale": 100000,
+          "source_order": 3004,
+          "time_ms": 1763042181606
+        },
+        "reason": "TIME_EXIT",
+        "side": "BID",
+        "threshold_price": null,
+        "threshold_units": null,
+        "time_ms": 1763042181606
+      },
+      "remaining": {
+        "denominator": 1,
+        "numerator": 0
+      },
+      "closed": {
+        "denominator": 1,
+        "numerator": 1
+      },
+      "quote_references": {
+        "activation": {
+          "ordinal": 2982,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042159647
+        },
+        "entry": {
+          "ordinal": 2971,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042121403
+        },
+        "exit": {
+          "ordinal": 3004,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042181606
+        },
+        "partial_exit": {
+          "ordinal": 2982,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042159647
+        },
+        "ratchet": {
+          "ordinal": 2995,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042175790
+        }
+      },
+      "partial": {
+        "closed_fraction": {
+          "denominator": 4,
+          "numerator": 1
+        },
+        "id": "XF-9eb0180d7d4185fd6380425576c8a4f462626e93a3f096de73f73bbc27b1cefc",
+        "price": "1.16176",
+        "price_units": 116176,
+        "quote": {
+          "ask_units": 116178,
+          "available_at_ms": 1763042159647,
+          "bid_units": 116176,
+          "scale": 100000,
+          "source_order": 2982,
+          "time_ms": 1763042159647
+        },
+        "reason": "PARTIAL_REWARD",
+        "side": "BID",
+        "threshold_price": "1.16176",
+        "threshold_units": 116176,
+        "time_ms": 1763042159647
+      },
+      "evidence_references": [
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763042120,
+          "calculation_id": "31f1e460c55ecd4d8a11d109ca7ce1e7dbca7eadb46e99ba0dd6d6169e1dcfe1",
+          "calculation_snapshot": "1526fef17077cee33b42b8b9e618038096a33c13cb5fe77b2547188da0585ed5",
+          "category": "smt",
+          "configuration": "218e22911d2a4aa96742a0bb10d9e0c43667106cfb08ba002029d8508914cdb5",
+          "event_id": "819bf5ccc2293ac540db9ce1c6039fa991e2566fd10ab0997a807739efe4675a",
+          "participants": {
+            "comparison": [
+              "DUKASCOPY_SAVED",
+              "GBPUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "9ec663e3420e09750d086751e2576fcab8672288813f5997ef702377aee1729a"
+            ],
+            "primary": [
+              "DUKASCOPY_SAVED",
+              "EURUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+            ]
+          },
+          "source": [
+            "SMT_PAIR",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "M5",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "BID",
+            null
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763040900,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "13a858083f402cacbdf39d80b36d98eb31429f40f9a5a45dccc809f696ee0098",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763038800,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "6365167b3ef77bc6a6b0310775bf7d5755eabcb56135979d1a8355ef6bfd4696",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763041500,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "814cbd08ee8d1a9e1d36f5b375c4640e2c94aee188ba3a7253862147e4296168",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "case": "test_session_checkpoint_partit0",
+      "kind": "MARKET",
+      "session_id": "RS-527dc1f53e3d208cba3e39ef95786a02e5f36aa747b09a8e02bca05699cd5620",
+      "cutoff_ms": 1763042159647,
+      "layout": [
+        {
+          "id": "a185f5be43d95808987b6cf703bfcc55455722c5465b8b9b6d4f36acf18148fa",
+          "sha256": "e2045d99c487e2dc6ba81eb21624207a0af0ba33dba906e73b917fe4244be7f1"
+        },
+        {
+          "id": "f3a46e053e0849ce6d74f547ad011162c34f30259e3c3dfd2b2aa8837139a59f",
+          "sha256": "ad709fde43fde63b65b2492eb85b90c1e06489c8f5125d243035eec0302691e0"
+        }
+      ],
+      "status": "OPEN_AT_CUTOFF",
+      "source": [
+        {
+          "end": 1763042400,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "start": 1763038800
+        }
+      ],
+      "decision_id": "HD-d382e330324d95b71ebcc7e64c7826328907a05d5a6e26624914ff5c0d01b23e",
+      "intent_id": "INT-ae2a3d830d1d81e6d80e86316ceabb9d0d1bedd7e429e0091bd99bd05e73db10",
+      "entry_fill": {
+        "id": "MF-1827e215da2bd5dae58f0c430f0912aeb9bc0c501779b173e5a1910600592d50",
+        "price": "1.16174",
+        "price_units": 116174,
+        "quote": {
+          "ask_units": 116174,
+          "available_at_ms": 1763042121403,
+          "bid_units": 116170,
+          "scale": 100000,
+          "source_order": 2971,
+          "time_ms": 1763042121403
+        },
+        "side": "ASK",
+        "status": "OFFLINE_SIMULATED_FILL",
+        "time_ms": 1763042121403
+      },
+      "exit": null,
+      "remaining": {
+        "denominator": 4,
+        "numerator": 3
+      },
+      "closed": {
+        "denominator": 4,
+        "numerator": 1
+      },
+      "quote_references": {
+        "activation": {
+          "ordinal": 2982,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042159647
+        },
+        "entry": {
+          "ordinal": 2971,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042121403
+        },
+        "partial_exit": {
+          "ordinal": 2982,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042159647
+        }
+      },
+      "partial": {
+        "closed_fraction": {
+          "denominator": 4,
+          "numerator": 1
+        },
+        "id": "XF-9eb0180d7d4185fd6380425576c8a4f462626e93a3f096de73f73bbc27b1cefc",
+        "price": "1.16176",
+        "price_units": 116176,
+        "quote": {
+          "ask_units": 116178,
+          "available_at_ms": 1763042159647,
+          "bid_units": 116176,
+          "scale": 100000,
+          "source_order": 2982,
+          "time_ms": 1763042159647
+        },
+        "reason": "PARTIAL_REWARD",
+        "side": "BID",
+        "threshold_price": "1.16176",
+        "threshold_units": 116176,
+        "time_ms": 1763042159647
+      },
+      "evidence_references": [
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763042120,
+          "calculation_id": "31f1e460c55ecd4d8a11d109ca7ce1e7dbca7eadb46e99ba0dd6d6169e1dcfe1",
+          "calculation_snapshot": "1526fef17077cee33b42b8b9e618038096a33c13cb5fe77b2547188da0585ed5",
+          "category": "smt",
+          "configuration": "218e22911d2a4aa96742a0bb10d9e0c43667106cfb08ba002029d8508914cdb5",
+          "event_id": "819bf5ccc2293ac540db9ce1c6039fa991e2566fd10ab0997a807739efe4675a",
+          "participants": {
+            "comparison": [
+              "DUKASCOPY_SAVED",
+              "GBPUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "9ec663e3420e09750d086751e2576fcab8672288813f5997ef702377aee1729a"
+            ],
+            "primary": [
+              "DUKASCOPY_SAVED",
+              "EURUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+            ]
+          },
+          "source": [
+            "SMT_PAIR",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "M5",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "BID",
+            null
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763040900,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "13a858083f402cacbdf39d80b36d98eb31429f40f9a5a45dccc809f696ee0098",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763038800,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "6365167b3ef77bc6a6b0310775bf7d5755eabcb56135979d1a8355ef6bfd4696",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763041500,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "814cbd08ee8d1a9e1d36f5b375c4640e2c94aee188ba3a7253862147e4296168",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "case": "test_session_checkpoint_partit0",
+      "kind": "MARKET",
+      "session_id": "RS-527dc1f53e3d208cba3e39ef95786a02e5f36aa747b09a8e02bca05699cd5620",
+      "cutoff_ms": 1763042181606,
+      "layout": [
+        {
+          "id": "a185f5be43d95808987b6cf703bfcc55455722c5465b8b9b6d4f36acf18148fa",
+          "sha256": "e2045d99c487e2dc6ba81eb21624207a0af0ba33dba906e73b917fe4244be7f1"
+        },
+        {
+          "id": "f3a46e053e0849ce6d74f547ad011162c34f30259e3c3dfd2b2aa8837139a59f",
+          "sha256": "ad709fde43fde63b65b2492eb85b90c1e06489c8f5125d243035eec0302691e0"
+        }
+      ],
+      "status": "SIMULATED_EXIT",
+      "source": [
+        {
+          "end": 1763042400,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "start": 1763038800
+        }
+      ],
+      "decision_id": "HD-d382e330324d95b71ebcc7e64c7826328907a05d5a6e26624914ff5c0d01b23e",
+      "intent_id": "INT-ae2a3d830d1d81e6d80e86316ceabb9d0d1bedd7e429e0091bd99bd05e73db10",
+      "entry_fill": {
+        "id": "MF-1827e215da2bd5dae58f0c430f0912aeb9bc0c501779b173e5a1910600592d50",
+        "price": "1.16174",
+        "price_units": 116174,
+        "quote": {
+          "ask_units": 116174,
+          "available_at_ms": 1763042121403,
+          "bid_units": 116170,
+          "scale": 100000,
+          "source_order": 2971,
+          "time_ms": 1763042121403
+        },
+        "side": "ASK",
+        "status": "OFFLINE_SIMULATED_FILL",
+        "time_ms": 1763042121403
+      },
+      "exit": {
+        "closed_fraction": {
+          "denominator": 4,
+          "numerator": 3
+        },
+        "id": "XF-f7a44f3f7e742aeaf44b03c8d3ad12650130bde25a791f159670ac2e5d8e48a3",
+        "price": "1.16183",
+        "price_units": 116183,
+        "quote": {
+          "ask_units": 116184,
+          "available_at_ms": 1763042181606,
+          "bid_units": 116183,
+          "scale": 100000,
+          "source_order": 3004,
+          "time_ms": 1763042181606
+        },
+        "reason": "TIME_EXIT",
+        "side": "BID",
+        "threshold_price": null,
+        "threshold_units": null,
+        "time_ms": 1763042181606
+      },
+      "remaining": {
+        "denominator": 1,
+        "numerator": 0
+      },
+      "closed": {
+        "denominator": 1,
+        "numerator": 1
+      },
+      "quote_references": {
+        "activation": {
+          "ordinal": 2982,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042159647
+        },
+        "entry": {
+          "ordinal": 2971,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042121403
+        },
+        "exit": {
+          "ordinal": 3004,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042181606
+        },
+        "partial_exit": {
+          "ordinal": 2982,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042159647
+        },
+        "ratchet": {
+          "ordinal": 2995,
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "time_ms": 1763042175790
+        }
+      },
+      "partial": {
+        "closed_fraction": {
+          "denominator": 4,
+          "numerator": 1
+        },
+        "id": "XF-9eb0180d7d4185fd6380425576c8a4f462626e93a3f096de73f73bbc27b1cefc",
+        "price": "1.16176",
+        "price_units": 116176,
+        "quote": {
+          "ask_units": 116178,
+          "available_at_ms": 1763042159647,
+          "bid_units": 116176,
+          "scale": 100000,
+          "source_order": 2982,
+          "time_ms": 1763042159647
+        },
+        "reason": "PARTIAL_REWARD",
+        "side": "BID",
+        "threshold_price": "1.16176",
+        "threshold_units": 116176,
+        "time_ms": 1763042159647
+      },
+      "evidence_references": [
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763042120,
+          "calculation_id": "31f1e460c55ecd4d8a11d109ca7ce1e7dbca7eadb46e99ba0dd6d6169e1dcfe1",
+          "calculation_snapshot": "1526fef17077cee33b42b8b9e618038096a33c13cb5fe77b2547188da0585ed5",
+          "category": "smt",
+          "configuration": "218e22911d2a4aa96742a0bb10d9e0c43667106cfb08ba002029d8508914cdb5",
+          "event_id": "819bf5ccc2293ac540db9ce1c6039fa991e2566fd10ab0997a807739efe4675a",
+          "participants": {
+            "comparison": [
+              "DUKASCOPY_SAVED",
+              "GBPUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "9ec663e3420e09750d086751e2576fcab8672288813f5997ef702377aee1729a"
+            ],
+            "primary": [
+              "DUKASCOPY_SAVED",
+              "EURUSD",
+              "M5",
+              "isolated-evaluator-fixture",
+              "BID",
+              "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+            ]
+          },
+          "source": [
+            "SMT_PAIR",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "M5",
+            "a8f7e96bd09c0957d0db062857c98078b10da037dbd5e13a318996948d8a4cd7",
+            "BID",
+            null
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763040900,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "13a858083f402cacbdf39d80b36d98eb31429f40f9a5a45dccc809f696ee0098",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763038800,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "6365167b3ef77bc6a6b0310775bf7d5755eabcb56135979d1a8355ef6bfd4696",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        },
+        {
+          "availability_mode": "HISTORICAL_SIMULATION",
+          "available_at": 1763041500,
+          "calculation_id": "bab75d9176d96a2821c29e511d12cb163411d3ac51bec67ae7244a3654a47442",
+          "calculation_snapshot": "51cbba7eb9927226397ede5398b191fc7b5c8f8b98de768b0242cd80f06142cb",
+          "category": "crt",
+          "configuration": "6bbacbcabcc48db757558bd535520d4a1067e28cdfdbf16c7e01304308c1e676",
+          "event_id": "814cbd08ee8d1a9e1d36f5b375c4640e2c94aee188ba3a7253862147e4296168",
+          "source": [
+            "DUKASCOPY_SAVED",
+            "EURUSD",
+            "M5",
+            "isolated-evaluator-fixture",
+            "BID",
+            "14989f76c565a569bddd406f59d2ef8e5d507e0fd6fe217e38c1e4b286dc10fb"
+          ],
+          "source_authority": "VERIFIED_ARCHIVE_SIMULATED_AVAILABILITY",
+          "version": 1
+        }
+      ]
+    }
+  ],
+  "legacy_benchmark": {
+    "seconds": 2.0533298999998806,
+    "python_peak_bytes": 35680513,
+    "process_peak_bytes": 155598848,
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "legacy_unresolved": []
+}

@@ -1,0 +1,182 @@
+{
+  "schema_version": 2,
+  "defaults_policy": "STRATEGY_DEFAULTS_V2",
+  "name": "Historical M5 FVG mitigation",
+  "description": "Research template. No optional filters enabled. Configure trigger, invalidation and execution policies.",
+  "status": "READY_FOR_EVALUATION",
+  "availability_modes": [
+    "HISTORICAL_SIMULATION"
+  ],
+  "instruments": {
+    "primary": {
+      "symbol": "EURUSD",
+      "source": "DUKASCOPY_SAVED",
+      "price_basis": "BID",
+      "modeled_delay_seconds": 0
+    },
+    "comparison": null,
+    "calendar": {
+      "kind": "forex_weekly"
+    }
+  },
+  "timeframes": {
+    "context": "M5",
+    "trigger": "M5"
+  },
+  "indicators": [
+    {
+      "id": "fvg",
+      "indicator": "FVG",
+      "algorithm_version": 1,
+      "role": "PRIMARY",
+      "timeframe": "M5",
+      "settings": {
+        "mitigation": "close"
+      }
+    }
+  ],
+  "context": {
+    "id": "context",
+    "type": "GROUP",
+    "operator": "ALL",
+    "children": [
+      {
+        "type": "RULE",
+        "id": "gap",
+        "observation": "FVG_STATE",
+        "dependency": "fvg",
+        "expected": "ACTIVE",
+        "operator": "EQ",
+        "alias": "bound_gap",
+        "evidence": {
+          "purpose": "HISTORICAL_SIMULATION",
+          "state": "HISTORICAL",
+          "max_age_seconds": 7200
+        },
+        "selection": "EARLIEST_ELIGIBLE",
+        "same_family_as": null
+      }
+    ]
+  },
+  "setup": {
+    "id": "setup",
+    "type": "GROUP",
+    "operator": "ALL",
+    "children": [
+      {
+        "type": "RULE",
+        "id": "gap-established",
+        "observation": "FVG_STATE",
+        "dependency": "fvg",
+        "expected": "ACTIVE",
+        "operator": "EQ",
+        "alias": null,
+        "evidence": {
+          "purpose": "HISTORICAL_SIMULATION",
+          "state": "HISTORICAL",
+          "max_age_seconds": 7200
+        },
+        "selection": "EARLIEST_ELIGIBLE",
+        "same_family_as": null
+      }
+    ]
+  },
+  "temporal": [],
+  "trade_intent": {
+    "role": "PRIMARY",
+    "direction": "SHORT",
+    "earliest": "AFTER_CAUSAL_AVAILABILITY",
+    "entry": {
+      "kind": "MARKET"
+    },
+    "expiry": {
+      "unit": "SECONDS",
+      "count": 90
+    }
+  },
+  "attempt": {
+    "context_mode": "LATCHED",
+    "candidate_limit": 32,
+    "expiry_origin": "CONTEXT_ACTIVATION",
+    "crt_reference_alias": null
+  },
+  "expiry": {
+    "unit": "SECONDS",
+    "count": 9000
+  },
+  "risk": {
+    "account_risk_pct": 0.5,
+    "max_simultaneous_exposure_pct": 1,
+    "max_session_loss_pct": 2,
+    "min_reward_risk": 2,
+    "instrument_limits": [
+      {
+        "role": "PRIMARY",
+        "max_risk_percent": 1
+      }
+    ]
+  },
+  "management": {
+    "initial_stop": {
+      "kind": "FIXED_PIPS",
+      "distance": 10
+    },
+    "target": {
+      "kind": "REWARD_MULTIPLE",
+      "multiple": 2
+    }
+  },
+  "execution": {
+    "price_basis": "BID",
+    "spread_bps": 1,
+    "slippage_bps": 0,
+    "commission_bps": 0,
+    "intrabar": "REJECT_AMBIGUOUS"
+  },
+  "trigger": {
+    "id": "trigger",
+    "type": "GROUP",
+    "operator": "ALL",
+    "children": [
+      {
+        "type": "RULE",
+        "id": "gap-mitigated",
+        "observation": "FVG_STATE",
+        "dependency": "fvg",
+        "expected": "PARTIALLY_MITIGATED",
+        "operator": "EQ",
+        "alias": null,
+        "evidence": {
+          "purpose": "HISTORICAL_SIMULATION",
+          "state": "HISTORICAL",
+          "max_age_seconds": 7200
+        },
+        "selection": "BOUND_FAMILY",
+        "same_family_as": "bound_gap"
+      }
+    ]
+  },
+  "invalidation": {
+    "id": "invalidation",
+    "type": "GROUP",
+    "operator": "ALL",
+    "children": [
+      {
+        "type": "RULE",
+        "id": "invalid",
+        "observation": "FVG_STATE",
+        "dependency": "fvg",
+        "expected": "FULLY_MITIGATED",
+        "operator": "EQ",
+        "alias": null,
+        "evidence": {
+          "purpose": "HISTORICAL_SIMULATION",
+          "state": "HISTORICAL",
+          "max_age_seconds": 7200
+        },
+        "selection": "EARLIEST_ELIGIBLE",
+        "same_family_as": null
+      }
+    ]
+  }
+}

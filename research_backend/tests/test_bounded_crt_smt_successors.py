@@ -353,6 +353,8 @@ def test_scheduler_equivalence_and_completion_gate(client,canonical_successors,m
     assert store.claim("first")==identifier
 
     def interrupt(snapshot,frontier,batch,completed,metrics):
+        # This test drives the worker without its normal supervising process.
+        assert store.heartbeat(identifier,"first")
         if interruption==7200 and frontier==BASE+7200:
             previous = store.latest_checkpoint(identifier)
             altered = [*snapshot[2],{**snapshot[2][0],"cutoff":frontier+1}]
@@ -385,7 +387,11 @@ def test_scheduler_equivalence_and_completion_gate(client,canonical_successors,m
     assert client.get(f"{API}/{identifier}/intents").json()==[]
     assert client.post(f"{API}/{identifier}/resume").status_code==200
     assert store.claim("resumed")==identifier
-    engine.run_chunks(run,evidence,model,lambda *args:store.publish(identifier,"resumed",*args),
+    def resumed_batch(*args):
+        assert store.heartbeat(identifier,"resumed")
+        store.publish(identifier,"resumed",*args)
+
+    engine.run_chunks(run,evidence,model,resumed_batch,
                       saved=store.latest_checkpoint(identifier),chunk_size=3)
     published = client.get(f"{API}/{identifier}/decisions").json()
     assert [item["id"] for item in published]==[row["id"] for row in result]

@@ -195,7 +195,7 @@ def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execu
 
 
 def iter_tick_partitions(partitions: list[dict], *, source_manifests=None, execution_only=False,
-                         period=None, through_priority=None, required_source=None, inspect_ties=False) -> Iterator[dict]:
+                         period=None, through_priority=None, required_source=None, inspect_ties=False, annotate_source=False) -> Iterator[dict]:
     if len(partitions) > 50 or sum(part["rows_count"] for part in partitions) > TICK_REPLAY_LIMIT:
         raise ValueError("Selected tick partitions exceed the 500,000 quote replay limit or 50 files")
     if len({(p["provider"], p["feed_id"], p["symbol"], p["price_basis"]) for p in partitions}) != 1:
@@ -227,6 +227,10 @@ def iter_tick_partitions(partitions: list[dict], *, source_manifests=None, execu
                 variants = None
                 for _, _, file_id, quote in tied:
                     current_origin = tick_origin(quote, file_id, source_manifests)
+                    if annotate_source:
+                        if current_origin[0] != "source":
+                            raise ValueError("Missing BI5 fingerprint for recorded observation")
+                        quote = quote | {"source_sha256":current_origin[1]}
                     if required_source is not None:
                         if current_origin != ("source", required_source):
                             raise ValueError("Recorded quote lacks the pinned BI5 source identity")

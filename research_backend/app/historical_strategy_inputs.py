@@ -53,7 +53,7 @@ def approved_partition(row):
     record = one("""SELECT 1 FROM historical_imports i, json_each(i.manifest,'$.candle_datasets') p
                     WHERE i.feed_id=? AND i.symbol=? AND json_extract(i.manifest,'$.source.provider')=?
                     AND json_extract(i.manifest,'$.source.sha256')=i.source_sha256
-                    AND json_extract(p.value,'$.id')=? AND json_extract(p.value,'$.sha256')=?
+                    AND CASE WHEN p.type='object' THEN json_extract(p.value,'$.id') END=? AND json_extract(p.value,'$.sha256')=?
                     AND json_extract(p.value,'$.timeframe')=? AND json_extract(p.value,'$.price_basis')=?
                     AND json_extract(p.value,'$.rows')=? LIMIT 1""",
                  (row["feed_id"],row["symbol"],row["provider"],row["id"],row["sha256"],

@@ -124,7 +124,7 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
     duration = timer.count if timer and timer.unit=="SECONDS" and not timer.timeframe else None
     policies = [policy for value,policy in ((activation_r,BREAK_EVEN_POLICY),(partial,PARTIAL_POLICY),
                 (trailing,TRAILING_POLICY),(duration,TIME_POLICY)) if value is not None]
-    if isinstance(tape, ExecutionWindow):
+    if isinstance(tape, ExecutionWindow) and not getattr(tape, "recorded_management", False):
         if any(value is not None for value in (activation_r,partial,trailing,timer)):
             raise ValueError("Recorded first exit supports fixed protective stop and target only")
         policy = RECORDED_EXIT_POLICY
@@ -133,6 +133,8 @@ def simulate_first_exit(entry, management, tape, digest, cutoff_ms):
     identity = {"entry_result_id":entry["id"],"entry_fill_id":fill["id"],
                 "management_policy_fingerprint":fingerprint(frozen),"execution_data_fingerprint":digest,
                 "cutoff_ms":cutoff_ms,"policy":dict(policy)}
+    if getattr(tape, "recorded_management", False):
+        identity["policy"] = dict(policy, execution_source="RECORDED_STRATEGY_POSITION_V1")
     identifier = "FX-"+fingerprint(identity)
     result = {"id":identifier,"identity":identity,"intent_id":intent["id"],"symbol":intent["symbol"],
               "direction":intent["direction"],"management_policy":frozen,"levels":None,"exit":None}
