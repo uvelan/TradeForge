@@ -41,6 +41,9 @@ CREATE TABLE IF NOT EXISTS smt_monitor (
     configuration TEXT NOT NULL CHECK(json_valid(configuration)),
     enabled_at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS smt_watch_checkpoint (
+    generation INTEGER PRIMARY KEY, payload TEXT NOT NULL CHECK(json_valid(payload))
+);
 CREATE TABLE IF NOT EXISTS smt_monitor_lease (
     id INTEGER PRIMARY KEY CHECK(id=1) REFERENCES smt_monitor(id) ON DELETE CASCADE,
     generation INTEGER NOT NULL,

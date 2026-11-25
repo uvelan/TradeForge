@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {api} from './api';
 
 type Amount={numerator:number;denominator:number};
@@ -16,23 +16,53 @@ export function RecordedReplay({runId,start,end}:{runId:string;start:number;end:
   const [through,setThrough]=useState(stamp(end*1000));
   const [busy,setBusy]=useState(true);
   const [error,setError]=useState('');
+  const [options,setOptions]=useState<{session_id:string;cutoff_ms:number;start:number;end:number}[]>([]);
+  const [selection,setSelection]=useState({session:'',time:''});
+  const [revision,setRevision]=useState(0);
+  const sequence=useRef(0);
+  const preference='tradeforge.recordedReplay.'+runId;
   useEffect(()=>{
-    let live=true;
-    api.get<Receipt|null>(route).then(value=>{if(live)setReceipt(value);})
-      .catch(e=>{if(live)setError(String(e));}).finally(()=>{if(live)setBusy(false);});
-    return ()=>{live=false;};
-  },[route]);
+    const token=++sequence.current;
+    setBusy(true);
+    async function load(){
+      const list=await api.get<typeof options>(route.replace('/recorded-replay','/recorded-sessions'));
+      const remembered=selection.session||localStorage.getItem(preference);
+      const id=list.some(item=>item.session_id===remembered)?remembered:null;
+      const query=new URLSearchParams();
+      if(id)query.set('session_id',id);
+      if(id&&selection.time)query.set('cutoff_ms',selection.time);
+      const value=await api.get<Receipt|null>(route+'?'+query);
+      if(sequence.current===token){setOptions(list);setReceipt(value);setError('');}
+    }
+    load().catch(e=>{if(sequence.current===token)setError(String(e));})
+      .finally(()=>{if(sequence.current===token)setBusy(false);});
+    return ()=>{sequence.current++;};
+  },[route,selection,revision,preference]);
   const cutoff=Date.parse(through+'Z');
   async function advance(){
     setBusy(true); setError('');
     try{
-      setReceipt(await api.post<Receipt>(route,{start:receipt?.binding.start??start,end:receipt?.binding.end??end,
-        cutoff_ms:cutoff,resume:receipt?.session_id??null,partitions:receipt?.layout??[]}));
+      const token=sequence.current;
+      const value=await api.post<Receipt>(route,{start:receipt?.binding.start??start,end:receipt?.binding.end??end,
+        cutoff_ms:cutoff,resume:receipt?.session_id??null,partitions:receipt?.layout??[]});
+      if(sequence.current===token){
+        localStorage.setItem(preference,value.session_id);
+        setSelection({session:value.session_id,time:''});setRevision(v=>v+1);
+      }
     }catch(e){setError(String(e));}finally{setBusy(false);}
   }
   return <section aria-label="Recorded quote replay">
     <h3>Recorded quote replay</h3>
     <p>Local Dukascopy bid/ask · zero modeled delivery delay · normalized position quantities</p>
+    {options.length>0&&receipt&&<>
+      <label>Recorded session and layout<select value={receipt.session_id} disabled={busy} onChange={e=>{
+        localStorage.setItem(preference,e.target.value);setSelection({session:e.target.value,time:''});
+      }}>{[...new Map(options.map(o=>[o.session_id,o])).values()].map(o=><option key={o.session_id} value={o.session_id}>
+        {o.session_id} · {stamp(o.start*1000)} to {stamp(o.end*1000)}</option>)}</select></label>
+      <label>Inspect saved checkpoint<select disabled={busy} value={selection.time} onChange={e=>setSelection({session:receipt.session_id,time:e.target.value})}>
+        <option value="">Furthest committed</option>{options.filter(o=>o.session_id===receipt.session_id).map(o=>
+          <option key={o.cutoff_ms} value={o.cutoff_ms}>{stamp(o.cutoff_ms)} UTC</option>)}</select></label>
+    </>}
     <label>Replay through (UTC)<input type="datetime-local" step="0.001" value={through}
       onChange={e=>setThrough(e.target.value)}/></label>
     <button className="small-tool" disabled={busy||!Number.isFinite(cutoff)||cutoff<(receipt?.cutoff_ms??start*1000)

@@ -20,7 +20,7 @@ export interface Plan {
 export interface Trade {id:string;symbol:SymbolName;direction:'BUY'|'SELL';status:string;created_at:string;updated_at:string;version?:number;versions?:{id:string;version:number;plan:Plan;created_at:string}[];plan:Plan;outcome?:{pnl_usd:string;result_r:string}|null}
 export interface Risk {stop_pips:string;maximum_planned_loss_usd:string;theoretical_lots:string;illustrative_lots:string;reward_risk:string;limitations:string[]}
 export interface Analytics {trades:number;active_plans:number;closed:number;win_rate:number|null;expectancy_r:number|null;net_pnl_usd:string;profit_factor:number|null;note:string}
-export interface Dataset {id:string;provider:string;symbol:string;kind:string;timeframe:string|null;rows_count:number;created_at:string;relative_path:string;price_basis:string}
+export interface Dataset {id:string;sha256?:string;provider:string;symbol:string;kind:string;timeframe:string|null;rows_count:number;created_at:string;relative_path:string;price_basis:string}
 export interface Package {id:string;trade_id:string;plan_version:number;created_at:string;knowledge_cutoff:string}
 export interface Review {has_original?:0|1;id:string;package_id:string;assessment:string;verification:string;created_at:string}
 export interface JournalEntry {snapshot_id?:string;plan_reference?:PlanReference;supersedes?:string;tags?:string[];signal_reference?:SignalReference;id:string;kind:string;title:string;content:string;created_at:string}

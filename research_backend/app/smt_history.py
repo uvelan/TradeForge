@@ -2,6 +2,8 @@
 
 from hashlib import sha256
 import json
+from contextlib import nullcontext
+from time import time as wall_clock
 
 from .db import transaction
 from .smt_monitor_lease import MonitorLease, owns
@@ -39,7 +41,7 @@ def record_source_corrections(db, scope: str, capture: dict, observed_at: int) -
                                     "observed": observed})
         if not changes:
             continue
-        correction = {**prior, "status": "SMT_SOURCE_CORRECTED",
+        correction = {**prior, **({"watch_published_at":int(wall_clock())} if "watch_published_at" in prior else {}), "status": "SMT_SOURCE_CORRECTED",
                       "transitions": [*prior["transitions"], {"status": "SMT_SOURCE_CORRECTED", "time": observed_at}],
                       "source_correction": {"observed_at": observed_at, "changes": changes,
                                             "previous_status": row["status"]}}
@@ -58,10 +60,11 @@ def event_identity(scope: str, event: dict) -> str:
 def record_smt(events: list[dict], scope: str, provenance: dict, rules: dict, *,
                alert_after: int | None = None, capture_step: int | None = None,
                capture: dict | None = None, observed_at: int | None = None,
-               monitor_lease: MonitorLease | None = None) -> tuple[list[dict], set[str]]:
+               monitor_lease: MonitorLease | None = None, connection=None, progress=None) -> tuple[list[dict], set[str]]:
     alerts = []
-    with transaction() as db:
-        db.execute("BEGIN IMMEDIATE")
+    with (transaction() if connection is None else nullcontext(connection)) as db:
+        if connection is None:
+            db.execute("BEGIN IMMEDIATE")
         if monitor_lease is not None and not owns(db, monitor_lease):
             return alerts, set()
         corrected = record_source_corrections(db, scope, capture, observed_at) if capture is not None else set()
@@ -80,6 +83,8 @@ def record_smt(events: list[dict], scope: str, provenance: dict, rules: dict, *,
                     continue
                 evidence = {**snapshot, "status": status, "transitions": event["transitions"][:index + 1],
                             "confirmed_at": event["confirmed_at"] if status != "SMT_CANDIDATE" else None}
+                if monitor_lease is not None:
+                    evidence["watch_published_at"] = int(wall_clock())
                 if capture_step is not None:
                     evidence["capture"] = {}
                     for side, bars in event["capture"].items():
@@ -101,7 +106,7 @@ def record_smt(events: list[dict], scope: str, provenance: dict, rules: dict, *,
                 )
                 existing[status] = evidence
             confirmed = existing.get("SMT_CONFIRMED")
-            if (confirmed and "SMT_INVALIDATED" not in existing and event["status"] == "SMT_CONFIRMED"
+            if (confirmed and (monitor_lease or ("SMT_INVALIDATED" not in existing and event["status"] == "SMT_CONFIRMED"))
                     and alert_after is not None
                     and confirmed["confirmed_at"] > alert_after):
                 alert = {**confirmed, "alert_recorded_at": observed_at}
@@ -111,4 +116,19 @@ def record_smt(events: list[dict], scope: str, provenance: dict, rules: dict, *,
                 ).rowcount
                 if inserted:
                     alerts.append(alert)
+        if progress is not None:
+            save_progress(db,monitor_lease,progress)
+        if monitor_lease and not owns(db,monitor_lease):
+            raise WatchLeaseLost("SMT monitor lease expired before commit")
     return alerts, corrected
+
+
+class WatchLeaseLost(RuntimeError):
+    pass
+
+
+def save_progress(db,lease,progress):
+    if not owns(db,lease):
+        raise WatchLeaseLost("SMT monitor no longer owns the watch")
+    db.execute("""INSERT INTO smt_watch_checkpoint VALUES (?,?) ON CONFLICT(generation)
+        DO UPDATE SET payload=excluded.payload""",(lease.generation,json.dumps(progress,sort_keys=True)))

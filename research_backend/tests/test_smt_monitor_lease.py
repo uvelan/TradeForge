@@ -60,7 +60,9 @@ def test_monitor_fences_stale_capture(tmp_path, monkeypatch, case):
     history = db.rows("SELECT payload FROM smt_event_history")
     alerts = db.rows("SELECT payload FROM smt_alerts")
     assert db.rows("SELECT * FROM smt_monitor_lease") == []
+    progress = db.rows("SELECT payload FROM smt_watch_checkpoint")
     if case in {"busy", "takeover"}:
+        assert len(progress)==1 and json.loads(progress[0]["payload"])["verified_through"]==close
         winner = "original" if case == "busy" else "successor"
         assert len(history) == 2 and len(alerts) == 1
         assert all(json.loads(row["payload"])["provenance"]["primary"]["feed_id"] == f"fixture:{winner}"
@@ -69,7 +71,7 @@ def test_monitor_fences_stale_capture(tmp_path, monkeypatch, case):
         assert bool(stale_state) == (case == "busy")
         assert bool(successor_state) == (case == "takeover")
     else:
-        assert not history and not alerts and not stale_state and not successor_state
+        assert not progress and not history and not alerts and not stale_state and not successor_state
 
 def test_lease_survives_worker_exit_and_can_be_reclaimed(tmp_path, monkeypatch):
     database = tmp_path/"watch.sqlite"

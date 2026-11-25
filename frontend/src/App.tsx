@@ -17,6 +17,7 @@ import {ChartView,frameMinutes,useViewCandles} from './chartViews';
 import {useChartIndicator} from './indicators';
 import {smtCoverageNotice,smtFeed,useSmt} from './smt';
 import {SmtMonitor} from './SmtMonitor';
+import {ArchiveSmtWatch} from './ArchiveSmtWatch';
 import {ArrivalPanel} from './ArrivalPanel';
 import {closedCandles, ReplayControls} from './ReplayControls';
 import {SignalExplorer,signalSummary,type SignalRecord} from './SignalExplorer';
@@ -905,7 +906,7 @@ function DataLibrary({refresh,initialDataset}:{refresh:()=>void;initialDataset?:
  <p>Choose an EURUSD BI5 hour from 13 November 2025 (13:00 or 14:00 UTC), or the EURUSD or GBPUSD M5 BID Parquet partition from 13 November 2026. Each file is identified by checksum. To resume an interrupted import, choose the same file again.</p>
  <label className="field">Reviewed archive file<input type="file" accept=".bi5,.parquet" onChange={e=>setReviewedFile(e.target.files?.[0]??null)}/></label>
  <button className="btn btn-secondary" disabled={busy||!reviewedFile} onClick={()=>void registerReviewed()}>Register or resume file</button></Card>
- <ArrivalPanel datasets={datasets}/>
+ <ArchiveSmtWatch datasets={datasets}/><ArrivalPanel datasets={datasets}/>
  <Card><SectionTitle title="Inspect archived candle coverage"/>
    <label className="field">Candle partition <select value={inspected?.id??''}
      onChange={event=>setInspected(datasets.find(item=>item.id===event.target.value)??(initialDataset?.id===event.target.value?initialDataset:undefined))}>

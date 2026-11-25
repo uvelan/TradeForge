@@ -89,12 +89,23 @@ with TestClient(app,base_url="http://localhost") as client:
         assert resumed[key]==fresh[key]
     assert call(61606,split,resumed["session_id"])==resumed
     assert call(39647,split)==early
+    # A new, earlier save arrives after the resumed session has already reached its horizon.
+    delayed = call(55600, split, resumed["session_id"])
+    def reopen(session, **extra):
+        return client.get(route,params={"session_id":session,**extra}).json()
+    def persisted(receipt):
+        return {k:v for k,v in receipt.items() if k not in ("bi5_reads","parquet_reads")}
+    assert reopen(resumed["session_id"])==persisted(resumed)
+    assert reopen(resumed["session_id"],cutoff_ms=Q+55600)==persisted(delayed)
+    assert reopen(fresh["session_id"])==persisted(fresh)
+    assert fresh["session_id"]!=resumed["session_id"]
+    assert client.get(route).json()==persisted(resumed)
     rejected=client.post(route,json=dict(start=spec["start"],end=spec["end"],cutoff_ms=Q+61606,
                                          partitions=[split[0]]))
     assert rejected.status_code==422 and "omit" in rejected.text
     assert source_records(run)==source
     with transaction() as db:
-        assert db.execute("SELECT count(*) FROM recorded_strategy_checkpoints").fetchone()[0]==3
+        assert db.execute("SELECT count(*) FROM recorded_strategy_checkpoints").fetchone()[0]==4
 
 @pytest.mark.parametrize("kind,offset,units", [("LIMIT",17210,116274),("STOP",449,116276)])
 @pytest.mark.parametrize("controlled", [(int(Q//1000)-14120+3600,90)],indirect=True)

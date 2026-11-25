@@ -240,13 +240,29 @@ async def recorded_replay(run_id:str, request:Request):
         raise HTTPException(422,str(error)) from error
 
 @router.get("/{run_id}/recorded-replay")
-def latest_recorded_replay(run_id:str):
+def latest_recorded_replay(run_id:str, session_id:str|None=None, cutoff_ms:int|None=None):
     require_published(run_id)
+    if cutoff_ms is not None and session_id is None:
+        raise HTTPException(422,"Choose a replay session before choosing a checkpoint")
+    if session_id is None:
+        first = one("""SELECT session_id FROM recorded_strategy_checkpoints
+            WHERE json_extract(payload,'$.binding.run_id')=? GROUP BY session_id ORDER BY min(rowid) DESC LIMIT 1""",(run_id,))
+        if not first:
+            return None
+        session_id = first["session_id"]
     row = one("""SELECT payload,payload_hash FROM recorded_strategy_checkpoints
-                 WHERE json_extract(payload,'$.binding.run_id')=? ORDER BY rowid DESC LIMIT 1""",(run_id,))
+        WHERE json_extract(payload,'$.binding.run_id')=? AND session_id=? AND (? IS NULL OR cutoff_ms=?)
+        ORDER BY cutoff_ms DESC LIMIT 1""",(run_id,session_id,cutoff_ms,cutoff_ms))
     if not row:
-        return None
+        raise HTTPException(404,"Recorded checkpoint unavailable")
     from hashlib import sha256
     if sha256(row["payload"].encode()).hexdigest()!=row["payload_hash"]:
         raise HTTPException(409,"Execution checkpoint integrity failure")
     return json.loads(row["payload"])
+
+@router.get("/{run_id}/recorded-sessions")
+def recorded_sessions(run_id:str):
+    require_published(run_id)
+    return rows("""SELECT session_id,cutoff_ms,json_extract(payload,'$.binding.start') AS start,
+        json_extract(payload,'$.binding.end') AS end FROM recorded_strategy_checkpoints
+        WHERE json_extract(payload,'$.binding.run_id')=? ORDER BY session_id,cutoff_ms DESC""",(run_id,))

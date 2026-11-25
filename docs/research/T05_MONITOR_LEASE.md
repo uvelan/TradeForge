@@ -54,3 +54,5 @@ The monitor panel and live chart label degraded coverage. The saved prior alert
 is not presented as a fresh confirmation during the gap. The live chart
 requests the visible chart cutoff; the background monitor checks against the
 current poll time, so only the monitor can assess freshness beyond that view.
+
+The [paired watch acceptance](../implementation/plan-integration-evidence/SMT-WATCH-RECOVERY.md) covers persisted observation frontiers, exact UTC archive pairs, process termination at the SQLite commit boundary, and reopening an original transition in Signal Explorer.
