@@ -13,7 +13,7 @@ import {CandleColorSettings} from './candleColors';
 import {useWorkspacePreference} from './useWorkspacePreference';
 import {ChartView,frameMinutes,useViewCandles} from './chartViews';
 import {useChartIndicator} from './indicators';
-import {smtFeed,useSmt} from './smt';
+import {smtCoverageNotice,smtFeed,useSmt} from './smt';
 import {SmtMonitor} from './SmtMonitor';
 import {ArrivalPanel} from './ArrivalPanel';
 import {closedCandles, ReplayControls} from './ReplayControls';
@@ -520,8 +520,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
               ? {primary:replayActive||!busy&&indicatorScope===loadedIndicatorScope ? firstFeed : undefined,
                 comparison:replayActive&&!replaySession?.views.comparison ? undefined : secondFeed,
                 timeframe,cutoff:indicatorCutoff,rules} : undefined}/>
-          <small role="status">{smt.error || comparison.error || (smt.authority==='VERIFIED_MT5_CAPTURE'?'SMT · verified MT5 candles':smt.authority==='VERIFIED_SAVED_DATASET'?'SMT · verified archive evidence':smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
-          {smt.alert?.confirmed_at&&<strong role="status">SMT_CONFIRMED · {smt.alert.direction} · {symbol} / {compare} · {new Date(smt.alert.confirmed_at*1000).toISOString()}</strong>}
+          <small role="status">{smt.error || comparison.error || smtCoverageNotice(smt.coverage) || (smt.authority==='VERIFIED_MT5_CAPTURE'?'SMT · verified MT5 candles':smt.authority==='VERIFIED_SAVED_DATASET'?'SMT · verified archive evidence':smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
+          {smt.alert?.confirmed_at&&<strong role="status">{(smt.pending || smt.error || smtCoverageNotice(smt.coverage)) ? 'Saved SMT_CONFIRMED' : 'SMT_CONFIRMED'} · {smt.alert.direction} · {symbol} / {compare} · {new Date(smt.alert.confirmed_at*1000).toISOString()}</strong>}
           {smt.alert?.event_key&&onSignal&&<button className="small-tool" onClick={()=>void onSignal({
             event_key:smt.alert!.event_key!,status:'SMT_CONFIRMED'
           }).catch(reason=>setPollError(reason.message))}>Inspect alert evidence</button>}

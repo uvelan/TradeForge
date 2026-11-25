@@ -60,9 +60,10 @@
         "T04-WAL"
       ],
       "tests": [
-        "research_backend/tests/test_smt_monitor_lease.py"
+        "research_backend/tests/test_smt_monitor_lease.py",
+        "research_backend/tests/test_smt_authority.py"
       ],
-      "remaining_or_boundary": "Lease and fencing only; catch-up, durable frontier and real terminal provenance remain."
+      "remaining_or_boundary": "Lease, fencing and observed gap/revision separation; bounded catch-up, durable frontier and real terminal provenance remain."
     },
     {
       "id": "T06-V2",

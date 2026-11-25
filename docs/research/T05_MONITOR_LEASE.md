@@ -24,7 +24,33 @@ python -m pytest -q research_backend/tests/test_smt_monitor_lease.py research_ba
 ```
 
 The tests use synthetic MT5 boundary data and an isolated SQLite store. This
-slice changes only automated watch polling; explicit chart capture remains
-unchanged. It does not establish real MT5 feed/timestamp authority, continuous
+lease changes only automated watch polling; the watch and explicit live chart
+capture both use the coverage checks below. It does not establish real MT5 feed/timestamp authority, continuous
 monitor readiness, persistent observation frontiers, gap classification, or
 bounded backfill. Leave those production gates closed.
+
+## Sparse capture and recovery
+
+Missing observations are not evidence of a source correction. A previously
+captured candle must be present and have different OHLC values before it can
+cause a correction. A sparse poll preserves existing alerts and immutable
+history; it does not undo previously recorded positive corrections.
+
+For new transitions, live capture uses only the latest paired, closed, regular
+suffix. Do not replace a missing confirmation bar with a later observation
+across a gap. A lagging or misaligned paired tail blocks new transitions; an
+interior gap leaves only the contiguous latest suffix eligible. Both the live
+response and poll status provide coverage, including a reason when degraded.
+This describes only clock spacing and pairing within returned data, not known
+broker operating hours or the completeness of a history request. A closed
+weekend can therefore be conservatively reported as a gap.
+
+Manual and background fixture tests confirm a previous alert survives an omitted
+candle and identical recovery with no duplicate. The same fixtures retain
+positive-change retraction. New confirmations cannot span an omitted bar or use
+an out-of-date tail, and recovery records the actual observed notification time.
+
+The monitor panel and live chart label degraded coverage. The saved prior alert
+is not presented as a fresh confirmation during the gap. The live chart
+requests the visible chart cutoff; the background monitor checks against the
+current poll time, so only the monitor can assess freshness beyond that view.

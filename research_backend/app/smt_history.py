@@ -13,7 +13,7 @@ def scope_key(provenance: dict, rules: dict) -> str:
 
 
 def record_source_corrections(db, scope: str, capture: dict, observed_at: int) -> set[str]:
-    # Only a revision inside the observed interval is evidence of a correction.
+    # A sparse capture does not prove that the source deleted a prior observation.
     indexed = {side: {bar["time"]: bar for bar in bars} for side, bars in capture.items()}
     if any(not bars for bars in indexed.values()):
         return set()
@@ -33,9 +33,10 @@ def record_source_corrections(db, scope: str, capture: dict, observed_at: int) -
             start, end = boundaries[side]
             for old in saved["bars"]:
                 timestamp = old["time"]
-                if start <= timestamp <= end and indexed[side].get(timestamp) != old:
+                observed = indexed[side].get(timestamp)
+                if start <= timestamp <= end and observed is not None and observed != old:
                     changes.append({"side": side, "time": timestamp, "previous": old,
-                                    "observed": indexed[side].get(timestamp)})
+                                    "observed": observed})
         if not changes:
             continue
         correction = {**prior, "status": "SMT_SOURCE_CORRECTED",

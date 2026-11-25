@@ -67,6 +67,7 @@ def test_worker_creates_and_retracts_alert_without_chart_requests(client, monkey
     start = close - 600
     clock = [close - 60]
     corrected = [False]
+    missing = [False]
 
     class Clock(datetime):
         @classmethod
@@ -79,7 +80,10 @@ def test_worker_creates_and_retracts_alert_without_chart_requests(client, monkey
         values = list(LEFT if symbol == "EURUSD" else RIGHT)
         if corrected[0] and symbol == "GBPUSD":
             values[6] = 30
-        return candles(values, start)
+        bars = candles(values, start)
+        if missing[0] and symbol == "GBPUSD":
+            bars.pop(5)
+        return bars
 
     def until(predicate):
         deadline = monotonic() + 8
@@ -102,6 +106,17 @@ def test_worker_creates_and_retracts_alert_without_chart_requests(client, monkey
     alert, = client.get(path + "/alerts").json()
     assert alert["confirmed_at"] == close
     assert client.get(path + "/monitor").json()["latest_alert"]["event_key"] == alert["event_key"]
+
+    before_gap = client.get(path + "/history").json()
+    missing[0] = True
+    clock[0] += 1
+    until(lambda: client.get(path + "/monitor").json().get("coverage", {}).get("status") == "DEGRADED")
+    assert client.get(path + "/history").json() == before_gap
+    missing[0] = False
+    clock[0] += 1
+    until(lambda: client.get(path + "/monitor").json().get("coverage", {}).get("status") == "CONTIGUOUS")
+    assert client.get(path + "/alerts").json() == [alert]
+    assert client.get(path + "/history").json() == before_gap
 
     corrected[0] = True
     clock[0] += 1
@@ -211,3 +226,85 @@ def test_signal_keyset_paginates_tied_transitions(client):
     assert [row["event_key"] for row in first["items"] + second["items"]] == keys
     assert second["next_cursor"] is None
     assert client.get(path, params={"cursor": "1:"+"z"*64}).status_code == 422
+
+
+def test_live_gap_recovers_without_rewriting_prior_alert(client, monkeypatch):
+    close = int(datetime.now(UTC).timestamp()) // 60 * 60
+    start = close - 600
+    mode = "complete"
+
+    def fetch(symbol, timeframe, limit, *, include_latest, provenance):
+        provenance.update(feed_id="mt5:gap-fixture", price_basis="BID")
+        bars = candles(LEFT if symbol == "EURUSD" else RIGHT, start)
+        if symbol == "GBPUSD" and mode == "interior":
+            bars.pop(5)
+        elif symbol == "GBPUSD" and mode == "changed":
+            bars[6]["high"] += 2
+            bars.pop(5)
+        return bars
+
+    monkeypatch.setattr(indicator_routes, "mt5_rates", fetch)
+    base = "/api/indicators/smt"
+    request = {**RULES, "primary_symbol": "EURUSD", "comparison_symbol": "GBPUSD",
+               "available_through": close, "alert_after": close-120}
+    initial = client.post(base+"/live", json=request).json()
+    alert, = initial["alerts"]
+    original_history = client.get(base+"/history").json()
+
+    mode = "interior"
+    gap = client.post(base+"/live", json=request).json()
+    assert client.get(base+"/history").json() == original_history
+    assert gap["coverage"]["status"] == "DEGRADED"
+    assert gap["alerts"] == []
+
+    mode = "complete"
+    recovered = client.post(base+"/live", json=request).json()
+    assert recovered["coverage"]["status"] == "CONTIGUOUS"
+    assert recovered["alerts"] == []
+    assert client.get(base+"/history").json() == original_history
+    assert client.get(base+"/alerts").json()[0]["event_key"] == alert["event_key"]
+
+    mode = "changed"
+    changed = client.post(base+"/live", json=request).json()
+    assert changed["coverage"]["status"] == "DEGRADED"
+    assert client.get(base+"/alerts").json() == []
+    corrections = [e for e in client.get(base+"/history").json() if e["status"] == "SMT_SOURCE_CORRECTED"]
+    correction, = corrections
+    assert correction["event_key"] == alert["event_key"]
+    change, = correction["source_correction"]["changes"]
+    assert change["time"] == start+360 and change["observed"] is not None
+
+
+def test_live_gap_cannot_replace_missing_confirmation_or_use_stale_tail(client, monkeypatch):
+    now = int(datetime.now(UTC).timestamp()) // 60 * 60
+    start = now - 660
+    mode = "interior"
+
+    def fetch(symbol, timeframe, limit, *, include_latest, provenance):
+        provenance.update(feed_id="mt5:gap-confirmation", price_basis="BID")
+        bars = candles((LEFT if symbol == "EURUSD" else RIGHT)+[11 if symbol == "EURUSD" else 24], start)
+        if symbol == "GBPUSD" and mode == "interior":
+            bars.pop(9)
+        elif mode == "stale_both" or (symbol == "GBPUSD" and mode == "stale"):
+            bars = bars[:10]
+        return bars
+
+    monkeypatch.setattr(indicator_routes, "mt5_rates", fetch)
+    base = "/api/indicators/smt"
+    request = {**RULES, "primary_symbol": "EURUSD", "comparison_symbol": "GBPUSD",
+               "available_through": now, "alert_after": now-120}
+    result = client.post(base+"/live", json=request).json()
+    assert result["alerts"] == []
+    assert not any(e["status"] == "SMT_CONFIRMED" for e in client.get(base+"/history").json())
+    assert result["coverage"]["status"] == "DEGRADED"
+
+    for mode in ("stale", "stale_both"):
+        result = client.post(base+"/live", json=request).json()
+        assert result["alerts"] == []
+        assert result["coverage"]["reason"] == "PAIRED_TAIL_UNAVAILABLE"
+
+    mode = "complete"
+    result = client.post(base+"/live", json=request).json()
+    alert, = result["alerts"]
+    assert alert["confirmed_at"] == now-60
+    assert alert["alert_recorded_at"] >= now

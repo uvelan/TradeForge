@@ -106,6 +106,30 @@ def live_smt(request: LiveSmtCalculation):
     return capture_live_smt(request)
 
 
+def live_smt_coverage(primary, comparison, step, cutoff):
+    """Classify observed sample continuity, not the broker's trading calendar."""
+    left, right = ({bar.time: bar for bar in lane} for lane in (primary, comparison))
+    paired = sorted(left.keys() & right.keys())
+    tails = [primary[-1].time, comparison[-1].time]
+    through = paired[-1] + step if paired else None
+    if not paired or tails != [paired[-1], paired[-1]] or cutoff - through >= step:
+        return [], [], {"status": "DEGRADED", "reason": "PAIRED_TAIL_UNAVAILABLE",
+                        "paired_closed_through": through}
+
+    first = len(paired) - 1
+    while first > 0 and paired[first] - paired[first - 1] == step:
+        first -= 1
+    suffix = paired[first:]
+    common_start = max(primary[0].time, comparison[0].time)
+    gap = (first > 0 or any(time >= common_start and time not in right for time in left)
+           or any(time >= common_start and time not in left for time in right))
+    return [left[time] for time in suffix], [right[time] for time in suffix], {
+        "status": "DEGRADED" if gap else "CONTIGUOUS",
+        "reason": "PAIRED_HISTORY_GAP" if gap else None,
+        "paired_contiguous_from": suffix[0], "paired_closed_through": through,
+    }
+
+
 def capture_live_smt(request: LiveSmtCalculation, monitor_lease: MonitorLease | None = None):
     validate_watch(request)
     step = FRAME_MIN[request.timeframe] * 60
@@ -132,10 +156,11 @@ def capture_live_smt(request: LiveSmtCalculation, monitor_lease: MonitorLease | 
     provenance = {"timeframe": request.timeframe, "primary": left, "comparison": right,
                   "authority": "VERIFIED_MT5_CAPTURE"}
     rules = rule_parameters(request)
-    events = detect_smt(primary, comparison, **rules, step=step)
+    paired_primary, paired_comparison, coverage = live_smt_coverage(primary, comparison, step, cutoff)
+    events = detect_smt(paired_primary, paired_comparison, **rules, step=step)
     for event in events:
         capture_evidence = {}
-        for side, bars in (("primary", primary), ("comparison", comparison)):
+        for side, bars in (("primary", paired_primary), ("comparison", paired_comparison)):
             start = event[side]["previous"]["time"] - rules["period"] * step
             evidence = [bar.model_dump() for bar in bars if bar.time >= start]
             capture_evidence[side] = evidence
@@ -154,7 +179,7 @@ def capture_live_smt(request: LiveSmtCalculation, monitor_lease: MonitorLease | 
     for event in events + alerts:
         event.pop("capture", None)
     return {**response_for(events, alerts, rules, step, provenance["authority"]),
-            "scope": scope, "corrected_ids": sorted(corrected)}
+            "scope": scope, "corrected_ids": sorted(corrected), "coverage": coverage}
 
 
 MONITOR_INTERVAL_SECONDS = 5
@@ -229,7 +254,7 @@ def poll_monitor(state: dict):
         capture = LiveSmtCalculation(**{**configuration, "available_through": now,
                                        "alert_after": token // 1_000_000_000})
         response = capture_live_smt(capture, monitor_lease=lease)
-        result = {"last_poll_at": now, "error": None, "scope": response["scope"]}
+        result = {"last_poll_at": now, "error": None, "scope": response["scope"], "coverage": response["coverage"]}
     except HTTPException as error:
         result = {"last_poll_at": now, "error": str(error.detail)}
     finally:

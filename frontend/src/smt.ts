@@ -25,6 +25,18 @@ export type SmtEvent = {
 
 export type SmtRules = {period:number;alignment_bars:number;tolerance_bps:number;confirmation_bars:number};
 
+export type SmtCoverage = {
+  status:"CONTIGUOUS" | "DEGRADED";
+  reason:"PAIRED_HISTORY_GAP" | "PAIRED_TAIL_UNAVAILABLE" | null;
+};
+
+export function smtCoverageNotice(coverage?: SmtCoverage): string | undefined {
+  if(coverage?.status!=="DEGRADED")return undefined;
+  return coverage.reason==="PAIRED_TAIL_UNAVAILABLE"
+    ? "SMT coverage degraded · latest paired candles unavailable"
+    : "SMT coverage degraded · gap in paired candle history";
+}
+
 export function smtFeed(symbol: string, data: CandleResponse | null | undefined) {
   if(!data?.feed_id)return undefined;
   return {symbol,source:data.source,feed_id:data.feed_id,price_basis:data.price_basis,dataset_id:data.dataset_id,
@@ -45,7 +57,7 @@ export function useSmt(primary: Candle[], comparison: Candle[] | undefined, time
     primary,comparison,timeframe,...rules,primary_feed:first,comparison_feed:second,replay,
   }) : "";
   const endpoint=live?"/research/api/indicators/smt/live":"/research/api/indicators/smt";
-  const [result,setResult]=useState<{body:string;refresh:number;events?:SmtEvent[];authority?:string;error?:string}>();
+  const [result,setResult]=useState<{body:string;refresh:number;events?:SmtEvent[];authority?:string;coverage?:SmtCoverage;error?:string}>();
   const [notice,setNotice]=useState<{scope:string;alert:SmtEvent}>();
   useEffect(()=>{
     if(!body)return;
@@ -59,15 +71,18 @@ export function useSmt(primary: Candle[], comparison: Candle[] | undefined, time
           const failure=await response.json().catch(()=>null);
           throw new Error(typeof failure?.detail==="string"?failure.detail:"SMT calculation unavailable");
         }
-        const data=await response.json() as {events:SmtEvent[];authority:string;alerts:SmtEvent[];corrected_ids?:string[]};
+        const data=await response.json() as {events:SmtEvent[];authority:string;alerts:SmtEvent[];corrected_ids?:string[];coverage?:SmtCoverage};
         if(!controller.signal.aborted){
-          setResult({body,refresh,events:data.events,authority:data.authority});
+          setResult({body,refresh,events:data.events,authority:data.authority,coverage:data.coverage});
           const alert=data.alerts?.at(-1);
           if(alert)setNotice({scope,alert});
-          else setNotice(previous=>previous?.scope===scope&&(
-            data.corrected_ids?.includes(previous.alert.id) ||
-            !data.events.some(event=>event.id===previous.alert.id&&event.status==='SMT_CONFIRMED')
-          )?undefined:previous);
+          else setNotice(previous=>{
+            if(previous?.scope!==scope)return previous;
+            const matching=data.events.find(event=>event.id===previous.alert.id);
+            const withdrawn=data.corrected_ids?.includes(previous.alert.id) ||
+              (matching ? matching.status!=="SMT_CONFIRMED" : data.coverage?.status!=="DEGRADED");
+            return withdrawn?undefined:previous;
+          });
         }
       }catch(error){
         if(!controller.signal.aborted)setResult({body,refresh,error:error instanceof Error?error.message:"SMT calculation unavailable"});
