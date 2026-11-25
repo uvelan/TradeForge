@@ -5,7 +5,7 @@ Baseline: `517f8122b633f9143324f99dd7b075c7c689df3f`. This work reconciles the m
 | Plan item | Existing or included | Remaining acceptance or decision |
 |---|---|---|
 | TF-000, TF-D01, TF-D02 | Existing baseline and drawing lifecycle evidence. | Keep existing browser gates passing; no replacement of the drawings architecture. |
-| TF-U01 | Existing synchronization and pane tooling. This PR fences queued crosshair updates against a removed or replaced pane identity. | Full chart-lifecycle, persisted panel and 100-cycle/viewport soak requirements are not established by a limited code change. |
+| TF-U01 | Existing synchronization and pane tooling. This PR fences queued crosshair updates against a removed or replaced pane identity and [attaches chart evidence only to the current view that requested it](../../research/TF-U01_CHART_CAPTURE_CONTEXT.md). | Full chart-lifecycle, persisted panel and 100-cycle/viewport soak requirements are not established by a limited code change. |
 | TF-I01, TF-I02, T02, T10 | Existing multi-instance UX and causal ICT/SMC/CRT. This PR adds ADX/DMI, Stochastic, Stochastic RSI, CCI, Keltner Channels and SuperTrend. | Remaining math goldens, independent TA-Lib oracle, indicator gaps and full lifecycle/viewport parity. Unsupported volume remains unsupported. |
 | TF-S01 | Existing causal strict SMT and evidence display. | Optional separately versioned multi-peer/sweep/session/inverse semantics and exact owner-approved matching semantics. Do not overwrite v2. |
 | T01 | Existing replay rejects contradictions in partial covered intervals. | Full OHLC certification needs actual per-bar source completeness, not assumed from a calendar or quote spacing. Keep untrusted metrics suppressed. |

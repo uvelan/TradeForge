@@ -1,5 +1,5 @@
 import LearningDrill from './LearningDrill';
-import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import { Crosshair, Eraser,   ListFilter,  Minus,  Activity,Archive,ArrowDownToLine,ArrowRight,ArrowUpRight,BarChart3,BookOpen,BrainCircuit,CalendarClock,CheckCircle2,ChevronRight,Clock3,CloudOff,Database,Download,ExternalLink,FileCheck2,FileText,FlaskConical,FolderOpen,LayoutDashboard,Menu,MoreHorizontal,Plus,Radio,RefreshCw,Settings,ShieldCheck,ShieldAlert,Search,Target,TrendingUp,Upload, X, Zap} from 'lucide-react';
 import {api} from './api';
 import {type ComparisonPlacement,Badge,CandleChart,Card,Empty,Metric,Notice,PriceChange,SectionTitle,Select,Spinner,Success,TextArea,TextField} from './components';
@@ -162,7 +162,11 @@ type ChartLevel=import('./components').ChartLevel;
 function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}:{expanded?:boolean;onPlan?:(seed:Partial<Plan>)=>void;
   onSignal?:(reference:import('./types').SignalReference)=>Promise<void>; initialLocation?:ChartLocation;onChartLesson?:(snapshot:string)=>void}){
   const [planPrices,setPlanPrices]=useState<string[]>([]);
-  const [chartCapture,setChartCapture]=useState<string>();
+  const [captureState,setCaptureState]=useState<{
+    generation:object; saving:boolean; id?:string; status?:string;
+  }>();
+  const liveCaptureGeneration=useRef<object|null>(null);
+  const captureSequence=useRef(0);
   const {zone}=useTimezone();
   const [forexSymbol,setSymbol]=useWorkspacePreference<SymbolName>('forex-symbol','EURUSD',watchSymbols);
   const [timeframe,setTimeframe]=useWorkspacePreference<Timeframe>('timeframe','M5',chartTimeframes);
@@ -235,6 +239,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   replayScopeRef.current=replayScope;
   const [quotes,setQuotes]=useState<Record<string,number|null>>({});
   const indicatorScope=JSON.stringify([source,symbol,timeframe,range]);
+  const primaryLoadGeneration=useMemo(()=>({}),
+    [symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence]);
+  const [loadedPrimaryGeneration,setLoadedPrimaryGeneration]=useState<object>();
   const [loadedIndicatorScope,setLoadedIndicatorScope]=useState("");
   const refreshCandles=useCallback(()=>setRefreshCount(n=>n+1),[]);
   const live=useBinanceCandles(isBinance,timeframe,refreshCandles);
@@ -252,15 +259,15 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   },[source,refreshCount]);
   useEffect(()=>{
     let active=true;
-    setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);setReplayBusy(false);setReplayError('');setChartCapture(undefined);setPlanPrices([]);
+    setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);setReplayBusy(false);setReplayError('');setPlanPrices([]);
     setInteraction(current=>current.mode==='plan'?{mode:'navigate'}:current);
     (exactEvidence?api.get<CandleResponse>(initialLocation!.evidencePath!):
       api.candles(symbol,timeframe,source,expanded?600:200,source==='MT5',range))
-      .then(main=>{if(active){setData(main);setLoadedIndicatorScope(indicatorScope);}})
+      .then(main=>{if(active){setData(main);setLoadedIndicatorScope(indicatorScope);setLoadedPrimaryGeneration(primaryLoadGeneration);}})
       .catch(e=>{if(active){setError(e.message);setData(null)}})
       .finally(()=>{if(active)setBusy(false)});
     return()=>{active=false};
-  },[symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence]);
+  },[symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence,primaryLoadGeneration]);
   useEffect(()=>{
     if(source!=='MT5'||busy||error||replayIndex!==null)return;
     let active=true;
@@ -403,6 +410,35 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const compare=replaySession?replaySession.views.comparison?.symbol??'':
     expanded&&comparisonSymbol!==symbol&&options.includes(comparisonSymbol)?comparisonSymbol:'';
   const comparison=useViewCandles(compare,timeframe,source,refreshCount,cutoff,true,range,replaySession?.views.comparison);
+  const feedIdentity=(feed:CandleResponse|null|undefined)=>feed&&[
+    feed.feed_id,feed.price_basis,feed.dataset_id,feed.partitions?.map(part=>[part.id,part.sha256]),
+  ];
+  const captureKey=JSON.stringify([symbol,timeframe,source,range,refreshCount,expanded,
+    exactEvidence?initialLocation:undefined,feedIdentity(isBinance?undefined:indicatorFeed),
+    compare,feedIdentity(comparison.feed),Boolean(comparison.candles?.length),placement,viewCount,
+    replayActive,replaySession?.id,replayIndex,cutoff]);
+  const canSaveCapture=loadedPrimaryGeneration===primaryLoadGeneration&&!busy&&!error&&!replayBusy&&
+    (!compare||Boolean(comparison.feed||comparison.error));
+  const captureGeneration=useMemo(()=>({}),[captureKey,primaryLoadGeneration,canSaveCapture]);
+  useLayoutEffect(()=>{
+    liveCaptureGeneration.current=canSaveCapture?captureGeneration:null;
+    return ()=>{liveCaptureGeneration.current=null};
+  },[canSaveCapture,captureGeneration]);
+  const currentCapture=canSaveCapture&&captureState?.generation===captureGeneration?captureState:undefined;
+  const chartCapture=currentCapture?.id;
+  async function saveChartEvidence(png:string) {
+    if(liveCaptureGeneration.current!==captureGeneration)return;
+    const sequence=++captureSequence.current;
+    const isCurrent=()=>liveCaptureGeneration.current===captureGeneration&&captureSequence.current===sequence;
+    setCaptureState({generation:captureGeneration,saving:true,id:chartCapture});
+    try {
+      const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff);
+      if(isCurrent())setCaptureState({generation:captureGeneration,saving:false,id:saved.id,status:'Chart capture saved'});
+    } catch(error) {
+      if(isCurrent())setCaptureState({generation:captureGeneration,saving:false,id:chartCapture,
+        status:error instanceof Error?error.message:'Chart capture could not be saved'});
+    }
+  }
   const rules={period:Number(smtWidth),alignment_bars:Number(smtAlignment),
     tolerance_bps:Number(smtTolerance),confirmation_bars:Number(smtConfirmation)};
   const ruleInputs=[
@@ -531,10 +567,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
               item.anchors.every(anchor=>anchor.time+frameMinutes[timeframe]*60<=cutoff))}
             drawMode={interaction.mode!=='navigate'} placementInteraction={interaction}
-            onSaveSnapshot={async png=>{
-              const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff);
-              setChartCapture(saved.id);
-            }}
+            onSaveSnapshot={canSaveCapture?saveChartEvidence:undefined} savingSnapshot={currentCapture?.saving??false} snapshotStatus={currentCapture?.status}
             onSmtSelect={!replayActive&&onSignal?event=>{
               if(event.event_key)void onSignal({event_key:event.event_key,status:event.status}).catch(reason=>setPollError(reason.message));
             }:undefined}

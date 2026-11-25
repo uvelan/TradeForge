@@ -180,9 +180,10 @@
       "status": "partial",
       "depends_on": [],
       "tests": [
-        "frontend/src/ChartLink.test.ts"
+        "frontend/src/ChartLink.test.ts",
+        "frontend/e2e/chart-capture-context.spec.ts"
       ],
-      "remaining_or_boundary": "Cancel stale linked crosshairs. No full panel or 100-navigation-cycle claim."
+      "remaining_or_boundary": "Cancel stale linked crosshairs and prevent chart capture responses from attaching across contexts. No full panel or 100-navigation-cycle claim."
     },
     {
       "id": "TF-I01",

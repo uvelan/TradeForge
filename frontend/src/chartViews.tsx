@@ -1,5 +1,5 @@
 import type {ChartLink} from "./ChartLink";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { visibleAt } from "./ReplayControls";
 import { api } from "./api";
 import { CandleChart, Select } from "./components";
@@ -10,17 +10,19 @@ export const frameMinutes: Record<Timeframe, number> = {M1:1,M3:3,M5:5,M15:15,M3
 
 export function useViewCandles(symbol: string, frame: Timeframe, source: ChartSource, refresh: number, cutoff?: number, follow=false, range?:CandleRange, frozen?:ReplayPane) {
   const key = JSON.stringify([symbol, frame, source, refresh,range]);
-  const [result, setResult] = useState<{key: string; data?: CandleResponse; error?: string}>();
+  // A return to the same key is a new request, not proof that its old pane is current.
+  const generation = useMemo(() => ({}), [key, range, frozen]);
+  const [result, setResult] = useState<{generation: object; data?: CandleResponse; error?: string}>();
   useEffect(() => {
     if (!symbol||frozen) return;
     let active = true;
     api.candles(symbol, frame, source, 600,false,range).then(data => {
-      if (active) setResult({key, data});
+      if (active) setResult({generation, data});
     }).catch(error => {
-      if (active) setResult({key, error: error.message});
+      if (active) setResult({generation, error: error.message});
     });
     return () => { active = false; };
-  }, [key, symbol, frame, source,range,frozen]);
+  }, [generation, symbol, frame, source,range,frozen]);
   const replay = cutoff !== undefined;
   useEffect(() => {
     if (!follow || !symbol || source !== "MT5" || replay) return;
@@ -33,23 +35,23 @@ export function useViewCandles(symbol: string, frame: Timeframe, source: ChartSo
         const update = await api.candles(symbol, frame, source, 10);
         if (!active || !update.candles.length) return;
         setResult(current => {
-          if (current?.key !== key || !current.data) return current;
+          if (current?.generation !== generation || !current.data) return current;
           if (current.data.feed_id !== update.feed_id || current.data.price_basis !== update.price_basis) {
-            return {key, data:update};
+            return {generation, data:update};
           }
           const first = update.candles[0].time;
           if (update.candles.at(-1)!.time < (current.data.candles.at(-1)?.time ?? 0)) return current;
           const candles = [...current.data.candles.filter(bar => bar.time < first), ...update.candles].slice(-600);
-          return {key, data: {...update, candles}};
+          return {generation, data: {...update, candles}};
         });
       } catch {
         // Retain the last confirmed comparison history during a transient disconnection.
       } finally { pending = false; }
     }, 5000);
     return () => { active = false; window.clearInterval(timer); };
-  }, [key, symbol, frame, source, follow, replay]);
+  }, [generation, symbol, frame, source, follow, replay]);
   const current = frozen ? ('error' in frozen ? {error:frozen.error,data:undefined} : {data:frozen,error:undefined}) :
-    result?.key === key ? result : undefined;
+    result?.generation === generation ? result : undefined;
   const candles = current?.data?.candles;
   return {
     candles: cutoff === undefined ? candles : candles && visibleAt(candles, cutoff, frameMinutes[frame] * 60),

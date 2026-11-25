@@ -80,6 +80,20 @@ test("navigates by keyboard and moves recorded signal evidence into a persisted 
   await page.getByRole('button',{name:'Last candle'}).click();
   await expect(page.getByRole('status').filter({hasText:/^Confirmed$/})).toBeVisible();
   await page.getByRole('button',{name:'Exit replay'}).click();
+  const captureStarted=Promise.withResolvers<void>();
+  const settleCapture=Promise.withResolvers<void>();
+  await page.route('**/research/api/chart-snapshots', async route=>{
+    captureStarted.resolve();
+    await settleCapture.promise;
+    await route.fulfill({status:422,json:{detail:'Standalone capture rejection fixture'}});
+  });
+  const saveCapture=page.getByRole('button',{name:'Save chart evidence'});
+  await saveCapture.click();
+  await captureStarted.promise;
+  await expect(saveCapture).toBeDisabled();
+  settleCapture.resolve();
+  await expect(page.getByText('Standalone capture rejection fixture')).toBeVisible();
+  await expect(saveCapture).toBeEnabled();
   await page.setViewportSize({width:390,height:844});
   await expect(page.getByRole('heading',{name:'Evidence Inspector'})).toBeVisible();
   await page.getByRole('button',{name:'Create plan draft'}).click();
