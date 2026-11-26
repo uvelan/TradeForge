@@ -484,6 +484,16 @@ def verify_lane(client, session, view, mode, end, lane, *, basis, canonical_ids=
         "families": counts(("FVG", "OB"), (key[0] for key in expected)),
         "states": counts(ALL_STATES, (event["state"] for chain in chains for event in chain)),
         "latest_states": counts(ALL_STATES, (chain[-1]["state"] for chain in chains)),
+        "revisions_by_direction": {
+            kind: {
+                direction: counts(ALL_STATES, (
+                    event["state"] for chain in chains for event in chain
+                    if event["type"] == kind and event["direction"] == direction
+                ))
+                for direction in ("BULLISH", "BEARISH")
+            }
+            for kind in ("FVG", "OB")
+        },
         "distinct_availability_boundaries": len(boundaries),
         "checked_t_minus_one_and_t": sum(map(len, chains)),
         "direct_rows_checked_at_final_cutoff": receipt_rows,
