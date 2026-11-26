@@ -263,6 +263,11 @@ CREATE TABLE IF NOT EXISTS replay_sessions (
     payload TEXT NOT NULL CHECK(json_valid(payload)),
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS replay_confluence_receipts (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES replay_sessions(id),
+    payload TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS replay_checkpoints (
     session_id TEXT PRIMARY KEY REFERENCES replay_sessions(id),
     position INTEGER NOT NULL,
@@ -360,7 +365,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 '''
 
 IMMUTABLE_TABLES = ['ai_review_integrity','recorded_package_sources','statement_versions','statement_traces','statement_reports','month_replay_manifests','month_replay_steps','decision_review_steps','plan_paper_events','plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
-IMMUTABLE_TABLES += ["learning_attempts", "arrival_sessions", "arrival_observations", "arrival_receipts",
+IMMUTABLE_TABLES += ["replay_confluence_receipts", "learning_attempts", "arrival_sessions", "arrival_observations", "arrival_receipts",
                      "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "historical_bi5_sources", "recorded_strategy_checkpoints", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
 
 

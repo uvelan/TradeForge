@@ -315,7 +315,7 @@ def _coverage(feed, rows, slots, cutoff, step):
             "unrecorded_observations": unknown, "symbol": feed.symbol}
 
 
-def evaluate_strict_smt(request, loader=load_reference, *, coordinator=None):
+def evaluate_strict_smt(request, loader=load_reference, *, coordinator=None, family_sink=None):
     feeds = (request.primary, request.comparison)
     step = FRAME_MIN[request.primary.timeframe]*60
     rule_keys = {"relationship", "period", "alignment_bars", "tolerance_bps", "confirmation_bars", "expiry_bars"}
@@ -475,6 +475,8 @@ def evaluate_strict_smt(request, loader=load_reference, *, coordinator=None):
                            "current_eligible": current and not simulated, "current_reason": reason,
                            "current_state": current_state, "revisions": states})
     for event in sorted(events, key=lambda event: (event["candidate_at"], event["id"])):
+        if family_sink is not None:
+            family_sink(event)
         page.append(event)
     current = [{"id": event["id"], "state": event["current_state"], "current_eligible": event["current_eligible"],
                 "current_simulation_eligible": event["current_simulation_eligible"],
