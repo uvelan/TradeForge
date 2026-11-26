@@ -85,7 +85,12 @@ async function setOppositePeer(page: Page, peer: Symbol) {
   await select(chart, 'View 2 timeframe').selectOption('M5');
 }
 
-async function createSession(page: Page, primary: Symbol, peer: Symbol) {
+async function createSession(page: Page, primary: Symbol, peer: Symbol, timings: Timings) {
+  const requests: string[] = [];
+  const recordRequest = (request: {url(): string}) => {
+    if (new URL(request.url()).pathname.endsWith('/structure-liquidity')) requests.push(request.url());
+  };
+  page.on('request', recordRequest);
   const created = page.waitForResponse(response => response.url().endsWith('/replay/sessions') &&
     response.request().method() === 'POST');
   await button(page, 'Bar replay').click();
@@ -97,8 +102,13 @@ async function createSession(page: Page, primary: Symbol, peer: Symbol) {
   expect(session.views['2']).toMatchObject({partitions: [reference.symbols[peer].partition]});
   expect(session.market.candles.length).toBe((end - start) / frame);
   await expect(panel(page)).toHaveCount(0);
+  expect(requests).toHaveLength(0);
+  const opening = performance.now();
   await page.locator('summary').getByText('Replay structure and liquidity', {exact: true}).click();
   await expect(events(page)).toHaveValue('');
+  timings[primary + ' open inspector and event list'] = performance.now() - opening;
+  expect(requests).toHaveLength(1);
+  page.off('request', recordRequest);
   return session;
 }
 
@@ -242,7 +252,7 @@ test('initial: sees first availability, retains scoped selections and ignores a 
   await button(page, 'Load saved range').click();
   await select(page, 'Chart layout').selectOption('2');
   await setOppositePeer(page, 'GBPUSD');
-  const session = await createSession(page, 'EURUSD', 'GBPUSD');
+  const session = await createSession(page, 'EURUSD', 'GBPUSD', timings);
 
   const bos = await chooseAtFirstAvailability(page, 'primary', 'EURUSD', first('EURUSD', 'BOS'), timings);
   const choch = await chooseAtFirstAvailability(page, 'primary', 'EURUSD', first('EURUSD', 'CHOCH'), timings);
@@ -283,11 +293,16 @@ test('initial: sees first availability, retains scoped selections and ignores a 
     await seek(page, available - frame);
     expect((await rewound).selected).toBeNull();
     await verifyUnavailable(page, id);
+    const earlierPrimary = waitForEvents(page, 'primary', available - frame, eql.receipt.id);
+    await pane(page).selectOption('primary');
+    expect((await earlierPrimary).selected).toEqual(eql.receipt);
     release.resolve();
     await delivered.promise;
     expect((await late).selected).toEqual(mss.receipt);
+    await expect(selectedReceipt(page)).toHaveAttribute('data-event-id', eql.receipt.id);
+    await pane(page).selectOption('2');
     await verifyUnavailable(page, id);
-    timings['GBPUSD MSS delayed upstream response after rewind'] = performance.now() - staleStart;
+    timings['GBPUSD MSS delayed upstream response after rewind and pane change'] = performance.now() - staleStart;
   } finally {
     release.resolve();
     await page.unroute(pattern);
@@ -317,7 +332,7 @@ test('initial: sees first availability, retains scoped selections and ignores a 
   await button(replay(page), 'Exit replay').click();
   await page.locator('.market-watchlist').getByRole('button', {name: /^GBPUSD/}).click();
   await setOppositePeer(page, 'EURUSD');
-  const swapped = await createSession(page, 'GBPUSD', 'EURUSD');
+  const swapped = await createSession(page, 'GBPUSD', 'EURUSD', timings);
   expect(swapped.id).not.toBe(session.id);
   await expect(pane(page)).toHaveValue('primary');
   await expect(events(page)).toHaveValue('');
@@ -357,7 +372,9 @@ test('restart: restores the saved cutoff and two pane selections in fresh servic
   timings['resume and selected GBPUSD receipt'] = performance.now() - began;
   const rhs = await verifyReceipt(page, mss.receipt);
   expect(rhs).toEqual(mss.shown);
-  await panel(page).screenshot({path: join(output, 'structure-liquidity-reopened.png')});
+  await page.setViewportSize({width: 1536, height: 1500});
+  await page.locator('.replay-structure-evidence').screenshot({path: join(output, 'structure-liquidity-reopened.png')});
+  await page.setViewportSize({width: 1536, height: 960});
 
   const primary = waitForEvents(page, 'primary', checkpoint.cutoff, eql.receipt.id);
   const switching = performance.now();
