@@ -250,6 +250,7 @@ test('freezes, advances and rewinds genuine M5 charts and saves a swapped paired
   await choose(other,'View 2 timeframe').selectOption('M5');
   await other.getByText('View 2 indicators',{exact:true}).click();
   await enableIndicators(other);
+  await other.getByText('View 2 indicators',{exact:true}).click();
   await page.getByText('Chart synchronization',{exact:true}).click();
   await page.getByRole('checkbox',{name:'Crosshair',exact:true}).check();
   const separate=await startReplay(page);

@@ -176,6 +176,7 @@
 .chart-legend-row strong { color: #58dec0; }
 .chart-legend-row.compared strong { color: #9bbaff; }
 .chart-legend-row b { font-weight: 500; color: var(--workspace-muted); }
+.multi-chart .chart-data-legend { top: 44px; left: 8px; max-width: calc(100% - 16px); }
 @media (max-width: 720px) {
   .chart-data-legend { top: 44px; left: 8px; max-width: calc(100% - 16px); }
 }
