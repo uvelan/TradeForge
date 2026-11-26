@@ -24,17 +24,45 @@ MSS_RULE = {"parent": "CHOCH", "measurement": "DIRECTIONAL_CLOSE_MINUS_OPEN",
             "min_displacement": float(MIN_DISPLACEMENT), "unit": "PRICE_UNITS"}
 
 
-def replay_events(lane, rows, cutoff, event_id):
+def replay_provenance(lane):
     # Use the same producer identity as the strict chart indicator on this frozen
     # lane. Its scope excludes retrieval, partition list and moving replay cutoff.
     source = {key: lane.get(key) for key in ("source", "symbol", "timeframe", "dataset_id", "feed_id", "price_basis")}
-    provenance = {**source, "partitions": lane["partitions"], "context_authority": "CLIENT_SUPPLIED_UNVERIFIED",
+    return {**source, "partitions": lane["partitions"], "context_authority": "CLIENT_SUPPLIED_UNVERIFIED",
                   "timing_policy": STRICT, "timing_policy_version": 3, "availability_mode": RECORDED_MODE,
                   "availability_mode_version": MODE_VERSIONS[RECORDED_MODE], "schedule_completeness": "NOT_ESTABLISHED"}
+
+
+def processed_rows(rows):
+    # Both producers consume closed candles in arrival order and ignore older bars
+    # arriving behind the chronological frontier.
+    frontier = -1
+    for bar, available in sorted(rows, key=lambda row: (row[1], row[0].time)):
+        if bar.time > frontier:
+            yield bar, available
+            frontier = bar.time
+
+
+def mark_pivot(pivot, processed, positions, mark):
+    anchor = positions[pivot["pivot_time"]]
+    for index in range(anchor - STRUCTURE.left, anchor + STRUCTURE.right + 1):
+        role = "PIVOT_LEFT" if index < anchor else "PIVOT_RIGHT" if index > anchor else "PIVOT_ANCHOR"
+        mark(processed[index][0].time, role, pivot["id"])
+    mark(pivot["confirmation_bar_time"], "PIVOT_CONFIRMATION", pivot["id"])
+
+
+def proof_prefix(children, observation_time, available_at, witnesses):
+    return [{**row, "roles": witnesses.get(row["time"], [])} for row in children
+            if row["time"] <= observation_time and row["available_at"] <= available_at]
+
+
+def replay_events(lane, rows, cutoff, event_id):
+    provenance = replay_provenance(lane)
     pivots = {}
     candles = {bar.time: bar for bar, _ in rows}
     events = []
-    positions = {bar.time: index for index, (bar, _) in enumerate(rows)}
+    processed = list(processed_rows(rows))
+    positions = {bar.time: index for index, (bar, _) in enumerate(processed)}
     witnesses = {}
     candidates = {}
     activation = {}
@@ -59,12 +87,7 @@ def replay_events(lane, rows, cutoff, event_id):
         if prior:
             mark(prior[0], "LEVEL_REVISION", prior[1])
         for producer in pivot_ids:
-            pivot = pivots[producer]
-            anchor = positions[pivot["pivot_time"]]
-            for index in range(anchor - STRUCTURE.left, anchor + STRUCTURE.right + 1):
-                role = "PIVOT_LEFT" if index < anchor else "PIVOT_RIGHT" if index > anchor else "PIVOT_ANCHOR"
-                mark(rows[index][0].time, role, producer)
-            mark(pivot["confirmation_bar_time"], "PIVOT_CONFIRMATION", producer)
+            mark_pivot(pivots[producer], processed, positions, mark)
 
     def publish_structure(kind, event):
         if kind == "pivots":
@@ -123,13 +146,13 @@ def replay_events(lane, rows, cutoff, event_id):
     return sorted(events, key=lambda e: (e["available_at"], e["observation_time"], e["type"], e["id"])), witnesses
 
 
-def inspect_structure_liquidity(session, view, cutoff, event_id=None, before=None):
+def verified_replay_rows(session, view, cutoff):
     primary = session["market"]
     lane = primary if view == "primary" else session["views"].get(view)
     if (not lane or lane.get("error") or lane.get("source") != "DUKASCOPY_SAVED" or lane.get("timeframe") != "M5"
             or lane.get("symbol") not in {"EURUSD", "GBPUSD"} or lane.get("price_basis") != "BID"
             or not lane.get("coverage") or not primary.get("coverage") or not primary.get("candles")):
-        raise HTTPException(422, "Structure inspection requires a saved Dukascopy EURUSD or GBPUSD M5 BID archive range")
+        raise HTTPException(422, "Inspection requires a saved Dukascopy EURUSD or GBPUSD M5 BID archive range")
     horizon = max(primary["coverage"]["end"], replay_availability(primary["candles"][-1], FRAME_MIN[primary["timeframe"]]*60))
     if not capture_start(primary) <= cutoff <= horizon:
         raise HTTPException(422, "Requested cutoff outside the captured replay session clock")
@@ -148,13 +171,17 @@ def inspect_structure_liquidity(session, view, cutoff, event_id=None, before=Non
     # receipt retains the exact input prefix of the stateful canonical producer.
     children = verified_children(lane, [(Bar.model_validate(bar.model_dump()), available) for bar, available in rows],
                                  include_availability_basis=True)
+    return lane, rows, children
+
+
+def inspect_structure_liquidity(session, view, cutoff, event_id=None, before=None):
+    lane, rows, children = verified_replay_rows(session, view, cutoff)
     events, witnesses = replay_events(lane, rows, cutoff, event_id)
     end = len(events) if before is None else min(before, len(events))
     start = max(end - PAGE_SIZE, 0)
     selected = next((e for e in events if e["id"] == event_id), None)
     if selected is not None:
-        selected = {**selected, "evidence": [{**row, "roles": witnesses.get(row["time"], [])} for row in children
-                                             if row["time"] <= selected["observation_time"]]}
+        selected = {**selected, "evidence": proof_prefix(children, selected["observation_time"], selected["available_at"], witnesses)}
     return {**{key: lane[key] for key in ("symbol", "source", "feed_id", "price_basis", "timeframe")},
             "session_id": session["id"], "view": view, "cutoff": cutoff, "rule_version": RULE_VERSION,
             "rules": {"structure": STRUCTURE.identity_parameters(), "liquidity": LIQUIDITY.identity(), "mss": MSS_RULE},

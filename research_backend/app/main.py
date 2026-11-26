@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from datetime import datetime,timedelta,timezone
 from decimal import Decimal
+from typing import Literal
 from hashlib import sha256
 import asyncio
 import json
@@ -44,6 +45,7 @@ from .indicator_routes import router as indicator_router, run_smt_monitor, signa
 from .indicator_coverage import replay_availability
 from .replay_hour import inspect_hour
 from .replay_structure import inspect_structure_liquidity
+from .replay_zones import inspect_zones
 from .saved_history import chart_range, tick_partitions, read_tick_partitions, tick_source_manifests
 
 
@@ -644,6 +646,15 @@ def replay_structure_liquidity(session_id: str, cutoff: int = Query(ge=0),
                                event_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
                                before: int | None = Query(default=None, ge=0)):
     return inspect_structure_liquidity(replay_session(session_id), view, cutoff, event_id, before)
+
+
+@app.get('/api/replay/sessions/{session_id}/zones')
+def replay_zones(session_id: str, cutoff: int = Query(ge=0),
+                 view: str = Query(default="primary", pattern=r"^(primary|comparison|[234])$"),
+                 mitigation: Literal["wick", "close"] = "wick",
+                 zone_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+                 before: int | None = Query(default=None, ge=0)):
+    return inspect_zones(replay_session(session_id), view, cutoff, mitigation, zone_id, before)
 
 
 @app.post('/api/replay/sessions/{session_id}/checkpoint')

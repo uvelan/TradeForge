@@ -237,11 +237,14 @@ class OrderBlockStream:
                 else:
                     heappush(heap, item)
 
+    def qualifies_structure(self, event):
+        return strategy_eligible(event, self.timing_cutoff, registry=self.registry,
+                                 purpose=getattr(self.registry, "purpose", RECORDED_MODE))
+
     def form(self, event, bar, available, index):
         if event["status"] != "confirmed" or event["type"] not in {"BOS", "CHOCH"}:
             return
-        if self.timing_cutoff is not None and (not strategy_eligible(
-                event, self.timing_cutoff, registry=self.registry,purpose=getattr(self.registry,"purpose",RECORDED_MODE)) or
+        if self.timing_cutoff is not None and (not self.qualifies_structure(event) or
                 self.minimum_displacement and bar.time<event["level_available_at"]):
             self.rejections["INELIGIBLE_STRUCTURAL_DEPENDENCY"] += 1
             return
