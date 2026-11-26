@@ -1,7 +1,8 @@
 import {useEffect, useState} from 'react';
 import {api} from './api';
 import type {SignalRecord} from './SignalExplorer';
-import type {Timeframe} from './types';
+import {useWorkspacePreference} from './useWorkspacePreference';
+import type {Candle, Timeframe} from './types';
 
 type Feed = SignalRecord['provenance']['primary'];
 type Receipt = SignalRecord & {strategy_revision?: {id:string; available_at:number}};
@@ -34,7 +35,7 @@ export function FrozenSmtReceipt(props:Props) {
 }
 
 function FamilyPicker({cutoff,timeframe,primary,comparison}:Props) {
-  const [preferred,setPreferred]=useState('');
+  const [preferred,setPreferred]=useWorkspacePreference<string>('recorded-smt-family','');
   const [page,setPage]=useState({cutoff,cursor:''});
   const [response,setResponse]=useState<{url:string; data?:Page; error?:string}>();
   const params=new URLSearchParams({as_of:String(cutoff),timeframe,instrument:primary.symbol,
@@ -64,7 +65,7 @@ function FamilyPicker({cutoff,timeframe,primary,comparison}:Props) {
       <label>Recorded SMT family <select value={selected.event_key} onChange={e=>setPreferred(e.target.value)}>
         {matches.map(e=><option key={e.event_key} value={e.event_key}>{e.direction} · {utc(e.primary.current.time)} · {e.event_key.slice(0,12)}</option>)}
       </select></label>
-      <Revision receipt={selected} chartPrimary={primary} paired={Boolean(comparison)}/>
+      <Revision key={selected.event_key+selected.status} receipt={selected} chartPrimary={primary} paired={Boolean(comparison)}/>
     </> : <p>No recorded SMT revision on this page matches the frozen archive pins.</p>}
     {params.has('cursor') && <button onClick={()=>setPage({cutoff,cursor:''})}>First page</button>}
     {next && <button onClick={()=>setPage({cutoff,cursor:next})}>Older families</button>}
@@ -72,6 +73,18 @@ function FamilyPicker({cutoff,timeframe,primary,comparison}:Props) {
 }
 
 function Revision({receipt,chartPrimary,paired}:{receipt:Receipt;chartPrimary:Feed;paired:boolean}) {
+  const [inspect,setInspect]=useState(false);
+  const [bars,setBars]=useState<{primary:Candle[];comparison:Candle[]}>();
+  const [error,setError]=useState('');
+  useEffect(()=>{
+    if(!inspect) return;
+    let current=true;
+    api.get<{primary:Candle[];comparison:Candle[]}>(
+      '/indicators/signals/'+receipt.event_key+'/candles?status='+receipt.status)
+      .then(data=>{if(current)setBars(data);})
+      .catch(reason=>{if(current)setError(String(reason));});
+    return ()=>{current=false;};
+  },[inspect,receipt.event_key,receipt.status]);
   const first=identity(receipt.provenance.primary)===identity(chartPrimary)?'primary':'comparison';
   const roles=[first, first==='primary'?'comparison':'primary'] as const;
   const revision=receipt.status==='SMT_SOURCE_CORRECTED'?undefined:receipt.strategy_revision;
@@ -79,12 +92,18 @@ function Revision({receipt,chartPrimary,paired}:{receipt:Receipt;chartPrimary:Fe
   return <div data-event-key={receipt.event_key} data-status={receipt.status} data-revision-id={revision?.id}>
     <p><strong>{receipt.status}</strong> · {receipt.direction} · {receipt.source_correction?'Correction observed':'Modeled availability'} {utc(transition.time)}</p>
     {revision && <p>Revision <code>{revision.id}</code></p>}
+    {receipt.status!=='SMT_SOURCE_CORRECTED' && <button type="button" className="small-tool"
+      onClick={()=>setInspect(true)} disabled={inspect}>Inspect transition candles</button>}
+    {inspect && !bars && <p role={error?'alert':'status'}>{error || 'Loading pinned candles…'}</p>}
     {roles.map((role,i)=>{
       const lane=receipt.provenance[role];
       const pivots=receipt[role];
+      const last=bars?.[role].at(-1);
       return <details key={role}><summary>{lane.symbol} · {i===0?'chart primary':paired?'chart comparison':'watch peer'} · {lane.price_basis}</summary>
         <p>Previous pivot {utc(pivots.previous.time)} · {pivots.previous.price}</p>
         <p>Current pivot {utc(pivots.current.time)} · {pivots.current.price}</p>
+        {last && <p>Last supporting candle opened {utc(last.time)} · O {last.open} H {last.high} L {last.low} C {last.close}</p>}
+        {bars && !last && <p>No supporting candle returned for this lane.</p>}
         <p>{lane.feed_id} · {receipt.provenance.timeframe}</p>
         {pins(lane).map(p=><p key={p.id}>Dataset <code>{p.id}</code> · SHA-256 <code>{p.sha256}</code></p>)}
       </details>;
