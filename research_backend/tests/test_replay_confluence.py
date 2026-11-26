@@ -65,7 +65,7 @@ def test_exact_overlap_direction_proofs_and_single_read_per_partition(client, mo
     assert smt["state"] == "SMT_CONFIRMED" and smt["candidate_at"] == at(9)
     assert crt["revision"] == smt["revision"] == 2
     assert len([c for c in crt["evidence"] if c["roles"][0]["role"] == "REFERENCE_CHILD"]) == 12
-    expected = {("EURUSD",stamp):row for row in left for stamp in [row["time"]]}
+    expected = {("EURUSD",row["time"]):row for row in left}
     expected.update({("GBPUSD",row["time"]):row for row in right})
     deps = {r["id"]:r["available_at"] for r in smt["revisions"]}
     for c in smt["evidence"]:
@@ -116,8 +116,12 @@ def test_candidate_delayed_peer_and_recovery_both_clocks(client):
     assert blocked["status"] == "INCOMPLETE"
     assert blocked["components"]["smt"]["condition"] == "INCOMPLETE"
     assert blocked["components"]["smt"]["coverage_reason"] == "MISSING_OPEN_CANDLES"
+    expected_issue = dict(symbol="GBPUSD", reason="MISSING_OPEN_CANDLES", missing_intervals=[dict(start=at(9),end=at(10))])
+    assert blocked["components"]["smt"]["coverage_issues"] == [expected_issue]
+    assert receipt(client,key,at(10))["components"]["smt"]["coverage_issues"] == [expected_issue]
     smt = receipt(client,key,at(10)+17)["components"]["smt"]
     assert (smt["state"],smt["available_at"],smt["family_id"]) == ("SMT_CONFIRMED",at(10)+17,candidate["family_id"])
+    assert not smt["coverage_issues"]
     proof = next(c for c in smt["evidence"] if (c["symbol"], c["time"]) == ("GBPUSD",at(9)))
     assert (proof["availability_basis"],proof["available_at"]) == ("ARCHIVE_SUPPLIED",at(10)+17)
     assert receipt(client,key,at(9))["components"]["smt"] == candidate
@@ -165,3 +169,67 @@ def test_pinned_receipt_survives_newer_evaluation_and_restart_but_rejects_corrup
     (storage.MARKET_DIR/pins[1]["relative_path"]).write_bytes(b"controlled corruption")
     assert request(client,key,at(13),receipt_id=pin).status_code == 409
 
+
+
+def test_simultaneous_opposite_smt_families_use_stable_smallest_id(client):
+    left = [bar(i,10,11,9) for i in range(13)]
+    right = [bar(i,20,21,19) for i in range(13)]
+    left[2], left[6] = bar(2,10,15,5), bar(6,10,16,4)
+    right[2], right[6] = bar(2,20,30,10), bar(6,20,29,11)
+    key,_ = capture(client,left,right)
+    result = receipt(client,key,at(10))
+    selected = result["components"]["smt"]
+    feeds = [dict(**src, calendar={"kind":"forex_weekly"}) for src in selected["sources"]]
+    producer = client.post("/api/indicators/smt/strict",json={
+        **result["rules"]["smt"], "primary":feeds[0], "comparison":feeds[1], "cutoff":at(10),
+        "availability_mode":"HISTORICAL_SIMULATION"})
+    assert producer.status_code == 200, producer.text
+    tied = producer.json()["events"]
+    assert len(tied) == 2 and {e["candidate_at"] for e in tied} == {at(9)}
+    assert {e["direction"] for e in tied} == {"bullish","bearish"}
+    chosen = min(tied, key=lambda e:e["id"])
+    assert (selected["family_id"],selected["revision_id"]) == (chosen["id"],chosen["revisions"][-1]["id"])
+
+
+@pytest.mark.parametrize("delay",[0,10])
+def test_shorter_peer_span_expires_immediately_after_its_capture_clock(client,delay):
+    publish(candles(LEFT)+[bar(i,16,18,15) for i in range(12,15)])
+    right = candles(RIGHT)+[bar(12,24,arrival=at(13)+delay)]
+    publish(right, "GBPUSD")
+    key = session(client,start=None,end=None,views=[dict(view="comparison",symbol="GBPUSD",timeframe="M5")])
+    exact = receipt(client,key,at(13)+delay)
+    assert exact["status"] == "ALIGNED" and not exact["components"]["smt"]["coverage_issues"]
+    beyond = receipt(client,key,at(13)+delay+1)
+    assert beyond["status"] == "INCOMPLETE" and beyond["components"]["smt"]["coverage_issues"] == [
+        dict(symbol="GBPUSD", reason="OUTSIDE_CAPTURED_PANE_WINDOW", missing_intervals=[])]
+    if delay:
+        assert receipt(client,key,at(13)+delay-1)["reason"] == "MISSING_OPEN_CANDLES"
+
+
+def test_missing_or_gapped_sources_preserve_both_diagnostics(client):
+    left,right = candles(LEFT),candles(RIGHT)
+    del left[3:5]
+    del right[6:8]
+    key,_ = capture(client,left,right)
+    at_end = receipt(client,key,at(10))
+    crt,smt = (at_end["components"][name] for name in ("crt","smt"))
+    assert crt["coverage_issues"] == [dict(symbol="EURUSD", reason="MISSING_OPEN_CANDLES",
+                                            missing_intervals=[dict(start=at(3),end=at(5))])]
+    assert smt["coverage_issues"] == [*crt["coverage_issues"],dict(symbol="GBPUSD", reason="MISSING_OPEN_CANDLES",
+                                                                   missing_intervals=[dict(start=at(6),end=at(8))])]
+    only = session(client,end=at(10))
+    peer_issue = receipt(client,only,at(2))["components"]["smt"]["coverage_issues"]
+    assert peer_issue == [dict(symbol="GBPUSD",reason="MISSING_REQUIRED_PANE",missing_intervals=[])]
+
+
+def test_low_reclaim_and_bullish_smt_agree(client):
+    def reflect(row):
+        return {**row, "open":100-row["open"],"close":100-row["close"],
+                "high":100-row["low"],"low":100-row["high"]}
+
+    left = [reflect(c) for c in candles(LEFT)+[bar(12,16,18,15)]]
+    right = [reflect(c) for c in candles(RIGHT)+[bar(12,24)]]
+    key,_ = capture(client,left,right)
+    result = receipt(client,key,at(13))
+    assert (result["status"],result["direction"],result["components"]["crt"]["state"]) == (
+        "ALIGNED","BULLISH","LOW_SWEPT_RECLAIMED")

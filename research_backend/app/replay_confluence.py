@@ -34,6 +34,16 @@ def component(sources, reason):
                 sources=sources, evidence=[])
 
 
+def coverage_issue(symbol, reason, missing=()):
+    intervals = []
+    for stamp in sorted(missing):
+        if intervals and stamp == intervals[-1]["end"]:
+            intervals[-1]["end"] += STEP
+        else:
+            intervals.append(dict(start=stamp, end=stamp+STEP))
+    return dict(symbol=symbol, reason=reason, missing_intervals=intervals)
+
+
 def read_panes(session, cutoff):
     primary = session["market"]
     if (primary.get("source") != "DUKASCOPY_SAVED" or not primary.get("coverage") or
@@ -50,38 +60,42 @@ def read_panes(session, cutoff):
                       and lane.get("source") == "DUKASCOPY_SAVED" and lane.get("timeframe") == "M5"
                       and lane.get("price_basis") == "BID" and lane.get("coverage") and not lane.get("error")]
         if not candidates:
-            issues[symbol] = "MISSING_REQUIRED_PANE"
+            issues[symbol] = coverage_issue(symbol, "MISSING_REQUIRED_PANE")
             continue
         view, lane = candidates[0]
         if any(other != lane for _, other in candidates[1:]):
-            issues[symbol] = "AMBIGUOUS_REQUIRED_PANE"
+            issues[symbol] = coverage_issue(symbol, "AMBIGUOUS_REQUIRED_PANE")
             continue
         _, rows, children = verified_replay_rows(session, view, cutoff)
         start, end = capture_start(lane), lane["coverage"]["end"]
         meta = dict(**source(lane), partitions=lane["partitions"], start=start, end=end)
+        # Older captures can omit the materialized nominal arrival. The
+        # archive comparison above established the same basis for each row.
+        rows = [(bar if bar.available_at == available else bar.model_copy(update={"available_at":available}), available)
+                for bar, available in rows]
         panes[symbol] = dict(lane=lane, rows=rows, children=children, source=meta)
         # Checking the closed prefix also catches a missing trailing child that has
         # no successor yet. Never use the capture's eventual gap list at an earlier clock.
         if end-start > 10_000*STEP:
-            issues[symbol] = "REPLAY_WINDOW_TOO_LARGE"
+            issues[symbol] = coverage_issue(symbol, "REPLAY_WINDOW_TOO_LARGE")
             continue
         # A delayed final captured candle extends only its own knowledge clock.
         # No later nominal close beyond the pane can be treated as covered.
         final_arrival = replay_availability(lane["candles"][-1], STEP) if lane["candles"] else end
         if cutoff < start or cutoff > max(end, final_arrival) or cutoff//STEP*STEP > end:
-            issues[symbol] = "OUTSIDE_CAPTURED_PANE_WINDOW"
+            issues[symbol] = coverage_issue(symbol, "OUTSIDE_CAPTURED_PANE_WINDOW")
             continue
         closed_end = min(end, cutoff//STEP*STEP)
         bounds = open_intervals(start, closed_end, SCHEDULE)
         if bounds is None:
-            issues[symbol] = "UNKNOWN_SCHEDULE"
+            issues[symbol] = coverage_issue(symbol, "UNKNOWN_SCHEDULE")
             continue
         expected = {stamp for left, right in bounds for stamp in range(left, right, STEP)}
         observed = {bar.time for bar, _ in rows}
         if observed - expected:
-            issues[symbol] = "SCHEDULE_MISMATCH"
+            issues[symbol] = coverage_issue(symbol, "SCHEDULE_MISMATCH")
         elif expected - observed:
-            issues[symbol] = "MISSING_OPEN_CANDLES"
+            issues[symbol] = coverage_issue(symbol, "MISSING_OPEN_CANDLES", expected - observed)
     return panes, issues
 
 
@@ -149,6 +163,9 @@ def smt_evidence(family, panes, cutoff):
                 if stamp < monitor_end and stamp+STEP > first["available_at"]:
                     roles.append(dict(role="AS_OF_LAGGARD_SURVEILLANCE", event_id=family["id"], cutoff=cutoff))
             for rev in chain[1:]:
+                if (rev["state"] == "SMT_CONFIRMED" and side == laggard and
+                        stamp < first["available_at"] < stamp+STEP):
+                    mark("CONFIRMATION_STRADDLING_CHILD", rev["id"])
                 if (rev["state"] == "SMT_CONFIRMED" or side == laggard) and (
                         rev["timing"]["observation_start"] <= stamp < rev["confirmation_time"]):
                     mark(rev["state"], rev["id"])
@@ -206,10 +223,13 @@ def smt_component(panes, cutoff):
 
 
 def joined_state(crt, smt):
+    for entry in (crt, smt):
+        if entry.get("coverage_reason"):
+            return "INCOMPLETE", entry["coverage_reason"], None
     for name, entry in (("CRT", crt), ("SMT", smt)):
         if entry["condition"] == "INCOMPLETE":
-            reason = entry.get("coverage_reason") or entry["reason"]
-            if not entry.get("coverage_reason") and entry["family_id"]:
+            reason = entry["reason"]
+            if entry["family_id"]:
                 reason = name+("_CANDIDATE" if entry["state"].endswith("_CANDIDATE") else "_UNCERTAIN")
             return "INCOMPLETE", reason, None
     if crt["condition"] == "NOT_SATISFIED":
@@ -235,13 +255,12 @@ def inspect_confluence(session, cutoff, profile=PROFILE, receipt_id=None):
     if saved is not None:
         return {**saved, "receipt_id":receipt_id}
 
-    crt = crt_component(panes["EURUSD"], cutoff) if "EURUSD" in panes else component([], issues["EURUSD"])
+    crt = crt_component(panes["EURUSD"], cutoff) if "EURUSD" in panes else component([], issues["EURUSD"]["reason"])
     smt = smt_component(panes, cutoff)
     for entry, symbols in ((crt, SYMBOLS[:1]), (smt, SYMBOLS)):
-        for symbol in symbols:
-            if symbol in issues:
-                entry.update(condition="INCOMPLETE", coverage_reason=issues[symbol])
-                break
+        entry["coverage_issues"] = [issues[symbol] for symbol in symbols if symbol in issues]
+        if entry["coverage_issues"]:
+            entry.update(condition="INCOMPLETE", coverage_reason=entry["coverage_issues"][0]["reason"])
     status, reason, direction = joined_state(crt, smt)
     first_available = None
     if status != "INCOMPLETE":
@@ -270,5 +289,3 @@ def pin_confluence(session, cutoff, profile, expected_id):
         if stored["payload"] != encoded:
             raise HTTPException(409, "Pinned receipt payload conflicts with its checksum")
     return {**receipt, "receipt_id":key}
-
-
