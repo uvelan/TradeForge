@@ -3,7 +3,7 @@ import {expect, test, type Locator, type Page} from '@playwright/test';
 import type {ReplaySourceCandle} from '../src/ReplayEvidenceSources';
 import type {ReplayZoneMitigation, ReplayZonePage, ReplayZoneReceipt, ReplayZoneRevision} from '../src/replayZoneTypes';
 import {
-  baseline, button, configurePair, end, frame, iso, monitorRequests, openTerminal, receipt, reference, reopen,
+  artifact, baseline, button, configurePair, end, frame, iso, monitorRequests, openTerminal, receipt, reference, reopen,
   replay, seek, select, setOppositePeer, start, startSession, stored, utc, type View,
 } from './t10-zones-support';
 
@@ -163,7 +163,7 @@ async function verifySelected(page: Page, value: ReplayZoneReceipt, symbol: Symb
   expect(qualified.broken_pivot_id).toBe(qualified.pivot.id);
   verifyPinnedRows(qualified.evidence, symbol, qualified.available_at);
   const proof = article.locator('details').filter({hasText: /Qualifying structure event/});
-  await proof.locator('summary').click();
+  await proof.locator(':scope > summary').click();
   const pivot = qualified.pivot;
   await readFields(proof.locator('dl[aria-label="Qualifying structure receipt"]'), {
     'Event': expectedBreak.type, 'Direction': latest.direction,
@@ -179,7 +179,7 @@ async function verifySelected(page: Page, value: ReplayZoneReceipt, symbol: Symb
   const witness = proof.locator('details').filter({hasText: /qualifying structure source candles/});
   await witness.locator('summary').click();
   await verifyTable(witness, 'Qualifying structure source candles', qualified.evidence, symbol);
-  await proof.locator('summary').click();
+  await proof.locator(':scope > summary').click();
   await expect(article.locator('tbody tr')).toHaveCount(0);
 }
 
@@ -386,6 +386,13 @@ test('restarts the normal Market Terminal with the saved pane, mode, and two ter
     await expect(pane(page)).toHaveValue('2');
     await expect(mitigation(page)).toHaveValue('wick');
     await verifySelected(page, ob.terminal, 'GBPUSD', 'wick', chain('GBPUSD', 'wick', 'OB'), cutoff, true);
+    const article = selected(page);
+    const proof = article.locator('details').filter({hasText: /Qualifying structure event/});
+    await proof.locator(':scope > summary').click();
+    await expect(proof.locator('dl[aria-label="Qualifying structure receipt"]')).toBeVisible();
+    await expect(article.locator('tbody tr')).toHaveCount(0);
+    await page.setViewportSize({width: 1536, height: 1280});
+    await article.screenshot({path: artifact('zones-reopened-order-block.png'), animations: 'disabled'});
 
     const primary = waitForZone(page, cutoff, 'primary', 'wick', fvg.terminal.zone_id);
     await pane(page).selectOption('primary');

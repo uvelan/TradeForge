@@ -1,3 +1,4 @@
+import {spawnSync} from 'node:child_process';
 import {readFileSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {expect, type Locator, type Page} from '@playwright/test';
@@ -17,8 +18,11 @@ export const frame = 300;
 export const baseline = process.env.TRADEFORGE_T10_ZONES_BASELINE === '1';
 export const reopen = process.env.TRADEFORGE_PAIR_REOPEN === '1';
 export const stored = (name: string) => join(process.env.TRADEFORGE_PAIR_STORAGE!, name);
-export const receipt = (name: string, value: unknown) => writeFileSync(
-  join(process.env.TRADEFORGE_T10_CHART_OUTPUT!, name + '.json'), JSON.stringify(value, null, 2) + '\n');
+export const artifact = (name: string) => join(process.env.TRADEFORGE_T10_CHART_OUTPUT!, name);
+export function receipt(name: string, value: object) {
+  const revision = spawnSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'});
+  writeFileSync(artifact(name + '.json'), JSON.stringify({git_revision: revision.stdout?.trim() || null, ...value}, null, 2) + '\n');
+}
 export const iso = (time: number) => new Date(time * 1000).toISOString();
 export const utc = (time: number) => iso(time).replace('T', ' ').replace('.000Z', ' UTC');
 export const select = (scope: Page | Locator, name: string) => scope.getByRole('combobox', {name, exact: true});

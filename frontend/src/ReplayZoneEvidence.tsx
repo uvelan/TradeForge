@@ -73,7 +73,8 @@ function ZoneResults({sessionId, cutoff, lane, mitigation, id, onSelect}: Query 
     request.current = {url, promise};
     promise.then(page => {
       if (page.session_id !== sessionId || page.view !== view || page.symbol !== symbol || page.cutoff !== cutoff ||
-          page.rules.fvg.mitigation !== mitigation || page.rules.ob.mitigation !== mitigation) {
+          page.source !== 'DUKASCOPY_SAVED' || page.price_basis !== 'BID' || page.timeframe !== 'M5' ||
+          page.authority !== 'RESEARCH_ONLY' || page.rules.fvg.mitigation !== mitigation || page.rules.ob.mitigation !== mitigation) {
         throw new Error('Replay zones did not match this pane, cutoff, and mitigation rule.');
       }
       if (current) {

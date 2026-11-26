@@ -26,6 +26,7 @@ const labels = (page: Page, surface: Surface) => {
 };
 const sampleCount = 8;
 const domain = baseline ? 'baseline' : 'candidate';
+const browserState = (surface: Surface) => stored('zone-performance-' + surface.endpoint + '-state.json');
 
 type Samples = Record<string, number[]>;
 type Rows = {collapsed: number; expanded: number; afterClose: number; source: string};
@@ -94,18 +95,20 @@ async function sampleSurface(page: Page, surface: Surface, saved: Saved) {
       hasText: surface === structure ? /calculation context candles/ : /direct source candles/,
     });
     const collapsed = await article.locator('tbody tr').count();
+    const beforeExpansion = requests.length;
     await measure(samples, 'source expansion', async () => {
       await sourceDetails.locator('summary').click();
       await expect(sourceDetails.getByRole('table').locator('tbody tr').first()).toBeVisible();
     });
     const expanded = await article.locator('tbody tr').count();
     await sourceDetails.locator('summary').click();
+    await expect(article.locator('tbody tr')).toHaveCount(collapsed);
     const afterClose = await article.locator('tbody tr').count();
+    expect(requests).toHaveLength(beforeExpansion);
     observations.push({collapsed, expanded, afterClose, source: detail.zone_id ?? detail.id});
     if (!baseline) {
       expect(collapsed).toBe(0);
       expect(expanded).toBeGreaterThan(0);
-      await expect(article.locator('tbody tr')).toHaveCount(0);
     }
 
     const earlier = detail.available_at - frame;
@@ -113,10 +116,17 @@ async function sampleSurface(page: Page, surface: Surface, saved: Saved) {
     const rewound = ready(page, surface, earlier, id);
     await measure(samples, 'rewind', async () => {
       await button(replay(page), 'Seek').click();
-      await rewound;
+      const result = await rewound;
       await expect(replay(page).locator('output')).toContainText(iso(earlier));
-      await expect(panel).toContainText('replay cutoff');
-      if (surface === structure) await expect(article).toHaveCount(0);
+      if (surface === structure) {
+        await expect(panel).toContainText('replay cutoff');
+        await expect(article).toHaveCount(0);
+      } else if (result.selected) {
+        await expect(article).toHaveAttribute('data-revision-id', result.selected.id);
+      } else {
+        await expect(panel.getByRole('status')).toContainText('unavailable at this cutoff');
+        await expect(article).toHaveCount(0);
+      }
     });
     if (iteration < sampleCount - 1) {
       await disclosure.click();
@@ -146,13 +156,16 @@ test('browser timing and row mounts on each evidence surface', async ({page, con
     await labels(page, surface).disclosure.click();
     await expect(labels(page, surface).panel).toHaveCount(0);
   }
-  for (const surface of surfaces) {
-    await labels(page, surface).disclosure.click();
-    await expect(labels(page, surface).article).toBeVisible();
-  }
   await button(replay(page), 'Save replay position').click();
   await expect(replay(page).getByText('Replay position saved', {exact: true})).toBeVisible();
-  await context.storageState({path: stored('zone-performance-state.json')});
+  for (const surface of surfaces) {
+    const {disclosure, article, panel} = labels(page, surface);
+    await disclosure.click();
+    await expect(article).toBeVisible();
+    await context.storageState({path: browserState(surface)});
+    await disclosure.click();
+    await expect(panel).toHaveCount(0);
+  }
   writeFileSync(stored('zone-performance-checkpoint.json'), JSON.stringify(saved));
   receipt('zones-ui-' + domain, {chromium: browser.version(), session_id: saved.id, measurements});
 });
@@ -162,28 +175,28 @@ test('cold browser contexts reopen the saved evidence after service restart', as
   test.setTimeout(240_000);
   const saved: Saved = JSON.parse(readFileSync(stored('zone-performance-checkpoint.json'), 'utf8'));
   const measured = Object.fromEntries(surfaces.map(surface => [surface.endpoint, {} as Samples]));
-  const serviceRestart: Record<string, number> = {};
   for (let iteration = 0; iteration < sampleCount; iteration++) {
-    const context = await browser.newContext({storageState: stored('zone-performance-state.json'), serviceWorkers: 'block'});
-    try {
-      const page = await context.newPage();
-      await openTerminal(page);
-      const began = performance.now();
-      const results = surfaces.map(async surface => {
-        const result = await ready(page, surface, end, saved.selections[surface.endpoint]);
-        expect(result.selected?.zone_id ?? result.selected?.id).toBe(saved.selections[surface.endpoint]);
-        await expect(labels(page, surface).article).toBeVisible();
-        const elapsed = performance.now() - began;
-        if (iteration === 0) serviceRestart[surface.endpoint] = elapsed;
-        (measured[surface.endpoint]['cold browser reopen'] ??= []).push(elapsed);
-      });
-      await select(page, 'Resume saved replay').selectOption(saved.id);
-      await Promise.all(results);
-    } finally {
-      await context.close();
+    for (const surface of surfaces) {
+      const context = await browser.newContext({storageState: browserState(surface), serviceWorkers: 'block'});
+      try {
+        const page = await context.newPage();
+        await openTerminal(page);
+        const response = ready(page, surface, end, saved.selections[surface.endpoint]);
+        await measure(measured[surface.endpoint], 'cold browser reopen', async () => {
+          await select(page, 'Resume saved replay').selectOption(saved.id);
+          const result = await response;
+          expect(result.selected?.zone_id ?? result.selected?.id).toBe(saved.selections[surface.endpoint]);
+          await expect(labels(page, surface).article).toBeVisible();
+        });
+        for (const other of surfaces.filter(choice => choice !== surface)) {
+          await expect(labels(page, other).panel).toHaveCount(0);
+        }
+      } finally {
+        await context.close();
+      }
     }
   }
   receipt('zones-ui-' + domain + '-restart', {chromium: browser.version(), session_id: saved.id,
     timings_ms: Object.fromEntries(Object.entries(measured).map(([surface, samples]) => [surface, stats(samples)])),
-    first_reopen_after_service_restart_ms: serviceRestart});
+    first_reopen_after_service_restart_ms: measured[structure.endpoint]['cold browser reopen'][0]});
 });
