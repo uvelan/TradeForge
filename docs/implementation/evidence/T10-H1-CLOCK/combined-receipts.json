@@ -1,0 +1,20 @@
+{
+  "tested_sha": "4a231d45bb96bb7775dd888d2c211246d6301155",
+  "receipts": {
+    "controlled-browser/delayed-restart": {
+      "sha256": "6808b00c2a4df233ee96c3fd22aa92549bcf74aea9e4716b9f0911398cfda14c",
+      "id": "9752759eae0106e1f731a622304669c1c512d96cb546e9df793ac8cad17a271e",
+      "cutoff": 1794578420,
+      "peer_http": 200
+    },
+    "controlled-browser/missing-restart": {
+      "sha256": "26421d1d58fd8033501b79eabdd0369eb05ebf93d281aea35d843f8d3c988dd3",
+      "id": "c9a2cb22c833a808559160c512d4eb6ca591219a2ae673e46c083d0aec7c0c40",
+      "cutoff": 1794585600
+    },
+    "controlled-api/api": {
+      "sha256": "4caddd7b58f31da18d985b322e7649fefa645bd19cb65fe2c39b0392fb83db69",
+      "passed": true
+    }
+  }
+}

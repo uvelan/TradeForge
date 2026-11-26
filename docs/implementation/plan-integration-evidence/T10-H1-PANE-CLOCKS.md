@@ -24,7 +24,9 @@ The independent API check passed six of seven probes on the starting revision an
 
 [Unmodified archive hashes, child references and four genuine H1 expectations](../evidence/T10-H1/provider-reference.json)
 
-[Before/after API and browser receipts, controlled partition IDs and hashes](../evidence/T10-H1-CLOCK/acceptance.json) · [Restarted peer pane](../evidence/T10-H1-CLOCK/delayed-restart.png) · [Restarted missing-hour inspection](../evidence/T10-H1-CLOCK/missing-restart.png)
+Worker C ran the baseline at `f273342db68aa61a8694d61693d9e1c1afbb5ee0` and the correction at `cda68a43e20ad0329fb97d23fc66107dab18d495`. Its delayed-restart screenshot shows **EURUSD primary at 14:00:20 UTC**, after switching back from the healthy GBPUSD peer. The second screenshot shows the unresolved GBPUSD hour. [Worker API and browser receipts](../evidence/T10-H1-CLOCK/acceptance.json) · [Restarted EURUSD primary](../evidence/T10-H1-CLOCK/delayed-restart.png) · [Restarted GBPUSD missing-hour inspection](../evidence/T10-H1-CLOCK/missing-restart.png)
+
+The integration owner ran the combined revision `4a231d45bb96bb7775dd888d2c211246d6301155` independently. [Combined restart receipt fingerprints](../evidence/T10-H1-CLOCK/combined-receipts.json)
 
 ## Parallel timeline
 
