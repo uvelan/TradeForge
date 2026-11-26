@@ -1,0 +1,113 @@
+{
+  "tested": "9d8653f0ccb9e7b36a01a021b78e0351a29ad312",
+  "starting": "a8c9db640ae2c1845f501ed5e31ac3ef9ae352b9",
+  "platform": "Windows local",
+  "focused": 55,
+  "full_backend_passed": 1166,
+  "full_backend_skipped": 3,
+  "additional_pinned_numerical_passed": 2,
+  "platform_skip": "POSIX FIFO",
+  "frontend_unit": 13,
+  "production_build": "PASS",
+  "standard_chromium_passed": 88,
+  "crt_browser_phases_passed": 8,
+  "browser_retries": 0,
+  "runs": [
+    {
+      "id": "legacy",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_zone_compatibility --suite crt --source-storage storage --output storage/t10-crt-integration/legacy-combined.json",
+      "started_utc": "2026-11-26T11:01:45.904Z",
+      "finished_utc": "2026-11-26T11:01:53.762Z",
+      "exit_code": 0,
+      "elapsed_seconds": 4.61268
+    },
+    {
+      "id": "focused",
+      "command": ".venv/Scripts/python.exe -m pytest -q research_backend/tests/test_replay_crt.py research_backend/tests/test_crt.py research_backend/tests/test_replay_zone_continuity.py",
+      "started_utc": "2026-11-26T11:01:45.904Z",
+      "finished_utc": "2026-11-26T11:02:12.012Z",
+      "exit_code": 0,
+      "elapsed_seconds": 23.4671919
+    },
+    {
+      "id": "oracle",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_crt --source-storage storage --output docs/implementation/evidence/T10-CRT-REPLAY/oracle.json",
+      "started_utc": "2026-11-26T11:01:45.903Z",
+      "finished_utc": "2026-11-26T11:03:19.978Z",
+      "exit_code": 0,
+      "elapsed_seconds": 90.2052633
+    },
+    {
+      "id": "sparse",
+      "command": ".venv/Scripts/python.exe -m scripts.benchmark_t10_zone_gaps --output docs/implementation/evidence/T10-CRT-REPLAY/sparse-final.json",
+      "started_utc": "2026-11-26T11:03:29.237Z",
+      "finished_utc": "2026-11-26T11:03:36.388Z",
+      "exit_code": 0,
+      "elapsed_seconds": 4.6678578
+    },
+    {
+      "id": "benchmark",
+      "command": ".venv/Scripts/python.exe -m scripts.benchmark_t10_crt --source-storage storage --baseline-repo K:/Projects/TradeForge-t10-crt-base --output docs/implementation/evidence/T10-CRT-REPLAY/benchmark.json",
+      "started_utc": "2026-11-26T11:03:36.389Z",
+      "finished_utc": "2026-11-26T11:04:51.215Z",
+      "exit_code": 0,
+      "elapsed_seconds": 72.7720971
+    },
+    {
+      "id": "browser",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_crt_browser --source-storage storage --output storage/t10-crt-integration/browser --api-port 8732 --ui-port 4732",
+      "started_utc": "2026-11-26T11:04:57.834Z",
+      "finished_utc": "2026-11-26T11:06:48.356Z",
+      "exit_code": 0,
+      "elapsed_seconds": 108.122167
+    },
+    {
+      "id": "backend",
+      "command": ".venv/Scripts/python.exe -m pytest -q",
+      "started_utc": "2026-11-26T11:06:55.767Z",
+      "finished_utc": "2026-11-26T11:18:46.231Z",
+      "exit_code": 0,
+      "elapsed_seconds": 708.154391
+    },
+    {
+      "id": "frontend-unit",
+      "command": "npm --prefix frontend test",
+      "started_utc": "2026-11-26T11:06:55.768Z",
+      "finished_utc": "2026-11-26T11:07:01.793Z",
+      "exit_code": 0,
+      "elapsed_seconds": 2.0374649
+    },
+    {
+      "id": "frontend-build",
+      "command": "npm --prefix frontend run build",
+      "started_utc": "2026-11-26T11:06:55.768Z",
+      "finished_utc": "2026-11-26T11:07:17.591Z",
+      "exit_code": 0,
+      "elapsed_seconds": 18.6632663
+    },
+    {
+      "id": "chromium",
+      "command": "$env:TRADEFORGE_E2E_API_PORT='8730'\n$env:TRADEFORGE_E2E_UI_PORT='4730'\nnpm --prefix frontend run e2e -- --retries=0",
+      "started_utc": "2026-11-26T11:06:55.769Z",
+      "finished_utc": "2026-11-26T11:14:52.375Z",
+      "exit_code": 0,
+      "elapsed_seconds": 473.4342047
+    },
+    {
+      "id": "benchmark-repeat",
+      "command": ".venv/Scripts/python.exe -m scripts.benchmark_t10_crt --source-storage storage --baseline-repo K:/Projects/TradeForge-t10-crt-base --output docs/implementation/evidence/T10-CRT-REPLAY/benchmark-idle.json",
+      "started_utc": "2026-11-26T11:18:58.418Z",
+      "finished_utc": "2026-11-26T11:19:59.841Z",
+      "exit_code": 0,
+      "elapsed_seconds": 59.1374358
+    },
+    {
+      "id": "recorded-numerical",
+      "command": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\n.venv/Scripts/python.exe -m pytest -q research_backend/tests/test_t10_numerical_acceptance.py",
+      "started_utc": "2026-11-26T11:20:05.126Z",
+      "finished_utc": "2026-11-26T11:20:10.166Z",
+      "exit_code": 0,
+      "elapsed_seconds": 2.8269075
+    }
+  ]
+}
