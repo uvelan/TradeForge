@@ -43,7 +43,7 @@ from .historical_strategy_routes import router as historical_strategy_router
 from .historical_strategy_worker import supervise as supervise_strategy_history
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
 from .indicator_coverage import replay_availability
-from .replay_confluence import inspect_confluence, pin_confluence
+from .replay_confluence import inspect_confluence, list_pinned_confluence, pin_confluence
 from .replay_crt import inspect_crt
 from .replay_hour import inspect_hour
 from .replay_structure import inspect_structure_liquidity
@@ -663,6 +663,16 @@ def replay_confluence(session_id: str, cutoff: int = Query(ge=0),
                       profile: Literal["CRT_SMT_M5_V1"] = "CRT_SMT_M5_V1",
                       receipt_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$")):
     return inspect_confluence(replay_session(session_id), cutoff, profile, receipt_id)
+
+
+@app.get('/api/replay/sessions/{session_id}/confluence/receipts')
+def saved_replay_confluence(session_id: str, cutoff: int = Query(ge=0),
+                            profile: Literal["CRT_SMT_M5_V1"] = "CRT_SMT_M5_V1",
+                            limit: int = Query(default=24, ge=1, le=48),
+                            before_cutoff: int | None = Query(default=None, ge=0),
+                            before_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+                            selected_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$")):
+    return list_pinned_confluence(replay_session(session_id), cutoff, profile, limit, before_cutoff, before_id, selected_id)
 
 
 @app.post('/api/replay/sessions/{session_id}/confluence')

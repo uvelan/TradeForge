@@ -268,6 +268,9 @@ CREATE TABLE IF NOT EXISTS replay_confluence_receipts (
     session_id TEXT NOT NULL REFERENCES replay_sessions(id),
     payload TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS replay_confluence_receipts_clock ON replay_confluence_receipts(
+    session_id, json_extract(payload,'$.profile'), json_extract(payload,'$.cutoff') DESC, id DESC
+) WHERE json_valid(payload);
 CREATE TABLE IF NOT EXISTS replay_checkpoints (
     session_id TEXT PRIMARY KEY REFERENCES replay_sessions(id),
     position INTEGER NOT NULL,

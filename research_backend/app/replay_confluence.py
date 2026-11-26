@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from .analysis_evidence import ResourceLimit
 from .arrival_policy import SIMULATION_AUTHORITY, SIMULATION_MODE
 from .crt import VERSION as CRT_VERSION, evaluate_crt
-from .db import one, transaction
+from .db import one, rows, transaction
 from .indicator_coverage import open_intervals, replay_availability
 from .market import FRAME_MIN
 from .replay_crt import DELIVERY, RULES, continuity, range_detail, summarize
@@ -44,7 +44,7 @@ def coverage_issue(symbol, reason, missing=()):
     return dict(symbol=symbol, reason=reason, missing_intervals=intervals)
 
 
-def read_panes(session, cutoff):
+def validate_cutoff(session, cutoff):
     primary = session["market"]
     if (primary.get("source") != "DUKASCOPY_SAVED" or not primary.get("coverage") or
             not primary.get("candles") or primary.get("timeframe") not in FRAME_MIN):
@@ -53,6 +53,9 @@ def read_panes(session, cutoff):
     if not capture_start(primary) <= cutoff <= horizon:
         raise HTTPException(422, "Requested cutoff outside the captured replay session clock")
 
+def read_panes(session, cutoff):
+    validate_cutoff(session, cutoff)
+    primary = session["market"]
     panes, issues = {}, {}
     views = {"primary": primary, **session["views"]}
     for symbol in SYMBOLS:
@@ -239,6 +242,40 @@ def joined_state(crt, smt):
     if crt["direction"] != smt["direction"]:
         return "CONTRADICTED", "OPPOSITE_DIRECTIONS", None
     return "ALIGNED", "MATCHING_DIRECTIONS", crt["direction"]
+
+
+RECEIPT_CUTOFF = "json_extract(payload,'$.cutoff')"
+RECEIPT_SUMMARIES = f"""
+    SELECT session_id, id AS receipt_id, {RECEIPT_CUTOFF} AS cutoff,
+           json_extract(payload,'$.profile') AS profile, json_extract(payload,'$.rule_version') AS rule_version,
+           json_extract(payload,'$.status') AS status, json_extract(payload,'$.reason') AS reason,
+           json_extract(payload,'$.direction') AS direction,
+           json_extract(payload,'$.first_available_at') AS first_available_at
+    FROM replay_confluence_receipts
+    WHERE json_valid(payload) AND session_id=? AND json_extract(payload,'$.profile')=? AND {RECEIPT_CUTOFF}<=?
+"""
+
+
+def list_pinned_confluence(session, cutoff, profile, limit, before_cutoff, before_id, selected_id):
+    validate_cutoff(session, cutoff)
+    if (before_cutoff is None) != (before_id is None) or (before_cutoff is not None and before_cutoff > cutoff):
+        raise HTTPException(422, "Receipt pagination requires a cutoff and ID within the requested clock")
+    scope = (session["id"], profile, cutoff)
+    query, args = RECEIPT_SUMMARIES, scope
+    if before_cutoff is not None:
+        query += f" AND ({RECEIPT_CUTOFF}, id) < (?, ?)"
+        args += (before_cutoff, before_id)
+    receipts = rows(query + " ORDER BY cutoff DESC, receipt_id DESC LIMIT ?", (*args, limit + 1))
+    page = receipts[:limit]
+    result = dict(receipts=page, next_cursor=None)
+    if len(receipts) > limit:
+        last = page[-1]
+        result["next_cursor"] = dict(cutoff=last["cutoff"], receipt_id=last["receipt_id"])
+    if selected_id is not None:
+        result["selected"] = next((entry for entry in page if entry["receipt_id"] == selected_id), None)
+        if result["selected"] is None:
+            result["selected"] = one(RECEIPT_SUMMARIES + " AND id=?", (*scope, selected_id))
+    return result
 
 
 def inspect_confluence(session, cutoff, profile=PROFILE, receipt_id=None):
