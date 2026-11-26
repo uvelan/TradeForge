@@ -95,13 +95,13 @@ def reference_pages(client, session, cutoff):
 def install_counters():
     # Count calls at the actual application boundary. These are not disk-cache misses.
     import pyarrow.parquet as parquet
-    from research_backend.app import db
-    from tradeforge import catalog
+    from research_backend.app import db, replay_hour
 
     counts = Counter()
     original_connect = db.connect
     original_hash = hashlib.file_digest
-    original_verify = catalog.verify_artifact
+    original_partition = replay_hour.iter_complete_partition
+    verify_hook_installed = False
     original_file = parquet.ParquetFile
 
     def connect():
@@ -120,12 +120,24 @@ def install_counters():
         counts["file_digest_calls"] += 1
         return original_hash(*args, **kwargs)
 
-    def verify_path(path, checksum, snapshot=None):
-        counts["verified_artifacts"] += 1
-        result = original_verify(path, checksum, snapshot)
-        if snapshot is not None:
-            counts["verified_snapshot_bytes"] += snapshot.tell()
-        return result
+    def partition(*args, **kwargs):
+        # Preserve the application's first-use import and memory behavior.
+        nonlocal verify_hook_installed
+        if not verify_hook_installed:
+            from tradeforge import catalog
+
+            original_verify = catalog.verify_artifact
+
+            def verify_path(path, checksum, snapshot=None):
+                counts["verified_artifacts"] += 1
+                result = original_verify(path, checksum, snapshot)
+                if snapshot is not None:
+                    counts["verified_snapshot_bytes"] += snapshot.tell()
+                return result
+
+            catalog.verify_artifact = verify_path
+            verify_hook_installed = True
+        return original_partition(*args, **kwargs)
 
     class CountedParquet(original_file):
         def __init__(self, *args, **kwargs):
@@ -144,7 +156,7 @@ def install_counters():
 
     db.connect = connect
     hashlib.file_digest = hash_file
-    catalog.verify_artifact = verify_path
+    replay_hour.iter_complete_partition = partition
     parquet.ParquetFile = CountedParquet
     return counts
 
@@ -202,6 +214,7 @@ def worker(operation, session_id, storage):
         for name, workload in SCHEDULE.items():
             callback = older if name == "older_page" else warm
             result[name] = [sample(lambda: callback(START + index * STEP), counts)[0] for index in workload]
+        result["peak_common_process_kib"] = rss_peak()
         probe_cutoff = START + 104 * STEP
         probe = [inspection(client, session_id, probe_cutoff, view=view) for view in ("primary", "comparison")]
         result["inspection_status"] = [response.status_code for response in probe]
@@ -292,7 +305,7 @@ def main():
     if cold_panel:
         timings["cold_reopen_then_open_panel"] = summary([item["cold_reopen"][0] for item in cold_panel])
     for key, value in warm.items():
-        if key not in {"inspection_status", "peak_process_kib"}:
+        if key not in {"inspection_status", "peak_process_kib", "peak_common_process_kib"}:
             timings[key] = summary(value)
     receipt = {
         "started_at": started_at,
@@ -318,7 +331,7 @@ def main():
         "new_inspection_http_status": warm["inspection_status"],
         "peak_process_kib": {"cold_samples": [item["peak_process_kib"] for item in cold],
                              "cold_open_panel": [item["peak_process_kib"] for item in cold_panel],
-                             "warm": warm["peak_process_kib"]},
+                             "warm_common": warm["peak_common_process_kib"], "warm": warm["peak_process_kib"]},
         "timings": timings,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
