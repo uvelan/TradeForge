@@ -21,6 +21,7 @@ import {smtCoverageNotice,smtFeed,useSmt} from './smt';
 import {SmtMonitor} from './SmtMonitor';
 import {FrozenSmtReceipt} from './FrozenSmtReceipt';
 import {ReplayH1Evidence} from './ReplayH1Evidence';
+import {ReplayStructureEvidence} from './ReplayStructureEvidence';
 import {ArchiveSmtWatch} from './ArchiveSmtWatch';
 import {ArrivalPanel} from './ArrivalPanel';
 import {closedCandles, ReplayControls} from './ReplayControls';
@@ -631,8 +632,12 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
         </div>
         {source === 'DUKASCOPY_SAVED' && cutoff != null && replaySession?.market.source === source &&
           loadedPrimaryGeneration === primaryLoadGeneration &&
-          <ReplayH1Evidence key={replaySession.id} session={replaySession} cutoff={cutoff} symbol={symbol} timeframe={timeframe}
-            linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>}
+          <>
+            <ReplayH1Evidence key={replaySession.id} session={replaySession} cutoff={cutoff} symbol={symbol} timeframe={timeframe}
+              linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
+            <ReplayStructureEvidence key={'events:' + replaySession.id} session={replaySession} cutoff={cutoff}
+              symbol={symbol} timeframe={timeframe} linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
+          </>}
         {savedSource&&cutoff!=null&&firstFeed&&(!compare||secondFeed)&&
           <FrozenSmtReceipt cutoff={cutoff} timeframe={timeframe} primary={firstFeed} comparison={compare?secondFeed:undefined}/>}
       </section>

@@ -44,6 +44,10 @@ def main():
                          help="Verify hourly evidence in the saved M5 replay")
     journey.add_argument("--indicators-checkpoint", action="store_true",
                         help="Verify the final dual-chart oscillator checkpoint")
+    journey.add_argument("--structure-liquidity", action="store_true",
+                         help="Verify selected structure and liquidity events in the saved M5 replay")
+    parser.add_argument("--structure-reference", type=Path,
+                        help="Optional override for the independent structure and liquidity reference")
     parser.add_argument("--source-storage", type=Path,
                         help="Read-only input storage containing research/ and tf-i08e-source/")
     options = parser.parse_args()
@@ -60,13 +64,18 @@ def main():
         env.setdefault("TRADEFORGE_E2E_UI_PORT", "4283")
         config = "playwright.comparison.config.ts"
         source_storage = (options.source_storage or root / "storage").resolve()
-        if options.source_storage is not None or options.indicators_checkpoint or options.h1_replay:
+        if options.source_storage or options.indicators_checkpoint or options.h1_replay or options.structure_liquidity:
             env["TRADEFORGE_COMPARISON_SOURCE_DIR"] = str(source_storage / "research")
         if options.indicators_checkpoint:
             write_indicator_reference(source_storage, Path(storage))
             config = "playwright.t10-indicators.config.ts"
         elif options.h1_replay:
             config = "playwright.t10-h1.config.ts"
+        elif options.structure_liquidity:
+            reference = options.structure_reference or (
+                root / "docs/implementation/evidence/T10-STRUCTURE-LIQUIDITY/oracle.json")
+            env["TRADEFORGE_T10_STRUCTURE_REFERENCE"] = str(reference.resolve(strict=True))
+            config = "playwright.t10-structure-liquidity.config.ts"
         for reopen in ("0", "1"):
             start = perf_counter()
             subprocess.run([npm, "run", "e2e", "--", "--config", config, "--retries=0"],

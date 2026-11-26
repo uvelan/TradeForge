@@ -127,7 +127,7 @@ function CandleEvidence({url}: {url: string}) {
     {children.length > 0 && <details>
       <summary>{children.length} source candles</summary>
       <ul>{partitions.map(pin => <li key={pin.id} className="evidence-id">Dataset <code>{pin.id}</code> · SHA-256 <code>{pin.sha256}</code></li>)}</ul>
-      <div className="replay-h1-sources">
+      <div className="replay-evidence-sources">
         <table aria-label="M5 source candles">
           <thead><tr>{['Opened', 'Available', 'Open', 'High', 'Low', 'Close', 'Source ID', 'Dataset'].map(heading =>
             <th key={heading} scope="col">{heading}</th>)}</tr></thead>
