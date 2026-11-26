@@ -1,6 +1,7 @@
-"""Run the recorded chart journey twice, restarting the API and Chromium on one disposable DB."""
+"""Verify a genuine chart journey across an API and Chromium restart on a disposable DB."""
 import argparse
 from pathlib import Path
+import json
 import os
 import shutil
 import subprocess
@@ -8,10 +9,40 @@ import tempfile
 from time import perf_counter
 
 
+def write_indicator_reference(source_storage: Path, workspace: Path):
+    from scripts.t10_numerical_acceptance import (
+        ARCHIVE_PIN, ABS_TOLERANCE, DAY, END, START, STEP, SYMBOLS, exact_reference, read_source,
+    )
+
+    pinned = json.loads(ARCHIVE_PIN.read_text(encoding="utf-8"))["run"]["selection"]["series"]
+    lanes = {}
+    for symbol in SYMBOLS:
+        selection, = (lane for lane in pinned.values()
+                      if lane["symbol"] == symbol and lane["timeframe"] == "M5")
+        bars, digest = read_source(source_storage, symbol)
+        lanes[symbol] = {
+            "market": {field: selection[field] for field in
+                       ("symbol", "timeframe", "source", "feed_id", "price_basis", "partitions")},
+            "providerCsvSha256": digest,
+            "bars": [{field: float(value) if field != "time" else value for field, value in bar.items()}
+                     for bar in bars],
+            "series": {label: [{"time": stamp, "value": float(value)} for stamp, value in points.items()]
+                       for label, points in exact_reference(bars).items()},
+        }
+    (workspace / "t10-indicators-reference.json").write_text(json.dumps({
+        "day": DAY, "start": START, "end": END, "step": STEP,
+        "absoluteTolerance": ABS_TOLERANCE, "lanes": lanes,
+    }), encoding="utf-8")
+
+
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True, help="Directory for receipts and screenshots")
+    parser.add_argument("--indicators-checkpoint", action="store_true",
+                        help="Verify the final dual-chart oscillator checkpoint")
+    parser.add_argument("--source-storage", type=Path,
+                        help="Read-only input storage containing research/ and tf-i08e-source/")
     options = parser.parse_args()
     output = options.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -24,11 +55,17 @@ def main():
                "TRADEFORGE_COMPARISON_DAY": "2026-11-13"}
         env.setdefault("TRADEFORGE_E2E_API_PORT", "8283")
         env.setdefault("TRADEFORGE_E2E_UI_PORT", "4283")
+        config = "playwright.comparison.config.ts"
+        source_storage = (options.source_storage or root / "storage").resolve()
+        if options.source_storage is not None or options.indicators_checkpoint:
+            env["TRADEFORGE_COMPARISON_SOURCE_DIR"] = str(source_storage / "research")
+        if options.indicators_checkpoint:
+            write_indicator_reference(source_storage, Path(storage))
+            config = "playwright.t10-indicators.config.ts"
         for reopen in ("0", "1"):
             start = perf_counter()
-            subprocess.run([npm, "run", "e2e", "--", "--config", "playwright.comparison.config.ts",
-                            "--retries=0"], cwd=root / "frontend", check=True,
-                           env={**env, "TRADEFORGE_PAIR_REOPEN": reopen})
+            subprocess.run([npm, "run", "e2e", "--", "--config", config, "--retries=0"],
+                           cwd=root / "frontend", check=True, env={**env, "TRADEFORGE_PAIR_REOPEN": reopen})
             print(f"{'Restart' if reopen == '1' else 'Initial journey'} passed in {perf_counter()-start:.2f}s",
                   flush=True)
 

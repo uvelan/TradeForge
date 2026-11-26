@@ -1,0 +1,531 @@
+{
+  "status": "PASS",
+  "chromiumVersion": "159.0.8154.6",
+  "startInclusiveUtc": "2026-11-13T13:00:00.000Z",
+  "endExclusiveUtc": "2026-11-13T15:00:00.000Z",
+  "savedCutoffUtc": "2026-11-13T15:00:00.000Z",
+  "sessionId": "e5bcdbe2a81b0d9dbb3e806d2754888335d423d2e2109fed296b7335145b9c29",
+  "checkpoint": {
+    "position": 23,
+    "bookmarks": []
+  },
+  "expectedSeriesCountsPerChart": {
+    "CCI": 5,
+    "%K": 11,
+    "%D": 9
+  },
+  "reference": "Exact rational arithmetic on checksummed provider M5 BID CSV decimals",
+  "absoluteTolerance": 1e-10,
+  "replaySteps": [
+    {
+      "cutoffUtc": "2026-11-13T14:05:00.000Z",
+      "closedBarsPerChart": 13,
+      "observedSeriesCounts": {
+        "EURUSD": {
+          "CCI": 0,
+          "%K": 0,
+          "%D": 0
+        },
+        "GBPUSD": {
+          "CCI": 0,
+          "%K": 0,
+          "%D": 0
+        }
+      }
+    },
+    {
+      "cutoffUtc": "2026-11-13T14:10:00.000Z",
+      "closedBarsPerChart": 14,
+      "observedSeriesCounts": {
+        "EURUSD": {
+          "CCI": 0,
+          "%K": 1,
+          "%D": 0
+        },
+        "GBPUSD": {
+          "CCI": 0,
+          "%K": 1,
+          "%D": 0
+        }
+      }
+    },
+    {
+      "cutoffUtc": "2026-11-13T14:20:00.000Z",
+      "closedBarsPerChart": 16,
+      "observedSeriesCounts": {
+        "EURUSD": {
+          "CCI": 0,
+          "%K": 3,
+          "%D": 1
+        },
+        "GBPUSD": {
+          "CCI": 0,
+          "%K": 3,
+          "%D": 1
+        }
+      }
+    },
+    {
+      "cutoffUtc": "2026-11-13T14:40:00.000Z",
+      "closedBarsPerChart": 20,
+      "observedSeriesCounts": {
+        "EURUSD": {
+          "CCI": 1,
+          "%K": 7,
+          "%D": 5
+        },
+        "GBPUSD": {
+          "CCI": 1,
+          "%K": 7,
+          "%D": 5
+        }
+      }
+    }
+  ],
+  "lanes": {
+    "EURUSD": {
+      "symbol": "EURUSD",
+      "timeframe": "M5",
+      "source": "DUKASCOPY_SAVED",
+      "feed_id": "dukascopy-web-m1-v1",
+      "price_basis": "BID",
+      "partitions": [
+        {
+          "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+          "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+        }
+      ],
+      "providerCsvSha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6",
+      "series": {
+        "CCI": [
+          {
+            "candleOpenUtc": "2026-11-13T14:35:00.000Z",
+            "availableAtUtc": "2026-11-13T14:40:00.000Z",
+            "reference": -101.42536105479861,
+            "savedPlot": -101.42536105479861,
+            "reopenedPlot": -101.42536105479861,
+            "recoveredPlot": -101.42536105479861
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:40:00.000Z",
+            "availableAtUtc": "2026-11-13T14:45:00.000Z",
+            "reference": -18.216981720631356,
+            "savedPlot": -18.216981720631356,
+            "reopenedPlot": -18.216981720631356,
+            "recoveredPlot": -18.216981720631356
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:45:00.000Z",
+            "availableAtUtc": "2026-11-13T14:50:00.000Z",
+            "reference": 61.70769728521427,
+            "savedPlot": 61.70769728521427,
+            "reopenedPlot": 61.70769728521427,
+            "recoveredPlot": 61.70769728521427
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:50:00.000Z",
+            "availableAtUtc": "2026-11-13T14:55:00.000Z",
+            "reference": 63.15730273887858,
+            "savedPlot": 63.15730273887858,
+            "reopenedPlot": 63.15730273887858,
+            "recoveredPlot": 63.15730273887858
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:55:00.000Z",
+            "availableAtUtc": "2026-11-13T15:00:00.000Z",
+            "reference": 55.176431424766974,
+            "savedPlot": 55.176431424766974,
+            "reopenedPlot": 55.176431424766974,
+            "recoveredPlot": 55.176431424766974
+          }
+        ],
+        "%K": [
+          {
+            "candleOpenUtc": "2026-11-13T14:05:00.000Z",
+            "availableAtUtc": "2026-11-13T14:10:00.000Z",
+            "reference": 27.053140096618357,
+            "savedPlot": 27.053140096623746,
+            "reopenedPlot": 27.053140096623746,
+            "recoveredPlot": 27.053140096623746
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:10:00.000Z",
+            "availableAtUtc": "2026-11-13T14:15:00.000Z",
+            "reference": 13.043478260869565,
+            "savedPlot": 13.0434782608691,
+            "reopenedPlot": 13.0434782608691,
+            "recoveredPlot": 13.0434782608691
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:15:00.000Z",
+            "availableAtUtc": "2026-11-13T14:20:00.000Z",
+            "reference": 12.560386473429952,
+            "savedPlot": 12.56038647343705,
+            "reopenedPlot": 12.56038647343705,
+            "recoveredPlot": 12.56038647343705
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:20:00.000Z",
+            "availableAtUtc": "2026-11-13T14:25:00.000Z",
+            "reference": 23.484848484848484,
+            "savedPlot": 23.48484848485116,
+            "reopenedPlot": 23.48484848485116,
+            "recoveredPlot": 23.48484848485116
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:25:00.000Z",
+            "availableAtUtc": "2026-11-13T14:30:00.000Z",
+            "reference": 18.560606060606062,
+            "savedPlot": 18.560606060610073,
+            "reopenedPlot": 18.560606060610073,
+            "recoveredPlot": 18.560606060610073
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:30:00.000Z",
+            "availableAtUtc": "2026-11-13T14:35:00.000Z",
+            "reference": 16.28787878787879,
+            "savedPlot": 16.287878787876302,
+            "reopenedPlot": 16.287878787876302,
+            "recoveredPlot": 16.287878787876302
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:35:00.000Z",
+            "availableAtUtc": "2026-11-13T14:40:00.000Z",
+            "reference": 18.939393939393938,
+            "savedPlot": 18.939393939392026,
+            "reopenedPlot": 18.939393939392026,
+            "recoveredPlot": 18.939393939392026
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:40:00.000Z",
+            "availableAtUtc": "2026-11-13T14:45:00.000Z",
+            "reference": 46.21513944223108,
+            "savedPlot": 46.21513944223284,
+            "reopenedPlot": 46.21513944223284,
+            "recoveredPlot": 46.21513944223284
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:45:00.000Z",
+            "availableAtUtc": "2026-11-13T14:50:00.000Z",
+            "reference": 75.3623188405797,
+            "savedPlot": 75.3623188405794,
+            "reopenedPlot": 75.3623188405794,
+            "recoveredPlot": 75.3623188405794
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:50:00.000Z",
+            "availableAtUtc": "2026-11-13T14:55:00.000Z",
+            "reference": 77.04918032786885,
+            "savedPlot": 77.04918032786408,
+            "reopenedPlot": 77.04918032786408,
+            "recoveredPlot": 77.04918032786408
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:55:00.000Z",
+            "availableAtUtc": "2026-11-13T15:00:00.000Z",
+            "reference": 82.24852071005917,
+            "savedPlot": 82.2485207100608,
+            "reopenedPlot": 82.2485207100608,
+            "recoveredPlot": 82.2485207100608
+          }
+        ],
+        "%D": [
+          {
+            "candleOpenUtc": "2026-11-13T14:15:00.000Z",
+            "availableAtUtc": "2026-11-13T14:20:00.000Z",
+            "reference": 17.55233494363929,
+            "savedPlot": 17.5523349436433,
+            "reopenedPlot": 17.5523349436433,
+            "recoveredPlot": 17.5523349436433
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:20:00.000Z",
+            "availableAtUtc": "2026-11-13T14:25:00.000Z",
+            "reference": 16.36290440638267,
+            "savedPlot": 16.36290440638577,
+            "reopenedPlot": 16.36290440638577,
+            "recoveredPlot": 16.36290440638577
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:25:00.000Z",
+            "availableAtUtc": "2026-11-13T14:30:00.000Z",
+            "reference": 18.201947006294834,
+            "savedPlot": 18.201947006299427,
+            "reopenedPlot": 18.201947006299427,
+            "recoveredPlot": 18.201947006299427
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:30:00.000Z",
+            "availableAtUtc": "2026-11-13T14:35:00.000Z",
+            "reference": 19.444444444444443,
+            "savedPlot": 19.444444444445846,
+            "reopenedPlot": 19.444444444445846,
+            "recoveredPlot": 19.444444444445846
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:35:00.000Z",
+            "availableAtUtc": "2026-11-13T14:40:00.000Z",
+            "reference": 17.92929292929293,
+            "savedPlot": 17.9292929292928,
+            "reopenedPlot": 17.9292929292928,
+            "recoveredPlot": 17.9292929292928
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:40:00.000Z",
+            "availableAtUtc": "2026-11-13T14:45:00.000Z",
+            "reference": 27.147470723167935,
+            "savedPlot": 27.147470723167057,
+            "reopenedPlot": 27.147470723167057,
+            "recoveredPlot": 27.147470723167057
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:45:00.000Z",
+            "availableAtUtc": "2026-11-13T14:50:00.000Z",
+            "reference": 46.83895074073491,
+            "savedPlot": 46.83895074073476,
+            "reopenedPlot": 46.83895074073476,
+            "recoveredPlot": 46.83895074073476
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:50:00.000Z",
+            "availableAtUtc": "2026-11-13T14:55:00.000Z",
+            "reference": 66.2088795368932,
+            "savedPlot": 66.2088795368921,
+            "reopenedPlot": 66.2088795368921,
+            "recoveredPlot": 66.2088795368921
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:55:00.000Z",
+            "availableAtUtc": "2026-11-13T15:00:00.000Z",
+            "reference": 78.22000662616925,
+            "savedPlot": 78.22000662616809,
+            "reopenedPlot": 78.22000662616809,
+            "recoveredPlot": 78.22000662616809
+          }
+        ]
+      }
+    },
+    "GBPUSD": {
+      "symbol": "GBPUSD",
+      "timeframe": "M5",
+      "source": "DUKASCOPY_SAVED",
+      "feed_id": "dukascopy-web-m1-v1",
+      "price_basis": "BID",
+      "partitions": [
+        {
+          "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+          "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+        }
+      ],
+      "providerCsvSha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928",
+      "series": {
+        "CCI": [
+          {
+            "candleOpenUtc": "2026-11-13T14:35:00.000Z",
+            "availableAtUtc": "2026-11-13T14:40:00.000Z",
+            "reference": 23.71439285206305,
+            "savedPlot": 23.71439285206305,
+            "reopenedPlot": 23.71439285206305,
+            "recoveredPlot": 23.71439285206305
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:40:00.000Z",
+            "availableAtUtc": "2026-11-13T14:45:00.000Z",
+            "reference": 87.13879323251984,
+            "savedPlot": 87.13879323251984,
+            "reopenedPlot": 87.13879323251984,
+            "recoveredPlot": 87.13879323251984
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:45:00.000Z",
+            "availableAtUtc": "2026-11-13T14:50:00.000Z",
+            "reference": 159.14226319595082,
+            "savedPlot": 159.14226319595082,
+            "reopenedPlot": 159.14226319595082,
+            "recoveredPlot": 159.14226319595082
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:50:00.000Z",
+            "availableAtUtc": "2026-11-13T14:55:00.000Z",
+            "reference": 140.86642895200623,
+            "savedPlot": 140.86642895200623,
+            "reopenedPlot": 140.86642895200623,
+            "recoveredPlot": 140.86642895200623
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:55:00.000Z",
+            "availableAtUtc": "2026-11-13T15:00:00.000Z",
+            "reference": 120.0880165128325,
+            "savedPlot": 120.0880165128325,
+            "reopenedPlot": 120.0880165128325,
+            "recoveredPlot": 120.0880165128325
+          }
+        ],
+        "%K": [
+          {
+            "candleOpenUtc": "2026-11-13T14:05:00.000Z",
+            "availableAtUtc": "2026-11-13T14:10:00.000Z",
+            "reference": 37.735849056603776,
+            "savedPlot": 37.73584905660219,
+            "reopenedPlot": 37.73584905660219,
+            "recoveredPlot": 37.73584905660219
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:10:00.000Z",
+            "availableAtUtc": "2026-11-13T14:15:00.000Z",
+            "reference": 14.4,
+            "savedPlot": 14.399999999996945,
+            "reopenedPlot": 14.399999999996945,
+            "recoveredPlot": 14.399999999996945
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:15:00.000Z",
+            "availableAtUtc": "2026-11-13T14:20:00.000Z",
+            "reference": 26,
+            "savedPlot": 26.00000000000213,
+            "reopenedPlot": 26.00000000000213,
+            "recoveredPlot": 26.00000000000213
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:20:00.000Z",
+            "availableAtUtc": "2026-11-13T14:25:00.000Z",
+            "reference": 20.930232558139537,
+            "savedPlot": 20.930232558147342,
+            "reopenedPlot": 20.930232558147342,
+            "recoveredPlot": 20.930232558147342
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:25:00.000Z",
+            "availableAtUtc": "2026-11-13T14:30:00.000Z",
+            "reference": 13.178294573643411,
+            "savedPlot": 13.178294573643544,
+            "reopenedPlot": 13.178294573643544,
+            "recoveredPlot": 13.178294573643544
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:30:00.000Z",
+            "availableAtUtc": "2026-11-13T14:35:00.000Z",
+            "reference": 28.294573643410853,
+            "savedPlot": 28.294573643415188,
+            "reopenedPlot": 28.294573643415188,
+            "recoveredPlot": 28.294573643415188
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:35:00.000Z",
+            "availableAtUtc": "2026-11-13T14:40:00.000Z",
+            "reference": 39.53488372093023,
+            "savedPlot": 39.53488372093063,
+            "reopenedPlot": 39.53488372093063,
+            "recoveredPlot": 39.53488372093063
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:40:00.000Z",
+            "availableAtUtc": "2026-11-13T14:45:00.000Z",
+            "reference": 65.89147286821705,
+            "savedPlot": 65.89147286821772,
+            "reopenedPlot": 65.89147286821772,
+            "recoveredPlot": 65.89147286821772
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:45:00.000Z",
+            "availableAtUtc": "2026-11-13T14:50:00.000Z",
+            "reference": 100,
+            "savedPlot": 100,
+            "reopenedPlot": 100,
+            "recoveredPlot": 100
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:50:00.000Z",
+            "availableAtUtc": "2026-11-13T14:55:00.000Z",
+            "reference": 77.56653992395437,
+            "savedPlot": 77.56653992395206,
+            "reopenedPlot": 77.56653992395206,
+            "recoveredPlot": 77.56653992395206
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:55:00.000Z",
+            "availableAtUtc": "2026-11-13T15:00:00.000Z",
+            "reference": 80.22813688212928,
+            "savedPlot": 80.22813688212739,
+            "reopenedPlot": 80.22813688212739,
+            "recoveredPlot": 80.22813688212739
+          }
+        ],
+        "%D": [
+          {
+            "candleOpenUtc": "2026-11-13T14:15:00.000Z",
+            "availableAtUtc": "2026-11-13T14:20:00.000Z",
+            "reference": 26.045283018867924,
+            "savedPlot": 26.045283018867092,
+            "reopenedPlot": 26.045283018867092,
+            "recoveredPlot": 26.045283018867092
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:20:00.000Z",
+            "availableAtUtc": "2026-11-13T14:25:00.000Z",
+            "reference": 20.44341085271318,
+            "savedPlot": 20.443410852715473,
+            "reopenedPlot": 20.443410852715473,
+            "recoveredPlot": 20.443410852715473
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:25:00.000Z",
+            "availableAtUtc": "2026-11-13T14:30:00.000Z",
+            "reference": 20.036175710594314,
+            "savedPlot": 20.03617571059767,
+            "reopenedPlot": 20.03617571059767,
+            "recoveredPlot": 20.03617571059767
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:30:00.000Z",
+            "availableAtUtc": "2026-11-13T14:35:00.000Z",
+            "reference": 20.801033591731265,
+            "savedPlot": 20.801033591735358,
+            "reopenedPlot": 20.801033591735358,
+            "recoveredPlot": 20.801033591735358
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:35:00.000Z",
+            "availableAtUtc": "2026-11-13T14:40:00.000Z",
+            "reference": 27.002583979328165,
+            "savedPlot": 27.002583979329785,
+            "reopenedPlot": 27.002583979329785,
+            "recoveredPlot": 27.002583979329785
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:40:00.000Z",
+            "availableAtUtc": "2026-11-13T14:45:00.000Z",
+            "reference": 44.57364341085271,
+            "savedPlot": 44.573643410854515,
+            "reopenedPlot": 44.573643410854515,
+            "recoveredPlot": 44.573643410854515
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:45:00.000Z",
+            "availableAtUtc": "2026-11-13T14:50:00.000Z",
+            "reference": 68.47545219638243,
+            "savedPlot": 68.47545219638279,
+            "reopenedPlot": 68.47545219638279,
+            "recoveredPlot": 68.47545219638279
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:50:00.000Z",
+            "availableAtUtc": "2026-11-13T14:55:00.000Z",
+            "reference": 81.15267093072381,
+            "savedPlot": 81.15267093072326,
+            "reopenedPlot": 81.15267093072326,
+            "recoveredPlot": 81.15267093072326
+          },
+          {
+            "candleOpenUtc": "2026-11-13T14:55:00.000Z",
+            "availableAtUtc": "2026-11-13T15:00:00.000Z",
+            "reference": 85.93155893536121,
+            "savedPlot": 85.93155893535982,
+            "reopenedPlot": 85.93155893535982,
+            "recoveredPlot": 85.93155893535982
+          }
+        ]
+      }
+    }
+  }
+}
