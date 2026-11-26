@@ -22,6 +22,7 @@ import {SmtMonitor} from './SmtMonitor';
 import {FrozenSmtReceipt} from './FrozenSmtReceipt';
 import {ReplayH1Evidence} from './ReplayH1Evidence';
 import {ReplayStructureEvidence} from './ReplayStructureEvidence';
+import {ReplayZoneEvidence} from './ReplayZoneEvidence';
 import {ArchiveSmtWatch} from './ArchiveSmtWatch';
 import {ArrivalPanel} from './ArrivalPanel';
 import {closedCandles, ReplayControls} from './ReplayControls';
@@ -636,6 +637,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             <ReplayH1Evidence key={replaySession.id} session={replaySession} cutoff={cutoff} symbol={symbol} timeframe={timeframe}
               linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
             <ReplayStructureEvidence key={'events:' + replaySession.id} session={replaySession} cutoff={cutoff}
+              symbol={symbol} timeframe={timeframe} linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
+            <ReplayZoneEvidence key={'zones:' + replaySession.id} session={replaySession} cutoff={cutoff}
               symbol={symbol} timeframe={timeframe} linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
           </>}
         {savedSource&&cutoff!=null&&firstFeed&&(!compare||secondFeed)&&

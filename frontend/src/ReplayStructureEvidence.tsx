@@ -1,14 +1,10 @@
 import {useEffect, useRef, useState} from 'react';
 import {api} from './api';
-import type {Candle, CandleResponse, ReplaySession, Timeframe} from './types';
+import type {Timeframe} from './types';
+import {EvidenceDisclosure, ReplaySourcePins, ReplaySourceTable, evidenceWords as words, replayUtc as utc, type ReplaySourceCandle} from './ReplayEvidenceSources';
+import {replayEvidenceLanes, replayLaneLabel, type ReplayEvidenceProps, type ReplayLane} from './replayEvidenceLanes';
 import {useWorkspacePreference} from './useWorkspacePreference';
 
-type Partition = {id: string; sha256: string};
-type SourceCandle = Required<Pick<Candle, 'time' | 'available_at' | 'open' | 'high' | 'low' | 'close'>> & {
-  source_id: string; partitions: Partition[];
-  availability_basis: 'ARCHIVE_SUPPLIED' | 'MODELED_NOMINAL_CLOSE';
-  roles: {role: string; event_id: string}[];
-};
 type EventSummary = {
   id: string; type: string; side: 'HIGH' | 'LOW'; direction: 'BULLISH' | 'BEARISH' | null;
   anchor_time: number; observation_time: number; confirmation_time: number | null;
@@ -17,37 +13,17 @@ type EventSummary = {
   liquidity_side?: string; lower?: number; upper?: number;
   break_price?: number; displacement?: number; level_available_at?: number;
 };
-type ReplayEvent = EventSummary & {evidence: SourceCandle[]};
+type ReplayEvent = EventSummary & {evidence: ReplaySourceCandle[]};
 type Evidence = {
   session_id: string; view: string; symbol: string; timeframe: Timeframe;
   cutoff: number; feed_id: string; price_basis: string; authority: 'RESEARCH_ONLY';
   rules: {mss: {min_displacement: number}};
   events: EventSummary[]; total: number; previous_before: number | null; selected: ReplayEvent | null;
 };
-type Lane = {view: string; symbol: string};
-
-const utc = (time: number) => new Date(time * 1000).toISOString().replace('T', ' ').replace('.000Z', ' UTC');
-const words = (value: string) => value.replaceAll('_', ' ');
-const laneLabel = (view: string) => view === 'primary' ? 'Primary' : view === 'comparison' ? 'Comparison' : 'View ' + view;
-
-function supportsEvidence(market: CandleResponse, symbol: string, timeframe: Timeframe) {
-  return market.source === 'DUKASCOPY_SAVED' && market.price_basis === 'BID' &&
-    Boolean(market.partitions?.length) && timeframe === 'M5' && (symbol === 'EURUSD' || symbol === 'GBPUSD');
-}
-
-export function ReplayStructureEvidence({session, cutoff, symbol, timeframe, linkedViews}: {
-  session: ReplaySession; cutoff: number; symbol: string; timeframe: Timeframe; linkedViews: number;
-}) {
+export function ReplayStructureEvidence({session, cutoff, symbol, timeframe, linkedViews}: ReplayEvidenceProps) {
   const [preferred, setPreferred] = useWorkspacePreference<string>('replay-structure-pane.' + session.id, 'primary');
   const [open, setOpen] = useWorkspacePreference('replay-structure-open.' + session.id, 'off', ['on', 'off']);
-  const lanes: Lane[] = [];
-  if (supportsEvidence(session.market, symbol, timeframe)) lanes.push({view: 'primary', symbol});
-  for (const [view, market] of Object.entries(session.views)) {
-    if ((view === 'comparison' || Number(view) <= linkedViews) &&
-        !('error' in market) && supportsEvidence(market, market.symbol, market.timeframe)) {
-      lanes.push({view, symbol: market.symbol});
-    }
-  }
+  const lanes = replayEvidenceLanes(session, symbol, timeframe, linkedViews);
   const lane = lanes.find(({view}) => view === preferred) ?? lanes[0];
   if (!lane) return null;
   return <details className="card replay-structure-evidence" open={open === 'on'}
@@ -57,7 +33,7 @@ export function ReplayStructureEvidence({session, cutoff, symbol, timeframe, lin
       <p>M5 replay cutoff {utc(cutoff)}</p>
       {lanes.length > 1 && <div className="research-controls">
         <label>Event chart pane <select value={lane.view} onChange={event => setPreferred(event.target.value)}>
-          {lanes.map(({view, symbol: name}) => <option key={view} value={view}>{laneLabel(view)} · {name}</option>)}
+          {lanes.map(({view, symbol: name}) => <option key={view} value={view}>{replayLaneLabel(view)} · {name}</option>)}
         </select></label>
       </div>}
       {lanes.map(choice => <LaneEvidence key={choice.view} sessionId={session.id} cutoff={cutoff}
@@ -67,7 +43,7 @@ export function ReplayStructureEvidence({session, cutoff, symbol, timeframe, lin
 }
 
 function LaneEvidence({sessionId, cutoff, lane, active}: {
-  sessionId: string; cutoff: number; lane: Lane; active: boolean;
+  sessionId: string; cutoff: number; lane: ReplayLane; active: boolean;
 }) {
   const [eventId, setEventId] = useWorkspacePreference<string>('replay-structure-event.' + sessionId + '.' + lane.view, '');
   return active && <CutoffEvidence key={cutoff} sessionId={sessionId} cutoff={cutoff} lane={lane}
@@ -75,7 +51,7 @@ function LaneEvidence({sessionId, cutoff, lane, active}: {
 }
 
 function CutoffEvidence({sessionId, cutoff, lane, eventId, onEvent}: {
-  sessionId: string; cutoff: number; lane: Lane; eventId: string; onEvent: (id: string) => void;
+  sessionId: string; cutoff: number; lane: ReplayLane; eventId: string; onEvent: (id: string) => void;
 }) {
   const [response, setResponse] = useState<{eventId: string; url: string; page: Evidence}>();
   const [error, setError] = useState<{url: string; message: string}>();
@@ -145,7 +121,6 @@ function eventLabel(event: EventSummary) {
 function EventReceipt({event, mssThreshold}: {event: ReplayEvent; mssThreshold: number}) {
   const direct = event.evidence.filter(row => row.roles.length > 0);
   const context = event.evidence.filter(row => row.roles.length === 0);
-  const partitions = [...new Map(event.evidence.flatMap(row => row.partitions).map(pin => [pin.id, pin])).values()];
   const rows = [
     ['Event', words(event.type)], ['Side', words(event.side)], ['Direction', event.direction ?? '—'],
     ['Status', words(event.status)], ['Level', event.level_price],
@@ -169,34 +144,12 @@ function EventReceipt({event, mssThreshold}: {event: ReplayEvent; mssThreshold: 
         {event.supporting_ids.join(', ')}
       </dd></div>}
     </dl>
-    {direct.length > 0 && <details>
-      <summary>{direct.length} direct source candles</summary>
-      <ul>{partitions.map(pin => <li key={pin.id} className="evidence-id">
-        Dataset <code>{pin.id}</code> · SHA-256 <code>{pin.sha256}</code>
-      </li>)}</ul>
-      <SourceTable name="Direct event source candles" rows={direct} direct/>
-    </details>}
-    {context.length > 0 && <details>
-      <summary>{context.length} calculation context candles</summary>
-      <SourceTable name="Calculation context candles" rows={context}/>
-    </details>}
+    {direct.length > 0 && <EvidenceDisclosure label={direct.length + ' direct source candles'}>
+      <ReplaySourcePins rows={event.evidence}/>
+      <ReplaySourceTable name="Direct event source candles" rows={direct} direct/>
+    </EvidenceDisclosure>}
+    {context.length > 0 && <EvidenceDisclosure label={context.length + ' calculation context candles'}>
+      <ReplaySourceTable name="Calculation context candles" rows={context}/>
+    </EvidenceDisclosure>}
   </article>;
-}
-
-function SourceTable({name, rows, direct = false}: {name: string; rows: SourceCandle[]; direct?: boolean}) {
-  const columns = ['Opened', 'Available', 'Availability basis', 'Open', 'High', 'Low', 'Close', 'Source ID'];
-  return <div className="replay-evidence-sources" tabIndex={0}>
-    <table aria-label={name}>
-      <thead><tr>{[...columns, ...(direct ? ['Event role'] : [])].map(label =>
-        <th key={label} scope="col">{label}</th>)}</tr></thead>
-      <tbody>{rows.map(row => <tr key={row.source_id}>
-        <td>{utc(row.time)}</td><td>{utc(row.available_at)}</td>
-        <td>{words(row.availability_basis)}</td><td>{row.open}</td><td>{row.high}</td><td>{row.low}</td><td>{row.close}</td>
-        <td className="evidence-id"><code>{row.source_id}</code></td>
-        {direct && <td>{row.roles.map(({role, event_id}) => <div key={role + event_id}>
-          {words(role).toLowerCase()} <code title={event_id}>{event_id.slice(0, 12)}</code>
-        </div>)}</td>}
-      </tr>)}</tbody>
-    </table>
-  </div>;
 }

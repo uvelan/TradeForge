@@ -46,11 +46,19 @@ def main():
                         help="Verify the final dual-chart oscillator checkpoint")
     journey.add_argument("--structure-liquidity", action="store_true",
                          help="Verify selected structure and liquidity events in the saved M5 replay")
+    journey.add_argument("--zones", action="store_true",
+                         help="Verify FVG and order block evidence in saved M5 replay")
+    parser.add_argument("--zones-baseline", action="store_true",
+                        help="Measure the existing structure evidence surface on the baseline checkout")
     parser.add_argument("--structure-reference", type=Path,
                         help="Optional override for the independent structure and liquidity reference")
+    parser.add_argument("--zones-reference", type=Path,
+                        help="Optional override for the independent zone lifecycle reference")
     parser.add_argument("--source-storage", type=Path,
                         help="Read-only input storage containing research/ and tf-i08e-source/")
     options = parser.parse_args()
+    if options.zones_baseline and not options.zones:
+        parser.error("--zones-baseline requires --zones")
     output = options.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     npm = shutil.which("npm.cmd") or shutil.which("npm")
@@ -64,14 +72,14 @@ def main():
         env.setdefault("TRADEFORGE_E2E_UI_PORT", "4283")
         config = "playwright.comparison.config.ts"
         source_storage = (options.source_storage or root / "storage").resolve()
-        if options.source_storage or options.indicators_checkpoint or options.h1_replay or options.structure_liquidity:
+        if options.source_storage or options.indicators_checkpoint or options.h1_replay or options.structure_liquidity or options.zones:
             env["TRADEFORGE_COMPARISON_SOURCE_DIR"] = str(source_storage / "research")
         if options.indicators_checkpoint:
             write_indicator_reference(source_storage, Path(storage))
             config = "playwright.t10-indicators.config.ts"
         elif options.h1_replay:
             config = "playwright.t10-h1.config.ts"
-        elif options.structure_liquidity:
+        elif options.structure_liquidity or options.zones:
             reference = options.structure_reference
             if reference is None:
                 from scripts.verify_t10_structure_liquidity import output_json, reference_document
@@ -79,6 +87,17 @@ def main():
                 output_json(reference, reference_document(source_storage))
             env["TRADEFORGE_T10_STRUCTURE_REFERENCE"] = str(reference.resolve(strict=True))
             config = "playwright.t10-structure-liquidity.config.ts"
+            if options.zones:
+                config = "playwright.t10-zones.config.ts"
+                env["TRADEFORGE_T10_ZONES_BASELINE"] = "1" if options.zones_baseline else "0"
+                if not options.zones_baseline:
+                    zones_reference = options.zones_reference
+                    if zones_reference is None:
+                        from scripts.verify_t10_zones import reference_document as zone_reference_document
+                        from scripts.verify_t10_structure_liquidity import output_json
+                        zones_reference = Path(storage) / "zones-reference.json"
+                        output_json(zones_reference, zone_reference_document(source_storage))
+                    env["TRADEFORGE_T10_ZONES_REFERENCE"] = str(zones_reference.resolve(strict=True))
         for reopen in ("0", "1"):
             start = perf_counter()
             subprocess.run([npm, "run", "e2e", "--", "--config", config, "--retries=0"],
