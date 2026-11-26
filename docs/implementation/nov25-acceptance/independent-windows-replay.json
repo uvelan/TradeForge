@@ -1,0 +1,1441 @@
+{
+  "dukascopy_control": {
+    "oracle": {
+      "inventory_counts": {
+        "SCHEDULED_CLOSURE": 238,
+        "MISSING_OPEN": 480,
+        "REGISTERED": 2
+      },
+      "available_hours": [
+        {
+          "start": 1763038800,
+          "status": "REGISTERED",
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+        },
+        {
+          "start": 1763042400,
+          "status": "REGISTERED",
+          "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f"
+        }
+      ],
+      "missing_open_seconds": [
+        1762120800,
+        1762124400,
+        1762128000,
+        1762131600,
+        1762135200,
+        1762138800,
+        1762142400,
+        1762146000,
+        1762149600,
+        1762153200,
+        1762156800,
+        1762160400,
+        1762164000,
+        1762167600,
+        1762171200,
+        1762174800,
+        1762178400,
+        1762182000,
+        1762185600,
+        1762189200,
+        1762192800,
+        1762196400,
+        1762200000,
+        1762203600,
+        1762207200,
+        1762210800,
+        1762214400,
+        1762218000,
+        1762221600,
+        1762225200,
+        1762228800,
+        1762232400,
+        1762236000,
+        1762239600,
+        1762243200,
+        1762246800,
+        1762250400,
+        1762254000,
+        1762257600,
+        1762261200,
+        1762264800,
+        1762268400,
+        1762272000,
+        1762275600,
+        1762279200,
+        1762282800,
+        1762286400,
+        1762290000,
+        1762293600,
+        1762297200,
+        1762300800,
+        1762304400,
+        1762308000,
+        1762311600,
+        1762315200,
+        1762318800,
+        1762322400,
+        1762326000,
+        1762329600,
+        1762333200,
+        1762336800,
+        1762340400,
+        1762344000,
+        1762347600,
+        1762351200,
+        1762354800,
+        1762358400,
+        1762362000,
+        1762365600,
+        1762369200,
+        1762372800,
+        1762376400,
+        1762380000,
+        1762383600,
+        1762387200,
+        1762390800,
+        1762394400,
+        1762398000,
+        1762401600,
+        1762405200,
+        1762408800,
+        1762412400,
+        1762416000,
+        1762419600,
+        1762423200,
+        1762426800,
+        1762430400,
+        1762434000,
+        1762437600,
+        1762441200,
+        1762444800,
+        1762448400,
+        1762452000,
+        1762455600,
+        1762459200,
+        1762462800,
+        1762466400,
+        1762470000,
+        1762473600,
+        1762477200,
+        1762480800,
+        1762484400,
+        1762488000,
+        1762491600,
+        1762495200,
+        1762498800,
+        1762502400,
+        1762506000,
+        1762509600,
+        1762513200,
+        1762516800,
+        1762520400,
+        1762524000,
+        1762527600,
+        1762531200,
+        1762534800,
+        1762538400,
+        1762542000,
+        1762545600,
+        1762549200,
+        1762725600,
+        1762729200,
+        1762732800,
+        1762736400,
+        1762740000,
+        1762743600,
+        1762747200,
+        1762750800,
+        1762754400,
+        1762758000,
+        1762761600,
+        1762765200,
+        1762768800,
+        1762772400,
+        1762776000,
+        1762779600,
+        1762783200,
+        1762786800,
+        1762790400,
+        1762794000,
+        1762797600,
+        1762801200,
+        1762804800,
+        1762808400,
+        1762812000,
+        1762815600,
+        1762819200,
+        1762822800,
+        1762826400,
+        1762830000,
+        1762833600,
+        1762837200,
+        1762840800,
+        1762844400,
+        1762848000,
+        1762851600,
+        1762855200,
+        1762858800,
+        1762862400,
+        1762866000,
+        1762869600,
+        1762873200,
+        1762876800,
+        1762880400,
+        1762884000,
+        1762887600,
+        1762891200,
+        1762894800,
+        1762898400,
+        1762902000,
+        1762905600,
+        1762909200,
+        1762912800,
+        1762916400,
+        1762920000,
+        1762923600,
+        1762927200,
+        1762930800,
+        1762934400,
+        1762938000,
+        1762941600,
+        1762945200,
+        1762948800,
+        1762952400,
+        1762956000,
+        1762959600,
+        1762963200,
+        1762966800,
+        1762970400,
+        1762974000,
+        1762977600,
+        1762981200,
+        1762984800,
+        1762988400,
+        1762992000,
+        1762995600,
+        1762999200,
+        1763002800,
+        1763006400,
+        1763010000,
+        1763013600,
+        1763017200,
+        1763020800,
+        1763024400,
+        1763028000,
+        1763031600,
+        1763035200,
+        1763046000,
+        1763049600,
+        1763053200,
+        1763056800,
+        1763060400,
+        1763064000,
+        1763067600,
+        1763071200,
+        1763074800,
+        1763078400,
+        1763082000,
+        1763085600,
+        1763089200,
+        1763092800,
+        1763096400,
+        1763100000,
+        1763103600,
+        1763107200,
+        1763110800,
+        1763114400,
+        1763118000,
+        1763121600,
+        1763125200,
+        1763128800,
+        1763132400,
+        1763136000,
+        1763139600,
+        1763143200,
+        1763146800,
+        1763150400,
+        1763154000,
+        1763330400,
+        1763334000,
+        1763337600,
+        1763341200,
+        1763344800,
+        1763348400,
+        1763352000,
+        1763355600,
+        1763359200,
+        1763362800,
+        1763366400,
+        1763370000,
+        1763373600,
+        1763377200,
+        1763380800,
+        1763384400,
+        1763388000,
+        1763391600,
+        1763395200,
+        1763398800,
+        1763402400,
+        1763406000,
+        1763409600,
+        1763413200,
+        1763416800,
+        1763420400,
+        1763424000,
+        1763427600,
+        1763431200,
+        1763434800,
+        1763438400,
+        1763442000,
+        1763445600,
+        1763449200,
+        1763452800,
+        1763456400,
+        1763460000,
+        1763463600,
+        1763467200,
+        1763470800,
+        1763474400,
+        1763478000,
+        1763481600,
+        1763485200,
+        1763488800,
+        1763492400,
+        1763496000,
+        1763499600,
+        1763503200,
+        1763506800,
+        1763510400,
+        1763514000,
+        1763517600,
+        1763521200,
+        1763524800,
+        1763528400,
+        1763532000,
+        1763535600,
+        1763539200,
+        1763542800,
+        1763546400,
+        1763550000,
+        1763553600,
+        1763557200,
+        1763560800,
+        1763564400,
+        1763568000,
+        1763571600,
+        1763575200,
+        1763578800,
+        1763582400,
+        1763586000,
+        1763589600,
+        1763593200,
+        1763596800,
+        1763600400,
+        1763604000,
+        1763607600,
+        1763611200,
+        1763614800,
+        1763618400,
+        1763622000,
+        1763625600,
+        1763629200,
+        1763632800,
+        1763636400,
+        1763640000,
+        1763643600,
+        1763647200,
+        1763650800,
+        1763654400,
+        1763658000,
+        1763661600,
+        1763665200,
+        1763668800,
+        1763672400,
+        1763676000,
+        1763679600,
+        1763683200,
+        1763686800,
+        1763690400,
+        1763694000,
+        1763697600,
+        1763701200,
+        1763704800,
+        1763708400,
+        1763712000,
+        1763715600,
+        1763719200,
+        1763722800,
+        1763726400,
+        1763730000,
+        1763733600,
+        1763737200,
+        1763740800,
+        1763744400,
+        1763748000,
+        1763751600,
+        1763755200,
+        1763758800,
+        1763935200,
+        1763938800,
+        1763942400,
+        1763946000,
+        1763949600,
+        1763953200,
+        1763956800,
+        1763960400,
+        1763964000,
+        1763967600,
+        1763971200,
+        1763974800,
+        1763978400,
+        1763982000,
+        1763985600,
+        1763989200,
+        1763992800,
+        1763996400,
+        1764000000,
+        1764003600,
+        1764007200,
+        1764010800,
+        1764014400,
+        1764018000,
+        1764021600,
+        1764025200,
+        1764028800,
+        1764032400,
+        1764036000,
+        1764039600,
+        1764043200,
+        1764046800,
+        1764050400,
+        1764054000,
+        1764057600,
+        1764061200,
+        1764064800,
+        1764068400,
+        1764072000,
+        1764075600,
+        1764079200,
+        1764082800,
+        1764086400,
+        1764090000,
+        1764093600,
+        1764097200,
+        1764100800,
+        1764104400,
+        1764108000,
+        1764111600,
+        1764115200,
+        1764118800,
+        1764122400,
+        1764126000,
+        1764129600,
+        1764133200,
+        1764136800,
+        1764140400,
+        1764144000,
+        1764147600,
+        1764151200,
+        1764154800,
+        1764158400,
+        1764162000,
+        1764165600,
+        1764169200,
+        1764172800,
+        1764176400,
+        1764180000,
+        1764183600,
+        1764187200,
+        1764190800,
+        1764194400,
+        1764198000,
+        1764201600,
+        1764205200,
+        1764208800,
+        1764212400,
+        1764216000,
+        1764219600,
+        1764223200,
+        1764226800,
+        1764230400,
+        1764234000,
+        1764237600,
+        1764241200,
+        1764244800,
+        1764248400,
+        1764252000,
+        1764255600,
+        1764259200,
+        1764262800,
+        1764266400,
+        1764270000,
+        1764273600,
+        1764277200,
+        1764280800,
+        1764284400,
+        1764288000,
+        1764291600,
+        1764295200,
+        1764298800,
+        1764302400,
+        1764306000,
+        1764309600,
+        1764313200,
+        1764316800,
+        1764320400,
+        1764324000,
+        1764327600,
+        1764331200,
+        1764334800,
+        1764338400,
+        1764342000,
+        1764345600,
+        1764349200,
+        1764352800,
+        1764356400,
+        1764360000,
+        1764363600,
+        1764540000,
+        1764543600
+      ],
+      "first_open_coverage_gap_ms": [
+        1762120800000,
+        1762552800000
+      ],
+      "merged_open_gaps_ms": [
+        [
+          1762120800000,
+          1762552800000
+        ],
+        [
+          1762725600000,
+          1763038800089
+        ],
+        [
+          1763045999826,
+          1763157600000
+        ],
+        [
+          1763330400000,
+          1763762400000
+        ],
+        [
+          1763935200000,
+          1764367200000
+        ],
+        [
+          1764540000000,
+          1764547200000
+        ]
+      ],
+      "coverage_gap_counts": {
+        "MISSING_OPEN": 2880,
+        "OBSERVED": 1
+      },
+      "unobserved_open_ms": 1728000263,
+      "coverage_sha256": "62eddd2eee8e5852bd2eda627a91553047bf317c92b7380105e1928a8e3fcc4f",
+      "events": [
+        {
+          "kind": "QUALIFIED",
+          "quote": {
+            "time_ms": 1763038800666,
+            "ordinal": 5,
+            "bid_units": 116239,
+            "ask_units": 116242,
+            "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+          },
+          "anchor": {
+            "time_ms": 1763038800089,
+            "ordinal": 0,
+            "bid_units": 116229,
+            "ask_units": 116231,
+            "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+          }
+        },
+        {
+          "kind": "ENTRY",
+          "quote": {
+            "time_ms": 1763038800771,
+            "ordinal": 6,
+            "bid_units": 116239,
+            "ask_units": 116243,
+            "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+          },
+          "side": "ASK",
+          "price_units": 116243,
+          "remaining": 1
+        },
+        {
+          "kind": "STOP",
+          "quote": {
+            "time_ms": 1763040698103,
+            "ordinal": 1564,
+            "bid_units": 116143,
+            "ask_units": 116144,
+            "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+          },
+          "side": "BID",
+          "price_units": 116143,
+          "remaining": 0
+        }
+      ],
+      "quote_count": 8636,
+      "ordered_slot_hashes_sha256": "9f29d9dfebe830eed6262fd2999cf57508a498aef3f4e2f5e80f32e7a4ab8dce",
+      "full_month_coverage": false
+    },
+    "variants": {
+      "baseline": {
+        "commit": "ad000f939de3bbbb8c5ba7b15a58cfd4ec102311",
+        "parity": {
+          "passed": true,
+          "first_divergence": null,
+          "verified_quote_rows": 8636,
+          "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+          "expected_gap_intervals": 2881,
+          "reopened_gap_intervals": null,
+          "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be"
+        },
+        "measurements": [
+          {
+            "mode": "cold",
+            "seconds": 2.9023672999974224,
+            "rss_bytes": 133419008,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 0,
+              "bi5_logical_bytes": 0,
+              "parquet_verifications": 0,
+              "parquet_logical_bytes": 0
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": null,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          },
+          {
+            "mode": "warm",
+            "seconds": 2.746803199996066,
+            "rss_bytes": 132759552,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 2,
+              "bi5_logical_bytes": 40141,
+              "parquet_verifications": 2,
+              "parquet_logical_bytes": 100293
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": null,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          },
+          {
+            "mode": "cold",
+            "seconds": 3.979741399998602,
+            "rss_bytes": 133472256,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 0,
+              "bi5_logical_bytes": 0,
+              "parquet_verifications": 0,
+              "parquet_logical_bytes": 0
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": null,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          },
+          {
+            "mode": "warm",
+            "seconds": 3.9161084000006667,
+            "rss_bytes": 132218880,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 2,
+              "bi5_logical_bytes": 40141,
+              "parquet_verifications": 2,
+              "parquet_logical_bytes": 100293
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": null,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          },
+          {
+            "mode": "cold",
+            "seconds": 4.179152899996552,
+            "rss_bytes": 133464064,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 0,
+              "bi5_logical_bytes": 0,
+              "parquet_verifications": 0,
+              "parquet_logical_bytes": 0
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": null,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          },
+          {
+            "mode": "warm",
+            "seconds": 4.302538699994329,
+            "rss_bytes": 132169728,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 2,
+              "bi5_logical_bytes": 40141,
+              "parquet_verifications": 2,
+              "parquet_logical_bytes": 100293
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": null,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          }
+        ]
+      },
+      "candidate": {
+        "commit": "c4f9ffbc3695720e89b7fe2e6a672d4a4a8115e5",
+        "parity": {
+          "passed": true,
+          "first_divergence": null,
+          "verified_quote_rows": 8636,
+          "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+          "expected_gap_intervals": 2881,
+          "reopened_gap_intervals": 2881,
+          "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be"
+        },
+        "measurements": [
+          {
+            "mode": "cold",
+            "seconds": 4.560294100003375,
+            "rss_bytes": 133017600,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 0,
+              "bi5_logical_bytes": 0,
+              "parquet_verifications": 0,
+              "parquet_logical_bytes": 0
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": 2881,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          },
+          {
+            "mode": "warm",
+            "seconds": 3.9360134999951697,
+            "rss_bytes": 132919296,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 2,
+              "bi5_logical_bytes": 40141,
+              "parquet_verifications": 2,
+              "parquet_logical_bytes": 100293
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": 2881,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          },
+          {
+            "mode": "cold",
+            "seconds": 4.1096324999962235,
+            "rss_bytes": 133263360,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 0,
+              "bi5_logical_bytes": 0,
+              "parquet_verifications": 0,
+              "parquet_logical_bytes": 0
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": 2881,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          },
+          {
+            "mode": "warm",
+            "seconds": 3.9598250999988522,
+            "rss_bytes": 132956160,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 2,
+              "bi5_logical_bytes": 40141,
+              "parquet_verifications": 2,
+              "parquet_logical_bytes": 100293
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": 2881,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          },
+          {
+            "mode": "cold",
+            "seconds": 3.6881138000026112,
+            "rss_bytes": 133398528,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 0,
+              "bi5_logical_bytes": 0,
+              "parquet_verifications": 0,
+              "parquet_logical_bytes": 0
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": 2881,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          },
+          {
+            "mode": "warm",
+            "seconds": 2.8884416000000783,
+            "rss_bytes": 133013504,
+            "requests": 43,
+            "warmup_reads": {
+              "bi5_decodes": 2,
+              "bi5_logical_bytes": 40141,
+              "parquet_verifications": 2,
+              "parquet_logical_bytes": 100293
+            },
+            "timed_reads": {
+              "bi5_decodes": 12,
+              "bi5_logical_bytes": 240846,
+              "parquet_verifications": 12,
+              "parquet_logical_bytes": 601758
+            },
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+            "service_hour_reads": 12,
+            "service_open_gap_intervals": 2881,
+            "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+            "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be",
+            "quote_count": 8636,
+            "parity_ledger_match": true
+          }
+        ]
+      }
+    }
+  },
+  "dukascopy_archive": {
+    "same_sha256_inputs_as_control": true,
+    "registered": 2
+  },
+  "mt5": {
+    "capture_sha256": "5431d15fa8a24b63b5f5b1f62241caa52110049ab8c87c8d1f7f5783d84d606c",
+    "captured_days": [
+      {
+        "day": "2025-11-01",
+        "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b",
+        "rows": 0
+      },
+      {
+        "day": "2025-11-02",
+        "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b",
+        "rows": 0
+      },
+      {
+        "day": "2025-11-03",
+        "sha256": "27c2ba647f56e5821f86df572fc5ef3380c4158de3e21278c57f963dcfb3b79a",
+        "rows": 52100
+      },
+      {
+        "day": "2025-11-04",
+        "sha256": "5da4d2d7b2bf565ede754263ce4f4765d31678ef9a8a0232c14a2bd7751f9d15",
+        "rows": 60854
+      },
+      {
+        "day": "2025-11-05",
+        "sha256": "2ac5274adcbddd079a81272a731ac547fec7e15f0b57cd09c83c607b50cc0b31",
+        "rows": 60794
+      },
+      {
+        "day": "2025-11-06",
+        "sha256": "3e3c67cfd54ae0315ddb42076ed645ddb964f4ba0524471f994c861e828dbee2",
+        "rows": 51117
+      },
+      {
+        "day": "2025-11-07",
+        "sha256": "87b84ec21b877cda608ba837bb529ccd2537a5bcc74dd6dd91bacc50595cfe01",
+        "rows": 50540
+      },
+      {
+        "day": "2025-11-08",
+        "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b",
+        "rows": 0
+      },
+      {
+        "day": "2025-11-09",
+        "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b",
+        "rows": 0
+      },
+      {
+        "day": "2025-11-10",
+        "sha256": "f32abf5b470675e838aa62f2792f8456e756ad95a62165af4d62828f270b9a73",
+        "rows": 49907
+      },
+      {
+        "day": "2025-11-11",
+        "sha256": "e6c947b43461c9244f29c784511645d5380a91969587c79d5054ef3682e5ebe7",
+        "rows": 48474
+      },
+      {
+        "day": "2025-11-12",
+        "sha256": "cc46384080b85e32dd5159d1ce786fec20cb4ebe55105e0bb90a28635a86d10a",
+        "rows": 48905
+      },
+      {
+        "day": "2025-11-13",
+        "sha256": "d64ee0a80861fbac730a172088d9857991ce8a0bbc192d20141125ae1a027b43",
+        "rows": 54537
+      },
+      {
+        "day": "2025-11-14",
+        "sha256": "d271ee6962d6b0197a84cb5a714975de6e611234ee0292d60cbbae4a907abb4a",
+        "rows": 59419
+      },
+      {
+        "day": "2025-11-15",
+        "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b",
+        "rows": 0
+      },
+      {
+        "day": "2025-11-16",
+        "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b",
+        "rows": 0
+      },
+      {
+        "day": "2025-11-17",
+        "sha256": "f2e8a6b7d587d557f814088e0bc4a5b8080a1d78ad70ba1f6f65625ac259cb5c",
+        "rows": 54021
+      },
+      {
+        "day": "2025-11-18",
+        "sha256": "ad9c9c6694e26f20739ffffaf255ce9df2c9c9a3f43a79a390804bec7fadb1ce",
+        "rows": 51950
+      },
+      {
+        "day": "2025-11-19",
+        "sha256": "6e015d81af3f8578edcdf813bd83b169bb25638253f4ba5bba1d91b2ea8232ef",
+        "rows": 53967
+      },
+      {
+        "day": "2025-11-20",
+        "sha256": "387b8bbfde6d636726bc731e3f900fa559d2f61c258d6f5218a61db548a6cec1",
+        "rows": 60001
+      },
+      {
+        "day": "2025-11-21",
+        "sha256": "182acd583ee855698933de495b5f42433a778b4e47d7372c849531a5164f191f",
+        "rows": 60495
+      },
+      {
+        "day": "2025-11-22",
+        "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b",
+        "rows": 0
+      },
+      {
+        "day": "2025-11-23",
+        "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b",
+        "rows": 0
+      },
+      {
+        "day": "2025-11-24",
+        "sha256": "b8c3e109a5d0f82d51678a06d2094340bbe8d8437edac024e9446b4fb38a8eb4",
+        "rows": 52169
+      },
+      {
+        "day": "2025-11-25",
+        "sha256": "2895647fc2ba1d37c08e49282c3bbfe61ed113e26360518c7398ecc796e7a163",
+        "rows": 59259
+      },
+      {
+        "day": "2025-11-26",
+        "sha256": "e10f9f39193593b1a8299755715a904623fb79bd834684048da87cd823f35683",
+        "rows": 61218
+      },
+      {
+        "day": "2025-11-27",
+        "sha256": "533d9ca8d003746e6ee4e10efdc7c15959cee8835c2db6c9a24c5e1b9c20464e",
+        "rows": 40952
+      },
+      {
+        "day": "2025-11-28",
+        "sha256": "e31a5f99b52ca984581f0fa2ed25beadcb9a915b51f5a3d0d9c65419663a2bcb",
+        "rows": 91113
+      },
+      {
+        "day": "2025-11-29",
+        "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b",
+        "rows": 0
+      },
+      {
+        "day": "2025-11-30",
+        "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b",
+        "rows": 0
+      }
+    ],
+    "source_rows": 1121792,
+    "open_rows": 1109721,
+    "counts": {
+      "SCHEDULED_CLOSURE": 230,
+      "MISSING_OPEN": 10,
+      "OBSERVED_OPEN": 472,
+      "CLOSED_WITH_OBSERVATIONS": 8
+    },
+    "closed_rows": 12071,
+    "closed_hours_with_observations": [
+      {
+        "start": 1762552800,
+        "count": 1647,
+        "first": {
+          "time_ms": 1762552800062,
+          "ordinal": 47623,
+          "bid_units": 115597,
+          "ask_units": 115599,
+          "source_sha256": "87b84ec21b877cda608ba837bb529ccd2537a5bcc74dd6dd91bacc50595cfe01"
+        },
+        "last": {
+          "time_ms": 1762556399486,
+          "ordinal": 49269,
+          "bid_units": 115640,
+          "ask_units": 115642,
+          "source_sha256": "87b84ec21b877cda608ba837bb529ccd2537a5bcc74dd6dd91bacc50595cfe01"
+        }
+      },
+      {
+        "start": 1762556400,
+        "count": 1270,
+        "first": {
+          "time_ms": 1762556400079,
+          "ordinal": 49270,
+          "bid_units": 115633,
+          "ask_units": 115650,
+          "source_sha256": "87b84ec21b877cda608ba837bb529ccd2537a5bcc74dd6dd91bacc50595cfe01"
+        },
+        "last": {
+          "time_ms": 1762559939484,
+          "ordinal": 50539,
+          "bid_units": 115637,
+          "ask_units": 115663,
+          "source_sha256": "87b84ec21b877cda608ba837bb529ccd2537a5bcc74dd6dd91bacc50595cfe01"
+        }
+      },
+      {
+        "start": 1763157600,
+        "count": 1540,
+        "first": {
+          "time_ms": 1763157601383,
+          "ordinal": 56383,
+          "bid_units": 116183,
+          "ask_units": 116185,
+          "source_sha256": "d271ee6962d6b0197a84cb5a714975de6e611234ee0292d60cbbae4a907abb4a"
+        },
+        "last": {
+          "time_ms": 1763161199111,
+          "ordinal": 57922,
+          "bid_units": 116200,
+          "ask_units": 116202,
+          "source_sha256": "d271ee6962d6b0197a84cb5a714975de6e611234ee0292d60cbbae4a907abb4a"
+        }
+      },
+      {
+        "start": 1763161200,
+        "count": 1496,
+        "first": {
+          "time_ms": 1763161200076,
+          "ordinal": 57923,
+          "bid_units": 116193,
+          "ask_units": 116211,
+          "source_sha256": "d271ee6962d6b0197a84cb5a714975de6e611234ee0292d60cbbae4a907abb4a"
+        },
+        "last": {
+          "time_ms": 1763164738618,
+          "ordinal": 59418,
+          "bid_units": 116201,
+          "ask_units": 116228,
+          "source_sha256": "d271ee6962d6b0197a84cb5a714975de6e611234ee0292d60cbbae4a907abb4a"
+        }
+      },
+      {
+        "start": 1763762400,
+        "count": 2023,
+        "first": {
+          "time_ms": 1763762400070,
+          "ordinal": 56907,
+          "bid_units": 115128,
+          "ask_units": 115130,
+          "source_sha256": "182acd583ee855698933de495b5f42433a778b4e47d7372c849531a5164f191f"
+        },
+        "last": {
+          "time_ms": 1763765999632,
+          "ordinal": 58929,
+          "bid_units": 115171,
+          "ask_units": 115173,
+          "source_sha256": "182acd583ee855698933de495b5f42433a778b4e47d7372c849531a5164f191f"
+        }
+      },
+      {
+        "start": 1763766000,
+        "count": 1565,
+        "first": {
+          "time_ms": 1763766000058,
+          "ordinal": 58930,
+          "bid_units": 115164,
+          "ask_units": 115181,
+          "source_sha256": "182acd583ee855698933de495b5f42433a778b4e47d7372c849531a5164f191f"
+        },
+        "last": {
+          "time_ms": 1763769537686,
+          "ordinal": 60494,
+          "bid_units": 115136,
+          "ask_units": 115148,
+          "source_sha256": "182acd583ee855698933de495b5f42433a778b4e47d7372c849531a5164f191f"
+        }
+      },
+      {
+        "start": 1764367200,
+        "count": 1278,
+        "first": {
+          "time_ms": 1764367200057,
+          "ordinal": 88583,
+          "bid_units": 116020,
+          "ask_units": 116022,
+          "source_sha256": "e31a5f99b52ca984581f0fa2ed25beadcb9a915b51f5a3d0d9c65419663a2bcb"
+        },
+        "last": {
+          "time_ms": 1764370794177,
+          "ordinal": 89860,
+          "bid_units": 116008,
+          "ask_units": 116010,
+          "source_sha256": "e31a5f99b52ca984581f0fa2ed25beadcb9a915b51f5a3d0d9c65419663a2bcb"
+        }
+      },
+      {
+        "start": 1764370800,
+        "count": 1252,
+        "first": {
+          "time_ms": 1764370800048,
+          "ordinal": 89861,
+          "bid_units": 116000,
+          "ask_units": 116018,
+          "source_sha256": "e31a5f99b52ca984581f0fa2ed25beadcb9a915b51f5a3d0d9c65419663a2bcb"
+        },
+        "last": {
+          "time_ms": 1764374330188,
+          "ordinal": 91112,
+          "bid_units": 115983,
+          "ask_units": 116031,
+          "source_sha256": "e31a5f99b52ca984581f0fa2ed25beadcb9a915b51f5a3d0d9c65419663a2bcb"
+        }
+      }
+    ],
+    "missing_open_seconds": [
+      1762120800,
+      1762124400,
+      1762725600,
+      1762729200,
+      1763330400,
+      1763334000,
+      1763935200,
+      1763938800,
+      1764540000,
+      1764543600
+    ],
+    "open_gaps_ms": [
+      [
+        1762120800000,
+        1762128081528
+      ],
+      [
+        1762128226590,
+        1762128300039
+      ],
+      [
+        1762214340113,
+        1762214440323
+      ],
+      [
+        1762214700943,
+        1762214765108
+      ],
+      [
+        1762300740442,
+        1762300860127
+      ],
+      [
+        1762387140109,
+        1762387260150
+      ],
+      [
+        1762387500161,
+        1762387581120
+      ],
+      [
+        1762473540086,
+        1762473660117
+      ],
+      [
+        1762725600000,
+        1762732874189
+      ],
+      [
+        1762732963319,
+        1762733023600
+      ],
+      [
+        1762819140998,
+        1762819260185
+      ],
+      [
+        1762819380763,
+        1762819441251
+      ],
+      [
+        1762905540090,
+        1762905660188
+      ],
+      [
+        1762991940101,
+        1762992060200
+      ],
+      [
+        1762992420850,
+        1762992481871
+      ],
+      [
+        1762992481872,
+        1762992550461
+      ],
+      [
+        1763048811331,
+        1763048874349
+      ],
+      [
+        1763078340087,
+        1763078434562
+      ],
+      [
+        1763078554881,
+        1763078626038
+      ],
+      [
+        1763153362318,
+        1763153449443
+      ],
+      [
+        1763330400000,
+        1763337684137
+      ],
+      [
+        1763423940135,
+        1763424036552
+      ],
+      [
+        1763424160019,
+        1763424226041
+      ],
+      [
+        1763510340397,
+        1763510460338
+      ],
+      [
+        1763510488490,
+        1763510625557
+      ],
+      [
+        1763510703196,
+        1763510790112
+      ],
+      [
+        1763512054582,
+        1763512122216
+      ],
+      [
+        1763596740095,
+        1763596860356
+      ],
+      [
+        1763667101324,
+        1763667181578
+      ],
+      [
+        1763683140090,
+        1763683260361
+      ],
+      [
+        1763935200000,
+        1763942489069
+      ],
+      [
+        1764028740094,
+        1764028860119
+      ],
+      [
+        1764029026040,
+        1764029100020
+      ],
+      [
+        1764098929114,
+        1764098992311
+      ],
+      [
+        1764115140090,
+        1764115260114
+      ],
+      [
+        1764115338740,
+        1764115425555
+      ],
+      [
+        1764201540083,
+        1764201660123
+      ],
+      [
+        1764201727183,
+        1764201791879
+      ],
+      [
+        1764275100400,
+        1764275186192
+      ],
+      [
+        1764287940082,
+        1764288060132
+      ],
+      [
+        1764288227940,
+        1764288300322
+      ],
+      [
+        1764288300836,
+        1764288390088
+      ],
+      [
+        1764289325336,
+        1764289397726
+      ],
+      [
+        1764290440963,
+        1764290511991
+      ],
+      [
+        1764540000000,
+        1764547200000
+      ]
+    ],
+    "max_open_gap_ms": 7289069,
+    "accepted_for_replay": false,
+    "used_raw_timestamps": true,
+    "product_preflight": {
+      "commit": "bfdb407013a486cc53f731c82fbc7325886130ea",
+      "status": "REJECTED",
+      "reasons": [
+        "RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR",
+        "OPEN_SESSION_COVERAGE_INCOMPLETE"
+      ],
+      "first_divergence": null,
+      "parity_passed": true,
+      "hourly_receipts_sha256": "31943d30975d5218d2be7364f4b3f4b77042827e1acb3574196d9c047d4b238f"
+    }
+  }
+}
