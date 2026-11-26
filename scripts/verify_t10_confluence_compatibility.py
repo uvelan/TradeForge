@@ -14,7 +14,24 @@ def get_json(response):
     return response.json()
 
 
-def capture(storage):
+def check_revision_links(client, session_id, cutoff, crt, smt):
+    receipt = get_json(client.get(f"/api/replay/sessions/{session_id}/confluence",
+                                  params={"cutoff": cutoff, "profile": "CRT_SMT_M5_V1"}))
+    for name, families in (("crt", crt["ranges"]), ("smt", smt["events"])):
+        selected = receipt["components"][name]
+        if selected.get("family_id") is None:
+            assert not families, (cutoff, name, "standalone API produced an unreported family")
+            continue
+        key = "range_id" if name == "crt" else "id"
+        family, = (item for item in families if item[key] == selected["family_id"])
+        published = [family] if name == "crt" else family["revisions"]
+        revision = published[-1]
+        assert (selected["revision_id"], selected["available_at"]) == (revision["id"], revision["available_at"]), (
+            cutoff, name, revision["id"], selected["revision_id"])
+    return receipt["receipt_id"]
+
+
+def capture(storage, check_join=False):
     from fastapi.testclient import TestClient
     from research_backend.app.main import app
 
@@ -40,6 +57,11 @@ def capture(storage):
                 "alignment_bars": 0, "confirmation_bars": 1, "expiry_bars": 64, "tolerance_bps": 0, "limit": 100,
             }))
             assert smt["status"] in ("PARTIAL", "EVALUATED"), smt
+            if check_join:
+                check_revision_links(client, session["id"], cutoff, crt, smt)
+            # Wall-clock telemetry varies on an identical run. All lineage, state,
+            # archive/resource counts, timestamps and exact evidence remain in the comparison.
+            smt = {**smt, "resources": {k: v for k, v in smt["resources"].items() if k != "matching_frontier_ms"}}
             for component, body in (("CRT", crt), ("SMT", smt)):
                 canonical = json.dumps(body, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
                 results.append({"component": component, "cutoff": cutoff, "bytes": len(canonical),
@@ -52,11 +74,12 @@ if __name__ == "__main__":
     parser.add_argument("--source-storage", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--compare", type=Path)
+    parser.add_argument("--check-join", action="store_true", help="Also resolve the joined IDs against the original APIs")
     args = parser.parse_args()
     with TemporaryDirectory(prefix="tradeforge-confluence-compat-") as workspace:
         os.environ["TRADEFORGE_STORAGE"] = workspace
         os.environ["TRADEFORGE_DATA_DIR"] = str(Path(workspace) / "research")
-        fingerprints = capture(args.source_storage.resolve())
+        fingerprints = capture(args.source_storage.resolve(), args.check_join)
     args.output.write_text(json.dumps(fingerprints, indent=2) + "\n", encoding="utf-8")
     if args.compare:
         assert fingerprints == json.loads(args.compare.read_text(encoding="utf-8")), "Standalone component responses changed"
