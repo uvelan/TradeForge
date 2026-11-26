@@ -144,3 +144,66 @@ def test_paging_and_missing_or_corrupt_pins_fail_closed(client):
     (storage.MARKET_DIR / partition["relative_path"]).write_bytes(b"corrupt controlled fixture")
     failed = query(client, key, end, zone_id=first["zone_id"])
     assert failed.status_code == 409 and partition["id"] in failed.json()["detail"]
+
+
+def test_structure_proof_preserves_delayed_candidate_lookback(client):
+    # Bar 6 is the nearest opposing candle, but its delivery follows the BOS's open.
+    prices = [(9, 10, 8, 9)] * 2 + BLOCK
+    prices[5] = (10.75, 11, 9.5, 10)
+    values = bars(prices, {6: stamp(7)+10})
+    publish(values)
+    key = session(client, end=stamp(len(values)))
+    at = receipt(client, key, stamp(8))
+    zone = family(at, "OB", 7)
+    detail = receipt(client, key, stamp(len(values)), zone_id=zone["zone_id"])["selected"]
+    assert (zone["anchor_time"], zone["lower"], zone["upper"]) == (stamp(5), 9.5, 11)
+    structure = detail["structure"]
+    for cutoff in (stamp(8), stamp(len(values))):
+        parent = client.get(f"{URL}/{key}/structure-liquidity",
+                            params={"cutoff": cutoff, "event_id": structure["id"]}).json()["selected"]
+        assert parent["evidence"] == structure["evidence"]
+    assert [row["time"] for row in structure["evidence"]] == [stamp(i) for i in range(8)]
+    candidate, newer, boss = structure["evidence"][-3:]
+    assert candidate["available_at"] <= boss["time"] < newer["available_at"] < boss["available_at"]
+    assert all(row["close"] < row["open"] for row in (candidate, newer))
+
+
+@pytest.mark.parametrize("ignored_arrival", [4, 9])
+def test_skipped_out_of_order_arrival_is_never_supporting_context(client, ignored_arrival):
+    from research_backend.app.indicator_engine import EvidenceBar
+    from research_backend.app.indicator_coverage import replay_availability
+    from research_backend.app.replay_structure import processed_rows, proof_prefix
+
+    values = bars(BLOCK, {0: stamp(ignored_arrival)+1})
+    publish(values)
+    rejected = client.post(URL, json=dict(symbol="EURUSD", source="DUKASCOPY_SAVED", timeframe="M5",
+                                           start=START, end=stamp(10)))
+    assert rejected.status_code == 409 and "timestamps" in rejected.json()["detail"]
+    # Defend the underlying producer projection as well when called on older or
+    # independently loaded histories. A delivered but ignored row cannot be proof.
+    children = [{**r, "available_at": replay_availability(r, STEP)} for r in values]
+    processed = processed_rows([(EvidenceBar.model_validate(r), r["available_at"]) for r in children])
+    positions = {bar.time: i for i, (bar, _) in enumerate(processed)}
+    captured = proof_prefix(children, stamp(5), stamp(6), {}, positions)
+    assert [row["time"] for row in captured] == [stamp(i) for i in range(1, 6)]
+
+
+@pytest.mark.parametrize("kind,values,index,later,reason", [
+    ("OB", BLOCK[:6], 5, [(11, 12, 8, 8)], "CLOSE_BEYOND_FAR_EDGE"),
+    ("FVG", GAP[:3], 2, [(12, 13, 10, 10)], "CLOSE_BEYOND_OPPOSITE_BOUNDARY"),
+    ("FVG", GAP[:3], 2, [(9, 9.5, 8, 9)], "GAP_THROUGH_UNOBSERVED"),
+    ("OB", BLOCK[:6], 5, [(15, 16, 14, 15)]*250, "MAX_AGE"),
+    ("FVG", GAP[:3], 2, [(15, 16, 14, 15)]*250, "MAX_AGE"),
+])
+def test_mirrored_bearish_terminal_and_prior_revision(client, kind, values, index, later, reason):
+    mirrored = [(30-o, 30-l, 30-h, 30-c) for o, h, l, c in values+later]
+    publish(bars(mirrored), "GBPUSD")
+    end = stamp(len(mirrored))
+    key = session(client, end=end, symbol="GBPUSD")
+    active = family(receipt(client, key, stamp(index+1)), kind, index)
+    terminal = receipt(client, key, end, zone_id=active["zone_id"])["selected"]
+    assert (terminal["direction"], terminal["state"], terminal["reason"]) == (
+        "BEARISH", "EXPIRED" if reason == "MAX_AGE" else "INVALIDATED", reason)
+    assert terminal["revisions"][0] == active and terminal["revisions"][-1]["available_at"] == end
+    rewind = receipt(client, key, stamp(index+1), zone_id=active["zone_id"])["selected"]
+    assert rewind["revisions"] == [active] and all(bar["available_at"] <= stamp(index+1) for bar in rewind["evidence"])

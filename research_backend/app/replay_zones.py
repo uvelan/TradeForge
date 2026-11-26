@@ -69,7 +69,7 @@ def zone_detail(latest, formation, revisions, breaks, pivots, rows, children):
         # distinguishing its direct pivot/break witnesses from contextual rows.
         structure_roles = {stamp: list(items) for stamp, items in roles.items()}
         structure_roles.setdefault(event["break_time"], []).append({"role": "EVENT_OBSERVATION", "event_id": event["id"]})
-        structure["evidence"] = proof_prefix(children, event["break_time"], event["available_at"], structure_roles)
+        structure["evidence"] = proof_prefix(children, event["break_time"], event["available_at"], structure_roles, positions)
         mark(formation["candidate_time"], "OB_CANDIDATE", formation["candidate_id"])
         mark(event["break_time"], "STRUCTURE_BREAK", event["id"])
 

@@ -29,8 +29,8 @@ def replay_provenance(lane):
     # lane. Its scope excludes retrieval, partition list and moving replay cutoff.
     source = {key: lane.get(key) for key in ("source", "symbol", "timeframe", "dataset_id", "feed_id", "price_basis")}
     return {**source, "partitions": lane["partitions"], "context_authority": "CLIENT_SUPPLIED_UNVERIFIED",
-                  "timing_policy": STRICT, "timing_policy_version": 3, "availability_mode": RECORDED_MODE,
-                  "availability_mode_version": MODE_VERSIONS[RECORDED_MODE], "schedule_completeness": "NOT_ESTABLISHED"}
+            "timing_policy": STRICT, "timing_policy_version": 3, "availability_mode": RECORDED_MODE,
+            "availability_mode_version": MODE_VERSIONS[RECORDED_MODE], "schedule_completeness": "NOT_ESTABLISHED"}
 
 
 def processed_rows(rows):
@@ -51,9 +51,9 @@ def mark_pivot(pivot, processed, positions, mark):
     mark(pivot["confirmation_bar_time"], "PIVOT_CONFIRMATION", pivot["id"])
 
 
-def proof_prefix(children, observation_time, available_at, witnesses):
+def proof_prefix(children, observation_time, available_at, witnesses, positions):
     return [{**row, "roles": witnesses.get(row["time"], [])} for row in children
-            if row["time"] <= observation_time and row["available_at"] <= available_at]
+            if row["time"] in positions and row["time"] <= observation_time and row["available_at"] <= available_at]
 
 
 def replay_events(lane, rows, cutoff, event_id):
@@ -143,7 +143,7 @@ def replay_events(lane, rows, cutoff, event_id):
     detect_structure(rows, STEP, STRUCTURE, structure_scope(provenance), StructureDelivery(pivot_limit=0, break_limit=0),
                      {"cutoff": cutoff, "frozen": True, "provenance": provenance},
                      consumer=stream.observe, public_event=publish_structure, registry=stream.registry)
-    return sorted(events, key=lambda e: (e["available_at"], e["observation_time"], e["type"], e["id"])), witnesses
+    return sorted(events, key=lambda e: (e["available_at"], e["observation_time"], e["type"], e["id"])), witnesses, positions
 
 
 def verified_replay_rows(session, view, cutoff):
@@ -176,12 +176,13 @@ def verified_replay_rows(session, view, cutoff):
 
 def inspect_structure_liquidity(session, view, cutoff, event_id=None, before=None):
     lane, rows, children = verified_replay_rows(session, view, cutoff)
-    events, witnesses = replay_events(lane, rows, cutoff, event_id)
+    events, witnesses, positions = replay_events(lane, rows, cutoff, event_id)
     end = len(events) if before is None else min(before, len(events))
     start = max(end - PAGE_SIZE, 0)
     selected = next((e for e in events if e["id"] == event_id), None)
     if selected is not None:
-        selected = {**selected, "evidence": proof_prefix(children, selected["observation_time"], selected["available_at"], witnesses)}
+        evidence = proof_prefix(children, selected["observation_time"], selected["available_at"], witnesses, positions)
+        selected = {**selected, "evidence": evidence}
     return {**{key: lane[key] for key in ("symbol", "source", "feed_id", "price_basis", "timeframe")},
             "session_id": session["id"], "view": view, "cutoff": cutoff, "rule_version": RULE_VERSION,
             "rules": {"structure": STRUCTURE.identity_parameters(), "liquidity": LIQUIDITY.identity(), "mss": MSS_RULE},
