@@ -288,7 +288,7 @@ test("links four chart views and opens a saved simulation after reload",async ({
   await page.getByText("Chart synchronization",{exact:true}).click();
   await page.getByRole("checkbox",{name:"Timeframe",exact:true}).check();
   const secondary=page.getByRole("region",{name:"Chart view 4",exact:true});
-  await expect(secondary.getByText("M5",{exact:true})).toBeVisible();
+  await expect(secondary.locator(".view-controls").getByText("M5",{exact:true})).toBeVisible();
   await expect(page.locator('.terminal-chart-columns [aria-label="Interactive market candlestick chart"]')).toHaveCount(4);
   await page.getByRole("button",{name:"Strategy Lab",exact:true}).click();
   await page.getByRole("combobox",{name:"Data source",exact:true}).selectOption("DEMO");
