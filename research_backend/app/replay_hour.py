@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from .db import transaction
 from .indicator_coverage import MarketSchedule, aggregate_ohlc, inspect_window, replay_availability
 from .indicators import Bar
+from .market import FRAME_MIN
 from .storage import iter_complete_partition
 
 STEP = 300
@@ -49,6 +50,11 @@ def verified_children(lane, visible):
     return children
 
 
+def capture_start(lane):
+    coverage = lane["coverage"]
+    return lane["candles"][0]["time"] if coverage["truncated"] and lane["candles"] else coverage["start"]
+
+
 def inspect_hour(session, view, hour_start, cutoff):
     lane = session["market"] if view == "primary" else session["views"].get(view)
     if not lane or lane.get("error"):
@@ -56,14 +62,17 @@ def inspect_hour(session, view, hour_start, cutoff):
     if (lane["timeframe"] != "M5" or lane["source"] != "DUKASCOPY_SAVED"
             or lane["symbol"] not in ("EURUSD", "GBPUSD") or not lane.get("coverage")):
         raise HTTPException(422, "H1 inspection requires a saved Dukascopy EURUSD or GBPUSD M5 archive range")
-    coverage = lane["coverage"]
-    bars = lane["candles"]
-    left = bars[0]["time"] if bars and coverage["truncated"] else coverage["start"]
-    horizon = max(coverage["end"], replay_availability(bars[-1], STEP)) if bars else coverage["end"]
+    primary = session["market"]
+    primary_step = FRAME_MIN[primary["timeframe"]] * 60
+    horizon = max(primary["coverage"]["end"], replay_availability(primary["candles"][-1], primary_step))
+    if not capture_start(primary) <= cutoff <= horizon:
+        raise HTTPException(422, "Requested cutoff outside the captured replay session clock")
+
+    left = capture_start(lane)
     end = hour_start + HOUR
-    if (hour_start % HOUR or not left <= cutoff <= horizon or hour_start > cutoff
-            or end <= left or hour_start >= coverage["end"]):
-        raise HTTPException(422, "Requested UTC hour or cutoff outside the captured replay window")
+    if (hour_start % HOUR or cutoff < left or hour_start > cutoff
+            or end <= left or hour_start >= lane["coverage"]["end"]):
+        raise HTTPException(422, "Requested UTC hour outside the captured pane window at this cutoff")
     schedule = MarketSchedule(kind="forex_weekly")
     receipt = dict(session_id=session["id"], view=view, symbol=lane["symbol"], source=lane["source"],
                    feed_id=lane["feed_id"], price_basis=lane["price_basis"], source_timeframe="M5", timeframe="H1",
@@ -73,7 +82,7 @@ def inspect_hour(session, view, hour_start, cutoff):
     # Only completed children enter the calculation. Missing and not-yet-delivered children
     # are indistinguishable at this cutoff, even after a later checkpoint has been inspected.
     visible = []
-    for row in bars:
+    for row in lane["candles"]:
         if hour_start <= row["time"] < end:
             available = replay_availability(row, STEP)
             if type(available) is not int or available < row["time"] + STEP:

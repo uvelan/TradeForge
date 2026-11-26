@@ -20,8 +20,8 @@ def publish(values, symbol="EURUSD"):
     return storage.write_partition("DUKASCOPY", "controlled-replay-test", symbol, "candles", "M5", "BID", values)
 
 
-def session(client, start=START, end=START + 7200, **extra):
-    response = client.post(URL, json=dict(symbol="EURUSD", source="DUKASCOPY_SAVED", timeframe="M5",
+def session(client, start=START, end=START + 7200, symbol="EURUSD", **extra):
+    response = client.post(URL, json=dict(symbol=symbol, source="DUKASCOPY_SAVED", timeframe="M5",
                                            start=start, end=end, **extra))
     assert response.status_code == 201, response.text
     return response.json()["id"]
@@ -130,3 +130,62 @@ def test_partial_replay_window_cannot_borrow_archived_candles_before_session(cli
     assert (result["status"], result["reason"], result["missing_slots"]) == (
         "UNRESOLVED", "MISSING_OPEN_CANDLES", [START, START + 300])
     assert result["ohlc"] is None and result["children"] == []
+
+
+@pytest.mark.parametrize(("primary", "peer"), [("EURUSD", "GBPUSD"), ("GBPUSD", "EURUSD")])
+def test_delayed_primary_clock_inspects_on_time_peer_at_the_same_cutoff(client, primary, peer):
+    end = START + 3600
+    primary_bars = bars(primary, 12)
+    for row in primary_bars:
+        row["available_at"] = row["time"] + 300
+    primary_bars[-1]["available_at"] = end + 20
+    primary_partition = publish(primary_bars, primary)
+    peer_partition = publish(bars(peer, 12), peer)
+    key = session(client, end=end, symbol=primary, views=[dict(view="comparison", symbol=peer, timeframe="M5")])
+
+    expected_ohlc = {"EURUSD": dict(open=100, high=142, low=84, close=112),
+                     "GBPUSD": dict(open=200, high=242, low=184, close=212)}
+    for cutoff in (end, end + 19, end + 20):
+        primary_hour = receipt(client, key, cutoff)
+        peer_hour = receipt(client, key, cutoff, view="comparison")
+        assert (peer_hour["status"], peer_hour["symbol"], peer_hour["cutoff"], peer_hour["available_at"]) == (
+            "COMPLETE", peer, cutoff, end)
+        assert peer_hour["ohlc"] == expected_ohlc[peer]
+        assert [child["source_id"] for child in peer_hour["children"]] == [
+            f"{peer_partition['id']}:{START + i * 300}" for i in range(12)]
+        if cutoff < end + 20:
+            assert primary_hour["status"] == "UNRESOLVED"
+            assert primary_hour["missing_slots"] == [end - 300]
+            assert primary_hour["ohlc"] is None and primary_hour["children"] == []
+        else:
+            assert primary_hour["status"] == "COMPLETE"
+            assert primary_hour["ohlc"] == expected_ohlc[primary]
+            assert [child["source_id"] for child in primary_hour["children"]] == [
+                f"{primary_partition['id']}:{START + i * 300}" for i in range(12)]
+            assert primary_hour["available_at"] == primary_hour["children"][-1]["available_at"] == cutoff
+    for view in ("primary", "comparison"):
+        assert inspect(client, key, end + 21, view=view).status_code == 422
+        assert inspect(client, key, end + 20, start=end, view=view).status_code == 422
+
+
+def test_shorter_peer_keeps_its_own_hour_range_and_the_primary_clock(client):
+    publish(bars("EURUSD", 36, START - 3600))
+    publish(bars("GBPUSD", 12), "GBPUSD")
+
+    # With no explicit bounds, each pane captures its own recent archive range.
+    def captured(primary, peer):
+        return session(client, start=None, end=None, symbol=primary,
+                       views=[dict(view="comparison", symbol=peer, timeframe="M5")])
+
+    late_cutoff = START + 7200
+    long_primary = captured("EURUSD", "GBPUSD")
+    peer_hour = receipt(client, long_primary, late_cutoff, view="comparison")
+    assert (peer_hour["status"], peer_hour["available_at"], peer_hour["cutoff"]) == (
+        "COMPLETE", START + 3600, late_cutoff)
+    assert inspect(client, long_primary, late_cutoff, start=START + 3600, view="comparison").status_code == 422
+    assert receipt(client, long_primary, late_cutoff, start=START + 3600)["status"] == "COMPLETE"
+
+    short_primary = captured("GBPUSD", "EURUSD")
+    assert inspect(client, short_primary, START - 1, start=START - 3600, view="comparison").status_code == 422
+    assert inspect(client, short_primary, START + 3601, view="comparison").status_code == 422
+    assert receipt(client, short_primary, START + 3600, view="comparison")["status"] == "COMPLETE"
