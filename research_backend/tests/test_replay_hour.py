@@ -130,4 +130,3 @@ def test_partial_replay_window_cannot_borrow_archived_candles_before_session(cli
     assert (result["status"], result["reason"], result["missing_slots"]) == (
         "UNRESOLVED", "MISSING_OPEN_CANDLES", [START, START + 300])
     assert result["ohlc"] is None and result["children"] == []
-
