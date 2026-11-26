@@ -57,6 +57,12 @@ def open_intervals(start: int, end: int, schedule: MarketSchedule):
     return intervals
 
 
+def aggregate_ohlc(bars):
+    """OHLC of chronologically ordered, nonempty child bars on one price basis."""
+    return {"open": bars[0].open, "high": max(bar.high for bar in bars),
+            "low": min(bar.low for bar in bars), "close": bars[-1].close}
+
+
 def inspect_window(start, end, step, observations, schedule, cutoff):
     intervals = open_intervals(start, end, schedule)
     expected = None

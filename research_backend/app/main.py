@@ -41,6 +41,7 @@ from .strategy_evaluation_routes import router as strategy_evaluation_router
 from .historical_strategy_routes import router as historical_strategy_router
 from .historical_strategy_worker import supervise as supervise_strategy_history
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
+from .replay_hour import inspect_hour
 from .saved_history import chart_range, tick_partitions, read_tick_partitions, tick_source_manifests
 
 
@@ -624,6 +625,12 @@ def replay_session(session_id:str):
     return {"id":session_id,**json.loads(row["payload"]),
             "checkpoint":{"position":checkpoint["position"],"bookmarks":json.loads(checkpoint["bookmarks"])}
             if checkpoint else None}
+
+
+@app.get('/api/replay/sessions/{session_id}/higher-timeframe')
+def replay_higher_timeframe(session_id: str, hour_start: int = Query(ge=0), cutoff: int = Query(ge=0),
+                            view: str = Query(default="primary", pattern=r"^(primary|comparison|[234])$")):
+    return inspect_hour(replay_session(session_id), view, hour_start, cutoff)
 
 
 @app.post('/api/replay/sessions/{session_id}/checkpoint')
