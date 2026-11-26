@@ -86,6 +86,7 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
   const [catalog,setCatalog]=useState<Catalog>();
   const [templates,setTemplates]=useState<Template[]>([]);
   const [library,setLibrary]=useState<Listed[]>([]);
+  const [libraryLoadFailed,setLibraryLoadFailed]=useState(false);
   const [offset,setOffset]=useState(0);
   const [record,setRecord]=useState<RecordVersion>();
   const [evaluationVersion,setEvaluationVersion]=useState<string>();
@@ -101,10 +102,18 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
 
   useEffect(()=>{
     let active=true;
-    Promise.all([api.get<Catalog>(endpoint+'/capabilities'),api.get<Template[]>(endpoint+'/templates'),
+    Promise.allSettled([api.get<Catalog>(endpoint+'/capabilities'),api.get<Template[]>(endpoint+'/templates'),
       api.get<Listed[]>(endpoint+'?limit=40')]).then(([cap,options,items])=>{
-        if(active){setCatalog(cap);setTemplates(options);setLibrary(items);}
-      }).catch((error:Error)=>{if(active)setError(error.message);});
+        if(!active)return;
+        if(cap.status==='fulfilled'&&options.status==='fulfilled'){
+          setCatalog(cap.value);setTemplates(options.value);
+        }else{
+          const failure=cap.status==='rejected'?cap:options;
+          if(failure.status==='rejected')setError(failure.reason.message);
+        }
+        if(items.status==='fulfilled')setLibrary(items.value);
+        else setLibraryLoadFailed(true);
+      });
     return()=>{active=false;};
   },[]);
 
@@ -121,6 +130,7 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
   function edit(update:Definition){setDefinition({...update,status:'DRAFT'});setValidation(undefined);setMessage('');}
   async function page(next:number){
     setLibrary(await api.get<Listed[]>(endpoint+'?limit=40&offset='+next));setOffset(next);
+    setLibraryLoadFailed(false);
   }
   function accept(item:RecordVersion){
     setRecord(item);setDefinition(item.definition);setValidation(item.binding_revision);setRefreshWarning('');
@@ -181,7 +191,11 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
           await adopt(await api.get<RecordVersion>(endpoint+'/'+item.strategy_id));
         })}>{item.name}</button>
         <span>v{item.version} · {item.status} · {purposeLabel(item.purpose)} · {format(item.created_at)}</span>
-      </li>)}</ul>:<p className="muted">No saved strategies on this page.</p>}
+      </li>)}</ul>:libraryLoadFailed?<div>
+        <p role="status">Could not load the strategy library.</p>
+        <button className="small-tool" type="button" disabled={busy}
+          onClick={()=>void run(()=>page(0))}>Retry strategy library</button>
+      </div>:<p className="muted">No saved strategies on this page.</p>}
       <div className="strategy-actions">
         {offset>0&&<button className="small-tool" type="button" disabled={busy} onClick={()=>void run(()=>page(offset-40))}>Previous strategies</button>}
         {library.length===40&&<button className="small-tool" type="button" disabled={busy} onClick={()=>void run(()=>page(offset+40))}>More strategies</button>}

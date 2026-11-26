@@ -251,3 +251,43 @@ test("retains contiguous history after a save and restores paging at a stale rel
   await expect(history.nth(1)).toContainText("v44 · DRAFT");
   await expect(history.last()).toContainText("v5 · DRAFT");
 });
+
+test("retries an unavailable strategy library after reopening", async ({ page }) => {
+  const name = "Saved strategy recovered after unavailable library";
+  const templates = await (await page.request.get(endpoint + "/templates")).json();
+  const definition = { ...templates.find((item: { id: string }) => item.id === "bearish").definition, name };
+  const created = await page.request.post(endpoint, { data: definition });
+  expect(created.status()).toBe(201);
+  const saved = await created.json();
+  let writes = 0;
+  let failedReads = 0;
+  page.on("request", request => {
+    if (request.method() === "POST" && new URL(request.url()).pathname.startsWith(endpoint)) writes++;
+  });
+  const list = /\/research\/api\/strategies\/v1\?limit=40(?:&offset=0)?$/;
+  await page.route(list, route => {
+    failedReads++;
+    return route.fulfill({ status: 503, json: { detail: "controlled library reopen fault" } });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Strategy Builder", exact: true }).click();
+  await expect.poll(() => failedReads).toBeGreaterThan(0);
+  await expect(page.getByRole("button", { name: "Use Bearish CRT / SMT template" })).toBeEnabled();
+  await expect(page.getByText("Could not load the strategy library.", { exact: true })).toBeVisible();
+  await expect(page.getByText("No saved strategies on this page.", { exact: true })).toHaveCount(0);
+  const retry = page.getByRole("button", { name: "Retry strategy library", exact: true });
+  await retry.click();
+  await expect(page.getByRole("alert")).toContainText("controlled library reopen fault");
+  await expect(retry).toBeEnabled();
+
+  await page.unroute(list);
+  await retry.click();
+  await page.getByRole("button", { name, exact: true }).click();
+  await expect(page.getByRole("region", { name: "Strategy editor" })).toContainText("v1 · DRAFT");
+  await expect(page.getByLabel("Strategy name")).toHaveValue(name);
+  await expect(retry).toHaveCount(0);
+  expect(writes).toBe(0);
+  const history = await (await page.request.get(endpoint + "/" + saved.strategy_id + "/history")).json();
+  expect(history.map((item: { version_id: string }) => item.version_id)).toEqual([saved.version_id]);
+});
