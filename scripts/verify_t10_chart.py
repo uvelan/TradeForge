@@ -39,7 +39,10 @@ def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True, help="Directory for receipts and screenshots")
-    parser.add_argument("--indicators-checkpoint", action="store_true",
+    journey = parser.add_mutually_exclusive_group()
+    journey.add_argument("--h1-replay", action="store_true",
+                         help="Verify hourly evidence in the saved M5 replay")
+    journey.add_argument("--indicators-checkpoint", action="store_true",
                         help="Verify the final dual-chart oscillator checkpoint")
     parser.add_argument("--source-storage", type=Path,
                         help="Read-only input storage containing research/ and tf-i08e-source/")
@@ -57,11 +60,13 @@ def main():
         env.setdefault("TRADEFORGE_E2E_UI_PORT", "4283")
         config = "playwright.comparison.config.ts"
         source_storage = (options.source_storage or root / "storage").resolve()
-        if options.source_storage is not None or options.indicators_checkpoint:
+        if options.source_storage is not None or options.indicators_checkpoint or options.h1_replay:
             env["TRADEFORGE_COMPARISON_SOURCE_DIR"] = str(source_storage / "research")
         if options.indicators_checkpoint:
             write_indicator_reference(source_storage, Path(storage))
             config = "playwright.t10-indicators.config.ts"
+        elif options.h1_replay:
+            config = "playwright.t10-h1.config.ts"
         for reopen in ("0", "1"):
             start = perf_counter()
             subprocess.run([npm, "run", "e2e", "--", "--config", config, "--retries=0"],

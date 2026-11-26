@@ -339,3 +339,11 @@
 }
 .panel-workspace.hide-watchlist .terminal-layout,.panel-workspace.hide-inspector .signal-layout{grid-template-columns:minmax(0,1fr)}
 .panel-workspace,.panel-workspace .terminal-core,.panel-workspace .terminal-chart-columns{min-width:0}
+
+.replay-h1-evidence{margin-top:.65rem;min-width:0}
+.replay-h1-evidence .evidence-grid{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
+.replay-h1-evidence summary{cursor:pointer}
+.replay-h1-sources{overflow-x:auto}
+.replay-h1-sources table{border-collapse:collapse;white-space:nowrap;text-align:left;font-variant-numeric:tabular-nums}
+.replay-h1-sources :is(td,th){padding:.45rem;border-bottom:1px solid #273c50}
+.replay-h1-sources td.evidence-id{white-space:normal;min-width:12ch;max-width:36ch}
