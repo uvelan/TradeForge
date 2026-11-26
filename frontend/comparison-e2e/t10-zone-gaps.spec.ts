@@ -6,7 +6,7 @@ import {artifact, button, configurePair, end, frame, iso, openTerminal, receipt,
 
 type Lane = typeof reference.symbols.EURUSD & {
   type: 'FVG' | 'OB'; anchor: number; formation: number; previous: number; successor: number;
-  T: number; missing: [number, number][];
+  T: number; missing: {start: number; end: number}[];
 };
 type Sample = {before: ReplayZoneReceipt; at: ReplayZoneReceipt};
 type Checkpoint = {
@@ -59,14 +59,14 @@ async function verifyGap(page: Page, lane: Lane, value: ReplayZoneReceipt) {
   expect(revision.id).toBe(value.id);
   expect(revision.continuity).toMatchObject({
     previous_observed_open: lane.previous, next_observed_open: lane.successor,
-    missing_open_intervals: lane.missing.map(([start, end]) => ({start, end})),
+    missing_open_intervals: lane.missing,
   });
   await expect(selected(page)).toHaveAttribute('data-revision-id', revision.id);
   await expect(receiptField(selected(page), 'State')).toHaveText('INVALIDATED');
   await expect(receiptField(selected(page), 'Reason')).toHaveText('MISSING OPEN CANDLES');
   await expect(gap(page)).toHaveAttribute('data-revision-id', revision.id);
   await expect(receiptField(gap(page), 'Missing candle opens [start, end) · UTC').locator('div'))
-    .toHaveText(lane.missing.map(([start, end]) => '[' + utc(start) + ', ' + utc(end) + ')'));
+    .toHaveText(lane.missing.map(({start, end}) => '[' + utc(start) + ', ' + utc(end) + ')'));
   const pinned = async (time: number, role: string, label: string) => {
     const id = lane.partition.id + ':' + time;
     expect(value.evidence.find(row => row.source_id === id)).toMatchObject({
