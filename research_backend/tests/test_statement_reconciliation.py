@@ -30,6 +30,41 @@ def example():
     return json.loads(EXAMPLE.read_bytes())
 
 
+def _reconcile_in_new_process(database, case_id, *, fresh=False):
+    code = """import json,os
+from pathlib import Path
+from fastapi.testclient import TestClient
+from research_backend.app import db
+db.DATABASE = Path(os.environ["CASE_DB"])
+from research_backend.app.main import app
+
+with TestClient(app) as client:
+    root = "/api/statements"
+    case = os.environ["CASE_ID"]
+    cursor = 5
+    if os.environ["CASE_MODE"] == "fresh":
+        registered = client.post(root, content=Path(os.environ["CASE_INPUT"]).read_bytes())
+        registered.raise_for_status()
+        assert registered.json()["id"] == case
+        cursor = registered.json()["cursor"]
+    result = client.post(f"{root}/{case}/advance", params={"cursor": cursor})
+    result.raise_for_status()
+    rows = client.get(f"{root}/{case}/rows")
+    rows.raise_for_status()
+    print(json.dumps({"receipt": result.json(), "rows": rows.json()}))
+"""
+    proc = subprocess.run(
+        [sys.executable, "-c", code],
+        env={**os.environ, "CASE_DB": str(database), "CASE_ID": case_id,
+             "CASE_MODE": "fresh" if fresh else "resume", "CASE_INPUT": str(EXAMPLE),
+             "TRADEFORGE_STORAGE": str(database.parent / "storage"),
+             "TRADEFORGE_DATA_DIR": str(database.parent)},
+        capture_output=True, text=True, timeout=120,
+    )
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout.strip().splitlines()[-1])
+
+
 def test_reconstruction_resume_reimport_and_amendment(client):
     raw=EXAMPLE.read_bytes()
     first=register(client,raw)
@@ -37,21 +72,9 @@ def test_reconstruction_resume_reimport_and_amendment(client):
     mid=advance(client,first,5)
     assert mid["cursor"]==5 and mid["report"] is None
     assert advance(client,first,5)==mid
-    # A new interpreter, new server app and new SQLite connections use only the original DB.
-    code="""import os,json
-from pathlib import Path
-from fastapi.testclient import TestClient
-from research_backend.app import db
-db.DATABASE=Path(os.environ['CASE_DB'])
-from research_backend.app.main import app
-with TestClient(app) as c:
- r=c.post('/api/statements/'+os.environ['CASE_ID']+'/advance?cursor=5')
- r.raise_for_status()
- print(json.dumps(r.json()))
-"""
-    proc=subprocess.run([sys.executable,"-c",code],env={**os.environ,"CASE_DB":str(db.DATABASE),"CASE_ID":first["id"],
-                        "TRADEFORGE_DATA_DIR":str(db.DATABASE.parent)},capture_output=True,text=True,check=True)
-    finished=json.loads(proc.stdout.strip().splitlines()[-1])
+    # A separate interpreter resumes entirely from the saved database.
+    resumed = _reconcile_in_new_process(db.DATABASE, first["id"])
+    finished = resumed["receipt"]
     assert advance(client,mid)==finished
     assert register(client,raw)==finished
     r=finished["report"]
@@ -64,12 +87,11 @@ with TestClient(app) as c:
     assert (rows[5]["closed_lots"],rows[5]["opened_lots"],rows[5]["after_lots"],rows[5]["native_realized"])==("1/100","1/100","-1/100","-2")
     with db.transaction() as con:
         assert [con.execute("select count(*) from "+t).fetchone()[0] for t in ("statement_versions","statement_traces","statement_reports")]==[1,9,1]
-    # A separate workspace processes exactly the same bytes uninterrupted.
-    from unittest.mock import patch
-    with patch.object(db,"DATABASE",db.DATABASE.with_name("fresh.sqlite3")):
-        db.initialize()
-        assert advance(client,register(client,raw))==finished
-        assert client.get(f"{ROOT}/{first['id']}/rows").json()==rows
+    # Do not change the database of a running app: its background worker
+    # could open the other database before the schema has been initialized.
+    assert resumed["rows"] == rows
+    fresh = db.DATABASE.parent / "fresh" / "fresh.sqlite3"
+    assert _reconcile_in_new_process(fresh, first["id"], fresh=True) == resumed
     amended=example()
     amended["rows"][3]["postings"][0]["amount"]="-1.26"
     amended.update(closing_balance="1078.99",closing_equity="1079.99")
