@@ -5,7 +5,7 @@ import {useWorkspacePreference} from './useWorkspacePreference';
 import type {Candle, Timeframe} from './types';
 
 type Feed = SignalRecord['provenance']['primary'];
-type Receipt = SignalRecord & {strategy_revision?: {id:string; available_at:number}};
+type Receipt = SignalRecord;
 type Page = {items:Receipt[]; next_cursor:string|null};
 type Props = {cutoff:number; timeframe:Timeframe; primary:Feed; comparison?:Feed};
 
@@ -30,45 +30,72 @@ export function FrozenSmtReceipt(props:Props) {
     <h3>Recorded SMT at chart cutoff</h3>
     {!pins(primary).length || (comparison && !pins(comparison).length)
       ? <p>Chart partition checksums are unavailable.</p>
-      : <FamilyPicker key={scope} {...props}/>}
+      : <FamilyPicker key={scope} scope={scope} {...props}/>}
   </section>;
 }
 
-function FamilyPicker({cutoff,timeframe,primary,comparison}:Props) {
-  const [preferred,setPreferred]=useWorkspacePreference<string>('recorded-smt-family','');
-  const [page,setPage]=useState({cutoff,cursor:''});
+function FamilyPicker({scope,...props}:Props & {scope:string}) {
+  const [preferred,setPreferred]=useWorkspacePreference<string>('recorded-smt-family.'+scope,'');
+  return <FamilyPage key={props.cutoff} {...props} preferred={preferred} onSelect={setPreferred}/>;
+}
+
+function useSignalPage(url:string|undefined) {
   const [response,setResponse]=useState<{url:string; data?:Page; error?:string}>();
-  const params=new URLSearchParams({as_of:String(cutoff),timeframe,instrument:primary.symbol,
-    source:primary.source,q:pins(primary)[0].id,limit:'100'});
-  if(page.cutoff===cutoff && page.cursor) params.set('cursor',page.cursor);
-  const url='/indicators/signals?'+params;
   useEffect(()=>{
+    if(!url) return;
     let current=true;
     api.get<Page>(url).then(data=>{if(current)setResponse({url,data});})
       .catch(error=>{if(current)setResponse({url,error:String(error)});});
     return ()=>{current=false;};
   },[url]);
-  if(response?.url!==url) return <p role="status">Loading recorded revisions…</p>;
-  if(!response.data) return <p role="alert">{response.error}</p>;
-  const matches=response.data.items.filter(event=>{
+  return response?.url===url ? response : undefined;
+}
+
+function familyLabel(event:Receipt) {
+  return event.direction+' · '+utc(event.primary.current.time)+' · '+event.event_key.slice(0,12);
+}
+
+function FamilyPage({cutoff,timeframe,primary,comparison,preferred,onSelect}:Props & {
+  preferred:string; onSelect:(key:string)=>void;
+}) {
+  const [cursor,setCursor]=useState('');
+  const params=new URLSearchParams({as_of:String(cutoff),timeframe,instrument:primary.symbol,
+    source:primary.source,q:pins(primary)[0].id,limit:'100'});
+  if(cursor) params.set('cursor',cursor);
+  const page=useSignalPage('/indicators/signals?'+params);
+  const matchesScope=(event:Receipt)=>{
     const {provenance}=event;
-    if(provenance.authority!=='HISTORICAL_SIMULATION') return false;
+    if(provenance.authority!=='HISTORICAL_SIMULATION' || provenance.timeframe!==timeframe) return false;
     return (['primary','comparison'] as const).some(role=>
       identity(provenance[role])===identity(primary) &&
       (!comparison || identity(provenance[role==='primary'?'comparison':'primary'])===identity(comparison)));
-  });
-  const selected=matches.find(e=>e.event_key===preferred)??matches[0];
-  const next=response.data.next_cursor;
+  };
+  const matches=page?.data?.items.filter(matchesScope)??[];
+  const onPage=matches.find(event=>event.event_key===preferred);
+  // A page contains discovery choices. A pin outside it still needs its own as-of revision.
+  const lookup=preferred && page?.data && !onPage
+    ? '/indicators/signals?'+new URLSearchParams({as_of:String(cutoff),event_key:preferred,limit:'1'})
+    : undefined;
+  const exact=useSignalPage(lookup);
+  const pinned=onPage??exact?.data?.items.find(event=>event.event_key===preferred && matchesScope(event));
+  const selected=preferred?pinned:matches[0];
+  const next=page?.data?.next_cursor;
   return <>
     <p>Chart cutoff {utc(cutoff)}</p>
-    {selected ? <>
-      <label>Recorded SMT family <select value={selected.event_key} onChange={e=>setPreferred(e.target.value)}>
-        {matches.map(e=><option key={e.event_key} value={e.event_key}>{e.direction} · {utc(e.primary.current.time)} · {e.event_key.slice(0,12)}</option>)}
-      </select></label>
-      <Revision key={selected.event_key+selected.status} receipt={selected} chartPrimary={primary} paired={Boolean(comparison)}/>
-    </> : <p>No recorded SMT revision on this page matches the frozen archive pins.</p>}
-    {params.has('cursor') && <button onClick={()=>setPage({cutoff,cursor:''})}>First page</button>}
-    {next && <button onClick={()=>setPage({cutoff,cursor:next})}>Older families</button>}
+    {!page && <p role="status">Loading recorded revisions…</p>}
+    {page?.error && <p role="alert">{page.error}</p>}
+    {(preferred || matches.length>0) && <label>Recorded SMT family <select value={preferred} onChange={e=>onSelect(e.target.value)}>
+      <option value="">Automatic · first matching family on this page</option>
+      {preferred && !onPage && <option value={preferred}>{pinned?familyLabel(pinned):preferred}</option>}
+      {matches.map(event=><option key={event.event_key} value={event.event_key}>{familyLabel(event)}</option>)}
+    </select></label>}
+    {selected && <Revision key={selected.event_key+selected.status} receipt={selected} chartPrimary={primary} paired={Boolean(comparison)}/>}
+    {lookup && !exact && <p role="status">Loading selected revision…</p>}
+    {exact?.error && <p role="alert">{exact.error}</p>}
+    {lookup && exact?.data && !pinned && <p>No recorded revision for the selected family at this cutoff.</p>}
+    {page?.data && !preferred && !matches.length && <p>No recorded SMT revision on this page matches the frozen archive pins.</p>}
+    {cursor && <button onClick={()=>setCursor('')}>First page</button>}
+    {next && <button onClick={()=>setCursor(next)}>Older families</button>}
   </>;
 }
 
