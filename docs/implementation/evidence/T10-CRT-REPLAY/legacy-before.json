@@ -1,0 +1,58 @@
+[
+  {
+    "symbol": "EURUSD",
+    "cutoff": 1794531599,
+    "indicator": "candle_range_theory",
+    "sha256": "9ec069ff858622ab3649616e88b5f34a79947feae48e801b6ee9f87b85a4878a",
+    "serialized_bytes": 3455
+  },
+  {
+    "symbol": "EURUSD",
+    "cutoff": 1794531600,
+    "indicator": "candle_range_theory",
+    "sha256": "703948b638e779f3cac3634d6cdec913534917617c914b91d99a59553a4a99f5",
+    "serialized_bytes": 5431
+  },
+  {
+    "symbol": "EURUSD",
+    "cutoff": 1794571200,
+    "indicator": "candle_range_theory",
+    "sha256": "48b41cbc633e39aa0852452fb498ddab6366a8cb3da2f433b259d73f8dc12246",
+    "serialized_bytes": 48691
+  },
+  {
+    "symbol": "EURUSD",
+    "cutoff": 1794607200,
+    "indicator": "candle_range_theory",
+    "sha256": "9abbfe45a10ac0be2126660d7957737d54505ec0ce642fac1a1809c7afc4c677",
+    "serialized_bytes": 92880
+  },
+  {
+    "symbol": "GBPUSD",
+    "cutoff": 1794531599,
+    "indicator": "candle_range_theory",
+    "sha256": "c5fe80854d4a0157b16e3512a6f869169cae65094b646783c0de479aee41959d",
+    "serialized_bytes": 3455
+  },
+  {
+    "symbol": "GBPUSD",
+    "cutoff": 1794531600,
+    "indicator": "candle_range_theory",
+    "sha256": "e66ad4c49ff0be3881bc1c52f97083c1b120af6426946756243150d57e3967bd",
+    "serialized_bytes": 5431
+  },
+  {
+    "symbol": "GBPUSD",
+    "cutoff": 1794571200,
+    "indicator": "candle_range_theory",
+    "sha256": "66b3201a6e0b702b1685d75cea6ef00ab2493bd3f18042b26276e12cd90477b7",
+    "serialized_bytes": 46975
+  },
+  {
+    "symbol": "GBPUSD",
+    "cutoff": 1794607200,
+    "indicator": "candle_range_theory",
+    "sha256": "effe8a363f2e8d3a14ab95cff23d64917ede0a79a409d0d9089b4ad7e607e576",
+    "serialized_bytes": 83679
+  }
+]
