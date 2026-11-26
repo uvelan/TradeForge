@@ -72,8 +72,11 @@ def main():
         elif options.h1_replay:
             config = "playwright.t10-h1.config.ts"
         elif options.structure_liquidity:
-            reference = options.structure_reference or (
-                root / "docs/implementation/evidence/T10-STRUCTURE-LIQUIDITY/oracle.json")
+            reference = options.structure_reference
+            if reference is None:
+                from scripts.verify_t10_structure_liquidity import output_json, reference_document
+                reference = Path(storage) / "structure-liquidity-reference.json"
+                output_json(reference, reference_document(source_storage))
             env["TRADEFORGE_T10_STRUCTURE_REFERENCE"] = str(reference.resolve(strict=True))
             config = "playwright.t10-structure-liquidity.config.ts"
         for reopen in ("0", "1"):
