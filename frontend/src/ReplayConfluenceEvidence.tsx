@@ -215,7 +215,7 @@ function CoverageRecoveries({receipt}: {receipt: ConfluenceReceipt}) {
     <ul aria-label="Coverage recovery witnesses">
       {recoveries.map(witness => <li key={witness.source_id}>
         <Fields label={witness.symbol + ' coverage recovery'} entries={[
-          ['Feed', witness.symbol], ['Candle open', timeValue(witness.time)],
+          ['Symbol', witness.symbol], ['Candle open', timeValue(witness.time)],
           ['Nominal close', timeValue(witness.nominal_close)], ['Available', timeValue(witness.available_at)],
           ['Availability basis', words(witness.availability_basis)], ['Source ID', idValue(witness.source_id)],
         ]}/>
