@@ -1,0 +1,178 @@
+{
+  "status": "PASS",
+  "chromium": "159.0.8154.6",
+  "day": "2026-11-13",
+  "replay": "e5bcdbe2a81b0d9dbb3e806d2754888335d423d2e2109fed296b7335145b9c29",
+  "observed": [
+    {
+      "symbol": "EURUSD",
+      "start": 1794574800,
+      "end": 1794578400,
+      "available_at": 1794578400,
+      "ohlc": {
+        "open": 1.10503,
+        "high": 1.10693,
+        "low": 1.10486,
+        "close": 1.10499
+      },
+      "sources": [
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794574800",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575100",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575400",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575700",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576000",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576300",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576600",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576900",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577200",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577500",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577800",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794578100"
+      ],
+      "partitions": [
+        {
+          "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+          "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+        }
+      ],
+      "provider_csv_sha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6"
+    },
+    {
+      "symbol": "EURUSD",
+      "start": 1794578400,
+      "end": 1794582000,
+      "available_at": 1794582000,
+      "ohlc": {
+        "open": 1.10501,
+        "high": 1.10598,
+        "low": 1.10429,
+        "close": 1.10568
+      },
+      "sources": [
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794578400",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794578700",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794579000",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794579300",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794579600",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794579900",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794580200",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794580500",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794580800",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794581100",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794581400",
+        "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794581700"
+      ],
+      "partitions": [
+        {
+          "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+          "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+        }
+      ],
+      "provider_csv_sha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6"
+    },
+    {
+      "symbol": "GBPUSD",
+      "start": 1794574800,
+      "end": 1794578400,
+      "available_at": 1794578400,
+      "ohlc": {
+        "open": 1.32256,
+        "high": 1.32503,
+        "low": 1.32238,
+        "close": 1.32319
+      },
+      "sources": [
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794574800",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575100",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575400",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575700",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576000",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576300",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576600",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576900",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577200",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577500",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577800",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794578100"
+      ],
+      "partitions": [
+        {
+          "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+          "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+        }
+      ],
+      "provider_csv_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928"
+    },
+    {
+      "symbol": "GBPUSD",
+      "start": 1794578400,
+      "end": 1794582000,
+      "available_at": 1794582000,
+      "ohlc": {
+        "open": 1.32321,
+        "high": 1.32508,
+        "low": 1.32245,
+        "close": 1.32456
+      },
+      "sources": [
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794578400",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794578700",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579000",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579300",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579600",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579900",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794580200",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794580500",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794580800",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794581100",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794581400",
+        "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794581700"
+      ],
+      "partitions": [
+        {
+          "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+          "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+        }
+      ],
+      "provider_csv_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928"
+    }
+  ],
+  "held_response": {
+    "status": "FORMING",
+    "hour": 1794578400
+  },
+  "held_response_replaced_current_hour": false,
+  "reopened": {
+    "symbol": "GBPUSD",
+    "start": 1794578400,
+    "end": 1794582000,
+    "available_at": 1794582000,
+    "ohlc": {
+      "open": 1.32321,
+      "high": 1.32508,
+      "low": 1.32245,
+      "close": 1.32456
+    },
+    "sources": [
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794578400",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794578700",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579000",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579300",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579600",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579900",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794580200",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794580500",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794580800",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794581100",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794581400",
+      "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794581700"
+    ],
+    "partitions": [
+      {
+        "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+        "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+      }
+    ],
+    "provider_csv_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928"
+  }
+}
