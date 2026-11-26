@@ -1,0 +1,203 @@
+{
+  "snapshot_utc": "2026-11-26T12:58:55.046032+00:00",
+  "milestone_start_utc": "2026-11-26T12:26:30.998Z",
+  "agents": [
+    {
+      "agent": "coverage",
+      "model": "gpt-6.2-astra",
+      "started": "2026-11-26T12:26:45.764Z",
+      "completed": "2026-11-26T12:35:03.346Z",
+      "usage_through": "2026-11-26T12:35:03.302Z",
+      "counter_records": 35,
+      "reported_stream_errors": 0,
+      "input_tokens": 1630415,
+      "cached_input_tokens": 1568896,
+      "output_tokens": 5789,
+      "reasoning_output_tokens": 816,
+      "total_tokens": 1636204,
+      "uncached_input_tokens": 61519
+    },
+    {
+      "agent": "coverage approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T12:26:58.296Z",
+      "completed": "2026-11-26T12:34:32.400Z",
+      "usage_through": "2026-11-26T12:34:32.390Z",
+      "counter_records": 21,
+      "reported_stream_errors": 0,
+      "input_tokens": 2204053,
+      "cached_input_tokens": 1902464,
+      "output_tokens": 1669,
+      "reasoning_output_tokens": 561,
+      "total_tokens": 2205722,
+      "uncached_input_tokens": 301589
+    },
+    {
+      "agent": "discovery",
+      "model": "gpt-6.2-sol",
+      "started": "2026-11-26T12:26:54.370Z",
+      "completed": "2026-11-26T12:48:42.014Z",
+      "usage_through": "2026-11-26T12:48:41.924Z",
+      "counter_records": 89,
+      "reported_stream_errors": 0,
+      "input_tokens": 9149288,
+      "cached_input_tokens": 8908160,
+      "output_tokens": 37161,
+      "reasoning_output_tokens": 12709,
+      "total_tokens": 9186449,
+      "uncached_input_tokens": 241128
+    },
+    {
+      "agent": "discovery approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T12:27:04.471Z",
+      "completed": "2026-11-26T12:47:20.754Z",
+      "usage_through": "2026-11-26T12:47:20.746Z",
+      "counter_records": 37,
+      "reported_stream_errors": 0,
+      "input_tokens": 4500504,
+      "cached_input_tokens": 3913088,
+      "output_tokens": 3514,
+      "reasoning_output_tokens": 1289,
+      "total_tokens": 4504018,
+      "uncached_input_tokens": 587416
+    },
+    {
+      "agent": "integration",
+      "model": "gpt-6.2-astra",
+      "started": "2026-11-26T12:26:30.998Z",
+      "completed": null,
+      "usage_through": "2026-11-26T12:58:42.674Z",
+      "counter_records": 132,
+      "reported_stream_errors": 0,
+      "input_tokens": 20429689,
+      "cached_input_tokens": 20356864,
+      "output_tokens": 22233,
+      "reasoning_output_tokens": 4041,
+      "total_tokens": 20451922,
+      "uncached_input_tokens": 72825
+    },
+    {
+      "agent": "verify",
+      "model": "gpt-6.2-sol",
+      "started": "2026-11-26T12:27:07.992Z",
+      "completed": "2026-11-26T12:38:46.626Z",
+      "usage_through": "2026-11-26T12:38:46.610Z",
+      "counter_records": 54,
+      "reported_stream_errors": 0,
+      "input_tokens": 4084021,
+      "cached_input_tokens": 3905536,
+      "output_tokens": 19348,
+      "reasoning_output_tokens": 2466,
+      "total_tokens": 4103369,
+      "uncached_input_tokens": 178485
+    },
+    {
+      "agent": "verify approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T12:27:15.309Z",
+      "completed": "2026-11-26T12:38:35.077Z",
+      "usage_through": "2026-11-26T12:38:35.074Z",
+      "counter_records": 35,
+      "reported_stream_errors": 0,
+      "input_tokens": 4092664,
+      "cached_input_tokens": 3552512,
+      "output_tokens": 2282,
+      "reasoning_output_tokens": 610,
+      "total_tokens": 4094946,
+      "uncached_input_tokens": 540152
+    }
+  ],
+  "total": {
+    "input_tokens": 46090634,
+    "cached_input_tokens": 44107520,
+    "output_tokens": 91996,
+    "reasoning_output_tokens": 22492,
+    "total_tokens": 46182630,
+    "uncached_input_tokens": 1983114
+  },
+  "by_model": {
+    "codex-auto-review": {
+      "input_tokens": 10797221,
+      "cached_input_tokens": 9368064,
+      "output_tokens": 7465,
+      "reasoning_output_tokens": 2460,
+      "total_tokens": 10804686,
+      "uncached_input_tokens": 1429157
+    },
+    "gpt-6.2-astra": {
+      "input_tokens": 22060104,
+      "cached_input_tokens": 21925760,
+      "output_tokens": 28022,
+      "reasoning_output_tokens": 4857,
+      "total_tokens": 22088126,
+      "uncached_input_tokens": 134344
+    },
+    "gpt-6.2-sol": {
+      "input_tokens": 13233309,
+      "cached_input_tokens": 12813696,
+      "output_tokens": 56509,
+      "reasoning_output_tokens": 15175,
+      "total_tokens": 13289818,
+      "uncached_input_tokens": 419613
+    }
+  },
+  "method": "Per linked session, differences of observed provider cumulative counters from the last sample before the owner turn to the last available sample. Cached input and reasoning are subsets of input and output. All visible retries are included; opaque provider retry and pricing details are unavailable.",
+  "scope": "integration owner, three workers, and their linked approval reviewer sessions",
+  "worker_commits": {
+    "coverage": [
+      "2e45cb5"
+    ],
+    "discovery": [
+      "4a47af1",
+      "5259b4d",
+      "cde122e",
+      "f9832a8"
+    ],
+    "verify": [
+      "28860b4",
+      "90045b6"
+    ]
+  },
+  "dispatch_utc": {
+    "coverage": "12:26:44.251",
+    "discovery": "12:26:52.708",
+    "verify": "12:27:06.153"
+  },
+  "starting_sha": "7cdacaf4c10bdd1073128c0a4d10b2e34be7c7f6",
+  "combined_tested_sha": "e28a5d0a87e412d4509799dd6afa72d817a62dfb",
+  "integration_started": "2026-11-26T12:33:11Z",
+  "simultaneous_worker_overlap_seconds": 475.354,
+  "rework_observed_seconds": {
+    "quiet_reference_initial_serialization_failure_to_successful_two_phase_rerun": 50.098,
+    "discovery_reported_one_pane_setup_failure_to_verified_two_order_completion": 213.55
+  },
+  "rework_method": "Failure to observed corrected pass, including test execution and polling. Separate lane intervals, not exclusive engineering time. Additional review-driven changes did not have a separate rework timer.",
+  "critical_path": "Three isolated lanes; discovery and fresh-process browser cases last; combined focused checks and parallel full suites; backend completion; evidence finalization and remote verification.",
+  "cost": "UNAVAILABLE: no applicable billing rate",
+  "parallel_speedup": "UNMEASURED: no equivalent serial milestone",
+  "sampling_note": "Last observed counters per linked agent; work after this sampling instant is excluded. Multiple reviewer sessions on one lane are separate records.",
+  "full_verification_window_seconds": 834.322,
+  "full_verification_last_finished": "backend",
+  "git_numstat_through": "e28a5d0a87e412d4509799dd6afa72d817a62dfb",
+  "churn": {
+    "evidence_and_docs": {
+      "files": 1,
+      "binary_files": 0,
+      "added": 60,
+      "removed": 0
+    },
+    "test_and_verification": {
+      "files": 7,
+      "binary_files": 0,
+      "added": 1108,
+      "removed": 8
+    },
+    "production": {
+      "files": 6,
+      "binary_files": 0,
+      "added": 256,
+      "removed": 49
+    }
+  }
+}

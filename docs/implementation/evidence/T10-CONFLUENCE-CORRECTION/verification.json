@@ -1,0 +1,158 @@
+{
+  "combined_tested_sha": "e28a5d0a87e412d4509799dd6afa72d817a62dfb",
+  "os": "Windows-11-10.0.26200-SP0",
+  "node": "v24.14.0",
+  "python": "3.13.14",
+  "commands": [
+    {
+      "id": "focused",
+      "start": "2026-11-26T12:35:54.123Z",
+      "end": "2026-11-26T12:36:08.909Z",
+      "command": ".venv/Scripts/python.exe -m pytest -q research_backend/tests/test_replay_confluence.py research_backend/tests/test_replay_confluence_receipts.py research_backend/tests/test_confluence_family_tie.py",
+      "exit_code": 0,
+      "elapsed": 11.5717552,
+      "summary": [
+        "20 passed, 1 warning in 10.60s"
+      ]
+    },
+    {
+      "id": "compat",
+      "start": "2026-11-26T12:35:54.123Z",
+      "end": "2026-11-26T12:36:00.865Z",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence_compatibility --check-join --source-storage storage --compare docs/implementation/evidence/T10-CONFLUENCE/components-before.json --output storage/t10-confluence-correction/components-after.json",
+      "exit_code": 0,
+      "elapsed": 2.836376,
+      "summary": [
+        "8 standalone component responses verified"
+      ]
+    },
+    {
+      "id": "oracle",
+      "start": "2026-11-26T12:35:54.123Z",
+      "end": "2026-11-26T12:38:42.840Z",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence --source-storage storage --output storage/t10-confluence-correction/oracle.json",
+      "exit_code": 0,
+      "elapsed": 164.5777622,
+      "summary": []
+    },
+    {
+      "id": "quiet-dev",
+      "start": "2026-11-26T12:42:33.824Z",
+      "end": "2026-11-26T12:42:38.670Z",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence_browser_upgrade --baseline ../TradeForge-join-verify/storage/original-writer --output storage/t10-confluence-correction/quiet-dev --api-port 8774 --ui-port 4774",
+      "exit_code": 1,
+      "elapsed": 0.4799239,
+      "summary": [
+        "TypeError: Object of type Decimal is not JSON serializable"
+      ]
+    },
+    {
+      "id": "quiet-dev2",
+      "start": "2026-11-26T12:43:03.483Z",
+      "end": "2026-11-26T12:43:28.768Z",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence_browser_upgrade --baseline ../TradeForge-join-verify/storage/original-writer --output storage/t10-confluence-correction/quiet-dev2 --api-port 8774 --ui-port 4774",
+      "exit_code": 0,
+      "elapsed": 22.3620789,
+      "summary": [
+        "1 passed (8.8s)",
+        "1 passed (6.3s)"
+      ]
+    },
+    {
+      "id": "orders",
+      "start": "2026-11-26T12:44:21.732Z",
+      "end": "2026-11-26T12:46:56.897Z",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence_browser --case controlled --two-tab-completion-orders --output storage/t10-confluence-correction/orders --api-port 8772 --ui-port 4772 --samples 1",
+      "exit_code": 0,
+      "elapsed": 151.7499206,
+      "summary": [
+        "1 passed (13.0s)",
+        "1 passed (26.2s)",
+        "1 passed (34.0s)",
+        "1 passed (53.3s)"
+      ]
+    },
+    {
+      "id": "discovery",
+      "start": "2026-11-26T12:46:56.897Z",
+      "end": "2026-11-26T12:48:26.710Z",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence_browser --case controlled --phase discovery --output storage/t10-confluence-correction/discovery --api-port 8772 --ui-port 4772 --samples 1",
+      "exit_code": 0,
+      "elapsed": 85.499379,
+      "summary": [
+        "3 passed (1.2m)"
+      ]
+    },
+    {
+      "id": "quiet",
+      "start": "2026-11-26T12:48:26.710Z",
+      "end": "2026-11-26T12:49:18.870Z",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence_browser_upgrade --baseline ../TradeForge-join-verify/storage/original-writer --output storage/t10-confluence-correction/quiet --api-port 8772 --ui-port 4772",
+      "exit_code": 0,
+      "elapsed": 48.3497041,
+      "summary": [
+        "1 passed (15.1s)",
+        "1 passed (13.6s)"
+      ]
+    },
+    {
+      "id": "prior-browser",
+      "start": "2026-11-26T12:49:18.870Z",
+      "end": "2026-11-26T12:51:30.967Z",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence_browser --case all --source-storage storage --output storage/t10-confluence-correction/prior-browser --api-port 8772 --ui-port 4772 --samples 2",
+      "exit_code": 0,
+      "elapsed": 128.2884391,
+      "summary": [
+        "1 passed (36.4s)",
+        "1 passed (17.2s)",
+        "1 passed (37.3s)",
+        "1 passed (16.4s)"
+      ]
+    },
+    {
+      "id": "backend",
+      "start": "2026-11-26T12:44:39.519Z",
+      "end": "2026-11-26T12:58:33.841Z",
+      "command": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\n.venv/Scripts/python.exe -m pytest -q",
+      "exit_code": 0,
+      "elapsed": 828.8332656,
+      "summary": [
+        "1188 passed, 1 skipped, 1 warning in 826.89s (0:13:46)"
+      ]
+    },
+    {
+      "id": "build",
+      "start": "2026-11-26T12:44:39.520Z",
+      "end": "2026-11-26T12:45:09.616Z",
+      "command": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\nnpm --prefix frontend run build",
+      "exit_code": 0,
+      "elapsed": 25.0656429,
+      "summary": [
+        "\u2713 built in 3.33s"
+      ]
+    },
+    {
+      "id": "unit",
+      "start": "2026-11-26T12:44:39.520Z",
+      "end": "2026-11-26T12:44:47.885Z",
+      "command": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\nnpm --prefix frontend test",
+      "exit_code": 0,
+      "elapsed": 3.5110407,
+      "summary": [
+        "Test Files  4 passed (4)",
+        "Tests  13 passed (13)"
+      ]
+    },
+    {
+      "id": "standard",
+      "start": "2026-11-26T12:44:39.520Z",
+      "end": "2026-11-26T12:54:07.173Z",
+      "command": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\n$env:TRADEFORGE_E2E_API_PORT='8770'\n$env:TRADEFORGE_E2E_UI_PORT='4770'\nnpm --prefix frontend run e2e -- --retries=0",
+      "exit_code": 0,
+      "elapsed": 561.5420781,
+      "summary": [
+        "88 passed (9.3m)"
+      ]
+    }
+  ]
+}

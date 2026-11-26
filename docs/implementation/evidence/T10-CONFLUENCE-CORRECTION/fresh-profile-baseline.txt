@@ -1,0 +1,7 @@
+Reviewed writer 7cdacaf4c10bdd1073128c0a4d10b2e34be7c7f6
+Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('region', { name: 'Replay CRT and SMT confluence', exact: true }).getByRole('combobox', { name: 'Confluence receipt', exact: true }).locator('option[value="13dd00459df8158ca5a47f58f0ef12ef184fbb162e1545511f144ca22293c7d6"]')
+    Expected: 1
+    Received: 0
+    Timeout:  5000ms

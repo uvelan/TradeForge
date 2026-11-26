@@ -1,5 +1,7 @@
 # Historical CRT and SMT confluence
 
+For the subsequent Windows correction to coverage witnesses and saved receipt discovery, see [Confluence coverage and saved receipts](T10-CONFLUENCE-CORRECTION.md). The measurements below describe the original implementation.
+
 ## Profile pinned before inspecting results
 
 `CRT_SMT_M5_V1` uses EURUSD for the H1 CRT reference and EURUSD/GBPUSD for positive-correlation exact M5 SMT. Both lanes require saved Dukascopy BID M5 candles with verified catalog pins. Pane order is a presentation choice. The genuine acceptance window is 13 November 2026, 12:00–16:00 UTC, with no earlier input; the comparison uses modeled M5 close unless the capture supplies availability.
@@ -21,7 +23,7 @@ A reclaimed low requires bullish SMT; a reclaimed high requires bearish SMT. Exp
 
 1. In Market Terminal, open a saved paired Dukascopy EURUSD/GBPUSD M5 BID replay. Freeze or resume the chart and expand **Replay CRT and SMT confluence**. Both components use the displayed evidence cutoff, bounded by the chart clock.
 2. Inspect the current receipt. Open each component to see its condition, direction, selected family and revision, first availability, source pins and candles. Choose an earlier UTC probe or step the chart across a publication.
-3. Choose **Save exact receipt** to retain that verdict and proof. Saving explicitly rechecks the current receipt hash. Reopen the saved entry at or after its evidence cutoff; rewinding earlier hides it, and advancing recovers it. Saved content lives in the local database. This version keeps the menu of saved references in the local browser profile.
+3. Choose **Save exact receipt** to retain that verdict and proof. Saving explicitly rechecks the current receipt hash. Reopen the saved entry at or after its evidence cutoff; rewinding earlier hides it, and advancing recovers it. Saved content lives in the local database. The original version kept the saved menu in the local browser profile. The corrected inspector lists the session’s SQLite receipts, including older saves made from another profile.
 4. Swap the two panes to inspect the same producer directions. EURUSD remains the CRT instrument and the SMT primary. The ordering of the chart panes does not change the research rule.
 
 ## Genuine expected and observed transitions

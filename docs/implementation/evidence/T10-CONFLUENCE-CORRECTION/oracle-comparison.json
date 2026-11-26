@@ -1,0 +1,146 @@
+{
+  "revision": "0aa4170c3b1970e2fb1c4a7f40ed8efc046e6a82",
+  "compared_to": "694aa2b90ee06246af3909f8913b1619b3961eb3",
+  "cases": {
+    "genuine": {
+      "cutoffs": 97,
+      "verdicts": {
+        "ALIGNED": 2,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 55,
+        "INCOMPLETE": 40
+      },
+      "material_transitions": 16,
+      "component_families_revisions_and_clocks_equal": true,
+      "changed_preview_receipt_ids": 16,
+      "rewind_reads": 194,
+      "restart_reads": 32
+    },
+    "disjoint": {
+      "cutoffs": 45,
+      "verdicts": {
+        "ALIGNED": 0,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 11,
+        "INCOMPLETE": 34
+      },
+      "material_transitions": 7,
+      "component_families_revisions_and_clocks_equal": true,
+      "changed_preview_receipt_ids": 7,
+      "rewind_reads": 90,
+      "restart_reads": 0
+    },
+    "overlap": {
+      "cutoffs": 45,
+      "verdicts": {
+        "ALIGNED": 8,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 3,
+        "INCOMPLETE": 34
+      },
+      "material_transitions": 8,
+      "component_families_revisions_and_clocks_equal": true,
+      "changed_preview_receipt_ids": 8,
+      "rewind_reads": 90,
+      "restart_reads": 0
+    },
+    "delayed-overlap": {
+      "cutoffs": 49,
+      "verdicts": {
+        "ALIGNED": 6,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 3,
+        "INCOMPLETE": 40
+      },
+      "material_transitions": 10,
+      "component_families_revisions_and_clocks_equal": true,
+      "changed_preview_receipt_ids": 10,
+      "rewind_reads": 98,
+      "restart_reads": 20
+    },
+    "contradiction": {
+      "cutoffs": 45,
+      "verdicts": {
+        "ALIGNED": 0,
+        "CONTRADICTED": 11,
+        "NOT_ALIGNED": 0,
+        "INCOMPLETE": 34
+      },
+      "material_transitions": 5,
+      "component_families_revisions_and_clocks_equal": true,
+      "changed_preview_receipt_ids": 5,
+      "rewind_reads": 90,
+      "restart_reads": 0
+    },
+    "terminal-tie": {
+      "cutoffs": 45,
+      "verdicts": {
+        "ALIGNED": 0,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 11,
+        "INCOMPLETE": 34
+      },
+      "material_transitions": 7,
+      "component_families_revisions_and_clocks_equal": true,
+      "changed_preview_receipt_ids": 7,
+      "rewind_reads": 90,
+      "restart_reads": 0
+    },
+    "smt-terminal": {
+      "cutoffs": 45,
+      "verdicts": {
+        "ALIGNED": 4,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 7,
+        "INCOMPLETE": 34
+      },
+      "material_transitions": 8,
+      "component_families_revisions_and_clocks_equal": true,
+      "changed_preview_receipt_ids": 8,
+      "rewind_reads": 90,
+      "restart_reads": 0
+    },
+    "newest-crt": {
+      "cutoffs": 53,
+      "verdicts": {
+        "ALIGNED": 14,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 5,
+        "INCOMPLETE": 34
+      },
+      "material_transitions": 7,
+      "component_families_revisions_and_clocks_equal": true,
+      "changed_preview_receipt_ids": 7,
+      "rewind_reads": 106,
+      "restart_reads": 0
+    },
+    "newest-smt": {
+      "cutoffs": 47,
+      "verdicts": {
+        "ALIGNED": 12,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 0,
+        "INCOMPLETE": 35
+      },
+      "material_transitions": 8,
+      "component_families_revisions_and_clocks_equal": true,
+      "changed_preview_receipt_ids": 8,
+      "rewind_reads": 94,
+      "restart_reads": 0
+    },
+    "peer-gap": {
+      "cutoffs": 45,
+      "verdicts": {
+        "ALIGNED": 4,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 0,
+        "INCOMPLETE": 41
+      },
+      "material_transitions": 9,
+      "component_families_revisions_and_clocks_equal": true,
+      "changed_preview_receipt_ids": 9,
+      "rewind_reads": 90,
+      "restart_reads": 0
+    }
+  }
+}

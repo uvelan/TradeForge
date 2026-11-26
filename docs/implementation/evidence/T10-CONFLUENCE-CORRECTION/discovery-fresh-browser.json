@@ -1,0 +1,14 @@
+{
+  "git_revision": "e28a5d0a87e412d4509799dd6afa72d817a62dfb",
+  "case": "controlled",
+  "session": "bbf60ee2f48cae3e2b597c623450ee771476fdf7b6049b79ccc812eb85d31235",
+  "receipt_id": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b",
+  "cutoff": 1794580223,
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/159.0.8154.6 Safari/537.36",
+  "immutable_rows": [
+    {
+      "id": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b",
+      "payload_sha256": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b"
+    }
+  ]
+}

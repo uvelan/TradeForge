@@ -1,0 +1,36 @@
+{
+  "git_revision": "e28a5d0a87e412d4509799dd6afa72d817a62dfb",
+  "case": "quiet-eurusd",
+  "session": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+  "cutoff": 1794579017,
+  "original_id": "2d78e30551c1b6637ee5e21a76ca1fb5e0a2cb62c5935d2ccb379d0ea42217a5",
+  "recovered_id": "46e68697d76948dcf05a619daa645511c204fe4a35ce6fb1fd7365f8c2ae37bd",
+  "witness": {
+    "symbol": "EURUSD",
+    "time": 1794578700,
+    "nominal_close": 1794579000,
+    "available_at": 1794579017,
+    "availability_basis": "ARCHIVE_SUPPLIED",
+    "source_id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14:1794578700",
+    "partitions": [
+      {
+        "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+        "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+      }
+    ]
+  },
+  "immutable_rows": [
+    {
+      "id": "2d78e30551c1b6637ee5e21a76ca1fb5e0a2cb62c5935d2ccb379d0ea42217a5",
+      "payload_sha256": "2d78e30551c1b6637ee5e21a76ca1fb5e0a2cb62c5935d2ccb379d0ea42217a5"
+    },
+    {
+      "id": "46e68697d76948dcf05a619daa645511c204fe4a35ce6fb1fd7365f8c2ae37bd",
+      "payload_sha256": "46e68697d76948dcf05a619daa645511c204fe4a35ce6fb1fd7365f8c2ae37bd"
+    },
+    {
+      "id": "8ab3eec522deaa4c1177bafc235dc780e25cde6424c4469b8c8daa3bfcfcf86e",
+      "payload_sha256": "8ab3eec522deaa4c1177bafc235dc780e25cde6424c4469b8c8daa3bfcfcf86e"
+    }
+  ]
+}
