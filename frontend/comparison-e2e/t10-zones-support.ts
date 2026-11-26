@@ -60,7 +60,8 @@ export async function startSession(page: Page, primary: Symbol, peer: Symbol) {
   const session: ReplaySession = await response.json();
   expect(session.market.partitions).toEqual([reference.symbols[primary].partition]);
   expect(session.views['2']).toMatchObject({symbol: peer, partitions: [reference.symbols[peer].partition]});
-  expect(session.market.candles.length).toBe((end - start) / frame);
+  expect(session.market.candles.map(bar => bar.time)).toEqual(reference.symbols[primary].bars.map(bar => bar.time));
+  expect(session.views['2'].candles.map(bar => bar.time)).toEqual(reference.symbols[peer].bars.map(bar => bar.time));
   return session;
 }
 

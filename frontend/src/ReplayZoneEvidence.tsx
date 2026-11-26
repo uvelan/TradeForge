@@ -1,8 +1,10 @@
 import {useEffect, useRef, useState, type ReactNode} from 'react';
 import {api} from './api';
-import {EvidenceDisclosure, ReplaySourcePins, ReplaySourceTable, evidenceWords as words, replayUtc as utc} from './ReplayEvidenceSources';
+import {EvidenceDisclosure, ReplaySourcePins, ReplaySourceTable, evidenceWords as words, replayUtc as utc,
+  type ReplaySourceCandle} from './ReplayEvidenceSources';
 import {replayEvidenceLanes, replayLaneLabel, type ReplayEvidenceProps, type ReplayLane} from './replayEvidenceLanes';
-import type {ReplayZoneMitigation, ReplayZonePage, ReplayZoneReceipt, ReplayZoneRevision, ReplayZoneStructure} from './replayZoneTypes';
+import type {ReplayZoneContinuity, ReplayZoneMitigation, ReplayZonePage, ReplayZoneReceipt, ReplayZoneRevision,
+  ReplayZoneStructure} from './replayZoneTypes';
 import {useWorkspacePreference} from './useWorkspacePreference';
 
 const title = 'Replay FVG and order blocks';
@@ -122,6 +124,7 @@ function zoneLabel(zone: ReplayZoneRevision) {
 }
 
 function ZoneReceipt({zone, mitigation}: {zone: ReplayZoneReceipt; mitigation: ReplayZoneMitigation}) {
+  const current = zone.revisions.at(-1);
   const fields: Fields = [
     ['Zone', zoneType(zone.type)], ['Direction', zone.direction],
     ['Bounds', bounds(zone.lower, zone.upper)], ['Remaining bounds', bounds(zone.remaining_lower, zone.remaining_upper)],
@@ -139,6 +142,8 @@ function ZoneReceipt({zone, mitigation}: {zone: ReplayZoneReceipt; mitigation: R
   return <article aria-label="Selected replay zone" data-zone-id={zone.zone_id}
     data-revision-id={zone.id} data-available-at={zone.available_at}>
     <ReceiptFields label="Zone receipt" fields={fields}/>
+    {current?.id === zone.id && current.continuity &&
+      <ZoneGapEvidence id={current.id} continuity={current.continuity} evidence={zone.evidence}/>}
     {zone.revisions.length > 0 && <EvidenceDisclosure label={zone.revisions.length + ' lifecycle revisions'}>
       <ol aria-label="Zone lifecycle revisions">{zone.revisions.map(revision => <li key={revision.id}>
         {utc(revision.available_at)} · {words(revision.state)} · {words(revision.reason)} · {revision.mitigation_pct}% ·
@@ -151,6 +156,33 @@ function ZoneReceipt({zone, mitigation}: {zone: ReplayZoneReceipt; mitigation: R
     </EvidenceDisclosure>}
     {zone.structure && <OrderBlockStructure structure={zone.structure}/>}
   </article>;
+}
+
+function ZoneGapEvidence({id, continuity, evidence}: {
+  id: string; continuity: ReplayZoneContinuity; evidence: ReplaySourceCandle[];
+}) {
+  const boundary = (time: number, role: string) => {
+    const source = evidence.find(row => row.time === time &&
+      row.roles.some(item => item.role === role && item.event_id === id));
+    return <>
+      <div>{utc(time)}</div>
+      {source && <>
+        <div className="evidence-id">Source ID <code>{source.source_id}</code></div>
+        <ReplaySourcePins rows={[source]}/>
+      </>}
+    </>;
+  };
+  const intervals = continuity.missing_open_intervals;
+  return <section aria-label={intervals ? 'Missing open candles evidence' : 'Unverifiable closure evidence'}
+    data-revision-id={id}>
+    <ReceiptFields label="Gap evidence" fields={[
+      ['Missing candle opens [start, end) · UTC', intervals
+        ? intervals.map(({start, end}) => <div key={start}>[{utc(start)}, {utc(end)})</div>)
+        : 'Missing open intervals could not be verified under the market calendar.'],
+      ['Previous observed candle open', boundary(continuity.previous_observed_open, 'GAP_PREVIOUS_OBSERVED')],
+      ['Next observed candle open', boundary(continuity.next_observed_open, 'GAP_NEXT_OBSERVED')],
+    ]}/>
+  </section>;
 }
 
 function OrderBlockStructure({structure}: {structure: ReplayZoneStructure}) {

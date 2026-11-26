@@ -1,6 +1,12 @@
 import type {ReplaySourceCandle} from './ReplayEvidenceSources';
 
 export type ReplayZoneMitigation = 'wick' | 'close';
+export type ReplayZoneContinuity = {
+  previous_observed_open: number;
+  next_observed_open: number;
+  missing_open_intervals: {start: number; end: number}[] | null;
+};
+
 export type ReplayZoneRevision = {
   id: string; zone_id: string; type: 'FVG' | 'OB'; direction: 'BULLISH' | 'BEARISH';
   state: string; reason: string; revision: number;
@@ -9,6 +15,7 @@ export type ReplayZoneRevision = {
   formation_available_at: number; observation_time: number; confirmation_time: number;
   available_at: number; observed_price: number | null;
   algorithm_version: number; identity_policy_version: number;
+  continuity?: ReplayZoneContinuity;
 };
 
 export type ReplayZoneStructure = {
