@@ -92,6 +92,10 @@ function Revision({receipt,chartPrimary,paired}:{receipt:Receipt;chartPrimary:Fe
   return <div data-event-key={receipt.event_key} data-status={receipt.status} data-revision-id={revision?.id}>
     <p><strong>{receipt.status}</strong> · {receipt.direction} · {receipt.source_correction?'Correction observed':'Modeled availability'} {utc(transition.time)}</p>
     {revision && <p>Revision <code>{revision.id}</code></p>}
+    <details><summary>Watch rules and publication</summary>
+      <p>Swing width {receipt.rules.period} · UTC match {receipt.rules.alignment_bars} bars · confirmation {receipt.rules.confirmation_bars} bars · tolerance {receipt.rules.tolerance_bps} bps</p>
+      {receipt.watch_published_at!=null && <p>Published locally {utc(receipt.watch_published_at)}</p>}
+    </details>
     {receipt.status!=='SMT_SOURCE_CORRECTED' && <button type="button" className="small-tool"
       onClick={()=>setInspect(true)} disabled={inspect}>Inspect transition candles</button>}
     {inspect && !bars && <p role={error?'alert':'status'}>{error || 'Loading pinned candles…'}</p>}
