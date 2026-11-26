@@ -1,0 +1,205 @@
+{
+  "times_seconds": {
+    "import": 13.8,
+    "pair": 19.15,
+    "publication": 18.33,
+    "restore": 0.24,
+    "restored": 8.65,
+    "reopen": 10.77
+  },
+  "registration": {
+    "fixed": {
+      "inspected": 0,
+      "mapped": 0,
+      "unresolved": 0
+    },
+    "research": {
+      "inspected": 12,
+      "mapped": 10,
+      "unresolved": 2
+    }
+  },
+  "references": {
+    "counts": {
+      "fixed": 0,
+      "research": 12,
+      "receipts": 12,
+      "import_refs": 10,
+      "smt_revisions": 63,
+      "unpinned_lanes": 0,
+      "smt_refs": 126,
+      "exports": 0
+    },
+    "dangling_receipts": []
+  },
+  "catalog": [
+    {
+      "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+      "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-bi5-v2",
+      "timeframe": null,
+      "kind": "ticks",
+      "price_basis": "BID_ASK_UNITS",
+      "first_time": "2025-11-13T13:00:00+00:00",
+      "last_time": "2025-11-13T13:59:55+00:00",
+      "rows_count": 3171
+    },
+    {
+      "id": "4c57fc75ff9e360fb169cb22323257c81ccd823b1062446109e9e41d9d6f38c8",
+      "sha256": "7d9642090fe1eec7fa0734eb0ba5cedea044250102e124a8ce1e70e2e2b6e82e",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-bi5-v2",
+      "timeframe": "M1",
+      "kind": "candles",
+      "price_basis": "ASK",
+      "first_time": "2025-11-13T13:00:00+00:00",
+      "last_time": "2025-11-13T13:59:00+00:00",
+      "rows_count": 60
+    },
+    {
+      "id": "01ed0c190b45128cfa61de57e68c0bb2153791a68809ad7e043ceb41ac33642e",
+      "sha256": "ba88a9e1d9912492d00ee904ae0e0cb9342fffd6280ec0a0ce73cdd77682831a",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-bi5-v2",
+      "timeframe": "M1",
+      "kind": "candles",
+      "price_basis": "BID",
+      "first_time": "2025-11-13T13:00:00+00:00",
+      "last_time": "2025-11-13T13:59:00+00:00",
+      "rows_count": 60
+    },
+    {
+      "id": "ac3716715819b0193ee1d5edd7a1828a058161036346c2387d1c7916892ad8b1",
+      "sha256": "4a4360ac5a48e773c95897bedda86dc1058548a9e433378877770067c700a38b",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-bi5-v2",
+      "timeframe": "M5",
+      "kind": "candles",
+      "price_basis": "ASK",
+      "first_time": "2025-11-13T13:00:00+00:00",
+      "last_time": "2025-11-13T13:55:00+00:00",
+      "rows_count": 12
+    },
+    {
+      "id": "55e8bd216f5d2b9e2b130ddedd0579dce0aa54fd561cfb6e86a633228a127b0d",
+      "sha256": "a6a0d7ee85e62b4947e9b0735d31ed4985871d0cb90d2efb8c621f7d14b63e41",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-bi5-v2",
+      "timeframe": "M5",
+      "kind": "candles",
+      "price_basis": "BID",
+      "first_time": "2025-11-13T13:00:00+00:00",
+      "last_time": "2025-11-13T13:55:00+00:00",
+      "rows_count": 12
+    },
+    {
+      "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+      "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-bi5-v2",
+      "timeframe": null,
+      "kind": "ticks",
+      "price_basis": "BID_ASK_UNITS",
+      "first_time": "2025-11-13T14:00:00+00:00",
+      "last_time": "2025-11-13T14:59:59+00:00",
+      "rows_count": 5465
+    },
+    {
+      "id": "9df5f8a3230a275dec03d78663ceb71ae77d926cb9a6d5014026c762f2d038b2",
+      "sha256": "c7bb385641285e2a6cfc55ff0c7c21548db6422a968690d6b8947dc30a07bd05",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-bi5-v2",
+      "timeframe": "M1",
+      "kind": "candles",
+      "price_basis": "ASK",
+      "first_time": "2025-11-13T14:00:00+00:00",
+      "last_time": "2025-11-13T14:59:00+00:00",
+      "rows_count": 60
+    },
+    {
+      "id": "3402d457f6de2f770ab2dedf31a951a9fcb8c90c4d8c186dc82d6f019f5d6d11",
+      "sha256": "351b64a92b7e292fd6c6026a5b92134623a38f62b997216c58f81fa67fe5d549",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-bi5-v2",
+      "timeframe": "M1",
+      "kind": "candles",
+      "price_basis": "BID",
+      "first_time": "2025-11-13T14:00:00+00:00",
+      "last_time": "2025-11-13T14:59:00+00:00",
+      "rows_count": 60
+    },
+    {
+      "id": "f2cf67c8b76e4908d3481359a2a1f6062f42d20fbd3c4694333cbb9c232390d1",
+      "sha256": "d65902decee45e27407544f6ee7236cb7e4017401dbf4a3cd69240bf5170a0fa",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-bi5-v2",
+      "timeframe": "M5",
+      "kind": "candles",
+      "price_basis": "ASK",
+      "first_time": "2025-11-13T14:00:00+00:00",
+      "last_time": "2025-11-13T14:55:00+00:00",
+      "rows_count": 12
+    },
+    {
+      "id": "42d67cb27e0d1b3554cd2f787b4d3268f8fdd9b022a520e2ce68477a2b1f6ca4",
+      "sha256": "e577e7e92bf826da9fdd2ba3ea791f20a858da732ba864d3984a21bf67a87626",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-bi5-v2",
+      "timeframe": "M5",
+      "kind": "candles",
+      "price_basis": "BID",
+      "first_time": "2025-11-13T14:00:00+00:00",
+      "last_time": "2025-11-13T14:55:00+00:00",
+      "rows_count": 12
+    },
+    {
+      "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+      "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d",
+      "symbol": "EURUSD",
+      "feed_id": "dukascopy-web-m1-v1",
+      "timeframe": "M5",
+      "kind": "candles",
+      "price_basis": "BID",
+      "first_time": "2026-11-13T00:00:00+00:00",
+      "last_time": "2026-11-13T21:55:00+00:00",
+      "rows_count": 264
+    },
+    {
+      "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+      "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02",
+      "symbol": "GBPUSD",
+      "feed_id": "dukascopy-web-m1-v1",
+      "timeframe": "M5",
+      "kind": "candles",
+      "price_basis": "BID",
+      "first_time": "2026-11-13T00:00:00+00:00",
+      "last_time": "2026-11-13T21:55:00+00:00",
+      "rows_count": 264
+    }
+  ],
+  "bi5_sources": [
+    {
+      "sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+      "bytes": 15332
+    },
+    {
+      "sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+      "bytes": 24809
+    }
+  ],
+  "database_sha256": {
+    "database/trading.sqlite3": "3350649b740460193b9aa5263a285002462bd05947302a9de8bdeb11e4415cce",
+    "research/tradeforge.sqlite3": "a7977a47f4c03fc3d230c1edb2aa6f33a8b863dc6d4c4fb42c28283f5545fbbb"
+  },
+  "lessons": [
+    {
+      "id": "0b1d7277d52b0d3b61e9397e7c5a818488cc5fddabf7696b696713904544caf6",
+      "png_sha256": "e3f1c8143fc79f58d19f0b01bbbd8240a678dec2e5de9d9f78708c68806519eb"
+    },
+    {
+      "id": "ab37fdc49ad21e96094683048dbfbd65569ee3e1939c19e51d97c930b3f8e030",
+      "png_sha256": "177b9974ccfa108c089f60e9c8cb7eebdc6ccf5d0a12cafb12ae65b1fdcbd23b"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 {
   "baseline": "517f8122b633f9143324f99dd7b075c7c689df3f",
+  "interpretation": "Historical integration backlog, including initial pending states. For the current Windows-local disposition of every task and remaining proof, see ../pr37-closure/REVIEW.md.",
   "source_requirements": [
     "docs/research/05_REMEDIATION_PLAN.md",
     "docs/research/08_IMPLEMENTATION_ROADMAP.md",
