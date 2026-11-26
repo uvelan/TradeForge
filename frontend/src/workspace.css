@@ -348,3 +348,11 @@
 .replay-evidence-sources table{border-collapse:collapse;white-space:nowrap;text-align:left;font-variant-numeric:tabular-nums}
 .replay-evidence-sources :is(td,th){padding:.45rem;border-bottom:1px solid #273c50}
 .replay-evidence-sources td.evidence-id{white-space:normal;min-width:12ch;max-width:36ch}
+.replay-confluence-evidence{margin-top:.65rem;min-width:0}
+.replay-confluence-evidence summary{cursor:pointer}
+.replay-confluence-evidence .evidence-pairs{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.replay-confluence-evidence .evidence-pairs h4{margin:.3rem 0 .65rem}
+.confluence-proof-sources{padding:0;list-style:none;max-height:14rem;overflow:auto}
+.confluence-proof-sources li{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;margin-bottom:.3rem}
+.confluence-proof-sources button{white-space:normal;text-align:left}
+.confluence-proof-sources button[aria-pressed=true]{border-color:#60dbc1}
