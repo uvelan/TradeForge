@@ -43,6 +43,7 @@ from .historical_strategy_routes import router as historical_strategy_router
 from .historical_strategy_worker import supervise as supervise_strategy_history
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
 from .indicator_coverage import replay_availability
+from .replay_crt import inspect_crt
 from .replay_hour import inspect_hour
 from .replay_structure import inspect_structure_liquidity
 from .replay_zones import inspect_zones
@@ -646,6 +647,14 @@ def replay_structure_liquidity(session_id: str, cutoff: int = Query(ge=0),
                                event_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
                                before: int | None = Query(default=None, ge=0)):
     return inspect_structure_liquidity(replay_session(session_id), view, cutoff, event_id, before)
+
+
+@app.get('/api/replay/sessions/{session_id}/crt')
+def replay_crt(session_id: str, cutoff: int = Query(ge=0),
+               view: str = Query(default="primary", pattern=r"^(primary|comparison|[234])$"),
+               range_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+               before: int | None = Query(default=None, ge=0)):
+    return inspect_crt(replay_session(session_id), view, cutoff, range_id, before)
 
 
 @app.get('/api/replay/sessions/{session_id}/zones')
