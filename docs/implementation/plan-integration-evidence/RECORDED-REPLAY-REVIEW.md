@@ -65,3 +65,13 @@ The full backend run finished with **1,115 passed, one skipped** and one Starlet
 Back up the research database and export directory together. Revert the T09 commit and restart the local application. Keep existing ZIPs, package rows, originals, operator decisions and the additive association table. The older app can use its PRE_TRADE records; use the updated app again to inspect historical packages. Restoring a pre-upgrade backup rolls the entire workspace back to that backup's time.
 
 This milestone covers the recorded EURUSD BID-rise price-change metric. November still lacks 480 open hours. T08 still requires an authorized redacted broker statement and dated specifications. Public historical admission remains 160 cutoffs and production recorded trading remains BLOCKED.
+
+## Review selection when an original cannot be verified
+
+On baseline `566dc22d48f0b810dc3240413f0fa665098cdf34`, Chromium showed the previous package's review comment and claim while waiting for a different package's original and after that request returned a checksum conflict. The review pane now clears review content before selection and shows decisions and the original link only after loading the selected review for the active package. A checksum error leaves no reviewed claims visible; select that review again to retry. A newly imported review opens directly rather than fetching an unrelated review first.
+
+```sh
+npm --prefix frontend run e2e -- recorded-review-identity --retries=0
+```
+
+The browser regression uses synthetic responses in the ordinary Strategy Lab UI. It failed before the fix and passed after it on Linux Chromium, confirming that the old comment, claim, link and controls are absent after a 409, and that retry opens only the selected package's claims and decisions. Independent component review found no blocking defect. No review bytes, metrics, trading logic, or API contracts changed. Reverting the pane change needs no migration, but restores the previous behavior on a failed original read.
