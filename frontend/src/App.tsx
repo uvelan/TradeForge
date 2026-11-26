@@ -1,3 +1,4 @@
+import StatementReconciliation from './StatementReconciliation';
 import {JournalPaper} from './PlanPaper';
 import {snapshotLane} from './snapshotLanes';
 import {SnapshotDetails} from './SnapshotDetails';
@@ -151,7 +152,7 @@ function App(){
         clearLink={()=>{setJournalSignal(undefined);setJournalContext(undefined);}}
         openPlan={(id,version)=>{setPlanLocation({id,version});go('plans');}}
         openSignal={openSignal}/>}
-      {section==='data'&&<DataLibrary refresh={refresh} initialDataset={dataLocation}/>}
+      {section==='data'&&<><DataLibrary refresh={refresh} initialDataset={dataLocation}/><StatementReconciliation/></>}
       {section==='settings'&&<SettingsPage/>}
       </div>
       <footer className="footer"><span>TRADEFORGE • RESEARCH ENVIRONMENT • SINGLE USER</span><span>Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">TradingView</a> · UTC storage · {zone}</span></footer>

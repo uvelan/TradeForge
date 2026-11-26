@@ -1,0 +1,174 @@
+{
+  "format": "REDACTED_STATEMENT_V1",
+  "book": "controlled-demo",
+  "start": "2025-11-10T00:00:00Z",
+  "end": "2025-11-15T00:00:00Z",
+  "currency": "USD",
+  "mode": "NETTING",
+  "rounding": "HALF_EVEN_PER_POSTING",
+  "complete_history": true,
+  "opening_balance": "1000.00",
+  "closing_balance": "1079.00",
+  "closing_equity": "1080.00",
+  "opening_positions": [],
+  "closing_positions": [
+    {
+      "symbol": "EURUSD",
+      "lots": "-0.01",
+      "average": "1.09900"
+    }
+  ],
+  "specs": [
+    {
+      "id": "spec1",
+      "symbol": "EURUSD",
+      "start": "2025-01-01T00:00:00Z",
+      "end": "2026-01-01T00:00:00Z",
+      "contract_size": "100000",
+      "tick": "0.00001",
+      "lot_step": "0.01",
+      "quote_currency": "USD",
+      "leverage": "100"
+    }
+  ],
+  "rates": [],
+  "marks": [
+    {
+      "symbol": "EURUSD",
+      "bid": "1.09798",
+      "ask": "1.09800",
+      "as_of": "2025-11-14T23:59:59Z",
+      "available": "2025-11-14T23:59:59Z",
+      "source": "controlled-mark"
+    }
+  ],
+  "max_age_seconds": 60,
+  "margin_model": "GROSS_NOTIONAL",
+  "closing_margin": "10.98",
+  "daily_loss_limit": "50",
+  "weekly_loss_limit": "100",
+  "rows": [
+    {
+      "id": "D1",
+      "at": "2025-11-14T10:00:00Z",
+      "sequence": 0,
+      "kind": "CASH",
+      "postings": [
+        {
+          "id": "D1-cash",
+          "kind": "DEPOSIT",
+          "amount": "100",
+          "currency": "USD"
+        }
+      ]
+    },
+    {
+      "id": "F1",
+      "at": "2025-11-14T10:01:00Z",
+      "sequence": 1,
+      "kind": "BUY",
+      "postings": [],
+      "symbol": "EURUSD",
+      "lots": "0.01",
+      "price": "1.10000",
+      "order_id": "order-buy"
+    },
+    {
+      "id": "F2",
+      "at": "2025-11-14T10:02:00Z",
+      "sequence": 2,
+      "kind": "BUY",
+      "postings": [],
+      "symbol": "EURUSD",
+      "lots": "0.01",
+      "price": "1.10200",
+      "order_id": "order-buy"
+    },
+    {
+      "id": "C1",
+      "at": "2025-11-14T10:03:00Z",
+      "sequence": 3,
+      "kind": "CASH",
+      "postings": [
+        {
+          "id": "C1-cash",
+          "kind": "COMMISSION",
+          "amount": "-1.25",
+          "currency": "USD"
+        }
+      ]
+    },
+    {
+      "id": "F3",
+      "at": "2025-11-14T10:04:00Z",
+      "sequence": 4,
+      "kind": "SELL",
+      "postings": [],
+      "symbol": "EURUSD",
+      "lots": "0.01",
+      "price": "1.10400",
+      "order_id": "order-F3",
+      "realized": {
+        "amount": "3",
+        "currency": "USD"
+      }
+    },
+    {
+      "id": "F4",
+      "at": "2025-11-14T10:05:00Z",
+      "sequence": 5,
+      "kind": "SELL",
+      "postings": [],
+      "symbol": "EURUSD",
+      "lots": "0.02",
+      "price": "1.09900",
+      "order_id": "order-F4",
+      "realized": {
+        "amount": "-2",
+        "currency": "USD"
+      }
+    },
+    {
+      "id": "S1",
+      "at": "2025-11-14T10:06:00Z",
+      "sequence": 6,
+      "kind": "CASH",
+      "postings": [
+        {
+          "id": "S1-cash",
+          "kind": "SWAP",
+          "amount": "-0.25",
+          "currency": "USD"
+        }
+      ]
+    },
+    {
+      "id": "X1",
+      "at": "2025-11-14T10:07:00Z",
+      "sequence": 7,
+      "kind": "CASH",
+      "postings": [
+        {
+          "id": "X1-cash",
+          "kind": "FEE",
+          "amount": "-0.50",
+          "currency": "USD"
+        }
+      ]
+    },
+    {
+      "id": "W1",
+      "at": "2025-11-14T10:08:00Z",
+      "sequence": 8,
+      "kind": "CASH",
+      "postings": [
+        {
+          "id": "W1-cash",
+          "kind": "WITHDRAWAL",
+          "amount": "-20",
+          "currency": "USD"
+        }
+      ]
+    }
+  ]
+}

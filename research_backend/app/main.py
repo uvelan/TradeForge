@@ -69,6 +69,8 @@ app.include_router(drawing_router)
 app.include_router(workspace_router)
 app.include_router(learning_router)
 app.include_router(decision_review_router)
+from .statement_routes import router as statement_router
+app.include_router(statement_router)
 app.include_router(month_router)
 app.include_router(strategy_router)
 app.include_router(strategy_evaluation_router)

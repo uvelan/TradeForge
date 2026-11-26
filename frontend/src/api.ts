@@ -11,6 +11,7 @@ async function request<T>(url:string,options?:RequestInit):Promise<T> {
 }
 const post=<T>(url:string,payload:unknown)=>request<T>(url,{method:'POST',body:JSON.stringify(payload)});
 export const api={
+  statementFile:<T>(file:File)=>request<T>('/statements',{method:'POST',body:file}),
   get:<T>(path:string)=>request<T>(path),post,
   overview:()=>request<import('./types').Overview>('/overview'),
   brokerSymbols:()=>request<BrokerSymbol[]>('/market/mt5/symbols'),
