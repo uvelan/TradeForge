@@ -21,7 +21,7 @@ PROFILE = "CRT_SMT_M5_V1"
 SWEEP_CANDIDATES = {"HIGH_SWEEP_CANDIDATE", "LOW_SWEEP_CANDIDATE"}
 RECLAIMED = {"HIGH_SWEPT_RECLAIMED", "LOW_SWEPT_RECLAIMED", "EXPANSION_OBSERVED"}
 CONTROLS = ("disjoint", "overlap", "delayed-overlap", "contradiction", "terminal-tie",
-            "smt-terminal", "newest-crt", "newest-smt")
+            "smt-terminal", "newest-crt", "newest-smt", "peer-gap")
 
 
 def price_rows(name):
@@ -76,7 +76,9 @@ def price_rows(name):
     return {"start": start, "end": start + len(eur) * STEP, "feed": f"controlled-t10-confluence-{name}",
             "symbols": {
                 symbol: {"bars": [bar(start + i * STEP, ohlc, delayed.get((symbol, i), 0))
-                                  for i, ohlc in enumerate(prices)], "basis": "ARCHIVE_SUPPLIED"}
+                                  for i, ohlc in enumerate(prices)
+                                  if not (name == "peer-gap" and symbol == "GBPUSD" and i == 18)],
+                         "basis": "ARCHIVE_SUPPLIED"}
                 for symbol, prices in (("EURUSD", eur), ("GBPUSD", gbp))
             }}
 
@@ -168,6 +170,44 @@ def smt_families(manifest, cutoff):
     return families
 
 
+def expected_coverage(manifest, cutoff):
+    expected = set(range(manifest["start"], cutoff // STEP * STEP, STEP))
+    issues = {}
+    for symbol, lane in manifest["symbols"].items():
+        visible = {row["time"] for row in lane["bars"] if row["available_at"] <= cutoff}
+        gaps = []
+        for stamp in sorted(expected - visible):
+            if gaps and gaps[-1]["end"] == stamp:
+                gaps[-1]["end"] += STEP
+            else:
+                gaps.append({"start": stamp, "end": stamp + STEP})
+        if gaps:
+            issues[symbol] = {"symbol": symbol, "reason": "MISSING_OPEN_CANDLES", "missing_intervals": gaps}
+    return issues
+
+
+def expected_reason(crt_state, smt_state, coverage, verdict):
+    if coverage:
+        return "MISSING_OPEN_CANDLES"
+    if crt_state is None:
+        return "NO_VISIBLE_CRT_FAMILY"
+    if crt_state in SWEEP_CANDIDATES:
+        return "CRT_CANDIDATE"
+    if crt_state in {"AMBIGUOUS", "UNCERTAIN"}:
+        return "CRT_UNCERTAIN"
+    if smt_state is None:
+        return "NO_VISIBLE_SMT_FAMILY"
+    if smt_state == "SMT_CANDIDATE":
+        return "SMT_CANDIDATE"
+    if smt_state == "UNCERTAIN":
+        return "SMT_UNCERTAIN"
+    if crt_state not in RECLAIMED:
+        return "CRT_NOT_RECLAIMED"
+    if smt_state != "SMT_CONFIRMED":
+        return "SMT_NOT_CONFIRMED"
+    return "MATCHING_DIRECTIONS" if verdict == "ALIGNED" else "OPPOSITE_DIRECTIONS"
+
+
 def expected_at(manifest, cutoff):
     ledger = lifecycle(manifest["symbols"]["EURUSD"]["bars"], cutoff)
     crt = ledger[max(ledger)][-1] if ledger else None
@@ -181,7 +221,8 @@ def expected_at(manifest, cutoff):
         smt = None
     crt_state, smt_state = (crt["state"] if crt else None), (smt["state"] if smt else None)
     direction = None
-    if not crt or not smt or crt_state in SWEEP_CANDIDATES | {"UNCERTAIN"} or smt_state in {
+    coverage = expected_coverage(manifest, cutoff)
+    if coverage or not crt or not smt or crt_state in SWEEP_CANDIDATES | {"UNCERTAIN", "AMBIGUOUS"} or smt_state in {
         "SMT_CANDIDATE", "UNCERTAIN",
     }:
         verdict = "INCOMPLETE"
@@ -192,7 +233,9 @@ def expected_at(manifest, cutoff):
         verdict = "ALIGNED" if direction == smt["direction"] else "CONTRADICTED"
         if verdict == "CONTRADICTED":
             direction = None
-    return {"cutoff": cutoff, "verdict": verdict, "crt_state": crt_state, "smt_state": smt_state,
+    reason = expected_reason(crt_state, smt_state, coverage, verdict)
+    return {"cutoff": cutoff, "verdict": verdict, "reason": reason, "coverage_issues": coverage,
+            "crt_state": crt_state, "smt_state": smt_state,
             "direction": direction, "crt": crt, "smt": smt,
             "crt_reference": max(ledger) if ledger else None,
             "crt_family_count": len(ledger), "smt_family_count": len(families)}
@@ -320,6 +363,11 @@ def assert_labeled_results(name, checkpoints):
         assert at[CLOSE + 5*STEP]["verdict"] == "CONTRADICTED"
     elif name == "terminal-tie":
         assert counts["ALIGNED"] == 0 and at[CLOSE + 5*STEP]["smt_state"] == "SMT_INVALIDATED"
+    elif name == "peer-gap":
+        gap = CLOSE + 7*STEP
+        assert at[gap - 1]["verdict"] == "ALIGNED"
+        assert at[gap]["smt_state"] == "UNCERTAIN"
+        assert all(item["verdict"] == "INCOMPLETE" for item in checkpoints if item["cutoff"] >= gap)
     elif name == "newest-crt":
         assert at[CLOSE + 12*STEP - 1]["verdict"] == "ALIGNED"
         assert at[CLOSE + 12*STEP]["crt_state"] == "ACTIVE"
@@ -362,6 +410,11 @@ def verify_case(client, name, manifest):
         assert (actual["status"], actual["direction"]) == (expected["verdict"], expected["direction"]), (
             name, utc(cutoff), expected["verdict"], actual["status"], actual["reason"],
         )
+        assert actual["reason"] == expected["reason"], (name, utc(cutoff), actual["reason"], expected["reason"])
+        for kind, symbols in (("crt", ("EURUSD",)), ("smt", ("EURUSD", "GBPUSD"))):
+            assert actual["components"][kind]["coverage_issues"] == [
+                expected["coverage_issues"][symbol] for symbol in symbols if symbol in expected["coverage_issues"]
+            ], (name, cutoff, kind)
         if actual["status"] == "INCOMPLETE":
             assert actual["first_available_at"] is None
         else:
@@ -387,16 +440,30 @@ def verify_case(client, name, manifest):
             assert family == component["family_id"]
             for row_index, row in enumerate(component["revisions"]):
                 assert row == revisions.setdefault(row_index, row), (kind, key, row_index)
-        state = (actual["status"], actual["reason"], expected["crt_state"], expected["smt_state"],
-                 expected["crt_reference"], expected["smt"]["key"] if expected["smt"] else None)
-        if state != previous:
+        verdict = {key: actual[key] for key in ("status", "reason", "direction", "first_available_at")}
+        components = {
+            name: {key: entry[key] for key in ("family_id", "revision_id", "revision", "state", "reason",
+                                               "available_at", "observation_time", "confirmation_time")}
+            for name, entry in actual["components"].items()
+        }
+        if (verdict, components) != previous:
             transitions.append({
-                "utc": utc(cutoff), "status": state[0], "reason": state[1],
-                "crt_state": state[2], "smt_state": state[3], "direction": actual["direction"],
+                "utc": utc(cutoff), **verdict,
+                "verdict_changed": previous is None or any(
+                    verdict[key] != previous[0][key] for key in ("status", "reason", "direction")
+                ),
+                "component_changed": previous is None or components != previous[1],
+                "crt_state": expected["crt_state"], "smt_state": expected["smt_state"],
                 "first_available_at": utc(actual["first_available_at"]) if actual["first_available_at"] else None,
+                "components": {
+                    name: {key: utc(value) if value is not None and key in (
+                        "available_at", "observation_time", "confirmation_time"
+                    ) else value for key, value in entry.items()}
+                    for name, entry in components.items()
+                },
                 "receipt_id": receipt,
             })
-            previous = state
+            previous = verdict, components
 
     # Rewind the whole series by identity after every later boundary has been published.
     for cutoff, (receipt, expected_digest) in reversed(tuple(seen.items())):
