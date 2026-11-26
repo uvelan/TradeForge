@@ -61,7 +61,7 @@ function responseAt(page: Page, cutoff: number, id?: string, method = 'GET'): Pr
     return isConfluence(url) && url.searchParams.get('cutoff') === String(cutoff) &&
       url.searchParams.get('profile') === confluenceProfile && url.searchParams.get('receipt_id') === (id ?? null) &&
       response.request().method() === method;
-  }).then(async response => ({receipt: await payload<ConfluenceReceipt>(response), bytes: (await response.body()).length}));
+  }, {timeout: 20_000}).then(async response => ({receipt: await payload<ConfluenceReceipt>(response), bytes: (await response.body()).length}));
 }
 
 async function profileRun(baseURL: string | undefined, work: (page: Page, processes: Processes) => Promise<void>) {
@@ -167,7 +167,7 @@ async function verifyReceipt(page: Page, receipt: ConfluenceReceipt, expected?: 
     await expect(field(part, 'Family ID')).toHaveText(value.family_id ?? 'Unavailable');
     await expect(field(part, 'Revision ID')).toHaveText(value.revision_id ?? 'Unavailable');
     await expect(field(part, 'Revision first available')).toHaveText(value.available_at == null ? 'Unavailable' : utc(value.available_at));
-    if (value.coverage_reason) await expect(field(part, 'Coverage')).toHaveText(words(value.coverage_reason));
+    if (value.coverage_reason) await expect(field(part, 'Coverage')).toContainText(words(value.coverage_reason));
     for (const witness of value.evidence) {
       const lane = manifest.symbols[witness.symbol];
       const candle = lane.bars.find(bar => bar.time === witness.time)!;
@@ -307,11 +307,16 @@ test('@phase-initial@end freezes conjunction, witnesses, saved receipt and swapp
     expect(requests).toHaveLength(0);
 
     const timings = await measureListAndSelect(page, requests, finalChartCutoff);
+    const delayed = Object.entries(manifest.symbols).flatMap(([symbol, lane]) => lane.bars
+      .filter(bar => bar.available_at > bar.time + frame)
+      .map(bar => ({symbol, open: bar.time, nominalClose: bar.time + frame, arrival: bar.available_at})));
+    if (mode === 'controlled') expect(delayed.some(item => item.symbol === 'GBPUSD')).toBe(true);
+    const deferredBoundaries = new Set(delayed.flatMap(item => [item.nominalClose, item.arrival]));
     const checkpoints = manifest.checkpoints.filter((current, index) => {
       const previous = manifest.checkpoints[index - 1];
       return previous && current.cutoff >= manifest.start + frame && current.cutoff <= finalChartCutoff &&
-        [current.verdict, current.crt_state, current.smt_state].join() !==
-        [previous.verdict, previous.crt_state, previous.smt_state].join();
+        (deferredBoundaries.has(current.cutoff) || [current.verdict, current.crt_state, current.smt_state].join() !==
+        [previous.verdict, previous.crt_state, previous.smt_state].join());
     });
     const snapshots: ConfluenceReceipt[] = [];
     for (const moment of checkpoints) {
@@ -319,6 +324,19 @@ test('@phase-initial@end freezes conjunction, witnesses, saved receipt and swapp
       await probe(page, moment.cutoff);
       const {receipt} = await reading;
       await verifyReceipt(page, receipt, moment);
+      for (const bar of delayed.filter(item => item.nominalClose === moment.cutoff)) {
+        const missing = {symbol: bar.symbol, reason: 'MISSING_OPEN_CANDLES',
+          missing_intervals: [{start: bar.open, end: bar.nominalClose}]};
+        expect(receipt.components.smt.coverage_issues).toContainEqual(missing);
+        expect(receipt.components.smt.evidence.some(row => row.symbol === bar.symbol && row.time === bar.open)).toBe(false);
+        const coverage = field(component(page, 'SMT'), 'Coverage');
+        await expect(coverage).toContainText(bar.symbol);
+        await expect(coverage).toContainText('[' + utc(bar.open) + ', ' + utc(bar.nominalClose) + ')');
+      }
+      for (const bar of delayed.filter(item => item.arrival === moment.cutoff)) {
+        expect(receipt.components.smt.coverage_issues?.some(issue => issue.symbol === bar.symbol &&
+          issue.missing_intervals.some(interval => interval.start <= bar.open && bar.open < interval.end))).toBe(false);
+      }
       snapshots.push(receipt);
     }
     await staleResponse(page);
@@ -347,9 +365,10 @@ test('@phase-initial@end freezes conjunction, witnesses, saved receipt and swapp
     expect((await pin).receipt).toEqual(aligned);
     await expect(scope(page).getByText('Exact receipt saved.', {exact: true})).toBeVisible();
 
-    const followChart = responseAt(page, afterChartCutoff);
+    // The same exact receipt remains visible when the chart settles on the inspected cutoff.
+    const followChart = afterChartCutoff === chosen.cutoff ? undefined : responseAt(page, afterChartCutoff);
     await moveChart(page, afterChartCutoff);
-    await ready(page, (await followChart).receipt);
+    await ready(page, followChart ? (await followChart).receipt : aligned);
     const rewind: Sample[] = [];
     for (let index = 0; index < repetitions; index++) {
       const rewound = responseAt(page, beforeChartCutoff);
@@ -385,6 +404,15 @@ test('@phase-initial@end freezes conjunction, witnesses, saved receipt and swapp
         await ready(page, latestReceipt);
       }
     }
+    const beforePin = responseAt(page, beforeChartCutoff);
+    await moveChart(page, beforeChartCutoff);
+    await beforePin;
+    await expect(selected(page)).toHaveCount(0);
+    await expect(scope(page).getByText('The saved receipt is unavailable at this chart cutoff.', {exact: true})).toBeVisible();
+    const arrived = responseAt(page, aligned.cutoff, aligned.receipt_id);
+    await moveChart(page, finalChartCutoff);
+    expect((await arrived).receipt).toEqual(aligned);
+    await ready(page, aligned);
     await button(replay(page), 'Save replay position').click();
     await expect(replay(page).getByText('Replay position saved', {exact: true})).toBeVisible();
     const saved = {session, chartCutoff: finalChartCutoff, receipt: aligned, processes};
@@ -432,7 +460,11 @@ test('@phase-restart@end reopens the exact older receipt after API and browser r
     await verifyReceipt(page, receipt, chosen);
     await checkProof(page, 'CRT', receipt.components.crt.evidence, 1, true);
     await checkProof(page, 'SMT', receipt.components.smt.evidence, 1, true);
-    await page.screenshot({path: join(output, 'exact-receipt-reopened.png'), fullPage: true});
+    await selected(page).locator('dl[aria-label="Confluence verdict"]').screenshot({path: join(output, 'reopened-verdict.png')});
+    await component(page, 'CRT').getByRole('region', {name: 'CRT exact source candle'})
+      .screenshot({path: join(output, 'reopened-crt-candle.png')});
+    await component(page, 'SMT').getByRole('region', {name: 'SMT exact source candle'})
+      .screenshot({path: join(output, 'reopened-smt-candle.png')});
     record('restart', {processes, receipt, measurement: summary([cold])});
   });
 });

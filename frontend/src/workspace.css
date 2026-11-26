@@ -356,3 +356,5 @@
 .confluence-proof-sources li{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;margin-bottom:.3rem}
 .confluence-proof-sources button{white-space:normal;text-align:left}
 .confluence-proof-sources button[aria-pressed=true]{border-color:#60dbc1}
+.confluence-coverage{list-style:none;padding:0;margin:0}
+.confluence-coverage li+li{margin-top:.45rem}

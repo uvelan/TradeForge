@@ -18,6 +18,12 @@ export type ConfluenceSource = Pick<ConfluenceCandle, 'symbol' | 'source' | 'fee
   end: number;
 };
 
+export type ConfluenceCoverageIssue = {
+  symbol: 'EURUSD' | 'GBPUSD';
+  reason: string;
+  missing_intervals: {start: number; end: number}[];
+};
+
 export type ConfluenceComponent = {
   family_id: string | null;
   revision_id: string | null;
@@ -30,6 +36,8 @@ export type ConfluenceComponent = {
   observation_time: number | null;
   confirmation_time: number | null;
   coverage_reason?: string;
+  coverage_issues?: ConfluenceCoverageIssue[];
+  published_state?: string;
   sources: ConfluenceSource[];
   evidence: ConfluenceCandle[];
 };

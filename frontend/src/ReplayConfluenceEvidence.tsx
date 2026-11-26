@@ -203,11 +203,25 @@ function ConfluenceDetail({receipt, showSave, saving, onSave}: {
 }
 
 function ComponentDetail({name, scope, component}: {name: string; scope: string; component: ConfluenceComponent}) {
+  const fields: [string, ReactNode][] = [
+    ['Condition', words(component.condition)], ['State', words(component.state)], ['Reason', words(component.reason)],
+  ];
+  if (component.published_state && component.published_state !== component.state) {
+    fields.push(['Published revision state', words(component.published_state)]);
+  }
+  if (component.coverage_reason || component.coverage_issues?.length) {
+    fields.push(['Coverage', component.coverage_issues?.length ?
+      <ul className="confluence-coverage" aria-label={name + ' coverage issues'}>
+        {component.coverage_issues.map(issue => <li key={issue.symbol}>
+          <strong>{issue.symbol}</strong> · {words(issue.reason)}
+          {issue.missing_intervals.map(({start, end}) => <div key={start}>[{utc(start)}, {utc(end)})</div>)}
+        </li>)}
+      </ul> : words(component.coverage_reason ?? '')]);
+  }
   return <section aria-label={name + ' component'} data-revision-id={component.revision_id ?? undefined}>
     <h4>{name} · {scope}</h4>
     <Fields label={name + ' condition'} entries={[
-      ['Condition', words(component.condition)], ['State', words(component.state)], ['Reason', words(component.reason)],
-      ...(component.coverage_reason ? [['Coverage', words(component.coverage_reason)] as [string, ReactNode]] : []),
+      ...fields,
       ['Direction', component.direction ?? 'Unavailable'], ['Revision first available', timeValue(component.available_at)],
       ['Observed', timeValue(component.observation_time)], ['Confirmed', timeValue(component.confirmation_time)],
       ['Family ID', idValue(component.family_id)], ['Revision', component.revision ?? 'Unavailable'],
