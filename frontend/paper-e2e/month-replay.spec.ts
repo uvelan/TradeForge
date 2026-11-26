@@ -25,6 +25,9 @@ test('resume a pinned November position in Strategy Lab and inspect its exit quo
   await page.reload();await lab();await button('Inspect monthly coverage').click();
   await button('Resume monthly replay').click();
   await expect(section).toContainText('4320/4320 ten-minute intervals · 8636 verified observations',{timeout:60000});
+  await expect(section).toContainText('Replay ledger complete');
+  await expect(section).toContainText(/\d+ recorded open-session gap intervals through the committed frontier/);
+  await expect(section).toContainText('Month-level performance metrics are unavailable.');
   const stop=section.locator('details').filter({has:page.locator('summary',{hasText:/^STOP ·/})});
   await stop.locator('summary').click();
   await expect(stop).toContainText('"price_units": 116143');
