@@ -1,0 +1,120 @@
+{
+  "symbol": "EURUSD",
+  "interval": "2025-11",
+  "provider": "Dukascopy hourly HTTPS datafeed/EURUSD/2025/10/DD/HHh_ticks.bi5",
+  "local_search": {
+    "scope": "TradeForge worktree storage BI5 files, local Downloads filenames, and historical_imports metadata in TradeForge worktree storage SQLite files.",
+    "catalogs_with_november_rows": 59,
+    "accepted_preexisting_sources": 2,
+    "other_intervals": "Two extra timestamps in weekend-v1-sample contain 3 and 16 fixture rows. Conflicting or unproven digests at known control times were excluded."
+  },
+  "attempted_probes": [
+    {
+      "start": "2025-11-03T12:00:00Z",
+      "method": "curl GET diagnostic, output NUL",
+      "http": 429,
+      "curl_exit": 22,
+      "accepted": false
+    },
+    {
+      "start": "2025-11-02T22:00:00Z",
+      "method": "curl GET diagnostic, output NUL",
+      "http": 200,
+      "content_length": 9513,
+      "accepted": false,
+      "reason": "Body unavailable for BI5 validation or checksum"
+    },
+    {
+      "start": "2025-11-02T22:00:00Z",
+      "method": "curl GET to local file",
+      "http": null,
+      "curl_exit": 28,
+      "timeout_seconds": 12,
+      "bytes_received": 0
+    },
+    {
+      "start": "2025-11-13T12:00:00Z",
+      "method": "curl GET adjacent control hour",
+      "http": null,
+      "curl_exit": 28,
+      "connect_timeout_seconds": 5,
+      "bytes_received": 0
+    },
+    {
+      "start": "2025-11-02T22:00:00Z",
+      "method": "Invoke-WebRequest GET to local file",
+      "http": null,
+      "error": "TaskCanceledException: configured HttpClient.Timeout of 10 seconds elapsed"
+    }
+  ],
+  "monthly_acquisition_attempts": [
+    {
+      "start": 1762120800,
+      "at": "2026-11-26T16:38:28.166830+00:00",
+      "attempt": 1,
+      "http": null,
+      "curl_exit": 28,
+      "retry_after_seconds": 0
+    },
+    {
+      "start": 1762124400,
+      "at": "2026-11-26T16:38:43.207614+00:00",
+      "attempt": 1,
+      "http": null,
+      "curl_exit": 28,
+      "retry_after_seconds": 0
+    },
+    {
+      "start": 1762128000,
+      "at": "2026-11-26T16:38:58.253041+00:00",
+      "attempt": 1,
+      "http": null,
+      "curl_exit": 28,
+      "retry_after_seconds": 0
+    },
+    {
+      "start": 1762131600,
+      "at": "2026-11-26T16:39:13.310684+00:00",
+      "attempt": 1,
+      "http": null,
+      "curl_exit": 28,
+      "retry_after_seconds": 0
+    },
+    {
+      "start": 1762135200,
+      "at": "2026-11-26T16:39:28.337358+00:00",
+      "attempt": 1,
+      "http": null,
+      "curl_exit": 28,
+      "retry_after_seconds": 0
+    },
+    {
+      "start": 1762138800,
+      "at": "2026-11-26T16:39:43.359844+00:00",
+      "attempt": 1,
+      "http": null,
+      "curl_exit": 28,
+      "retry_after_seconds": 0
+    },
+    {
+      "start": 1762142400,
+      "at": "2026-11-26T16:39:58.393262+00:00",
+      "attempt": 1,
+      "http": null,
+      "curl_exit": 28,
+      "retry_after_seconds": 0
+    },
+    {
+      "start": 1762146000,
+      "at": "2026-11-26T16:40:13.457760+00:00",
+      "attempt": 1,
+      "http": null,
+      "curl_exit": 28,
+      "retry_after_seconds": 0
+    }
+  ],
+  "stop_reason": "Eight consecutive completed 15-second curl timeouts with no HTTP response; collector stopped. Specific retries also failed. Unattempted open hours remain missing, with no provider-specific error assigned.",
+  "newly_verified_files": 0,
+  "retained_prior_files": 2,
+  "rerun": "python -m scripts.month_archive 2025-11 --source <local-raw-directory> --fetch --receipt <local-jsonl> (set TRADEFORGE_DATA_DIR to the isolated catalog first). Current collector stops after four consecutive failures or immediately on provider cooldown."
+}
