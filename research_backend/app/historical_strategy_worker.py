@@ -1,8 +1,10 @@
 """Local single-worker supervisor with an externally enforced process deadline."""
 import asyncio
 import json
+import logging
 import os
 from pathlib import Path
+import sqlite3
 import subprocess
 import sys
 from time import monotonic, time
@@ -17,6 +19,10 @@ from .historical_strategy_store import LeaseLost, claim, finish, heartbeat, late
 from .strategy_definitions import StrategyDefinitionV2
 from .strategy_evaluation_sources import EVALUATOR_VERSION
 from .strategy_evidence import fingerprint
+
+
+def _is_database_busy(error):
+    return (getattr(error, "sqlite_errorcode", 0) & 0xFF) in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED)
 
 
 def child(run_id, owner):
@@ -97,34 +103,42 @@ async def supervise(stop):
     proc = None
     run_id = None
     owner = None
+    pending_finish = None
     try:
         while not stop.is_set():
-            if proc is None:
-                owner = uuid4().hex
-                run_id = await asyncio.to_thread(claim,owner)
-                if run_id:
-                    try:
-                        proc = subprocess.Popen([sys.executable,"-m",__name__,run_id,owner],
-                            cwd=ROOT,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
-                            creationflags=subprocess.CREATE_NO_WINDOW if os.name=="nt" else 0)
-                        started = monotonic()
-                    except OSError as error:
-                        await asyncio.to_thread(finish,run_id,owner,"FAILED",error)
-            elif proc.poll() is not None:
-                await asyncio.to_thread(finish,run_id,owner,"FAILED",f"Worker exited with code {proc.returncode}")
-                proc = None
-            else:
-                elapsed = monotonic()-started
-                limit = working_set(proc.pid)
-                alive = await asyncio.to_thread(heartbeat,run_id,owner)
-                if not alive or elapsed>=HARD_SECONDS or limit is not None and limit>MEMORY_BYTES:
-                    proc.kill()
-                    await asyncio.to_thread(proc.wait)
-                    reason = ("Worker lease or cancellation" if not alive else
-                              "External process deadline" if elapsed>=HARD_SECONDS else "Sampled working-set limit")
-                    await asyncio.to_thread(finish,run_id,owner,
-                                            "FAILED" if not alive else "RESOURCE_LIMIT_EXCEEDED",reason)
-                    proc = None
+            try:
+                if pending_finish is None:
+                    if proc is None:
+                        owner = uuid4().hex
+                        run_id = await asyncio.to_thread(claim,owner)
+                        if run_id:
+                            try:
+                                proc = subprocess.Popen([sys.executable,"-m",__name__,run_id,owner],
+                                    cwd=ROOT,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+                                    creationflags=subprocess.CREATE_NO_WINDOW if os.name=="nt" else 0)
+                                started = monotonic()
+                            except OSError as error:
+                                pending_finish = ("FAILED", error)
+                    elif proc.poll() is not None:
+                        pending_finish = ("FAILED", f"Worker exited with code {proc.returncode}")
+                    else:
+                        elapsed = monotonic()-started
+                        limit = working_set(proc.pid)
+                        if elapsed>=HARD_SECONDS or limit is not None and limit>MEMORY_BYTES:
+                            reason = "External process deadline" if elapsed>=HARD_SECONDS else "Sampled working-set limit"
+                            pending_finish = ("RESOURCE_LIMIT_EXCEEDED", reason)
+                        elif not await asyncio.to_thread(heartbeat,run_id,owner):
+                            pending_finish = ("FAILED", "Worker lease or cancellation")
+                        if pending_finish is not None:
+                            proc.kill()
+                            await asyncio.to_thread(proc.wait)
+                if pending_finish is not None:
+                    await asyncio.to_thread(finish,run_id,owner,*pending_finish)
+                    pending_finish = proc = None
+            except sqlite3.OperationalError as error:
+                if not _is_database_busy(error):
+                    raise
+                logging.getLogger(__name__).warning("Historical worker will retry after SQLite contention: %s", error)
             try:
                 await asyncio.wait_for(stop.wait(),timeout=0.5 if proc else 1.0)
             except TimeoutError:
@@ -134,7 +148,15 @@ async def supervise(stop):
             if proc.poll() is None:
                 proc.kill()
             await asyncio.to_thread(proc.wait)
-            await asyncio.to_thread(finish,run_id,owner,"FAILED","Local service stopped; resume from the committed checkpoint")
+            if pending_finish is None:
+                pending_finish = ("FAILED", "Local service stopped; resume from the committed checkpoint")
+        if pending_finish is not None:
+            try:
+                await asyncio.to_thread(finish,run_id,owner,*pending_finish)
+            except sqlite3.OperationalError as error:
+                if not _is_database_busy(error):
+                    raise
+                logging.getLogger(__name__).warning("Historical worker lease left to expire after SQLite contention: %s", error)
 
 
 if __name__=="__main__":

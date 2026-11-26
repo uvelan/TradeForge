@@ -1,0 +1,156 @@
+{
+  "first-tab-first": {
+    "code": "e28a5d0a87e412d4509799dd6afa72d817a62dfb",
+    "session": "bbf60ee2f48cae3e2b597c623450ee771476fdf7b6049b79ccc812eb85d31235",
+    "foreign_session": "cb1595788597db64ac7ef2eb9506d438e63f872a3f0788cda13a8667814e76a1",
+    "save_order": [
+      "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b",
+      "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1"
+    ],
+    "processes": [
+      {
+        "api": 38356,
+        "frontend": 33704,
+        "browser": 5656,
+        "playwright_worker": 27896
+      },
+      {
+        "api": 39376,
+        "frontend": 30612,
+        "browser": 9140,
+        "playwright_worker": 35744
+      }
+    ],
+    "reopened": [
+      {
+        "session_id": "bbf60ee2f48cae3e2b597c623450ee771476fdf7b6049b79ccc812eb85d31235",
+        "receipt_id": "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1",
+        "cutoff": 1794581100,
+        "profile": "CRT_SMT_M5_V1",
+        "rule_version": 2,
+        "status": "NOT_ALIGNED",
+        "reason": "CRT_NOT_RECLAIMED",
+        "direction": null,
+        "first_available_at": 1794581100
+      },
+      {
+        "session_id": "bbf60ee2f48cae3e2b597c623450ee771476fdf7b6049b79ccc812eb85d31235",
+        "receipt_id": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b",
+        "cutoff": 1794580223,
+        "profile": "CRT_SMT_M5_V1",
+        "rule_version": 2,
+        "status": "ALIGNED",
+        "reason": "MATCHING_DIRECTIONS",
+        "direction": "BULLISH",
+        "first_available_at": 1794580223
+      }
+    ],
+    "rows_before": [
+      {
+        "id": "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1",
+        "payload_sha256": "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1"
+      },
+      {
+        "id": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b",
+        "payload_sha256": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b"
+      }
+    ],
+    "rows_after_identical_retries": [
+      {
+        "id": "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1",
+        "payload_sha256": "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1"
+      },
+      {
+        "id": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b",
+        "payload_sha256": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b"
+      }
+    ],
+    "phases": {
+      "two-tab-save": {
+        "exit_code": 0,
+        "elapsed_seconds": 13.8
+      },
+      "two-tab-restart": {
+        "exit_code": 0,
+        "elapsed_seconds": 28.36
+      }
+    }
+  },
+  "second-tab-first": {
+    "code": "e28a5d0a87e412d4509799dd6afa72d817a62dfb",
+    "session": "bbf60ee2f48cae3e2b597c623450ee771476fdf7b6049b79ccc812eb85d31235",
+    "foreign_session": "cb1595788597db64ac7ef2eb9506d438e63f872a3f0788cda13a8667814e76a1",
+    "save_order": [
+      "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1",
+      "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b"
+    ],
+    "processes": [
+      {
+        "api": 33784,
+        "frontend": 35904,
+        "browser": 17464,
+        "playwright_worker": 37156
+      },
+      {
+        "api": 27732,
+        "frontend": 22116,
+        "browser": 37616,
+        "playwright_worker": 46460
+      }
+    ],
+    "reopened": [
+      {
+        "session_id": "bbf60ee2f48cae3e2b597c623450ee771476fdf7b6049b79ccc812eb85d31235",
+        "receipt_id": "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1",
+        "cutoff": 1794581100,
+        "profile": "CRT_SMT_M5_V1",
+        "rule_version": 2,
+        "status": "NOT_ALIGNED",
+        "reason": "CRT_NOT_RECLAIMED",
+        "direction": null,
+        "first_available_at": 1794581100
+      },
+      {
+        "session_id": "bbf60ee2f48cae3e2b597c623450ee771476fdf7b6049b79ccc812eb85d31235",
+        "receipt_id": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b",
+        "cutoff": 1794580223,
+        "profile": "CRT_SMT_M5_V1",
+        "rule_version": 2,
+        "status": "ALIGNED",
+        "reason": "MATCHING_DIRECTIONS",
+        "direction": "BULLISH",
+        "first_available_at": 1794580223
+      }
+    ],
+    "rows_before": [
+      {
+        "id": "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1",
+        "payload_sha256": "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1"
+      },
+      {
+        "id": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b",
+        "payload_sha256": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b"
+      }
+    ],
+    "rows_after_identical_retries": [
+      {
+        "id": "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1",
+        "payload_sha256": "053cb2debef041bde7b096eefba6a7757de4be9bec0ff0ef3e850765c802ced1"
+      },
+      {
+        "id": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b",
+        "payload_sha256": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b"
+      }
+    ],
+    "phases": {
+      "two-tab-save": {
+        "exit_code": 0,
+        "elapsed_seconds": 35.8
+      },
+      "two-tab-restart": {
+        "exit_code": 0,
+        "elapsed_seconds": 58.57
+      }
+    }
+  }
+}

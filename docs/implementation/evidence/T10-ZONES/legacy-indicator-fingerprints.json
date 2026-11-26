@@ -1,0 +1,58 @@
+[
+  {
+    "symbol": "EURUSD",
+    "cutoff": 1794571200,
+    "indicator": "fair_value_gap",
+    "sha256": "da42ed0875307b79cc293d2c9338c5f7a7e2709450b9ead506930cf948c1aaa7",
+    "serialized_bytes": 91271
+  },
+  {
+    "symbol": "EURUSD",
+    "cutoff": 1794571200,
+    "indicator": "order_blocks",
+    "sha256": "90cb6d6a521833412f3b1cb701488f11eef0d264155ebc31cfd41d92779730e6",
+    "serialized_bytes": 59046
+  },
+  {
+    "symbol": "EURUSD",
+    "cutoff": 1794607200,
+    "indicator": "fair_value_gap",
+    "sha256": "7a0f1c29da2ba1cdf32950b0f03bdb36ea2e71ad9afa4fbee4955d70e4e3aba8",
+    "serialized_bytes": 179468
+  },
+  {
+    "symbol": "EURUSD",
+    "cutoff": 1794607200,
+    "indicator": "order_blocks",
+    "sha256": "7378b6632a64fcdae3d3618db95beec703be515b19be74adbad1d38e5061009b",
+    "serialized_bytes": 98429
+  },
+  {
+    "symbol": "GBPUSD",
+    "cutoff": 1794571200,
+    "indicator": "fair_value_gap",
+    "sha256": "72c7990a39eac84530b9254c077183e8108092aec437be07623c564886d32b47",
+    "serialized_bytes": 92322
+  },
+  {
+    "symbol": "GBPUSD",
+    "cutoff": 1794571200,
+    "indicator": "order_blocks",
+    "sha256": "a78ca7a7f20308493e40beccbe478d5fdf1ac8d6df1a53731d759c3f610e06b3",
+    "serialized_bytes": 47583
+  },
+  {
+    "symbol": "GBPUSD",
+    "cutoff": 1794607200,
+    "indicator": "fair_value_gap",
+    "sha256": "80e12801e2c4be66bc0e6459f09b739032baa50d9bf0f004e24db805a551aebf",
+    "serialized_bytes": 188142
+  },
+  {
+    "symbol": "GBPUSD",
+    "cutoff": 1794607200,
+    "indicator": "order_blocks",
+    "sha256": "e415ef305033b5c3e5cf5f645329fb1703a8d3752d504c29dd0e725cef6953f4",
+    "serialized_bytes": 88535
+  }
+]

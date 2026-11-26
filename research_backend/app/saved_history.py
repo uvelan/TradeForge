@@ -9,8 +9,8 @@ from .db import rows
 from .storage import iter_complete_partition, read_partition, read_partition_tail
 
 
-def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int, *, resolver=None) -> tuple[int, int]:
-    query = resolver.rows if resolver else rows
+def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int, *, resolver=None, query=rows) -> tuple[int, int]:
+    query = resolver.rows if resolver else query
     columns = "rowid AS _snapshot_rowid, *" if resolver else "first_time, last_time, feed_id, price_basis"
     partitions = query(f"""SELECT {columns} FROM datasets
         WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles' AND (provider<>'DUKASCOPY' OR price_basis='BID')
@@ -28,13 +28,13 @@ def recent_archive_range(provider: str, symbol: str, timeframe: str, step: int, 
     return start, end
 
 
-def saved_range(provider: str, symbol: str, timeframe: str, start: int, end: int, step: int, limit: int, *, resolver=None) -> dict:
+def saved_range(provider: str, symbol: str, timeframe: str, start: int, end: int, step: int, limit: int, *, resolver=None, query=rows) -> dict:
     def iso(timestamp: int) -> str:
         return datetime.fromtimestamp(timestamp, UTC).isoformat()
 
     if not 0 <= start < end <= int(datetime.now(UTC).timestamp()) or start % step or end % step:
         raise ValueError("Use an aligned, completed UTC range")
-    query = resolver.rows if resolver else rows
+    query = resolver.rows if resolver else query
     columns = "rowid AS _snapshot_rowid, *" if resolver else "*"
     partitions = query(f"""SELECT {columns} FROM datasets
         WHERE provider=? AND symbol=? AND timeframe=? AND kind='candles' AND (provider<>'DUKASCOPY' OR price_basis='BID')
@@ -92,9 +92,13 @@ def chart_range(provider, symbol, timeframe, start, end, step, limit):
             if start is None:
                 start, end = recent_archive_range(provider, symbol, timeframe, step, resolver=resolver)
             return saved_range(provider, symbol, timeframe, start, end, step, limit, resolver=resolver)
-    if start is None:
-        start, end = recent_archive_range(provider, symbol, timeframe, step)
-    return saved_range(provider, symbol, timeframe, start, end, step, limit)
+    with db.transaction() as reader:
+        reader.execute("BEGIN")
+        def query(sql, args):
+            return [dict(row) for row in reader.execute(sql, args)]
+        if start is None:
+            start, end = recent_archive_range(provider, symbol, timeframe, step, query=query)
+        return saved_range(provider, symbol, timeframe, start, end, step, limit, query=query)
 
 
 TICK_REPLAY_LIMIT = 500_000
@@ -178,9 +182,10 @@ def tick_origin(quote, file_id, manifests):
 
 
 class TickOrderError(ValueError):
-    def __init__(self, message, time_ms, ordinal):
+    def __init__(self, message, time_ms, ordinal, variants=()):
         super().__init__(message)
         self.priority = (time_ms, ordinal)
+        self.variants = variants
 
 
 def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execution_only=False, period=None, through_priority=None,
@@ -190,7 +195,7 @@ def read_tick_partitions(partitions: list[dict], *, source_manifests=None, execu
 
 
 def iter_tick_partitions(partitions: list[dict], *, source_manifests=None, execution_only=False,
-                         period=None, through_priority=None, required_source=None) -> Iterator[dict]:
+                         period=None, through_priority=None, required_source=None, inspect_ties=False, annotate_source=False) -> Iterator[dict]:
     if len(partitions) > 50 or sum(part["rows_count"] for part in partitions) > TICK_REPLAY_LIMIT:
         raise ValueError("Selected tick partitions exceed the 500,000 quote replay limit or 50 files")
     if len({(p["provider"], p["feed_id"], p["symbol"], p["price_basis"]) for p in partitions}) != 1:
@@ -219,8 +224,13 @@ def iter_tick_partitions(partitions: list[dict], *, source_manifests=None, execu
                     continue
                 previous_file = None
                 winner = None
+                variants = None
                 for _, _, file_id, quote in tied:
                     current_origin = tick_origin(quote, file_id, source_manifests)
+                    if annotate_source:
+                        if current_origin[0] != "source":
+                            raise ValueError("Missing BI5 fingerprint for recorded observation")
+                        quote = quote | {"source_sha256":current_origin[1]}
                     if required_source is not None:
                         if current_origin != ("source", required_source):
                             raise ValueError("Recorded quote lacks the pinned BI5 source identity")
@@ -232,8 +242,14 @@ def iter_tick_partitions(partitions: list[dict], *, source_manifests=None, execu
                     if previous_file == file_id:
                         raise TickOrderError("Tick source order is ambiguous within a partition", ms, ordinal)
                     if winner is not None and quote != winner:
-                        raise TickOrderError("Conflicting tick quotes in overlapping partitions", ms, ordinal)
+                        if not inspect_ties:
+                            raise TickOrderError("Conflicting tick quotes in overlapping partitions", ms, ordinal)
+                        if variants is None:
+                            variants = [winner]
+                        variants.append(quote)
                     previous_file, winner = file_id, quote
+                if variants is not None:
+                    raise TickOrderError("Conflicting tick quotes in overlapping partitions", ms, ordinal, variants)
                 if scale is None:
                     scale = winner["scale"]
                 if type(scale) is not int or scale <= 0 or winner["scale"] != scale:

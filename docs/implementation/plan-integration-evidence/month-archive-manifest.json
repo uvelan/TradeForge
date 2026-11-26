@@ -1,0 +1,116 @@
+{
+  "month": "2025-11",
+  "start": 1761955200,
+  "end": 1764547200,
+  "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V1",
+  "symbol": "EURUSD",
+  "feed": "dukascopy-bi5-v2",
+  "price_basis": "BID_ASK_UNITS",
+  "scale": 100000,
+  "calendar": {
+    "kind": "forex_weekly",
+    "timezone": "America/New_York",
+    "sunday_open": "17:00",
+    "friday_close": "17:00"
+  },
+  "batch_seconds": 600,
+  "max_gap_ms": 60000,
+  "delivery_delay_ms": 0,
+  "fees": 0,
+  "slippage_points": 0,
+  "session_sha256": "1def53f4a258da71e6569763fcbec9ea37f77bc66e8456a55ab73d77d1dd30a0",
+  "inputs": [
+    {
+      "start": 1763038800,
+      "end": 1763042400,
+      "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+      "partition": {
+        "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+        "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+      }
+    },
+    {
+      "start": 1763042400,
+      "end": 1763046000,
+      "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+      "partition": {
+        "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+        "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+      }
+    }
+  ],
+  "intervals": [
+    {
+      "start": 1761955200,
+      "end": 1762120800,
+      "status": "SCHEDULED_CLOSURE",
+      "hours": 46
+    },
+    {
+      "start": 1762120800,
+      "end": 1762552800,
+      "status": "MISSING_OPEN",
+      "hours": 120
+    },
+    {
+      "start": 1762552800,
+      "end": 1762725600,
+      "status": "SCHEDULED_CLOSURE",
+      "hours": 48
+    },
+    {
+      "start": 1762725600,
+      "end": 1763038800,
+      "status": "MISSING_OPEN",
+      "hours": 87
+    },
+    {
+      "start": 1763038800,
+      "end": 1763046000,
+      "status": "REGISTERED",
+      "hours": 2
+    },
+    {
+      "start": 1763046000,
+      "end": 1763157600,
+      "status": "MISSING_OPEN",
+      "hours": 31
+    },
+    {
+      "start": 1763157600,
+      "end": 1763330400,
+      "status": "SCHEDULED_CLOSURE",
+      "hours": 48
+    },
+    {
+      "start": 1763330400,
+      "end": 1763762400,
+      "status": "MISSING_OPEN",
+      "hours": 120
+    },
+    {
+      "start": 1763762400,
+      "end": 1763935200,
+      "status": "SCHEDULED_CLOSURE",
+      "hours": 48
+    },
+    {
+      "start": 1763935200,
+      "end": 1764367200,
+      "status": "MISSING_OPEN",
+      "hours": 120
+    },
+    {
+      "start": 1764367200,
+      "end": 1764540000,
+      "status": "SCHEDULED_CLOSURE",
+      "hours": 48
+    },
+    {
+      "start": 1764540000,
+      "end": 1764547200,
+      "status": "MISSING_OPEN",
+      "hours": 2
+    }
+  ]
+}

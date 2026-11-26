@@ -1,0 +1,284 @@
+{
+  "baseline": "517f8122b633f9143324f99dd7b075c7c689df3f",
+  "interpretation": "Historical integration backlog, including initial pending states. For the current Windows-local disposition of every task and remaining proof, see ../pr37-closure/REVIEW.md.",
+  "source_requirements": [
+    "docs/research/05_REMEDIATION_PLAN.md",
+    "docs/research/08_IMPLEMENTATION_ROADMAP.md",
+    "TradeForge master implementation plan"
+  ],
+  "risk_constraints": {
+    "max_public_cutoffs": 160,
+    "broker_routing": false,
+    "live_deployment": false
+  },
+  "tasks": [
+    {
+      "id": "T01",
+      "status": "gated",
+      "depends_on": [],
+      "tests": [],
+      "remaining_or_boundary": "Exhaustive per-bar quote/source completeness is not attested."
+    },
+    {
+      "id": "T02",
+      "status": "existing_with_residual",
+      "depends_on": [],
+      "tests": [],
+      "remaining_or_boundary": "Full T05 revision coverage and numerical chart parity remain."
+    },
+    {
+      "id": "T03",
+      "status": "existing_with_residual",
+      "depends_on": [],
+      "tests": [],
+      "remaining_or_boundary": "Live writable profile is not the same as isolated restore."
+    },
+    {
+      "id": "T04-WAL",
+      "status": "included",
+      "depends_on": [
+        "T03"
+      ],
+      "tests": [
+        "tests/test_shadow_candle_reads.py"
+      ],
+      "remaining_or_boundary": "Addresses demonstrated FileNotFoundError path; historical Windows 404 cause unknown."
+    },
+    {
+      "id": "T04-ROLLOUT",
+      "status": "gated",
+      "depends_on": [
+        "T04-WAL"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Separately authorize per-reader cutover and writer retirement after writable snapshot parity."
+    },
+    {
+      "id": "T05",
+      "status": "partial",
+      "depends_on": [
+        "T02",
+        "T04-WAL"
+      ],
+      "tests": [
+        "research_backend/tests/test_smt_monitor_lease.py",
+        "research_backend/tests/test_smt_authority.py"
+      ],
+      "remaining_or_boundary": "Lease, fencing and observed gap/revision separation; bounded catch-up, durable frontier and real terminal provenance remain."
+    },
+    {
+      "id": "T06-V2",
+      "status": "included",
+      "depends_on": [],
+      "tests": [
+        "research_backend/tests/test_legacy_quote_evidence.py",
+        "research_backend/tests/test_t06_layout.py"
+      ],
+      "remaining_or_boundary": "Restore checksum-bound historical display order only; new V3 remains strict."
+    },
+    {
+      "id": "T06-SCALE",
+      "status": "pending",
+      "depends_on": [
+        "T06-V2"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Month-scale random and cold/warm archive read and quote pagination benchmark."
+    },
+    {
+      "id": "T07",
+      "status": "partial",
+      "depends_on": [
+        "T06-V2"
+      ],
+      "tests": [
+        "research_backend/tests/test_recorded_limit_entry.py",
+        "research_backend/tests/test_recorded_stop_entry.py",
+        "research_backend/tests/test_recorded_first_exit.py",
+        "research_backend/tests/test_recorded_exit_schedule.py"
+      ],
+      "remaining_or_boundary": "Opt-in modeled LIMIT, STOP and fixed exit; dynamic exits, measured delivery, actual P&L and empirical execution remain."
+    },
+    {
+      "id": "T08",
+      "status": "gated",
+      "depends_on": [
+        "T04-ROLLOUT"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Requires broker-authoritative specs, recorded fills, statements and reconciled FX."
+    },
+    {
+      "id": "T09",
+      "status": "partial",
+      "depends_on": [
+        "T04-WAL"
+      ],
+      "tests": [
+        "research_backend/tests/test_ai_evidence_snapshot.py",
+        "research_backend/tests/test_ai_review_decisions.py"
+      ],
+      "remaining_or_boundary": "Pinned pre-trade snapshot and decision revisions; historical metric evidence depends on T07 and T08."
+    },
+    {
+      "id": "T10",
+      "status": "partial",
+      "depends_on": [
+        "T02"
+      ],
+      "tests": [
+        "research_backend/tests/test_indicator_engine.py"
+      ],
+      "remaining_or_boundary": "Existing ICT/SMC/CRT; new OHLC indicators. Broader cross-pane and lifecycle frame goldens remain."
+    },
+    {
+      "id": "T11",
+      "status": "gated",
+      "depends_on": [
+        "T03"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Optional provider entitlements, quota and recovery in a clean Windows profile."
+    },
+    {
+      "id": "T12",
+      "status": "optional_gated",
+      "depends_on": [
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T11"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Policies and artifact-scale thresholds needed before optional adapters."
+    },
+    {
+      "id": "TF-000",
+      "status": "existing",
+      "depends_on": [],
+      "tests": [],
+      "remaining_or_boundary": "Baseline and repeatable local tooling exist."
+    },
+    {
+      "id": "TF-D01",
+      "status": "existing",
+      "depends_on": [],
+      "tests": [],
+      "remaining_or_boundary": "Drawing placement browser gate remains required."
+    },
+    {
+      "id": "TF-D02",
+      "status": "existing",
+      "depends_on": [
+        "TF-D01"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Drawing lifecycle browser gate remains required."
+    },
+    {
+      "id": "TF-U01",
+      "status": "implemented",
+      "depends_on": [],
+      "tests": [
+        "frontend/src/ChartLink.test.ts",
+        "frontend/e2e/chart-capture-context.spec.ts",
+        "frontend/e2e/chart-workspace.spec.ts"
+      ],
+      "remaining_or_boundary": "Desktop and narrow Chromium workspace acceptance. Resource counts cover chart-owned application registrations and observed chart surfaces."
+    },
+    {
+      "id": "TF-I01",
+      "status": "partial",
+      "depends_on": [
+        "TF-U01"
+      ],
+      "tests": [
+        "research_backend/tests/test_indicators.py",
+        "research_backend/tests/test_indicator_engine.py",
+        "research_backend/tests/test_cci_precision.py",
+        "research_backend/tests/test_tf_i01_numerical_oracle.py",
+        "frontend/e2e/indicator-engine.spec.ts"
+      ],
+      "remaining_or_boundary": "Six causal OHLC calculators with bounded independent numerical acceptance; untested ranges, gated VWAP, optional HMA and broader chart lifecycle remain."
+    },
+    {
+      "id": "TF-I02",
+      "status": "existing_with_residual",
+      "depends_on": [
+        "TF-I01"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Existing causal ICT/SMC/CRT. New extensions need their own acceptance."
+    },
+    {
+      "id": "TF-S01",
+      "status": "partial",
+      "depends_on": [
+        "T02"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Current strict SMT stable; advanced multi-peer/range/sweep and offline debugger remain."
+    },
+    {
+      "id": "TF-L01",
+      "status": "partial",
+      "depends_on": [
+        "T02"
+      ],
+      "tests": [
+        "research_backend/tests/test_learning_drill.py",
+        "frontend/e2e/learning-drill.spec.ts"
+      ],
+      "remaining_or_boundary": "One synthetic blind drill, persisted journal. Curriculum, spaced learning and chart replay remain."
+    },
+    {
+      "id": "TF-P01",
+      "status": "partial",
+      "depends_on": [],
+      "tests": [
+        "tests/test_paper_ledger.py"
+      ],
+      "remaining_or_boundary": "Durable offline market-only paper ledger; UI/fees/portfolio and wider rules remain."
+    },
+    {
+      "id": "TF-E01",
+      "status": "included",
+      "depends_on": [],
+      "tests": [
+        "tests/test_broker_contracts.py"
+      ],
+      "remaining_or_boundary": "Contracts and deterministic no-routing checks only."
+    },
+    {
+      "id": "TF-E02",
+      "status": "gated",
+      "depends_on": [
+        "TF-E01",
+        "TF-P01"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Separate owner-authorized practice broker with account isolation and actual integration tests."
+    },
+    {
+      "id": "TF-E03",
+      "status": "gated",
+      "depends_on": [
+        "TF-E02",
+        "T08"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Separate explicit grant for live plus broker/risk proof; disabled."
+    },
+    {
+      "id": "TF-R01",
+      "status": "partial",
+      "depends_on": [
+        "TF-U01",
+        "T03"
+      ],
+      "tests": [],
+      "remaining_or_boundary": "Existing isolated restores and new tests; broader recovery and benchmark gates remain."
+    }
+  ]
+}

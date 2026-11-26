@@ -88,3 +88,41 @@ test('strict SMT ignores stale pair responses and rewinds a frozen pair', async 
     await expect(monitor).toContainText('SMT_CANDIDATE');
   }
 });
+
+test('background SMT labels degraded coverage and ignores a stale poll', async ({page}) => {
+  let release = () => {};
+  const hold = new Promise<void>(resolve => {release = resolve;});
+  let armed = false;
+  let polled = 0;
+  const configuration = {primary_symbol: 'EURUSD', comparison_symbol: 'GBPUSD', timeframe: 'M1'};
+  await page.route('**/research/api/indicators/smt/monitor', async route => {
+    const older = armed && ++polled === 1;
+    if (older) await hold;
+    const coverage = older || !armed
+      ? {status: 'CONTIGUOUS', reason: null}
+      : {status: 'DEGRADED', reason: 'PAIRED_TAIL_UNAVAILABLE'};
+    return route.fulfill({headers: {'x-test-poll': older ? 'older' : armed ? 'newer' : 'initial'}, json: {
+      configuration,
+      last_poll_at: 1_700_000_100,
+      coverage,
+      latest_alert: {direction: older ? 'bullish' : 'bearish', confirmed_at: 1_700_000_040},
+    }});
+  });
+  await page.goto('/');
+  await page.getByRole('button', {name: 'Market Terminal', exact: true}).click();
+  const monitor = page.locator('details').filter({hasText: /^(SMT monitor|Background SMT)/});
+  await monitor.locator('summary').click();
+  await expect(monitor.getByRole('status')).toContainText('Polling');
+  await expect(monitor).toContainText('SMT_CONFIRMED · bearish');
+  armed = true;
+  const degraded = 'SMT coverage degraded · latest paired candles unavailable';
+  await expect(monitor.getByRole('status')).toContainText(degraded, {timeout: 12_000});
+  await expect(monitor).toContainText('Saved SMT_CONFIRMED · bearish');
+  const delayed = page.waitForResponse(response => response.headers()['x-test-poll'] === 'older');
+  release();
+  await (await delayed).finished();
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(monitor.getByRole('status')).toContainText(degraded);
+  await expect(monitor).toContainText('Saved SMT_CONFIRMED · bearish');
+  await expect(monitor).not.toContainText('bullish');
+});

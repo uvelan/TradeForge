@@ -71,3 +71,11 @@ jobs:
             frontend/test-results/drawing-edit-a-canonical-*/drawing-with-ema.png
           if-no-files-found: ignore
           retention-days: 14
+      - name: Upload TF-U01 workspace evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: TF-U01-workspace-evidence
+          path: frontend/test-results/chart-workspace-*/**
+          if-no-files-found: ignore
+          retention-days: 14

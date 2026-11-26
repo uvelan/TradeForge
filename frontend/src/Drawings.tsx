@@ -1,5 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {IChartApi,IPrimitivePaneRenderer,PrimitiveHoveredItem,ISeriesApi,ISeriesPrimitive,Time,UTCTimestamp} from 'lightweight-charts';
+import {useWorkspacePreference} from './useWorkspacePreference';
 import {api,ApiError} from './api';
 import {bodyDistance,handlesFor,sameAnchors,type DrawingHandle} from './drawingGeometry';
 import type {Candle} from './types';
@@ -41,7 +42,9 @@ export function useDrawingBook(scope:string) {
   const setEdit=useCallback((draft?:Edit)=>setInteraction(
     draft?{mode:draft.item?'edit':'place',draft}:{mode:'navigate'},
   ),[]);
-  const [snap,setSnap]=useState(false);
+  const [snapValue,saveSnap]=useWorkspacePreference('drawing-snap','off',['on','off']);
+  const snap=snapValue==='on';
+  const setSnap=(value:boolean)=>saveSnap(value?'on':'off');
   const [history,setHistory]=useState<{undo:Drawing[][];redo:Drawing[][]}>({undo:[],redo:[]});
   const current=loaded?.scope===scope?loaded.version:undefined;
   const active=useRef<symbol|undefined>(undefined);
@@ -132,7 +135,8 @@ export function useDrawingBook(scope:string) {
 }
 
 export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>}) {
-  const [tool,setTool]=useState<DrawingTool>('trend');
+  const [tool,setTool]=useWorkspacePreference<DrawingTool>('drawing-tool','trend',Object.keys(tools) as DrawingTool[]);
+  const [expanded,setExpanded]=useWorkspacePreference("drawing-toolbox","closed",["open","closed"]);
   const item=book.current?.items.find(drawing=>drawing.id===book.selected);
   const [draft,setDraft]=useState<{id:string;label:string;color:string}>();
   const options=draft?.id===item?.id?draft:undefined;
@@ -141,11 +145,11 @@ export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>})
     if(item&&book.current)void book.save(book.current.items.map(drawing=>drawing.id===item.id?
       {...drawing,...changes,updated_at:now()}:drawing));
   };
-  return <details className="data-trust"><summary>Drawing toolbox {book.current?`(${book.current.items.length})`:''}</summary>
+  return <details className="data-trust" open={expanded==="open"} onToggle={e=>setExpanded(e.currentTarget.open?"open":"closed")}><summary>Drawing toolbox {book.current?`(${book.current.items.length})`:''}</summary>
     {book.error&&<p role="alert">{book.error} <button className="small-tool" disabled={book.saving} onClick={book.reload}>Reload drawings</button></p>}
     {!book.current&&!book.error&&<p role="status">Loading drawings</p>}
     <div className="research-controls">
-      <label>Drawing tool<select value={tool} onChange={event=>setTool(event.target.value as DrawingTool)}>
+      <label>Drawing tool<select aria-label="Drawing tool" value={tool} onChange={event=>setTool(event.target.value as DrawingTool)}>
         {Object.entries(tools).map(([value,[label]])=><option key={value} value={value}>{label}</option>)}
       </select></label>
       <button className="small-tool" disabled={blocked||book.current?.items.length===100} onClick={()=>book.begin(tool)}>Draw</button>

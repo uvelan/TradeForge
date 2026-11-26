@@ -1,0 +1,605 @@
+{
+  "controlled": {
+    "tested": "9d8653f0ccb9e7b36a01a021b78e0351a29ad312",
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/159.0.8154.6 Safari/537.36",
+    "session": "1bf04d630053d1dbe37c6355e4f611c287128578a4ad6685fa7ac55a43c79c82",
+    "chart_cutoff": 1794580200,
+    "inspection_cutoff": 1794580199,
+    "phases": {
+      "initial": {
+        "exit_code": 0,
+        "elapsed_seconds": 24.46
+      },
+      "restart": {
+        "exit_code": 0,
+        "elapsed_seconds": 8.65
+      },
+      "legacy": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.23
+      },
+      "legacy-restart": {
+        "exit_code": 0,
+        "elapsed_seconds": 7.81
+      }
+    },
+    "retries": 0,
+    "saved_receipt_comparison": "exact",
+    "swapped_session": "a7b6fe6687326f243b66dd7956630ffd3105db752d432878ec9044c6a7f973aa",
+    "receipts": {
+      "EURUSD": {
+        "range_id": "f95422bea82358cd65a29a3af503b77c2bfc8ce555ffc42a0716293862290176",
+        "reference_id": "7ec289f312131838a2f51e12af683c91c12c77ae6d51cd7d4834f3ee75988c4a",
+        "as_of_latest_revision": "0aa4d6d04d426f2fb9e8780aec6096f38802c198fe76ab7bedc175d05f909ce5",
+        "revisions": [
+          "c3206fefee2ceea162332f18072a6c8a8187142a8f026023fa9396e88bc29a2b",
+          "ef99c91b9df5ce2612b2b83d424a422fd81ca475f5b7ec3c20941a3516bfaa93",
+          "3ecfed762652f6a87520fb13c21aa6e4c1cda4b6add9777f1188acab5155f595",
+          "0aa4d6d04d426f2fb9e8780aec6096f38802c198fe76ab7bedc175d05f909ce5"
+        ],
+        "reference_ohlc": [
+          103,
+          105,
+          100,
+          103
+        ],
+        "source_ids": [
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794574800",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794575100",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794575400",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794575700",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794576000",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794576300",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794576600",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794576900",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794577200",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794577500",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794577800",
+          "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794578100"
+        ],
+        "partitions": [
+          {
+            "id": "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143",
+            "sha256": "4ec7b26127f1258adaf03f2ca68d2706bafc3ccf0b65cef4622f2afdd9b6df4f"
+          }
+        ],
+        "receipt_sha256": "e9a45df10d4cc511d5d23a481f91e4b3277684a7bae26041ae8bb77643f78ff2"
+      },
+      "GBPUSD": {
+        "range_id": "f591cf501152ef7702fd1d018e9477dc7e40d0dead0c7a11b59b2813a2ec5507",
+        "reference_id": "6dcbe11c8c883c1750d43494167bd9f27bc141fe33e50c0df71be279b16c961c",
+        "as_of_latest_revision": "ae756e5549699fc6d51db0d65314858519d7b9edaf967aa2f482ef36cdd724d2",
+        "revisions": [
+          "6afcd9514ec4b090dd074ec451e9a9c0b2165bfdaa491f716a672705fd2e7842",
+          "27623a59b594f00dabb5d519870e2ee4e2fd950e1207ea9a65efc22820f376d2",
+          "37ce8a244fb2c0ae30156a283a6fd91bb107dd874ca13ff461eed2f1d9ec3a17",
+          "ae756e5549699fc6d51db0d65314858519d7b9edaf967aa2f482ef36cdd724d2"
+        ],
+        "reference_ohlc": [
+          103,
+          105,
+          100,
+          103
+        ],
+        "source_ids": [
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794574800",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794575100",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794575400",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794575700",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794576000",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794576300",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794576600",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794576900",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794577200",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794577500",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794577800",
+          "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794578100"
+        ],
+        "partitions": [
+          {
+            "id": "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509",
+            "sha256": "60abf5dfbf9ff74b007b57dc80a296cea172a8092c467d69c62284cf32f26a38"
+          }
+        ],
+        "receipt_sha256": "06361ca86d59a83db1c161109a87caf4d9573f6cddbe4509265a2a633350686f"
+      }
+    },
+    "probes": {
+      "EURUSD": {
+        "2026-11-13T14:00:16.000Z": {
+          "bytes": 866,
+          "revision_id": null,
+          "state": null
+        },
+        "2026-11-13T14:00:17.000Z": {
+          "bytes": 14719,
+          "revision_id": "c3206fefee2ceea162332f18072a6c8a8187142a8f026023fa9396e88bc29a2b",
+          "state": "ACTIVE"
+        },
+        "2026-11-13T14:09:59.000Z": {
+          "bytes": 14719,
+          "revision_id": "c3206fefee2ceea162332f18072a6c8a8187142a8f026023fa9396e88bc29a2b",
+          "state": "ACTIVE"
+        },
+        "2026-11-13T14:10:00.000Z": {
+          "bytes": 17080,
+          "revision_id": "ef99c91b9df5ce2612b2b83d424a422fd81ca475f5b7ec3c20941a3516bfaa93",
+          "state": "HIGH_SWEPT_RECLAIMED"
+        },
+        "2026-11-13T14:14:59.000Z": {
+          "bytes": 17080,
+          "revision_id": "ef99c91b9df5ce2612b2b83d424a422fd81ca475f5b7ec3c20941a3516bfaa93",
+          "state": "HIGH_SWEPT_RECLAIMED"
+        },
+        "2026-11-13T14:15:00.000Z": {
+          "bytes": 18875,
+          "revision_id": "3ecfed762652f6a87520fb13c21aa6e4c1cda4b6add9777f1188acab5155f595",
+          "state": "EXPANSION_OBSERVED"
+        },
+        "2026-11-13T14:25:16.000Z": {
+          "bytes": 18875,
+          "revision_id": "3ecfed762652f6a87520fb13c21aa6e4c1cda4b6add9777f1188acab5155f595",
+          "state": "EXPANSION_OBSERVED"
+        },
+        "2026-11-13T14:25:17.000Z": {
+          "bytes": 21418,
+          "revision_id": "0aa4d6d04d426f2fb9e8780aec6096f38802c198fe76ab7bedc175d05f909ce5",
+          "state": "INVALIDATED"
+        }
+      },
+      "GBPUSD": {
+        "2026-11-13T14:00:16.000Z": {
+          "bytes": 860,
+          "revision_id": null,
+          "state": null
+        },
+        "2026-11-13T14:00:17.000Z": {
+          "bytes": 14713,
+          "revision_id": "6afcd9514ec4b090dd074ec451e9a9c0b2165bfdaa491f716a672705fd2e7842",
+          "state": "ACTIVE"
+        },
+        "2026-11-13T14:09:59.000Z": {
+          "bytes": 14713,
+          "revision_id": "6afcd9514ec4b090dd074ec451e9a9c0b2165bfdaa491f716a672705fd2e7842",
+          "state": "ACTIVE"
+        },
+        "2026-11-13T14:10:00.000Z": {
+          "bytes": 17061,
+          "revision_id": "27623a59b594f00dabb5d519870e2ee4e2fd950e1207ea9a65efc22820f376d2",
+          "state": "LOW_SWEPT_RECLAIMED"
+        },
+        "2026-11-13T14:14:59.000Z": {
+          "bytes": 17061,
+          "revision_id": "27623a59b594f00dabb5d519870e2ee4e2fd950e1207ea9a65efc22820f376d2",
+          "state": "LOW_SWEPT_RECLAIMED"
+        },
+        "2026-11-13T14:15:00.000Z": {
+          "bytes": 18858,
+          "revision_id": "37ce8a244fb2c0ae30156a283a6fd91bb107dd874ca13ff461eed2f1d9ec3a17",
+          "state": "EXPANSION_OBSERVED"
+        },
+        "2026-11-13T14:19:59.000Z": {
+          "bytes": 18858,
+          "revision_id": "37ce8a244fb2c0ae30156a283a6fd91bb107dd874ca13ff461eed2f1d9ec3a17",
+          "state": "EXPANSION_OBSERVED"
+        },
+        "2026-11-13T14:20:00.000Z": {
+          "bytes": 20672,
+          "revision_id": "ae756e5549699fc6d51db0d65314858519d7b9edaf967aa2f482ef36cdd724d2",
+          "state": "OPPOSITE_BOUNDARY_REACHED"
+        }
+      }
+    },
+    "inspector_actions": {
+      "collapsed": {
+        "ms": 609.7,
+        "page_nodes": 906,
+        "scope_nodes": 1,
+        "source_rows": 0
+      },
+      "list": {
+        "ms": 138.7,
+        "page_nodes": 925,
+        "scope_nodes": 20,
+        "source_rows": 0,
+        "bytes": 2139
+      },
+      "select": {
+        "ms": 91.4,
+        "page_nodes": 1033,
+        "scope_nodes": 128,
+        "source_rows": 0,
+        "bytes": 21418
+      },
+      "sources": {
+        "n": 20,
+        "median_ms": 84.55,
+        "p95_ms": 116.2,
+        "samples_ms": [
+          94.1,
+          81.8,
+          116.2,
+          75.3,
+          89,
+          76.2,
+          93.4,
+          84,
+          72.9,
+          98.3,
+          76.6,
+          87.1,
+          80.6,
+          74.9,
+          106.6,
+          85.1,
+          138.8,
+          82.1,
+          111.1,
+          71.9
+        ],
+        "page_nodes": 1170,
+        "scope_nodes": 265,
+        "source_rows": 12,
+        "collapsed_source_rows": 0
+      },
+      "rewind": {
+        "ms": 338.6,
+        "page_nodes": 1007,
+        "scope_nodes": 102,
+        "source_rows": 0,
+        "bytes": 18875
+      },
+      "cold_resume": {
+        "ms": 472,
+        "page_nodes": 1008,
+        "scope_nodes": 104,
+        "source_rows": 0,
+        "bytes": 20672
+      }
+    },
+    "existing_library_actions": {
+      "collapsed": {
+        "ms": 641.1,
+        "page_nodes": 906,
+        "scope_nodes": 39,
+        "source_rows": 0
+      },
+      "list": {
+        "ms": 256.9,
+        "page_nodes": 968,
+        "scope_nodes": 101,
+        "source_rows": 0,
+        "bytes": 17707
+      },
+      "select": {
+        "ms": 83.9,
+        "page_nodes": 985,
+        "scope_nodes": 118,
+        "source_rows": 0,
+        "bytes": 0
+      },
+      "rewind": {
+        "ms": 322.6,
+        "page_nodes": 967,
+        "scope_nodes": 100,
+        "source_rows": 0,
+        "bytes": 17013
+      },
+      "source_expansion": null,
+      "cold_resume": {
+        "ms": 1016.7,
+        "page_nodes": 984,
+        "scope_nodes": 118,
+        "source_rows": 0,
+        "bytes": 17707
+      }
+    }
+  },
+  "genuine": {
+    "tested": "9d8653f0ccb9e7b36a01a021b78e0351a29ad312",
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/159.0.8154.6 Safari/537.36",
+    "session": "73b908f0d88c11e62dda35e5c9ad42a9c9c2b50016e7bcd6f628a4ca1ebecca6",
+    "chart_cutoff": 1794585000,
+    "inspection_cutoff": 1794584999,
+    "phases": {
+      "initial": {
+        "exit_code": 0,
+        "elapsed_seconds": 23.92
+      },
+      "restart": {
+        "exit_code": 0,
+        "elapsed_seconds": 8.45
+      },
+      "legacy": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.04
+      },
+      "legacy-restart": {
+        "exit_code": 0,
+        "elapsed_seconds": 7.28
+      }
+    },
+    "retries": 0,
+    "saved_receipt_comparison": "exact",
+    "swapped_session": "47d1174851756577aaeaf7a1c16f6c0c4c6d8a3dc0e00586b9e5c1febb29e20a",
+    "receipts": {
+      "EURUSD": {
+        "range_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+        "reference_id": "558fe4bd15581ae6eb107395a76aa9a429901368ec1e308bd4da290d2086698e",
+        "as_of_latest_revision": "1d76c0420662df7e2cef7664fba1d2d60bfd8be86b45e69ef6a98c3a94393987",
+        "revisions": [
+          "9a8b0b829e8d37b0305dd8c5572c46856c43f2ba93c064080982806a72b9dacb",
+          "ac8ce76376f1162fb2c4cec4d8291f638bc4fb999dddfa2bc130cd431a2688ce",
+          "7f5f533619cd19b59c174cf82ed36bd2fda292096cc32c603532f1befb57d82c",
+          "075e7d5afbb240d52ede507ea6aa371e2bafc7b78d4527e67c30d8c6561ec4a8",
+          "1d76c0420662df7e2cef7664fba1d2d60bfd8be86b45e69ef6a98c3a94393987"
+        ],
+        "reference_ohlc": [
+          1.10503,
+          1.10693,
+          1.10486,
+          1.10499
+        ],
+        "source_ids": [
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794574800",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575100",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575400",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575700",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576000",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576300",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576600",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576900",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577200",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577500",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577800",
+          "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794578100"
+        ],
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "receipt_sha256": "84d762edd7fab9188c540a49cac9dbc5a428a0b40195cfaa7d50b063621dc416"
+      },
+      "GBPUSD": {
+        "range_id": "3c7804e82b04bbd2a283b3ab99666e4537ea456d7d51bf0ad114bfc49a5de50d",
+        "reference_id": "3a0b8b2b5d71a7330e5420aaec60b7aa8af482d868e0f5632505ad5fba0fe94a",
+        "as_of_latest_revision": "6f01137af4d2187ad59a56fac2c20b61527c64d4bc09deb79c5a7bde70590baa",
+        "revisions": [
+          "cbfaffb2cc6827cab155479f474fb97c467901fe109d11b8b68ede1b674dff10",
+          "37d5880714c404f50b27ef78c7c61472e0734f3b8c3a3aff696e3b9db0cec72c",
+          "dcc766080b74703d7743be0a0fcff441f730b392957d173e72fe10c5cc82323b",
+          "6f01137af4d2187ad59a56fac2c20b61527c64d4bc09deb79c5a7bde70590baa"
+        ],
+        "reference_ohlc": [
+          1.32256,
+          1.32503,
+          1.32238,
+          1.32319
+        ],
+        "source_ids": [
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794574800",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575100",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575400",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575700",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576000",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576300",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576600",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576900",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577200",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577500",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577800",
+          "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794578100"
+        ],
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ],
+        "receipt_sha256": "bee23c931fca07bfdf41d2e3dfa291a360ed7bc1374da660414968feb65f4ec0"
+      }
+    },
+    "probes": {
+      "EURUSD": {
+        "2026-11-13T13:59:59.000Z": {
+          "bytes": 17476,
+          "revision_id": null,
+          "state": null
+        },
+        "2026-11-13T14:00:00.000Z": {
+          "bytes": 31685,
+          "revision_id": "9a8b0b829e8d37b0305dd8c5572c46856c43f2ba93c064080982806a72b9dacb",
+          "state": "ACTIVE"
+        },
+        "2026-11-13T14:24:59.000Z": {
+          "bytes": 31685,
+          "revision_id": "9a8b0b829e8d37b0305dd8c5572c46856c43f2ba93c064080982806a72b9dacb",
+          "state": "ACTIVE"
+        },
+        "2026-11-13T14:25:00.000Z": {
+          "bytes": 34122,
+          "revision_id": "ac8ce76376f1162fb2c4cec4d8291f638bc4fb999dddfa2bc130cd431a2688ce",
+          "state": "LOW_SWEPT_RECLAIMED"
+        },
+        "2026-11-13T14:29:59.000Z": {
+          "bytes": 34122,
+          "revision_id": "ac8ce76376f1162fb2c4cec4d8291f638bc4fb999dddfa2bc130cd431a2688ce",
+          "state": "LOW_SWEPT_RECLAIMED"
+        },
+        "2026-11-13T14:30:00.000Z": {
+          "bytes": 35945,
+          "revision_id": "7f5f533619cd19b59c174cf82ed36bd2fda292096cc32c603532f1befb57d82c",
+          "state": "LOW_SWEPT_RECLAIMED"
+        },
+        "2026-11-13T14:54:59.000Z": {
+          "bytes": 35945,
+          "revision_id": "7f5f533619cd19b59c174cf82ed36bd2fda292096cc32c603532f1befb57d82c",
+          "state": "LOW_SWEPT_RECLAIMED"
+        },
+        "2026-11-13T14:55:00.000Z": {
+          "bytes": 37801,
+          "revision_id": "075e7d5afbb240d52ede507ea6aa371e2bafc7b78d4527e67c30d8c6561ec4a8",
+          "state": "EXPANSION_OBSERVED"
+        },
+        "2026-11-13T15:29:59.000Z": {
+          "bytes": 38819,
+          "revision_id": "075e7d5afbb240d52ede507ea6aa371e2bafc7b78d4527e67c30d8c6561ec4a8",
+          "state": "EXPANSION_OBSERVED"
+        },
+        "2026-11-13T15:30:00.000Z": {
+          "bytes": 40874,
+          "revision_id": "1d76c0420662df7e2cef7664fba1d2d60bfd8be86b45e69ef6a98c3a94393987",
+          "state": "INVALIDATED"
+        }
+      },
+      "GBPUSD": {
+        "2026-11-13T13:59:59.000Z": {
+          "bytes": 17055,
+          "revision_id": null,
+          "state": null
+        },
+        "2026-11-13T14:00:00.000Z": {
+          "bytes": 31272,
+          "revision_id": "cbfaffb2cc6827cab155479f474fb97c467901fe109d11b8b68ede1b674dff10",
+          "state": "ACTIVE"
+        },
+        "2026-11-13T14:54:59.000Z": {
+          "bytes": 31272,
+          "revision_id": "cbfaffb2cc6827cab155479f474fb97c467901fe109d11b8b68ede1b674dff10",
+          "state": "ACTIVE"
+        },
+        "2026-11-13T14:55:00.000Z": {
+          "bytes": 33709,
+          "revision_id": "37d5880714c404f50b27ef78c7c61472e0734f3b8c3a3aff696e3b9db0cec72c",
+          "state": "HIGH_SWEPT_RECLAIMED"
+        },
+        "2026-11-13T15:09:59.000Z": {
+          "bytes": 34727,
+          "revision_id": "37d5880714c404f50b27ef78c7c61472e0734f3b8c3a3aff696e3b9db0cec72c",
+          "state": "HIGH_SWEPT_RECLAIMED"
+        },
+        "2026-11-13T15:10:00.000Z": {
+          "bytes": 36572,
+          "revision_id": "dcc766080b74703d7743be0a0fcff441f730b392957d173e72fe10c5cc82323b",
+          "state": "EXPANSION_OBSERVED"
+        },
+        "2026-11-13T15:44:59.000Z": {
+          "bytes": 36572,
+          "revision_id": "dcc766080b74703d7743be0a0fcff441f730b392957d173e72fe10c5cc82323b",
+          "state": "EXPANSION_OBSERVED"
+        },
+        "2026-11-13T15:45:00.000Z": {
+          "bytes": 38649,
+          "revision_id": "6f01137af4d2187ad59a56fac2c20b61527c64d4bc09deb79c5a7bde70590baa",
+          "state": "OPPOSITE_BOUNDARY_REACHED"
+        }
+      }
+    },
+    "inspector_actions": {
+      "collapsed": {
+        "ms": 601.9,
+        "page_nodes": 920,
+        "scope_nodes": 1,
+        "source_rows": 0
+      },
+      "list": {
+        "ms": 203.3,
+        "page_nodes": 953,
+        "scope_nodes": 34,
+        "source_rows": 0,
+        "bytes": 20006
+      },
+      "select": {
+        "ms": 102.8,
+        "page_nodes": 1035,
+        "scope_nodes": 116,
+        "source_rows": 0,
+        "bytes": 40853
+      },
+      "sources": {
+        "n": 20,
+        "median_ms": 88.5,
+        "p95_ms": 106.2,
+        "samples_ms": [
+          75.8,
+          101.6,
+          106.2,
+          78,
+          81,
+          97.7,
+          97.8,
+          78.7,
+          70.5,
+          90.7,
+          93.1,
+          86.3,
+          152.1,
+          81.4,
+          49.9,
+          62.7,
+          94.1,
+          67.7,
+          96,
+          94.7
+        ],
+        "page_nodes": 1172,
+        "scope_nodes": 253,
+        "source_rows": 12,
+        "collapsed_source_rows": 0
+      },
+      "rewind": {
+        "ms": 308.3,
+        "page_nodes": 1035,
+        "scope_nodes": 116,
+        "source_rows": 0,
+        "bytes": 38819
+      },
+      "cold_resume": {
+        "ms": 488.7,
+        "page_nodes": 1036,
+        "scope_nodes": 118,
+        "source_rows": 0,
+        "bytes": 38649
+      }
+    },
+    "existing_library_actions": {
+      "collapsed": {
+        "ms": 525.6,
+        "page_nodes": 920,
+        "scope_nodes": 39,
+        "source_rows": 0
+      },
+      "list": {
+        "ms": 343.5,
+        "page_nodes": 996,
+        "scope_nodes": 115,
+        "source_rows": 0,
+        "bytes": 186014
+      },
+      "select": {
+        "ms": 128.6,
+        "page_nodes": 1013,
+        "scope_nodes": 132,
+        "source_rows": 0,
+        "bytes": 0
+      },
+      "rewind": {
+        "ms": 318.4,
+        "page_nodes": 996,
+        "scope_nodes": 115,
+        "source_rows": 0,
+        "bytes": 181077
+      },
+      "source_expansion": null,
+      "cold_resume": {
+        "ms": 693.2,
+        "page_nodes": 1012,
+        "scope_nodes": 132,
+        "source_rows": 0,
+        "bytes": 186014
+      }
+    }
+  }
+}

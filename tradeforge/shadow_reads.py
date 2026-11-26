@@ -93,9 +93,22 @@ def open_resolver(path, catalog, database, archive_root):
     # Use one manifest transaction and select rows from the exact database bytes
     # that passed the hash check. Phase A pins offline databases without WAL frames.
     root = archive_root.resolve()
-    def has_journal():
-        wal = Path(str(database) + "-wal")
-        return Path(str(database) + "-journal").exists() or (wal.exists() and wal.stat().st_size > 0)
+    def check_journals(stage):
+        for suffix in ("-journal", "-wal"):
+            try:
+                sidecar = Path(str(database) + suffix).stat()
+            except FileNotFoundError:
+                # SQLite can remove a clean sidecar as its last reader closes.
+                # A separate exists() check can race with that removal.
+                continue
+            except OSError as error:
+                raise ShadowReadError(
+                    f"SHADOW_SOURCE_SNAPSHOT_MISMATCH: cannot inspect SQLite {suffix[1:]} {stage}"
+                ) from error
+            if suffix == "-journal" or sidecar.st_size > 0:
+                raise ShadowReadError(
+                    f"SHADOW_SOURCE_SNAPSHOT_MISMATCH: SQLite {suffix[1:]} present {stage}"
+                )
 
     try:
         with closing(sqlite3.connect(path.resolve().as_uri()+"?mode=ro", uri=True)) as manifest:
@@ -111,8 +124,9 @@ def open_resolver(path, catalog, database, archive_root):
                 raise ShadowReadError("SHADOW_REGISTRATION_INCOMPLETE: rerun registration")
             pin = manifest.execute("SELECT database_sha256,archive_root FROM sources WHERE catalog=?",
                                    (catalog,)).fetchone()
-            if not pin or Path(pin[1]) != root or has_journal():
+            if not pin or Path(pin[1]) != root:
                 raise ShadowReadError("SHADOW_SOURCE_SNAPSHOT_MISMATCH")
+            check_journals("before source copy")
             with TemporaryDirectory() as private:
                 copy = Path(private) / "source.sqlite"
                 with copy.open("wb") as handle:
@@ -120,8 +134,7 @@ def open_resolver(path, catalog, database, archive_root):
                         verify_artifact(database, pin[0], handle)
                     except CatalogIntegrityError as error:
                         raise ShadowReadError(f"SHADOW_SOURCE_SNAPSHOT_MISMATCH: {error}") from error
-                if has_journal():
-                    raise ShadowReadError("SHADOW_SOURCE_SNAPSHOT_MISMATCH")
+                check_journals("after source copy")
                 with closing(sqlite3.connect(copy.as_uri()+"?immutable=1&mode=ro",uri=True)) as source:
                     source.row_factory = sqlite3.Row
                     yield CandleResolver(catalog,root,manifest,source)

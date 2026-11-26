@@ -1,0 +1,776 @@
+{
+  "date_utc": "2026-11-13",
+  "interval_utc_seconds": [
+    1794574800,
+    1794582000
+  ],
+  "availability_model": "Nominal M5 close with zero modeled delivery delay",
+  "checks": [
+    1794578399,
+    1794578400,
+    1794581999,
+    1794582000
+  ],
+  "symbols": {
+    "EURUSD": {
+      "market": {
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "price_basis": "BID",
+        "partitions": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ]
+      },
+      "provider_csv_sha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6",
+      "hours": [
+        {
+          "start": 1794574800,
+          "end": 1794578400,
+          "available_at": 1794578400,
+          "ohlc": {
+            "open": 1.10503,
+            "high": 1.10693,
+            "low": 1.10486,
+            "close": 1.10499
+          },
+          "children": [
+            {
+              "open_time": 1794574800,
+              "available_at": 1794575100,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10503,
+                "high": 1.1055,
+                "low": 1.10494,
+                "close": 1.10545
+              }
+            },
+            {
+              "open_time": 1794575100,
+              "available_at": 1794575400,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10545,
+                "high": 1.10557,
+                "low": 1.10511,
+                "close": 1.1052
+              }
+            },
+            {
+              "open_time": 1794575400,
+              "available_at": 1794575700,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10521,
+                "high": 1.10533,
+                "low": 1.10503,
+                "close": 1.10514
+              }
+            },
+            {
+              "open_time": 1794575700,
+              "available_at": 1794576000,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10512,
+                "high": 1.10527,
+                "low": 1.10486,
+                "close": 1.1049
+              }
+            },
+            {
+              "open_time": 1794576000,
+              "available_at": 1794576300,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10489,
+                "high": 1.10519,
+                "low": 1.10489,
+                "close": 1.10513
+              }
+            },
+            {
+              "open_time": 1794576300,
+              "available_at": 1794576600,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10514,
+                "high": 1.10568,
+                "low": 1.10497,
+                "close": 1.10552
+              }
+            },
+            {
+              "open_time": 1794576600,
+              "available_at": 1794576900,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10552,
+                "high": 1.10693,
+                "low": 1.10547,
+                "close": 1.10676
+              }
+            },
+            {
+              "open_time": 1794576900,
+              "available_at": 1794577200,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.1068,
+                "high": 1.1068,
+                "low": 1.1062,
+                "close": 1.10622
+              }
+            },
+            {
+              "open_time": 1794577200,
+              "available_at": 1794577500,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10623,
+                "high": 1.10636,
+                "low": 1.10591,
+                "close": 1.10602
+              }
+            },
+            {
+              "open_time": 1794577500,
+              "available_at": 1794577800,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10604,
+                "high": 1.10612,
+                "low": 1.10547,
+                "close": 1.1057
+              }
+            },
+            {
+              "open_time": 1794577800,
+              "available_at": 1794578100,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10568,
+                "high": 1.10568,
+                "low": 1.10509,
+                "close": 1.10545
+              }
+            },
+            {
+              "open_time": 1794578100,
+              "available_at": 1794578400,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10545,
+                "high": 1.10553,
+                "low": 1.10498,
+                "close": 1.10499
+              }
+            }
+          ]
+        },
+        {
+          "start": 1794578400,
+          "end": 1794582000,
+          "available_at": 1794582000,
+          "ohlc": {
+            "open": 1.10501,
+            "high": 1.10598,
+            "low": 1.10429,
+            "close": 1.10568
+          },
+          "children": [
+            {
+              "open_time": 1794578400,
+              "available_at": 1794578700,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10501,
+                "high": 1.10533,
+                "low": 1.10498,
+                "close": 1.10527
+              }
+            },
+            {
+              "open_time": 1794578700,
+              "available_at": 1794579000,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10529,
+                "high": 1.10551,
+                "low": 1.10507,
+                "close": 1.10542
+              }
+            },
+            {
+              "open_time": 1794579000,
+              "available_at": 1794579300,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10542,
+                "high": 1.10543,
+                "low": 1.10508,
+                "close": 1.10513
+              }
+            },
+            {
+              "open_time": 1794579300,
+              "available_at": 1794579600,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10514,
+                "high": 1.1053,
+                "low": 1.10502,
+                "close": 1.10512
+              }
+            },
+            {
+              "open_time": 1794579600,
+              "available_at": 1794579900,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.1051,
+                "high": 1.10512,
+                "low": 1.10429,
+                "close": 1.10491
+              }
+            },
+            {
+              "open_time": 1794579900,
+              "available_at": 1794580200,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10492,
+                "high": 1.10497,
+                "low": 1.1046,
+                "close": 1.10478
+              }
+            },
+            {
+              "open_time": 1794580200,
+              "available_at": 1794580500,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10478,
+                "high": 1.10491,
+                "low": 1.1046,
+                "close": 1.10472
+              }
+            },
+            {
+              "open_time": 1794580500,
+              "available_at": 1794580800,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10473,
+                "high": 1.10491,
+                "low": 1.10465,
+                "close": 1.10479
+              }
+            },
+            {
+              "open_time": 1794580800,
+              "available_at": 1794581100,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.1048,
+                "high": 1.10546,
+                "low": 1.10475,
+                "close": 1.10545
+              }
+            },
+            {
+              "open_time": 1794581100,
+              "available_at": 1794581400,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10544,
+                "high": 1.10585,
+                "low": 1.10536,
+                "close": 1.10585
+              }
+            },
+            {
+              "open_time": 1794581400,
+              "available_at": 1794581700,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10585,
+                "high": 1.10598,
+                "low": 1.10554,
+                "close": 1.1057
+              }
+            },
+            {
+              "open_time": 1794581700,
+              "available_at": 1794582000,
+              "partition": {
+                "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+                "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+              },
+              "ohlc": {
+                "open": 1.10569,
+                "high": 1.10595,
+                "low": 1.10557,
+                "close": 1.10568
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "GBPUSD": {
+      "market": {
+        "symbol": "GBPUSD",
+        "timeframe": "M5",
+        "source": "DUKASCOPY_SAVED",
+        "feed_id": "dukascopy-web-m1-v1",
+        "price_basis": "BID",
+        "partitions": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ]
+      },
+      "provider_csv_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928",
+      "hours": [
+        {
+          "start": 1794574800,
+          "end": 1794578400,
+          "available_at": 1794578400,
+          "ohlc": {
+            "open": 1.32256,
+            "high": 1.32503,
+            "low": 1.32238,
+            "close": 1.32319
+          },
+          "children": [
+            {
+              "open_time": 1794574800,
+              "available_at": 1794575100,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32256,
+                "high": 1.32287,
+                "low": 1.32238,
+                "close": 1.32283
+              }
+            },
+            {
+              "open_time": 1794575100,
+              "available_at": 1794575400,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32284,
+                "high": 1.32306,
+                "low": 1.32256,
+                "close": 1.32267
+              }
+            },
+            {
+              "open_time": 1794575400,
+              "available_at": 1794575700,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32268,
+                "high": 1.32292,
+                "low": 1.32267,
+                "close": 1.32289
+              }
+            },
+            {
+              "open_time": 1794575700,
+              "available_at": 1794576000,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32288,
+                "high": 1.32295,
+                "low": 1.32253,
+                "close": 1.32256
+              }
+            },
+            {
+              "open_time": 1794576000,
+              "available_at": 1794576300,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32257,
+                "high": 1.32297,
+                "low": 1.32257,
+                "close": 1.32289
+              }
+            },
+            {
+              "open_time": 1794576300,
+              "available_at": 1794576600,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32288,
+                "high": 1.32328,
+                "low": 1.32267,
+                "close": 1.32305
+              }
+            },
+            {
+              "open_time": 1794576600,
+              "available_at": 1794576900,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32303,
+                "high": 1.32487,
+                "low": 1.32301,
+                "close": 1.32472
+              }
+            },
+            {
+              "open_time": 1794576900,
+              "available_at": 1794577200,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32474,
+                "high": 1.32503,
+                "low": 1.32424,
+                "close": 1.32443
+              }
+            },
+            {
+              "open_time": 1794577200,
+              "available_at": 1794577500,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32442,
+                "high": 1.32452,
+                "low": 1.32395,
+                "close": 1.32408
+              }
+            },
+            {
+              "open_time": 1794577500,
+              "available_at": 1794577800,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.3241,
+                "high": 1.32416,
+                "low": 1.32354,
+                "close": 1.32379
+              }
+            },
+            {
+              "open_time": 1794577800,
+              "available_at": 1794578100,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32377,
+                "high": 1.3238,
+                "low": 1.3232,
+                "close": 1.32371
+              }
+            },
+            {
+              "open_time": 1794578100,
+              "available_at": 1794578400,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32371,
+                "high": 1.32383,
+                "low": 1.32317,
+                "close": 1.32319
+              }
+            }
+          ]
+        },
+        {
+          "start": 1794578400,
+          "end": 1794582000,
+          "available_at": 1794582000,
+          "ohlc": {
+            "open": 1.32321,
+            "high": 1.32508,
+            "low": 1.32245,
+            "close": 1.32456
+          },
+          "children": [
+            {
+              "open_time": 1794578400,
+              "available_at": 1794578700,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32321,
+                "high": 1.32341,
+                "low": 1.32305,
+                "close": 1.32318
+              }
+            },
+            {
+              "open_time": 1794578700,
+              "available_at": 1794579000,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.3232,
+                "high": 1.32339,
+                "low": 1.32289,
+                "close": 1.32338
+              }
+            },
+            {
+              "open_time": 1794579000,
+              "available_at": 1794579300,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32339,
+                "high": 1.32339,
+                "low": 1.32285,
+                "close": 1.32289
+              }
+            },
+            {
+              "open_time": 1794579300,
+              "available_at": 1794579600,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32289,
+                "high": 1.32326,
+                "low": 1.32285,
+                "close": 1.32318
+              }
+            },
+            {
+              "open_time": 1794579600,
+              "available_at": 1794579900,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32318,
+                "high": 1.32321,
+                "low": 1.32245,
+                "close": 1.32299
+              }
+            },
+            {
+              "open_time": 1794579900,
+              "available_at": 1794580200,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32301,
+                "high": 1.32307,
+                "low": 1.32261,
+                "close": 1.32279
+              }
+            },
+            {
+              "open_time": 1794580200,
+              "available_at": 1794580500,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32279,
+                "high": 1.3234,
+                "low": 1.32279,
+                "close": 1.32318
+              }
+            },
+            {
+              "open_time": 1794580500,
+              "available_at": 1794580800,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32322,
+                "high": 1.32363,
+                "low": 1.32316,
+                "close": 1.32347
+              }
+            },
+            {
+              "open_time": 1794580800,
+              "available_at": 1794581100,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.3235,
+                "high": 1.32418,
+                "low": 1.3234,
+                "close": 1.32415
+              }
+            },
+            {
+              "open_time": 1794581100,
+              "available_at": 1794581400,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32416,
+                "high": 1.32481,
+                "low": 1.32416,
+                "close": 1.32481
+              }
+            },
+            {
+              "open_time": 1794581400,
+              "available_at": 1794581700,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32482,
+                "high": 1.32508,
+                "low": 1.3244,
+                "close": 1.32449
+              }
+            },
+            {
+              "open_time": 1794581700,
+              "available_at": 1794582000,
+              "partition": {
+                "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+                "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+              },
+              "ohlc": {
+                "open": 1.32448,
+                "high": 1.32488,
+                "low": 1.32447,
+                "close": 1.32456
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

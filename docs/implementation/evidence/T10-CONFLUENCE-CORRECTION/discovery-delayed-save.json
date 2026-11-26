@@ -1,0 +1,18 @@
+{
+  "git_revision": "e28a5d0a87e412d4509799dd6afa72d817a62dfb",
+  "case": "controlled",
+  "session": "bbf60ee2f48cae3e2b597c623450ee771476fdf7b6049b79ccc812eb85d31235",
+  "receipt_id": "909eb62a6f7c4fbc866d8717d0ba829431f815264b8beff2c04104937e7b9524",
+  "before_chart_cutoff": 1794579900,
+  "final_chart_cutoff": 1794581400,
+  "immutable_rows": [
+    {
+      "id": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b",
+      "payload_sha256": "6bf598adac0c89908f445849a426a3d00a8d5ddf59429ce913fa4251e2a9469b"
+    },
+    {
+      "id": "909eb62a6f7c4fbc866d8717d0ba829431f815264b8beff2c04104937e7b9524",
+      "payload_sha256": "909eb62a6f7c4fbc866d8717d0ba829431f815264b8beff2c04104937e7b9524"
+    }
+  ]
+}

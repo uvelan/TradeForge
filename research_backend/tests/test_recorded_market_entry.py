@@ -28,16 +28,17 @@ REAL_PIN = "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
 
 
 @pytest.fixture
-def controlled(monkeypatch, publish):
+def controlled(monkeypatch, publish, request):
+    base, expiry = getattr(request, "param", (BASE, 5))
     for module in (crt, market, evaluator, integrity):
-        monkeypatch.setattr(module, "BASE", BASE)
-    monkeypatch.setattr(crt, "START", BASE + 3600)
-    monkeypatch.setattr(crt, "END", BASE + 15300)
+        monkeypatch.setattr(module, "BASE", base)
+    monkeypatch.setattr(crt, "START", base + 3600)
+    monkeypatch.setattr(crt, "END", base + 15300)
     original = crt.bounded_definition
 
     def definition(*args, **kwargs):
         value = original(*args, **kwargs)
-        value["trade_intent"]["expiry"] = {"unit": "SECONDS", "count": 5}
+        value["trade_intent"]["expiry"] = {"unit": "SECONDS", "count": expiry}
         return value
 
     monkeypatch.setattr(crt, "bounded_definition", definition)
@@ -55,12 +56,12 @@ def pin(part):
     return {key: part[key] for key in ("id", "sha256")}
 
 
-def prepare(raw):
-    part = import_bi5(raw, "EURUSD", DAY, 13)["tick_dataset"]
+def prepare(raw, hour=13, qualification=Q):
+    part = import_bi5(raw, "EURUSD", DAY, hour)["tick_dataset"]
     spec = dict(source=pin(part), source_sha256=sha256(raw).hexdigest(), partitions=[pin(part)],
-                start=Q//1000-60, end=Q//1000+90)
+                start=qualification//1000-60, end=qualification//1000+91)
     rows = [row | {"source_sha256": spec["source_sha256"]}
-            for row in decode_bi5(raw, "EURUSD", DAY, 13)
+            for row in decode_bi5(raw, "EURUSD", DAY, hour)
             if spec["start"] <= row["time"] < spec["end"]]
     return spec, rows
 

@@ -1,0 +1,510 @@
+{
+  "case": "closure-missing",
+  "baseline_git_revision": "4e03463a36f176b701ba36558bf03ffa9c8795a2",
+  "fixed_git_revision": "57157f1f4898d818c99505e95447bd99b774ab8b",
+  "session_id": "5bf0ba8dcb0348f177791a216ca00d227cf3df43b117249321c26d93fcf9b57b",
+  "manifest": {
+    "date_utc": "2026-11-13",
+    "start": 1794604800,
+    "end": 1794780600,
+    "symbols": {
+      "EURUSD": {
+        "type": "FVG",
+        "anchor": 1794605700,
+        "formation": 1794606300,
+        "previous": 1794606600,
+        "successor": 1794780300,
+        "T": 1794780600,
+        "reason": "MISSING_OPEN_CANDLES",
+        "missing": [
+          {
+            "start": 1794606900,
+            "end": 1794607200
+          },
+          {
+            "start": 1794780000,
+            "end": 1794780300
+          }
+        ],
+        "partitions": [
+          {
+            "id": "108eb6015189a1e5a3f00b9f2536184a70bef840ba7ff2baa638217e4a4281b2",
+            "sha256": "0df7cdb7fd4e694da14018b6187b2fe34c1ad805b3176c0266068a329276acb4"
+          },
+          {
+            "id": "da722d58ddd7d06634764066947bde8b47c6d31083d7162be5d3805ef9f71dcb",
+            "sha256": "b720c31432278a4829a544de728347e77bbdd716209614b73fef30332c080f68"
+          }
+        ]
+      },
+      "GBPUSD": {
+        "type": "OB",
+        "anchor": 1794606000,
+        "formation": 1794606300,
+        "previous": 1794606600,
+        "successor": 1794780300,
+        "T": 1794780600,
+        "reason": "MISSING_OPEN_CANDLES",
+        "missing": [
+          {
+            "start": 1794606900,
+            "end": 1794607200
+          },
+          {
+            "start": 1794780000,
+            "end": 1794780300
+          }
+        ],
+        "partitions": [
+          {
+            "id": "41bb7e957f3ba48aa00429d4981c9c8ef08d6101c4cb340583994a777ba62846",
+            "sha256": "445b0efe6fc3a7d6edfec976dbd08440f805ebe8ce85dd6d10a06d4603aad912"
+          },
+          {
+            "id": "23803cdf61d9f37ff979fbefd8f832f22e4d88c9a9f768852f180ccf65edd978",
+            "sha256": "fb96e48be13379dfbe81b7275e457d79fe01dfe9d1f0c0a3e9b40e33c91efdea"
+          }
+        ]
+      }
+    }
+  },
+  "symbols": {
+    "EURUSD": {
+      "wick": {
+        "T": "2026-11-15T22:10:00Z",
+        "T-1": {
+          "zone_id": "cdfdd1c6a685fef30a5510436b4b65bcff2be79dff976098a5b97927e9e30014",
+          "id": "e6df29b56d757142188306d1f7f059db01efcb49abce8e322c102d83b172fb0c",
+          "state": "ACTIVE",
+          "reason": "THREE_CLOSED_CANDLES",
+          "revision": 1,
+          "observation_time": 1794606300,
+          "confirmation_time": 1794606600,
+          "available_at": 1794606600
+        },
+        "at_T": {
+          "zone_id": "cdfdd1c6a685fef30a5510436b4b65bcff2be79dff976098a5b97927e9e30014",
+          "id": "2d8ea859966cac927efcb038b680a7f2c985f8c362bb504430c28760894a372a",
+          "state": "INVALIDATED",
+          "reason": "MISSING_OPEN_CANDLES",
+          "revision": 2,
+          "observation_time": 1794780300,
+          "confirmation_time": 1794780600,
+          "available_at": 1794780600
+        },
+        "baseline_witness_rows": [
+          {
+            "time_utc": "2026-11-15T22:05:00Z",
+            "available_at_utc": "2026-11-15T22:10:00Z",
+            "source_id": "da722d58ddd7d06634764066947bde8b47c6d31083d7162be5d3805ef9f71dcb:1794780300",
+            "partitions": [
+              {
+                "id": "da722d58ddd7d06634764066947bde8b47c6d31083d7162be5d3805ef9f71dcb",
+                "sha256": "b720c31432278a4829a544de728347e77bbdd716209614b73fef30332c080f68"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "2d8ea859966cac927efcb038b680a7f2c985f8c362bb504430c28760894a372a"
+              }
+            ]
+          }
+        ],
+        "fixed_witness_rows": [
+          {
+            "time_utc": "2026-11-13T21:50:00Z",
+            "available_at_utc": "2026-11-13T21:55:00Z",
+            "source_id": "108eb6015189a1e5a3f00b9f2536184a70bef840ba7ff2baa638217e4a4281b2:1794606600",
+            "partitions": [
+              {
+                "id": "108eb6015189a1e5a3f00b9f2536184a70bef840ba7ff2baa638217e4a4281b2",
+                "sha256": "0df7cdb7fd4e694da14018b6187b2fe34c1ad805b3176c0266068a329276acb4"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "GAP_PREVIOUS_OBSERVED",
+                "event_id": "2d8ea859966cac927efcb038b680a7f2c985f8c362bb504430c28760894a372a"
+              }
+            ]
+          },
+          {
+            "time_utc": "2026-11-15T22:05:00Z",
+            "available_at_utc": "2026-11-15T22:10:00Z",
+            "source_id": "da722d58ddd7d06634764066947bde8b47c6d31083d7162be5d3805ef9f71dcb:1794780300",
+            "partitions": [
+              {
+                "id": "da722d58ddd7d06634764066947bde8b47c6d31083d7162be5d3805ef9f71dcb",
+                "sha256": "b720c31432278a4829a544de728347e77bbdd716209614b73fef30332c080f68"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "2d8ea859966cac927efcb038b680a7f2c985f8c362bb504430c28760894a372a"
+              },
+              {
+                "role": "GAP_NEXT_OBSERVED",
+                "event_id": "2d8ea859966cac927efcb038b680a7f2c985f8c362bb504430c28760894a372a"
+              }
+            ]
+          }
+        ],
+        "continuity": {
+          "previous_observed_open": 1794606600,
+          "next_observed_open": 1794780300,
+          "step_seconds": 300,
+          "missing_open_intervals": [
+            {
+              "start": 1794606900,
+              "end": 1794607200
+            },
+            {
+              "start": 1794780000,
+              "end": 1794780300
+            }
+          ],
+          "schedule": {
+            "kind": "forex_weekly",
+            "timezone": "America/New_York",
+            "sunday_open": "17:00",
+            "friday_close": "17:00"
+          }
+        },
+        "shared_prior_contract_sha256": "752670d1ed3e71645a002484620a0355939d4dc0ad2079f3e69c30768a5671aa",
+        "rewind_matches_T_minus_1": true
+      },
+      "close": {
+        "T": "2026-11-15T22:10:00Z",
+        "T-1": {
+          "zone_id": "edf33b450120bc4b73cd00fe9ae59c0a53367a3c5413625fb745ef630e96b455",
+          "id": "81e9d8cc9a0782524f7deacbbd6873cdffdb007d050bd179bbc81388026bd5e3",
+          "state": "ACTIVE",
+          "reason": "THREE_CLOSED_CANDLES",
+          "revision": 1,
+          "observation_time": 1794606300,
+          "confirmation_time": 1794606600,
+          "available_at": 1794606600
+        },
+        "at_T": {
+          "zone_id": "edf33b450120bc4b73cd00fe9ae59c0a53367a3c5413625fb745ef630e96b455",
+          "id": "7651822fd4082e0f8d7d075da739163f955aa2aa9ddf5a7a203a3c7354f7ccdf",
+          "state": "INVALIDATED",
+          "reason": "MISSING_OPEN_CANDLES",
+          "revision": 2,
+          "observation_time": 1794780300,
+          "confirmation_time": 1794780600,
+          "available_at": 1794780600
+        },
+        "baseline_witness_rows": [
+          {
+            "time_utc": "2026-11-15T22:05:00Z",
+            "available_at_utc": "2026-11-15T22:10:00Z",
+            "source_id": "da722d58ddd7d06634764066947bde8b47c6d31083d7162be5d3805ef9f71dcb:1794780300",
+            "partitions": [
+              {
+                "id": "da722d58ddd7d06634764066947bde8b47c6d31083d7162be5d3805ef9f71dcb",
+                "sha256": "b720c31432278a4829a544de728347e77bbdd716209614b73fef30332c080f68"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "7651822fd4082e0f8d7d075da739163f955aa2aa9ddf5a7a203a3c7354f7ccdf"
+              }
+            ]
+          }
+        ],
+        "fixed_witness_rows": [
+          {
+            "time_utc": "2026-11-13T21:50:00Z",
+            "available_at_utc": "2026-11-13T21:55:00Z",
+            "source_id": "108eb6015189a1e5a3f00b9f2536184a70bef840ba7ff2baa638217e4a4281b2:1794606600",
+            "partitions": [
+              {
+                "id": "108eb6015189a1e5a3f00b9f2536184a70bef840ba7ff2baa638217e4a4281b2",
+                "sha256": "0df7cdb7fd4e694da14018b6187b2fe34c1ad805b3176c0266068a329276acb4"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "GAP_PREVIOUS_OBSERVED",
+                "event_id": "7651822fd4082e0f8d7d075da739163f955aa2aa9ddf5a7a203a3c7354f7ccdf"
+              }
+            ]
+          },
+          {
+            "time_utc": "2026-11-15T22:05:00Z",
+            "available_at_utc": "2026-11-15T22:10:00Z",
+            "source_id": "da722d58ddd7d06634764066947bde8b47c6d31083d7162be5d3805ef9f71dcb:1794780300",
+            "partitions": [
+              {
+                "id": "da722d58ddd7d06634764066947bde8b47c6d31083d7162be5d3805ef9f71dcb",
+                "sha256": "b720c31432278a4829a544de728347e77bbdd716209614b73fef30332c080f68"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "7651822fd4082e0f8d7d075da739163f955aa2aa9ddf5a7a203a3c7354f7ccdf"
+              },
+              {
+                "role": "GAP_NEXT_OBSERVED",
+                "event_id": "7651822fd4082e0f8d7d075da739163f955aa2aa9ddf5a7a203a3c7354f7ccdf"
+              }
+            ]
+          }
+        ],
+        "continuity": {
+          "previous_observed_open": 1794606600,
+          "next_observed_open": 1794780300,
+          "step_seconds": 300,
+          "missing_open_intervals": [
+            {
+              "start": 1794606900,
+              "end": 1794607200
+            },
+            {
+              "start": 1794780000,
+              "end": 1794780300
+            }
+          ],
+          "schedule": {
+            "kind": "forex_weekly",
+            "timezone": "America/New_York",
+            "sunday_open": "17:00",
+            "friday_close": "17:00"
+          }
+        },
+        "shared_prior_contract_sha256": "8ea6af6dc0f17de6cf15faaeffe734a554ee59a81fc9843fbadb46ada559d4fe",
+        "rewind_matches_T_minus_1": true
+      }
+    },
+    "GBPUSD": {
+      "wick": {
+        "T": "2026-11-15T22:10:00Z",
+        "T-1": {
+          "zone_id": "3384c499e480043b76a1570bfe02cddc55d0cd11777895bf6ae439b2cd83f3d5",
+          "id": "ebbbb64c8ebd12c426e35af153f15d278345c16ac0bef56642b21f2726fcae22",
+          "state": "ACTIVE",
+          "reason": "CONFIRMED_BOS",
+          "revision": 1,
+          "observation_time": 1794606300,
+          "confirmation_time": 1794606600,
+          "available_at": 1794606600
+        },
+        "at_T": {
+          "zone_id": "3384c499e480043b76a1570bfe02cddc55d0cd11777895bf6ae439b2cd83f3d5",
+          "id": "14e92a4baaa75672596e246f6e514f49498fe302909d9a9ce3b9f501a78a3ace",
+          "state": "INVALIDATED",
+          "reason": "MISSING_OPEN_CANDLES",
+          "revision": 2,
+          "observation_time": 1794780300,
+          "confirmation_time": 1794780600,
+          "available_at": 1794780600
+        },
+        "baseline_witness_rows": [
+          {
+            "time_utc": "2026-11-15T22:05:00Z",
+            "available_at_utc": "2026-11-15T22:10:00Z",
+            "source_id": "23803cdf61d9f37ff979fbefd8f832f22e4d88c9a9f768852f180ccf65edd978:1794780300",
+            "partitions": [
+              {
+                "id": "23803cdf61d9f37ff979fbefd8f832f22e4d88c9a9f768852f180ccf65edd978",
+                "sha256": "fb96e48be13379dfbe81b7275e457d79fe01dfe9d1f0c0a3e9b40e33c91efdea"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "14e92a4baaa75672596e246f6e514f49498fe302909d9a9ce3b9f501a78a3ace"
+              }
+            ]
+          }
+        ],
+        "fixed_witness_rows": [
+          {
+            "time_utc": "2026-11-13T21:50:00Z",
+            "available_at_utc": "2026-11-13T21:55:00Z",
+            "source_id": "41bb7e957f3ba48aa00429d4981c9c8ef08d6101c4cb340583994a777ba62846:1794606600",
+            "partitions": [
+              {
+                "id": "41bb7e957f3ba48aa00429d4981c9c8ef08d6101c4cb340583994a777ba62846",
+                "sha256": "445b0efe6fc3a7d6edfec976dbd08440f805ebe8ce85dd6d10a06d4603aad912"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "GAP_PREVIOUS_OBSERVED",
+                "event_id": "14e92a4baaa75672596e246f6e514f49498fe302909d9a9ce3b9f501a78a3ace"
+              }
+            ]
+          },
+          {
+            "time_utc": "2026-11-15T22:05:00Z",
+            "available_at_utc": "2026-11-15T22:10:00Z",
+            "source_id": "23803cdf61d9f37ff979fbefd8f832f22e4d88c9a9f768852f180ccf65edd978:1794780300",
+            "partitions": [
+              {
+                "id": "23803cdf61d9f37ff979fbefd8f832f22e4d88c9a9f768852f180ccf65edd978",
+                "sha256": "fb96e48be13379dfbe81b7275e457d79fe01dfe9d1f0c0a3e9b40e33c91efdea"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "14e92a4baaa75672596e246f6e514f49498fe302909d9a9ce3b9f501a78a3ace"
+              },
+              {
+                "role": "GAP_NEXT_OBSERVED",
+                "event_id": "14e92a4baaa75672596e246f6e514f49498fe302909d9a9ce3b9f501a78a3ace"
+              }
+            ]
+          }
+        ],
+        "continuity": {
+          "previous_observed_open": 1794606600,
+          "next_observed_open": 1794780300,
+          "step_seconds": 300,
+          "missing_open_intervals": [
+            {
+              "start": 1794606900,
+              "end": 1794607200
+            },
+            {
+              "start": 1794780000,
+              "end": 1794780300
+            }
+          ],
+          "schedule": {
+            "kind": "forex_weekly",
+            "timezone": "America/New_York",
+            "sunday_open": "17:00",
+            "friday_close": "17:00"
+          }
+        },
+        "shared_prior_contract_sha256": "3478da369a323bb44f4870d995ea7c780684b78c341f2f245e29637171836c0a",
+        "rewind_matches_T_minus_1": true
+      },
+      "close": {
+        "T": "2026-11-15T22:10:00Z",
+        "T-1": {
+          "zone_id": "c4caf7e70dc1f7ff015ac29be144913c59f6a491be1f289cb81b95f60ebd2602",
+          "id": "3a892aa96b3275520b16cadb373affd0833bf6cee5bb6af78ed180fb9fce2350",
+          "state": "ACTIVE",
+          "reason": "CONFIRMED_BOS",
+          "revision": 1,
+          "observation_time": 1794606300,
+          "confirmation_time": 1794606600,
+          "available_at": 1794606600
+        },
+        "at_T": {
+          "zone_id": "c4caf7e70dc1f7ff015ac29be144913c59f6a491be1f289cb81b95f60ebd2602",
+          "id": "091587bfa20cba981d253d4e64ace061ba494b0556ea5b69adc8b593e94a6b52",
+          "state": "INVALIDATED",
+          "reason": "MISSING_OPEN_CANDLES",
+          "revision": 2,
+          "observation_time": 1794780300,
+          "confirmation_time": 1794780600,
+          "available_at": 1794780600
+        },
+        "baseline_witness_rows": [
+          {
+            "time_utc": "2026-11-15T22:05:00Z",
+            "available_at_utc": "2026-11-15T22:10:00Z",
+            "source_id": "23803cdf61d9f37ff979fbefd8f832f22e4d88c9a9f768852f180ccf65edd978:1794780300",
+            "partitions": [
+              {
+                "id": "23803cdf61d9f37ff979fbefd8f832f22e4d88c9a9f768852f180ccf65edd978",
+                "sha256": "fb96e48be13379dfbe81b7275e457d79fe01dfe9d1f0c0a3e9b40e33c91efdea"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "091587bfa20cba981d253d4e64ace061ba494b0556ea5b69adc8b593e94a6b52"
+              }
+            ]
+          }
+        ],
+        "fixed_witness_rows": [
+          {
+            "time_utc": "2026-11-13T21:50:00Z",
+            "available_at_utc": "2026-11-13T21:55:00Z",
+            "source_id": "41bb7e957f3ba48aa00429d4981c9c8ef08d6101c4cb340583994a777ba62846:1794606600",
+            "partitions": [
+              {
+                "id": "41bb7e957f3ba48aa00429d4981c9c8ef08d6101c4cb340583994a777ba62846",
+                "sha256": "445b0efe6fc3a7d6edfec976dbd08440f805ebe8ce85dd6d10a06d4603aad912"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "GAP_PREVIOUS_OBSERVED",
+                "event_id": "091587bfa20cba981d253d4e64ace061ba494b0556ea5b69adc8b593e94a6b52"
+              }
+            ]
+          },
+          {
+            "time_utc": "2026-11-15T22:05:00Z",
+            "available_at_utc": "2026-11-15T22:10:00Z",
+            "source_id": "23803cdf61d9f37ff979fbefd8f832f22e4d88c9a9f768852f180ccf65edd978:1794780300",
+            "partitions": [
+              {
+                "id": "23803cdf61d9f37ff979fbefd8f832f22e4d88c9a9f768852f180ccf65edd978",
+                "sha256": "fb96e48be13379dfbe81b7275e457d79fe01dfe9d1f0c0a3e9b40e33c91efdea"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "091587bfa20cba981d253d4e64ace061ba494b0556ea5b69adc8b593e94a6b52"
+              },
+              {
+                "role": "GAP_NEXT_OBSERVED",
+                "event_id": "091587bfa20cba981d253d4e64ace061ba494b0556ea5b69adc8b593e94a6b52"
+              }
+            ]
+          }
+        ],
+        "continuity": {
+          "previous_observed_open": 1794606600,
+          "next_observed_open": 1794780300,
+          "step_seconds": 300,
+          "missing_open_intervals": [
+            {
+              "start": 1794606900,
+              "end": 1794607200
+            },
+            {
+              "start": 1794780000,
+              "end": 1794780300
+            }
+          ],
+          "schedule": {
+            "kind": "forex_weekly",
+            "timezone": "America/New_York",
+            "sunday_open": "17:00",
+            "friday_close": "17:00"
+          }
+        },
+        "shared_prior_contract_sha256": "f819ef0c656045122c783650bc934fb8bf68f3819a988a3d2d0ef8bc3bd3d735",
+        "rewind_matches_T_minus_1": true
+      }
+    }
+  },
+  "existing_receipts_match": true
+}

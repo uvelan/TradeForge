@@ -1,0 +1,2090 @@
+{
+  "revisions": {
+    "baseline": "7cdacaf4c10bdd1073128c0a4d10b2e34be7c7f6",
+    "candidate": "db80a2ec866c7af57d3c2e9f60d263d28ddcb38e"
+  },
+  "method": "Fresh FastAPI TestClient process per phase, public HTTP routes on the same SQLite and pinned Parquet files. Trial timings exclude startup; OS file cache was uncontrolled. HTTP 404 is baseline receipt-list availability, with no baseline API listing latency. SQL uses connection trace callbacks. Archive opens, rows and hashes count application work even if the host returns cached bytes.",
+  "clock_utc": {
+    "controlled_open": "2026-11-13T14:05:00Z",
+    "nominal_close": "2026-11-13T14:10:00Z",
+    "arrival": "2026-11-13T14:10:17Z"
+  },
+  "cases": {
+    "genuine": {
+      "session": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+      "position": 25,
+      "saved": [
+        {
+          "summary": {
+            "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+            "cutoff": 1794576300,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 1,
+            "receipt_id": "fc5627b440c2fff1f9f90d86738b6a5250506e06eeb1acb35841fcd735b1fe89",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794576300,
+            "components": {
+              "crt": {
+                "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+                "revision_id": "828cf3b23c25fca8b0efa8aeb4c5a5620a33f7be59ce2d05db5a86b12e11c451",
+                "state": "EXPANSION_OBSERVED",
+                "available_at": 1794576000,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+                "revision_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794576300,
+                "coverage_issues": []
+              }
+            }
+          },
+          "payload_bytes": 43498,
+          "payload_sha256": "fc5627b440c2fff1f9f90d86738b6a5250506e06eeb1acb35841fcd735b1fe89"
+        },
+        {
+          "summary": {
+            "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+            "cutoff": 1794579000,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 1,
+            "receipt_id": "7ab118f42e53b2762ce81fd140ff060b5aac1154d7e77209659558cccc152c03",
+            "status": "NOT_ALIGNED",
+            "reason": "CRT_NOT_RECLAIMED",
+            "direction": null,
+            "first_available_at": 1794578400,
+            "components": {
+              "crt": {
+                "family_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+                "revision_id": "9a8b0b829e8d37b0305dd8c5572c46856c43f2ba93c064080982806a72b9dacb",
+                "state": "ACTIVE",
+                "available_at": 1794578400,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+                "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+                "state": "SMT_INVALIDATED",
+                "available_at": 1794576600,
+                "coverage_issues": []
+              }
+            }
+          },
+          "payload_bytes": 38655,
+          "payload_sha256": "7ab118f42e53b2762ce81fd140ff060b5aac1154d7e77209659558cccc152c03"
+        }
+      ],
+      "witnesses": [],
+      "provider_pins": {
+        "EURUSD": [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        "GBPUSD": [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ]
+      },
+      "samples": {
+        "1794576300": {
+          "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+          "cutoff": 1794576300,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "fc5627b440c2fff1f9f90d86738b6a5250506e06eeb1acb35841fcd735b1fe89",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794576300,
+          "components": {
+            "crt": {
+              "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+              "revision_id": "828cf3b23c25fca8b0efa8aeb4c5a5620a33f7be59ce2d05db5a86b12e11c451",
+              "state": "EXPANSION_OBSERVED",
+              "available_at": 1794576000,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794576300,
+              "coverage_issues": []
+            }
+          }
+        },
+        "1794576600": {
+          "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+          "cutoff": 1794576600,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "0140bfc09f53985186ce083c4afd5c1a564f6f2168d7cc0d81733168cd0e70ec",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": 1794576600,
+          "components": {
+            "crt": {
+              "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+              "revision_id": "9ca2e4a3914f74ee8fa0661999fa5e4e7466b83d544cb174486d985910642405",
+              "state": "INVALIDATED",
+              "available_at": 1794576600,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+              "state": "SMT_INVALIDATED",
+              "available_at": 1794576600,
+              "coverage_issues": []
+            }
+          }
+        },
+        "1794579000": {
+          "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+          "cutoff": 1794579000,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "7ab118f42e53b2762ce81fd140ff060b5aac1154d7e77209659558cccc152c03",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": 1794578400,
+          "components": {
+            "crt": {
+              "family_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+              "revision_id": "9a8b0b829e8d37b0305dd8c5572c46856c43f2ba93c064080982806a72b9dacb",
+              "state": "ACTIVE",
+              "available_at": 1794578400,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+              "state": "SMT_INVALIDATED",
+              "available_at": 1794576600,
+              "coverage_issues": []
+            }
+          }
+        },
+        "1794579017": {
+          "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+          "cutoff": 1794579017,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "e7f8ed96a12da1f77a6ae7409329405e33332bdc04c3afa73fe210a9b3a85a79",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": 1794578400,
+          "components": {
+            "crt": {
+              "family_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+              "revision_id": "9a8b0b829e8d37b0305dd8c5572c46856c43f2ba93c064080982806a72b9dacb",
+              "state": "ACTIVE",
+              "available_at": 1794578400,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+              "state": "SMT_INVALIDATED",
+              "available_at": 1794576600,
+              "coverage_issues": []
+            }
+          }
+        }
+      },
+      "candidate": {
+        "first_page": {
+          "receipts": [
+            {
+              "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+              "receipt_id": "7ab118f42e53b2762ce81fd140ff060b5aac1154d7e77209659558cccc152c03",
+              "cutoff": 1794579000,
+              "profile": "CRT_SMT_M5_V1",
+              "rule_version": 1,
+              "status": "NOT_ALIGNED",
+              "reason": "CRT_NOT_RECLAIMED",
+              "direction": null,
+              "first_available_at": 1794578400
+            }
+          ],
+          "next_cursor": {
+            "cutoff": 1794579000,
+            "receipt_id": "7ab118f42e53b2762ce81fd140ff060b5aac1154d7e77209659558cccc152c03"
+          }
+        },
+        "samples": {
+          "1794576300": {
+            "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+            "cutoff": 1794576300,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "d14c0e07c2e602d10d8c69647cf960e70e33342f7bec278c28c29f418d2481de",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794576300,
+            "components": {
+              "crt": {
+                "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+                "revision_id": "828cf3b23c25fca8b0efa8aeb4c5a5620a33f7be59ce2d05db5a86b12e11c451",
+                "state": "EXPANSION_OBSERVED",
+                "available_at": 1794576000,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+                "revision_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794576300,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794576600": {
+            "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+            "cutoff": 1794576600,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "b144c835a376bbc8b8e569ec8d7c05673e1b6b034e5b4203b28ad5d149154d27",
+            "status": "NOT_ALIGNED",
+            "reason": "CRT_NOT_RECLAIMED",
+            "direction": null,
+            "first_available_at": 1794576600,
+            "components": {
+              "crt": {
+                "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+                "revision_id": "9ca2e4a3914f74ee8fa0661999fa5e4e7466b83d544cb174486d985910642405",
+                "state": "INVALIDATED",
+                "available_at": 1794576600,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+                "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+                "state": "SMT_INVALIDATED",
+                "available_at": 1794576600,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794579000": {
+            "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+            "cutoff": 1794579000,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "9fb27dc90358d6e8a134b17aca7a250b5abd04c1006961de98a5b942ae62cd7f",
+            "status": "NOT_ALIGNED",
+            "reason": "CRT_NOT_RECLAIMED",
+            "direction": null,
+            "first_available_at": 1794578400,
+            "components": {
+              "crt": {
+                "family_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+                "revision_id": "9a8b0b829e8d37b0305dd8c5572c46856c43f2ba93c064080982806a72b9dacb",
+                "state": "ACTIVE",
+                "available_at": 1794578400,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+                "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+                "state": "SMT_INVALIDATED",
+                "available_at": 1794576600,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794579017": {
+            "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+            "cutoff": 1794579017,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "7f48bdd29b7f1aaf73902b7dea7293f2de242ffe26e2453d6e9f7848a91181f0",
+            "status": "NOT_ALIGNED",
+            "reason": "CRT_NOT_RECLAIMED",
+            "direction": null,
+            "first_available_at": 1794578400,
+            "components": {
+              "crt": {
+                "family_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+                "revision_id": "9a8b0b829e8d37b0305dd8c5572c46856c43f2ba93c064080982806a72b9dacb",
+                "state": "ACTIVE",
+                "available_at": 1794578400,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+                "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+                "state": "SMT_INVALIDATED",
+                "available_at": 1794576600,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": []
+          }
+        }
+      }
+    },
+    "quiet-eurusd": {
+      "session": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+      "position": 13,
+      "saved": [
+        {
+          "summary": {
+            "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+            "cutoff": 1794578700,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 1,
+            "receipt_id": "8ab3eec522deaa4c1177bafc235dc780e25cde6424c4469b8c8daa3bfcfcf86e",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794578700,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            }
+          },
+          "payload_bytes": 32386,
+          "payload_sha256": "8ab3eec522deaa4c1177bafc235dc780e25cde6424c4469b8c8daa3bfcfcf86e"
+        },
+        {
+          "summary": {
+            "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+            "cutoff": 1794579017,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 1,
+            "receipt_id": "2d78e30551c1b6637ee5e21a76ca1fb5e0a2cb62c5935d2ccb379d0ea42217a5",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794579017,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            }
+          },
+          "payload_bytes": 33045,
+          "payload_sha256": "2d78e30551c1b6637ee5e21a76ca1fb5e0a2cb62c5935d2ccb379d0ea42217a5"
+        }
+      ],
+      "witnesses": [
+        {
+          "symbol": "EURUSD",
+          "time": 1794578700,
+          "nominal_close": 1794579000,
+          "available_at": 1794579017,
+          "availability_basis": "ARCHIVE_SUPPLIED",
+          "source_id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14:1794578700",
+          "partitions": [
+            {
+              "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+              "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+            }
+          ]
+        }
+      ],
+      "provider_pins": {
+        "EURUSD": [
+          {
+            "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+            "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+          }
+        ],
+        "GBPUSD": [
+          {
+            "id": "2446d26a46b02c22a05d933df5aaebcf0ed1d96f2b98474c89e643bcffbfa18b",
+            "sha256": "1e24c9be493fed012a9b8f3bae45f5bc471630e4e472ba55f18485f7f5080dcc"
+          }
+        ]
+      },
+      "samples": {
+        "1794578700": {
+          "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+          "cutoff": 1794578700,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "8ab3eec522deaa4c1177bafc235dc780e25cde6424c4469b8c8daa3bfcfcf86e",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794578700,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": []
+            }
+          }
+        },
+        "1794578999": {
+          "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+          "cutoff": 1794578999,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "853169cbfacf41c5977fe53bd93e8ed6e38489f68f6e0ee89bd332d8af7df170",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794578700,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": []
+            }
+          }
+        },
+        "1794579000": {
+          "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+          "cutoff": 1794579000,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "6184d41c85c6ee165a2edb9f63c6682929573fa77ab563dbbbf57c4662f24842",
+          "status": "INCOMPLETE",
+          "reason": "MISSING_OPEN_CANDLES",
+          "direction": null,
+          "first_available_at": null,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": [
+                {
+                  "symbol": "EURUSD",
+                  "reason": "MISSING_OPEN_CANDLES",
+                  "missing_intervals": [
+                    {
+                      "start": 1794578700,
+                      "end": 1794579000
+                    }
+                  ]
+                }
+              ]
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": [
+                {
+                  "symbol": "EURUSD",
+                  "reason": "MISSING_OPEN_CANDLES",
+                  "missing_intervals": [
+                    {
+                      "start": 1794578700,
+                      "end": 1794579000
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "1794579016": {
+          "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+          "cutoff": 1794579016,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "5b0cd3c7a612ff403a8515a11dbcb7b2e60dbd1a4c4f97d622ba75f33f3b1865",
+          "status": "INCOMPLETE",
+          "reason": "MISSING_OPEN_CANDLES",
+          "direction": null,
+          "first_available_at": null,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": [
+                {
+                  "symbol": "EURUSD",
+                  "reason": "MISSING_OPEN_CANDLES",
+                  "missing_intervals": [
+                    {
+                      "start": 1794578700,
+                      "end": 1794579000
+                    }
+                  ]
+                }
+              ]
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": [
+                {
+                  "symbol": "EURUSD",
+                  "reason": "MISSING_OPEN_CANDLES",
+                  "missing_intervals": [
+                    {
+                      "start": 1794578700,
+                      "end": 1794579000
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "1794579017": {
+          "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+          "cutoff": 1794579017,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "2d78e30551c1b6637ee5e21a76ca1fb5e0a2cb62c5935d2ccb379d0ea42217a5",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794579017,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": []
+            }
+          }
+        },
+        "1794579018": {
+          "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+          "cutoff": 1794579018,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "05a85789ef4409ae348a4b3c5c24a3b80af301e958d835c6ef924156977abbc0",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794579017,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": []
+            }
+          }
+        }
+      },
+      "candidate": {
+        "first_page": {
+          "receipts": [
+            {
+              "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+              "receipt_id": "2d78e30551c1b6637ee5e21a76ca1fb5e0a2cb62c5935d2ccb379d0ea42217a5",
+              "cutoff": 1794579017,
+              "profile": "CRT_SMT_M5_V1",
+              "rule_version": 1,
+              "status": "ALIGNED",
+              "reason": "MATCHING_DIRECTIONS",
+              "direction": "BEARISH",
+              "first_available_at": 1794579017
+            }
+          ],
+          "next_cursor": {
+            "cutoff": 1794579017,
+            "receipt_id": "2d78e30551c1b6637ee5e21a76ca1fb5e0a2cb62c5935d2ccb379d0ea42217a5"
+          }
+        },
+        "samples": {
+          "1794578700": {
+            "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+            "cutoff": 1794578700,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "3b86f4c0fd2e4fc1245d129abe9474e7ed353b957cfa76630b5501b31fa47e19",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794578700,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794578999": {
+            "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+            "cutoff": 1794578999,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "cd8a3b20d3308b752d0bf8ba561b2f91ce62ba48b032c7ce8bf2961d3fea0106",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794578700,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794579000": {
+            "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+            "cutoff": 1794579000,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "9219e9edcdbbc0e84d652b40962967cf13afea419dd3c9bd0513caa433f59fb8",
+            "status": "INCOMPLETE",
+            "reason": "MISSING_OPEN_CANDLES",
+            "direction": null,
+            "first_available_at": null,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": [
+                  {
+                    "symbol": "EURUSD",
+                    "reason": "MISSING_OPEN_CANDLES",
+                    "missing_intervals": [
+                      {
+                        "start": 1794578700,
+                        "end": 1794579000
+                      }
+                    ]
+                  }
+                ]
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": [
+                  {
+                    "symbol": "EURUSD",
+                    "reason": "MISSING_OPEN_CANDLES",
+                    "missing_intervals": [
+                      {
+                        "start": 1794578700,
+                        "end": 1794579000
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794579016": {
+            "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+            "cutoff": 1794579016,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "f0f998b1883032919361d42476c482e4cce410fa9bc7f518c813cd99e3ab5a4c",
+            "status": "INCOMPLETE",
+            "reason": "MISSING_OPEN_CANDLES",
+            "direction": null,
+            "first_available_at": null,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": [
+                  {
+                    "symbol": "EURUSD",
+                    "reason": "MISSING_OPEN_CANDLES",
+                    "missing_intervals": [
+                      {
+                        "start": 1794578700,
+                        "end": 1794579000
+                      }
+                    ]
+                  }
+                ]
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": [
+                  {
+                    "symbol": "EURUSD",
+                    "reason": "MISSING_OPEN_CANDLES",
+                    "missing_intervals": [
+                      {
+                        "start": 1794578700,
+                        "end": 1794579000
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794579017": {
+            "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+            "cutoff": 1794579017,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "46e68697d76948dcf05a619daa645511c204fe4a35ce6fb1fd7365f8c2ae37bd",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794579017,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": [
+              {
+                "symbol": "EURUSD",
+                "time": 1794578700,
+                "nominal_close": 1794579000,
+                "available_at": 1794579017,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "source_id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14:1794578700",
+                "partitions": [
+                  {
+                    "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+                    "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+                  }
+                ]
+              }
+            ]
+          },
+          "1794579018": {
+            "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+            "cutoff": 1794579018,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "719d2357736fe396b4df0f44640de39497e4e2ff65ec1fb458dbbb812309d309",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794579017,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": [
+              {
+                "symbol": "EURUSD",
+                "time": 1794578700,
+                "nominal_close": 1794579000,
+                "available_at": 1794579017,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "source_id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14:1794578700",
+                "partitions": [
+                  {
+                    "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+                    "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "new_saved": {
+        "summary": {
+          "session_id": "a5e8585d0eb71f290be9944651356000878054450321b05ead61740d4ec78da2",
+          "cutoff": 1794579017,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 2,
+          "receipt_id": "46e68697d76948dcf05a619daa645511c204fe4a35ce6fb1fd7365f8c2ae37bd",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794579017,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": []
+            }
+          },
+          "coverage_recoveries": [
+            {
+              "symbol": "EURUSD",
+              "time": 1794578700,
+              "nominal_close": 1794579000,
+              "available_at": 1794579017,
+              "availability_basis": "ARCHIVE_SUPPLIED",
+              "source_id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14:1794578700",
+              "partitions": [
+                {
+                  "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+                  "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+                }
+              ]
+            }
+          ]
+        },
+        "payload_bytes": 33455,
+        "payload_sha256": "46e68697d76948dcf05a619daa645511c204fe4a35ce6fb1fd7365f8c2ae37bd"
+      },
+      "candidate_restart_order": [
+        "46e68697d76948dcf05a619daa645511c204fe4a35ce6fb1fd7365f8c2ae37bd",
+        "2d78e30551c1b6637ee5e21a76ca1fb5e0a2cb62c5935d2ccb379d0ea42217a5",
+        "8ab3eec522deaa4c1177bafc235dc780e25cde6424c4469b8c8daa3bfcfcf86e"
+      ]
+    },
+    "both": {
+      "session": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+      "position": 13,
+      "saved": [
+        {
+          "summary": {
+            "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+            "cutoff": 1794578700,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 1,
+            "receipt_id": "a0c0ce59d94ce2b4880dfc57baca70ab413f02b5220f6c97b5ec48e0bf60cd13",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794578700,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            }
+          },
+          "payload_bytes": 32386,
+          "payload_sha256": "a0c0ce59d94ce2b4880dfc57baca70ab413f02b5220f6c97b5ec48e0bf60cd13"
+        },
+        {
+          "summary": {
+            "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+            "cutoff": 1794579017,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 1,
+            "receipt_id": "1b21c1ffa4e8c13c588aa8a3408a34b6d06711d9e35760c729e97bc90cd359c9",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794579017,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            }
+          },
+          "payload_bytes": 33045,
+          "payload_sha256": "1b21c1ffa4e8c13c588aa8a3408a34b6d06711d9e35760c729e97bc90cd359c9"
+        }
+      ],
+      "witnesses": [
+        {
+          "symbol": "EURUSD",
+          "time": 1794578700,
+          "nominal_close": 1794579000,
+          "available_at": 1794579017,
+          "availability_basis": "ARCHIVE_SUPPLIED",
+          "source_id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14:1794578700",
+          "partitions": [
+            {
+              "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+              "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "time": 1794578700,
+          "nominal_close": 1794579000,
+          "available_at": 1794579017,
+          "availability_basis": "ARCHIVE_SUPPLIED",
+          "source_id": "bd182dcc3adccb64183873dc4e2bc658cfc2e00cbbe3cd4d1be2e8b42d9bc1aa:1794578700",
+          "partitions": [
+            {
+              "id": "bd182dcc3adccb64183873dc4e2bc658cfc2e00cbbe3cd4d1be2e8b42d9bc1aa",
+              "sha256": "20c21162bd93b0cc64f30beb33c7819b792d194d5571ea8f50775028b6d47500"
+            }
+          ]
+        }
+      ],
+      "provider_pins": {
+        "EURUSD": [
+          {
+            "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+            "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+          }
+        ],
+        "GBPUSD": [
+          {
+            "id": "bd182dcc3adccb64183873dc4e2bc658cfc2e00cbbe3cd4d1be2e8b42d9bc1aa",
+            "sha256": "20c21162bd93b0cc64f30beb33c7819b792d194d5571ea8f50775028b6d47500"
+          }
+        ]
+      },
+      "samples": {
+        "1794578700": {
+          "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+          "cutoff": 1794578700,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "a0c0ce59d94ce2b4880dfc57baca70ab413f02b5220f6c97b5ec48e0bf60cd13",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794578700,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": []
+            }
+          }
+        },
+        "1794578999": {
+          "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+          "cutoff": 1794578999,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "12b02c9946d4b3d0d070beea9cd35ce03f8f71ef9e93dcd911629a30915c39d7",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794578700,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": []
+            }
+          }
+        },
+        "1794579000": {
+          "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+          "cutoff": 1794579000,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "d99698aa21b80e8119517f4098915cbc3d5f8faf49a5002cfb448242461d233c",
+          "status": "INCOMPLETE",
+          "reason": "MISSING_OPEN_CANDLES",
+          "direction": null,
+          "first_available_at": null,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": [
+                {
+                  "symbol": "EURUSD",
+                  "reason": "MISSING_OPEN_CANDLES",
+                  "missing_intervals": [
+                    {
+                      "start": 1794578700,
+                      "end": 1794579000
+                    }
+                  ]
+                }
+              ]
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "UNCERTAIN",
+              "available_at": 1794577800,
+              "coverage_issues": [
+                {
+                  "symbol": "EURUSD",
+                  "reason": "MISSING_OPEN_CANDLES",
+                  "missing_intervals": [
+                    {
+                      "start": 1794578700,
+                      "end": 1794579000
+                    }
+                  ]
+                },
+                {
+                  "symbol": "GBPUSD",
+                  "reason": "MISSING_OPEN_CANDLES",
+                  "missing_intervals": [
+                    {
+                      "start": 1794578700,
+                      "end": 1794579000
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "1794579016": {
+          "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+          "cutoff": 1794579016,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "3a048b952c12f020f9c7e59e98a85da4a0f4ad2826c44800df8e736d5d360bd1",
+          "status": "INCOMPLETE",
+          "reason": "MISSING_OPEN_CANDLES",
+          "direction": null,
+          "first_available_at": null,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": [
+                {
+                  "symbol": "EURUSD",
+                  "reason": "MISSING_OPEN_CANDLES",
+                  "missing_intervals": [
+                    {
+                      "start": 1794578700,
+                      "end": 1794579000
+                    }
+                  ]
+                }
+              ]
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "UNCERTAIN",
+              "available_at": 1794577800,
+              "coverage_issues": [
+                {
+                  "symbol": "EURUSD",
+                  "reason": "MISSING_OPEN_CANDLES",
+                  "missing_intervals": [
+                    {
+                      "start": 1794578700,
+                      "end": 1794579000
+                    }
+                  ]
+                },
+                {
+                  "symbol": "GBPUSD",
+                  "reason": "MISSING_OPEN_CANDLES",
+                  "missing_intervals": [
+                    {
+                      "start": 1794578700,
+                      "end": 1794579000
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "1794579017": {
+          "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+          "cutoff": 1794579017,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "1b21c1ffa4e8c13c588aa8a3408a34b6d06711d9e35760c729e97bc90cd359c9",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794579017,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": []
+            }
+          }
+        },
+        "1794579018": {
+          "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+          "cutoff": 1794579018,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 1,
+          "receipt_id": "a91c67f966aa0a9c36a220e61dec4e78a19ceb2725c7e18a82ef8aa18d2b48a3",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794579017,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": []
+            }
+          }
+        }
+      },
+      "candidate": {
+        "first_page": {
+          "receipts": [
+            {
+              "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+              "receipt_id": "1b21c1ffa4e8c13c588aa8a3408a34b6d06711d9e35760c729e97bc90cd359c9",
+              "cutoff": 1794579017,
+              "profile": "CRT_SMT_M5_V1",
+              "rule_version": 1,
+              "status": "ALIGNED",
+              "reason": "MATCHING_DIRECTIONS",
+              "direction": "BEARISH",
+              "first_available_at": 1794579017
+            }
+          ],
+          "next_cursor": {
+            "cutoff": 1794579017,
+            "receipt_id": "1b21c1ffa4e8c13c588aa8a3408a34b6d06711d9e35760c729e97bc90cd359c9"
+          }
+        },
+        "samples": {
+          "1794578700": {
+            "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+            "cutoff": 1794578700,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "2cce7c9b7ba053920871be5544fe4f78e7ffb3a86a47d6d0a6f59d6489d63f57",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794578700,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794578999": {
+            "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+            "cutoff": 1794578999,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "214fac25957c06ec3524b1b06eaa443ea9b09e59a428995a2965fa24010b9040",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794578700,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794579000": {
+            "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+            "cutoff": 1794579000,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "7da3b9fca2b73fada3e8b19e20895790b73ea52416524ef32a3eb122de15c966",
+            "status": "INCOMPLETE",
+            "reason": "MISSING_OPEN_CANDLES",
+            "direction": null,
+            "first_available_at": null,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": [
+                  {
+                    "symbol": "EURUSD",
+                    "reason": "MISSING_OPEN_CANDLES",
+                    "missing_intervals": [
+                      {
+                        "start": 1794578700,
+                        "end": 1794579000
+                      }
+                    ]
+                  }
+                ]
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "UNCERTAIN",
+                "available_at": 1794577800,
+                "coverage_issues": [
+                  {
+                    "symbol": "EURUSD",
+                    "reason": "MISSING_OPEN_CANDLES",
+                    "missing_intervals": [
+                      {
+                        "start": 1794578700,
+                        "end": 1794579000
+                      }
+                    ]
+                  },
+                  {
+                    "symbol": "GBPUSD",
+                    "reason": "MISSING_OPEN_CANDLES",
+                    "missing_intervals": [
+                      {
+                        "start": 1794578700,
+                        "end": 1794579000
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794579016": {
+            "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+            "cutoff": 1794579016,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "905a428b2c14ba0e0ceff06c54358b956b834e00624b793b47dc25760fdebfda",
+            "status": "INCOMPLETE",
+            "reason": "MISSING_OPEN_CANDLES",
+            "direction": null,
+            "first_available_at": null,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": [
+                  {
+                    "symbol": "EURUSD",
+                    "reason": "MISSING_OPEN_CANDLES",
+                    "missing_intervals": [
+                      {
+                        "start": 1794578700,
+                        "end": 1794579000
+                      }
+                    ]
+                  }
+                ]
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "UNCERTAIN",
+                "available_at": 1794577800,
+                "coverage_issues": [
+                  {
+                    "symbol": "EURUSD",
+                    "reason": "MISSING_OPEN_CANDLES",
+                    "missing_intervals": [
+                      {
+                        "start": 1794578700,
+                        "end": 1794579000
+                      }
+                    ]
+                  },
+                  {
+                    "symbol": "GBPUSD",
+                    "reason": "MISSING_OPEN_CANDLES",
+                    "missing_intervals": [
+                      {
+                        "start": 1794578700,
+                        "end": 1794579000
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "coverage_recoveries": []
+          },
+          "1794579017": {
+            "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+            "cutoff": 1794579017,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "f2eadc24ef16d4684d20a9807e6ef7a1a1b2d586717103beb707a4fc579b14aa",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794579017,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": [
+              {
+                "symbol": "EURUSD",
+                "time": 1794578700,
+                "nominal_close": 1794579000,
+                "available_at": 1794579017,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "source_id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14:1794578700",
+                "partitions": [
+                  {
+                    "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+                    "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+                  }
+                ]
+              },
+              {
+                "symbol": "GBPUSD",
+                "time": 1794578700,
+                "nominal_close": 1794579000,
+                "available_at": 1794579017,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "source_id": "bd182dcc3adccb64183873dc4e2bc658cfc2e00cbbe3cd4d1be2e8b42d9bc1aa:1794578700",
+                "partitions": [
+                  {
+                    "id": "bd182dcc3adccb64183873dc4e2bc658cfc2e00cbbe3cd4d1be2e8b42d9bc1aa",
+                    "sha256": "20c21162bd93b0cc64f30beb33c7819b792d194d5571ea8f50775028b6d47500"
+                  }
+                ]
+              }
+            ]
+          },
+          "1794579018": {
+            "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+            "cutoff": 1794579018,
+            "profile": "CRT_SMT_M5_V1",
+            "rule_version": 2,
+            "receipt_id": "8b3c11aa1ddfb75cb5d6f4632c150e59dfa03ea2221c954c9b8817a8cca13829",
+            "status": "ALIGNED",
+            "reason": "MATCHING_DIRECTIONS",
+            "direction": "BEARISH",
+            "first_available_at": 1794579017,
+            "components": {
+              "crt": {
+                "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+                "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "available_at": 1794578700,
+                "coverage_issues": []
+              },
+              "smt": {
+                "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+                "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+                "state": "SMT_CONFIRMED",
+                "available_at": 1794577800,
+                "coverage_issues": []
+              }
+            },
+            "coverage_recoveries": [
+              {
+                "symbol": "EURUSD",
+                "time": 1794578700,
+                "nominal_close": 1794579000,
+                "available_at": 1794579017,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "source_id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14:1794578700",
+                "partitions": [
+                  {
+                    "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+                    "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+                  }
+                ]
+              },
+              {
+                "symbol": "GBPUSD",
+                "time": 1794578700,
+                "nominal_close": 1794579000,
+                "available_at": 1794579017,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "source_id": "bd182dcc3adccb64183873dc4e2bc658cfc2e00cbbe3cd4d1be2e8b42d9bc1aa:1794578700",
+                "partitions": [
+                  {
+                    "id": "bd182dcc3adccb64183873dc4e2bc658cfc2e00cbbe3cd4d1be2e8b42d9bc1aa",
+                    "sha256": "20c21162bd93b0cc64f30beb33c7819b792d194d5571ea8f50775028b6d47500"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "new_saved": {
+        "summary": {
+          "session_id": "400ad2f27241fdbb82097dad4282f01b56b78864b32fa68138bc47520f4154a5",
+          "cutoff": 1794579017,
+          "profile": "CRT_SMT_M5_V1",
+          "rule_version": 2,
+          "receipt_id": "f2eadc24ef16d4684d20a9807e6ef7a1a1b2d586717103beb707a4fc579b14aa",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": 1794579017,
+          "components": {
+            "crt": {
+              "family_id": "ac2b10e9eb3b2fc6c2b1439189bd1e175cd990b325e55308c825a8b74e964e47",
+              "revision_id": "612f13ad15f3a492aa0a665ddbdadc0eece1c0a0b1e885d28325eb6c04142b20",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "available_at": 1794578700,
+              "coverage_issues": []
+            },
+            "smt": {
+              "family_id": "6b394bf16ce53bd1aa6f98fffddd500e9d75ae76c164107e6d2a31804a96dfc9",
+              "revision_id": "eefac556b6cafb1191e43d22b3a05f3e4ed1faa013d9cf3cb9b3aaf23fdee0d3",
+              "state": "SMT_CONFIRMED",
+              "available_at": 1794577800,
+              "coverage_issues": []
+            }
+          },
+          "coverage_recoveries": [
+            {
+              "symbol": "EURUSD",
+              "time": 1794578700,
+              "nominal_close": 1794579000,
+              "available_at": 1794579017,
+              "availability_basis": "ARCHIVE_SUPPLIED",
+              "source_id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14:1794578700",
+              "partitions": [
+                {
+                  "id": "6197eb048229efd0cc153dd8c0e0e14eda15ae3c5feef354356bf9fd1b49af14",
+                  "sha256": "85c512b48e2b33f02a5942ab6150d10e9127feed6d0a79fc6d6ff2b5fabe725b"
+                }
+              ]
+            },
+            {
+              "symbol": "GBPUSD",
+              "time": 1794578700,
+              "nominal_close": 1794579000,
+              "available_at": 1794579017,
+              "availability_basis": "ARCHIVE_SUPPLIED",
+              "source_id": "bd182dcc3adccb64183873dc4e2bc658cfc2e00cbbe3cd4d1be2e8b42d9bc1aa:1794578700",
+              "partitions": [
+                {
+                  "id": "bd182dcc3adccb64183873dc4e2bc658cfc2e00cbbe3cd4d1be2e8b42d9bc1aa",
+                  "sha256": "20c21162bd93b0cc64f30beb33c7819b792d194d5571ea8f50775028b6d47500"
+                }
+              ]
+            }
+          ]
+        },
+        "payload_bytes": 33841,
+        "payload_sha256": "f2eadc24ef16d4684d20a9807e6ef7a1a1b2d586717103beb707a4fc579b14aa"
+      },
+      "candidate_restart_order": [
+        "f2eadc24ef16d4684d20a9807e6ef7a1a1b2d586717103beb707a4fc579b14aa",
+        "1b21c1ffa4e8c13c588aa8a3408a34b6d06711d9e35760c729e97bc90cd359c9",
+        "a0c0ce59d94ce2b4880dfc57baca70ab413f02b5220f6c97b5ec48e0bf60cd13"
+      ]
+    }
+  },
+  "benchmarks": {
+    "baseline": {
+      "cold": {
+        "receipt_list": {
+          "status_code": 404,
+          "samples": 4,
+          "median_ms": 43.706,
+          "p95_ms": 44.397,
+          "per_request_min_max": {
+            "sql_statements": [
+              0,
+              0
+            ],
+            "sql_selects": [
+              0,
+              0
+            ],
+            "parquet_opens": [
+              0,
+              0
+            ],
+            "decoded_rows": [
+              0,
+              0
+            ],
+            "verified_archive_bytes": [
+              0,
+              0
+            ]
+          }
+        },
+        "reopen": {
+          "status_code": 200,
+          "samples": 4,
+          "median_ms": 355.011,
+          "p95_ms": 409.402,
+          "per_request_min_max": {
+            "sql_statements": [
+              9,
+              9
+            ],
+            "sql_selects": [
+              5,
+              5
+            ],
+            "parquet_opens": [
+              2,
+              2
+            ],
+            "decoded_rows": [
+              528,
+              528
+            ],
+            "verified_archive_bytes": [
+              20818,
+              20818
+            ]
+          }
+        },
+        "session_and_reopen": {
+          "status_code": 200,
+          "samples": 4,
+          "median_ms": 359.071,
+          "p95_ms": 377.642,
+          "per_request_min_max": {
+            "sql_statements": [
+              11,
+              11
+            ],
+            "sql_selects": [
+              7,
+              7
+            ],
+            "parquet_opens": [
+              2,
+              2
+            ],
+            "decoded_rows": [
+              528,
+              528
+            ],
+            "verified_archive_bytes": [
+              20818,
+              20818
+            ]
+          }
+        }
+      },
+      "warm": {
+        "receipt_list": {
+          "status_code": 404,
+          "samples": 30,
+          "median_ms": 2.184,
+          "p95_ms": 2.464,
+          "per_request_min_max": {
+            "sql_statements": [
+              0,
+              0
+            ],
+            "sql_selects": [
+              0,
+              0
+            ],
+            "parquet_opens": [
+              0,
+              0
+            ],
+            "decoded_rows": [
+              0,
+              0
+            ],
+            "verified_archive_bytes": [
+              0,
+              0
+            ]
+          }
+        },
+        "session_list": {
+          "status_code": 200,
+          "samples": 30,
+          "median_ms": 4.416,
+          "p95_ms": 5.233,
+          "per_request_min_max": {
+            "sql_statements": [
+              1,
+              1
+            ],
+            "sql_selects": [
+              1,
+              1
+            ],
+            "parquet_opens": [
+              0,
+              0
+            ],
+            "decoded_rows": [
+              0,
+              0
+            ],
+            "verified_archive_bytes": [
+              0,
+              0
+            ]
+          }
+        },
+        "reopen": {
+          "status_code": 200,
+          "samples": 30,
+          "median_ms": 19.284,
+          "p95_ms": 21.437,
+          "per_request_min_max": {
+            "sql_statements": [
+              9,
+              14
+            ],
+            "sql_selects": [
+              5,
+              7
+            ],
+            "parquet_opens": [
+              2,
+              2
+            ],
+            "decoded_rows": [
+              528,
+              528
+            ],
+            "verified_archive_bytes": [
+              20818,
+              20818
+            ]
+          }
+        },
+        "session_and_reopen": {
+          "status_code": 200,
+          "samples": 30,
+          "median_ms": 30.306,
+          "p95_ms": 60.197,
+          "per_request_min_max": {
+            "sql_statements": [
+              11,
+              16
+            ],
+            "sql_selects": [
+              7,
+              9
+            ],
+            "parquet_opens": [
+              2,
+              2
+            ],
+            "decoded_rows": [
+              528,
+              528
+            ],
+            "verified_archive_bytes": [
+              20818,
+              20818
+            ]
+          }
+        }
+      }
+    },
+    "candidate": {
+      "cold": {
+        "receipt_list": {
+          "status_code": 200,
+          "samples": 4,
+          "median_ms": 52.381,
+          "p95_ms": 59.419,
+          "per_request_min_max": {
+            "sql_statements": [
+              3,
+              3
+            ],
+            "sql_selects": [
+              3,
+              3
+            ],
+            "parquet_opens": [
+              0,
+              0
+            ],
+            "decoded_rows": [
+              0,
+              0
+            ],
+            "verified_archive_bytes": [
+              0,
+              0
+            ]
+          }
+        },
+        "reopen": {
+          "status_code": 200,
+          "samples": 4,
+          "median_ms": 342.373,
+          "p95_ms": 348.183,
+          "per_request_min_max": {
+            "sql_statements": [
+              9,
+              9
+            ],
+            "sql_selects": [
+              5,
+              5
+            ],
+            "parquet_opens": [
+              2,
+              2
+            ],
+            "decoded_rows": [
+              528,
+              528
+            ],
+            "verified_archive_bytes": [
+              20818,
+              20818
+            ]
+          }
+        },
+        "session_and_reopen": {
+          "status_code": 200,
+          "samples": 4,
+          "median_ms": 360.648,
+          "p95_ms": 365.195,
+          "per_request_min_max": {
+            "sql_statements": [
+              11,
+              11
+            ],
+            "sql_selects": [
+              7,
+              7
+            ],
+            "parquet_opens": [
+              2,
+              2
+            ],
+            "decoded_rows": [
+              528,
+              528
+            ],
+            "verified_archive_bytes": [
+              20818,
+              20818
+            ]
+          }
+        }
+      },
+      "warm": {
+        "receipt_list": {
+          "status_code": 200,
+          "samples": 30,
+          "median_ms": 9.491,
+          "p95_ms": 57.382,
+          "per_request_min_max": {
+            "sql_statements": [
+              3,
+              3
+            ],
+            "sql_selects": [
+              3,
+              3
+            ],
+            "parquet_opens": [
+              0,
+              0
+            ],
+            "decoded_rows": [
+              0,
+              0
+            ],
+            "verified_archive_bytes": [
+              0,
+              0
+            ]
+          }
+        },
+        "session_list": {
+          "status_code": 200,
+          "samples": 30,
+          "median_ms": 4.349,
+          "p95_ms": 4.928,
+          "per_request_min_max": {
+            "sql_statements": [
+              1,
+              1
+            ],
+            "sql_selects": [
+              1,
+              1
+            ],
+            "parquet_opens": [
+              0,
+              0
+            ],
+            "decoded_rows": [
+              0,
+              0
+            ],
+            "verified_archive_bytes": [
+              0,
+              0
+            ]
+          }
+        },
+        "reopen": {
+          "status_code": 200,
+          "samples": 30,
+          "median_ms": 21.095,
+          "p95_ms": 26.103,
+          "per_request_min_max": {
+            "sql_statements": [
+              9,
+              9
+            ],
+            "sql_selects": [
+              5,
+              5
+            ],
+            "parquet_opens": [
+              2,
+              2
+            ],
+            "decoded_rows": [
+              528,
+              528
+            ],
+            "verified_archive_bytes": [
+              20818,
+              20818
+            ]
+          }
+        },
+        "session_and_reopen": {
+          "status_code": 200,
+          "samples": 30,
+          "median_ms": 31.391,
+          "p95_ms": 35.447,
+          "per_request_min_max": {
+            "sql_statements": [
+              11,
+              16
+            ],
+            "sql_selects": [
+              7,
+              9
+            ],
+            "parquet_opens": [
+              2,
+              2
+            ],
+            "decoded_rows": [
+              528,
+              528
+            ],
+            "verified_archive_bytes": [
+              20818,
+              20818
+            ]
+          }
+        }
+      }
+    }
+  }
+}

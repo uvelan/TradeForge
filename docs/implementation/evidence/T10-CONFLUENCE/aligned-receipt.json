@@ -1,0 +1,1790 @@
+{
+  "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+  "cutoff": 1794576300,
+  "profile": "CRT_SMT_M5_V1",
+  "rule_version": 1,
+  "authority": "RESEARCH_ONLY",
+  "availability_policy": "PINNED_M5_AVAILABLE_AT_OR_MODELED_NOMINAL_CLOSE",
+  "rules": {
+    "crt": {
+      "reference_frame": "H1",
+      "reference_mode": "aggregated",
+      "daily_timezone": "UTC",
+      "daily_boundary": "00:00",
+      "market_schedule": {
+        "kind": "forex_weekly",
+        "timezone": "America/New_York",
+        "sunday_open": "17:00",
+        "friday_close": "17:00"
+      },
+      "reference_start": null,
+      "history_bars": 2000,
+      "history_start": null,
+      "max_ranges": 2,
+      "max_age": 96,
+      "candidate_age": 3,
+      "min_penetration": 0,
+      "min_reclaim": 0,
+      "invalidate": "sweep_extreme",
+      "include_context": false
+    },
+    "smt": {
+      "relationship": "POSITIVE",
+      "period": 2,
+      "alignment_bars": 0,
+      "tolerance_bps": 0,
+      "confirmation_bars": 1,
+      "expiry_bars": 64
+    },
+    "crt_version": 1,
+    "smt_algorithm_version": 2,
+    "smt_lifecycle_version": 2,
+    "availability_mode": "HISTORICAL_SIMULATION"
+  },
+  "status": "ALIGNED",
+  "reason": "MATCHING_DIRECTIONS",
+  "direction": "BEARISH",
+  "first_available_at": 1794576300,
+  "components": {
+    "crt": {
+      "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+      "revision_id": "828cf3b23c25fca8b0efa8aeb4c5a5620a33f7be59ce2d05db5a86b12e11c451",
+      "revision": 4,
+      "state": "EXPANSION_OBSERVED",
+      "condition": "SATISFIED",
+      "direction": "BEARISH",
+      "reason": "POST_RECLAIM_MIDPOINT",
+      "observation_time": 1794575700,
+      "confirmation_time": 1794576000,
+      "available_at": 1794576000,
+      "sources": [
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "start": 1794571200,
+          "end": 1794585600
+        }
+      ],
+      "evidence": [
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794571200,
+          "open": 1.10533,
+          "high": 1.10547,
+          "low": 1.10515,
+          "close": 1.10529,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794571500,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794571200",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794571500,
+          "open": 1.10528,
+          "high": 1.10529,
+          "low": 1.10502,
+          "close": 1.10502,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794571800,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794571500",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794571800,
+          "open": 1.10502,
+          "high": 1.10515,
+          "low": 1.10499,
+          "close": 1.10503,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794572100,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794571800",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794572100,
+          "open": 1.10502,
+          "high": 1.10517,
+          "low": 1.10488,
+          "close": 1.1049,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794572400,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794572100",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794572400,
+          "open": 1.10488,
+          "high": 1.10495,
+          "low": 1.10469,
+          "close": 1.10479,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794572700,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794572400",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794572700,
+          "open": 1.10479,
+          "high": 1.10514,
+          "low": 1.10479,
+          "close": 1.10509,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573000,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794572700",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573000,
+          "open": 1.1051,
+          "high": 1.10519,
+          "low": 1.10503,
+          "close": 1.10518,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573300,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794573000",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573300,
+          "open": 1.10518,
+          "high": 1.10549,
+          "low": 1.10518,
+          "close": 1.10544,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573600,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794573300",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573600,
+          "open": 1.10544,
+          "high": 1.10547,
+          "low": 1.10504,
+          "close": 1.10511,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573900,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794573600",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573900,
+          "open": 1.10511,
+          "high": 1.10511,
+          "low": 1.10442,
+          "close": 1.10465,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794574200,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794573900",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794574200,
+          "open": 1.10465,
+          "high": 1.10483,
+          "low": 1.10443,
+          "close": 1.10471,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794574500,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794574200",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794574500,
+          "open": 1.10472,
+          "high": 1.10507,
+          "low": 1.10467,
+          "close": 1.10505,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794574800,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794574500",
+          "roles": [
+            {
+              "role": "REFERENCE_CHILD",
+              "event_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794574800,
+          "open": 1.10503,
+          "high": 1.1055,
+          "low": 1.10494,
+          "close": 1.10545,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794575100,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794574800",
+          "roles": [
+            {
+              "role": "REVISION_OBSERVATION",
+              "event_id": "d1d73f7816175e43df4377772af64f4041327dac485d5d4716bb9b63ba6b556b"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794575100,
+          "open": 1.10545,
+          "high": 1.10557,
+          "low": 1.10511,
+          "close": 1.1052,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794575400,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575100",
+          "roles": [
+            {
+              "role": "REVISION_OBSERVATION",
+              "event_id": "49aece0c332eeb7d5cea03ec280acb3b87bf1611acc61d77cf4231a6cff9b176"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794575700,
+          "open": 1.10512,
+          "high": 1.10527,
+          "low": 1.10486,
+          "close": 1.1049,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794576000,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575700",
+          "roles": [
+            {
+              "role": "REVISION_OBSERVATION",
+              "event_id": "828cf3b23c25fca8b0efa8aeb4c5a5620a33f7be59ce2d05db5a86b12e11c451"
+            }
+          ]
+        }
+      ],
+      "reference_start": 1794571200,
+      "reference_end": 1794574800,
+      "reference_id": "da47be740c88dbbdada9642131e13001c3862fab519d920dd7da059888a08457",
+      "reference_ohlc": [
+        1.10533,
+        1.10549,
+        1.10442,
+        1.10505
+      ],
+      "sweep_side": "HIGH",
+      "revisions": [
+        {
+          "id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6",
+          "range_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+          "reference_id": "da47be740c88dbbdada9642131e13001c3862fab519d920dd7da059888a08457",
+          "reference_start": 1794571200,
+          "reference_end": 1794574800,
+          "reference_available_at": 1794574800,
+          "reference_ohlc": [
+            1.10533,
+            1.10549,
+            1.10442,
+            1.10505
+          ],
+          "reference_mode": "aggregated",
+          "reference_frame": "H1",
+          "constituents": 12,
+          "high": 1.10549,
+          "low": 1.10442,
+          "width": 0.00107,
+          "midpoint": 1.104955,
+          "algorithm_version": 1,
+          "identity_policy_version": 1,
+          "provenance_id": "3c0257a5547d08370bcb87cbe398107c639cb370c459009f02d0f3d9b9656ff0",
+          "configuration_fingerprint": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "revision": 1,
+          "evidence_fingerprint": "942bdab9b7bc3611094a7fe2547365143d35552e3fa53f14d80c16748a8625e5",
+          "state": "ACTIVE",
+          "reason": "CLOSED_REFERENCE",
+          "observation_time": 1794571200,
+          "confirmation_time": 1794574800,
+          "available_at": 1794574800,
+          "observation_ohlc": null,
+          "sweep_side": null
+        },
+        {
+          "id": "d1d73f7816175e43df4377772af64f4041327dac485d5d4716bb9b63ba6b556b",
+          "range_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+          "reference_id": "da47be740c88dbbdada9642131e13001c3862fab519d920dd7da059888a08457",
+          "reference_start": 1794571200,
+          "reference_end": 1794574800,
+          "reference_available_at": 1794574800,
+          "reference_ohlc": [
+            1.10533,
+            1.10549,
+            1.10442,
+            1.10505
+          ],
+          "reference_mode": "aggregated",
+          "reference_frame": "H1",
+          "constituents": 12,
+          "high": 1.10549,
+          "low": 1.10442,
+          "width": 0.00107,
+          "midpoint": 1.104955,
+          "algorithm_version": 1,
+          "identity_policy_version": 1,
+          "provenance_id": "3c0257a5547d08370bcb87cbe398107c639cb370c459009f02d0f3d9b9656ff0",
+          "configuration_fingerprint": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "revision": 2,
+          "evidence_fingerprint": "c6819220125a43d8fbcadb2efe54fee1a8da25090444ca09aeb6915fec27a90b",
+          "state": "HIGH_SWEPT_RECLAIMED",
+          "reason": "SAME_CANDLE_RECLAIM",
+          "observation_time": 1794574800,
+          "confirmation_time": 1794575100,
+          "available_at": 1794575100,
+          "observation_ohlc": [
+            1.10503,
+            1.1055,
+            1.10494,
+            1.10545
+          ],
+          "swept_boundary": 1.10549,
+          "sweep_extreme": 1.1055,
+          "sweep_id": "eb703310c5ce66a994eef102726d11a83d5817683259c082c318dac97a67e9fd",
+          "reclaim_id": "35e075f60aa89bcb0fd49a0daa38a9b087ba7480193118d2fd535e260bf66b60",
+          "penetration": 1e-05,
+          "reclaim_close": 1.10545,
+          "sweep_side": "HIGH"
+        },
+        {
+          "id": "49aece0c332eeb7d5cea03ec280acb3b87bf1611acc61d77cf4231a6cff9b176",
+          "range_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+          "reference_id": "da47be740c88dbbdada9642131e13001c3862fab519d920dd7da059888a08457",
+          "reference_start": 1794571200,
+          "reference_end": 1794574800,
+          "reference_available_at": 1794574800,
+          "reference_ohlc": [
+            1.10533,
+            1.10549,
+            1.10442,
+            1.10505
+          ],
+          "reference_mode": "aggregated",
+          "reference_frame": "H1",
+          "constituents": 12,
+          "high": 1.10549,
+          "low": 1.10442,
+          "width": 0.00107,
+          "midpoint": 1.104955,
+          "algorithm_version": 1,
+          "identity_policy_version": 1,
+          "provenance_id": "3c0257a5547d08370bcb87cbe398107c639cb370c459009f02d0f3d9b9656ff0",
+          "configuration_fingerprint": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "revision": 3,
+          "evidence_fingerprint": "ac63348a909a962f6ea2493184883ec661f4803b8455f0015d511818e6b488be",
+          "state": "HIGH_SWEPT_RECLAIMED",
+          "reason": "NEW_SWEEP_EXTREME",
+          "observation_time": 1794575100,
+          "confirmation_time": 1794575400,
+          "available_at": 1794575400,
+          "observation_ohlc": [
+            1.10545,
+            1.10557,
+            1.10511,
+            1.1052
+          ],
+          "swept_boundary": 1.10549,
+          "sweep_extreme": 1.1055,
+          "sweep_id": "eb703310c5ce66a994eef102726d11a83d5817683259c082c318dac97a67e9fd",
+          "reclaim_id": "35e075f60aa89bcb0fd49a0daa38a9b087ba7480193118d2fd535e260bf66b60",
+          "penetration": 1e-05,
+          "reclaim_close": 1.10545,
+          "sweep_side": "HIGH"
+        },
+        {
+          "id": "828cf3b23c25fca8b0efa8aeb4c5a5620a33f7be59ce2d05db5a86b12e11c451",
+          "range_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+          "reference_id": "da47be740c88dbbdada9642131e13001c3862fab519d920dd7da059888a08457",
+          "reference_start": 1794571200,
+          "reference_end": 1794574800,
+          "reference_available_at": 1794574800,
+          "reference_ohlc": [
+            1.10533,
+            1.10549,
+            1.10442,
+            1.10505
+          ],
+          "reference_mode": "aggregated",
+          "reference_frame": "H1",
+          "constituents": 12,
+          "high": 1.10549,
+          "low": 1.10442,
+          "width": 0.00107,
+          "midpoint": 1.104955,
+          "algorithm_version": 1,
+          "identity_policy_version": 1,
+          "provenance_id": "3c0257a5547d08370bcb87cbe398107c639cb370c459009f02d0f3d9b9656ff0",
+          "configuration_fingerprint": "1bd743b1cafbb7ead91ce662a79171ca4172cda807b664de70245b423383e69a",
+          "revision": 4,
+          "evidence_fingerprint": "a1246c4c45eb284380ff588dd08a205b0872ad8509d3e73d92eef61d190945db",
+          "state": "EXPANSION_OBSERVED",
+          "reason": "POST_RECLAIM_MIDPOINT",
+          "observation_time": 1794575700,
+          "confirmation_time": 1794576000,
+          "available_at": 1794576000,
+          "observation_ohlc": [
+            1.10512,
+            1.10527,
+            1.10486,
+            1.1049
+          ],
+          "swept_boundary": 1.10549,
+          "sweep_extreme": 1.1055,
+          "sweep_id": "eb703310c5ce66a994eef102726d11a83d5817683259c082c318dac97a67e9fd",
+          "reclaim_id": "35e075f60aa89bcb0fd49a0daa38a9b087ba7480193118d2fd535e260bf66b60",
+          "penetration": 1e-05,
+          "reclaim_close": 1.10545,
+          "sweep_side": "HIGH"
+        }
+      ],
+      "coverage_issues": []
+    },
+    "smt": {
+      "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+      "revision_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+      "revision": 2,
+      "state": "SMT_CONFIRMED",
+      "condition": "SATISFIED",
+      "direction": "BEARISH",
+      "reason": "SMT_CONFIRMED",
+      "observation_time": 1794576000,
+      "confirmation_time": 1794576300,
+      "available_at": 1794576300,
+      "sources": [
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "start": 1794571200,
+          "end": 1794585600
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "start": 1794571200,
+          "end": 1794585600
+        }
+      ],
+      "evidence": [
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794571200,
+          "open": 1.10533,
+          "high": 1.10547,
+          "low": 1.10515,
+          "close": 1.10529,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794571500,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794571200",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794571500,
+          "open": 1.10528,
+          "high": 1.10529,
+          "low": 1.10502,
+          "close": 1.10502,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794571800,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794571500",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794571800,
+          "open": 1.10502,
+          "high": 1.10515,
+          "low": 1.10499,
+          "close": 1.10503,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794572100,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794571800",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794572100,
+          "open": 1.10502,
+          "high": 1.10517,
+          "low": 1.10488,
+          "close": 1.1049,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794572400,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794572100",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794572400,
+          "open": 1.10488,
+          "high": 1.10495,
+          "low": 1.10469,
+          "close": 1.10479,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794572700,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794572400",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794572700,
+          "open": 1.10479,
+          "high": 1.10514,
+          "low": 1.10479,
+          "close": 1.10509,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573000,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794572700",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "PREVIOUS_PIVOT_CHILD",
+              "event_id": "f5312709f2b6bdac5d06b7a2717394821f0828afc1c1f8d55ff3c46a8dfe5244"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573000,
+          "open": 1.1051,
+          "high": 1.10519,
+          "low": 1.10503,
+          "close": 1.10518,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573300,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794573000",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "PREVIOUS_PIVOT_CHILD",
+              "event_id": "f5312709f2b6bdac5d06b7a2717394821f0828afc1c1f8d55ff3c46a8dfe5244"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573300,
+          "open": 1.10518,
+          "high": 1.10549,
+          "low": 1.10518,
+          "close": 1.10544,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573600,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794573300",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "PREVIOUS_PIVOT_ANCHOR",
+              "event_id": "f5312709f2b6bdac5d06b7a2717394821f0828afc1c1f8d55ff3c46a8dfe5244"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573600,
+          "open": 1.10544,
+          "high": 1.10547,
+          "low": 1.10504,
+          "close": 1.10511,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573900,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794573600",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "PREVIOUS_PIVOT_CHILD",
+              "event_id": "f5312709f2b6bdac5d06b7a2717394821f0828afc1c1f8d55ff3c46a8dfe5244"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573900,
+          "open": 1.10511,
+          "high": 1.10511,
+          "low": 1.10442,
+          "close": 1.10465,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794574200,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794573900",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "PREVIOUS_PIVOT_CHILD",
+              "event_id": "f5312709f2b6bdac5d06b7a2717394821f0828afc1c1f8d55ff3c46a8dfe5244"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794574200,
+          "open": 1.10465,
+          "high": 1.10483,
+          "low": 1.10443,
+          "close": 1.10471,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794574500,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794574200",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794574500,
+          "open": 1.10472,
+          "high": 1.10507,
+          "low": 1.10467,
+          "close": 1.10505,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794574800,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794574500",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "CURRENT_PIVOT_CHILD",
+              "event_id": "b9c92168bce6d78260bc4409b35e4acee4ebec1f46b0a518f95f2fa8ed3efca1"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794574800,
+          "open": 1.10503,
+          "high": 1.1055,
+          "low": 1.10494,
+          "close": 1.10545,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794575100,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794574800",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "CURRENT_PIVOT_CHILD",
+              "event_id": "b9c92168bce6d78260bc4409b35e4acee4ebec1f46b0a518f95f2fa8ed3efca1"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794575100,
+          "open": 1.10545,
+          "high": 1.10557,
+          "low": 1.10511,
+          "close": 1.1052,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794575400,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575100",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "CURRENT_PIVOT_ANCHOR",
+              "event_id": "b9c92168bce6d78260bc4409b35e4acee4ebec1f46b0a518f95f2fa8ed3efca1"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794575400,
+          "open": 1.10521,
+          "high": 1.10533,
+          "low": 1.10503,
+          "close": 1.10514,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794575700,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575400",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "CURRENT_PIVOT_CHILD",
+              "event_id": "b9c92168bce6d78260bc4409b35e4acee4ebec1f46b0a518f95f2fa8ed3efca1"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794575700,
+          "open": 1.10512,
+          "high": 1.10527,
+          "low": 1.10486,
+          "close": 1.1049,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794576000,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575700",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "CURRENT_PIVOT_CHILD",
+              "event_id": "b9c92168bce6d78260bc4409b35e4acee4ebec1f46b0a518f95f2fa8ed3efca1"
+            }
+          ]
+        },
+        {
+          "symbol": "EURUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794576000,
+          "open": 1.10489,
+          "high": 1.10519,
+          "low": 1.10489,
+          "close": 1.10513,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794576300,
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "source_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576000",
+          "roles": [
+            {
+              "role": "SMT_CONFIRMED",
+              "event_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794571200,
+          "open": 1.32326,
+          "high": 1.3234,
+          "low": 1.32295,
+          "close": 1.32307,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794571500,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794571200",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794571500,
+          "open": 1.32308,
+          "high": 1.32314,
+          "low": 1.32277,
+          "close": 1.32279,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794571800,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794571500",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794571800,
+          "open": 1.3228,
+          "high": 1.32294,
+          "low": 1.3227,
+          "close": 1.3227,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794572100,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794571800",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794572100,
+          "open": 1.3227,
+          "high": 1.32287,
+          "low": 1.3225,
+          "close": 1.32253,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794572400,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794572100",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794572400,
+          "open": 1.32255,
+          "high": 1.32257,
+          "low": 1.32223,
+          "close": 1.3223,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794572700,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794572400",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794572700,
+          "open": 1.32231,
+          "high": 1.32275,
+          "low": 1.32228,
+          "close": 1.32275,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573000,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794572700",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "PREVIOUS_PIVOT_CHILD",
+              "event_id": "2a9532fb2249a444dd7ca588809921857e46b2e437bbae3b7195b36e7a019a68"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573000,
+          "open": 1.32274,
+          "high": 1.32288,
+          "low": 1.32268,
+          "close": 1.32286,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573300,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794573000",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "PREVIOUS_PIVOT_CHILD",
+              "event_id": "2a9532fb2249a444dd7ca588809921857e46b2e437bbae3b7195b36e7a019a68"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573300,
+          "open": 1.32287,
+          "high": 1.32316,
+          "low": 1.32286,
+          "close": 1.32306,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573600,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794573300",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "PREVIOUS_PIVOT_ANCHOR",
+              "event_id": "2a9532fb2249a444dd7ca588809921857e46b2e437bbae3b7195b36e7a019a68"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573600,
+          "open": 1.32305,
+          "high": 1.32311,
+          "low": 1.32243,
+          "close": 1.32255,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794573900,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794573600",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "PREVIOUS_PIVOT_CHILD",
+              "event_id": "2a9532fb2249a444dd7ca588809921857e46b2e437bbae3b7195b36e7a019a68"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794573900,
+          "open": 1.32256,
+          "high": 1.32258,
+          "low": 1.3218,
+          "close": 1.32218,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794574200,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794573900",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "PREVIOUS_PIVOT_CHILD",
+              "event_id": "2a9532fb2249a444dd7ca588809921857e46b2e437bbae3b7195b36e7a019a68"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794574200,
+          "open": 1.32219,
+          "high": 1.32228,
+          "low": 1.32186,
+          "close": 1.32216,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794574500,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794574200",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794574500,
+          "open": 1.32215,
+          "high": 1.32262,
+          "low": 1.32215,
+          "close": 1.32255,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794574800,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794574500",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "CURRENT_PIVOT_CHILD",
+              "event_id": "898d572c6ee1f40c7a9a1ef9a9b0ba7080b0a46f013642b08c5506a7350942da"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794574800,
+          "open": 1.32256,
+          "high": 1.32287,
+          "low": 1.32238,
+          "close": 1.32283,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794575100,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794574800",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "CURRENT_PIVOT_CHILD",
+              "event_id": "898d572c6ee1f40c7a9a1ef9a9b0ba7080b0a46f013642b08c5506a7350942da"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794575100,
+          "open": 1.32284,
+          "high": 1.32306,
+          "low": 1.32256,
+          "close": 1.32267,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794575400,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575100",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "CURRENT_PIVOT_ANCHOR",
+              "event_id": "898d572c6ee1f40c7a9a1ef9a9b0ba7080b0a46f013642b08c5506a7350942da"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794575400,
+          "open": 1.32268,
+          "high": 1.32292,
+          "low": 1.32267,
+          "close": 1.32289,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794575700,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575400",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "CURRENT_PIVOT_CHILD",
+              "event_id": "898d572c6ee1f40c7a9a1ef9a9b0ba7080b0a46f013642b08c5506a7350942da"
+            },
+            {
+              "role": "ACTIVATION_OBSERVATION",
+              "event_id": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794575700,
+          "open": 1.32288,
+          "high": 1.32295,
+          "low": 1.32253,
+          "close": 1.32256,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794576000,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575700",
+          "roles": [
+            {
+              "role": "MATCHING_PREFIX",
+              "event_id": "5490466792739aa2a4811550b896bf805d6bd05cde7a7f572a9c1a97bd96d0a3"
+            },
+            {
+              "role": "CURRENT_PIVOT_CHILD",
+              "event_id": "898d572c6ee1f40c7a9a1ef9a9b0ba7080b0a46f013642b08c5506a7350942da"
+            },
+            {
+              "role": "ACTIVATION_OBSERVATION",
+              "event_id": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318"
+            }
+          ]
+        },
+        {
+          "symbol": "GBPUSD",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "timeframe": "M5",
+          "time": 1794576000,
+          "open": 1.32257,
+          "high": 1.32297,
+          "low": 1.32257,
+          "close": 1.32289,
+          "availability_basis": "MODELED_NOMINAL_CLOSE",
+          "available_at": 1794576300,
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "source_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576000",
+          "roles": [
+            {
+              "role": "AS_OF_LAGGARD_SURVEILLANCE",
+              "event_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "cutoff": 1794576300
+            },
+            {
+              "role": "SMT_CONFIRMED",
+              "event_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0"
+            }
+          ]
+        }
+      ],
+      "published_state": "SMT_CONFIRMED",
+      "candidate_at": 1794576000,
+      "leader": "primary",
+      "pivots": {
+        "primary": {
+          "previous": {
+            "id": "f5312709f2b6bdac5d06b7a2717394821f0828afc1c1f8d55ff3c46a8dfe5244",
+            "time": 1794573300,
+            "price": 1.10549,
+            "nominal_confirmation": 1794574200,
+            "observation_start": 1794572700,
+            "available_at": 1794574200,
+            "evidence_digest": "2d7886270a6a530db00e0db0daa43a92ff86dd6cd22f4e2ef50cbc488dafd71a"
+          },
+          "current": {
+            "id": "b9c92168bce6d78260bc4409b35e4acee4ebec1f46b0a518f95f2fa8ed3efca1",
+            "time": 1794575100,
+            "price": 1.10557,
+            "nominal_confirmation": 1794576000,
+            "observation_start": 1794574500,
+            "available_at": 1794576000,
+            "evidence_digest": "33cf3b58de2ed5a030e5adda1544297e05964c48d31a64f61c0048ec5b288f53"
+          }
+        },
+        "comparison": {
+          "previous": {
+            "id": "2a9532fb2249a444dd7ca588809921857e46b2e437bbae3b7195b36e7a019a68",
+            "time": 1794573300,
+            "price": 1.32316,
+            "nominal_confirmation": 1794574200,
+            "observation_start": 1794572700,
+            "available_at": 1794574200,
+            "evidence_digest": "3f78d0f659a72a12a6063598cbce9dd6b05a169057a71abaff97a4f4bdd3695a"
+          },
+          "current": {
+            "id": "898d572c6ee1f40c7a9a1ef9a9b0ba7080b0a46f013642b08c5506a7350942da",
+            "time": 1794575100,
+            "price": 1.32306,
+            "nominal_confirmation": 1794576000,
+            "observation_start": 1794574500,
+            "available_at": 1794576000,
+            "evidence_digest": "ea3093b3e5a0c1841c4894fbba634c68e7f674b5de9cf882cff8a3a872c00159"
+          }
+        }
+      },
+      "revisions": [
+        {
+          "id": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318",
+          "state": "SMT_CANDIDATE",
+          "available_at": 1794576000,
+          "observation_time": 1794574500,
+          "confirmation_time": 1794576000,
+          "witness": "ff16eaf9c6bbea814c9faf3b551463b8c56e28ce5caadd59733cf56d992ce806"
+        },
+        {
+          "id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+          "state": "SMT_CONFIRMED",
+          "available_at": 1794576300,
+          "observation_time": 1794576000,
+          "confirmation_time": 1794576300,
+          "witness": "16d748cea126d5cf8013ff08b1ffa3de039c0df77ffc838aa9c003207a47051b"
+        }
+      ],
+      "coverage_issues": []
+    }
+  },
+  "receipt_id": "fc5627b440c2fff1f9f90d86738b6a5250506e06eeb1acb35841fcd735b1fe89"
+}

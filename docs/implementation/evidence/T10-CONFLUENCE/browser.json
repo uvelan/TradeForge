@@ -1,0 +1,2120 @@
+{
+  "genuine": {
+    "sha": "694aa2b90ee06246af3909f8913b1619b3961eb3",
+    "status": "ALIGNED",
+    "receipt_id": "fc5627b440c2fff1f9f90d86738b6a5250506e06eeb1acb35841fcd735b1fe89",
+    "reopened": "fc5627b440c2fff1f9f90d86738b6a5250506e06eeb1acb35841fcd735b1fe89",
+    "swapped": "829101976f54664569d88b934e1c53021656c0361c9da83418df54e7b5a17961",
+    "swapped_components_equal": true,
+    "processes": [
+      {
+        "api": 24672,
+        "frontend": 29960,
+        "browser": 31984,
+        "playwright_worker": 28724
+      },
+      {
+        "api": 2784,
+        "frontend": 3000,
+        "browser": 34048,
+        "playwright_worker": 14976
+      }
+    ],
+    "measurements": {
+      "hidden": {
+        "page_nodes": 742,
+        "inspector_nodes": 1,
+        "source_rows": 0,
+        "heap_bytes": 32271392,
+        "ms": 854.7,
+        "bytes": 0
+      },
+      "list": {
+        "n": 20,
+        "median_ms": 125.65,
+        "p95_ms": 169.9,
+        "samples": [
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 38829516,
+            "ms": 349,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 33162062,
+            "ms": 109.2,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 38338462,
+            "ms": 125.6,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 43519266,
+            "ms": 129.6,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 34706306,
+            "ms": 159.4,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 39107466,
+            "ms": 119.4,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 44174706,
+            "ms": 144.5,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 35399390,
+            "ms": 140.4,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 40503568,
+            "ms": 111.1,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 40490273,
+            "ms": 101.8,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 32579089,
+            "ms": 169.9,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 37060021,
+            "ms": 130.6,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 42042837,
+            "ms": 128.8,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 33197645,
+            "ms": 121,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 37735561,
+            "ms": 111.3,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 42691505,
+            "ms": 115.7,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 33914345,
+            "ms": 104,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 38292229,
+            "ms": 125.7,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 41343899,
+            "ms": 145,
+            "bytes": 72605
+          },
+          {
+            "page_nodes": 925,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 33774851,
+            "ms": 124.3,
+            "bytes": 72605
+          }
+        ]
+      },
+      "select": {
+        "n": 20,
+        "median_ms": 68.35,
+        "p95_ms": 87.8,
+        "samples": [
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 34782082,
+            "ms": 79.5,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 40924962,
+            "ms": 76.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 32512406,
+            "ms": 66.3,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 37214834,
+            "ms": 77.9,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 42212442,
+            "ms": 65,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 33219470,
+            "ms": 65.7,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 37835154,
+            "ms": 68.9,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 42888598,
+            "ms": 64.9,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 34683808,
+            "ms": 63.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 35171565,
+            "ms": 54.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 39938397,
+            "ms": 87.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 31146697,
+            "ms": 70.5,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 35683541,
+            "ms": 67.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 40563717,
+            "ms": 86.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 31806121,
+            "ms": 58.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 36327409,
+            "ms": 54.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 41258737,
+            "ms": 53,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 45687809,
+            "ms": 96.3,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 35732143,
+            "ms": 71.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 41150031,
+            "ms": 78.3,
+            "bytes": 0
+          }
+        ]
+      },
+      "rewind": {
+        "n": 20,
+        "median_ms": 231.64999999999998,
+        "p95_ms": 262.5,
+        "samples": [
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 43423546,
+            "ms": 239.8,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 49342350,
+            "ms": 246.1,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 54826224,
+            "ms": 225.1,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 57840910,
+            "ms": 196.2,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 57950247,
+            "ms": 225.8,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 59492497,
+            "ms": 205.5,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 35899185,
+            "ms": 246.3,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 40532963,
+            "ms": 313.7,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 40739933,
+            "ms": 252.7,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 42126291,
+            "ms": 224.1,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 42815637,
+            "ms": 183.7,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 43881483,
+            "ms": 232.2,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 44564153,
+            "ms": 241,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 48576602,
+            "ms": 262.5,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 53610457,
+            "ms": 211.5,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 55600679,
+            "ms": 251.3,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 56611805,
+            "ms": 243.6,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 57384011,
+            "ms": 210.2,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 58211007,
+            "ms": 231.1,
+            "bytes": 41915
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 59063545,
+            "ms": 200.8,
+            "bytes": 41915
+          }
+        ]
+      },
+      "reopen": {
+        "n": 20,
+        "median_ms": 103.55,
+        "p95_ms": 142.8,
+        "samples": [
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 36255914,
+            "ms": 146.1,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 53963108,
+            "ms": 103.5,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 45404495,
+            "ms": 101.5,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 36290259,
+            "ms": 93.9,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 53232835,
+            "ms": 86.9,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 43939523,
+            "ms": 142.8,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 60885143,
+            "ms": 103.6,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 51911923,
+            "ms": 109.5,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 42160903,
+            "ms": 120.3,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 46756358,
+            "ms": 136,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 37345702,
+            "ms": 105.8,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 54344850,
+            "ms": 92.2,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 44369302,
+            "ms": 87.5,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 35248902,
+            "ms": 90.6,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 52029174,
+            "ms": 132.3,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 42789604,
+            "ms": 106.6,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 59580516,
+            "ms": 102.7,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 49619276,
+            "ms": 102.1,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 40396200,
+            "ms": 98.7,
+            "bytes": 43578
+          },
+          {
+            "page_nodes": 1038,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 57240416,
+            "ms": 111.7,
+            "bytes": 43578
+          }
+        ]
+      },
+      "drill_crt": {
+        "n": 20,
+        "median_ms": 133.3,
+        "p95_ms": 172.6,
+        "samples": [
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 40628219,
+            "ms": 172.6,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 55269447,
+            "ms": 132.6,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 43236035,
+            "ms": 141.7,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 57820619,
+            "ms": 110.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 46221407,
+            "ms": 143.7,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 34364239,
+            "ms": 129.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 49035475,
+            "ms": 177.5,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 37144887,
+            "ms": 113,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 51695943,
+            "ms": 111.2,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 38719023,
+            "ms": 128.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 53343819,
+            "ms": 134,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 41080411,
+            "ms": 117.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 55553891,
+            "ms": 109.3,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 44269448,
+            "ms": 157.2,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 32496216,
+            "ms": 152.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 47124576,
+            "ms": 122.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 35336576,
+            "ms": 145.3,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 49915448,
+            "ms": 163.9,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 37480737,
+            "ms": 116.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1118,
+            "inspector_nodes": 209,
+            "source_rows": 1,
+            "heap_bytes": 52058861,
+            "ms": 139.3,
+            "bytes": 0
+          }
+        ]
+      },
+      "drill_smt": {
+        "n": 20,
+        "median_ms": 132.4,
+        "p95_ms": 157.6,
+        "samples": [
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 54060584,
+            "ms": 122.7,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 44089772,
+            "ms": 121.2,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 33908376,
+            "ms": 113.5,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 49841956,
+            "ms": 113.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 39268312,
+            "ms": 129.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 55369828,
+            "ms": 134.5,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 45257836,
+            "ms": 163.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 35203156,
+            "ms": 126.7,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 51422772,
+            "ms": 136.3,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 41376860,
+            "ms": 150.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 57359768,
+            "ms": 143.2,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 45260495,
+            "ms": 114.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 34399975,
+            "ms": 157.6,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 50370367,
+            "ms": 130.3,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 40292499,
+            "ms": 144.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 56212459,
+            "ms": 151.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 45742483,
+            "ms": 134.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 35785095,
+            "ms": 129.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 51713887,
+            "ms": 107.6,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1175,
+            "inspector_nodes": 266,
+            "source_rows": 1,
+            "heap_bytes": 41647024,
+            "ms": 139.6,
+            "bytes": 0
+          }
+        ]
+      }
+    },
+    "restarted": {
+      "n": 1,
+      "median_ms": 496.8,
+      "p95_ms": 496.8,
+      "samples": [
+        {
+          "page_nodes": 1036,
+          "inspector_nodes": 128,
+          "source_rows": 0,
+          "heap_bytes": 34928484,
+          "ms": 496.8,
+          "bytes": 43578
+        }
+      ]
+    },
+    "phases": {
+      "initial": {
+        "exit_code": 0,
+        "elapsed_seconds": 55.28
+      },
+      "restart": {
+        "exit_code": 0,
+        "elapsed_seconds": 8.38
+      }
+    }
+  },
+  "controlled": {
+    "sha": "694aa2b90ee06246af3909f8913b1619b3961eb3",
+    "status": "ALIGNED",
+    "receipt_id": "13dd00459df8158ca5a47f58f0ef12ef184fbb162e1545511f144ca22293c7d6",
+    "reopened": "13dd00459df8158ca5a47f58f0ef12ef184fbb162e1545511f144ca22293c7d6",
+    "swapped": "4ea801cb4ee0cd2cc06d6f07329d9bde4bf74d3256ab70405311281cf02ca04d",
+    "swapped_components_equal": true,
+    "processes": [
+      {
+        "api": 44200,
+        "frontend": 37072,
+        "browser": 30512,
+        "playwright_worker": 36268
+      },
+      {
+        "api": 37308,
+        "frontend": 20008,
+        "browser": 5528,
+        "playwright_worker": 27236
+      }
+    ],
+    "measurements": {
+      "hidden": {
+        "page_nodes": 908,
+        "inspector_nodes": 1,
+        "source_rows": 0,
+        "heap_bytes": 35423748,
+        "ms": 1302.6,
+        "bytes": 0
+      },
+      "list": {
+        "n": 20,
+        "median_ms": 123.65,
+        "p95_ms": 169.1,
+        "samples": [
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 40375863,
+            "ms": 169.1,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 34330079,
+            "ms": 225.3,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 39510771,
+            "ms": 163.9,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 44550367,
+            "ms": 129.4,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 35872287,
+            "ms": 118.6,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 40187383,
+            "ms": 119.2,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 45178193,
+            "ms": 119.9,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 33834778,
+            "ms": 129.5,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 38691658,
+            "ms": 117.7,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 30996534,
+            "ms": 105.2,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 35667129,
+            "ms": 138.9,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 40672565,
+            "ms": 113.3,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 32731165,
+            "ms": 112.4,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 37301861,
+            "ms": 124.7,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 42119105,
+            "ms": 108.1,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 30208066,
+            "ms": 122.6,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 35893733,
+            "ms": 99.4,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 40983469,
+            "ms": 125.4,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 32291501,
+            "ms": 143.4,
+            "bytes": 47847
+          },
+          {
+            "page_nodes": 923,
+            "inspector_nodes": 16,
+            "source_rows": 0,
+            "heap_bytes": 36904177,
+            "ms": 145.8,
+            "bytes": 47847
+          }
+        ]
+      },
+      "select": {
+        "n": 20,
+        "median_ms": 76.6,
+        "p95_ms": 87.8,
+        "samples": [
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 36035123,
+            "ms": 87.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 42057707,
+            "ms": 87.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 33596151,
+            "ms": 78,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 38289431,
+            "ms": 75.2,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 43354711,
+            "ms": 65.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 34275803,
+            "ms": 81.9,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 36142216,
+            "ms": 87.2,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 41283898,
+            "ms": 64,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 33234346,
+            "ms": 67.9,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 38408694,
+            "ms": 69.2,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 42992753,
+            "ms": 58.6,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 35047529,
+            "ms": 61.7,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 40056365,
+            "ms": 82.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 44624893,
+            "ms": 78.6,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 36443717,
+            "ms": 67,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 37923286,
+            "ms": 92.2,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 43232293,
+            "ms": 60.2,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 34948573,
+            "ms": 78,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 39629857,
+            "ms": 67.5,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 44235113,
+            "ms": 81,
+            "bytes": 0
+          }
+        ]
+      },
+      "rewind": {
+        "n": 20,
+        "median_ms": 186.75,
+        "p95_ms": 243.6,
+        "samples": [
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 39406998,
+            "ms": 181.5,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 40749956,
+            "ms": 155.7,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 43993394,
+            "ms": 195.9,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 44892126,
+            "ms": 166.4,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 44392542,
+            "ms": 207.2,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 46603022,
+            "ms": 210.2,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 35651990,
+            "ms": 187.2,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 40641087,
+            "ms": 195.3,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 41483783,
+            "ms": 184.1,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 39813063,
+            "ms": 161.6,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 43270015,
+            "ms": 260.8,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 43306681,
+            "ms": 160.8,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 45082193,
+            "ms": 234.7,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 45872193,
+            "ms": 187.1,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 46280465,
+            "ms": 243.6,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 50724330,
+            "ms": 171.3,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 51519893,
+            "ms": 173,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 53458545,
+            "ms": 193.2,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 56967413,
+            "ms": 186.4,
+            "bytes": 41024
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 52487513,
+            "ms": 139,
+            "bytes": 41024
+          }
+        ]
+      },
+      "reopen": {
+        "n": 20,
+        "median_ms": 86.55,
+        "p95_ms": 110.9,
+        "samples": [
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 41800920,
+            "ms": 81.4,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 35692948,
+            "ms": 103.1,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 51824441,
+            "ms": 96.5,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 40775037,
+            "ms": 87.3,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 56338889,
+            "ms": 93.8,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 43602969,
+            "ms": 107.6,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 60532931,
+            "ms": 98.5,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 49601027,
+            "ms": 123.1,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 38983631,
+            "ms": 82.4,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 54452267,
+            "ms": 82.5,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 44001111,
+            "ms": 79.7,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 59495499,
+            "ms": 81.4,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 48446827,
+            "ms": 85.8,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 37770567,
+            "ms": 107.7,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 53248187,
+            "ms": 82.5,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 39887544,
+            "ms": 100.4,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 55451837,
+            "ms": 82.8,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 43609181,
+            "ms": 80.9,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 59100329,
+            "ms": 83.1,
+            "bytes": 42825
+          },
+          {
+            "page_nodes": 1036,
+            "inspector_nodes": 129,
+            "source_rows": 0,
+            "heap_bytes": 48690589,
+            "ms": 110.9,
+            "bytes": 42825
+          }
+        ]
+      },
+      "drill_crt": {
+        "n": 20,
+        "median_ms": 134.45,
+        "p95_ms": 158.6,
+        "samples": [
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 38194229,
+            "ms": 141.6,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 52660033,
+            "ms": 147.5,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 40689555,
+            "ms": 158.6,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 55168271,
+            "ms": 119.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 42958472,
+            "ms": 131.9,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 57428980,
+            "ms": 131.9,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 44850888,
+            "ms": 130.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 59273416,
+            "ms": 117.3,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 47387060,
+            "ms": 146.6,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 35068108,
+            "ms": 139.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 49526216,
+            "ms": 112.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 37212940,
+            "ms": 137.3,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 44582945,
+            "ms": 143.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 32945537,
+            "ms": 133.5,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 47386941,
+            "ms": 127.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 35023245,
+            "ms": 159,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 49494318,
+            "ms": 151.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 37219810,
+            "ms": 129.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 51690326,
+            "ms": 135.4,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1113,
+            "inspector_nodes": 206,
+            "source_rows": 1,
+            "heap_bytes": 38221310,
+            "ms": 130.2,
+            "bytes": 0
+          }
+        ]
+      },
+      "drill_smt": {
+        "n": 20,
+        "median_ms": 129.85000000000002,
+        "p95_ms": 157.7,
+        "samples": [
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 39992852,
+            "ms": 154.5,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 56050044,
+            "ms": 123.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 45535085,
+            "ms": 123,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 35453805,
+            "ms": 144.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 51406576,
+            "ms": 116.9,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 45757741,
+            "ms": 139,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 35104653,
+            "ms": 109.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 51159201,
+            "ms": 157.7,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 41121430,
+            "ms": 156.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 57012234,
+            "ms": 120.5,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 46284254,
+            "ms": 130.9,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 36509366,
+            "ms": 137.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 52526342,
+            "ms": 170.3,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 41894470,
+            "ms": 136.3,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 58008034,
+            "ms": 137,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 47101426,
+            "ms": 120.7,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 36647902,
+            "ms": 108.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 52507870,
+            "ms": 106.8,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 41382562,
+            "ms": 112.1,
+            "bytes": 0
+          },
+          {
+            "page_nodes": 1176,
+            "inspector_nodes": 269,
+            "source_rows": 1,
+            "heap_bytes": 57234322,
+            "ms": 128.8,
+            "bytes": 0
+          }
+        ]
+      }
+    },
+    "restarted": {
+      "n": 1,
+      "median_ms": 1598.1,
+      "p95_ms": 1598.1,
+      "samples": [
+        {
+          "page_nodes": 1034,
+          "inspector_nodes": 128,
+          "source_rows": 0,
+          "heap_bytes": 37374862,
+          "ms": 1598.1,
+          "bytes": 42825
+        }
+      ]
+    },
+    "phases": {
+      "initial": {
+        "exit_code": 0,
+        "elapsed_seconds": 53.27
+      },
+      "restart": {
+        "exit_code": 0,
+        "elapsed_seconds": 11.44
+      }
+    }
+  }
+}

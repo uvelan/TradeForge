@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {api} from './api';
 import {useTimestampFormat} from './timezone';
 import {BoundFields,Choice,GroupFields,Producers,fieldName,groupFor,rulesIn} from './StrategyRules';
@@ -11,6 +11,11 @@ const endpoint='/strategies/v1';
 const phases:Phase[]=['context','setup','trigger','invalidation'];
 const purposeLabel=(value:string)=>value==='HISTORICAL_SIMULATION'?'Historical simulation':'Strict recorded';
 type History=Omit<Listed,'purpose'>;
+type HistoryResponse=Omit<History,'strategy_id'>;
+const scopedHistory=(rows:HistoryResponse[],strategy_id:string):History[]=>rows.map(row=>({...row,strategy_id}));
+function historyRow({strategy_id,version,version_id,created_at,configuration_fingerprint,status,definition}:RecordVersion):History{
+  return {strategy_id,version,version_id,created_at,configuration_fingerprint,status,name:definition.name,schema_version:definition.schema_version};
+}
 
 function validationError(error:unknown):Validation|null {
   if(!(error instanceof Error))return null;
@@ -46,7 +51,7 @@ function Temporal({value,onChange}:{value:Definition;onChange:(value:Definition)
   </section>;
 }
 
-function VersionHistory({record,history,load}:{record:RecordVersion;history:History[];load:()=>void}){
+function VersionHistory({record,history,load,disabled}:{record:RecordVersion;history:History[];load:()=>void;disabled:boolean}){
   const [from,setFrom]=useState(Math.max(1,record.version-1));
   const [to,setTo]=useState(record.version);
   const [result,setResult]=useState<Diff>();
@@ -58,11 +63,11 @@ function VersionHistory({record,history,load}:{record:RecordVersion;history:Hist
     <ol className="strategy-history">{history.map(row=><li key={row.version_id}>
       <strong>v{row.version} · {row.status}</strong> · {format(row.created_at)}<br/><code>{row.configuration_fingerprint}</code>
     </li>)}</ol>
-    {history.length<record.version&&<button type="button" className="small-tool" onClick={load}>Load older versions</button>}
+    {history.length<record.version&&<button type="button" className="small-tool" disabled={disabled} onClick={load}>Load older versions</button>}
     {history.length>1&&<div className="strategy-fields">
       <Choice label="Compare from" value={String(from)} options={versionOptions} onChange={next=>{setFrom(Number(next));setResult(undefined);}}/>
       <Choice label="Compare to" value={String(to)} options={versionOptions} onChange={next=>{setTo(Number(next));setResult(undefined);}}/>
-      <button className="small-tool" disabled={busy} type="button" onClick={()=>{
+      <button className="small-tool" disabled={busy||disabled} type="button" onClick={()=>{
         setBusy(true);setError('');setResult(undefined);
         void api.get<Diff>(endpoint+'/'+record.strategy_id+'/compare?from_version='+from+'&to_version='+to)
           .then(setResult).catch((error:Error)=>setError(error.message)).finally(()=>setBusy(false));
@@ -81,6 +86,7 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
   const [catalog,setCatalog]=useState<Catalog>();
   const [templates,setTemplates]=useState<Template[]>([]);
   const [library,setLibrary]=useState<Listed[]>([]);
+  const [libraryLoadFailed,setLibraryLoadFailed]=useState(false);
   const [offset,setOffset]=useState(0);
   const [record,setRecord]=useState<RecordVersion>();
   const [evaluationVersion,setEvaluationVersion]=useState<string>();
@@ -90,35 +96,75 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
   const [error,setError]=useState('');
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState('');
+  const [refreshWarning,setRefreshWarning]=useState('');
+  const working=useRef(false);
   const format=useTimestampFormat();
 
   useEffect(()=>{
     let active=true;
-    Promise.all([api.get<Catalog>(endpoint+'/capabilities'),api.get<Template[]>(endpoint+'/templates'),
+    Promise.allSettled([api.get<Catalog>(endpoint+'/capabilities'),api.get<Template[]>(endpoint+'/templates'),
       api.get<Listed[]>(endpoint+'?limit=40')]).then(([cap,options,items])=>{
-        if(active){setCatalog(cap);setTemplates(options);setLibrary(items);}
-      }).catch((error:Error)=>{if(active)setError(error.message);});
+        if(!active)return;
+        if(cap.status==='fulfilled'&&options.status==='fulfilled'){
+          setCatalog(cap.value);setTemplates(options.value);
+        }else{
+          const failure=cap.status==='rejected'?cap:options;
+          if(failure.status==='rejected')setError(failure.reason.message);
+        }
+        if(items.status==='fulfilled')setLibrary(items.value);
+        else setLibraryLoadFailed(true);
+      });
     return()=>{active=false;};
   },[]);
 
   async function run(action:()=>Promise<void>){
+    if(working.current)return;
+    working.current=true;
     setBusy(true);setError('');setMessage('');
     try{await action();}catch(error){
       const detail=validationError(error);
       if(detail)setValidation(detail);
       else if(error instanceof Error)setError(error.message.includes('VERSION_CONFLICT')?'Another edit saved a newer version. Reload the saved definition before revising.':error.message);
-    }finally{setBusy(false);}
+    }finally{working.current=false;setBusy(false);}
   }
   function edit(update:Definition){setDefinition({...update,status:'DRAFT'});setValidation(undefined);setMessage('');}
   async function page(next:number){
     setLibrary(await api.get<Listed[]>(endpoint+'?limit=40&offset='+next));setOffset(next);
+    setLibraryLoadFailed(false);
+  }
+  function accept(item:RecordVersion){
+    setRecord(item);setDefinition(item.definition);setValidation(item.binding_revision);setRefreshWarning('');
+    setHistory(previous=>{
+      const known=[historyRow(item)];
+      for(const row of previous){
+        if(row.strategy_id!==item.strategy_id||row.version>=item.version)continue;
+        // A stale reload can jump multiple versions. Do not page past a gap.
+        if(row.version!==known.at(-1)!.version-1)break;
+        known.push(row);
+      }
+      return known;
+    });
+  }
+  async function refresh(item:RecordVersion,reloadLibrary=false){
+    const jobs=[api.get<HistoryResponse[]>(endpoint+'/'+item.strategy_id+'/history?limit=40&before='+(item.version+1)).then(versions=>{
+      setHistory([historyRow(item),...scopedHistory(versions.filter(row=>row.version<item.version),item.strategy_id)]);
+    })];
+    if(reloadLibrary)jobs.push(page(0));
+    const results=await Promise.allSettled(jobs);
+    const unavailable=[results[0].status==='rejected'?'version history':'',results[1]?.status==='rejected'?'strategy library':''].filter(Boolean);
+    setRefreshWarning(unavailable.length?'Could not refresh '+unavailable.join(' and ')+'. The saved definition is unchanged.':'');
   }
   async function adopt(item:RecordVersion){
-    const versions=await api.get<History[]>(endpoint+'/'+item.strategy_id+'/history?limit=40');
-    setRecord(item);setDefinition(item.definition);setHistory(versions);setValidation(item.binding_revision);
+    accept(item);
+    await refresh(item);
+  }
+  async function confirm(item:RecordVersion,text:string){
+    // A successful write receipt is authoritative even if subsequent GETs fail.
+    accept(item);setMessage(text);
+    await refresh(item,true);
   }
   function begin(template:Template,blank=false){
-    setRecord(undefined);setHistory([]);setValidation(undefined);setMessage('');setError('');
+    setRecord(undefined);setHistory([]);setValidation(undefined);setMessage('');setError('');setRefreshWarning('');
     const item=structuredClone(template.definition);
     setDefinition(blank?{...item,name:'Untitled strategy',description:'',context:null,setup:null,trigger:null,invalidation:null,
       temporal:[],indicators:[],trade_intent:undefined,attempt:null}:item);
@@ -127,7 +173,7 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
     if(!record)return;
     void run(async()=>{
       const item=await api.post<RecordVersion>(endpoint+'/'+record.strategy_id+'/'+operation,{expected_version:record.version});
-      await adopt(item);await page(0);setMessage(operation==='archive'?'Strategy archived':'Independent draft created');
+      await confirm(item,operation==='archive'?'Strategy archived':'Independent draft created');
     });
   }
 
@@ -145,7 +191,11 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
           await adopt(await api.get<RecordVersion>(endpoint+'/'+item.strategy_id));
         })}>{item.name}</button>
         <span>v{item.version} · {item.status} · {purposeLabel(item.purpose)} · {format(item.created_at)}</span>
-      </li>)}</ul>:<p className="muted">No saved strategies on this page.</p>}
+      </li>)}</ul>:libraryLoadFailed?<div>
+        <p role="status">Could not load the strategy library.</p>
+        <button className="small-tool" type="button" disabled={busy}
+          onClick={()=>void run(()=>page(0))}>Retry strategy library</button>
+      </div>:<p className="muted">No saved strategies on this page.</p>}
       <div className="strategy-actions">
         {offset>0&&<button className="small-tool" type="button" disabled={busy} onClick={()=>void run(()=>page(offset-40))}>Previous strategies</button>}
         {library.length===40&&<button className="small-tool" type="button" disabled={busy} onClick={()=>void run(()=>page(offset+40))}>More strategies</button>}
@@ -153,6 +203,9 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
     </section>
     {error&&<p className="error-banner" role="alert">{error}</p>}
     {message&&<p role="status">{message}</p>}
+    {refreshWarning&&record&&<div><p role="status">{refreshWarning}</p>
+      <button type="button" className="small-tool" disabled={busy}
+        onClick={()=>void run(()=>refresh(record,true))}>Refresh saved views</button></div>}
     {definition&&catalog&&<>
       <section className="card strategy-block" aria-label="Strategy editor">
         <div className="strategy-heading"><h2>Strategy editor</h2>{record&&<span>v{record.version} · {record.status}</span>}</div>
@@ -194,7 +247,7 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
             <button className="btn btn-primary" type="button" onClick={()=>void run(async()=>{
               const item=await api.post<RecordVersion>(record?endpoint+'/'+record.strategy_id+'/revisions':endpoint,
                 record?{expected_version:record.version,definition}:definition);
-              await adopt(item);await page(0);setMessage('Definition saved as version '+item.version);
+              await confirm(item,'Definition saved as version '+item.version);
             })}>{record?'Save revision':'Save strategy'}</button>
           </div>
         </fieldset>
@@ -223,9 +276,12 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
           </li>)}</ul>}
         </>}
       </section>
-      {record&&<VersionHistory key={record.version_id} record={record} history={history} load={()=>void run(async()=>{
+      {record&&<VersionHistory key={record.version_id} record={record} history={history} disabled={busy} load={()=>void run(async()=>{
         const last=history.at(-1);
-        if(last)setHistory([...history,...await api.get<History[]>(endpoint+'/'+record.strategy_id+'/history?limit=40&before='+last.version)]);
+        if(last){
+          const older=await api.get<HistoryResponse[]>(endpoint+'/'+record.strategy_id+'/history?limit=40&before='+last.version);
+          setHistory(previous=>[...previous,...scopedHistory(older,record.strategy_id)]);
+        }
       })}/>}
       <section className="card strategy-block"><details><summary>Unavailable capabilities</summary>
         <ul>{Object.entries(catalog.unsupported).map(([name,why])=><li key={name}>{fieldName(name)} · {why}</li>)}</ul></details></section>

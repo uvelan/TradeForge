@@ -1,0 +1,42 @@
+{
+  "checkpoint": "4cb062680d01be495e1a2d2c604c512f948a58623f277425c766983c21c8e1db",
+  "position": 4,
+  "revision": {
+    "cutoff": "13:25",
+    "expected": {
+      "status": "SMT_CONFIRMED",
+      "id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0"
+    },
+    "observed": {
+      "status": "SMT_CONFIRMED",
+      "id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+      "key": "7e9485b627eb7c327f80ae78f4e524920c33ef6ffe6802ecdd76397c53985e43"
+    }
+  },
+  "lanes": [
+    {
+      "symbol": "GBPUSD",
+      "expectedPin": {
+        "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+        "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+      },
+      "observed": "GBPUSD · chart primary · BID\n\nPrevious pivot 2026-11-13 12:35:00 UTC · 1.32316\n\nCurrent pivot 2026-11-13 13:05:00 UTC · 1.32306\n\nLast supporting candle opened 2026-11-13 13:20:00 UTC · O 1.32257 H 1.32297 L 1.32257 C 1.32289\n\ndukascopy-web-m1-v1 · M5\n\nDataset 1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0 · SHA-256 aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+    },
+    {
+      "symbol": "EURUSD",
+      "expectedPin": {
+        "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+        "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+      },
+      "observed": "EURUSD · chart comparison · BID\n\nPrevious pivot 2026-11-13 12:35:00 UTC · 1.10549\n\nCurrent pivot 2026-11-13 13:05:00 UTC · 1.10557\n\nLast supporting candle opened 2026-11-13 13:20:00 UTC · O 1.10489 H 1.10519 L 1.10489 C 1.10513\n\ndukascopy-web-m1-v1 · M5\n\nDataset ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e · SHA-256 fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+    }
+  ],
+  "cursor": {
+    "time": 1794576000,
+    "symbols": [
+      "GBPUSD",
+      "EURUSD"
+    ],
+    "observed": "M5\n13 Nov 2026, 13:20 · UTC\nOverlay\nNew pane\nGBPUSD\nO 1.32257\nH 1.32297\nL 1.32257\nC 1.32289\nEURUSD\nO 1.10489\nH 1.10519\nL 1.10489\nC 1.10513\nSMT within chart range · 0 confirmed · 0 candidates · 0 invalidated"
+  }
+}

@@ -70,7 +70,9 @@ class Block:
 
 
 class OrderBlockStream:
-    def __init__(self, rules, structure, provenance, step, delivery, *, on_formation=None, timing_cutoff=None, registry=None):
+    def __init__(self, rules, structure, provenance, step, delivery, *, on_formation=None, timing_cutoff=None,
+                 registry=None, include_gap_boundary=False):
+        self.include_gap_boundary = include_gap_boundary
         self.on_formation = on_formation
         self.timing_cutoff = timing_cutoff
         self.registry = registry if registry is not None else EvidenceRegistry()
@@ -152,6 +154,8 @@ class OrderBlockStream:
                  "mitigation_pct": float(100*zone.depth/zone.width),
                  "remaining_lower": float(zone.lower if zone.sign == 1 else zone.lower+zone.depth),
                  "remaining_upper": float(zone.upper-zone.depth if zone.sign == 1 else zone.upper)}
+        if self.include_gap_boundary and previous_time is not None:
+            event["previous_observed_open"] = previous_time
         if self.timing_cutoff is not None:
             decision=timing_reason or ("EXPIRED_REFERENCE" if state=="EXPIRED" else
                 "INSUFFICIENT_HISTORY" if state=="INVALIDATED" else
@@ -237,11 +241,14 @@ class OrderBlockStream:
                 else:
                     heappush(heap, item)
 
+    def qualifies_structure(self, event):
+        return strategy_eligible(event, self.timing_cutoff, registry=self.registry,
+                                 purpose=getattr(self.registry, "purpose", RECORDED_MODE))
+
     def form(self, event, bar, available, index):
         if event["status"] != "confirmed" or event["type"] not in {"BOS", "CHOCH"}:
             return
-        if self.timing_cutoff is not None and (not strategy_eligible(
-                event, self.timing_cutoff, registry=self.registry,purpose=getattr(self.registry,"purpose",RECORDED_MODE)) or
+        if self.timing_cutoff is not None and (not self.qualifies_structure(event) or
                 self.minimum_displacement and bar.time<event["level_available_at"]):
             self.rejections["INELIGIBLE_STRUCTURAL_DEPENDENCY"] += 1
             return

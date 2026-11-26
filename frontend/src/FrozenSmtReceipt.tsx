@@ -1,0 +1,143 @@
+import {useEffect, useState} from 'react';
+import {api} from './api';
+import type {SignalRecord} from './SignalExplorer';
+import {useWorkspacePreference} from './useWorkspacePreference';
+import type {Candle, Timeframe} from './types';
+
+type Feed = SignalRecord['provenance']['primary'];
+type Receipt = SignalRecord;
+type Page = {items:Receipt[]; next_cursor:string|null};
+type Props = {cutoff:number; timeframe:Timeframe; primary:Feed; comparison?:Feed};
+
+function pins(feed:Feed) {
+  return feed.partitions?.length ? feed.partitions :
+    feed.dataset_id && feed.sha256 ? [{id:feed.dataset_id, sha256:feed.sha256}] : [];
+}
+
+function identity(feed:Feed) {
+  return JSON.stringify([feed.symbol, feed.source, feed.feed_id, feed.price_basis,
+    pins(feed).map(p=>[p.id,p.sha256]).sort(([a],[b])=>a.localeCompare(b))]);
+}
+
+function utc(epoch:number) {
+  return new Date(epoch*1000).toISOString().replace('T',' ').replace('.000Z',' UTC');
+}
+
+export function FrozenSmtReceipt(props:Props) {
+  const {primary,comparison,timeframe}=props;
+  const scope=JSON.stringify([identity(primary),comparison && identity(comparison),timeframe]);
+  return <section className="card" aria-label="Recorded SMT at chart cutoff">
+    <h3>Recorded SMT at chart cutoff</h3>
+    {!pins(primary).length || (comparison && !pins(comparison).length)
+      ? <p>Chart partition checksums are unavailable.</p>
+      : <FamilyPicker key={scope} scope={scope} {...props}/>}
+  </section>;
+}
+
+function FamilyPicker({scope,...props}:Props & {scope:string}) {
+  const [preferred,setPreferred]=useWorkspacePreference<string>('recorded-smt-family.'+scope,'');
+  return <FamilyPage key={props.cutoff} {...props} preferred={preferred} onSelect={setPreferred}/>;
+}
+
+function useSignalPage(url:string|undefined) {
+  const [response,setResponse]=useState<{url:string; data?:Page; error?:string}>();
+  useEffect(()=>{
+    if(!url) return;
+    let current=true;
+    api.get<Page>(url).then(data=>{if(current)setResponse({url,data});})
+      .catch(error=>{if(current)setResponse({url,error:String(error)});});
+    return ()=>{current=false;};
+  },[url]);
+  return response?.url===url ? response : undefined;
+}
+
+function familyLabel(event:Receipt) {
+  return event.direction+' · '+utc(event.primary.current.time)+' · '+event.event_key.slice(0,12);
+}
+
+function FamilyPage({cutoff,timeframe,primary,comparison,preferred,onSelect}:Props & {
+  preferred:string; onSelect:(key:string)=>void;
+}) {
+  const [cursor,setCursor]=useState('');
+  const params=new URLSearchParams({as_of:String(cutoff),timeframe,instrument:primary.symbol,
+    source:primary.source,q:pins(primary)[0].id,limit:'100'});
+  if(cursor) params.set('cursor',cursor);
+  const page=useSignalPage('/indicators/signals?'+params);
+  const matchesScope=(event:Receipt)=>{
+    const {provenance}=event;
+    if(provenance.authority!=='HISTORICAL_SIMULATION' || provenance.timeframe!==timeframe) return false;
+    return (['primary','comparison'] as const).some(role=>
+      identity(provenance[role])===identity(primary) &&
+      (!comparison || identity(provenance[role==='primary'?'comparison':'primary'])===identity(comparison)));
+  };
+  const matches=page?.data?.items.filter(matchesScope)??[];
+  const onPage=matches.find(event=>event.event_key===preferred);
+  // A page contains discovery choices. A pin outside it still needs its own as-of revision.
+  const lookup=preferred && page?.data && !onPage
+    ? '/indicators/signals?'+new URLSearchParams({as_of:String(cutoff),event_key:preferred,limit:'1'})
+    : undefined;
+  const exact=useSignalPage(lookup);
+  const pinned=onPage??exact?.data?.items.find(event=>event.event_key===preferred && matchesScope(event));
+  const selected=preferred?pinned:matches[0];
+  const next=page?.data?.next_cursor;
+  return <>
+    <p>Chart cutoff {utc(cutoff)}</p>
+    {!page && <p role="status">Loading recorded revisions…</p>}
+    {page?.error && <p role="alert">{page.error}</p>}
+    {(preferred || matches.length>0) && <label>Recorded SMT family <select value={preferred} onChange={e=>onSelect(e.target.value)}>
+      <option value="">Automatic · first matching family on this page</option>
+      {preferred && !onPage && <option value={preferred}>{pinned?familyLabel(pinned):preferred}</option>}
+      {matches.map(event=><option key={event.event_key} value={event.event_key}>{familyLabel(event)}</option>)}
+    </select></label>}
+    {selected && <Revision key={selected.event_key+selected.status} receipt={selected} chartPrimary={primary} paired={Boolean(comparison)}/>}
+    {lookup && !exact && <p role="status">Loading selected revision…</p>}
+    {exact?.error && <p role="alert">{exact.error}</p>}
+    {lookup && exact?.data && !pinned && <p>No recorded revision for the selected family at this cutoff.</p>}
+    {page?.data && !preferred && !matches.length && <p>No recorded SMT revision on this page matches the frozen archive pins.</p>}
+    {cursor && <button onClick={()=>setCursor('')}>First page</button>}
+    {next && <button onClick={()=>setCursor(next)}>Older families</button>}
+  </>;
+}
+
+function Revision({receipt,chartPrimary,paired}:{receipt:Receipt;chartPrimary:Feed;paired:boolean}) {
+  const [inspect,setInspect]=useState(false);
+  const [bars,setBars]=useState<{primary:Candle[];comparison:Candle[]}>();
+  const [error,setError]=useState('');
+  useEffect(()=>{
+    if(!inspect) return;
+    let current=true;
+    api.get<{primary:Candle[];comparison:Candle[]}>(
+      '/indicators/signals/'+receipt.event_key+'/candles?status='+receipt.status)
+      .then(data=>{if(current)setBars(data);})
+      .catch(reason=>{if(current)setError(String(reason));});
+    return ()=>{current=false;};
+  },[inspect,receipt.event_key,receipt.status]);
+  const first=identity(receipt.provenance.primary)===identity(chartPrimary)?'primary':'comparison';
+  const roles=[first, first==='primary'?'comparison':'primary'] as const;
+  const revision=receipt.status==='SMT_SOURCE_CORRECTED'?undefined:receipt.strategy_revision;
+  const transition=receipt.transitions.at(-1)!;
+  return <div data-event-key={receipt.event_key} data-status={receipt.status} data-revision-id={revision?.id}>
+    <p><strong>{receipt.status}</strong> · {receipt.direction} · {receipt.source_correction?'Correction observed':'Modeled availability'} {utc(transition.time)}</p>
+    {revision && <p>Revision <code>{revision.id}</code></p>}
+    <details><summary>Watch rules and publication</summary>
+      <p>Swing width {receipt.rules.period} · UTC match {receipt.rules.alignment_bars} bars · confirmation {receipt.rules.confirmation_bars} bars · tolerance {receipt.rules.tolerance_bps} bps</p>
+      {receipt.watch_published_at!=null && <p>Published locally {utc(receipt.watch_published_at)}</p>}
+    </details>
+    {receipt.status!=='SMT_SOURCE_CORRECTED' && <button type="button" className="small-tool"
+      onClick={()=>setInspect(true)} disabled={inspect}>Inspect transition candles</button>}
+    {inspect && !bars && <p role={error?'alert':'status'}>{error || 'Loading pinned candles…'}</p>}
+    {roles.map((role,i)=>{
+      const lane=receipt.provenance[role];
+      const pivots=receipt[role];
+      const last=bars?.[role].at(-1);
+      return <details key={role}><summary>{lane.symbol} · {i===0?'chart primary':paired?'chart comparison':'watch peer'} · {lane.price_basis}</summary>
+        <p>Previous pivot {utc(pivots.previous.time)} · {pivots.previous.price}</p>
+        <p>Current pivot {utc(pivots.current.time)} · {pivots.current.price}</p>
+        {last && <p>Last supporting candle opened {utc(last.time)} · O {last.open} H {last.high} L {last.low} C {last.close}</p>}
+        {bars && !last && <p>No supporting candle returned for this lane.</p>}
+        <p>{lane.feed_id} · {receipt.provenance.timeframe}</p>
+        {pins(lane).map(p=><p key={p.id}>Dataset <code>{p.id}</code> · SHA-256 <code>{p.sha256}</code></p>)}
+      </details>;
+    })}
+  </div>;
+}

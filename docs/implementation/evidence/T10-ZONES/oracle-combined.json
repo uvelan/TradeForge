@@ -1,0 +1,2811 @@
+{
+  "date_utc": "2026-11-13",
+  "range_utc": [
+    "2026-11-13T00:00:00Z",
+    "2026-11-13T22:00:00Z"
+  ],
+  "structure_profile": {
+    "algorithm_version": 2,
+    "left": 2,
+    "right": 2,
+    "price_source": "wick",
+    "ties": "strict",
+    "tolerance_bps": 0,
+    "break_bps": 0,
+    "wick_candidates": true,
+    "market_schedule": {
+      "kind": "forex_weekly",
+      "timezone": "America/New_York"
+    }
+  },
+  "revision": "928f8558cb435665085c4401712ce73f7729178b",
+  "started_at": "2026-11-26T09:35:53+00:00",
+  "finished_at": "2026-11-26T09:39:29+00:00",
+  "method": "Independent Decimal scan over the provider CSV, with every M5 candle checked against pinned Parquet. A separately reconstructed structure model identifies confirmed BOS and the preceding known opposite candle. Public saved-replay receipts check every zone revision at T-1 and T.",
+  "symbols": {
+    "EURUSD": {
+      "csv_sha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6",
+      "partition": {
+        "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+        "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+      },
+      "candles": 264,
+      "mode_differences": {
+        "FVG": {
+          "families_with_different_lifecycle": 34,
+          "families_with_different_final_state": 24,
+          "families_with_different_latest_availability": 25
+        },
+        "OB": {
+          "families_with_different_lifecycle": 13,
+          "families_with_different_final_state": 6,
+          "families_with_different_latest_availability": 6
+        }
+      },
+      "modes": {
+        "wick": {
+          "families": {
+            "FVG": 61,
+            "OB": 16
+          },
+          "states": {
+            "ACTIVE": 77,
+            "TOUCHED": 2,
+            "PARTIALLY_MITIGATED": 60,
+            "FULLY_MITIGATED": 30,
+            "INVALIDATED": 39,
+            "EXPIRED": 0,
+            "UNCERTAIN": 0
+          },
+          "latest_states": {
+            "ACTIVE": 4,
+            "TOUCHED": 0,
+            "PARTIALLY_MITIGATED": 4,
+            "FULLY_MITIGATED": 30,
+            "INVALIDATED": 39,
+            "EXPIRED": 0,
+            "UNCERTAIN": 0
+          },
+          "revisions_by_direction": {
+            "FVG": {
+              "BULLISH": {
+                "ACTIVE": 27,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 13,
+                "FULLY_MITIGATED": 14,
+                "INVALIDATED": 13,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              },
+              "BEARISH": {
+                "ACTIVE": 34,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 23,
+                "FULLY_MITIGATED": 11,
+                "INVALIDATED": 19,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              }
+            },
+            "OB": {
+              "BULLISH": {
+                "ACTIVE": 5,
+                "TOUCHED": 1,
+                "PARTIALLY_MITIGATED": 13,
+                "FULLY_MITIGATED": 1,
+                "INVALIDATED": 4,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              },
+              "BEARISH": {
+                "ACTIVE": 11,
+                "TOUCHED": 1,
+                "PARTIALLY_MITIGATED": 11,
+                "FULLY_MITIGATED": 4,
+                "INVALIDATED": 3,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              }
+            }
+          },
+          "distinct_availability_boundaries": 150,
+          "checked_t_minus_one_and_t": 208,
+          "direct_rows_checked_at_final_cutoff": 420,
+          "structure_rows_checked_at_final_cutoff": 2224,
+          "empty_before_any_formation": true,
+          "canonical_bos_receipts_checked": 16,
+          "tied_revision_boundaries": 0,
+          "independent_sequence_sha256": "211f8908889659e6d5e81aad446a4b3bc3a78099238567736dac7f89d877594a",
+          "verified_receipt_sequence_sha256": "4d7e47035404d0cb37114aa2f4020db05e4d53a8c35f951e4249086123abbbbd",
+          "first_formations": {
+            "FVG": {
+              "direction": "BULLISH",
+              "bounds": [
+                "1.10508",
+                "1.10518"
+              ],
+              "anchor_utc": "2026-11-13T00:15:00Z",
+              "formation_observation_utc": "2026-11-13T00:25:00Z",
+              "formation_availability_utc": "2026-11-13T00:30:00Z",
+              "transitions": [
+                {
+                  "state": "ACTIVE",
+                  "observation_utc": "2026-11-13T00:25:00Z",
+                  "arrival_utc": "2026-11-13T00:30:00Z",
+                  "mitigation_pct": "0E+5"
+                },
+                {
+                  "state": "FULLY_MITIGATED",
+                  "observation_utc": "2026-11-13T00:30:00Z",
+                  "arrival_utc": "2026-11-13T00:35:00Z",
+                  "mitigation_pct": "100"
+                }
+              ]
+            },
+            "OB": {
+              "direction": "BULLISH",
+              "bounds": [
+                "1.10594",
+                "1.10618"
+              ],
+              "anchor_utc": "2026-11-13T01:30:00Z",
+              "formation_observation_utc": "2026-11-13T01:45:00Z",
+              "formation_availability_utc": "2026-11-13T01:50:00Z",
+              "transitions": [
+                {
+                  "state": "ACTIVE",
+                  "observation_utc": "2026-11-13T01:45:00Z",
+                  "arrival_utc": "2026-11-13T01:50:00Z",
+                  "mitigation_pct": "0E+5"
+                },
+                {
+                  "state": "PARTIALLY_MITIGATED",
+                  "observation_utc": "2026-11-13T01:50:00Z",
+                  "arrival_utc": "2026-11-13T01:55:00Z",
+                  "mitigation_pct": "12.5"
+                },
+                {
+                  "state": "PARTIALLY_MITIGATED",
+                  "observation_utc": "2026-11-13T01:55:00Z",
+                  "arrival_utc": "2026-11-13T02:00:00Z",
+                  "mitigation_pct": "33.33333333333333333333333333"
+                },
+                {
+                  "state": "PARTIALLY_MITIGATED",
+                  "observation_utc": "2026-11-13T02:00:00Z",
+                  "arrival_utc": "2026-11-13T02:05:00Z",
+                  "mitigation_pct": "79.16666666666666666666666667"
+                },
+                {
+                  "state": "FULLY_MITIGATED",
+                  "observation_utc": "2026-11-13T02:10:00Z",
+                  "arrival_utc": "2026-11-13T02:15:00Z",
+                  "mitigation_pct": "100"
+                }
+              ]
+            }
+          },
+          "stable_after_append_rewind_and_pane_swap": 38
+        },
+        "close": {
+          "families": {
+            "FVG": 61,
+            "OB": 16
+          },
+          "states": {
+            "ACTIVE": 77,
+            "TOUCHED": 1,
+            "PARTIALLY_MITIGATED": 54,
+            "FULLY_MITIGATED": 2,
+            "INVALIDATED": 60,
+            "EXPIRED": 0,
+            "UNCERTAIN": 0
+          },
+          "latest_states": {
+            "ACTIVE": 7,
+            "TOUCHED": 0,
+            "PARTIALLY_MITIGATED": 8,
+            "FULLY_MITIGATED": 2,
+            "INVALIDATED": 60,
+            "EXPIRED": 0,
+            "UNCERTAIN": 0
+          },
+          "revisions_by_direction": {
+            "FVG": {
+              "BULLISH": {
+                "ACTIVE": 27,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 16,
+                "FULLY_MITIGATED": 1,
+                "INVALIDATED": 26,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              },
+              "BEARISH": {
+                "ACTIVE": 34,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 20,
+                "FULLY_MITIGATED": 1,
+                "INVALIDATED": 23,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              }
+            },
+            "OB": {
+              "BULLISH": {
+                "ACTIVE": 5,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 7,
+                "FULLY_MITIGATED": 0,
+                "INVALIDATED": 5,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              },
+              "BEARISH": {
+                "ACTIVE": 11,
+                "TOUCHED": 1,
+                "PARTIALLY_MITIGATED": 11,
+                "FULLY_MITIGATED": 0,
+                "INVALIDATED": 6,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              }
+            }
+          },
+          "distinct_availability_boundaries": 134,
+          "checked_t_minus_one_and_t": 194,
+          "direct_rows_checked_at_final_cutoff": 406,
+          "structure_rows_checked_at_final_cutoff": 2224,
+          "empty_before_any_formation": true,
+          "canonical_bos_receipts_checked": 0,
+          "tied_revision_boundaries": 0,
+          "independent_sequence_sha256": "e336e55559605fe48fd9a66840ee8d40540d6484539d82ac427259fbbeaa8486",
+          "verified_receipt_sequence_sha256": "b1df0a6941b9a72e214b473f68a1f8ab9d1c76a6a48a3985bdf9fb04d76947c4",
+          "first_formations": {
+            "FVG": {
+              "direction": "BULLISH",
+              "bounds": [
+                "1.10508",
+                "1.10518"
+              ],
+              "anchor_utc": "2026-11-13T00:15:00Z",
+              "formation_observation_utc": "2026-11-13T00:25:00Z",
+              "formation_availability_utc": "2026-11-13T00:30:00Z",
+              "transitions": [
+                {
+                  "state": "ACTIVE",
+                  "observation_utc": "2026-11-13T00:25:00Z",
+                  "arrival_utc": "2026-11-13T00:30:00Z",
+                  "mitigation_pct": "0E+5"
+                },
+                {
+                  "state": "PARTIALLY_MITIGATED",
+                  "observation_utc": "2026-11-13T00:50:00Z",
+                  "arrival_utc": "2026-11-13T00:55:00Z",
+                  "mitigation_pct": "10"
+                },
+                {
+                  "state": "INVALIDATED",
+                  "observation_utc": "2026-11-13T10:45:00Z",
+                  "arrival_utc": "2026-11-13T10:50:00Z",
+                  "mitigation_pct": "100"
+                }
+              ]
+            },
+            "OB": {
+              "direction": "BULLISH",
+              "bounds": [
+                "1.10594",
+                "1.10618"
+              ],
+              "anchor_utc": "2026-11-13T01:30:00Z",
+              "formation_observation_utc": "2026-11-13T01:45:00Z",
+              "formation_availability_utc": "2026-11-13T01:50:00Z",
+              "transitions": [
+                {
+                  "state": "ACTIVE",
+                  "observation_utc": "2026-11-13T01:45:00Z",
+                  "arrival_utc": "2026-11-13T01:50:00Z",
+                  "mitigation_pct": "0E+5"
+                },
+                {
+                  "state": "PARTIALLY_MITIGATED",
+                  "observation_utc": "2026-11-13T01:55:00Z",
+                  "arrival_utc": "2026-11-13T02:00:00Z",
+                  "mitigation_pct": "12.5"
+                },
+                {
+                  "state": "PARTIALLY_MITIGATED",
+                  "observation_utc": "2026-11-13T02:05:00Z",
+                  "arrival_utc": "2026-11-13T02:10:00Z",
+                  "mitigation_pct": "75"
+                },
+                {
+                  "state": "INVALIDATED",
+                  "observation_utc": "2026-11-13T02:20:00Z",
+                  "arrival_utc": "2026-11-13T02:25:00Z",
+                  "mitigation_pct": "100"
+                }
+              ]
+            }
+          },
+          "stable_after_append_rewind_and_pane_swap": 38
+        }
+      }
+    },
+    "GBPUSD": {
+      "csv_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928",
+      "partition": {
+        "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+        "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+      },
+      "candles": 264,
+      "mode_differences": {
+        "FVG": {
+          "families_with_different_lifecycle": 44,
+          "families_with_different_final_state": 26,
+          "families_with_different_latest_availability": 28
+        },
+        "OB": {
+          "families_with_different_lifecycle": 12,
+          "families_with_different_final_state": 5,
+          "families_with_different_latest_availability": 6
+        }
+      },
+      "modes": {
+        "wick": {
+          "families": {
+            "FVG": 61,
+            "OB": 15
+          },
+          "states": {
+            "ACTIVE": 76,
+            "TOUCHED": 1,
+            "PARTIALLY_MITIGATED": 65,
+            "FULLY_MITIGATED": 31,
+            "INVALIDATED": 38,
+            "EXPIRED": 0,
+            "UNCERTAIN": 0
+          },
+          "latest_states": {
+            "ACTIVE": 3,
+            "TOUCHED": 0,
+            "PARTIALLY_MITIGATED": 4,
+            "FULLY_MITIGATED": 31,
+            "INVALIDATED": 38,
+            "EXPIRED": 0,
+            "UNCERTAIN": 0
+          },
+          "revisions_by_direction": {
+            "FVG": {
+              "BULLISH": {
+                "ACTIVE": 24,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 14,
+                "FULLY_MITIGATED": 11,
+                "INVALIDATED": 13,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              },
+              "BEARISH": {
+                "ACTIVE": 37,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 30,
+                "FULLY_MITIGATED": 14,
+                "INVALIDATED": 18,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              }
+            },
+            "OB": {
+              "BULLISH": {
+                "ACTIVE": 5,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 8,
+                "FULLY_MITIGATED": 3,
+                "INVALIDATED": 2,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              },
+              "BEARISH": {
+                "ACTIVE": 10,
+                "TOUCHED": 1,
+                "PARTIALLY_MITIGATED": 13,
+                "FULLY_MITIGATED": 3,
+                "INVALIDATED": 5,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              }
+            }
+          },
+          "distinct_availability_boundaries": 142,
+          "checked_t_minus_one_and_t": 211,
+          "direct_rows_checked_at_final_cutoff": 413,
+          "structure_rows_checked_at_final_cutoff": 1965,
+          "empty_before_any_formation": true,
+          "canonical_bos_receipts_checked": 15,
+          "tied_revision_boundaries": 0,
+          "independent_sequence_sha256": "fc48f952f75cddb433137b7c2f037ba2d2f076e14ae501793211829e0632f07d",
+          "verified_receipt_sequence_sha256": "fa68e0cc7bea35252c22532dafe353d446681ae2965df1b2b3a57361e8e4f360",
+          "first_formations": {
+            "FVG": {
+              "direction": "BULLISH",
+              "bounds": [
+                "1.32306",
+                "1.32308"
+              ],
+              "anchor_utc": "2026-11-13T00:15:00Z",
+              "formation_observation_utc": "2026-11-13T00:25:00Z",
+              "formation_availability_utc": "2026-11-13T00:30:00Z",
+              "transitions": [
+                {
+                  "state": "ACTIVE",
+                  "observation_utc": "2026-11-13T00:25:00Z",
+                  "arrival_utc": "2026-11-13T00:30:00Z",
+                  "mitigation_pct": "0E+5"
+                },
+                {
+                  "state": "INVALIDATED",
+                  "observation_utc": "2026-11-13T00:30:00Z",
+                  "arrival_utc": "2026-11-13T00:35:00Z",
+                  "mitigation_pct": "100"
+                }
+              ]
+            },
+            "OB": {
+              "direction": "BULLISH",
+              "bounds": [
+                "1.32284",
+                "1.32313"
+              ],
+              "anchor_utc": "2026-11-13T00:10:00Z",
+              "formation_observation_utc": "2026-11-13T00:25:00Z",
+              "formation_availability_utc": "2026-11-13T00:30:00Z",
+              "transitions": [
+                {
+                  "state": "ACTIVE",
+                  "observation_utc": "2026-11-13T00:25:00Z",
+                  "arrival_utc": "2026-11-13T00:30:00Z",
+                  "mitigation_pct": "0E+5"
+                },
+                {
+                  "state": "FULLY_MITIGATED",
+                  "observation_utc": "2026-11-13T00:30:00Z",
+                  "arrival_utc": "2026-11-13T00:35:00Z",
+                  "mitigation_pct": "100"
+                }
+              ]
+            }
+          },
+          "stable_after_append_rewind_and_pane_swap": 36
+        },
+        "close": {
+          "families": {
+            "FVG": 61,
+            "OB": 15
+          },
+          "states": {
+            "ACTIVE": 76,
+            "TOUCHED": 0,
+            "PARTIALLY_MITIGATED": 52,
+            "FULLY_MITIGATED": 4,
+            "INVALIDATED": 60,
+            "EXPIRED": 0,
+            "UNCERTAIN": 0
+          },
+          "latest_states": {
+            "ACTIVE": 10,
+            "TOUCHED": 0,
+            "PARTIALLY_MITIGATED": 2,
+            "FULLY_MITIGATED": 4,
+            "INVALIDATED": 60,
+            "EXPIRED": 0,
+            "UNCERTAIN": 0
+          },
+          "revisions_by_direction": {
+            "FVG": {
+              "BULLISH": {
+                "ACTIVE": 24,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 17,
+                "FULLY_MITIGATED": 2,
+                "INVALIDATED": 21,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              },
+              "BEARISH": {
+                "ACTIVE": 37,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 14,
+                "FULLY_MITIGATED": 0,
+                "INVALIDATED": 29,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              }
+            },
+            "OB": {
+              "BULLISH": {
+                "ACTIVE": 5,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 13,
+                "FULLY_MITIGATED": 0,
+                "INVALIDATED": 4,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              },
+              "BEARISH": {
+                "ACTIVE": 10,
+                "TOUCHED": 0,
+                "PARTIALLY_MITIGATED": 8,
+                "FULLY_MITIGATED": 2,
+                "INVALIDATED": 6,
+                "EXPIRED": 0,
+                "UNCERTAIN": 0
+              }
+            }
+          },
+          "distinct_availability_boundaries": 126,
+          "checked_t_minus_one_and_t": 192,
+          "direct_rows_checked_at_final_cutoff": 394,
+          "structure_rows_checked_at_final_cutoff": 1965,
+          "empty_before_any_formation": true,
+          "canonical_bos_receipts_checked": 0,
+          "tied_revision_boundaries": 0,
+          "independent_sequence_sha256": "3d9e022a49dd80b3adf990f349aa1a65ef2ded62e6e833e991f66da907ba0e39",
+          "verified_receipt_sequence_sha256": "2f50cfb3aeb796e116ff809d748397cec302675e2531cea159fa4a2009152784",
+          "first_formations": {
+            "FVG": {
+              "direction": "BULLISH",
+              "bounds": [
+                "1.32306",
+                "1.32308"
+              ],
+              "anchor_utc": "2026-11-13T00:15:00Z",
+              "formation_observation_utc": "2026-11-13T00:25:00Z",
+              "formation_availability_utc": "2026-11-13T00:30:00Z",
+              "transitions": [
+                {
+                  "state": "ACTIVE",
+                  "observation_utc": "2026-11-13T00:25:00Z",
+                  "arrival_utc": "2026-11-13T00:30:00Z",
+                  "mitigation_pct": "0E+5"
+                },
+                {
+                  "state": "INVALIDATED",
+                  "observation_utc": "2026-11-13T00:30:00Z",
+                  "arrival_utc": "2026-11-13T00:35:00Z",
+                  "mitigation_pct": "100"
+                }
+              ]
+            },
+            "OB": {
+              "direction": "BULLISH",
+              "bounds": [
+                "1.32284",
+                "1.32313"
+              ],
+              "anchor_utc": "2026-11-13T00:10:00Z",
+              "formation_observation_utc": "2026-11-13T00:25:00Z",
+              "formation_availability_utc": "2026-11-13T00:30:00Z",
+              "transitions": [
+                {
+                  "state": "ACTIVE",
+                  "observation_utc": "2026-11-13T00:25:00Z",
+                  "arrival_utc": "2026-11-13T00:30:00Z",
+                  "mitigation_pct": "0E+5"
+                },
+                {
+                  "state": "PARTIALLY_MITIGATED",
+                  "observation_utc": "2026-11-13T00:30:00Z",
+                  "arrival_utc": "2026-11-13T00:35:00Z",
+                  "mitigation_pct": "31.03448275862068965517241379"
+                },
+                {
+                  "state": "PARTIALLY_MITIGATED",
+                  "observation_utc": "2026-11-13T00:50:00Z",
+                  "arrival_utc": "2026-11-13T00:55:00Z",
+                  "mitigation_pct": "72.41379310344827586206896552"
+                },
+                {
+                  "state": "INVALIDATED",
+                  "observation_utc": "2026-11-13T04:15:00Z",
+                  "arrival_utc": "2026-11-13T04:20:00Z",
+                  "mitigation_pct": "100"
+                }
+              ]
+            }
+          },
+          "stable_after_append_rewind_and_pane_swap": 36
+        }
+      }
+    }
+  },
+  "controlled": {
+    "ob_delayed_bos_straddle": {
+      "wick": {
+        "families": {
+          "FVG": 1,
+          "OB": 1
+        },
+        "states": {
+          "ACTIVE": 2,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 2
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 2
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 1
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 1
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 4,
+        "direct_rows_checked_at_final_cutoff": 11,
+        "structure_rows_checked_at_final_cutoff": 6,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "0427d01c5f6da13c7bd1d6508cfdd3c59c8e53fda487e665431067455b0b7b44",
+        "verified_receipt_sequence_sha256": "95ad339bb3253a4b89a6569a29e58270bfeb233a0bf6f79431fbf235ab262397",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32306",
+              "1.32308"
+            ],
+            "anchor_utc": "2026-11-13T00:15:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:20Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:20Z",
+                "mitigation_pct": "0E+5"
+              },
+              {
+                "state": "UNCERTAIN",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:35:00Z",
+                "mitigation_pct": "0E+5"
+              }
+            ]
+          },
+          "OB": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32284",
+              "1.32313"
+            ],
+            "anchor_utc": "2026-11-13T00:10:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:20Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:20Z",
+                "mitigation_pct": "0E+5"
+              },
+              {
+                "state": "UNCERTAIN",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:35:00Z",
+                "mitigation_pct": "0E+5"
+              }
+            ]
+          }
+        }
+      },
+      "close": {
+        "families": {
+          "FVG": 1,
+          "OB": 1
+        },
+        "states": {
+          "ACTIVE": 2,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 2
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 2
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 1
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 1
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 4,
+        "direct_rows_checked_at_final_cutoff": 11,
+        "structure_rows_checked_at_final_cutoff": 6,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "2eb68da597df7bc9053694a0a96046ca316d6879967a0f39c154808e49d71589",
+        "verified_receipt_sequence_sha256": "7a90103802aae7cc930c0e95d98d4ab7f5f1670e933410c680b968ed1705439a",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32306",
+              "1.32308"
+            ],
+            "anchor_utc": "2026-11-13T00:15:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:20Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:20Z",
+                "mitigation_pct": "0E+5"
+              },
+              {
+                "state": "UNCERTAIN",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:35:00Z",
+                "mitigation_pct": "0E+5"
+              }
+            ]
+          },
+          "OB": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32284",
+              "1.32313"
+            ],
+            "anchor_utc": "2026-11-13T00:10:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:20Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:20Z",
+                "mitigation_pct": "0E+5"
+              },
+              {
+                "state": "UNCERTAIN",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:35:00Z",
+                "mitigation_pct": "0E+5"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "ob_equal_arrival_lifecycle": {
+      "wick": {
+        "families": {
+          "FVG": 1,
+          "OB": 1
+        },
+        "states": {
+          "ACTIVE": 2,
+          "TOUCHED": 1,
+          "PARTIALLY_MITIGATED": 1,
+          "FULLY_MITIGATED": 2,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 2,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 1,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 1,
+              "PARTIALLY_MITIGATED": 1,
+              "FULLY_MITIGATED": 1,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 3,
+        "checked_t_minus_one_and_t": 6,
+        "direct_rows_checked_at_final_cutoff": 13,
+        "structure_rows_checked_at_final_cutoff": 6,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 1,
+        "independent_sequence_sha256": "6b612bafa8993ead0224d157f6167cf059f3aa6faaaee7b26d9c12a80dbe27bd",
+        "verified_receipt_sequence_sha256": "f0bb58d4583ea95b0d101386ab48ed751c1628da07ffe6f7a614e013879d2fb4",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "11",
+              "12"
+            ],
+            "anchor_utc": "2026-11-13T00:15:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "FULLY_MITIGATED",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:40:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          },
+          "OB": {
+            "direction": "BULLISH",
+            "bounds": [
+              "9",
+              "11"
+            ],
+            "anchor_utc": "2026-11-13T00:20:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "TOUCHED",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:40:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "PARTIALLY_MITIGATED",
+                "observation_utc": "2026-11-13T00:35:00Z",
+                "arrival_utc": "2026-11-13T00:40:00Z",
+                "mitigation_pct": "50"
+              },
+              {
+                "state": "FULLY_MITIGATED",
+                "observation_utc": "2026-11-13T00:40:00Z",
+                "arrival_utc": "2026-11-13T00:45:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          }
+        }
+      },
+      "close": {
+        "families": {
+          "FVG": 1,
+          "OB": 1
+        },
+        "states": {
+          "ACTIVE": 2,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 1,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 1,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 1,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 1,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 1,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 1,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 4,
+        "direct_rows_checked_at_final_cutoff": 11,
+        "structure_rows_checked_at_final_cutoff": 6,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "e8f8ccbf7253fda6961d846aa41e840c116db0d8eb39a33dcbe5faeeef7708c8",
+        "verified_receipt_sequence_sha256": "fa8cc9cd090508698061691eef1d9ef55834eafdcc3839d16da71310a320be95",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "11",
+              "12"
+            ],
+            "anchor_utc": "2026-11-13T00:15:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "INVALIDATED",
+                "observation_utc": "2026-11-13T00:40:00Z",
+                "arrival_utc": "2026-11-13T00:45:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          },
+          "OB": {
+            "direction": "BULLISH",
+            "bounds": [
+              "9",
+              "11"
+            ],
+            "anchor_utc": "2026-11-13T00:20:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "PARTIALLY_MITIGATED",
+                "observation_utc": "2026-11-13T00:40:00Z",
+                "arrival_utc": "2026-11-13T00:45:00Z",
+                "mitigation_pct": "50"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "ob_equal_pivot_break_close": {
+      "wick": {
+        "families": {
+          "FVG": 1,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 1,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 1,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 1,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 2,
+        "direct_rows_checked_at_final_cutoff": 4,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "dc6966c0349ef8e98e8efbfc85ba847fcf2f191feb2960be8ada6c2f61555b2f",
+        "verified_receipt_sequence_sha256": "cc68c09bb4fc7daaf908d5cda989dde001127b01e56ba79a0eda92859dcd4733",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "11",
+              "12"
+            ],
+            "anchor_utc": "2026-11-13T00:15:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "FULLY_MITIGATED",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:35:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          },
+          "OB": null
+        }
+      },
+      "close": {
+        "families": {
+          "FVG": 1,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 1,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 1,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 1,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 2,
+        "direct_rows_checked_at_final_cutoff": 4,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "c599b437286b733ca4568c56dbc2d78e8ca4e3711e68d8211ae70151e3f33099",
+        "verified_receipt_sequence_sha256": "9c7480cb29c15bfbe20a28a4bd877a08af3c917388daa83fb093ffd18dda46ff",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "11",
+              "12"
+            ],
+            "anchor_utc": "2026-11-13T00:15:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "INVALIDATED",
+                "observation_utc": "2026-11-13T00:40:00Z",
+                "arrival_utc": "2026-11-13T00:45:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          },
+          "OB": null
+        }
+      }
+    },
+    "ob_exact_entry_touch": {
+      "wick": {
+        "families": {
+          "FVG": 2,
+          "OB": 1
+        },
+        "states": {
+          "ACTIVE": 3,
+          "TOUCHED": 1,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 2,
+          "TOUCHED": 1,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 2,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 1,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 4,
+        "direct_rows_checked_at_final_cutoff": 13,
+        "structure_rows_checked_at_final_cutoff": 6,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "4ea847d8835ddee3434239bb32324921fd4c5e74a4447b7476cf99dff384a240",
+        "verified_receipt_sequence_sha256": "ae4da261e00489c269fbb48cbff453ee9e7df87e98530b359c67f1988236acf4",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32306",
+              "1.32308"
+            ],
+            "anchor_utc": "2026-11-13T00:15:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0E+5"
+              }
+            ]
+          },
+          "OB": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32284",
+              "1.32313"
+            ],
+            "anchor_utc": "2026-11-13T00:10:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0E+5"
+              },
+              {
+                "state": "TOUCHED",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:35:00Z",
+                "mitigation_pct": "0"
+              }
+            ]
+          }
+        }
+      },
+      "close": {
+        "families": {
+          "FVG": 2,
+          "OB": 1
+        },
+        "states": {
+          "ACTIVE": 3,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 3,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 2,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 3,
+        "direct_rows_checked_at_final_cutoff": 12,
+        "structure_rows_checked_at_final_cutoff": 6,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "7a74dc568c744be67de5060925ef020c7ccb851fb315b3d72809122505af3c74",
+        "verified_receipt_sequence_sha256": "cc23796ac0abb5ff6a3fbc8014671f2d32140742c776a38c0d0931f3a4bfb33e",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32306",
+              "1.32308"
+            ],
+            "anchor_utc": "2026-11-13T00:15:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0E+5"
+              }
+            ]
+          },
+          "OB": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32284",
+              "1.32313"
+            ],
+            "anchor_utc": "2026-11-13T00:10:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0E+5"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "ob_strict_terminal_close": {
+      "wick": {
+        "families": {
+          "FVG": 1,
+          "OB": 1
+        },
+        "states": {
+          "ACTIVE": 2,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 2,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 2,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 1,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 1,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 4,
+        "direct_rows_checked_at_final_cutoff": 11,
+        "structure_rows_checked_at_final_cutoff": 6,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "018c812cb7bc632776028ac4c6eb0c4e68280e1c99de29d6bb5ba120e80c5f96",
+        "verified_receipt_sequence_sha256": "dfd64b2f234e1f2c10cddf493289a400e4b3a0a13e91baeae50b5159e2081dd9",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32306",
+              "1.32308"
+            ],
+            "anchor_utc": "2026-11-13T00:15:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0E+5"
+              },
+              {
+                "state": "INVALIDATED",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:35:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          },
+          "OB": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32284",
+              "1.32313"
+            ],
+            "anchor_utc": "2026-11-13T00:10:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0E+5"
+              },
+              {
+                "state": "INVALIDATED",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:35:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          }
+        }
+      },
+      "close": {
+        "families": {
+          "FVG": 1,
+          "OB": 1
+        },
+        "states": {
+          "ACTIVE": 2,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 2,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 2,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 1,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 1,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 4,
+        "direct_rows_checked_at_final_cutoff": 11,
+        "structure_rows_checked_at_final_cutoff": 6,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "018c812cb7bc632776028ac4c6eb0c4e68280e1c99de29d6bb5ba120e80c5f96",
+        "verified_receipt_sequence_sha256": "e1f1a55611403a11edc08ca0d8cd988ad98aa32759b05b59e985a76e975c9d2c",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32306",
+              "1.32308"
+            ],
+            "anchor_utc": "2026-11-13T00:15:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0E+5"
+              },
+              {
+                "state": "INVALIDATED",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:35:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          },
+          "OB": {
+            "direction": "BULLISH",
+            "bounds": [
+              "1.32284",
+              "1.32313"
+            ],
+            "anchor_utc": "2026-11-13T00:10:00Z",
+            "formation_observation_utc": "2026-11-13T00:25:00Z",
+            "formation_availability_utc": "2026-11-13T00:30:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "0E+5"
+              },
+              {
+                "state": "INVALIDATED",
+                "observation_utc": "2026-11-13T00:30:00Z",
+                "arrival_utc": "2026-11-13T00:35:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "equal_gap_boundary": {
+      "wick": {
+        "families": {
+          "FVG": 0,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 0,
+        "checked_t_minus_one_and_t": 0,
+        "direct_rows_checked_at_final_cutoff": 0,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "verified_receipt_sequence_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "first_formations": {
+          "FVG": null,
+          "OB": null
+        }
+      },
+      "close": {
+        "families": {
+          "FVG": 0,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 0,
+        "checked_t_minus_one_and_t": 0,
+        "direct_rows_checked_at_final_cutoff": 0,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "verified_receipt_sequence_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "first_formations": {
+          "FVG": null,
+          "OB": null
+        }
+      }
+    },
+    "equal_arrival": {
+      "wick": {
+        "families": {
+          "FVG": 1,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 1,
+        "checked_t_minus_one_and_t": 1,
+        "direct_rows_checked_at_final_cutoff": 3,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "29e39e3a515b03e758dee76bdbba1fc76c937fcae5ad3a6b45b1f92561eadf9a",
+        "verified_receipt_sequence_sha256": "7f85bdefaec3ed2e548e70230deba937fce7c781c39bec7842f673d20b2566a4",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "100",
+              "105"
+            ],
+            "anchor_utc": "2026-11-13T00:00:00Z",
+            "formation_observation_utc": "2026-11-13T00:10:00Z",
+            "formation_availability_utc": "2026-11-13T00:20:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:10:00Z",
+                "arrival_utc": "2026-11-13T00:20:00Z",
+                "mitigation_pct": "0"
+              }
+            ]
+          },
+          "OB": null
+        }
+      },
+      "close": {
+        "families": {
+          "FVG": 1,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 1,
+        "checked_t_minus_one_and_t": 1,
+        "direct_rows_checked_at_final_cutoff": 3,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "29e39e3a515b03e758dee76bdbba1fc76c937fcae5ad3a6b45b1f92561eadf9a",
+        "verified_receipt_sequence_sha256": "59638553fcfbcec9cd619551bf1079c81a8dd2eb30282bbb239b4b26378a7525",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "100",
+              "105"
+            ],
+            "anchor_utc": "2026-11-13T00:00:00Z",
+            "formation_observation_utc": "2026-11-13T00:10:00Z",
+            "formation_availability_utc": "2026-11-13T00:20:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:10:00Z",
+                "arrival_utc": "2026-11-13T00:20:00Z",
+                "mitigation_pct": "0"
+              }
+            ]
+          },
+          "OB": null
+        }
+      }
+    },
+    "delayed_formation_straddle": {
+      "wick": {
+        "families": {
+          "FVG": 1,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 1
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 1
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 1
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 2,
+        "direct_rows_checked_at_final_cutoff": 4,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "a6490bb133d611017a1ee97ffd9d2d1f53877227ab7ca5b882fc61cc6fdbc84b",
+        "verified_receipt_sequence_sha256": "449f97dbb2dfe638fbf66a6865f9c4505855631a47a0c7e20bc73f7797c532de",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "100",
+              "105"
+            ],
+            "anchor_utc": "2026-11-13T00:00:00Z",
+            "formation_observation_utc": "2026-11-13T00:10:00Z",
+            "formation_availability_utc": "2026-11-13T00:15:20Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:10:00Z",
+                "arrival_utc": "2026-11-13T00:15:20Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "UNCERTAIN",
+                "observation_utc": "2026-11-13T00:15:00Z",
+                "arrival_utc": "2026-11-13T00:20:00Z",
+                "mitigation_pct": "0"
+              }
+            ]
+          },
+          "OB": null
+        }
+      },
+      "close": {
+        "families": {
+          "FVG": 1,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 1,
+        "checked_t_minus_one_and_t": 1,
+        "direct_rows_checked_at_final_cutoff": 3,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "c2d3a301d87a03e380a45507cbdfe3f4a0b3629c13c3ae55b5fc19a214e7038f",
+        "verified_receipt_sequence_sha256": "52f5976d94edb62a0dc9660d0f2be1fb738ec64311f85f8bea1ba30f9b704c87",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "100",
+              "105"
+            ],
+            "anchor_utc": "2026-11-13T00:00:00Z",
+            "formation_observation_utc": "2026-11-13T00:10:00Z",
+            "formation_availability_utc": "2026-11-13T00:15:20Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:10:00Z",
+                "arrival_utc": "2026-11-13T00:15:20Z",
+                "mitigation_pct": "0"
+              }
+            ]
+          },
+          "OB": null
+        }
+      }
+    },
+    "exact_entry_and_far_boundary": {
+      "wick": {
+        "families": {
+          "FVG": 1,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 1,
+          "FULLY_MITIGATED": 1,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 1,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 1,
+              "FULLY_MITIGATED": 1,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 3,
+        "checked_t_minus_one_and_t": 3,
+        "direct_rows_checked_at_final_cutoff": 5,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "9ef8106a7fa885b74862c1945dbda4c705930a2e1d998e40d2831bbeb21f21fc",
+        "verified_receipt_sequence_sha256": "9a90c0e512c7f02016c0f4ff37e3531d008a6a65b71440376d67a36756f6305b",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "100",
+              "105"
+            ],
+            "anchor_utc": "2026-11-13T00:00:00Z",
+            "formation_observation_utc": "2026-11-13T00:10:00Z",
+            "formation_availability_utc": "2026-11-13T00:15:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:10:00Z",
+                "arrival_utc": "2026-11-13T00:15:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "PARTIALLY_MITIGATED",
+                "observation_utc": "2026-11-13T00:20:00Z",
+                "arrival_utc": "2026-11-13T00:25:00Z",
+                "mitigation_pct": "60"
+              },
+              {
+                "state": "FULLY_MITIGATED",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          },
+          "OB": null
+        }
+      },
+      "close": {
+        "families": {
+          "FVG": 1,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 1,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 1,
+          "INVALIDATED": 0,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 1,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 2,
+        "direct_rows_checked_at_final_cutoff": 4,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "2cf3caab3bc7b341fa6b72ec3ccaffa9706638a972ab9dfcb0254da79a5dbba0",
+        "verified_receipt_sequence_sha256": "bd8b17f5543e9ef15e8fb5eb4d7fe4dc1f9ed471be4f8edd5d2d9cbfed44984c",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "100",
+              "105"
+            ],
+            "anchor_utc": "2026-11-13T00:00:00Z",
+            "formation_observation_utc": "2026-11-13T00:10:00Z",
+            "formation_availability_utc": "2026-11-13T00:15:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:10:00Z",
+                "arrival_utc": "2026-11-13T00:15:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "FULLY_MITIGATED",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          },
+          "OB": null
+        }
+      }
+    },
+    "strictly_past_far_boundary": {
+      "wick": {
+        "families": {
+          "FVG": 1,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 1,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 1,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 1,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 1,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 1,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 3,
+        "checked_t_minus_one_and_t": 3,
+        "direct_rows_checked_at_final_cutoff": 5,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "59255dff624ca1b059a654a7785367119017a8346fb9bb567c78c6de5e218057",
+        "verified_receipt_sequence_sha256": "f8890acc3a1d8484ec9027d36a6e5101770ab436a734c23308c430b49ef1ea8c",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "100",
+              "105"
+            ],
+            "anchor_utc": "2026-11-13T00:00:00Z",
+            "formation_observation_utc": "2026-11-13T00:10:00Z",
+            "formation_availability_utc": "2026-11-13T00:15:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:10:00Z",
+                "arrival_utc": "2026-11-13T00:15:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "PARTIALLY_MITIGATED",
+                "observation_utc": "2026-11-13T00:20:00Z",
+                "arrival_utc": "2026-11-13T00:25:00Z",
+                "mitigation_pct": "60"
+              },
+              {
+                "state": "INVALIDATED",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          },
+          "OB": null
+        }
+      },
+      "close": {
+        "families": {
+          "FVG": 1,
+          "OB": 0
+        },
+        "states": {
+          "ACTIVE": 1,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 1,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "latest_states": {
+          "ACTIVE": 0,
+          "TOUCHED": 0,
+          "PARTIALLY_MITIGATED": 0,
+          "FULLY_MITIGATED": 0,
+          "INVALIDATED": 1,
+          "EXPIRED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_direction": {
+          "FVG": {
+            "BULLISH": {
+              "ACTIVE": 1,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 1,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          },
+          "OB": {
+            "BULLISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            },
+            "BEARISH": {
+              "ACTIVE": 0,
+              "TOUCHED": 0,
+              "PARTIALLY_MITIGATED": 0,
+              "FULLY_MITIGATED": 0,
+              "INVALIDATED": 0,
+              "EXPIRED": 0,
+              "UNCERTAIN": 0
+            }
+          }
+        },
+        "distinct_availability_boundaries": 2,
+        "checked_t_minus_one_and_t": 2,
+        "direct_rows_checked_at_final_cutoff": 4,
+        "structure_rows_checked_at_final_cutoff": 0,
+        "empty_before_any_formation": true,
+        "canonical_bos_receipts_checked": 0,
+        "tied_revision_boundaries": 0,
+        "independent_sequence_sha256": "c718b64ce9dae2cca81691b7a5a1ed20513d58e4a931690d3ffd8d0cd7dde954",
+        "verified_receipt_sequence_sha256": "85bd3b821824c9dcaea324cabd90ac92239cd999fd0e18c16005df69eaf2c732",
+        "first_formations": {
+          "FVG": {
+            "direction": "BULLISH",
+            "bounds": [
+              "100",
+              "105"
+            ],
+            "anchor_utc": "2026-11-13T00:00:00Z",
+            "formation_observation_utc": "2026-11-13T00:10:00Z",
+            "formation_availability_utc": "2026-11-13T00:15:00Z",
+            "transitions": [
+              {
+                "state": "ACTIVE",
+                "observation_utc": "2026-11-13T00:10:00Z",
+                "arrival_utc": "2026-11-13T00:15:00Z",
+                "mitigation_pct": "0"
+              },
+              {
+                "state": "INVALIDATED",
+                "observation_utc": "2026-11-13T00:25:00Z",
+                "arrival_utc": "2026-11-13T00:30:00Z",
+                "mitigation_pct": "100"
+              }
+            ]
+          },
+          "OB": null
+        }
+      }
+    }
+  }
+}

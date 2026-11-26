@@ -52,8 +52,8 @@ test("navigates by keyboard and moves recorded signal evidence into a persisted 
     transitions:[{status:'SMT_CANDIDATE',time:540},{status:'SMT_CONFIRMED',time:600}],
     rules:{period:2,alignment_bars:0,tolerance_bps:0.5,confirmation_bars:1},
     provenance:{authority:'VERIFIED_SAVED_DATASET',timeframe:'M1',
-      primary:{symbol:'EURUSD',source:'DUKASCOPY_SAVED',feed_id:'test',price_basis:'BID'},
-      comparison:{symbol:'GBPUSD',source:'DUKASCOPY_SAVED',feed_id:'test',price_basis:'BID'}}};
+      primary:{symbol:'EURUSD',source:'DUKASCOPY_SAVED',feed_id:'test',price_basis:'BID',dataset_id:'fixture-eur',sha256:'e'.repeat(64)},
+      comparison:{symbol:'GBPUSD',source:'DUKASCOPY_SAVED',feed_id:'test',price_basis:'BID',dataset_id:'fixture-gbp',sha256:'b'.repeat(64)}}};
   await page.route('**/indicators/signals?*',route=>route.fulfill({json:{items:[signal],next_cursor:null}}));
   const bars=Array.from({length:10},(_,i)=>({time:i*60,open:10,high:14,low:9,close:11}));
   await page.route('**/indicators/signals/*/candles?*',route=>route.fulfill({json:{primary:bars,comparison:bars}}));
@@ -80,6 +80,20 @@ test("navigates by keyboard and moves recorded signal evidence into a persisted 
   await page.getByRole('button',{name:'Last candle'}).click();
   await expect(page.getByRole('status').filter({hasText:/^Confirmed$/})).toBeVisible();
   await page.getByRole('button',{name:'Exit replay'}).click();
+  const captureStarted=Promise.withResolvers<void>();
+  const settleCapture=Promise.withResolvers<void>();
+  await page.route('**/research/api/chart-snapshots', async route=>{
+    captureStarted.resolve();
+    await settleCapture.promise;
+    await route.fulfill({status:422,json:{detail:'Standalone capture rejection fixture'}});
+  });
+  const saveCapture=page.getByRole('button',{name:'Save chart evidence'});
+  await saveCapture.click();
+  await captureStarted.promise;
+  await expect(saveCapture).toBeDisabled();
+  settleCapture.resolve();
+  await expect(page.getByText('Standalone capture rejection fixture')).toBeVisible();
+  await expect(saveCapture).toBeEnabled();
   await page.setViewportSize({width:390,height:844});
   await expect(page.getByRole('heading',{name:'Evidence Inspector'})).toBeVisible();
   await page.getByRole('button',{name:'Create plan draft'}).click();
@@ -173,7 +187,7 @@ for(const stressed of [false,true])test(
   await page.getByRole("button",{name:"Save chart evidence"}).click();
   await expect(page.getByText("Chart capture saved")).toBeVisible();
   await page.reload();
-  await page.getByText(/^Drawing toolbox/).click();
+  await expect(page.getByLabel("Drawing tool", {exact:true})).toBeVisible();
   await expect(page.getByLabel("Select drawing").locator(`option[value="${id}"]`)).toHaveCount(1);
   const replayBuilt=Promise.withResolvers<void>();
   const publishReplay=Promise.withResolvers<void>();
@@ -274,7 +288,7 @@ test("links four chart views and opens a saved simulation after reload",async ({
   await page.getByText("Chart synchronization",{exact:true}).click();
   await page.getByRole("checkbox",{name:"Timeframe",exact:true}).check();
   const secondary=page.getByRole("region",{name:"Chart view 4",exact:true});
-  await expect(secondary.getByText("M5",{exact:true})).toBeVisible();
+  await expect(secondary.locator(".view-controls").getByText("M5",{exact:true})).toBeVisible();
   await expect(page.locator('.terminal-chart-columns [aria-label="Interactive market candlestick chart"]')).toHaveCount(4);
   await page.getByRole("button",{name:"Strategy Lab",exact:true}).click();
   await page.getByRole("combobox",{name:"Data source",exact:true}).selectOption("DEMO");

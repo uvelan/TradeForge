@@ -98,7 +98,9 @@ export function SimulationEvidence({result,run}: {result:BacktestResult;run?:Bac
       {offset===undefined&&<button className="small-tool" onClick={()=>setOffset(0)}>Inspect bid/ask quote path</button>}
       {offset!==undefined&&!quotes&&!quoteError&&<p role="status">Loading quote path</p>}
       {quoteError&&<p role="alert">{quoteError}</p>}
-      {quotes&&<><p>{quotes.total} quotes in execution order</p><div className="table-scroll quote-path">
+      {quotes&&<><p>{quotes.total} {result.execution_model.version===2
+        ? 'quotes in historical V2 order (not revalidated under V3)'
+        : 'quotes in execution order'}</p><div className="table-scroll quote-path">
         <table><thead><tr><th>UTC</th><th>Source order</th><th>Bid</th><th>Ask</th></tr></thead>
         <tbody>{quotes.items.map(quote=><tr key={`${quote.time_ms}:${quote.source_order}`}>
           <td>{new Date(quote.time_ms).toISOString()}</td><td>{quote.source_order}</td>

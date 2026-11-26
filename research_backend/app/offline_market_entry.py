@@ -39,12 +39,17 @@ LIMIT_POLICY = POLICY | {
 }
 
 
+RECORDED_LIMIT_POLICY = LIMIT_POLICY | RECORDED_RULES | {"id": "OFFLINE_RECORDED_FIXED_PRICE_LIMIT_ENTRY"}
+
+
 STOP_POLICY = POLICY | {
     "id":"OFFLINE_FIXED_PRICE_STOP_ENTRY", "version":1,
     "trigger":"LONG_ASK_AT_OR_ABOVE_STOP_SHORT_BID_AT_OR_BELOW_STOP",
     "stop_grid":"EXACT_INSTRUMENT_POINTS",
     "execution":"STOP_MARKET_AT_TRIGGER_QUOTE",
 }
+RECORDED_STOP_POLICY = STOP_POLICY | RECORDED_RULES | {"id": "OFFLINE_RECORDED_FIXED_PRICE_STOP_ENTRY"}
+RECORDED_POLICIES = {"MARKET": RECORDED_POLICY, "LIMIT": RECORDED_LIMIT_POLICY, "STOP": RECORDED_STOP_POLICY}
 ENTRY_POLICIES = {"MARKET":POLICY,"LIMIT":LIMIT_POLICY,"STOP":STOP_POLICY}
 
 
@@ -161,6 +166,19 @@ def quote_priority(quote: Quote) -> tuple[int,int,int]:
     return quote.available_at_ms,quote.time_ms,quote.source_order
 
 
+def fixed_price_units(threshold, scale):
+    scaled = Decimal(str(threshold["value"])) * scale
+    return int(scaled) if scaled == scaled.to_integral_value() else None
+
+
+def limit_touched(buy, bid, ask, limit_units):
+    return ask <= limit_units if buy else bid >= limit_units
+
+
+def stop_touched(buy, bid, ask, stop_units):
+    return ask >= stop_units if buy else bid <= stop_units
+
+
 def simulate(intent, model, tape, tape_digest, *, policy=None, cutoff_ms=None):
     kind = intent["entry"]["kind"]
     current = ENTRY_POLICIES.get(kind,POLICY)
@@ -169,8 +187,8 @@ def simulate(intent, model, tape, tape_digest, *, policy=None, cutoff_ms=None):
     market_v1 = canonical(policy)==canonical(legacy_market)
     # Before fixed-price support, MARKET V1/V2 recorded an unsupported outcome
     # under its own policy identity for those entry kinds.
-    recorded_market = policy == RECORDED_POLICY and isinstance(tape, ExecutionWindow) and kind == "MARKET"
-    if canonical(policy) not in (canonical(current),canonical(POLICY)) and not (market_v1 or recorded_market):
+    recorded_policy = isinstance(tape, ExecutionWindow) and policy == RECORDED_POLICIES.get(kind)
+    if canonical(policy) not in (canonical(current),canonical(POLICY)) and not (market_v1 or recorded_policy):
         raise ValueError("Unverifiable historical entry policy")
 
     identity = {"intent":intent["id"],"execution_data_fingerprint":tape_digest,"policy":dict(policy)}
@@ -196,10 +214,9 @@ def simulate(intent, model, tape, tape_digest, *, policy=None, cutoff_ms=None):
         threshold = intent["entry"]["price"]
         if threshold is None or threshold["kind"]!="FIXED_ABSOLUTE":
             return result | {"status":f"UNSUPPORTED_{kind}_PRICE"}
-        scaled = Decimal(str(threshold["value"]))*scale
-        if scaled!=scaled.to_integral_value():
+        threshold_units = fixed_price_units(threshold, scale)
+        if threshold_units is None:
             return result | {"status":f"UNSUPPORTED_{kind}_PRICE_GRID"}
-        threshold_units = int(scaled)
         if kind=="LIMIT":
             order.update(limit_price=threshold,limit_price_units=threshold_units,scale=scale)
         else:
@@ -220,10 +237,10 @@ def simulate(intent, model, tape, tape_digest, *, policy=None, cutoff_ms=None):
     qualifying = relevant
     if kind=="LIMIT":
         qualifying = [quote for quote in relevant
-                      if (quote.ask_units<=threshold_units if buy else quote.bid_units>=threshold_units)]
+                      if limit_touched(buy, quote.bid_units, quote.ask_units, threshold_units)]
     elif kind=="STOP":
         qualifying = [quote for quote in relevant
-                      if (quote.ask_units>=threshold_units if buy else quote.bid_units<=threshold_units)]
+                      if stop_touched(buy, quote.bid_units, quote.ask_units, threshold_units)]
     chosen = min(qualifying,key=quote_priority,default=None)
     needed = chosen.available_at_ms if chosen else horizon
     if not covered(tape.complete_delivery_intervals,begin+1,needed):
@@ -280,6 +297,17 @@ def published_entry_intents(db, run_id, identity, model):
     return attempts,qualified,intents
 
 
+def replay_recorded_entry(db, recorded, intent, model):
+    kind = intent["entry"]["kind"]
+    if kind not in RECORDED_POLICIES or intent["order_expiry"]["unit"] != "SECONDS":
+        raise ValueError("Recorded execution requires MARKET, fixed-price LIMIT, or fixed-price STOP with seconds expiry")
+    window, evidence, ambiguous = resolve_window(db, recorded, intent)
+    result = simulate(intent, model, window, fingerprint(evidence), policy=RECORDED_POLICIES[kind])
+    if ambiguous and result["status"] == "SIMULATED_FILLED":
+        result.update(status="AMBIGUOUS_QUOTE_ORDER", fill=None)
+    return result | {"recorded_evidence": evidence}
+
+
 def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=None, recorded=None):
     """Validate published intents without changing their ledger or qualification status."""
     if recorded is not None:
@@ -299,13 +327,7 @@ def validate_market_entries(run_id, *, tape=None, tape_sha256=None, intent_id=No
             if recorded is None:
                 result = simulate(intent,model,tape,digest)
             else:
-                if intent["entry"]["kind"] != "MARKET" or intent["order_expiry"]["unit"] != "SECONDS":
-                    raise ValueError("Recorded execution supports MARKET with seconds expiry only")
-                window, evidence, ambiguous = resolve_window(db, recorded, intent)
-                result = simulate(intent, model, window, fingerprint(evidence), policy=RECORDED_POLICY)
-                if ambiguous and result["status"] == "SIMULATED_FILLED":
-                    result.update(status="AMBIGUOUS_QUOTE_ORDER", fill=None)
-                result["recorded_evidence"] = evidence
+                result = replay_recorded_entry(db, recorded, intent, model)
             payload = canonical(result)
             prior = db.execute("SELECT payload FROM offline_market_entry_results WHERE id=?",
                                (result["id"],)).fetchone()

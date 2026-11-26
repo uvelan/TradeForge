@@ -103,7 +103,8 @@ def overlap_sample(book, zone):
     return matches, False
 
 
-def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen, *, on_formation=None, registry=None):
+def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen, *, on_formation=None, registry=None,
+                 include_gap_boundary=False):
     source_keys = ("source", "symbol", "timeframe", "feed_id", "dataset_id", "price_basis")
     scope = {key: provenance.get(key) for key in source_keys}
     parameters = rules.canonical()
@@ -163,6 +164,8 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen, *, on_
                "formation_available_at":zone.formation_available_at,"observation_time":bar.time,
                "confirmation_time":bar.time+step,"available_at":available,"evidence_cutoff":available,
                "observed_price":observed,"warnings":sorted(warnings),**extra}
+        if include_gap_boundary and continuity_from is not None:
+            event["previous_observed_open"] = continuity_from
         if strict:
             decision=("STRADDLING_OBSERVATION" if state=="UNCERTAIN" else
                       "EXPIRED_REFERENCE" if state=="EXPIRED" else

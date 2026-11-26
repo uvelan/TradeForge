@@ -19,6 +19,9 @@ from .smt_causal import StrictSmtRequest, evaluate_strict_smt
 from .analysis_evidence import ResourceLimit
 from .db import one, rows, transaction
 from .smt_history import event_identity, record_smt, scope_key
+from . import archive_smt_watch as archive_watch
+from .smt_history import WatchLeaseLost
+from .smt_monitor_lease import MonitorLease, claim, finish
 from .storage import read_partition
 from .saved_history import saved_range
 
@@ -105,19 +108,48 @@ def live_smt(request: LiveSmtCalculation):
     return capture_live_smt(request)
 
 
-def capture_live_smt(request: LiveSmtCalculation, monitor_token: int | None = None):
+def live_smt_coverage(primary, comparison, step, cutoff):
+    """Classify observed sample continuity, not the broker's trading calendar."""
+    left, right = ({bar.time: bar for bar in lane} for lane in (primary, comparison))
+    paired = sorted(left.keys() & right.keys())
+    tails = [lane[-1].time if lane else None for lane in (primary, comparison)]
+    through = paired[-1] + step if paired else None
+    if not paired or tails != [paired[-1], paired[-1]] or cutoff - through >= step:
+        return [], [], {"status": "DEGRADED", "reason": "PAIRED_TAIL_UNAVAILABLE",
+                        "paired_closed_through": through}
+
+    first = len(paired) - 1
+    while first > 0 and paired[first] - paired[first - 1] == step:
+        first -= 1
+    suffix = paired[first:]
+    common_start = max(primary[0].time, comparison[0].time)
+    gap = (first > 0 or any(time >= common_start and time not in right for time in left)
+           or any(time >= common_start and time not in left for time in right))
+    return [left[time] for time in suffix], [right[time] for time in suffix], {
+        "status": "DEGRADED" if gap else "CONTIGUOUS",
+        "reason": "PAIRED_HISTORY_GAP" if gap else None,
+        "paired_contiguous_from": suffix[0], "paired_closed_through": through,
+    }
+
+
+def capture_live_smt(request: LiveSmtCalculation, monitor_lease: MonitorLease | None = None):
     validate_watch(request)
     step = FRAME_MIN[request.timeframe] * 60
     now = int(datetime.now(UTC).timestamp())
     cutoff = min(now, request.available_through)
 
+    prior = archive_watch.checkpoint(monitor_lease.generation) if monitor_lease else {}
+    frontier = prior.get("verified_through")
     def capture(symbol):
         metadata = {}
-        values = mt5_rates(symbol, request.timeframe, 600, include_latest=True, provenance=metadata)
+        kwargs = {}
+        if frontier and cutoff-frontier>500*step:
+            kwargs["window"] = (frontier-80*step,frontier+500*step)
+        values = mt5_rates(symbol, request.timeframe, 600, include_latest=True, provenance=metadata, **kwargs)
         candles = [Bar.model_validate(bar) for bar in values if bar["time"] + step <= cutoff]
         if not metadata.get("feed_id") or metadata.get("price_basis") not in {"BID", "LAST_TRADE"}:
             raise ValueError("MT5 feed or basis unavailable")
-        if not candles or any(a.time >= b.time for a, b in zip(candles, candles[1:])):
+        if (not candles and not monitor_lease) or any(a.time >= b.time for a, b in zip(candles, candles[1:])):
             raise ValueError("MT5 returned no closed candles or unordered candles")
         return candles, {"symbol": symbol, "source": "MT5", **metadata}
 
@@ -131,21 +163,64 @@ def capture_live_smt(request: LiveSmtCalculation, monitor_token: int | None = No
     provenance = {"timeframe": request.timeframe, "primary": left, "comparison": right,
                   "authority": "VERIFIED_MT5_CAPTURE"}
     rules = rule_parameters(request)
-    events = detect_smt(primary, comparison, **rules, step=step)
+    paired_primary, paired_comparison, coverage = live_smt_coverage(primary, comparison, step, cutoff)
+    progress = None
+    if monitor_lease:
+        if prior.get("scope") and prior["scope"]!=scope_key(provenance,rules):
+            raise HTTPException(409,"Watch feed identity changed. Configure a new watch.")
+        lanes = {}
+        for side,fetched in (("primary",primary),("comparison",comparison)):
+            known = {b["time"]:Bar.model_validate(b) for b in prior.get("observations",{}).get(side,[])}
+            known.update({b.time:b for b in fetched})
+            lanes[side] = known
+        # On enrollment the paired contiguous history before the first shared
+        # gap is unknown. Bootstrap from the most recent complete segment,
+        # then require every subsequent slot from that durable frontier.
+        initial = max((min(v) for v in lanes.values() if v), default=cutoff//step*step)
+        if frontier is None and all(lanes.values()):
+            enrolled = monitor_lease.generation//1_000_000_000
+            paired = sorted(t for t in lanes["primary"].keys() & lanes["comparison"].keys() if t+step<=enrolled)
+            for a,b in zip(paired,paired[1:]):
+                if b-a!=step:
+                    initial=b
+        start = frontier if frontier is not None else prior.get("waiting_from",initial)
+        through = start
+        until = min(cutoff//step*step,start+500*step)
+        while through<until and all(through in lane for lane in lanes.values()):
+            through+=step
+        missing = [side for side,v in lanes.items() if through not in v] if through<until else []
+        prefix = sorted(set(lanes["primary"]) & set(lanes["comparison"]))
+        eligible = [t for t in prefix if t<through]
+        if frontier is None:
+            eligible = [t for t in eligible if t>=start]
+        else:
+            eligible = [t for t in eligible if t>=prior.get("history_start",start)]
+        # Retain the previous verified prefix across a sparse poll; no new bar can cross the first missing slot.
+        paired_primary,paired_comparison = ([lanes[k][t] for t in eligible] for k in ("primary","comparison"))
+        coverage = {**coverage,"status":"DEGRADED" if missing else coverage["status"],
+                    "reason":"PAIRED_HISTORY_GAP" if missing else coverage["reason"],"paired_closed_through":through}
+        progress = {"scope":scope_key(provenance,rules),"last_poll_at":now,"coverage":coverage,
+                    "verified_through": through if eligible else frontier,
+                    "waiting_from":through,"history_start":eligible[0] if eligible else start,
+                    "status":"DEGRADED" if coverage["status"]=="DEGRADED" else "WATCHING",
+                    "gap":{"open_time":through,"symbols":[provenance[k]["symbol"] for k in missing]} if missing else None,
+                    "observations":{k:[v[t].model_dump() for t in sorted(v) if through-600*step<=t<through+500*step]
+                                    for k,v in lanes.items()}}
+    events = detect_smt(paired_primary, paired_comparison, **rules, step=step)
     for event in events:
         capture_evidence = {}
-        for side, bars in (("primary", primary), ("comparison", comparison)):
+        for side, bars in (("primary", paired_primary), ("comparison", paired_comparison)):
             start = event[side]["previous"]["time"] - rules["period"] * step
             evidence = [bar.model_dump() for bar in bars if bar.time >= start]
             capture_evidence[side] = evidence
         event["capture"] = capture_evidence
-    alert_after = max(request.alert_after, now - step * 2) if request.alert_after is not None else None
+    alert_after = request.alert_after if monitor_lease else max(request.alert_after, now - step * 2) if request.alert_after is not None else None
     scope = scope_key(provenance, rules)
     alerts, corrected = record_smt(
         events, scope, provenance, rules, alert_after=alert_after, capture_step=step,
         capture={"primary": [bar.model_dump() for bar in primary],
                  "comparison": [bar.model_dump() for bar in comparison]}, observed_at=now,
-        monitor_token=monitor_token,
+        monitor_lease=monitor_lease, progress=progress,
     )
     events = [event for event in events if event["id"] not in corrected]
     for event in events:
@@ -153,7 +228,7 @@ def capture_live_smt(request: LiveSmtCalculation, monitor_token: int | None = No
     for event in events + alerts:
         event.pop("capture", None)
     return {**response_for(events, alerts, rules, step, provenance["authority"]),
-            "scope": scope, "corrected_ids": sorted(corrected)}
+            "scope": scope, "corrected_ids": sorted(corrected), "coverage": coverage}
 
 
 MONITOR_INTERVAL_SECONDS = 5
@@ -169,15 +244,33 @@ def monitor_status(request: Request):
     configuration = monitor_configuration()
     state = request.app.state.smt_monitor
     installed = {**configuration, "enabled_at": configuration["enabled_at"] // 1_000_000_000} if configuration else None
-    if configuration is None or state.get("configuration") != configuration:
-        return {"configuration": installed}
-    result = state["result"]
+    if configuration is None:
+        return {"configuration": None}
+    progress = archive_watch.checkpoint(configuration["enabled_at"])
+    progress.pop("observations",None)
+    result = {**(state["result"] if state.get("configuration")==configuration else {}), **progress}
     scope = result.get("scope")
     alert = next(iter(active_alerts(1, scope)), None) if scope else None
     correction = one("SELECT payload FROM smt_source_corrections WHERE scope_key=? ORDER BY event_time DESC, event_key LIMIT 1",
                      (scope,)) if scope else None
     return {"configuration": installed, **result, "latest_alert": alert,
             "latest_correction": json.loads(correction["payload"]) if correction else None}
+
+
+@router.post("/smt/monitor/archive")
+def configure_archive_watch(watch:archive_watch.ArchiveWatch):
+    try:
+        feeds,_ = archive_watch.inputs(watch)
+    except (ValueError,RuntimeError,OSError) as error:
+        raise HTTPException(409,str(error)) from error
+    config = dict(archive=watch.model_dump(),primary_symbol=feeds["primary"].symbol,
+                  comparison_symbol=feeds["comparison"].symbol,timeframe="M5",enabled=True,
+                  **rule_parameters(SmtRules(timeframe="M5",**watch.model_dump())))
+    with transaction() as db:
+        db.execute("""INSERT INTO smt_monitor VALUES(1,?,?) ON CONFLICT(id) DO UPDATE
+            SET configuration=excluded.configuration,enabled_at=excluded.enabled_at
+            WHERE smt_monitor.configuration!=excluded.configuration""",(json.dumps(config,sort_keys=True),time_ns()))
+    return config
 
 
 @router.post("/smt/monitor")
@@ -204,6 +297,8 @@ def active_alerts(limit: int, scope: str | None = None):
                    WHERE history.event_key=alerts.event_key AND history.status='SMT_INVALIDATED'
                )"""
     args = (limit,)
+    if scope is None:
+        query += " AND COALESCE(json_extract(alerts.payload,'$.provenance.authority'),'')!='HISTORICAL_SIMULATION'"
     if scope is not None:
         query += " AND scope_key=?"
         args = (scope, limit)
@@ -219,16 +314,29 @@ def poll_monitor(state: dict):
     configuration = monitor_configuration()
     if configuration is None:
         return
+    token = configuration["enabled_at"]
+    lease = claim(token)
+    if lease is None:
+        return
     now = int(datetime.now(UTC).timestamp())
     try:
-        token = configuration["enabled_at"]
-        capture = LiveSmtCalculation(**{**configuration, "available_through": now,
-                                       "alert_after": token // 1_000_000_000})
-        response = capture_live_smt(capture, monitor_token=token)
-        result = {"last_poll_at": now, "error": None, "scope": response["scope"]}
+        if "archive" in configuration:
+            result = archive_watch.advance(archive_watch.ArchiveWatch.model_validate(configuration["archive"]),lease)
+        else:
+            capture = LiveSmtCalculation(**{**configuration, "available_through": now,
+                                           "alert_after": token // 1_000_000_000})
+            response = capture_live_smt(capture, monitor_lease=lease)
+            result = {"last_poll_at": now, "error": None, "scope": response["scope"], "coverage": response["coverage"]}
+    except WatchLeaseLost:
+        return
+    except (RuntimeError,ValueError,OSError) as error:
+        result = {"last_poll_at":now,"error":str(error)}
     except HTTPException as error:
         result = {"last_poll_at": now, "error": str(error.detail)}
-    state.update(configuration=configuration, result=result)
+    finally:
+        current = finish(lease)
+    if current:
+        state.update(configuration=configuration, result=result)
 
 
 async def run_smt_monitor(stop: asyncio.Event, state: dict):
@@ -332,13 +440,13 @@ def signals(q: str = Query("", max_length=128), direction: Literal["bullish", "b
             status: Literal["SMT_CANDIDATE", "SMT_CONFIRMED", "SMT_INVALIDATED", "SMT_SOURCE_CORRECTED"] | None = None,
             timeframe: str | None = Query(None, max_length=10), source: str | None = Query(None, max_length=30),
             instrument: str | None = Query(None, max_length=64), start: int | None = Query(None, ge=0),
-            end: int | None = Query(None, ge=0), cursor: str | None = Query(None, max_length=90),
-            limit: int = Query(25, ge=1, le=100)):
+            end: int | None = Query(None, ge=0), as_of: int | None = Query(None,ge=0), cursor: str | None = Query(None, max_length=90),
+            limit: int = Query(25, ge=1, le=100), event_key: str | None = Query(None, pattern=r"^[0-9a-f]{64}$")):
     if start is not None and end is not None and start >= end:
         raise HTTPException(422, "Choose an end time after the start")
     conditions, parameters = [], []
     for sql, value in (
-        ("status=?", status), ("json_extract(payload,'$.direction')=?", direction),
+        ("event_key=?", event_key), ("status=?", status), ("json_extract(payload,'$.direction')=?", direction),
         ("json_extract(payload,'$.provenance.timeframe')=?", timeframe),
         ("json_extract(payload,'$.provenance.primary.source')=?", source),
         ("event_time>=?", start), ("event_time<?", end),
@@ -372,10 +480,10 @@ def signals(q: str = Query("", max_length=128), direction: Literal["bullish", "b
             UNION ALL
             SELECT event_key,event_time,'SMT_SOURCE_CORRECTED',payload,4 FROM smt_source_corrections
         ), latest AS (
-            SELECT *, row_number() OVER(PARTITION BY event_key ORDER BY priority DESC) AS position FROM history
+            SELECT *, row_number() OVER(PARTITION BY event_key ORDER BY priority DESC) AS position FROM history WHERE (? IS NULL OR event_time<=?)
         )
         SELECT event_key,event_time,json_remove(payload,'$.capture') AS payload FROM latest WHERE position=1
-    """ + where + " ORDER BY event_time DESC,event_key LIMIT ?", (*parameters, limit + 1))
+    """ + where + " ORDER BY event_time DESC,event_key LIMIT ?", (as_of,as_of,*parameters, limit + 1))
     results = []
     for row in page[:limit]:
         event = json.loads(row["payload"])
@@ -411,7 +519,8 @@ def signal_plans(event_key: str):
 
 @router.get("/signals/{event_key}/candles")
 def signal_candles(event_key: str, status: Literal["SMT_CANDIDATE", "SMT_CONFIRMED",
-                   "SMT_INVALIDATED", "SMT_SOURCE_CORRECTED"]):
+                   "SMT_INVALIDATED", "SMT_SOURCE_CORRECTED"],
+                   view: Literal["transition", "retrospective"] = "transition"):
     if status == "SMT_SOURCE_CORRECTED":
         correction = one("SELECT payload FROM smt_source_corrections WHERE event_key=?", (event_key,))
         if not correction:
@@ -447,7 +556,8 @@ def signal_candles(event_key: str, status: Literal["SMT_CANDIDATE", "SMT_CONFIRM
                     raise ValueError("Original partition unavailable")
                 values = read_partition(dataset)
             result[side] = [Bar.model_validate(bar).model_dump() for bar in values
-                            if bar["time"] + step <= event["transitions"][-1]["time"]]
+                            if provenance.get("watch_start",0)<=bar["time"]<provenance.get("watch_end",float("inf"))
+                            and (view == "retrospective" or bar["time"] + step <= event["transitions"][-1]["time"])]
     except (OSError, RuntimeError, ValueError, KeyError) as error:
         raise HTTPException(409, f"Recorded evidence unavailable: {error}") from error
     return result
@@ -474,5 +584,9 @@ def indicator(request: Calculation):
         raise HTTPException(422, "Unknown indicator")
     if any(left.time >= right.time for left, right in zip(request.candles, request.candles[1:])):
         raise HTTPException(422, "Candle times must be strictly increasing")
-    return {**calculate(request.candles, request.indicator, request.period),
+    try:
+        result = calculate(request.candles, request.indicator, request.period)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    return {**result,
             "source": request.source, "timeframe": request.timeframe, "authority": "CLIENT_SUPPLIED_UNVERIFIED"}

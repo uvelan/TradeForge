@@ -1,0 +1,162 @@
+{
+  "snapshot_utc": "2026-11-26T10:23:30.235855+00:00",
+  "milestone_start_utc": "2026-11-26T09:57:11.036Z",
+  "agents": [
+    {
+      "agent": "gap_api",
+      "model": "gpt-6.2-astra",
+      "started": "2026-11-26T09:57:25.527Z",
+      "completed": "2026-11-26T10:04:52.406Z",
+      "usage_through": "2026-11-26T10:04:52.382Z",
+      "counter_records": 40,
+      "reported_stream_errors": 0,
+      "input_tokens": 1776591,
+      "cached_input_tokens": 1719168,
+      "output_tokens": 8124,
+      "reasoning_output_tokens": 1333,
+      "total_tokens": 1784715,
+      "uncached_input_tokens": 57423
+    },
+    {
+      "agent": "gap_api approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T09:57:36.580Z",
+      "completed": "2026-11-26T10:04:35.624Z",
+      "usage_through": "2026-11-26T10:04:35.622Z",
+      "counter_records": 22,
+      "reported_stream_errors": 0,
+      "input_tokens": 2316978,
+      "cached_input_tokens": 2010368,
+      "output_tokens": 967,
+      "reasoning_output_tokens": 471,
+      "total_tokens": 2317945,
+      "uncached_input_tokens": 306610
+    },
+    {
+      "agent": "gap_ref",
+      "model": "gpt-6.2-sol",
+      "started": "2026-11-26T09:57:57.058Z",
+      "completed": "2026-11-26T10:07:52.107Z",
+      "usage_through": "2026-11-26T10:07:52.086Z",
+      "counter_records": 47,
+      "reported_stream_errors": 0,
+      "input_tokens": 2669257,
+      "cached_input_tokens": 2601088,
+      "output_tokens": 18920,
+      "reasoning_output_tokens": 3794,
+      "total_tokens": 2688177,
+      "uncached_input_tokens": 68169
+    },
+    {
+      "agent": "gap_ref approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T09:58:12.167Z",
+      "completed": "2026-11-26T10:07:38.397Z",
+      "usage_through": "2026-11-26T10:07:38.392Z",
+      "counter_records": 22,
+      "reported_stream_errors": 0,
+      "input_tokens": 2364100,
+      "cached_input_tokens": 2034048,
+      "output_tokens": 1954,
+      "reasoning_output_tokens": 617,
+      "total_tokens": 2366054,
+      "uncached_input_tokens": 330052
+    },
+    {
+      "agent": "gap_ui",
+      "model": "gpt-6.2-sol",
+      "started": "2026-11-26T09:57:46.660Z",
+      "completed": "2026-11-26T10:07:49.918Z",
+      "usage_through": "2026-11-26T10:07:49.897Z",
+      "counter_records": 48,
+      "reported_stream_errors": 0,
+      "input_tokens": 2937525,
+      "cached_input_tokens": 2864256,
+      "output_tokens": 15255,
+      "reasoning_output_tokens": 4054,
+      "total_tokens": 2952780,
+      "uncached_input_tokens": 73269
+    },
+    {
+      "agent": "gap_ui approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T09:58:11.440Z",
+      "completed": "2026-11-26T10:07:37.168Z",
+      "usage_through": "2026-11-26T10:07:37.165Z",
+      "counter_records": 36,
+      "reported_stream_errors": 0,
+      "input_tokens": 4219204,
+      "cached_input_tokens": 3694848,
+      "output_tokens": 2871,
+      "reasoning_output_tokens": 795,
+      "total_tokens": 4222075,
+      "uncached_input_tokens": 524356
+    },
+    {
+      "agent": "integration",
+      "model": "gpt-6.2-astra",
+      "started": "2026-11-26T09:57:11.036Z",
+      "completed": null,
+      "usage_through": "2026-11-26T10:23:16.804Z",
+      "counter_records": 96,
+      "reported_stream_errors": 0,
+      "input_tokens": 19312353,
+      "cached_input_tokens": 19266176,
+      "output_tokens": 19768,
+      "reasoning_output_tokens": 3903,
+      "total_tokens": 19332121,
+      "uncached_input_tokens": 46177
+    },
+    {
+      "agent": "integration approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T10:10:09.894Z",
+      "completed": "2026-11-26T10:23:28.488Z",
+      "usage_through": "2026-11-26T10:23:28.486Z",
+      "counter_records": 24,
+      "reported_stream_errors": 0,
+      "input_tokens": 2047979,
+      "cached_input_tokens": 1950848,
+      "output_tokens": 2198,
+      "reasoning_output_tokens": 628,
+      "total_tokens": 2050177,
+      "uncached_input_tokens": 97131
+    }
+  ],
+  "total": {
+    "input_tokens": 37643987,
+    "cached_input_tokens": 36140800,
+    "output_tokens": 70057,
+    "reasoning_output_tokens": 15595,
+    "total_tokens": 37714044,
+    "uncached_input_tokens": 1503187
+  },
+  "by_model": {
+    "codex-auto-review": {
+      "input_tokens": 10948261,
+      "cached_input_tokens": 9690112,
+      "output_tokens": 7990,
+      "reasoning_output_tokens": 2511,
+      "total_tokens": 10956251,
+      "uncached_input_tokens": 1258149
+    },
+    "gpt-6.2-astra": {
+      "input_tokens": 21088944,
+      "cached_input_tokens": 20985344,
+      "output_tokens": 27892,
+      "reasoning_output_tokens": 5236,
+      "total_tokens": 21116836,
+      "uncached_input_tokens": 103600
+    },
+    "gpt-6.2-sol": {
+      "input_tokens": 5606782,
+      "cached_input_tokens": 5465344,
+      "output_tokens": 34175,
+      "reasoning_output_tokens": 7848,
+      "total_tokens": 5640957,
+      "uncached_input_tokens": 141438
+    }
+  },
+  "method": "Per linked session, differences of observed provider cumulative counters from the last sample before the owner turn to the last available sample. Cached input and reasoning are subsets of input and output. All visible retries are included; opaque provider retry and pricing details are unavailable.",
+  "scope": "integration owner, three workers, and their linked approval reviewer sessions"
+}

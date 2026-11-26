@@ -1,4 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
+import {RecordedReplay} from './RecordedReplay';
 import {api} from './api';
 import type {EvidenceChartLocation} from './StrategyEvaluation';
 import type {Listed} from './strategyTypes';
@@ -208,6 +209,7 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
           setRunRevision(revision=>revision+1);
         })}>Resume run</button>}
       </div>
+      {run.worker.state==='COMPLETED'&&run.run_id===runId&&<RecordedReplay key={runId} runId={runId} start={run.identity.warmup_start} end={run.identity.cutoff}/>}
       <ul>{decisions.map(item=><li key={item.id}>{utc(item.cutoff)} · {human(item.state)}{' '}
         <button className="small-tool" disabled={busy} onClick={()=>inspect(item)}>Inspect historical decision</button></li>)}</ul>
       {trace?.runId===runId&&<div>

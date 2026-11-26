@@ -1,0 +1,245 @@
+{
+  "exported": [
+    {
+      "manifest": {
+        "review_type": "RECORDED_REPLAY_REVIEW_V1",
+        "package_id": "PKG-A4081CD66B8E",
+        "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+        "knowledge_cutoff_utc": "2025-11-13T13:31:38.102+00:00",
+        "evidence_snapshot": {
+          "policy": "SQLITE_READ_SNAPSHOT_V1",
+          "components_sha256": {
+            "data/replay.json": "58b00fe88f25e11638be69a0de925ec57bfb32f96f6c0e8e874a80eb60561c16",
+            "response/AI_REVIEW_TEMPLATE.json": "6a06de54bcf65fc77f8ca97af09ab564f67c9d7b2069911f683dc0d434d9cc56"
+          }
+        }
+      },
+      "evidence": {
+        "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+        "month": "2025-11",
+        "cutoff_ms": 1763040698102,
+        "committed_before_ms": 1763040698103,
+        "strategy_policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+        "execution_policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+        "symbol": "EURUSD",
+        "feed": "dukascopy-bi5-v2",
+        "scale": 100000,
+        "execution": "SIMULATED_RECORDED_BID_ASK",
+        "modeled_delivery_delay_ms": 0,
+        "modeled_fees": 0,
+        "assumed_slippage_points": 0,
+        "events": [
+          {
+            "kind": "QUALIFIED",
+            "quote": {
+              "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+              "partition": {
+                "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+                "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+              },
+              "ordinal": 5,
+              "time_ms": 1763038800666,
+              "bid_units": 116239,
+              "ask_units": 116242
+            },
+            "anchor": {
+              "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+              "partition": {
+                "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+                "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+              },
+              "ordinal": 0,
+              "time_ms": 1763038800089,
+              "bid_units": 116229,
+              "ask_units": 116231
+            },
+            "id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+            "available_at_ms": 1763038800666
+          },
+          {
+            "kind": "ENTRY",
+            "quote": {
+              "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+              "partition": {
+                "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+                "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+              },
+              "ordinal": 6,
+              "time_ms": 1763038800771,
+              "bid_units": 116239,
+              "ask_units": 116243
+            },
+            "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+            "side": "ASK",
+            "price_units": 116243,
+            "remaining": 1,
+            "id": "06ce962ed046b24e07194460e8c43a041296ec1985fe9ae200d2efba408c6b31",
+            "available_at_ms": 1763038800771
+          }
+        ],
+        "metrics": {},
+        "unavailable": {
+          "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea": "NO_VERIFIED_EXIT_BY_CUTOFF",
+          "completed_price_change": "NO_COMPLETED_EXIT_IN_SNAPSHOT",
+          "broker_fees": "NO_BROKER_COST_EVIDENCE",
+          "account_pnl": "NO_ACCOUNT_LEDGER",
+          "month_expectancy": "NO_VALIDATED_MONTH_PERFORMANCE"
+        }
+      },
+      "template": {
+        "review_type": "RECORDED_REPLAY_REVIEW_V1",
+        "package_id": "PKG-A4081CD66B8E",
+        "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+        "assessment": "INSUFFICIENT_DATA",
+        "comment": "",
+        "claims": []
+      }
+    },
+    {
+      "manifest": {
+        "review_type": "RECORDED_REPLAY_REVIEW_V1",
+        "package_id": "PKG-724FA1AC115F",
+        "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+        "knowledge_cutoff_utc": "2025-11-13T13:31:38.103+00:00",
+        "evidence_snapshot": {
+          "policy": "SQLITE_READ_SNAPSHOT_V1",
+          "components_sha256": {
+            "data/replay.json": "829911a608165977a1ba3e9156801f70c176314182acdbe2b94488e628696195",
+            "response/AI_REVIEW_TEMPLATE.json": "106bd56a3c8f9ff6d27a2f42fac5ba4b7c4bb851ccf6c90d7366df03e71e4bf9"
+          }
+        }
+      },
+      "evidence": {
+        "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+        "month": "2025-11",
+        "cutoff_ms": 1763040698103,
+        "committed_before_ms": 1763040698104,
+        "strategy_policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+        "execution_policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+        "symbol": "EURUSD",
+        "feed": "dukascopy-bi5-v2",
+        "scale": 100000,
+        "execution": "SIMULATED_RECORDED_BID_ASK",
+        "modeled_delivery_delay_ms": 0,
+        "modeled_fees": 0,
+        "assumed_slippage_points": 0,
+        "events": [
+          {
+            "kind": "QUALIFIED",
+            "quote": {
+              "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+              "partition": {
+                "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+                "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+              },
+              "ordinal": 5,
+              "time_ms": 1763038800666,
+              "bid_units": 116239,
+              "ask_units": 116242
+            },
+            "anchor": {
+              "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+              "partition": {
+                "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+                "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+              },
+              "ordinal": 0,
+              "time_ms": 1763038800089,
+              "bid_units": 116229,
+              "ask_units": 116231
+            },
+            "id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+            "available_at_ms": 1763038800666
+          },
+          {
+            "kind": "ENTRY",
+            "quote": {
+              "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+              "partition": {
+                "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+                "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+              },
+              "ordinal": 6,
+              "time_ms": 1763038800771,
+              "bid_units": 116239,
+              "ask_units": 116243
+            },
+            "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+            "side": "ASK",
+            "price_units": 116243,
+            "remaining": 1,
+            "id": "06ce962ed046b24e07194460e8c43a041296ec1985fe9ae200d2efba408c6b31",
+            "available_at_ms": 1763038800771
+          },
+          {
+            "kind": "STOP",
+            "quote": {
+              "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+              "partition": {
+                "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+                "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+              },
+              "ordinal": 1564,
+              "time_ms": 1763040698103,
+              "bid_units": 116143,
+              "ask_units": 116144
+            },
+            "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+            "side": "BID",
+            "price_units": 116143,
+            "remaining": 0,
+            "id": "282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387",
+            "available_at_ms": 1763040698103
+          }
+        ],
+        "metrics": {
+          "PRICE_CHANGE-282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387": {
+            "metric_id": "PRICE_CHANGE-282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387",
+            "value": "-0.00100",
+            "unit": "USD per EUR",
+            "available_at_ms": 1763040698103,
+            "interval_ms": [
+              1763038800771,
+              1763040698103
+            ],
+            "entry_ref": "06ce962ed046b24e07194460e8c43a041296ec1985fe9ae200d2efba408c6b31",
+            "exit_ref": "282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387",
+            "decision_ref": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+            "calculation": "exit BID minus entry ASK",
+            "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2"
+          }
+        },
+        "unavailable": {
+          "broker_fees": "NO_BROKER_COST_EVIDENCE",
+          "account_pnl": "NO_ACCOUNT_LEDGER",
+          "month_expectancy": "NO_VALIDATED_MONTH_PERFORMANCE"
+        }
+      },
+      "template": {
+        "review_type": "RECORDED_REPLAY_REVIEW_V1",
+        "package_id": "PKG-724FA1AC115F",
+        "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+        "assessment": "INSUFFICIENT_DATA",
+        "comment": "",
+        "claims": [
+          {
+            "metric_id": "PRICE_CHANGE-282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387",
+            "value": "-0.00100",
+            "unit": "USD per EUR"
+          }
+        ]
+      }
+    }
+  ],
+  "review": "REVIEW-076B0B0E3713",
+  "review_sha256": "d166f9fbaa6fe23b9e7819fb1249ba824bb5fa45fd33b9240699e1611526d6fb",
+  "concurrent_review": {
+    "revision": "REVIEW-6FC8F57201AE",
+    "input_sha256": [
+      "c6fe19cf60dd73572479b6dfacc7b6c287891df7dc6633e29ae0d944a5696523",
+      "3d8588db3efaae3857c168dc032c1551e06b0bdae6a4f7d37779f3373ef19254"
+    ],
+    "retained_sha256": "c6fe19cf60dd73572479b6dfacc7b6c287891df7dc6633e29ae0d944a5696523",
+    "new_canonical_reviews": 1
+  }
+}

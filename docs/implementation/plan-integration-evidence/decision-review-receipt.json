@@ -1,0 +1,149 @@
+{
+  "starting_head": "217cc663cc683fd0e49928cdd901c74a77c3af98",
+  "seconds": {
+    "entry": 20.57,
+    "partial": 11.95,
+    "close": 10.38,
+    "signal": 12.76,
+    "signal-reopen": 13.13,
+    "review-blind": 11.84,
+    "review-reveal": 12.39,
+    "review-reopen": 12.6
+  },
+  "cases": [
+    {
+      "trade_id": "TD-26D11B283472",
+      "version": 1,
+      "plan_version_id": "PLAN-20865318B346",
+      "cutoff": 1763039100,
+      "prompt_hash": "9e53c5a68595dfc339d03e0522d3b3cfc2b1411a3a1e252db382badeaafc2eb7",
+      "assessment": "Follow the frozen risk budget.",
+      "blind_response_fields": [
+        "phase",
+        "prompt",
+        "prompt_hash"
+      ],
+      "snapshot_id": "480f8d4f6a7a3b63eaf0d89607c5fb51ecf95c962cdac6da02a27cc43c8ceb08",
+      "signal": null,
+      "lanes": [
+        {
+          "symbol": "EURUSD",
+          "feed": "dukascopy-bi5-v2",
+          "basis": "BID",
+          "partitions": [
+            {
+              "id": "55e8bd216f5d2b9e2b130ddedd0579dce0aa54fd561cfb6e86a633228a127b0d",
+              "sha256": "a6a0d7ee85e62b4947e9b0735d31ed4985871d0cb90d2efb8c621f7d14b63e41"
+            },
+            {
+              "id": "42d67cb27e0d1b3554cd2f787b4d3268f8fdd9b022a520e2ce68477a2b1f6ca4",
+              "sha256": "e577e7e92bf826da9fdd2ba3ea791f20a858da732ba864d3984a21bf67a87626"
+            }
+          ],
+          "count": 1,
+          "first": 1763038800,
+          "last": 1763038800
+        }
+      ],
+      "outcome": "PAPER_CLOSED",
+      "fills": [
+        {
+          "fill_id": "a92c4b12aa93437da81890fbd3b53779f0897dac548d055f42b833cc9dd94fdb",
+          "side": "ASK",
+          "quantity_eur": 1000,
+          "price_units": 116211,
+          "time_ms": 1763039102028,
+          "cash_usd_units": 883789000,
+          "realized_usd_units": 0,
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+        },
+        {
+          "fill_id": "8d5844f81129f37b7facf8863118a9c7c6017432a2f5d1c7512927505e2e8a43",
+          "side": "BID",
+          "quantity_eur": 400,
+          "price_units": 116199,
+          "time_ms": 1763039160038,
+          "cash_usd_units": 930268600,
+          "realized_usd_units": -4800,
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+        },
+        {
+          "fill_id": "193c95dd57a9223bcc0868b930759cefd1caa4fe7b87e5242924c6c2b179a1dd",
+          "side": "BID",
+          "quantity_eur": 600,
+          "price_units": 116194,
+          "time_ms": 1763039225141,
+          "cash_usd_units": 999985000,
+          "realized_usd_units": -15000,
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+        }
+      ]
+    },
+    {
+      "trade_id": "TD-28FF09A14E4D",
+      "version": 1,
+      "plan_version_id": "PLAN-52D762C83F49",
+      "cutoff": 1794576300,
+      "prompt_hash": "ae196875e803438bf457bcb45183fa044962b7ce9eab1d4769b8cf8e9c445e58",
+      "assessment": "Wait for the planned entry conditions.",
+      "blind_response_fields": [
+        "phase",
+        "prompt",
+        "prompt_hash"
+      ],
+      "snapshot_id": null,
+      "signal": {
+        "event_key": "7e9485b627eb7c327f80ae78f4e524920c33ef6ffe6802ecdd76397c53985e43",
+        "status": "SMT_CONFIRMED"
+      },
+      "lanes": [
+        {
+          "symbol": "EURUSD",
+          "feed": "dukascopy-web-m1-v1",
+          "basis": "BID",
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "count": 14,
+          "first": 1794572100,
+          "last": 1794576000
+        },
+        {
+          "symbol": "GBPUSD",
+          "feed": "dukascopy-web-m1-v1",
+          "basis": "BID",
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "count": 14,
+          "first": 1794572100,
+          "last": 1794576000
+        }
+      ],
+      "outcome": "NO_TRADE",
+      "kind": "NO_TRADE",
+      "event_id": "EVENT-2DF6BEA8ADEE",
+      "reason": "Passed because the independent entry condition was absent.",
+      "signal_history": [
+        {
+          "status": "SMT_CANDIDATE",
+          "event_time": 1794576000
+        },
+        {
+          "status": "SMT_CONFIRMED",
+          "event_time": 1794576300
+        },
+        {
+          "status": "SMT_INVALIDATED",
+          "event_time": 1794576600
+        }
+      ]
+    }
+  ]
+}

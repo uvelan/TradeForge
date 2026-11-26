@@ -1,0 +1,456 @@
+{
+  "case": "unverifiable",
+  "baseline_git_revision": "4e03463a36f176b701ba36558bf03ffa9c8795a2",
+  "fixed_git_revision": "57157f1f4898d818c99505e95447bd99b774ab8b",
+  "session_id": "8576076f9325de9cf14c9f5b44a59403fb6c68c53275f47bd46210ecdaef9cff",
+  "manifest": {
+    "date_utc": "2026-11-13",
+    "start": 1794605100,
+    "end": 1794675900,
+    "symbols": {
+      "EURUSD": {
+        "type": "FVG",
+        "anchor": 1794606000,
+        "formation": 1794606600,
+        "previous": 1794606900,
+        "successor": 1794675600,
+        "T": 1794675900,
+        "reason": "UNVERIFIABLE_CLOSURE",
+        "missing": null,
+        "partitions": [
+          {
+            "id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b",
+            "sha256": "5e6e9bd606cf7e15be6cab17c5414adfcf9c6fefa107f244b8db83266c589f2f"
+          }
+        ],
+        "partition": {
+          "id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b",
+          "sha256": "5e6e9bd606cf7e15be6cab17c5414adfcf9c6fefa107f244b8db83266c589f2f"
+        }
+      },
+      "GBPUSD": {
+        "type": "OB",
+        "anchor": 1794606300,
+        "formation": 1794606600,
+        "previous": 1794606900,
+        "successor": 1794675600,
+        "T": 1794675900,
+        "reason": "UNVERIFIABLE_CLOSURE",
+        "missing": null,
+        "partitions": [
+          {
+            "id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5",
+            "sha256": "1a3b3e12cc0b0664e22e664d7862fd9f769617141073e5713aaa357e1e5a2a4c"
+          }
+        ],
+        "partition": {
+          "id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5",
+          "sha256": "1a3b3e12cc0b0664e22e664d7862fd9f769617141073e5713aaa357e1e5a2a4c"
+        }
+      }
+    }
+  },
+  "symbols": {
+    "EURUSD": {
+      "wick": {
+        "T": "2026-11-14T17:05:00Z",
+        "T-1": {
+          "zone_id": "9417560e63412ae48020000820e9443e1c35bb98d10f19a6f9f6765aa3d7db54",
+          "id": "e120a4d1e54e579d17d9a323d65efd2b66ae29ea265ef25af47d3d6499cf1ea6",
+          "state": "ACTIVE",
+          "reason": "THREE_CLOSED_CANDLES",
+          "revision": 1,
+          "observation_time": 1794606600,
+          "confirmation_time": 1794606900,
+          "available_at": 1794606900
+        },
+        "at_T": {
+          "zone_id": "9417560e63412ae48020000820e9443e1c35bb98d10f19a6f9f6765aa3d7db54",
+          "id": "ec24839c4f5252014066407497ee196e1a6b97ccb0c8617a54ab8d8d0b9edd7a",
+          "state": "INVALIDATED",
+          "reason": "UNVERIFIABLE_CLOSURE",
+          "revision": 2,
+          "observation_time": 1794675600,
+          "confirmation_time": 1794675900,
+          "available_at": 1794675900
+        },
+        "baseline_witness_rows": [
+          {
+            "time_utc": "2026-11-14T17:00:00Z",
+            "available_at_utc": "2026-11-14T17:05:00Z",
+            "source_id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b:1794675600",
+            "partitions": [
+              {
+                "id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b",
+                "sha256": "5e6e9bd606cf7e15be6cab17c5414adfcf9c6fefa107f244b8db83266c589f2f"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "ec24839c4f5252014066407497ee196e1a6b97ccb0c8617a54ab8d8d0b9edd7a"
+              }
+            ]
+          }
+        ],
+        "fixed_witness_rows": [
+          {
+            "time_utc": "2026-11-13T21:55:00Z",
+            "available_at_utc": "2026-11-13T22:00:00Z",
+            "source_id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b:1794606900",
+            "partitions": [
+              {
+                "id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b",
+                "sha256": "5e6e9bd606cf7e15be6cab17c5414adfcf9c6fefa107f244b8db83266c589f2f"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "GAP_PREVIOUS_OBSERVED",
+                "event_id": "ec24839c4f5252014066407497ee196e1a6b97ccb0c8617a54ab8d8d0b9edd7a"
+              }
+            ]
+          },
+          {
+            "time_utc": "2026-11-14T17:00:00Z",
+            "available_at_utc": "2026-11-14T17:05:00Z",
+            "source_id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b:1794675600",
+            "partitions": [
+              {
+                "id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b",
+                "sha256": "5e6e9bd606cf7e15be6cab17c5414adfcf9c6fefa107f244b8db83266c589f2f"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "ec24839c4f5252014066407497ee196e1a6b97ccb0c8617a54ab8d8d0b9edd7a"
+              },
+              {
+                "role": "GAP_NEXT_OBSERVED",
+                "event_id": "ec24839c4f5252014066407497ee196e1a6b97ccb0c8617a54ab8d8d0b9edd7a"
+              }
+            ]
+          }
+        ],
+        "continuity": {
+          "previous_observed_open": 1794606900,
+          "next_observed_open": 1794675600,
+          "step_seconds": 300,
+          "missing_open_intervals": null,
+          "schedule": {
+            "kind": "forex_weekly",
+            "timezone": "America/New_York",
+            "sunday_open": "17:00",
+            "friday_close": "17:00"
+          }
+        },
+        "shared_prior_contract_sha256": "fa8bd157732f39c4149359756c310a8c6100c3357e9831ed606f1ef7afe930d4",
+        "rewind_matches_T_minus_1": true
+      },
+      "close": {
+        "T": "2026-11-14T17:05:00Z",
+        "T-1": {
+          "zone_id": "c0d0b8f49683e06f12c3a9f5fe3906dd27e34254a32a2d1876699fe1c20f6f77",
+          "id": "a1cb0e74f930b5e7dbf5db3f3fc1f6fc04cbfcd033b65d77c35af81fedb13272",
+          "state": "ACTIVE",
+          "reason": "THREE_CLOSED_CANDLES",
+          "revision": 1,
+          "observation_time": 1794606600,
+          "confirmation_time": 1794606900,
+          "available_at": 1794606900
+        },
+        "at_T": {
+          "zone_id": "c0d0b8f49683e06f12c3a9f5fe3906dd27e34254a32a2d1876699fe1c20f6f77",
+          "id": "c7b9ef44db896cd0e49f2e794ae250fc3047487de77f5900a4140713b1ce5e35",
+          "state": "INVALIDATED",
+          "reason": "UNVERIFIABLE_CLOSURE",
+          "revision": 2,
+          "observation_time": 1794675600,
+          "confirmation_time": 1794675900,
+          "available_at": 1794675900
+        },
+        "baseline_witness_rows": [
+          {
+            "time_utc": "2026-11-14T17:00:00Z",
+            "available_at_utc": "2026-11-14T17:05:00Z",
+            "source_id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b:1794675600",
+            "partitions": [
+              {
+                "id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b",
+                "sha256": "5e6e9bd606cf7e15be6cab17c5414adfcf9c6fefa107f244b8db83266c589f2f"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "c7b9ef44db896cd0e49f2e794ae250fc3047487de77f5900a4140713b1ce5e35"
+              }
+            ]
+          }
+        ],
+        "fixed_witness_rows": [
+          {
+            "time_utc": "2026-11-13T21:55:00Z",
+            "available_at_utc": "2026-11-13T22:00:00Z",
+            "source_id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b:1794606900",
+            "partitions": [
+              {
+                "id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b",
+                "sha256": "5e6e9bd606cf7e15be6cab17c5414adfcf9c6fefa107f244b8db83266c589f2f"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "GAP_PREVIOUS_OBSERVED",
+                "event_id": "c7b9ef44db896cd0e49f2e794ae250fc3047487de77f5900a4140713b1ce5e35"
+              }
+            ]
+          },
+          {
+            "time_utc": "2026-11-14T17:00:00Z",
+            "available_at_utc": "2026-11-14T17:05:00Z",
+            "source_id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b:1794675600",
+            "partitions": [
+              {
+                "id": "1e01590f1ce81d92bcadc9d9f829cd6ba0ef14e5353a3d4eeb5cff16c8ff233b",
+                "sha256": "5e6e9bd606cf7e15be6cab17c5414adfcf9c6fefa107f244b8db83266c589f2f"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "c7b9ef44db896cd0e49f2e794ae250fc3047487de77f5900a4140713b1ce5e35"
+              },
+              {
+                "role": "GAP_NEXT_OBSERVED",
+                "event_id": "c7b9ef44db896cd0e49f2e794ae250fc3047487de77f5900a4140713b1ce5e35"
+              }
+            ]
+          }
+        ],
+        "continuity": {
+          "previous_observed_open": 1794606900,
+          "next_observed_open": 1794675600,
+          "step_seconds": 300,
+          "missing_open_intervals": null,
+          "schedule": {
+            "kind": "forex_weekly",
+            "timezone": "America/New_York",
+            "sunday_open": "17:00",
+            "friday_close": "17:00"
+          }
+        },
+        "shared_prior_contract_sha256": "17cbc376f1176c08a48c6e6f5ffa65053329a9c8952bc0cd2c166fb125845d22",
+        "rewind_matches_T_minus_1": true
+      }
+    },
+    "GBPUSD": {
+      "wick": {
+        "T": "2026-11-14T17:05:00Z",
+        "T-1": {
+          "zone_id": "c4d6142be5f7168a32825ace47ca287af56fcf870a13a5296f3eb48571f03d21",
+          "id": "7742bd9b3fd5d435611207cd12639caa12cd9a01f06a9ead92b0ce8dafa25643",
+          "state": "ACTIVE",
+          "reason": "CONFIRMED_BOS",
+          "revision": 1,
+          "observation_time": 1794606600,
+          "confirmation_time": 1794606900,
+          "available_at": 1794606900
+        },
+        "at_T": {
+          "zone_id": "c4d6142be5f7168a32825ace47ca287af56fcf870a13a5296f3eb48571f03d21",
+          "id": "cbeb9ff79aa9da7b836d8a77e6014386b3a4cd5b604b9378d00ecc7f1290dfa6",
+          "state": "INVALIDATED",
+          "reason": "UNVERIFIABLE_CLOSURE",
+          "revision": 2,
+          "observation_time": 1794675600,
+          "confirmation_time": 1794675900,
+          "available_at": 1794675900
+        },
+        "baseline_witness_rows": [
+          {
+            "time_utc": "2026-11-14T17:00:00Z",
+            "available_at_utc": "2026-11-14T17:05:00Z",
+            "source_id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5:1794675600",
+            "partitions": [
+              {
+                "id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5",
+                "sha256": "1a3b3e12cc0b0664e22e664d7862fd9f769617141073e5713aaa357e1e5a2a4c"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "cbeb9ff79aa9da7b836d8a77e6014386b3a4cd5b604b9378d00ecc7f1290dfa6"
+              }
+            ]
+          }
+        ],
+        "fixed_witness_rows": [
+          {
+            "time_utc": "2026-11-13T21:55:00Z",
+            "available_at_utc": "2026-11-13T22:00:00Z",
+            "source_id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5:1794606900",
+            "partitions": [
+              {
+                "id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5",
+                "sha256": "1a3b3e12cc0b0664e22e664d7862fd9f769617141073e5713aaa357e1e5a2a4c"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "GAP_PREVIOUS_OBSERVED",
+                "event_id": "cbeb9ff79aa9da7b836d8a77e6014386b3a4cd5b604b9378d00ecc7f1290dfa6"
+              }
+            ]
+          },
+          {
+            "time_utc": "2026-11-14T17:00:00Z",
+            "available_at_utc": "2026-11-14T17:05:00Z",
+            "source_id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5:1794675600",
+            "partitions": [
+              {
+                "id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5",
+                "sha256": "1a3b3e12cc0b0664e22e664d7862fd9f769617141073e5713aaa357e1e5a2a4c"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "cbeb9ff79aa9da7b836d8a77e6014386b3a4cd5b604b9378d00ecc7f1290dfa6"
+              },
+              {
+                "role": "GAP_NEXT_OBSERVED",
+                "event_id": "cbeb9ff79aa9da7b836d8a77e6014386b3a4cd5b604b9378d00ecc7f1290dfa6"
+              }
+            ]
+          }
+        ],
+        "continuity": {
+          "previous_observed_open": 1794606900,
+          "next_observed_open": 1794675600,
+          "step_seconds": 300,
+          "missing_open_intervals": null,
+          "schedule": {
+            "kind": "forex_weekly",
+            "timezone": "America/New_York",
+            "sunday_open": "17:00",
+            "friday_close": "17:00"
+          }
+        },
+        "shared_prior_contract_sha256": "65cce174033c98c581b27f41ab5e8651c7b6d08991951814f5656c99356e155d",
+        "rewind_matches_T_minus_1": true
+      },
+      "close": {
+        "T": "2026-11-14T17:05:00Z",
+        "T-1": {
+          "zone_id": "a60cd5ef9470ecd5ecbba66c526451683ef065a0594e7f298f4b7f17aec5d8b5",
+          "id": "4ecc9675acfe3562001c9de28d94d35510f8e8cafb99b20959aeaef9025d9af1",
+          "state": "ACTIVE",
+          "reason": "CONFIRMED_BOS",
+          "revision": 1,
+          "observation_time": 1794606600,
+          "confirmation_time": 1794606900,
+          "available_at": 1794606900
+        },
+        "at_T": {
+          "zone_id": "a60cd5ef9470ecd5ecbba66c526451683ef065a0594e7f298f4b7f17aec5d8b5",
+          "id": "202224b1c672421e36b9b7286457d1fae90af23dff2e8aa94981a8c6defb3dc9",
+          "state": "INVALIDATED",
+          "reason": "UNVERIFIABLE_CLOSURE",
+          "revision": 2,
+          "observation_time": 1794675600,
+          "confirmation_time": 1794675900,
+          "available_at": 1794675900
+        },
+        "baseline_witness_rows": [
+          {
+            "time_utc": "2026-11-14T17:00:00Z",
+            "available_at_utc": "2026-11-14T17:05:00Z",
+            "source_id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5:1794675600",
+            "partitions": [
+              {
+                "id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5",
+                "sha256": "1a3b3e12cc0b0664e22e664d7862fd9f769617141073e5713aaa357e1e5a2a4c"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "202224b1c672421e36b9b7286457d1fae90af23dff2e8aa94981a8c6defb3dc9"
+              }
+            ]
+          }
+        ],
+        "fixed_witness_rows": [
+          {
+            "time_utc": "2026-11-13T21:55:00Z",
+            "available_at_utc": "2026-11-13T22:00:00Z",
+            "source_id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5:1794606900",
+            "partitions": [
+              {
+                "id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5",
+                "sha256": "1a3b3e12cc0b0664e22e664d7862fd9f769617141073e5713aaa357e1e5a2a4c"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "GAP_PREVIOUS_OBSERVED",
+                "event_id": "202224b1c672421e36b9b7286457d1fae90af23dff2e8aa94981a8c6defb3dc9"
+              }
+            ]
+          },
+          {
+            "time_utc": "2026-11-14T17:00:00Z",
+            "available_at_utc": "2026-11-14T17:05:00Z",
+            "source_id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5:1794675600",
+            "partitions": [
+              {
+                "id": "560014bd6108200e9370172f0852a14ea65cbcbb0b7c694bf7999099af8ddba5",
+                "sha256": "1a3b3e12cc0b0664e22e664d7862fd9f769617141073e5713aaa357e1e5a2a4c"
+              }
+            ],
+            "availability_basis": "ARCHIVE_SUPPLIED",
+            "roles": [
+              {
+                "role": "REVISION_OBSERVATION",
+                "event_id": "202224b1c672421e36b9b7286457d1fae90af23dff2e8aa94981a8c6defb3dc9"
+              },
+              {
+                "role": "GAP_NEXT_OBSERVED",
+                "event_id": "202224b1c672421e36b9b7286457d1fae90af23dff2e8aa94981a8c6defb3dc9"
+              }
+            ]
+          }
+        ],
+        "continuity": {
+          "previous_observed_open": 1794606900,
+          "next_observed_open": 1794675600,
+          "step_seconds": 300,
+          "missing_open_intervals": null,
+          "schedule": {
+            "kind": "forex_weekly",
+            "timezone": "America/New_York",
+            "sunday_open": "17:00",
+            "friday_close": "17:00"
+          }
+        },
+        "shared_prior_contract_sha256": "3533647194e3476dd6a230af69853cba41c7efd8f8050f3461a6eeb5876515ee",
+        "rewind_matches_T_minus_1": true
+      }
+    }
+  },
+  "existing_receipts_match": true
+}

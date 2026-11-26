@@ -707,3 +707,30 @@ test("strict FVG timing exposes a straddling replay observation and rewinds",asy
   await page.getByText("Indicator library",{exact:true}).click();
   await expect(policy).toHaveValue("STRICT_CAUSAL");
 });
+
+test("flat M5 CCI renders exact zero on the real indicator response", async ({page}, info) => {
+  const start = 1704067200;
+  const price = 1.60003;
+  const candles = Array.from({length: 21}, (_, index) => ({
+    time: start + 300 * index, open: price, high: price, low: price, close: price,
+  }));
+  await page.route("**/research/api/market/candles?*", route => {
+    const params = new URL(route.request().url()).searchParams;
+    if (params.get("source") !== "DEMO" || params.get("timeframe") !== "M5") return route.continue();
+    return route.fulfill({json: {symbol:"EURUSD", timeframe:"M5", source:"DEMO", candles}});
+  });
+  await terminal(page);
+  await page.getByText("Indicator library", {exact:true}).click();
+  const evaluated = page.waitForResponse(response => response.url().endsWith("/indicators/evaluate") &&
+    response.request().postDataJSON().indicators.some((indicator:{id:string}) => indicator.id === "cci"));
+  await enable(page, "Commodity Channel Index", "cci");
+  const response = await evaluated;
+  expect(response.ok()).toBe(true);
+  const {results} = await response.json();
+  expect(results.find((result:{id:string}) => result.id === "cci").series.CCI
+    .map(({time,value}:{time:number;value:number}) => ({time,value})))
+    .toEqual([{time: start + 19 * 300, value: 0}, {time: start + 20 * 300, value: 0}]);
+  await expect(page.locator(primary + " tr")).toHaveCount(4);
+  await page.locator(primary).scrollIntoViewIfNeeded();
+  await page.screenshot({path:info.outputPath("cci-flat-zero.png")});
+});

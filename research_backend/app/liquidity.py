@@ -73,7 +73,8 @@ class Pool:
 
 
 class LiquidityStream:
-    def __init__(self, rules: LiquidityRules, delivery: LiquidityDelivery, step: int, *, on_confirmed_sweep=None, timing=None, registry=None):
+    def __init__(self, rules: LiquidityRules, delivery: LiquidityDelivery, step: int, *, on_confirmed_sweep=None, timing=None, registry=None, public_event=None):
+        self.public_event = public_event
         self.on_confirmed_sweep = on_confirmed_sweep
         self.timing = timing
         self.timing_config = digest(rules.identity()) if timing else None
@@ -136,6 +137,8 @@ class LiquidityStream:
                 coverage=self.timing[2] is not None and self.timing[2].kind!="unknown",lineage=True,
                 producer_references=pool.producer_references)
         self.pools.append(entry)
+        if self.public_event is not None:
+            self.public_event("pools", entry)
         if state in {"SWEPT","BROKEN","EXPIRED","INVALIDATED","UNCERTAIN"}:
             self.active.pop(pool.id)
             key = self.bucket(pool.side,pool.anchor)
@@ -262,6 +265,8 @@ class LiquidityStream:
                             predicate="CLOSE_ONLY" if event_state=="BROKEN" else "WHOLE_CANDLE",
                             coverage=self.timing[2] is not None and self.timing[2].kind!="unknown")
                     self.sweeps.append(crossing)
+                    if self.public_event is not None:
+                        self.public_event("sweeps", crossing)
                     if event_state == "SWEPT" and self.on_confirmed_sweep is not None:
                         self.on_confirmed_sweep(crossing)
                     if event_state=="SWEEP_CANDIDATE":

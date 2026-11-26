@@ -1,0 +1,126 @@
+{
+  "tested_sha": "47ffc9edbcafdb5ec37cd539bb5a79d35388dab4",
+  "machine": "Windows-11-10.0.26200-SP0",
+  "browser": "159.0.8154.6",
+  "session_id": "73b908f0d88c11e62dda35e5c9ad42a9c9c2b50016e7bcd6f628a4ca1ebecca6",
+  "swapped_session_id": "47d1174851756577aaeaf7a1c16f6c0c4c6d8a3dc0e00586b9e5c1febb29e20a",
+  "observed": {
+    "bos": {
+      "id": "005f5c83294a55caf7d883b25edff3c25985e5717d9f23669cf3d7a2feed825d",
+      "type": "BOS",
+      "available_at": 1794534600,
+      "anchor_time": 1794533100,
+      "supporting_ids": [
+        "adbedfc03266026354a1e4fbd87a6d29d99867a21bc5102b28bc5559cd7ebcbe",
+        "2e27ccc6a9d4188351365b957340db8975bbb6bfdc0c7d7a95af00f73e71054b"
+      ]
+    },
+    "choch": {
+      "id": "99b6d71290497130821d177223587b0ac245d89b6757b17441241bbd724c6875",
+      "type": "CHOCH",
+      "available_at": 1794543300,
+      "anchor_time": 1794541500,
+      "supporting_ids": [
+        "3adb0da45448b1544557f19f2e039a216341c7dcc863f4d2302b6401b256bca8"
+      ]
+    },
+    "eql": {
+      "id": "a5949441726f43737a99e504f34ae1d5f96eb5feb98234f4eee49cfe02070634",
+      "type": "EQL",
+      "available_at": 1794532200,
+      "anchor_time": 1794529800,
+      "supporting_ids": [
+        "03d9d888a54556eec54bfef9e9ffa67fd884ceee9869d47a6827e7e29ca6ceaa",
+        "1a14766443fbf00004899566bd88842a7541cbc5df3e2917c3cc57e807495e4b"
+      ]
+    },
+    "swept": {
+      "id": "bae9b38578ed3861f950f3bf26ed91841ab3ca0de7dc2ad472e071b9b3667999",
+      "type": "SWEPT",
+      "available_at": 1794554100,
+      "anchor_time": 1794534300,
+      "supporting_ids": [
+        "a9790e6fc481d9bc6befb8fd3a371d598acda5e9d299080ccdb4ce0901cb92e3",
+        "04628fc60c6eb0cbf24ab31ae3e064e2bbe4a64354a7b394a6603c2fead4c331",
+        "35f439df1582195f3e3207d90539fb235a9bbd939c153a61499d9123f15419af",
+        "fab59f4d84e324b620c9bdc16223691311275505d182eeae2b68cc16cbf1d492",
+        "ea47eecbe7655bb2b55ed239808960ca007bd25d8aa60df562ab21ebc2459a9f",
+        "c27f58aac83f454e274591a52218a4428e718a5ad2c371e6fb211dd06470463d"
+      ]
+    },
+    "mss": {
+      "id": "dd03b7385b7c0a18e8a6cf77e481f4b745c5e027ce1b9a756ea28ac46c93f2d9",
+      "type": "MSS",
+      "available_at": 1794576900,
+      "anchor_time": 1794575100,
+      "supporting_ids": [
+        "9980dab36a1c539ad828ff9703611602f06333ac0c6fd85b6e78021878c9da2a",
+        "e8a79c5072eb4db4361b03e1725479d4254802d171d971eeef9eea36edcb021e",
+        "9fe8448983dd67d4b3dac8e8c0f86c923bb90e1a9e23403ab21bb4a0de0c78a9"
+      ]
+    }
+  },
+  "restored": {
+    "primary": {
+      "Event": "EQL",
+      "Side": "LOW",
+      "Direction": "\u2014",
+      "Status": "confirmed",
+      "Level": "1.10499",
+      "Anchor": "2026-11-13 00:30:00 UTC",
+      "Observation": "2026-11-13 01:05:00 UTC",
+      "Confirmation": "2026-11-13 01:10:00 UTC",
+      "First available": "2026-11-13 01:10:00 UTC",
+      "Rule version": "1",
+      "Event ID": "a5949441726f43737a99e504f34ae1d5f96eb5feb98234f4eee49cfe02070634",
+      "Liquidity side": "SSL",
+      "Pool range": "1.10499 \u2013 1.1051",
+      "Supporting events": "03d9d888a54556eec54bfef9e9ffa67fd884ceee9869d47a6827e7e29ca6ceaa, 1a14766443fbf00004899566bd88842a7541cbc5df3e2917c3cc57e807495e4b"
+    },
+    "peer": {
+      "Event": "MSS",
+      "Side": "HIGH",
+      "Direction": "BULLISH",
+      "Status": "confirmed",
+      "Level": "1.32306",
+      "Anchor": "2026-11-13 13:05:00 UTC",
+      "Observation": "2026-11-13 13:30:00 UTC",
+      "Confirmation": "2026-11-13 13:35:00 UTC",
+      "First available": "2026-11-13 13:35:00 UTC",
+      "Rule version": "1",
+      "Event ID": "dd03b7385b7c0a18e8a6cf77e481f4b745c5e027ce1b9a756ea28ac46c93f2d9",
+      "Level first available": "2026-11-13 13:20:00 UTC",
+      "Crossing price": "1.32472",
+      "Directional body": "0.00169",
+      "MSS threshold (price)": "0.001",
+      "State change": "BEARISH \u2192 NEUTRAL",
+      "Supporting events": "9980dab36a1c539ad828ff9703611602f06333ac0c6fd85b6e78021878c9da2a, e8a79c5072eb4db4361b03e1725479d4254802d171d971eeef9eea36edcb021e, 9fe8448983dd67d4b3dac8e8c0f86c923bb90e1a9e23403ab21bb4a0de0c78a9"
+    }
+  },
+  "utc_cutoff": 1794607200,
+  "initial_timings_ms": {
+    "EURUSD open inspector and event list": 245.51189999999997,
+    "EURUSD BOS step and event list": 224.48090000000047,
+    "EURUSD BOS select and receipt": 135.59049999999934,
+    "EURUSD CHOCH step and event list": 328.64370000000054,
+    "EURUSD CHOCH select and receipt": 192.04929999999968,
+    "EURUSD EQL step and event list": 268.79509999999937,
+    "EURUSD EQL select and receipt": 102.05740000000151,
+    "GBPUSD SWEPT step and event list": 242.16489999999976,
+    "GBPUSD SWEPT select and receipt": 208.60499999999956,
+    "GBPUSD MSS step and event list": 333.92449999999917,
+    "GBPUSD MSS select and receipt": 191.58259999999973,
+    "GBPUSD MSS delayed upstream response after rewind and pane change": 1066.4992000000002,
+    "GBPUSD open inspector and event list": 140.34709999999905
+  },
+  "restart_timings_ms": {
+    "resume and selected GBPUSD receipt": 671.8987000000002,
+    "swap to and restore EURUSD receipt": 204.06370000000015
+  },
+  "relative_worker_comparison": "Combined browser observations, rendered rows and restored records matched the worker's raw initial and restart receipts, except timings_ms. Full API symbols, controlled cases, rule profile and interval matched the committed oracle exactly.",
+  "raw_receipt_sha256": {
+    "combined-oracle.json": "e20dc05259eac897d59769892a2bcc00c4a61df7194f04d66fcf026fbebeccc2",
+    "browser/structure-liquidity-initial.json": "bebe11667493a2fa73ab73b7498293b51e62d5d5aaf11b75ec5247847f1971a3",
+    "browser/structure-liquidity-restart.json": "e364587d4c5cbab986dbb63a3911d442fe9fb2b1539f81fb090f5f569423b173"
+  }
+}

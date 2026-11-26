@@ -11,6 +11,7 @@ async function request<T>(url:string,options?:RequestInit):Promise<T> {
 }
 const post=<T>(url:string,payload:unknown)=>request<T>(url,{method:'POST',body:JSON.stringify(payload)});
 export const api={
+  statementFile:<T>(file:File)=>request<T>('/statements',{method:'POST',body:file}),
   get:<T>(path:string)=>request<T>(path),post,
   overview:()=>request<import('./types').Overview>('/overview'),
   brokerSymbols:()=>request<BrokerSymbol[]>('/market/mt5/symbols'),
@@ -31,7 +32,7 @@ export const api={
   closeTrade:(id:string,pnl:string,r:string,notes:string)=>post(`/trades/${id}/close`,{pnl_usd:pnl,result_r:r,notes}),
   packages:()=>request<import('./types').Package[]>('/ai/packages'),
   reviews:()=>request<import('./types').Review[]>('/ai/reviews'),
-  importReview:(input:string)=>request<{id:string;assessment:string;verification:string}>('/ai/reviews',{method:'POST',body:input}),
+  importReview:(input:string|File)=>request<{id:string;assessment:string;verification:string}>('/ai/reviews',{method:'POST',body:input}),
   journal:()=>request<import('./types').JournalEntry[]>('/journal'),
   addJournal:(kind:string,title:string,content:string,signal_reference?:import('./types').SignalReference,context?:import('./types').JournalContext)=>post<{id:string}>('/journal',{kind,title,content,signal_reference,...context}),
   datasets:()=>request<import('./types').Dataset[]>('/datasets'),
@@ -56,8 +57,12 @@ export const api={
   replay:(id:string)=>request<import('./types').ReplaySession>('/replay/sessions/'+encodeURIComponent(id)),
   saveCheckpoint:(id:string,position:number,bookmarks:number[])=>post('/replay/sessions/'+encodeURIComponent(id)+'/checkpoint',{position,bookmarks}),
   saveSnapshot:(png:string,symbol:string,timeframe:Timeframe,source:string,cutoff?:number,
-    signal_reference?:import('./types').SignalReference)=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference}),
+    signal_reference?:import('./types').SignalReference,lanes?:import('./snapshotLanes').SnapshotLane[])=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference,lanes}),
   importMt5:(symbol:SymbolName,timeframe:Timeframe,limit:number)=>post('/market/import/mt5',{symbol,timeframe,limit}),
+  importReviewed:(file:File)=>{
+    const body=new FormData();body.append('file',file);
+    return request<{source_sha256:string;partitions:{id:string}[]}>('/market/import/reviewed',{method:'POST',body});
+  },
   importBi5:async(symbol:SymbolName,day:string,file:File,hour:string)=>{
     const f=new FormData();f.append('file',file);
     const q=new URLSearchParams({symbol,day});if(hour)q.set('hour',hour);

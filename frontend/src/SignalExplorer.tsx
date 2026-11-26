@@ -1,4 +1,7 @@
-import {useEffect,useState} from 'react';
+import {SnapshotDetails} from './SnapshotDetails';
+import {snapshotLane} from './snapshotLanes';
+import {useEffect,useRef,useState} from 'react';
+import {WorkspacePanels} from './WorkspacePanels';
 import {api} from './api';
 import {CandleChart,Notice} from './components';
 import {frameMinutes} from './chartViews';
@@ -11,7 +14,8 @@ export type SignalStatus = SmtEvent['status'] | 'SMT_SOURCE_CORRECTED';
 type SignalFeed = {symbol:string; source:string; feed_id:string; price_basis:string;
   dataset_id?:string; sha256?:string; partitions?:{id:string;sha256:string}[]};
 export type SignalRecord = Omit<SmtEvent,'status'|'transitions'> & {
-  event_key:string; status:SignalStatus; version:number; rules:SmtRules;
+  source_correction?:{observed_at:number;changes:unknown[]}; watch_published_at?:number; chart_cutoff?:number; event_key:string; status:SignalStatus; version:number; rules:SmtRules;
+  strategy_revision?:{id:string;available_at:number};
   transitions:{status:SignalStatus;time:number}[];
   provenance:{authority:string; timeframe:Timeframe; primary:SignalFeed; comparison:SignalFeed};
 };
@@ -31,6 +35,8 @@ const filters={q:'',instrument:'',direction:'',timeframe:'',source:'',status:'',
 export function SignalExplorer({selected,onSelect,onPlan,onJournal,onOpenPlan}: {
   selected?:SignalRecord; onSelect:(record:SignalRecord)=>void; onPlan:(record:SignalRecord,snapshot?:string)=>void; onJournal:(record:SignalRecord,snapshot?:string)=>void; onOpenPlan:(id:string,version:number)=>void;
 }) {
+  const selectionRequest=useRef(0);
+  useEffect(()=>()=>{selectionRequest.current++;},[]);
   const [draft,setDraft]=useState(filters);
   const [query,setQuery]=useState('');
   const [cursor,setCursor]=useState('');
@@ -71,16 +77,22 @@ export function SignalExplorer({selected,onSelect,onPlan,onJournal,onOpenPlan}: 
       <label>Until UTC<input type="datetime-local" value={draft.end} onChange={e=>setDraft({...draft,end:e.target.value})}/></label>
       <button className="btn btn-primary" type="submit">Search signals</button>
     </form>
-    <div className="signal-layout">
+    <WorkspacePanels inspectorOnly><div className="signal-layout">
       <div className="card signal-results">
         {error?<Notice tone="red">{error}</Notice>:!result?<p role="status">Loading signals…</p>:
           result.items.length===0?<p role="status">No recorded signals match these filters.</p>:
           <ul>{result.items.map(record=><li key={record.event_key}>
-            <button className="signal-row" aria-pressed={selected?.event_key===record.event_key} onClick={()=>onSelect(record)}>
+            <button className="signal-row" aria-pressed={selected?.event_key===record.event_key} onClick={()=>{selectionRequest.current++;onSelect(record);}}>
               <strong>{record.provenance.primary.symbol} / {record.provenance.comparison.symbol}</strong>
               <span>{record.provenance.timeframe} · {record.direction} · {labels[record.status]}</span>
               <small>{format(record.transitions.at(-1)!.time*1000)}</small>
             </button>
+            {record.watch_published_at!=null&&record.transitions.map(t=><button className="text-button" key={t.status}
+              onClick={()=>{const token=++selectionRequest.current;
+                api.get<SignalRecord>('/indicators/signals/'+record.event_key+'?status='+t.status)
+                  .then(item=>{if(selectionRequest.current===token)onSelect(item);})
+                  .catch(e=>{if(selectionRequest.current===token)setError(e.message);});}}>
+              {labels[t.status]} · {format(t.time*1000)}</button>)}
           </li>)}</ul>}
         <div className="research-controls">
           <button className="small-tool" disabled={!previous.length} onClick={()=>{setCursor(previous.at(-1)??'');setPrevious(previous.slice(0,-1));}}>Previous page</button>
@@ -88,7 +100,7 @@ export function SignalExplorer({selected,onSelect,onPlan,onJournal,onOpenPlan}: 
         </div>
       </div>
       {selected&&<EvidenceInspector key={selected.event_key+selected.status} signal={selected} onPlan={onPlan} onJournal={onJournal} onOpenPlan={onOpenPlan}/>}
-    </div>
+    </div></WorkspacePanels>
   </section>;
 }
 
@@ -127,16 +139,26 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
   const cutoff=bar?(bar.available_at??bar.time+step):undefined;
   const left=capture?(cutoff===undefined?capture.primary:visibleAt(capture.primary,cutoff,step)):[];
   const right=capture?(cutoff===undefined?capture.comparison:visibleAt(capture.comparison,cutoff,step)):undefined;
-  const calculated=useSmt(left,right,timeframe,replay,signal.rules,undefined,undefined,true,0,step);
-  const recorded = signal.status==='SMT_SOURCE_CORRECTED'?undefined:
-    {...signal,status:signal.status,transitions:signal.transitions.filter(t=>t.status!=='SMT_SOURCE_CORRECTED') as SmtEvent['transitions'],
-      confirmation_bar_time:signal.confirmed_at==null?null:signal.confirmed_at-step};
-  const events=!showLines?[]:replay?(calculated.events?.filter(event=>event.id===signal.id&&event.confirmed_at!==null)??[]):recorded&&recorded.confirmed_at!==null?[recorded]:[];
+  const archiveWatch=signal.chart_cutoff!=null && Boolean(signal.strategy_revision);
+  const calculated=useSmt(left,right,timeframe,replay&&!archiveWatch,signal.rules,undefined,undefined,true,0,step);
+  const transitions=signal.transitions.filter((t):t is SmtEvent['transitions'][number]=>
+    t.status!=='SMT_SOURCE_CORRECTED' && (cutoff===undefined || t.time<=cutoff));
+  const latest=transitions.at(-1);
+  const confirmation=transitions.find(t=>t.status==='SMT_CONFIRMED');
+  const recorded:SmtEvent|undefined=signal.status!=='SMT_SOURCE_CORRECTED' && latest ? {
+    id:signal.id, event_key:signal.event_key, direction:signal.direction, leader:signal.leader,
+    primary:signal.primary, comparison:signal.comparison, status:latest.status, transitions, timing:signal.timing,
+    confirmed_at:confirmation?.time??null, confirmation_bar_time:confirmation?confirmation.time-step:null,
+  } : undefined;
+  const visibleEvent=replay&&!archiveWatch
+    ? calculated.events?.find(event=>event.id===signal.id&&event.confirmed_at!==null)
+    : recorded && (archiveWatch || recorded.confirmed_at!==null) ? recorded : undefined;
+  const events=showLines&&visibleEvent?[visibleEvent]:[];
   async function open() {
     if(capture||loading)return;
     setLoading(true);setError('');
     try {
-      const data=await api.get<Capture>('/indicators/signals/'+signal.event_key+'/candles?status='+signal.status);
+      const data=await api.get<Capture>('/indicators/signals/'+signal.event_key+'/candles?status='+signal.status+(primary.source.endsWith('_SAVED') && signal.chart_cutoff==null?'&view=retrospective':''));
       if(!data.primary.length||!data.comparison.length)throw new Error('Recorded candles are unavailable');
       setCapture(data);
     }catch(reason){setError((reason as Error).message);}finally{setLoading(false);}
@@ -159,7 +181,7 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
   const moveLabel=(epoch:number)=>capture?<button className="text-button" onClick={()=>move(epoch)}>{at(epoch)}</button>:at(epoch);
   const eligible=['EURUSD','GBPUSD','USDJPY','XAUUSD'].includes(primary.symbol);
   return <aside className="card signal-evidence" aria-label="Evidence Inspector">
-    <header><h2>Evidence Inspector</h2><p>{signalSummary(signal).split(' | ').slice(0,3).join(' · ')}</p></header>
+    <header><h2>Evidence Inspector</h2><p>{replay?`${primary.symbol} / ${comparison.symbol} ${timeframe}`:signalSummary(signal).split(' | ').slice(0,3).join(' · ')}</p></header>
     <div className="research-controls">
       <button className="small-tool" disabled={loading||Boolean(capture)} onClick={()=>void open()}>{loading?'Loading chart…':capture?'Recorded chart loaded':'Open recorded chart'}</button>
       {!replay&&<button className="small-tool" onClick={()=>onJournal(signal,snapshot)}>Record lesson</button>}
@@ -170,7 +192,11 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
     </div>
     {error&&<Notice tone="red">{error}</Notice>}
     {!replay&&<><dl className="evidence-grid">
+      {signal.watch_published_at!=null&&<div><dt>Watch publication</dt><dd>{at(signal.watch_published_at)}</dd></div>}{signal.chart_cutoff!=null&&<div><dt>Frozen chart cutoff</dt><dd>{at(signal.chart_cutoff)}</dd></div>}
       <div><dt>Signal ID</dt><dd className="evidence-id">{signal.event_key}</dd></div>
+      {archiveWatch&&signal.strategy_revision&&<><div><dt>Strategy revision ID</dt><dd className="evidence-id">{signal.strategy_revision.id}</dd></div>
+        <div><dt>Last contributing candle open</dt><dd>{at(signal.chart_cutoff!-step)}</dd></div>
+        <div><dt>Modeled availability</dt><dd>{at(signal.strategy_revision.available_at)}</dd></div></>}
       <div><dt>Leading instrument</dt><dd>{(signal.leader==='primary'?primary:comparison).symbol}</dd></div>
       <div><dt>Confirmed at ({zone})</dt><dd>{signal.confirmed_at==null?'—':capture?<button className="text-button" onClick={()=>move(signal.confirmed_at!-step)}>{at(signal.confirmed_at)}</button>:at(signal.confirmed_at)}</dd></div>
       <div><dt>Matching window closed</dt><dd>{at(signal.transitions[0]?.time)}</dd></div>
@@ -189,12 +215,14 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
         {(market.partitions??(market.dataset_id?[{id:market.dataset_id,sha256:market.sha256}]:[])).map(part=><details key={part.id}><summary>Dataset {part.id.slice(0,12)}</summary><p className="evidence-id">{part.id}<br/>{part.sha256}</p></details>)}
       </section>;
     })}</div></>}
+    {!replay&&signal.source_correction&&<details><summary>Changed source observations</summary>
+      <pre>{JSON.stringify(signal.source_correction.changes,null,2)}</pre></details>}
     {!replay&&captures.length>0&&<label className="field">Chart capture evidence<select value={snapshot??''}
       onChange={event=>setSnapshot(event.target.value||undefined)}>
       <option value="">Choose a capture to attach</option>
       {captures.map(item=><option key={item.id} value={item.id}>{format(item.created_at)} · {item.id.slice(0,12)}</option>)}
     </select></label>}
-    {!replay&&snapshot&&<p><a href={`/research/api/chart-snapshots/${snapshot}/image`} target="_blank" rel="noreferrer">Open saved chart capture</a></p>}
+    {!replay&&snapshot&&<><p><a href={`/research/api/chart-snapshots/${snapshot}/image`} target="_blank" rel="noreferrer">Open saved chart capture</a></p><SnapshotDetails id={snapshot}/></>}
     {!replay&&<details onToggle={event=>{if(event.currentTarget.open)openRelated();}}>
       <summary>Related plans</summary>
       {relatedError?<p role="alert">{relatedError}</p>:!related?<p>Loading plan links</p>:!related.length?<p>No plans are linked to this record.</p>:
@@ -202,14 +230,18 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
           {item.trade_id} · v{item.version} · {item.strategy}</button> · {item.evidence_status}</p>)}
     </details>}
     {capture&&<div className="evidence-chart">
+      {!replay&&signal.chart_cutoff==null&&primary.source.endsWith('_SAVED')&&<p>Retrospective archive chart. Signal transition: {at(signal.transitions.at(-1)?.time)}.</p>}
       <div className="research-controls">
         {!replay&&<button className="small-tool" disabled={loading} onClick={()=>void replayEvidence()}>Replay recorded evidence</button>}
         <label><input type="checkbox" checked={showLines} onChange={e=>setShowLines(e.target.checked)}/> SMT lines</label>
-        {replay&&<span role="status">{events.length?labels[events[0].status]:'No visible confirmation at this cutoff'}</span>}
+        {replay&&<span role="status">{visibleEvent?labels[visibleEvent.status]:archiveWatch?'No visible signal at this cutoff':'No visible confirmation at this cutoff'}</span>}
       </div>
       <CandleChart onSaveSnapshot={replay?undefined:async png=>{
-        const saved=await api.saveSnapshot(png,primary.symbol,timeframe,primary.source,signal.transitions.at(-1)?.time,
-          {event_key:signal.event_key,status:signal.status});
+        const saved=await api.saveSnapshot(png,primary.symbol,timeframe,primary.source,signal.chart_cutoff,
+          {event_key:signal.event_key,status:signal.status},primary.source.endsWith('_SAVED')?[
+            snapshotLane('primary',primary.symbol,timeframe,primary,left),
+            snapshotLane('comparison',comparison.symbol,timeframe,comparison,right??[]),
+          ]:undefined);
         setSnapshot(saved.id);
         setCaptures(items=>[{id:saved.id,created_at:new Date().toISOString()},...items.filter(item=>item.id!==saved.id)]);
       }} candles={left} symbol={primary.symbol} timeframe={timeframe} focus={focus} height={360}
@@ -218,8 +250,8 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
         onCheckpoint={frozenReplay?async(position,bookmarks)=>{
           await api.saveCheckpoint(frozenReplay.id,position,bookmarks);
         }:undefined}
-        jumps={[{label:'Primary pivot close',time:signal.primary.current.time+step},
-          ...(signal.confirmed_at===null?[]:[{label:'Signal confirmation',time:signal.confirmed_at}])]}/>}
+        jumps={[{label:archiveWatch?'Selected receipt’s primary pivot close':'Primary pivot close',time:signal.primary.current.time+step},
+          ...(signal.confirmed_at===null?[]:[{label:archiveWatch?'Selected receipt’s confirmation':'Signal confirmation',time:signal.confirmed_at}])]}/>}
     </div>}
   </aside>;
 }

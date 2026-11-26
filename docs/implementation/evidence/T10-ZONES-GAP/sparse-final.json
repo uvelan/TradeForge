@@ -1,0 +1,323 @@
+{
+  "revision": "57157f1f4898d818c99505e95447bd99b774ab8b",
+  "session": "625583e3783a6aa8df50a277f137656057da7ce5ed6cee1bd9113f02817d95a7",
+  "peak_process_kib": 132296,
+  "timings": {
+    "EURUSD_wick": {
+      "family": "f465c57730f5b23cea684f690ea4abc723da40613e5ad069e7b40664e510b81f",
+      "revision": "07656d6c29bc15084bd5907795882d8fbb15a078a32f07fc85de00ef21e31e70",
+      "samples": 30,
+      "p50_ms": 15.944,
+      "p95_ms": 20.85,
+      "min_ms": 13.666,
+      "max_ms": 26.044,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          10,
+          10
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "parquet_opens": [
+          1,
+          1
+        ],
+        "replay_database_connections": [
+          3,
+          3
+        ],
+        "response_bytes": [
+          7314,
+          7314
+        ],
+        "sql_selects": [
+          3,
+          3
+        ],
+        "sql_statements": [
+          5,
+          5
+        ],
+        "verified_artifacts": [
+          1,
+          1
+        ],
+        "verified_snapshot_bytes": [
+          2188,
+          2188
+        ]
+      },
+      "latency_ms": [
+        15.166,
+        15.108,
+        13.666,
+        15.82,
+        15.305,
+        16.71,
+        15.23,
+        17.583,
+        17.26,
+        21.981,
+        26.044,
+        17.498,
+        14.936,
+        16.071,
+        15.505,
+        15.353,
+        15.731,
+        15.125,
+        14.705,
+        15.007,
+        14.067,
+        17.407,
+        16.068,
+        16.963,
+        17.317,
+        13.915,
+        17.53,
+        18.192,
+        18.779,
+        19.467
+      ]
+    },
+    "EURUSD_close": {
+      "family": "71e63d8eb2a91a96b402322b657827c9185bbfef9d8aa839af9d916cd4f106a7",
+      "revision": "7ba852a4e046d6bc04112a8bbcaa318d9dc92b56c946261e84c2c62bde3946b7",
+      "samples": 30,
+      "p50_ms": 14.662,
+      "p95_ms": 18.198,
+      "min_ms": 12.143,
+      "max_ms": 21.894,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          10,
+          10
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "parquet_opens": [
+          1,
+          1
+        ],
+        "replay_database_connections": [
+          3,
+          4
+        ],
+        "response_bytes": [
+          7316,
+          7316
+        ],
+        "sql_selects": [
+          3,
+          5
+        ],
+        "sql_statements": [
+          5,
+          10
+        ],
+        "verified_artifacts": [
+          1,
+          1
+        ],
+        "verified_snapshot_bytes": [
+          2188,
+          2188
+        ]
+      },
+      "latency_ms": [
+        17.471,
+        21.894,
+        14.974,
+        14.968,
+        13.742,
+        15.599,
+        16.564,
+        17.648,
+        15.773,
+        14.96,
+        13.285,
+        15.219,
+        15.254,
+        17.329,
+        17.306,
+        14.519,
+        13.655,
+        18.648,
+        14.805,
+        14.19,
+        14.465,
+        12.659,
+        12.939,
+        12.673,
+        12.531,
+        13.221,
+        13.271,
+        14.128,
+        12.143,
+        12.701
+      ]
+    },
+    "GBPUSD_wick": {
+      "family": "eafb5b8283ba0b3e18fc4053093033e0e96e8edd0b08ded106b31d44621cd0d0",
+      "revision": "ce0689c29eb1acfce1415812b7fa10b6250005d658eadbe3ec4f5c317d9d792f",
+      "samples": 30,
+      "p50_ms": 15.332,
+      "p95_ms": 31.811,
+      "min_ms": 13.502,
+      "max_ms": 38.845,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          8,
+          8
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "parquet_opens": [
+          1,
+          1
+        ],
+        "replay_database_connections": [
+          3,
+          3
+        ],
+        "response_bytes": [
+          14317,
+          14317
+        ],
+        "sql_selects": [
+          3,
+          3
+        ],
+        "sql_statements": [
+          5,
+          5
+        ],
+        "verified_artifacts": [
+          1,
+          1
+        ],
+        "verified_snapshot_bytes": [
+          2182,
+          2182
+        ]
+      },
+      "latency_ms": [
+        15.264,
+        15.252,
+        15.093,
+        14.03,
+        13.502,
+        14.882,
+        13.847,
+        15.557,
+        14.513,
+        14.577,
+        14.062,
+        13.789,
+        14.172,
+        14.402,
+        14.632,
+        13.502,
+        15.507,
+        27.634,
+        30.835,
+        32.609,
+        38.845,
+        20.654,
+        24.472,
+        15.399,
+        17.593,
+        16.005,
+        17.306,
+        16.376,
+        17.961,
+        19.894
+      ]
+    },
+    "GBPUSD_close": {
+      "family": "9097875688c4549616603194271b67b18b2a1438d6f290c7057afe4cb3619c49",
+      "revision": "b6a2db3de53652f7aa75c93ce084e984e67136b7d7ac3f63f25f408d2aeb7dd5",
+      "samples": 30,
+      "p50_ms": 16.37,
+      "p95_ms": 20.583,
+      "min_ms": 14.896,
+      "max_ms": 22.689,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          8,
+          8
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "parquet_opens": [
+          1,
+          1
+        ],
+        "replay_database_connections": [
+          3,
+          4
+        ],
+        "response_bytes": [
+          14319,
+          14319
+        ],
+        "sql_selects": [
+          3,
+          5
+        ],
+        "sql_statements": [
+          5,
+          10
+        ],
+        "verified_artifacts": [
+          1,
+          1
+        ],
+        "verified_snapshot_bytes": [
+          2182,
+          2182
+        ]
+      },
+      "latency_ms": [
+        17.625,
+        15.947,
+        18.626,
+        15.229,
+        15.903,
+        15.112,
+        18.905,
+        15.987,
+        19.157,
+        22.689,
+        15.788,
+        16.027,
+        20.309,
+        16.417,
+        19.104,
+        16.274,
+        15.366,
+        14.896,
+        16.064,
+        15.956,
+        15.849,
+        20.807,
+        17.354,
+        16.513,
+        16.365,
+        18.986,
+        16.375,
+        17.159,
+        16.207,
+        16.749
+      ]
+    }
+  }
+}

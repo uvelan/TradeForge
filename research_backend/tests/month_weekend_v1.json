@@ -1,0 +1,117 @@
+{
+  "session": "39d7d97afe74b14b357fc6fdf06e51619f7e4f0a6fcbe541ea41349d7df846d2",
+  "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V1",
+  "index": 2003,
+  "digest": "98d67fd153e8215e6e5683cc36455f6ca8735c7fede06356c1078eca96dcd854",
+  "step": {
+    "next_index": 2004,
+    "through": 1763157600,
+    "state": {
+      "last": {
+        "source_sha256": "1fc4df0d30e753be13e6b2490ddd8814fd5ce8f4e79042f5fe44f5dacdeb746d",
+        "partition": {
+          "id": "0803c76d80e461615374ad8f0cd29b421c6ffd2fc83c6b44ea5ff5e1a39c79bf",
+          "sha256": "012ac2529d6cc5465427ea5f425cb9b181bae19f55d850056d8a56540b76e32d"
+        },
+        "ordinal": 2,
+        "time_ms": 1763157599999,
+        "bid_units": 110010,
+        "ask_units": 110012
+      },
+      "pending_since": 1763157600000,
+      "anchor": {
+        "source_sha256": "1fc4df0d30e753be13e6b2490ddd8814fd5ce8f4e79042f5fe44f5dacdeb746d",
+        "partition": {
+          "id": "0803c76d80e461615374ad8f0cd29b421c6ffd2fc83c6b44ea5ff5e1a39c79bf",
+          "sha256": "012ac2529d6cc5465427ea5f425cb9b181bae19f55d850056d8a56540b76e32d"
+        },
+        "ordinal": 0,
+        "time_ms": 1763157599980,
+        "bid_units": 110000,
+        "ask_units": 110002
+      },
+      "spent_day": 20406,
+      "position": {
+        "decision_id": "57f79f5883506fd4dabd068d867266e257aea675ea1a9f7cefefa9ad1f718c7b",
+        "qualified_at": 1763157599990,
+        "fill": {
+          "source_sha256": "1fc4df0d30e753be13e6b2490ddd8814fd5ce8f4e79042f5fe44f5dacdeb746d",
+          "partition": {
+            "id": "0803c76d80e461615374ad8f0cd29b421c6ffd2fc83c6b44ea5ff5e1a39c79bf",
+            "sha256": "012ac2529d6cc5465427ea5f425cb9b181bae19f55d850056d8a56540b76e32d"
+          },
+          "ordinal": 2,
+          "time_ms": 1763157599999,
+          "bid_units": 110010,
+          "ask_units": 110012
+        }
+      },
+      "unresolved": false
+    },
+    "events": [
+      {
+        "kind": "QUALIFIED",
+        "quote": {
+          "source_sha256": "1fc4df0d30e753be13e6b2490ddd8814fd5ce8f4e79042f5fe44f5dacdeb746d",
+          "partition": {
+            "id": "0803c76d80e461615374ad8f0cd29b421c6ffd2fc83c6b44ea5ff5e1a39c79bf",
+            "sha256": "012ac2529d6cc5465427ea5f425cb9b181bae19f55d850056d8a56540b76e32d"
+          },
+          "ordinal": 1,
+          "time_ms": 1763157599990,
+          "bid_units": 110010,
+          "ask_units": 110012
+        },
+        "anchor": {
+          "source_sha256": "1fc4df0d30e753be13e6b2490ddd8814fd5ce8f4e79042f5fe44f5dacdeb746d",
+          "partition": {
+            "id": "0803c76d80e461615374ad8f0cd29b421c6ffd2fc83c6b44ea5ff5e1a39c79bf",
+            "sha256": "012ac2529d6cc5465427ea5f425cb9b181bae19f55d850056d8a56540b76e32d"
+          },
+          "ordinal": 0,
+          "time_ms": 1763157599980,
+          "bid_units": 110000,
+          "ask_units": 110002
+        },
+        "id": "57f79f5883506fd4dabd068d867266e257aea675ea1a9f7cefefa9ad1f718c7b"
+      },
+      {
+        "kind": "ENTRY",
+        "quote": {
+          "source_sha256": "1fc4df0d30e753be13e6b2490ddd8814fd5ce8f4e79042f5fe44f5dacdeb746d",
+          "partition": {
+            "id": "0803c76d80e461615374ad8f0cd29b421c6ffd2fc83c6b44ea5ff5e1a39c79bf",
+            "sha256": "012ac2529d6cc5465427ea5f425cb9b181bae19f55d850056d8a56540b76e32d"
+          },
+          "ordinal": 2,
+          "time_ms": 1763157599999,
+          "bid_units": 110010,
+          "ask_units": 110012
+        },
+        "decision_id": "57f79f5883506fd4dabd068d867266e257aea675ea1a9f7cefefa9ad1f718c7b",
+        "side": "ASK",
+        "price_units": 110012,
+        "remaining": 1,
+        "id": "69ba931f7c2d76e2c6546c3148c3851fd10acf86f3ce70ae3530daec7d6b07f0"
+      }
+    ],
+    "coverage": [
+      {
+        "start": 1763157000,
+        "status": "OBSERVED",
+        "count": 3,
+        "first_ms": 1763157599980,
+        "last_ms": 1763157599999,
+        "gaps": [
+          [
+            1763157000000,
+            1763157599980
+          ]
+        ]
+      }
+    ],
+    "quote_count": 3,
+    "hour_reads": 6,
+    "completed": false
+  }
+}

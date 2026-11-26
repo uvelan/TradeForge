@@ -1,0 +1,19 @@
+{
+  "tested": "57157f1f4898d818c99505e95447bd99b774ab8b",
+  "genuine_date_utc": "2026-11-13",
+  "independent_oracle_matches_prior_symbols_and_controls": true,
+  "revision_records_verified_at_t_and_t_minus_one": 805,
+  "canonical_BOS_proofs": 31,
+  "legacy_fingerprints": 8,
+  "legacy_fingerprint_file_sha256": "95f95b3d075d7a7e1dae6266449c4c93868ccf48a2c24bcbe8fdbad8c5c2a3f5",
+  "digests": {
+    "EURUSD": {
+      "wick": "4d7e47035404d0cb37114aa2f4020db05e4d53a8c35f951e4249086123abbbbd",
+      "close": "b1df0a6941b9a72e214b473f68a1f8ab9d1c76a6a48a3985bdf9fb04d76947c4"
+    },
+    "GBPUSD": {
+      "wick": "fa68e0cc7bea35252c22532dafe353d446681ae2965df1b2b3a57361e8e4f360",
+      "close": "2f50cfb3aeb796e116ff809d748397cec302675e2531cea159fa4a2009152784"
+    }
+  }
+}

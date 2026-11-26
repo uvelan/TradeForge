@@ -7,12 +7,14 @@ import hashlib
 import io
 import json
 import os
+import re
 import uuid
 import zipfile
-from pathlib import Path
+from pathlib import PureWindowsPath
 from fastapi import HTTPException
 from .schemas import SignalReference, TradePlan, Outcome, JournalInput, ReviewInput, ReviewV1
 from .risk import evaluate
+from .review_integrity import AMBIGUOUS, CLEAN
 from .db import transaction, rows, one, utc_now
 from .config import EXPORT_DIR, JOURNAL_DIR, JOURNAL_FILE
 
@@ -118,6 +120,8 @@ def decline_trade(uid:str,reason:str)->dict:
         db.execute("BEGIN IMMEDIATE")
         trade=db.execute('SELECT status FROM trades WHERE id=?',(uid,)).fetchone()
         if trade is None:raise HTTPException(404,'Trade not found')
+        if db.execute("SELECT 1 FROM plan_paper_events WHERE trade_id=? LIMIT 1",(uid,)).fetchone():
+            raise HTTPException(409,"A submitted paper order already exists for this decision")
         if trade['status'] in ('CLOSED','CANCELLED'):raise HTTPException(409,'Decision is already finalized')
         sequence=db.execute('SELECT MAX(sequence)+1 FROM trade_events WHERE trade_id=?',(uid,)).fetchone()[0]
         now=utc_now()
@@ -167,12 +171,9 @@ def analytics():
       'note':'Manual journal outcomes; not a reconciled broker performance statement'}
 
 
-def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
+def _package_files(t:dict,package_id:str,cutoff:str,signal,snapshot)->dict[str,bytes]:
     latest=t['versions'][0]
     plan=latest['plan']; validated=TradePlan.model_validate(plan);risk=evaluate(validated)
-    with transaction() as db:
-        signal = linked_signal(db, validated)
-        snapshot = validate_plan_snapshot(db,validated)
     evidence_refs = ['PLAN','RISK','TIMELINE']
     if signal is not None:
         cutoff_epoch = datetime.fromisoformat(cutoff).timestamp()
@@ -183,9 +184,12 @@ def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
         if snapshot[2]>cutoff:
             raise HTTPException(422,"Linked chart snapshot occurred after package cutoff")
         evidence_refs.append("CHART_CAPTURE")
-    events=[e for e in t['events'] if e['at']<=cutoff]
-    # The latest plan must have existed at cutoff.
-    if latest['created_at']>cutoff:raise HTTPException(422,'Plan was created after knowledge cutoff')
+    events=t['events']
+    # A bad clock must not produce a timeline with silently skipped sequence entries.
+    if latest['created_at']>cutoff:
+        raise HTTPException(422,'Plan was created after knowledge cutoff')
+    if any(event["at"]>cutoff for event in events):
+        raise HTTPException(422,"Trade timeline extends beyond knowledge cutoff")
     pieces=[
       '# TRADEFORGE · PRE-TRADE REVIEW',
       f'Package: {package_id} | Trade: {t["id"]} | Plan v{latest["version"]}',
@@ -206,7 +210,7 @@ def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
       plan_version=latest['version'], review_type='PRE_TRADE', assessment='INSUFFICIENT_DATA',
       findings=[{'summary':'State one evidence-linked finding','evidence_refs':['PLAN','RISK'],'metric_refs':[]}],
       evidence_refs=['PLAN','RISK'], missing_evidence=[], contradictions=[], risk_concerns=[],
-      suggested_actions=[], limitations=[]).model_dump(mode="json")
+      suggested_actions=[], limitations=[]).model_dump(mode="json",exclude={"corrects_review_id"})
     manifest={'schema_version':'1.0.0','package_id':package_id,'trade_decision_id':t['id'],
       'plan_version':latest['version'],'review_type':'PRE_TRADE','knowledge_cutoff_utc':cutoff,
       'evidence_refs':evidence_refs, 'generated_at':utc_now(),'source':'Local plan only; no verified historical analogs'}
@@ -214,36 +218,84 @@ def _package_files(t:dict,package_id:str,cutoff:str)->dict[str,bytes]:
         pieces.append("\n## Linked signal\nSee data/signal.json for the recorded revision and source lineage.")
     if snapshot is not None:
         pieces.append("\n## User chart capture\nSee data/chart.png and data/chart_metadata.json.")
-    return {**({"data/chart.png":snapshot[1],"data/chart_metadata.json":_json(snapshot[0]).encode()}
+    files = {**({"data/chart.png":snapshot[1],"data/chart_metadata.json":_json(snapshot[0]).encode()}
               if snapshot is not None else {}),
         **({"data/signal.json": _json(signal).encode()} if signal is not None else {}), 'AI_CONTEXT.md':'\n'.join(pieces).encode(),
         'data/trade_plan.json':json.dumps(plan,indent=2).encode(),
         'data/risk_metrics.json':json.dumps(risk,indent=2).encode(),
         'data/timeline.jsonl':'\n'.join(json.dumps(e) for e in events).encode(),
-        'response/AI_REVIEW_TEMPLATE.json':json.dumps(template,indent=2).encode(),
-        'manifest.json':json.dumps(manifest,indent=2).encode()}
+        'response/AI_REVIEW_TEMPLATE.json':json.dumps(template,indent=2).encode()}
+    manifest["evidence_snapshot"] = {
+        "policy":"SQLITE_READ_SNAPSHOT_V1",
+        "through_event_sequence":max((e["sequence"] for e in events),default=0),
+        "components_sha256":{name:hashlib.sha256(content).hexdigest() for name,content in files.items()},
+    }
+    return files | {"manifest.json":json.dumps(manifest,indent=2).encode()}
 
 
 def export_ai(uid:str, plan_version:int|None=None)->dict:
-    t=get_trade(uid)
-    if t["outcome"] is not None:
-        raise HTTPException(422, "Pre-trade review packages require an open plan")
-    latest=t['versions'][0]
-    if plan_version is not None and latest["version"] != plan_version:
-        raise HTTPException(409, "Plan version changed. Refresh the plan before exporting.")
-    # Strictly bound to the current time, after latest plan was created.
-    cutoff=utc_now()
-    package_id=_id('PKG')
-    items=_package_files(t,package_id,cutoff)
+    with transaction() as db:
+        # An explicit read transaction pins the SQLite/WAL view on the first SELECT.
+        db.execute("BEGIN")
+        trade=db.execute("SELECT status FROM trades WHERE id=?",(uid,)).fetchone()
+        cutoff=utc_now()
+        if trade is None:
+            raise HTTPException(404,"Trade not found")
+        if trade["status"] not in ("PLANNED","REVIEWED"):
+            raise HTTPException(422,"Pre-trade review packages require an open plan")
+        if db.execute("SELECT 1 FROM plan_paper_events WHERE trade_id=? LIMIT 1", (uid,)).fetchone():
+            raise HTTPException(422, "Pre-trade review requires a decision with no submitted paper fills")
+        latest=dict(db.execute(
+            "SELECT version,payload,created_at FROM plan_versions WHERE trade_id=? ORDER BY version DESC LIMIT 1",
+            (uid,)).fetchone())
+        if plan_version is not None and latest["version"] != plan_version:
+            raise HTTPException(409,"Plan version changed. Refresh the plan before exporting.")
+        latest["plan"]=json.loads(latest.pop("payload"))
+        events=[dict(e,payload=json.loads(e["payload"])) for e in db.execute(
+            "SELECT * FROM trade_events WHERE trade_id=? ORDER BY sequence",(uid,))]
+        plan=TradePlan.model_validate(latest["plan"])
+        signal=linked_signal(db,plan)
+        snapshot=validate_plan_snapshot(db,plan)
+    package_id=_id("PKG")
+    items=_package_files({"id":uid,"versions":[latest],"events":events},package_id,cutoff,signal,snapshot)
+    return publish_package(items,package_id,cutoff,trade_id=uid,plan_version=latest['version'])
+
+
+def publish_package(items,package_id,cutoff,*,trade_id=None,plan_version=None,replay_session=None):
     path=EXPORT_DIR/f'{package_id}.zip';partial=path.with_suffix('.pending')
     with zipfile.ZipFile(partial,'w',compression=zipfile.ZIP_DEFLATED) as z:
         for name,content in items.items():z.writestr(name,content)
     os.replace(partial,path)
     digest=hashlib.sha256(path.read_bytes()).hexdigest()
     with transaction() as db:
-        db.execute('INSERT INTO ai_packages VALUES(?,?,?,?,?,?,?)',
-          (package_id,uid,latest['version'],cutoff,str(path),digest,utc_now()))
+        db.execute('INSERT INTO ai_packages(id,trade_id,plan_version,knowledge_cutoff,location,sha256,created_at) VALUES(?,?,?,?,?,?,?)',
+          (package_id,trade_id,plan_version,cutoff,str(path),digest,utc_now()))
+        if replay_session is not None:
+            db.execute("INSERT INTO recorded_package_sources VALUES(?,?)",(package_id,replay_session))
     return {'package_id':package_id,'sha256':digest,'download_url':f'/research/api/ai/packages/{package_id}/download'}
+
+
+def read_package_bytes(pkg: dict, *, missing_status: int = 409,
+                       missing_detail: str = "Package file unavailable",
+                       checksum_detail: str = "Package checksum mismatch") -> bytes:
+    """Read only the canonical active-root copy of an immutable export."""
+    key = pkg["id"]
+    filename = f"{key}.zip"
+    if (not re.fullmatch(r"PKG-[A-Za-z0-9-]+", key)
+            or PureWindowsPath(pkg["location"]).name != filename):
+        raise HTTPException(missing_status, missing_detail)
+    # The issuing profile's absolute path is provenance, not a portable locator.
+    # Keep the catalog row intact and apply the same filename rule as restore.
+    try:
+        candidate = EXPORT_DIR.resolve() / filename
+        if candidate.resolve(strict=True) != candidate or not candidate.is_file():
+            raise HTTPException(missing_status, missing_detail)
+        payload = candidate.read_bytes()
+    except (OSError, RuntimeError):
+        raise HTTPException(missing_status, missing_detail) from None
+    if hashlib.sha256(payload).hexdigest() != pkg["sha256"]:
+        raise HTTPException(409, checksum_detail)
+    return payload
 
 
 def import_ai(data: ReviewV1 | ReviewInput, original: bytes) -> dict:
@@ -254,12 +306,7 @@ def import_ai(data: ReviewV1 | ReviewInput, original: bytes) -> dict:
     if isinstance(data, ReviewV1):
         if data.review_type != "PRE_TRADE":
             raise HTTPException(422, "Review type differs from the exported package")
-        path = Path(pkg["location"]).resolve()
-        if not path.is_relative_to(EXPORT_DIR.resolve()) or not path.is_file():
-            raise HTTPException(409, "Package file unavailable")
-        payload = path.read_bytes()
-        if hashlib.sha256(payload).hexdigest() != pkg["sha256"]:
-            raise HTTPException(409, "Package checksum mismatch")
+        payload = read_package_bytes(pkg)
         with zipfile.ZipFile(io.BytesIO(payload)) as archive:
             metrics = json.loads(archive.read("data/risk_metrics.json"))
             manifest = json.loads(archive.read("manifest.json"))
@@ -285,20 +332,37 @@ def import_ai(data: ReviewV1 | ReviewInput, original: bytes) -> dict:
             raise HTTPException(422,'Finding references unsupported evidence')
         if 'metric_claims' in f:
             raise HTTPException(422,'Unverified numerical metric claims are not permitted')
-    serialized=_json(data.model_dump())
+    return store_review(data,original)
+
+
+def store_review(data,original):
+    target = data.corrects_review_id
+    # Preserve the pre-upgrade canonical representation for ordinary duplicates.
+    serialized=_json(data.model_dump(exclude={"corrects_review_id"} if target is None else set()))
     uid = _id('REVIEW')
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
+        if target:
+            parent = db.execute("""SELECT r.package_id,i.status FROM ai_reviews r
+                LEFT JOIN ai_review_integrity i ON i.review_id=r.id WHERE r.id=?""",(target,)).fetchone()
+            if not parent or parent["package_id"] != data.package_id or parent["status"] != AMBIGUOUS:
+                raise HTTPException(422,"Correction requires an ambiguous original in the same package")
         existing = db.execute(
-            "SELECT id,assessment FROM ai_reviews WHERE package_id=? AND response=?",
+            """SELECT r.id,r.assessment,i.status FROM ai_reviews r LEFT JOIN ai_review_integrity i
+               ON i.review_id=r.id WHERE r.package_id=? AND r.response=?""",
             (data.package_id, serialized),
         ).fetchone()
         if existing:
+            if existing["status"] == AMBIGUOUS:
+                raise HTTPException(409, f"Ambiguous original: submit a clean review with corrects_review_id={existing['id']}")
+            if existing["status"] != CLEAN:
+                raise HTTPException(409,"Existing review original cannot be verified")
             return {"id": existing["id"], "assessment": existing["assessment"], "verification": "DUPLICATE_IGNORED"}
         db.execute('INSERT INTO ai_reviews VALUES(?,?,?,?,?,?)',
           (uid,data.package_id,data.assessment,serialized,'STRUCTURE_VALID_CONTENT_UNVERIFIED',utc_now()))
         db.execute("INSERT INTO ai_review_originals VALUES(?,?,?)",
                    (uid, original, hashlib.sha256(original).hexdigest()))
+        db.execute("INSERT INTO ai_review_integrity VALUES(?,?,NULL,?)",(uid,CLEAN,target))
     return {'id':uid,'assessment':data.assessment,'verification':'STRUCTURE_VALID_CONTENT_UNVERIFIED',
       'warning':'Free-text findings are not fact-checked by a model or by this importer.'}
 

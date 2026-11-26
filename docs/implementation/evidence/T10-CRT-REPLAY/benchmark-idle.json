@@ -1,0 +1,1497 @@
+{
+  "method": "Serial FastAPI TestClient on the same host. Both builds reopen the same pinned paired M5 replay in a fresh backend, excluding startup/import. Step and rewind run unchanged FVG and OB overlays with selection collapsed. The candidate also lists and selects the genuine 13:00 UTC H1 terminal family on each pane. Timings exclude the preliminary route probe and warm-up. OS cache is uncontrolled.",
+  "counter_scope": "HTTP requests and JSON body bytes; SQLite SELECTs and verified artifact snapshot bytes; actual Parquet opens and decoded rows. Evidence rows count both reference_children and evidence records in the response, including repetitions across these arrays.",
+  "coverage_utc": [
+    "2026-11-13T00:00:00Z",
+    "2026-11-13T22:00:00Z"
+  ],
+  "cutoff_ordinals": {
+    "collapsed_step": [
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135
+    ],
+    "collapsed_rewind": [
+      135,
+      134,
+      133,
+      132,
+      131,
+      130,
+      129,
+      128,
+      127,
+      126,
+      125,
+      124,
+      123,
+      122,
+      121,
+      120,
+      119,
+      118,
+      117,
+      116,
+      115,
+      114,
+      113,
+      112,
+      111,
+      110,
+      109,
+      108,
+      107,
+      106
+    ],
+    "inspection": [
+      234,
+      235,
+      236,
+      237,
+      238,
+      239,
+      240,
+      241,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      251,
+      252,
+      253,
+      254,
+      255,
+      256,
+      257,
+      258,
+      259,
+      260,
+      261,
+      262,
+      263
+    ]
+  },
+  "collapsed_overlays": [
+    {
+      "id": "fair_value_gap",
+      "fvg": {
+        "market_schedule": {
+          "kind": "forex_weekly",
+          "timezone": "America/New_York"
+        }
+      },
+      "fvg_delivery": {
+        "formation_limit": 12,
+        "revision_limit": 12,
+        "current_limit": 12
+      }
+    },
+    {
+      "id": "order_blocks",
+      "structure": {
+        "algorithm_version": 2,
+        "left": 2,
+        "right": 2,
+        "price_source": "wick",
+        "ties": "strict",
+        "tolerance_bps": 0,
+        "break_bps": 0,
+        "wick_candidates": true,
+        "market_schedule": {
+          "kind": "forex_weekly",
+          "timezone": "America/New_York"
+        }
+      },
+      "ob_delivery": {
+        "formation_limit": 12,
+        "revision_limit": 12,
+        "current_limit": 12
+      }
+    }
+  ],
+  "pins": {
+    "EURUSD": {
+      "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+      "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+    },
+    "GBPUSD": {
+      "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+      "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+    }
+  },
+  "baseline": {
+    "revision": "a8c9db640ae2c1845f501ed5e31ac3ef9ae352b9",
+    "tracked_worktree_diff": false,
+    "started_at": "2026-11-26T11:19:01+00:00",
+    "finished_at": "2026-11-26T11:19:27+00:00",
+    "python": "3.13.14 (tags/v3.13.14:fd17997, Jun 10 2026, 13:03:48) [MSC v.1944 64 bit (AMD64)]",
+    "endpoint_status": 404,
+    "selected_range_ids": {},
+    "peak_working_set_kib": {
+      "cold-only": [
+        93440,
+        93348,
+        93072,
+        93412,
+        93156,
+        93400,
+        93332,
+        93452
+      ],
+      "cold-with-overlays": [
+        94288,
+        94596,
+        94464,
+        94304,
+        94744,
+        94872,
+        94652,
+        94744
+      ],
+      "warm_common": 95984,
+      "warm_with_inspection": 95984
+    },
+    "timings": {
+      "cold-only": {
+        "samples": 8,
+        "p50_ms": 56.464,
+        "p95_ms": 59.617,
+        "min_ms": 54.958,
+        "max_ms": 60.438,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            0,
+            0
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            0,
+            0
+          ],
+          "http_requests": [
+            1,
+            1
+          ],
+          "http_response_bytes": [
+            67137,
+            67137
+          ],
+          "parquet_opens": [
+            0,
+            0
+          ],
+          "replay_database_connections": [
+            2,
+            2
+          ],
+          "sql_selects": [
+            2,
+            2
+          ],
+          "sql_statements": [
+            2,
+            2
+          ],
+          "verified_artifacts": [
+            0,
+            0
+          ],
+          "verified_snapshot_bytes": [
+            0,
+            0
+          ],
+          "returned_range_rows": [
+            0,
+            0
+          ],
+          "returned_revision_rows": [
+            0,
+            0
+          ],
+          "returned_source_rows": [
+            0,
+            0
+          ]
+        },
+        "latency_ms": [
+          60.438,
+          55.121,
+          56.15,
+          54.962,
+          56.777,
+          54.958,
+          57.61,
+          58.091
+        ]
+      },
+      "cold-with-overlays": {
+        "samples": 8,
+        "p50_ms": 91.982,
+        "p95_ms": 95.349,
+        "min_ms": 91.041,
+        "max_ms": 95.419,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            0,
+            0
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            34940,
+            34940
+          ],
+          "http_requests": [
+            3,
+            3
+          ],
+          "http_response_bytes": [
+            211991,
+            211993
+          ],
+          "parquet_opens": [
+            0,
+            0
+          ],
+          "replay_database_connections": [
+            2,
+            2
+          ],
+          "sql_selects": [
+            2,
+            2
+          ],
+          "sql_statements": [
+            2,
+            2
+          ],
+          "verified_artifacts": [
+            0,
+            0
+          ],
+          "verified_snapshot_bytes": [
+            0,
+            0
+          ],
+          "returned_range_rows": [
+            0,
+            0
+          ],
+          "returned_revision_rows": [
+            0,
+            0
+          ],
+          "returned_source_rows": [
+            0,
+            0
+          ]
+        },
+        "latency_ms": [
+          91.041,
+          91.984,
+          91.594,
+          95.419,
+          91.673,
+          91.98,
+          95.219,
+          94.089
+        ]
+      },
+      "collapsed_step": {
+        "samples": 30,
+        "p50_ms": 32.561,
+        "p95_ms": 34.352,
+        "min_ms": 30.812,
+        "max_ms": 36.934,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            0,
+            0
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            28211,
+            35440
+          ],
+          "http_requests": [
+            2,
+            2
+          ],
+          "http_response_bytes": [
+            136613,
+            144893
+          ],
+          "parquet_opens": [
+            0,
+            0
+          ],
+          "replay_database_connections": [
+            0,
+            1
+          ],
+          "sql_selects": [
+            0,
+            2
+          ],
+          "sql_statements": [
+            0,
+            5
+          ],
+          "verified_artifacts": [
+            0,
+            0
+          ],
+          "verified_snapshot_bytes": [
+            0,
+            0
+          ],
+          "returned_range_rows": [
+            0,
+            0
+          ],
+          "returned_revision_rows": [
+            0,
+            0
+          ],
+          "returned_source_rows": [
+            0,
+            0
+          ]
+        },
+        "latency_ms": [
+          32.345,
+          31.833,
+          32.373,
+          31.859,
+          32.006,
+          33.029,
+          31.797,
+          30.812,
+          31.389,
+          31.297,
+          33.566,
+          31.207,
+          31.288,
+          32.469,
+          36.934,
+          32.609,
+          32.164,
+          32.307,
+          33.875,
+          33.735,
+          32.513,
+          33.514,
+          33.152,
+          33.927,
+          34.236,
+          33.439,
+          33.735,
+          33.266,
+          34.446,
+          34.146
+        ]
+      },
+      "collapsed_rewind": {
+        "samples": 30,
+        "p50_ms": 33.09,
+        "p95_ms": 38.258,
+        "min_ms": 30.058,
+        "max_ms": 54.7,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            0,
+            0
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            28211,
+            35440
+          ],
+          "http_requests": [
+            2,
+            2
+          ],
+          "http_response_bytes": [
+            136613,
+            144893
+          ],
+          "parquet_opens": [
+            0,
+            0
+          ],
+          "replay_database_connections": [
+            0,
+            1
+          ],
+          "sql_selects": [
+            0,
+            2
+          ],
+          "sql_statements": [
+            0,
+            5
+          ],
+          "verified_artifacts": [
+            0,
+            0
+          ],
+          "verified_snapshot_bytes": [
+            0,
+            0
+          ],
+          "returned_range_rows": [
+            0,
+            0
+          ],
+          "returned_revision_rows": [
+            0,
+            0
+          ],
+          "returned_source_rows": [
+            0,
+            0
+          ]
+        },
+        "latency_ms": [
+          35.082,
+          35.446,
+          35.626,
+          34.61,
+          34.034,
+          33.487,
+          33.518,
+          31.992,
+          32.468,
+          32.296,
+          31.999,
+          32.602,
+          32.064,
+          31.835,
+          54.7,
+          33.347,
+          38.276,
+          38.235,
+          33.704,
+          32.28,
+          33.501,
+          36.232,
+          32.832,
+          32.759,
+          31.373,
+          35.335,
+          32.311,
+          31.408,
+          31.343,
+          30.058
+        ]
+      }
+    }
+  },
+  "candidate": {
+    "revision": "9d8653f0ccb9e7b36a01a021b78e0351a29ad312",
+    "tracked_worktree_diff": false,
+    "started_at": "2026-11-26T11:19:27+00:00",
+    "finished_at": "2026-11-26T11:19:59+00:00",
+    "python": "3.13.14 (tags/v3.13.14:fd17997, Jun 10 2026, 13:03:48) [MSC v.1944 64 bit (AMD64)]",
+    "endpoint_status": 200,
+    "selected_range_ids": {
+      "EURUSD": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+      "GBPUSD": "3c7804e82b04bbd2a283b3ab99666e4537ea456d7d51bf0ad114bfc49a5de50d"
+    },
+    "peak_working_set_kib": {
+      "cold-only": [
+        93520,
+        93552,
+        93512,
+        93536,
+        93608,
+        93456,
+        93480,
+        93344
+      ],
+      "cold-with-overlays": [
+        94632,
+        94384,
+        94728,
+        94368,
+        94700,
+        94328,
+        94304,
+        94468
+      ],
+      "warm_common": 95416,
+      "warm_with_inspection": 125592
+    },
+    "timings": {
+      "cold-only": {
+        "samples": 8,
+        "p50_ms": 56.274,
+        "p95_ms": 58.686,
+        "min_ms": 55.22,
+        "max_ms": 59.103,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            0,
+            0
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            0,
+            0
+          ],
+          "http_requests": [
+            1,
+            1
+          ],
+          "http_response_bytes": [
+            67137,
+            67137
+          ],
+          "parquet_opens": [
+            0,
+            0
+          ],
+          "replay_database_connections": [
+            2,
+            2
+          ],
+          "sql_selects": [
+            2,
+            2
+          ],
+          "sql_statements": [
+            2,
+            2
+          ],
+          "verified_artifacts": [
+            0,
+            0
+          ],
+          "verified_snapshot_bytes": [
+            0,
+            0
+          ],
+          "returned_range_rows": [
+            0,
+            0
+          ],
+          "returned_revision_rows": [
+            0,
+            0
+          ],
+          "returned_source_rows": [
+            0,
+            0
+          ]
+        },
+        "latency_ms": [
+          56.281,
+          56.386,
+          57.91,
+          56.268,
+          55.643,
+          59.103,
+          55.22,
+          55.562
+        ]
+      },
+      "cold-with-overlays": {
+        "samples": 8,
+        "p50_ms": 91.958,
+        "p95_ms": 100.859,
+        "min_ms": 90.061,
+        "max_ms": 101.302,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            0,
+            0
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            34940,
+            34940
+          ],
+          "http_requests": [
+            3,
+            3
+          ],
+          "http_response_bytes": [
+            211991,
+            211994
+          ],
+          "parquet_opens": [
+            0,
+            0
+          ],
+          "replay_database_connections": [
+            2,
+            2
+          ],
+          "sql_selects": [
+            2,
+            2
+          ],
+          "sql_statements": [
+            2,
+            2
+          ],
+          "verified_artifacts": [
+            0,
+            0
+          ],
+          "verified_snapshot_bytes": [
+            0,
+            0
+          ],
+          "returned_range_rows": [
+            0,
+            0
+          ],
+          "returned_revision_rows": [
+            0,
+            0
+          ],
+          "returned_source_rows": [
+            0,
+            0
+          ]
+        },
+        "latency_ms": [
+          100.035,
+          101.302,
+          98.078,
+          91.511,
+          92.406,
+          90.061,
+          91.002,
+          91.342
+        ]
+      },
+      "collapsed_step": {
+        "samples": 30,
+        "p50_ms": 32.049,
+        "p95_ms": 34.376,
+        "min_ms": 29.54,
+        "max_ms": 34.672,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            0,
+            0
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            28211,
+            35440
+          ],
+          "http_requests": [
+            2,
+            2
+          ],
+          "http_response_bytes": [
+            136614,
+            144891
+          ],
+          "parquet_opens": [
+            0,
+            0
+          ],
+          "replay_database_connections": [
+            0,
+            1
+          ],
+          "sql_selects": [
+            0,
+            2
+          ],
+          "sql_statements": [
+            0,
+            5
+          ],
+          "verified_artifacts": [
+            0,
+            0
+          ],
+          "verified_snapshot_bytes": [
+            0,
+            0
+          ],
+          "returned_range_rows": [
+            0,
+            0
+          ],
+          "returned_revision_rows": [
+            0,
+            0
+          ],
+          "returned_source_rows": [
+            0,
+            0
+          ]
+        },
+        "latency_ms": [
+          29.571,
+          29.63,
+          29.54,
+          30.322,
+          30.3,
+          32.231,
+          31.49,
+          30.973,
+          30.016,
+          31.232,
+          33.03,
+          30.808,
+          30.46,
+          30.36,
+          32.167,
+          31.933,
+          30.846,
+          32.083,
+          32.016,
+          33.772,
+          34.163,
+          33.126,
+          32.483,
+          32.402,
+          32.628,
+          34.55,
+          32.529,
+          34.672,
+          32.773,
+          33.171
+        ]
+      },
+      "collapsed_rewind": {
+        "samples": 30,
+        "p50_ms": 31.673,
+        "p95_ms": 41.437,
+        "min_ms": 28.393,
+        "max_ms": 56.389,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            0,
+            0
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            28211,
+            35440
+          ],
+          "http_requests": [
+            2,
+            2
+          ],
+          "http_response_bytes": [
+            136612,
+            144892
+          ],
+          "parquet_opens": [
+            0,
+            0
+          ],
+          "replay_database_connections": [
+            0,
+            1
+          ],
+          "sql_selects": [
+            0,
+            2
+          ],
+          "sql_statements": [
+            0,
+            5
+          ],
+          "verified_artifacts": [
+            0,
+            0
+          ],
+          "verified_snapshot_bytes": [
+            0,
+            0
+          ],
+          "returned_range_rows": [
+            0,
+            0
+          ],
+          "returned_revision_rows": [
+            0,
+            0
+          ],
+          "returned_source_rows": [
+            0,
+            0
+          ]
+        },
+        "latency_ms": [
+          32.952,
+          43.152,
+          39.341,
+          32.836,
+          33.633,
+          36.073,
+          33.446,
+          35.234,
+          35.008,
+          32.54,
+          32.12,
+          31.315,
+          31.157,
+          32.031,
+          56.389,
+          30.759,
+          30.968,
+          30.437,
+          30.003,
+          30.379,
+          30.081,
+          32.202,
+          29.892,
+          29.684,
+          28.625,
+          32.76,
+          28.908,
+          29.027,
+          28.646,
+          28.393
+        ]
+      },
+      "EURUSD_new_list": {
+        "samples": 30,
+        "p50_ms": 25.806,
+        "p95_ms": 27.204,
+        "min_ms": 24.57,
+        "max_ms": 28.228,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            264,
+            264
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            0,
+            0
+          ],
+          "http_requests": [
+            1,
+            1
+          ],
+          "http_response_bytes": [
+            24961,
+            27505
+          ],
+          "parquet_opens": [
+            1,
+            1
+          ],
+          "replay_database_connections": [
+            3,
+            4
+          ],
+          "returned_range_rows": [
+            19,
+            21
+          ],
+          "returned_revision_rows": [
+            0,
+            0
+          ],
+          "returned_source_rows": [
+            0,
+            0
+          ],
+          "sql_selects": [
+            3,
+            5
+          ],
+          "sql_statements": [
+            5,
+            10
+          ],
+          "verified_artifacts": [
+            1,
+            1
+          ],
+          "verified_snapshot_bytes": [
+            10538,
+            10538
+          ]
+        },
+        "latency_ms": [
+          25.237,
+          24.873,
+          24.773,
+          24.57,
+          26.417,
+          25.736,
+          25.017,
+          25.184,
+          25.435,
+          25.434,
+          24.941,
+          25.371,
+          25.511,
+          26.342,
+          28.228,
+          26.358,
+          25.876,
+          26.241,
+          26.034,
+          25.694,
+          25.657,
+          26.495,
+          26.338,
+          25.632,
+          26.277,
+          27.381,
+          26.94,
+          26.987,
+          26.711,
+          26.495
+        ]
+      },
+      "EURUSD_new_selection": {
+        "samples": 30,
+        "p50_ms": 27.337,
+        "p95_ms": 29.373,
+        "min_ms": 25.81,
+        "max_ms": 30.471,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            264,
+            264
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            0,
+            0
+          ],
+          "http_requests": [
+            1,
+            1
+          ],
+          "http_response_bytes": [
+            45808,
+            48352
+          ],
+          "parquet_opens": [
+            1,
+            1
+          ],
+          "replay_database_connections": [
+            3,
+            4
+          ],
+          "returned_range_rows": [
+            19,
+            21
+          ],
+          "returned_revision_rows": [
+            5,
+            5
+          ],
+          "returned_source_rows": [
+            28,
+            28
+          ],
+          "sql_selects": [
+            3,
+            5
+          ],
+          "sql_statements": [
+            5,
+            9
+          ],
+          "verified_artifacts": [
+            1,
+            1
+          ],
+          "verified_snapshot_bytes": [
+            10538,
+            10538
+          ]
+        },
+        "latency_ms": [
+          26.811,
+          26.796,
+          27.016,
+          26.083,
+          26.469,
+          25.81,
+          26.375,
+          27.304,
+          28.642,
+          27.776,
+          27.369,
+          27.028,
+          26.982,
+          26.887,
+          27.057,
+          28.023,
+          27.033,
+          27.398,
+          27.081,
+          27.456,
+          27.506,
+          28.719,
+          28.974,
+          28.413,
+          30.471,
+          29.699,
+          27.654,
+          27.473,
+          27.252,
+          27.646
+        ]
+      },
+      "EURUSD_new_list_and_selection": {
+        "samples": 30,
+        "p50_ms": 53.26,
+        "p95_ms": 57.604,
+        "min_ms": 50.74,
+        "max_ms": 97.837,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            528,
+            528
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            0,
+            0
+          ],
+          "http_requests": [
+            2,
+            2
+          ],
+          "http_response_bytes": [
+            70769,
+            75857
+          ],
+          "parquet_opens": [
+            2,
+            2
+          ],
+          "replay_database_connections": [
+            6,
+            7
+          ],
+          "returned_range_rows": [
+            38,
+            42
+          ],
+          "returned_revision_rows": [
+            5,
+            5
+          ],
+          "returned_source_rows": [
+            28,
+            28
+          ],
+          "sql_selects": [
+            6,
+            8
+          ],
+          "sql_statements": [
+            10,
+            15
+          ],
+          "verified_artifacts": [
+            2,
+            2
+          ],
+          "verified_snapshot_bytes": [
+            21076,
+            21076
+          ]
+        },
+        "latency_ms": [
+          51.35,
+          51.348,
+          54.48,
+          52.429,
+          51.349,
+          50.74,
+          50.866,
+          53.421,
+          53.251,
+          97.837,
+          52.447,
+          52.744,
+          52.655,
+          52.169,
+          52.09,
+          53.601,
+          57.213,
+          54.722,
+          52.726,
+          53.209,
+          53.269,
+          53.725,
+          53.874,
+          54.742,
+          53.166,
+          56.699,
+          54.865,
+          56.111,
+          57.923,
+          54.481
+        ]
+      },
+      "GBPUSD_new_list": {
+        "samples": 30,
+        "p50_ms": 25.467,
+        "p95_ms": 27.829,
+        "min_ms": 24.603,
+        "max_ms": 29.014,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            264,
+            264
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            0,
+            0
+          ],
+          "http_requests": [
+            1,
+            1
+          ],
+          "http_response_bytes": [
+            24355,
+            26930
+          ],
+          "parquet_opens": [
+            1,
+            1
+          ],
+          "replay_database_connections": [
+            3,
+            4
+          ],
+          "returned_range_rows": [
+            19,
+            21
+          ],
+          "returned_revision_rows": [
+            0,
+            0
+          ],
+          "returned_source_rows": [
+            0,
+            0
+          ],
+          "sql_selects": [
+            3,
+            5
+          ],
+          "sql_statements": [
+            5,
+            10
+          ],
+          "verified_artifacts": [
+            1,
+            1
+          ],
+          "verified_snapshot_bytes": [
+            10280,
+            10280
+          ]
+        },
+        "latency_ms": [
+          27.306,
+          25.66,
+          25.438,
+          24.835,
+          25.141,
+          24.603,
+          25.652,
+          29.014,
+          28.257,
+          25.825,
+          24.675,
+          24.822,
+          25.054,
+          25.07,
+          25.011,
+          25.495,
+          25.568,
+          24.98,
+          25.079,
+          25.708,
+          25.36,
+          25.44,
+          25.4,
+          25.876,
+          25.356,
+          25.955,
+          27.084,
+          26.092,
+          25.56,
+          25.709
+        ]
+      },
+      "GBPUSD_new_selection": {
+        "samples": 30,
+        "p50_ms": 27.016,
+        "p95_ms": 29.686,
+        "min_ms": 24.689,
+        "max_ms": 30.823,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            264,
+            264
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            0,
+            0
+          ],
+          "http_requests": [
+            1,
+            1
+          ],
+          "http_response_bytes": [
+            43391,
+            45966
+          ],
+          "parquet_opens": [
+            1,
+            1
+          ],
+          "replay_database_connections": [
+            3,
+            4
+          ],
+          "returned_range_rows": [
+            19,
+            21
+          ],
+          "returned_revision_rows": [
+            4,
+            4
+          ],
+          "returned_source_rows": [
+            27,
+            27
+          ],
+          "sql_selects": [
+            3,
+            5
+          ],
+          "sql_statements": [
+            5,
+            10
+          ],
+          "verified_artifacts": [
+            1,
+            1
+          ],
+          "verified_snapshot_bytes": [
+            10280,
+            10280
+          ]
+        },
+        "latency_ms": [
+          24.689,
+          27.548,
+          27.524,
+          26.17,
+          25.354,
+          26.633,
+          27.051,
+          26.618,
+          25.638,
+          26.544,
+          25.494,
+          25.89,
+          27.98,
+          28.346,
+          28.282,
+          27.515,
+          26.561,
+          28.182,
+          30.823,
+          30.544,
+          28.084,
+          27.532,
+          27.167,
+          26.981,
+          26.969,
+          26.703,
+          26.714,
+          27.371,
+          26.563,
+          28.637
+        ]
+      },
+      "GBPUSD_new_list_and_selection": {
+        "samples": 30,
+        "p50_ms": 52.026,
+        "p95_ms": 56.49,
+        "min_ms": 49.967,
+        "max_ms": 56.968,
+        "counts_per_sample_min_max": {
+          "decoded_rows": [
+            528,
+            528
+          ],
+          "file_digest_calls": [
+            0,
+            0
+          ],
+          "http_request_bytes": [
+            0,
+            0
+          ],
+          "http_requests": [
+            2,
+            2
+          ],
+          "http_response_bytes": [
+            67746,
+            72896
+          ],
+          "parquet_opens": [
+            2,
+            2
+          ],
+          "replay_database_connections": [
+            6,
+            7
+          ],
+          "returned_range_rows": [
+            38,
+            42
+          ],
+          "returned_revision_rows": [
+            4,
+            4
+          ],
+          "returned_source_rows": [
+            27,
+            27
+          ],
+          "sql_selects": [
+            6,
+            8
+          ],
+          "sql_statements": [
+            10,
+            15
+          ],
+          "verified_artifacts": [
+            2,
+            2
+          ],
+          "verified_snapshot_bytes": [
+            20560,
+            20560
+          ]
+        },
+        "latency_ms": [
+          51.888,
+          56.441,
+          51.658,
+          52.12,
+          50.035,
+          51.899,
+          53.659,
+          50.581,
+          50.945,
+          50.699,
+          50.437,
+          51.718,
+          49.967,
+          51.176,
+          53.785,
+          53.386,
+          51.931,
+          50.867,
+          56.968,
+          55.722,
+          52.754,
+          54.429,
+          52.965,
+          52.627,
+          51.682,
+          51.545,
+          56.53,
+          52.785,
+          52.686,
+          55.015
+        ]
+      }
+    }
+  }
+}

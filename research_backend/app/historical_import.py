@@ -12,6 +12,12 @@ POLICY = "UTC_TICK_MS_FILE_ORDINAL_V2"
 MAX_TICKS = 500_000
 
 
+def retain_source(db, digest, payload):
+    db.execute("INSERT INTO historical_bi5_sources VALUES (?,?) ON CONFLICT DO NOTHING", (digest,payload))
+    if db.execute("SELECT payload=? FROM historical_bi5_sources WHERE sha256=?", (payload,digest)).fetchone()[0] != 1:
+        raise ValueError("Retained BI5 source checksum conflict")
+
+
 def import_bi5(payload, symbol, day, hour=None):
     start = day.replace(hour=hour or 0, minute=0, second=0, microsecond=0)
     end = start + (timedelta(hours=1) if hour is not None else timedelta(days=1))
@@ -25,7 +31,9 @@ def import_bi5(payload, symbol, day, hour=None):
     with transaction() as db:
         existing = db.execute(sql,(FEED,symbol,end,start)).fetchall()
         if existing:
-            return existing_import(db, existing, scope, digest)
+            result = existing_import(db, existing, scope, digest)
+            retain_source(db, digest, payload)
+            return result
     decoded = decode_bi5(payload,symbol,day,hour)
     ticks = list(canonical_ticks(decoded,scale=POINT_SCALES[symbol]))
     if not ticks:
@@ -40,7 +48,9 @@ def import_bi5(payload, symbol, day, hour=None):
         db.execute("BEGIN IMMEDIATE")
         existing = db.execute(sql,(FEED,symbol,end,start)).fetchall()
         if existing:
-            return existing_import(db, existing, scope, digest)
+            result = existing_import(db, existing, scope, digest)
+            retain_source(db, digest, payload)
+            return result
         tick_part = write_partition("DUKASCOPY",FEED,symbol,"ticks",None,"BID_ASK_UNITS",ticks,
                                     connection=db,row_group_size=8192)
         parts = []
@@ -61,6 +71,7 @@ def import_bi5(payload, symbol, day, hour=None):
                              "first_ms":ticks[0]["time_ms"],"last_ms":ticks[-1]["time_ms"],
                              "spread_points":{"min":min(spreads),"max":max(spreads),"mean":sum(spreads)/len(spreads)}},
                   "note":"Source coverage must be checked against the selected market calendar."}
+        retain_source(db, digest, payload)
         db.execute("INSERT INTO historical_imports VALUES (?,?,?,?,?,?,?)",
                    (*scope,digest,seen_at,json.dumps(result,sort_keys=True)))
     return result

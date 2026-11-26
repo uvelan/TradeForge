@@ -172,7 +172,7 @@ test("select, move and resize a trendline; reload and undo/redo exact revisions"
   expect(await scene(page)).toEqual(previous);
   await writeFile(info.outputPath("persisted-trendline.json"),JSON.stringify({before:created,after:previous},null,2)+"\n");
   await page.reload();
-  await page.getByText(/^Drawing toolbox/).click();
+  await expect(page.getByLabel("Drawing tool", {exact:true})).toBeVisible();
   await expect(page.getByLabel("Select drawing").locator('option[value="'+item.id+'"]')).toHaveCount(1);
   expect(await scene(page)).toEqual(previous);
 });

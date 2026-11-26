@@ -1,0 +1,2408 @@
+{
+  "revision": "9d8653f0ccb9e7b36a01a021b78e0351a29ad312",
+  "tracked_worktree_diff": false,
+  "started_at": "2026-11-26T11:01:50+00:00",
+  "finished_at": "2026-11-26T11:03:19+00:00",
+  "method": "Independent Decimal H1 aggregation and CRT lifecycle derived from the source CSV and verified against pinned Parquet. Public list and selection verify all material changes before and at availability, with separate checks of evidence, rewind, pane swap and suffix invariance. Controlled archive rows are synthetic.",
+  "coverage_utc": [
+    "2026-11-13T00:00:00Z",
+    "2026-11-13T22:00:00Z"
+  ],
+  "genuine": {
+    "EURUSD": {
+      "input_rows": 264,
+      "reference_families": 22,
+      "revisions_by_state": {
+        "ACTIVE": 22,
+        "HIGH_SWEEP_CANDIDATE": 4,
+        "LOW_SWEEP_CANDIDATE": 2,
+        "HIGH_SWEPT_RECLAIMED": 3,
+        "LOW_SWEPT_RECLAIMED": 12,
+        "EXPANSION_OBSERVED": 9,
+        "AMBIGUOUS": 0,
+        "EXPIRED": 8,
+        "INVALIDATED": 9,
+        "OPPOSITE_BOUNDARY_REACHED": 4,
+        "UNCERTAIN": 0
+      },
+      "revisions_by_reason": {
+        "CLOSED_REFERENCE": 22,
+        "NO_SAME_CANDLE_RECLAIM": 6,
+        "SAME_CANDLE_RECLAIM": 13,
+        "BOTH_BOUNDARIES_SWEPT": 0,
+        "POST_RECLAIM_MIDPOINT": 7,
+        "POST_RECLAIM_BOUNDARY": 4,
+        "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+        "UNOBSERVED_OPPOSITE_GAP": 0,
+        "CLOSE_BEYOND_INVALIDATION": 9,
+        "NEW_SWEEP_EXTREME": 3,
+        "OUTSIDE_CLOSE": 1,
+        "CANDIDATE_AGE": 6,
+        "REFERENCE_AGE": 0,
+        "REFERENCE_CAP_REPLACEMENT": 2,
+        "STRADDLING_OBSERVATION": 0,
+        "MISSING_OPEN_CANDLES": 0,
+        "UNVERIFIABLE_CLOSURE": 0
+      },
+      "transitions_compared_at_prior_second_and_arrival": 73,
+      "validated_selected_receipts": 146,
+      "exact_source_rows_in_final_receipts": 349,
+      "independent_ledger_sha256": "bc444df67ba851422a75a61feb337cb991fbb71080f5247d7d3136f5c70b040f",
+      "public_receipt_ledger_sha256": "6d7ccd6f45bb98e6071dfa63819027c49482aca6f022576fcba2a925be319611",
+      "partitions": [
+        {
+          "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+          "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+        }
+      ],
+      "checkpoints_without_new_revision": [],
+      "csv_sha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6",
+      "archive_file": "part-ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e.parquet",
+      "samples": [
+        {
+          "range_id": "c3c104529585547dce634d437fe62088ba1c5dd2bab122473fe5d635f7996b4b",
+          "reference_id": "c374768f0965c52d1ed3a77b26aa488e807597f57e580ae0d13b5a29c292d3d4",
+          "reference_utc": "2026-11-13T03:00:00Z",
+          "reference_ohlc": [
+            1.10608,
+            1.10634,
+            1.10576,
+            1.10626
+          ],
+          "midpoint": 1.10605,
+          "reference_children": [
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794538800",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794539100",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794539400",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794539700",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794540000",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794540300",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794540600",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794540900",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794541200",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794541500",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794541800",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794542100"
+          ],
+          "transitions": [
+            {
+              "id": "cbfabe22508af3164ec206fa5e4dd82f80515e7be16ee18880c22f25c864b055",
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "sweep_side": null,
+              "observation_time": "2026-11-13T03:00:00Z",
+              "confirmation_time": "2026-11-13T04:00:00Z",
+              "available_at": "2026-11-13T04:00:00Z"
+            },
+            {
+              "id": "f9af62aeb7b0cdaf95f16b4a317daac574de7ab5da8e5b106f45625abdde99bd",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "sweep_side": "HIGH",
+              "observation_time": "2026-11-13T04:00:00Z",
+              "confirmation_time": "2026-11-13T04:05:00Z",
+              "available_at": "2026-11-13T04:05:00Z"
+            },
+            {
+              "id": "32aecc73c69285ba791be94b147d5ae4cde4815cb8e64c02908caa72b0b9d36f",
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "sweep_side": "HIGH",
+              "observation_time": "2026-11-13T04:10:00Z",
+              "confirmation_time": "2026-11-13T04:15:00Z",
+              "available_at": "2026-11-13T04:15:00Z"
+            },
+            {
+              "id": "675268e383ea8cdb6740b66b1e1618bdfd4517279d82f5f7aaa437144bd85d9a",
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "sweep_side": "HIGH",
+              "observation_time": "2026-11-13T04:15:00Z",
+              "confirmation_time": "2026-11-13T04:20:00Z",
+              "available_at": "2026-11-13T04:20:00Z"
+            }
+          ],
+          "gap_source_rows": []
+        },
+        {
+          "range_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+          "reference_id": "558fe4bd15581ae6eb107395a76aa9a429901368ec1e308bd4da290d2086698e",
+          "reference_utc": "2026-11-13T13:00:00Z",
+          "reference_ohlc": [
+            1.10503,
+            1.10693,
+            1.10486,
+            1.10499
+          ],
+          "midpoint": 1.105895,
+          "reference_children": [
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794574800",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575100",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575400",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575700",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576000",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576300",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576600",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576900",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577200",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577500",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577800",
+            "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794578100"
+          ],
+          "transitions": [
+            {
+              "id": "9a8b0b829e8d37b0305dd8c5572c46856c43f2ba93c064080982806a72b9dacb",
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "sweep_side": null,
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z",
+              "available_at": "2026-11-13T14:00:00Z"
+            },
+            {
+              "id": "ac8ce76376f1162fb2c4cec4d8291f638bc4fb999dddfa2bc130cd431a2688ce",
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "sweep_side": "LOW",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z",
+              "available_at": "2026-11-13T14:25:00Z"
+            },
+            {
+              "id": "7f5f533619cd19b59c174cf82ed36bd2fda292096cc32c603532f1befb57d82c",
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "OUTSIDE_CLOSE",
+              "sweep_side": "LOW",
+              "observation_time": "2026-11-13T14:25:00Z",
+              "confirmation_time": "2026-11-13T14:30:00Z",
+              "available_at": "2026-11-13T14:30:00Z"
+            },
+            {
+              "id": "075e7d5afbb240d52ede507ea6aa371e2bafc7b78d4527e67c30d8c6561ec4a8",
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "sweep_side": "LOW",
+              "observation_time": "2026-11-13T14:50:00Z",
+              "confirmation_time": "2026-11-13T14:55:00Z",
+              "available_at": "2026-11-13T14:55:00Z"
+            },
+            {
+              "id": "1d76c0420662df7e2cef7664fba1d2d60bfd8be86b45e69ef6a98c3a94393987",
+              "state": "INVALIDATED",
+              "reason": "CLOSE_BEYOND_INVALIDATION",
+              "sweep_side": "LOW",
+              "observation_time": "2026-11-13T15:25:00Z",
+              "confirmation_time": "2026-11-13T15:30:00Z",
+              "available_at": "2026-11-13T15:30:00Z"
+            }
+          ],
+          "gap_source_rows": []
+        }
+      ],
+      "stable_families_after_suffix_rewind_and_pane_swap": 12
+    },
+    "GBPUSD": {
+      "input_rows": 264,
+      "reference_families": 22,
+      "revisions_by_state": {
+        "ACTIVE": 22,
+        "HIGH_SWEEP_CANDIDATE": 6,
+        "LOW_SWEEP_CANDIDATE": 8,
+        "HIGH_SWEPT_RECLAIMED": 2,
+        "LOW_SWEPT_RECLAIMED": 4,
+        "EXPANSION_OBSERVED": 4,
+        "AMBIGUOUS": 0,
+        "EXPIRED": 15,
+        "INVALIDATED": 2,
+        "OPPOSITE_BOUNDARY_REACHED": 4,
+        "UNCERTAIN": 0
+      },
+      "revisions_by_reason": {
+        "CLOSED_REFERENCE": 22,
+        "NO_SAME_CANDLE_RECLAIM": 14,
+        "SAME_CANDLE_RECLAIM": 6,
+        "BOTH_BOUNDARIES_SWEPT": 0,
+        "POST_RECLAIM_MIDPOINT": 4,
+        "POST_RECLAIM_BOUNDARY": 4,
+        "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+        "UNOBSERVED_OPPOSITE_GAP": 0,
+        "CLOSE_BEYOND_INVALIDATION": 2,
+        "NEW_SWEEP_EXTREME": 0,
+        "OUTSIDE_CLOSE": 0,
+        "CANDIDATE_AGE": 14,
+        "REFERENCE_AGE": 0,
+        "REFERENCE_CAP_REPLACEMENT": 1,
+        "STRADDLING_OBSERVATION": 0,
+        "MISSING_OPEN_CANDLES": 0,
+        "UNVERIFIABLE_CLOSURE": 0
+      },
+      "transitions_compared_at_prior_second_and_arrival": 67,
+      "validated_selected_receipts": 134,
+      "exact_source_rows_in_final_receipts": 348,
+      "independent_ledger_sha256": "ff460f7580c8dba8df7b20faabe3369d9feb960adc0575424ce7d7af93c48b94",
+      "public_receipt_ledger_sha256": "31fa68123c01dba4599ddbd7ea6cd37f28905b13db1c011d46137f018a22a838",
+      "partitions": [
+        {
+          "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+          "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+        }
+      ],
+      "checkpoints_without_new_revision": [],
+      "csv_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928",
+      "archive_file": "part-1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0.parquet",
+      "samples": [
+        {
+          "range_id": "87642c2912ea37033b11ff8e0f8c244fd8c9dfbb673427c724fd3f8222f9645d",
+          "reference_id": "39e2855f244bd2a9e3751fbc5fae2dcc8c123b4937271a48d8801fe7d11e9440",
+          "reference_utc": "2026-11-13T03:00:00Z",
+          "reference_ohlc": [
+            1.32379,
+            1.32379,
+            1.32313,
+            1.32357
+          ],
+          "midpoint": 1.32346,
+          "reference_children": [
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794538800",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794539100",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794539400",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794539700",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794540000",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794540300",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794540600",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794540900",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794541200",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794541500",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794541800",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794542100"
+          ],
+          "transitions": [
+            {
+              "id": "fa4ef917cd088ef07204af68dde8f1aa64026c78c9a9fb5664f1736967787771",
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "sweep_side": null,
+              "observation_time": "2026-11-13T03:00:00Z",
+              "confirmation_time": "2026-11-13T04:00:00Z",
+              "available_at": "2026-11-13T04:00:00Z"
+            },
+            {
+              "id": "075d4cc164275f7d9838243b940b9041fd1e57f0426967f8b5e209c2b779ffa1",
+              "state": "LOW_SWEEP_CANDIDATE",
+              "reason": "NO_SAME_CANDLE_RECLAIM",
+              "sweep_side": "LOW",
+              "observation_time": "2026-11-13T04:10:00Z",
+              "confirmation_time": "2026-11-13T04:15:00Z",
+              "available_at": "2026-11-13T04:15:00Z"
+            },
+            {
+              "id": "5f97e55b5fed034c452ac776e548d1043143be4d9e3f5466b4578c29741af346",
+              "state": "EXPIRED",
+              "reason": "CANDIDATE_AGE",
+              "sweep_side": "LOW",
+              "observation_time": "2026-11-13T04:25:00Z",
+              "confirmation_time": "2026-11-13T04:30:00Z",
+              "available_at": "2026-11-13T04:30:00Z"
+            }
+          ],
+          "gap_source_rows": []
+        },
+        {
+          "range_id": "3c7804e82b04bbd2a283b3ab99666e4537ea456d7d51bf0ad114bfc49a5de50d",
+          "reference_id": "3a0b8b2b5d71a7330e5420aaec60b7aa8af482d868e0f5632505ad5fba0fe94a",
+          "reference_utc": "2026-11-13T13:00:00Z",
+          "reference_ohlc": [
+            1.32256,
+            1.32503,
+            1.32238,
+            1.32319
+          ],
+          "midpoint": 1.323705,
+          "reference_children": [
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794574800",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575100",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575400",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575700",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576000",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576300",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576600",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576900",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577200",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577500",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577800",
+            "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794578100"
+          ],
+          "transitions": [
+            {
+              "id": "cbfaffb2cc6827cab155479f474fb97c467901fe109d11b8b68ede1b674dff10",
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "sweep_side": null,
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z",
+              "available_at": "2026-11-13T14:00:00Z"
+            },
+            {
+              "id": "37d5880714c404f50b27ef78c7c61472e0734f3b8c3a3aff696e3b9db0cec72c",
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "sweep_side": "HIGH",
+              "observation_time": "2026-11-13T14:50:00Z",
+              "confirmation_time": "2026-11-13T14:55:00Z",
+              "available_at": "2026-11-13T14:55:00Z"
+            },
+            {
+              "id": "dcc766080b74703d7743be0a0fcff441f730b392957d173e72fe10c5cc82323b",
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "sweep_side": "HIGH",
+              "observation_time": "2026-11-13T15:05:00Z",
+              "confirmation_time": "2026-11-13T15:10:00Z",
+              "available_at": "2026-11-13T15:10:00Z"
+            },
+            {
+              "id": "6f01137af4d2187ad59a56fac2c20b61527c64d4bc09deb79c5a7bde70590baa",
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "sweep_side": "HIGH",
+              "observation_time": "2026-11-13T15:40:00Z",
+              "confirmation_time": "2026-11-13T15:45:00Z",
+              "available_at": "2026-11-13T15:45:00Z"
+            }
+          ],
+          "gap_source_rows": []
+        }
+      ],
+      "stable_families_after_suffix_rewind_and_pane_swap": 12
+    }
+  },
+  "controlled": {
+    "browser-pair": {
+      "EURUSD": {
+        "input_rows": 20,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 1,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 1,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 1,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 1,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 1,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 1,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 4,
+        "validated_selected_receipts": 8,
+        "exact_source_rows_in_final_receipts": 15,
+        "independent_ledger_sha256": "0b639e889db1a9a4d931744c9f9d68207b68a308b1cdfb4c63334b4ace40117c",
+        "public_receipt_ledger_sha256": "6f747bbd3a5d3aaff4d06f67ba8d224f0760184d4640ac043c93fbf4ca9e9448",
+        "partitions": [
+          {
+            "id": "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143",
+            "sha256": "4ec7b26127f1258adaf03f2ca68d2706bafc3ccf0b65cef4622f2afdd9b6df4f"
+          }
+        ],
+        "checkpoints_without_new_revision": [
+          {
+            "cutoff_utc": "2026-11-13T13:59:59Z",
+            "ranges": {}
+          },
+          {
+            "cutoff_utc": "2026-11-13T14:00:00Z",
+            "ranges": {}
+          }
+        ],
+        "receipts": [
+          {
+            "range_id": "f95422bea82358cd65a29a3af503b77c2bfc8ce555ffc42a0716293862290176",
+            "reference_id": "7ec289f312131838a2f51e12af683c91c12c77ae6d51cd7d4834f3ee75988c4a",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794574800",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794575100",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794575400",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794575700",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794576000",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794576300",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794576600",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794576900",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794577200",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794577500",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794577800",
+              "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "c3206fefee2ceea162332f18072a6c8a8187142a8f026023fa9396e88bc29a2b",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:17Z"
+              },
+              {
+                "id": "ef99c91b9df5ce2612b2b83d424a422fd81ca475f5b7ec3c20941a3516bfaa93",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "reason": "SAME_CANDLE_RECLAIM",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:05:00Z",
+                "confirmation_time": "2026-11-13T14:10:00Z",
+                "available_at": "2026-11-13T14:10:00Z"
+              },
+              {
+                "id": "3ecfed762652f6a87520fb13c21aa6e4c1cda4b6add9777f1188acab5155f595",
+                "state": "EXPANSION_OBSERVED",
+                "reason": "POST_RECLAIM_MIDPOINT",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:10:00Z",
+                "confirmation_time": "2026-11-13T14:15:00Z",
+                "available_at": "2026-11-13T14:15:00Z"
+              },
+              {
+                "id": "0aa4d6d04d426f2fb9e8780aec6096f38802c198fe76ab7bedc175d05f909ce5",
+                "state": "INVALIDATED",
+                "reason": "MISSING_OPEN_CANDLES",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:20:00Z",
+                "confirmation_time": "2026-11-13T14:25:00Z",
+                "available_at": "2026-11-13T14:25:17Z",
+                "continuity": {
+                  "previous_observed_open": 1794579000,
+                  "next_observed_open": 1794579600,
+                  "step_seconds": 300,
+                  "missing_open_intervals": [
+                    {
+                      "start": 1794579300,
+                      "end": 1794579600
+                    }
+                  ],
+                  "schedule": {
+                    "kind": "forex_weekly",
+                    "timezone": "America/New_York",
+                    "sunday_open": "17:00",
+                    "friday_close": "17:00"
+                  }
+                }
+              }
+            ],
+            "gap_source_rows": [
+              {
+                "time": 1794579000,
+                "open": 104.0,
+                "high": 104.5,
+                "low": 102.0,
+                "close": 103.0,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "available_at": 1794579300,
+                "partitions": [
+                  {
+                    "id": "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143",
+                    "sha256": "4ec7b26127f1258adaf03f2ca68d2706bafc3ccf0b65cef4622f2afdd9b6df4f"
+                  }
+                ],
+                "source_id": "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794579000",
+                "roles": [
+                  {
+                    "role": "REVISION_OBSERVATION",
+                    "event_id": "3ecfed762652f6a87520fb13c21aa6e4c1cda4b6add9777f1188acab5155f595"
+                  },
+                  {
+                    "role": "GAP_PREVIOUS_OBSERVED",
+                    "event_id": "0aa4d6d04d426f2fb9e8780aec6096f38802c198fe76ab7bedc175d05f909ce5"
+                  }
+                ]
+              },
+              {
+                "time": 1794579600,
+                "open": 103.0,
+                "high": 104.0,
+                "low": 102.0,
+                "close": 103.0,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "available_at": 1794579917,
+                "partitions": [
+                  {
+                    "id": "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143",
+                    "sha256": "4ec7b26127f1258adaf03f2ca68d2706bafc3ccf0b65cef4622f2afdd9b6df4f"
+                  }
+                ],
+                "source_id": "e83d9e8e91ff167939f4e21202077aa91b926b79cad1b420bb5d8dfcc55de143:1794579600",
+                "roles": [
+                  {
+                    "role": "REVISION_OBSERVATION",
+                    "event_id": "0aa4d6d04d426f2fb9e8780aec6096f38802c198fe76ab7bedc175d05f909ce5"
+                  },
+                  {
+                    "role": "GAP_NEXT_OBSERVED",
+                    "event_id": "0aa4d6d04d426f2fb9e8780aec6096f38802c198fe76ab7bedc175d05f909ce5"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "GBPUSD": {
+        "input_rows": 21,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 1,
+          "EXPANSION_OBSERVED": 1,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 0,
+          "OPPOSITE_BOUNDARY_REACHED": 1,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 1,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 1,
+          "POST_RECLAIM_BOUNDARY": 1,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 4,
+        "validated_selected_receipts": 8,
+        "exact_source_rows_in_final_receipts": 15,
+        "independent_ledger_sha256": "dbf98a20ac10ecf8be633c1db26cb7a4b88d0e710f94018ede9296809cb4de78",
+        "public_receipt_ledger_sha256": "cd0cffd6e3b73625f2fd7792fd1fd5d927bcf69c4597519248ec821492ac8636",
+        "partitions": [
+          {
+            "id": "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509",
+            "sha256": "60abf5dfbf9ff74b007b57dc80a296cea172a8092c467d69c62284cf32f26a38"
+          }
+        ],
+        "checkpoints_without_new_revision": [
+          {
+            "cutoff_utc": "2026-11-13T13:59:59Z",
+            "ranges": {}
+          },
+          {
+            "cutoff_utc": "2026-11-13T14:00:00Z",
+            "ranges": {}
+          }
+        ],
+        "receipts": [
+          {
+            "range_id": "f591cf501152ef7702fd1d018e9477dc7e40d0dead0c7a11b59b2813a2ec5507",
+            "reference_id": "6dcbe11c8c883c1750d43494167bd9f27bc141fe33e50c0df71be279b16c961c",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794574800",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794575100",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794575400",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794575700",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794576000",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794576300",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794576600",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794576900",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794577200",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794577500",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794577800",
+              "647d7f3e120b962f0322041620bc91d6aa8a42c24afc779424b3f774c4143509:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "6afcd9514ec4b090dd074ec451e9a9c0b2165bfdaa491f716a672705fd2e7842",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:17Z"
+              },
+              {
+                "id": "27623a59b594f00dabb5d519870e2ee4e2fd950e1207ea9a65efc22820f376d2",
+                "state": "LOW_SWEPT_RECLAIMED",
+                "reason": "SAME_CANDLE_RECLAIM",
+                "sweep_side": "LOW",
+                "observation_time": "2026-11-13T14:05:00Z",
+                "confirmation_time": "2026-11-13T14:10:00Z",
+                "available_at": "2026-11-13T14:10:00Z"
+              },
+              {
+                "id": "37ce8a244fb2c0ae30156a283a6fd91bb107dd874ca13ff461eed2f1d9ec3a17",
+                "state": "EXPANSION_OBSERVED",
+                "reason": "POST_RECLAIM_MIDPOINT",
+                "sweep_side": "LOW",
+                "observation_time": "2026-11-13T14:10:00Z",
+                "confirmation_time": "2026-11-13T14:15:00Z",
+                "available_at": "2026-11-13T14:15:00Z"
+              },
+              {
+                "id": "ae756e5549699fc6d51db0d65314858519d7b9edaf967aa2f482ef36cdd724d2",
+                "state": "OPPOSITE_BOUNDARY_REACHED",
+                "reason": "POST_RECLAIM_BOUNDARY",
+                "sweep_side": "LOW",
+                "observation_time": "2026-11-13T14:15:00Z",
+                "confirmation_time": "2026-11-13T14:20:00Z",
+                "available_at": "2026-11-13T14:20:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "high-later-reclaim-and-expiry": {
+      "EURUSD": {
+        "input_rows": 16,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 1,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 1,
+          "INVALIDATED": 0,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 1,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 1,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 3,
+        "validated_selected_receipts": 6,
+        "exact_source_rows_in_final_receipts": 16,
+        "independent_ledger_sha256": "279fa409e1753a12e63411581b14750dda16a461c1e09b12decbbc014f96fe73",
+        "public_receipt_ledger_sha256": "4b51686dc74108fe6c8a87cc1f8d67e675e30a7ee31aad2367976db0a7cdc9c5",
+        "partitions": [
+          {
+            "id": "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9",
+            "sha256": "8940fe62c2328caa63bc2e061a58426c775ec8ce06207c72ea4c1a288f25f48c"
+          }
+        ],
+        "checkpoints_without_new_revision": [
+          {
+            "cutoff_utc": "2026-11-13T14:10:00Z",
+            "ranges": {
+              "2026-11-13T13:00:00Z": "HIGH_SWEEP_CANDIDATE"
+            }
+          },
+          {
+            "cutoff_utc": "2026-11-13T14:15:00Z",
+            "ranges": {
+              "2026-11-13T13:00:00Z": "HIGH_SWEEP_CANDIDATE"
+            }
+          }
+        ],
+        "receipts": [
+          {
+            "range_id": "3e56f8ea9dddb32f99f8e51c89e3f04e73436120eb1d7f3719cd04f6452bf94f",
+            "reference_id": "72da203829ea861822394f3d9303a338b37e0af1968b84599034fe3729de9beb",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794574800",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794575100",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794575400",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794575700",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794576000",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794576300",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794576600",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794576900",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794577200",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794577500",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794577800",
+              "4a4d6493d6604f570e3f424a894f7b249599c85661213806a0ae3b5a6b40f3e9:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "ce017da7f6f221460f0d87a796a4c123433d3a2e1e99c5079b945214fe382561",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:00Z"
+              },
+              {
+                "id": "c1bb82cfec7d42ba9ef83fb4bc133736b0db64f35204d193a02f067a65c811db",
+                "state": "HIGH_SWEEP_CANDIDATE",
+                "reason": "NO_SAME_CANDLE_RECLAIM",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:00:00Z",
+                "confirmation_time": "2026-11-13T14:05:00Z",
+                "available_at": "2026-11-13T14:05:00Z"
+              },
+              {
+                "id": "5527c885a93a2932ab3bb483efee4c09d1fe7934c5448fba403f46dd2fc077eb",
+                "state": "EXPIRED",
+                "reason": "CANDIDATE_AGE",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:15:00Z",
+                "confirmation_time": "2026-11-13T14:20:00Z",
+                "available_at": "2026-11-13T14:20:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "high-opposite-before-reclaim": {
+      "EURUSD": {
+        "input_rows": 15,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 1,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 1,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 1,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 1,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 3,
+        "validated_selected_receipts": 6,
+        "exact_source_rows_in_final_receipts": 14,
+        "independent_ledger_sha256": "4b672f84195e87a210a95fb76a439aef24c5f13c9d71b8dee359daa768bbc354",
+        "public_receipt_ledger_sha256": "ccec9d8930767838ae42902355f905ae4c8f474780b066dbc96de27eab3df1e1",
+        "partitions": [
+          {
+            "id": "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800",
+            "sha256": "24a3f271f90c2cad77b38d7c6c949b9cb224fbab33551150a1724995d0580133"
+          }
+        ],
+        "checkpoints_without_new_revision": [
+          {
+            "cutoff_utc": "2026-11-13T14:10:00Z",
+            "ranges": {
+              "2026-11-13T13:00:00Z": "HIGH_SWEEP_CANDIDATE"
+            }
+          }
+        ],
+        "receipts": [
+          {
+            "range_id": "896dc9810dec5da65b177c146ca823d5814f9b55140ed734a4d509b460e3daec",
+            "reference_id": "9b9b7e611abc07a96ca5fafb518964a353063c81bdced2d9eeb0d14de25eb681",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794574800",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794575100",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794575400",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794575700",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794576000",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794576300",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794576600",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794576900",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794577200",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794577500",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794577800",
+              "d7540ceebd058f19f783d11fe71b04d73a5797cb96c00cdac9c725d48b611800:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "8e201758bf8da6774c34d2cae1e8746724961c8e2b4aa1e80169e7ef92b3c465",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:00Z"
+              },
+              {
+                "id": "c91799e1007da9b92425fddf23e06b5cc76b0be602bb066d1b2fd88ced342ba6",
+                "state": "HIGH_SWEEP_CANDIDATE",
+                "reason": "NO_SAME_CANDLE_RECLAIM",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:00:00Z",
+                "confirmation_time": "2026-11-13T14:05:00Z",
+                "available_at": "2026-11-13T14:05:00Z"
+              },
+              {
+                "id": "2b916f52aaf2114c2e03a2a8598b4217e1f7e725f5b779417c8ff59a2c834fd1",
+                "state": "INVALIDATED",
+                "reason": "OPPOSITE_SWEEP_BEFORE_RECLAIM",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:10:00Z",
+                "confirmation_time": "2026-11-13T14:15:00Z",
+                "available_at": "2026-11-13T14:15:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "low-later-reclaim-and-expiry": {
+      "EURUSD": {
+        "input_rows": 16,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 1,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 1,
+          "INVALIDATED": 0,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 1,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 1,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 3,
+        "validated_selected_receipts": 6,
+        "exact_source_rows_in_final_receipts": 16,
+        "independent_ledger_sha256": "12f666a2d31ca229aeab74d134d147300b34265545fde651a96d55af1da2938f",
+        "public_receipt_ledger_sha256": "d307b23a9be52c8b3ab8f1d58c808d0b2880bc23f17948a351ec3eb8427bc1a2",
+        "partitions": [
+          {
+            "id": "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733",
+            "sha256": "1c3df768614d05de1caa2e89e976773215fd3db4a12362627501f95821cc9fae"
+          }
+        ],
+        "checkpoints_without_new_revision": [
+          {
+            "cutoff_utc": "2026-11-13T14:10:00Z",
+            "ranges": {
+              "2026-11-13T13:00:00Z": "LOW_SWEEP_CANDIDATE"
+            }
+          },
+          {
+            "cutoff_utc": "2026-11-13T14:15:00Z",
+            "ranges": {
+              "2026-11-13T13:00:00Z": "LOW_SWEEP_CANDIDATE"
+            }
+          }
+        ],
+        "receipts": [
+          {
+            "range_id": "895b80f5145510335fc0cfd7ecb7cbbfbbd1186cec94ed86ab282ea7f98db1d5",
+            "reference_id": "c465eeb16f73fa6bb7985185d06d2197f17448361ed800bbdcc5539a5a5b24d5",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794574800",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794575100",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794575400",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794575700",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794576000",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794576300",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794576600",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794576900",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794577200",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794577500",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794577800",
+              "52f69dd98d5a9b1af95a11b30287ed0afce66ce76d41e7baba5833be3e5e6733:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "c39272614f5eb250f3f4eda8b79d9a09d49eeaaf32eb982af21cfe65aaac4cf9",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:00Z"
+              },
+              {
+                "id": "8e135067500f343fa8128a7e4024c5b627cadb2efb33511c456a7528542c316e",
+                "state": "LOW_SWEEP_CANDIDATE",
+                "reason": "NO_SAME_CANDLE_RECLAIM",
+                "sweep_side": "LOW",
+                "observation_time": "2026-11-13T14:00:00Z",
+                "confirmation_time": "2026-11-13T14:05:00Z",
+                "available_at": "2026-11-13T14:05:00Z"
+              },
+              {
+                "id": "2ebaca316d93bc42e2df2c9f5acbc02e761cc1ec6e689a1d11143e60cbce2734",
+                "state": "EXPIRED",
+                "reason": "CANDIDATE_AGE",
+                "sweep_side": "LOW",
+                "observation_time": "2026-11-13T14:15:00Z",
+                "confirmation_time": "2026-11-13T14:20:00Z",
+                "available_at": "2026-11-13T14:20:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "low-opposite-before-reclaim": {
+      "EURUSD": {
+        "input_rows": 15,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 1,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 1,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 1,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 1,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 3,
+        "validated_selected_receipts": 6,
+        "exact_source_rows_in_final_receipts": 14,
+        "independent_ledger_sha256": "274ee5cd644fb7fcc625ff5bb48381ae8611230dc68cf803440e59b013404248",
+        "public_receipt_ledger_sha256": "0d012a01f26a30ec8ee02686d1163ca1c3d924afbe52c0d08df949f4dc652210",
+        "partitions": [
+          {
+            "id": "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917",
+            "sha256": "8e630f46ccb362028ebcf300c5f3b7fcaa15c47d0d77086b159ee8cdbc180be3"
+          }
+        ],
+        "checkpoints_without_new_revision": [
+          {
+            "cutoff_utc": "2026-11-13T14:10:00Z",
+            "ranges": {
+              "2026-11-13T13:00:00Z": "LOW_SWEEP_CANDIDATE"
+            }
+          }
+        ],
+        "receipts": [
+          {
+            "range_id": "5589214fdcbc54a38656bc1b76875268faeae157c3b06077bad63ed1f41b6a9a",
+            "reference_id": "ace012150c39eb96ce9bdc8594692267bfd91854e5429927c562fcf0df95443f",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794574800",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794575100",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794575400",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794575700",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794576000",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794576300",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794576600",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794576900",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794577200",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794577500",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794577800",
+              "1ee52799e2cc31a4754292d55c29ccde8b7c562970370051b43c3790ae179917:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "234f81ca69aa6be86d5d2f85d71dfbd6e209875844a31b13c68ff03d1f915547",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:00Z"
+              },
+              {
+                "id": "a99efbd74d9794c8ce7594aee6d74ceefb7060b4e6ea59eda11477295e492296",
+                "state": "LOW_SWEEP_CANDIDATE",
+                "reason": "NO_SAME_CANDLE_RECLAIM",
+                "sweep_side": "LOW",
+                "observation_time": "2026-11-13T14:00:00Z",
+                "confirmation_time": "2026-11-13T14:05:00Z",
+                "available_at": "2026-11-13T14:05:00Z"
+              },
+              {
+                "id": "92ecc9a780088b60d6497ffed6cb86cf8258ce759d3e8ce0bfe9bc17c8a08cae",
+                "state": "INVALIDATED",
+                "reason": "OPPOSITE_SWEEP_BEFORE_RECLAIM",
+                "sweep_side": "LOW",
+                "observation_time": "2026-11-13T14:10:00Z",
+                "confirmation_time": "2026-11-13T14:15:00Z",
+                "available_at": "2026-11-13T14:15:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "both-boundaries": {
+      "EURUSD": {
+        "input_rows": 13,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 1,
+          "EXPIRED": 0,
+          "INVALIDATED": 0,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 1,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 2,
+        "validated_selected_receipts": 4,
+        "exact_source_rows_in_final_receipts": 13,
+        "independent_ledger_sha256": "1f0adea78c9b768a0fd1e6785d7534e7bea0df199456271c7ff71284067a6cde",
+        "public_receipt_ledger_sha256": "a012426362c3b50fb5eeb3ded55b3c4b3f6d123c1833768030d3d208b80546e1",
+        "partitions": [
+          {
+            "id": "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8",
+            "sha256": "1f3d926169d1f22904c90c0af0d11ccc4f9c993fcfcfb411586a62ca28950abb"
+          }
+        ],
+        "checkpoints_without_new_revision": [],
+        "receipts": [
+          {
+            "range_id": "12c722b70ec797df5d00deaec1adf5195c63709066eb124f0deb1b7db033979b",
+            "reference_id": "c790a65b630cb679f789faa566e740b3ed3063371770145e3339abba731e4477",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794574800",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794575100",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794575400",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794575700",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794576000",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794576300",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794576600",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794576900",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794577200",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794577500",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794577800",
+              "04e34aa023686fcbd7f17e51f143390fb047910f17e625589ee8ebae0f0360e8:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "7faab24b2a98b8a44ab26437dbe48b9da1538a729734cb15ca4f383da721e49f",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:00Z"
+              },
+              {
+                "id": "d4c0ad2e13aa77029d08876867fc1d78ee9d590262094413c24e9fe7a59e37c4",
+                "state": "AMBIGUOUS",
+                "reason": "BOTH_BOUNDARIES_SWEPT",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T14:00:00Z",
+                "confirmation_time": "2026-11-13T14:05:00Z",
+                "available_at": "2026-11-13T14:05:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "opposite-price-gap": {
+      "EURUSD": {
+        "input_rows": 14,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 1,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 1,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 1,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 1,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 3,
+        "validated_selected_receipts": 6,
+        "exact_source_rows_in_final_receipts": 14,
+        "independent_ledger_sha256": "7e5a39e69bee632e2e47ae0c6998239cfcfaf222e15a0dfa143da67aa7c1e41c",
+        "public_receipt_ledger_sha256": "684fb0a42bf5cbf5d23756342b04695ea96f8bd21f93b4807a39c6c0857387dd",
+        "partitions": [
+          {
+            "id": "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457",
+            "sha256": "10f5ced387f6962b35a09cd78bce38a0767433ef8d782119216067d50763c60c"
+          }
+        ],
+        "checkpoints_without_new_revision": [],
+        "receipts": [
+          {
+            "range_id": "14d604849ebeed9b4ee1e093e49b1ea3bde81836bef8880c0746be78e1007fcf",
+            "reference_id": "d982a460782a4b5e5d1f6fcc90cfb9146d26c8da4e900b675f0cd0d5366edcfc",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794574800",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794575100",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794575400",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794575700",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794576000",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794576300",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794576600",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794576900",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794577200",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794577500",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794577800",
+              "c361a5774118b0b77973d683e9d00ab1a94eef956d057ce3c9c6b429ec0f8457:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "828e6332e300acc5b42b46a63d26a9c2057f6428ec90dc7cd930624ee1751189",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:00Z"
+              },
+              {
+                "id": "9e5a2ac3f4627b82a06d39675d580bc80a676f97a73f93ab0a1994cfe5551347",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "reason": "SAME_CANDLE_RECLAIM",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:00:00Z",
+                "confirmation_time": "2026-11-13T14:05:00Z",
+                "available_at": "2026-11-13T14:05:00Z"
+              },
+              {
+                "id": "594741c8ab6cb8dd46f5e566f7698fff6c65a713b2bc5283e7036668b58fad09",
+                "state": "INVALIDATED",
+                "reason": "UNOBSERVED_OPPOSITE_GAP",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:05:00Z",
+                "confirmation_time": "2026-11-13T14:10:00Z",
+                "available_at": "2026-11-13T14:10:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "straddling-delayed-reclaim": {
+      "EURUSD": {
+        "input_rows": 14,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 1,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 0,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 1
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 1,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 1,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 3,
+        "validated_selected_receipts": 6,
+        "exact_source_rows_in_final_receipts": 14,
+        "independent_ledger_sha256": "992f35af8ac7c4cac3634261a8c0ca8ca9b7e0345cfdc0b4bfeabd5cf691561d",
+        "public_receipt_ledger_sha256": "e1ae0f8f6e010f9add38d9e465d6f139d460b9441467646aa1325ca25d279415",
+        "partitions": [
+          {
+            "id": "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e",
+            "sha256": "8ac5a0da88f646e9d5b165c915f97945992217582fe819c9c341bf104bbbf576"
+          }
+        ],
+        "checkpoints_without_new_revision": [
+          {
+            "cutoff_utc": "2026-11-13T14:05:00Z",
+            "ranges": {
+              "2026-11-13T13:00:00Z": "ACTIVE"
+            }
+          }
+        ],
+        "receipts": [
+          {
+            "range_id": "138563c21ae2afe6e781de6fd882e3873380c9655415ce05fcbec0fefea65409",
+            "reference_id": "475312756fb0c85ea8fdf2813aae305fe3ddae904ce81a91e93d10c1dad99a56",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794574800",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794575100",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794575400",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794575700",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794576000",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794576300",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794576600",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794576900",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794577200",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794577500",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794577800",
+              "62a612f03cc5fdf654378d0949d56d8029910b1016c74b0ca72c197fc77dcb7e:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "6e515a2ef6d647d3df52db71279d85ca095b8253210ac9be84a312ecf0f5ca52",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:00Z"
+              },
+              {
+                "id": "203454020a89002f4d42ed4aed677c172a8ed6a78ab9e2c655e7672b71c28d27",
+                "state": "HIGH_SWEPT_RECLAIMED",
+                "reason": "SAME_CANDLE_RECLAIM",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:00:00Z",
+                "confirmation_time": "2026-11-13T14:05:00Z",
+                "available_at": "2026-11-13T14:05:17Z"
+              },
+              {
+                "id": "21c00c73eb27c3bd860ce4ac157b122fe34afed401e8c725f88e657101d17fdd",
+                "state": "UNCERTAIN",
+                "reason": "STRADDLING_OBSERVATION",
+                "sweep_side": "HIGH",
+                "observation_time": "2026-11-13T14:05:00Z",
+                "confirmation_time": "2026-11-13T14:10:00Z",
+                "available_at": "2026-11-13T14:10:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "incomplete-reference": {
+      "EURUSD": {
+        "input_rows": 12,
+        "reference_families": 0,
+        "revisions_by_state": {
+          "ACTIVE": 0,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 0,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 0,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 0,
+        "validated_selected_receipts": 0,
+        "exact_source_rows_in_final_receipts": 0,
+        "independent_ledger_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "public_receipt_ledger_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "partitions": [
+          {
+            "id": "b61f553b1aa0f256a9034f7e4621156ecca881a73b61e84130faa7b186481e61",
+            "sha256": "f416ddfc3cf95b9eea9a7286ba9fd4fbe46f749a142e389b47bf9e3668ce1086"
+          }
+        ],
+        "checkpoints_without_new_revision": [],
+        "receipts": []
+      }
+    },
+    "straddling-delayed-reference": {
+      "EURUSD": {
+        "input_rows": 13,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 0,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 1
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 1,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 2,
+        "validated_selected_receipts": 4,
+        "exact_source_rows_in_final_receipts": 13,
+        "independent_ledger_sha256": "33f2e90f1e42f2288539f7717b6a4f062b8570937416b84e47346b7bcb488e14",
+        "public_receipt_ledger_sha256": "31877001c080ff933c95ceb5b4393f7f8808a8ead137a8fe7f2ced29539e9526",
+        "partitions": [
+          {
+            "id": "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8",
+            "sha256": "f60db2df87b91322afb158134ccda444d337a0ac418a74fa0ea054243de03e40"
+          }
+        ],
+        "checkpoints_without_new_revision": [
+          {
+            "cutoff_utc": "2026-11-13T14:00:00Z",
+            "ranges": {}
+          }
+        ],
+        "receipts": [
+          {
+            "range_id": "f1248c5a5c5c2af4d11b25ac4c8e4fcb114b9956d4951959209e67a61a534493",
+            "reference_id": "4d190bfc2ac64d78c881c600a9eef7477b072361d47b03d963d191e1d715aaf7",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794574800",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794575100",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794575400",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794575700",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794576000",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794576300",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794576600",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794576900",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794577200",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794577500",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794577800",
+              "577d447b18658f2eaa0702e510e5b3501acf991c3ceee309f4830a92bcc29de8:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "e2a6d76f28d631f82f93202c7a60ec67d4af23fd165f84a7a4b8c3df7783c3f6",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:17Z"
+              },
+              {
+                "id": "f67dc8776e6ae5a906547842022a06274bc674dff198a24ddd7bd0f0d1aeb14a",
+                "state": "UNCERTAIN",
+                "reason": "STRADDLING_OBSERVATION",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T14:00:00Z",
+                "confirmation_time": "2026-11-13T14:05:00Z",
+                "available_at": "2026-11-13T14:05:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "clean-closure": {
+      "EURUSD": {
+        "input_rows": 25,
+        "reference_families": 2,
+        "revisions_by_state": {
+          "ACTIVE": 2,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 0,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 2,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 2,
+        "validated_selected_receipts": 4,
+        "exact_source_rows_in_final_receipts": 24,
+        "independent_ledger_sha256": "7662680c91f44186f2179cce2784f27146c3216e115cfc2307facf38cbd26187",
+        "public_receipt_ledger_sha256": "86d3666087c26c71f9033e0af79528e796e3cf6ef163447cf95c2b78b099e014",
+        "partitions": [
+          {
+            "id": "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20",
+            "sha256": "197899104294d9d6e7269e5baaecd5e3c9e8c37c28f6cfca243eac8e5da49d7f"
+          },
+          {
+            "id": "8afb052083222c1f77e00d3f1e9b9f4bbaab37605749b5e28b6916f8069d8ced",
+            "sha256": "2a7bdbd669d7fa55f987cf7c565f97efa8b2add7f94c1d26ae0390c989685a4e"
+          }
+        ],
+        "checkpoints_without_new_revision": [
+          {
+            "cutoff_utc": "2026-11-15T22:05:00Z",
+            "ranges": {
+              "2026-11-13T20:00:00Z": "ACTIVE",
+              "2026-11-13T21:00:00Z": "ACTIVE"
+            }
+          }
+        ],
+        "receipts": [
+          {
+            "range_id": "6a015ef07af5ddcae2218d8e90f3aae7bbde0be3cb34fa40936ff1d8ce233298",
+            "reference_id": "8dc4039bbe5ed80b1d019339277768738191593df544760f09319d600cee207f",
+            "reference_utc": "2026-11-13T20:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794600000",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794600300",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794600600",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794600900",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794601200",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794601500",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794601800",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794602100",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794602400",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794602700",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794603000",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794603300"
+            ],
+            "transitions": [
+              {
+                "id": "2b8ddbc02af0e44ed3921189046001f07671a630c0972af61d3516c09fed7dbc",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T20:00:00Z",
+                "confirmation_time": "2026-11-13T21:00:00Z",
+                "available_at": "2026-11-13T21:00:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          },
+          {
+            "range_id": "33e868221caaa4ba6c7b289ad05d95eb066cf7cbf2d2bca88396595a553f98cb",
+            "reference_id": "0c249014e6d5bb03b179a9982ebd4ecf6e33a970ad99ae9aade5c1b7d30501fb",
+            "reference_utc": "2026-11-13T21:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794603600",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794603900",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794604200",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794604500",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794604800",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794605100",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794605400",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794605700",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794606000",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794606300",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794606600",
+              "d81f965cea6fb3b7ddf931eadb65b576795ecb86f7759de31fcb8f07bda6de20:1794606900"
+            ],
+            "transitions": [
+              {
+                "id": "36d212d7f9c9fafdef99e548914150033d154d7b83f34a50d87cddab9c47cbac",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T21:00:00Z",
+                "confirmation_time": "2026-11-13T22:00:00Z",
+                "available_at": "2026-11-13T22:00:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "mixed-closure": {
+      "EURUSD": {
+        "input_rows": 24,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 1,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 1,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 2,
+        "validated_selected_receipts": 4,
+        "exact_source_rows_in_final_receipts": 14,
+        "independent_ledger_sha256": "41f30eb47ceff6bfef7b775ed1b30bbd6ba872404fa51149229fb75c8b5210a5",
+        "public_receipt_ledger_sha256": "f47d6955796840d8226051f0b730560921e656aea814a869182c42539a189790",
+        "partitions": [
+          {
+            "id": "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df",
+            "sha256": "4208c4a4e1b4b50310c2ea7fdc1ef23a7e9f0dcbd184601f83a4c90b981153c3"
+          },
+          {
+            "id": "7f17917f7cccd16fe8127fe7de924a353f1bbda6d546dd23eaf0a5ea00bb57c7",
+            "sha256": "edcf2e1ed24b29a71da52ea0953083c130e44b352cc10835219bb3ee59ac3668"
+          }
+        ],
+        "checkpoints_without_new_revision": [
+          {
+            "cutoff_utc": "2026-11-15T22:10:00Z",
+            "ranges": {
+              "2026-11-13T20:00:00Z": "ACTIVE"
+            }
+          }
+        ],
+        "receipts": [
+          {
+            "range_id": "823bb5e33286664b77e8acb17ebd83644bd612f1643b670ea85a50cf9698e596",
+            "reference_id": "d44c8d134afdfa0a556edfe2d55984ecb9fb2c8d5e1b873f19ec1d7ed90903c9",
+            "reference_utc": "2026-11-13T20:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794600000",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794600300",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794600600",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794600900",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794601200",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794601500",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794601800",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794602100",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794602400",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794602700",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794603000",
+              "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794603300"
+            ],
+            "transitions": [
+              {
+                "id": "3bbd11c35b45d47c2114f1eb99ba780e93345940fc723df1fcd65cab405662b8",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T20:00:00Z",
+                "confirmation_time": "2026-11-13T21:00:00Z",
+                "available_at": "2026-11-13T21:00:00Z"
+              },
+              {
+                "id": "07bdb5e56eeb3de0d273868b154d1e765a4313774cac3b3b59997d395b296926",
+                "state": "INVALIDATED",
+                "reason": "MISSING_OPEN_CANDLES",
+                "sweep_side": null,
+                "observation_time": "2026-11-15T22:05:00Z",
+                "confirmation_time": "2026-11-15T22:10:00Z",
+                "available_at": "2026-11-15T22:10:17Z",
+                "continuity": {
+                  "previous_observed_open": 1794606600,
+                  "next_observed_open": 1794780300,
+                  "step_seconds": 300,
+                  "missing_open_intervals": [
+                    {
+                      "start": 1794606900,
+                      "end": 1794607200
+                    },
+                    {
+                      "start": 1794780000,
+                      "end": 1794780300
+                    }
+                  ],
+                  "schedule": {
+                    "kind": "forex_weekly",
+                    "timezone": "America/New_York",
+                    "sunday_open": "17:00",
+                    "friday_close": "17:00"
+                  }
+                }
+              }
+            ],
+            "gap_source_rows": [
+              {
+                "time": 1794606600,
+                "open": 103.0,
+                "high": 105.0,
+                "low": 100.0,
+                "close": 103.0,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "available_at": 1794606900,
+                "partitions": [
+                  {
+                    "id": "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df",
+                    "sha256": "4208c4a4e1b4b50310c2ea7fdc1ef23a7e9f0dcbd184601f83a4c90b981153c3"
+                  }
+                ],
+                "source_id": "47c6e622295cf23c41387efc460c79d1c59a4de48b75cf5b8760f27d73a198df:1794606600",
+                "roles": [
+                  {
+                    "role": "GAP_PREVIOUS_OBSERVED",
+                    "event_id": "07bdb5e56eeb3de0d273868b154d1e765a4313774cac3b3b59997d395b296926"
+                  }
+                ]
+              },
+              {
+                "time": 1794780300,
+                "open": 103.0,
+                "high": 104.0,
+                "low": 102.0,
+                "close": 103.0,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "available_at": 1794780617,
+                "partitions": [
+                  {
+                    "id": "7f17917f7cccd16fe8127fe7de924a353f1bbda6d546dd23eaf0a5ea00bb57c7",
+                    "sha256": "edcf2e1ed24b29a71da52ea0953083c130e44b352cc10835219bb3ee59ac3668"
+                  }
+                ],
+                "source_id": "7f17917f7cccd16fe8127fe7de924a353f1bbda6d546dd23eaf0a5ea00bb57c7:1794780300",
+                "roles": [
+                  {
+                    "role": "REVISION_OBSERVATION",
+                    "event_id": "07bdb5e56eeb3de0d273868b154d1e765a4313774cac3b3b59997d395b296926"
+                  },
+                  {
+                    "role": "GAP_NEXT_OBSERVED",
+                    "event_id": "07bdb5e56eeb3de0d273868b154d1e765a4313774cac3b3b59997d395b296926"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "unverifiable-closure": {
+      "EURUSD": {
+        "input_rows": 13,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 0,
+          "INVALIDATED": 1,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 1
+        },
+        "transitions_compared_at_prior_second_and_arrival": 2,
+        "validated_selected_receipts": 4,
+        "exact_source_rows_in_final_receipts": 13,
+        "independent_ledger_sha256": "2e9da9697b4668a881d565c2a701f67c2f15c380688f65199d205029614c8c94",
+        "public_receipt_ledger_sha256": "db550ae9d159106167c36b132372e34a7f84fbfc0638f1613d74f21e5964ef79",
+        "partitions": [
+          {
+            "id": "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9",
+            "sha256": "d6fb37dc22aa7439d9a829e3a3b7d2aa2b375b22ac986d838fe02ae34b68c833"
+          }
+        ],
+        "checkpoints_without_new_revision": [],
+        "receipts": [
+          {
+            "range_id": "5ed6c0498c73616bcc8d6a9581740b41382b251c2614a19d92a74f3cc63f18c1",
+            "reference_id": "f3b0bfc0cbdd1fc0bccb83a9470820b628c567dfdbd9b0e1fa582e0189075401",
+            "reference_utc": "2026-11-13T21:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794603600",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794603900",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794604200",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794604500",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794604800",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794605100",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794605400",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794605700",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794606000",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794606300",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794606600",
+              "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794606900"
+            ],
+            "transitions": [
+              {
+                "id": "c61f33c07fa2dc05a771a8dd30fc7f267728000ccdfcd46f43bcd46accedc67b",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T21:00:00Z",
+                "confirmation_time": "2026-11-13T22:00:00Z",
+                "available_at": "2026-11-13T22:00:00Z"
+              },
+              {
+                "id": "80ad873974fd67f6af1febb5af029f7f419f1d4f73025c64382db21b0aa60afb",
+                "state": "INVALIDATED",
+                "reason": "UNVERIFIABLE_CLOSURE",
+                "sweep_side": null,
+                "observation_time": "2026-11-14T17:00:00Z",
+                "confirmation_time": "2026-11-14T17:05:00Z",
+                "available_at": "2026-11-14T17:05:00Z",
+                "continuity": {
+                  "previous_observed_open": 1794606900,
+                  "next_observed_open": 1794675600,
+                  "step_seconds": 300,
+                  "missing_open_intervals": null,
+                  "schedule": {
+                    "kind": "forex_weekly",
+                    "timezone": "America/New_York",
+                    "sunday_open": "17:00",
+                    "friday_close": "17:00"
+                  }
+                }
+              }
+            ],
+            "gap_source_rows": [
+              {
+                "time": 1794606900,
+                "open": 103.0,
+                "high": 105.0,
+                "low": 100.0,
+                "close": 103.0,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "available_at": 1794607200,
+                "partitions": [
+                  {
+                    "id": "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9",
+                    "sha256": "d6fb37dc22aa7439d9a829e3a3b7d2aa2b375b22ac986d838fe02ae34b68c833"
+                  }
+                ],
+                "source_id": "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794606900",
+                "roles": [
+                  {
+                    "role": "REFERENCE_CHILD",
+                    "event_id": "c61f33c07fa2dc05a771a8dd30fc7f267728000ccdfcd46f43bcd46accedc67b"
+                  },
+                  {
+                    "role": "GAP_PREVIOUS_OBSERVED",
+                    "event_id": "80ad873974fd67f6af1febb5af029f7f419f1d4f73025c64382db21b0aa60afb"
+                  }
+                ]
+              },
+              {
+                "time": 1794675600,
+                "open": 103.0,
+                "high": 104.0,
+                "low": 102.0,
+                "close": 103.0,
+                "availability_basis": "ARCHIVE_SUPPLIED",
+                "available_at": 1794675900,
+                "partitions": [
+                  {
+                    "id": "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9",
+                    "sha256": "d6fb37dc22aa7439d9a829e3a3b7d2aa2b375b22ac986d838fe02ae34b68c833"
+                  }
+                ],
+                "source_id": "cb7e17ba3052a8d32f0d4f005d3011851f74bffcccc748b26f854b169bb431f9:1794675600",
+                "roles": [
+                  {
+                    "role": "REVISION_OBSERVATION",
+                    "event_id": "80ad873974fd67f6af1febb5af029f7f419f1d4f73025c64382db21b0aa60afb"
+                  },
+                  {
+                    "role": "GAP_NEXT_OBSERVED",
+                    "event_id": "80ad873974fd67f6af1febb5af029f7f419f1d4f73025c64382db21b0aa60afb"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "reference-age": {
+      "EURUSD": {
+        "input_rows": 108,
+        "reference_families": 1,
+        "revisions_by_state": {
+          "ACTIVE": 1,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 1,
+          "INVALIDATED": 0,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 1,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 1,
+          "REFERENCE_CAP_REPLACEMENT": 0,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 2,
+        "validated_selected_receipts": 4,
+        "exact_source_rows_in_final_receipts": 108,
+        "independent_ledger_sha256": "3f73b8eaff23225d757a852b2a0165bc16001a29c8501b11b9db6f87737f1830",
+        "public_receipt_ledger_sha256": "c0280e9173839efa9deb3ae3aa8f862d62e48e2c0c7c540aeb39a0151f312c40",
+        "partitions": [
+          {
+            "id": "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00",
+            "sha256": "1676f3888ec89d627998a4d7b4f0d98611a8e89e272c8af67898c32455dbe715"
+          }
+        ],
+        "checkpoints_without_new_revision": [],
+        "receipts": [
+          {
+            "range_id": "c6cac030cd3d2547fe185cb6ac1bd267b5b3a8a73d2b962c579b14a3ba5a732b",
+            "reference_id": "a66a061258ddaec40fe1d901f652413867828cf3d016c1f607f1ed31658c2f2e",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794574800",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794575100",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794575400",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794575700",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794576000",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794576300",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794576600",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794576900",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794577200",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794577500",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794577800",
+              "df7d849560c83b7813d1afb6b41e2f42e129ec0a574bed90273bc7f865f95b00:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "e2878ae9cfbe78f13963be29af8dd7e2e136171f80bb0094fb14b33f2e90b575",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:00Z"
+              },
+              {
+                "id": "a30f06821c8d330ced49d01fda2f1dfbac88bdb19799f128429de84a5dd095f3",
+                "state": "EXPIRED",
+                "reason": "REFERENCE_AGE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T21:55:00Z",
+                "confirmation_time": "2026-11-13T22:00:00Z",
+                "available_at": "2026-11-13T22:00:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    },
+    "reference-cap": {
+      "EURUSD": {
+        "input_rows": 36,
+        "reference_families": 3,
+        "revisions_by_state": {
+          "ACTIVE": 3,
+          "HIGH_SWEEP_CANDIDATE": 0,
+          "LOW_SWEEP_CANDIDATE": 0,
+          "HIGH_SWEPT_RECLAIMED": 0,
+          "LOW_SWEPT_RECLAIMED": 0,
+          "EXPANSION_OBSERVED": 0,
+          "AMBIGUOUS": 0,
+          "EXPIRED": 1,
+          "INVALIDATED": 0,
+          "OPPOSITE_BOUNDARY_REACHED": 0,
+          "UNCERTAIN": 0
+        },
+        "revisions_by_reason": {
+          "CLOSED_REFERENCE": 3,
+          "NO_SAME_CANDLE_RECLAIM": 0,
+          "SAME_CANDLE_RECLAIM": 0,
+          "BOTH_BOUNDARIES_SWEPT": 0,
+          "POST_RECLAIM_MIDPOINT": 0,
+          "POST_RECLAIM_BOUNDARY": 0,
+          "OPPOSITE_SWEEP_BEFORE_RECLAIM": 0,
+          "UNOBSERVED_OPPOSITE_GAP": 0,
+          "CLOSE_BEYOND_INVALIDATION": 0,
+          "NEW_SWEEP_EXTREME": 0,
+          "OUTSIDE_CLOSE": 0,
+          "CANDIDATE_AGE": 0,
+          "REFERENCE_AGE": 0,
+          "REFERENCE_CAP_REPLACEMENT": 1,
+          "STRADDLING_OBSERVATION": 0,
+          "MISSING_OPEN_CANDLES": 0,
+          "UNVERIFIABLE_CLOSURE": 0
+        },
+        "transitions_compared_at_prior_second_and_arrival": 4,
+        "validated_selected_receipts": 8,
+        "exact_source_rows_in_final_receipts": 48,
+        "independent_ledger_sha256": "ed12d4313c01694d05aba3432643ac9ae667d86a08a1969856a5ea1ab0f7bf4c",
+        "public_receipt_ledger_sha256": "8a464a3818376d740986c8ce9ab7325cd799a805a8d1b5ba341fa428c0def264",
+        "partitions": [
+          {
+            "id": "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328",
+            "sha256": "bfbdf8ac98f51b7822275eb92923fabcde1c49987c699922858738d0ecadcedf"
+          }
+        ],
+        "checkpoints_without_new_revision": [],
+        "receipts": [
+          {
+            "range_id": "f3f3366ba08ffa1180ade98cc273ad9f34b0efe615866b845ebe4c20a4b76762",
+            "reference_id": "2b0c4f86618c59a726ffdaf4b2d26e1f1c449c2cf8fbc1459322f51955a9f4e5",
+            "reference_utc": "2026-11-13T13:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794574800",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794575100",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794575400",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794575700",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794576000",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794576300",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794576600",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794576900",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794577200",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794577500",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794577800",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794578100"
+            ],
+            "transitions": [
+              {
+                "id": "c09924c5118609c7d70f5f10402e110afdeb8208b69b4d18824898e3ca8c5af8",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T13:00:00Z",
+                "confirmation_time": "2026-11-13T14:00:00Z",
+                "available_at": "2026-11-13T14:00:00Z"
+              },
+              {
+                "id": "112857098ebbbd08ca7987db63897a1ca772415a99e4060c92be999bc940a1ad",
+                "state": "EXPIRED",
+                "reason": "REFERENCE_CAP_REPLACEMENT",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T15:00:00Z",
+                "confirmation_time": "2026-11-13T16:00:00Z",
+                "available_at": "2026-11-13T16:00:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          },
+          {
+            "range_id": "5375dfef707aa3839b89b8556cfbe5fc8e979b0fe972bcb5b0b790cba525e766",
+            "reference_id": "43816d33a1d433b3da6990091ac974eb7263a428a1d7fdde04b14f56c82a5831",
+            "reference_utc": "2026-11-13T14:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794578400",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794578700",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794579000",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794579300",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794579600",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794579900",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794580200",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794580500",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794580800",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794581100",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794581400",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794581700"
+            ],
+            "transitions": [
+              {
+                "id": "03b3d8f665e3d4227606553c3f30c2aa2d4a4dbd5fd243b5097b0d469518c3a0",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T14:00:00Z",
+                "confirmation_time": "2026-11-13T15:00:00Z",
+                "available_at": "2026-11-13T15:00:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          },
+          {
+            "range_id": "bcf263a8883a3f8795d206ee3b7dd15f951b580d2f3b7fc3a0cc2a2fd040c2b3",
+            "reference_id": "3d7fa8a7e3a078cb91d933f6ba328c17811202806ff599f3114bf642a05ef549",
+            "reference_utc": "2026-11-13T15:00:00Z",
+            "reference_ohlc": [
+              103.0,
+              105.0,
+              100.0,
+              103.0
+            ],
+            "midpoint": 102.5,
+            "reference_children": [
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794582000",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794582300",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794582600",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794582900",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794583200",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794583500",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794583800",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794584100",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794584400",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794584700",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794585000",
+              "d76bbbb79bf1369082b21da7352a0ae61f1dc11fbc678cecff3aab41e9fec328:1794585300"
+            ],
+            "transitions": [
+              {
+                "id": "0f483e514b9ade5fdebb8c340ba29fa997744584638cfa71b7be2dfba3427bc1",
+                "state": "ACTIVE",
+                "reason": "CLOSED_REFERENCE",
+                "sweep_side": null,
+                "observation_time": "2026-11-13T15:00:00Z",
+                "confirmation_time": "2026-11-13T16:00:00Z",
+                "available_at": "2026-11-13T16:00:00Z"
+              }
+            ],
+            "gap_source_rows": []
+          }
+        ]
+      }
+    }
+  }
+}

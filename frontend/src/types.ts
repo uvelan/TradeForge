@@ -6,10 +6,12 @@ export type ChartSymbol=SymbolName|'BTCUSDT';
 export interface Candle {time:number;available_at?:number;open:number;high:number;low:number;close:number;volume?:number}
 export type CandleRange = {start:number;end:number};
 export interface CandleCoverage extends CandleRange {gaps:CandleRange[];duplicate_bars:number;truncated:boolean}
-export interface CandleResponse {source:ChartSource;synthetic:boolean;price_basis:string;candles:Candle[];dataset_id?:string;feed_id?:string;latest_unconfirmed?:boolean;coverage?:CandleCoverage;partitions?:{id:string;sha256:string}[]}
+export interface ArchiveOrigin {file_observations?:string;source_completeness:string;reconstruction:string;source_sha256?:string;start?:number;end?:number;checked_bars?:number;missing_slots?:number[]}
+export interface CandleResponse {source_completeness?:"UNVERIFIED";origin?:ArchiveOrigin;source:ChartSource;synthetic:boolean;price_basis:string;candles:Candle[];dataset_id?:string;feed_id?:string;latest_unconfirmed?:boolean;coverage?:CandleCoverage;partitions?:{id:string;sha256:string}[]}
 export interface BrokerSymbol {name:string;description:string;digits:number}
 export type SignalReference={event_key:string;status:import("./SignalExplorer").SignalStatus};
 export interface Plan {
+ knowledge_cutoff_utc?:string;
  snapshot_id?:string;
  signal_reference?:SignalReference;
  symbol:SymbolName; direction:'BUY'|'SELL';strategy:string;session:'ASIA'|'LONDON'|'NEW_YORK'|'OTHER';timeframe:Timeframe;
@@ -19,9 +21,9 @@ export interface Plan {
 export interface Trade {id:string;symbol:SymbolName;direction:'BUY'|'SELL';status:string;created_at:string;updated_at:string;version?:number;versions?:{id:string;version:number;plan:Plan;created_at:string}[];plan:Plan;outcome?:{pnl_usd:string;result_r:string}|null}
 export interface Risk {stop_pips:string;maximum_planned_loss_usd:string;theoretical_lots:string;illustrative_lots:string;reward_risk:string;limitations:string[]}
 export interface Analytics {trades:number;active_plans:number;closed:number;win_rate:number|null;expectancy_r:number|null;net_pnl_usd:string;profit_factor:number|null;note:string}
-export interface Dataset {id:string;provider:string;symbol:string;kind:string;timeframe:string|null;rows_count:number;created_at:string;relative_path:string;price_basis:string}
+export interface Dataset {id:string;sha256?:string;provider:string;symbol:string;kind:string;timeframe:string|null;rows_count:number;created_at:string;relative_path:string;price_basis:string}
 export interface Package {id:string;trade_id:string;plan_version:number;created_at:string;knowledge_cutoff:string}
-export interface Review {has_original?:0|1;id:string;package_id:string;assessment:string;verification:string;created_at:string}
+export interface Review {original_integrity:string;duplicate_key:string|null;corrects_review_id:string|null;recorded_package?:0|1;has_original?:0|1;id:string;package_id:string;assessment:string;verification:string;created_at:string}
 export interface JournalEntry {snapshot_id?:string;plan_reference?:PlanReference;supersedes?:string;tags?:string[];signal_reference?:SignalReference;id:string;kind:string;title:string;content:string;created_at:string}
 export interface Overview {analytics:Analytics;mt5:{connected:boolean;reason?:string;broker?:string;mode?:string};datasets:Dataset[];recent_trades:Trade[];recent_reviews:Review[];journal_count:number}
 export interface BacktestResult {strategy:string;source:string;synthetic:boolean;symbol:string;timeframe:string;count:number;eligible_signals:number;ambiguous_excluded:number;ambiguous_rate:number|null;missing_tick_windows?:number;candle_gaps?:{start:number;end:number}[];unresolved_outcomes?:{signal_time:number;reason:string}[];win_rate:number|null;expectancy_r:number|null;expectancy_bounds_r:{worst:number;best:number}|null;total_r:number|null;data_note:string;execution_model?:{version:number;max_quote_gap_ms:number;slippage_bps:string;commission_bps_per_side:string};lineage?:{candle_partitions:{id:string;sha256:string}[];tick_partition?:{id:string;sha256:string};tick_partitions?:{id:string;sha256:string}[]};trades:{entry_time:number;exit_time?:number;exit_time_ms?:number;exit?:number;exit_reason?:string;side:string;entry:number;stop:number;target:number;result_r:number}[]}

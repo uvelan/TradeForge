@@ -1,0 +1,108 @@
+{
+  "tested": "57157f1f4898d818c99505e95447bd99b774ab8b",
+  "windows_local": true,
+  "backend_passed": 1160,
+  "backend_skip": "1 POSIX FIFO",
+  "chromium_passed": 88,
+  "chromium_retries": 0,
+  "frontend_tests_passed": 13,
+  "build": "passed",
+  "runs": [
+    {
+      "id": "backend",
+      "command": ".venv/Scripts/python.exe -m pytest -q",
+      "started_utc": "2026-11-26T10:09:25.710Z",
+      "finished_utc": "2026-11-26T10:22:26.269Z",
+      "exit_code": 0,
+      "elapsed_seconds": 772.1259773
+    },
+    {
+      "id": "standard-chromium",
+      "command": "npm --prefix frontend run e2e -- --retries=0",
+      "started_utc": "2026-11-26T10:11:39.771Z",
+      "finished_utc": "2026-11-26T10:19:34.484Z",
+      "exit_code": 0,
+      "elapsed_seconds": 470.6633572
+    },
+    {
+      "id": "sparse-api",
+      "command": "$out='storage/t10-gap-integration'\n$baseline='K:/Projects/TradeForge-t10-gap-base'\nforeach ($case in 'missing','contiguous','closure','closure-missing','delayed','unverifiable') {\n    .venv/Scripts/python.exe -m scripts.verify_t10_zone_gaps --case $case --repo $baseline --output \"$out/$case-base.json\"\n    if ($LASTEXITCODE) { throw \"Baseline failed for $case\" }\n    .venv/Scripts/python.exe -m scripts.verify_t10_zone_gaps --case $case --phase fixed --baseline \"$out/$case-base.json\" --output \"$out/$case-fixed.json\"\n    if ($LASTEXITCODE) { throw \"Comparison failed for $case\" }\n}\nGet-ChildItem storage/t10-gap-integration/*-fixed.json | Select-Object Name",
+      "started_utc": "2026-11-26T10:09:25.711Z",
+      "finished_utc": "2026-11-26T10:10:39.235Z",
+      "exit_code": 0,
+      "elapsed_seconds": 68.7200919
+    },
+    {
+      "id": "sparse-browser",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_zone_gap_browser --output storage/t10-gap-integration/sparse-browser",
+      "started_utc": "2026-11-26T10:09:01.263Z",
+      "finished_utc": "2026-11-26T10:09:28.318Z",
+      "exit_code": 0,
+      "elapsed_seconds": 23.9746019
+    },
+    {
+      "id": "genuine-browser",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_chart --zones --source-storage storage --output storage/t10-gap-integration/genuine-browser",
+      "started_utc": "2026-11-26T10:09:28.318Z",
+      "finished_utc": "2026-11-26T10:11:32.543Z",
+      "exit_code": 0,
+      "elapsed_seconds": 118.6915293
+    },
+    {
+      "id": "genuine-oracle",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_zones --source-storage storage --output storage/t10-gap-integration/genuine.json",
+      "started_utc": "2026-11-26T10:09:25.711Z",
+      "finished_utc": "2026-11-26T10:13:22.786Z",
+      "exit_code": 0,
+      "elapsed_seconds": 231.8533093
+    },
+    {
+      "id": "legacy",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_zone_compatibility --source-storage storage --output storage/t10-gap-integration/fingerprints.json",
+      "started_utc": "2026-11-26T10:09:25.711Z",
+      "finished_utc": "2026-11-26T10:09:35.511Z",
+      "exit_code": 0,
+      "elapsed_seconds": 4.6268815
+    },
+    {
+      "id": "frontend-unit",
+      "command": "npm --prefix frontend test",
+      "started_utc": "2026-11-26T10:09:25.711Z",
+      "finished_utc": "2026-11-26T10:09:33.339Z",
+      "exit_code": 0,
+      "elapsed_seconds": 2.9589582
+    },
+    {
+      "id": "frontend-build",
+      "command": "npm --prefix frontend run build",
+      "started_utc": "2026-11-26T10:09:25.711Z",
+      "finished_utc": "2026-11-26T10:09:50.728Z",
+      "exit_code": 0,
+      "elapsed_seconds": 21.8239388
+    },
+    {
+      "id": "sparse-base-final",
+      "command": ".venv/Scripts/python.exe -m scripts.benchmark_t10_zone_gaps --repo K:/Projects/TradeForge-t10-gap-base --output docs/implementation/evidence/T10-ZONES-GAP/sparse-baseline.json",
+      "started_utc": "2026-11-26T10:08:09.659Z",
+      "finished_utc": "2026-11-26T10:08:17.328Z",
+      "exit_code": 0,
+      "elapsed_seconds": 3.9590368
+    },
+    {
+      "id": "sparse-final",
+      "command": ".venv/Scripts/python.exe -m scripts.benchmark_t10_zone_gaps --output docs/implementation/evidence/T10-ZONES-GAP/sparse-final.json",
+      "started_utc": "2026-11-26T10:08:17.328Z",
+      "finished_utc": "2026-11-26T10:08:24.411Z",
+      "exit_code": 0,
+      "elapsed_seconds": 4.1688606
+    },
+    {
+      "id": "candidate-timing",
+      "command": ".venv/Scripts/python.exe -m scripts.benchmark_t10_zones --source-storage storage --output docs/implementation/evidence/T10-ZONES-GAP/timing-final.json",
+      "started_utc": "2026-11-26T10:08:24.411Z",
+      "finished_utc": "2026-11-26T10:09:01.263Z",
+      "exit_code": 0,
+      "elapsed_seconds": 33.6432192
+    }
+  ]
+}

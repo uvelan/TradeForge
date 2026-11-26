@@ -67,7 +67,11 @@ class JournalInput(BaseModel):
     title: str=Field(min_length=2,max_length=200)
     content: str=Field(min_length=5,max_length=20000)
 
-class ReviewInput(BaseModel):
+class CorrectableReview(BaseModel):
+    corrects_review_id: str | None = Field(default=None, pattern=r"^REVIEW-[A-Za-z0-9-]+$", max_length=120)
+
+
+class ReviewInput(CorrectableReview):
     model_config = ConfigDict(extra="forbid")
     package_id: str
     trade_decision_id: str
@@ -95,7 +99,7 @@ class ReviewFinding(BaseModel):
     )
 
 
-class ReviewV1(BaseModel):
+class ReviewV1(CorrectableReview):
     model_config = ConfigDict(extra="forbid", title="TradeForge AI review v1")
     schema_version: Literal[1]
     package_id: str = Field(pattern=r"^PKG-[A-Za-z0-9-]+$", max_length=120)

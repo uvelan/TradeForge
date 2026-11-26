@@ -10,7 +10,8 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from .db import one, rows, transaction, utc_now
-from .domain import journal_detail, resolve_signal
+from .chart_snapshot_lanes import ChartLane, verified_lanes
+from .domain import journal_detail, resolve_signal, resolve_snapshot
 from .market import FRAME_MIN
 from .schemas import SignalReference
 
@@ -68,6 +69,7 @@ def dataset_detail(dataset_id:str):
 
 
 class ChartSnapshotRequest(BaseModel):
+    lanes: tuple[ChartLane] | tuple[ChartLane, ChartLane] | None = None
     png: str = Field(min_length=40,max_length=2_000_000)
     symbol: str = Field(min_length=1,max_length=64)
     timeframe: str = Field(min_length=2,max_length=4)
@@ -109,16 +111,29 @@ def create_snapshot(request:ChartSnapshotRequest):
     except (Base64Error,ValueError) as error:
         raise HTTPException(422,"Malformed PNG encoding") from error
     width,height=validate_chart_png(png)
-    metadata=request.model_dump(mode="json",exclude={"png"})
+    metadata=request.model_dump(mode="json",exclude={"png","lanes"})
     metadata.update(width=width,height=height,authority="USER_CHART_CAPTURE")
-    data=json.dumps(metadata,sort_keys=True,separators=(",",":"))
-    snapshot_id=sha256(data.encode()+png).hexdigest()
     with transaction() as db:
         signal=resolve_signal(db,request.signal_reference)
         if signal is not None and (signal["provenance"]["timeframe"]!=request.timeframe
                                    or signal["provenance"]["primary"]["symbol"]!=request.symbol
                                    or signal["provenance"]["primary"]["source"]!=request.source):
             raise HTTPException(422,"Snapshot context differs from linked signal")
+        if request.lanes is not None:
+            metadata.update(lane_schema_version=1, lanes=verified_lanes(db, request, signal))
+        if signal is not None:
+            transition = next((t for t in reversed(signal["transitions"])
+                               if t["status"] == request.signal_reference.status), None)
+            if transition is None:
+                raise HTTPException(409, "Signal revision has no matching transition")
+            if request.cutoff is not None and transition["time"] > request.cutoff:
+                raise HTTPException(409, "Signal revision unavailable at chart cutoff")
+            metadata["signal_transition_at"] = transition["time"]
+            metadata["chart_context"] = "FROZEN" if request.cutoff is not None else "RETROSPECTIVE"
+            if request.lanes is not None:
+                metadata["chart_evidence_through"] = max(lane["latest_bar_available_at"] for lane in metadata["lanes"])
+        data=json.dumps(metadata,sort_keys=True,separators=(",",":"))
+        snapshot_id=sha256(data.encode()+png).hexdigest()
         db.execute("INSERT INTO chart_snapshots VALUES(?,?,?,?) ON CONFLICT(id) DO NOTHING",
                    (snapshot_id,data,png,utc_now()))
     return {"id":snapshot_id,**metadata}
@@ -132,6 +147,13 @@ def list_snapshots(event_key:str=Query(pattern=r"^[0-9a-f]{64}$"),
           WHERE json_extract(metadata,'$.signal_reference.event_key')=?
           AND json_extract(metadata,'$.signal_reference.status')=?
           ORDER BY created_at DESC,id LIMIT 10""",(event_key,status))]
+
+
+@router.get('/api/chart-snapshots/{snapshot_id}')
+def snapshot_metadata(snapshot_id:str):
+    with transaction() as db:
+        metadata, _, _ = resolve_snapshot(db, snapshot_id)
+    return {"id":snapshot_id, **metadata}
 
 
 @router.get('/api/chart-snapshots/{snapshot_id}/image')

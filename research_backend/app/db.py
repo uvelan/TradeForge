@@ -41,6 +41,15 @@ CREATE TABLE IF NOT EXISTS smt_monitor (
     configuration TEXT NOT NULL CHECK(json_valid(configuration)),
     enabled_at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS smt_watch_checkpoint (
+    generation INTEGER PRIMARY KEY, payload TEXT NOT NULL CHECK(json_valid(payload))
+);
+CREATE TABLE IF NOT EXISTS smt_monitor_lease (
+    id INTEGER PRIMARY KEY CHECK(id=1) REFERENCES smt_monitor(id) ON DELETE CASCADE,
+    generation INTEGER NOT NULL,
+    owner TEXT NOT NULL,
+    expires_ns INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS trades (
     id TEXT PRIMARY KEY,
     symbol TEXT NOT NULL CHECK(symbol IN ('EURUSD','GBPUSD','USDJPY','XAUUSD')),
@@ -74,6 +83,27 @@ CREATE TABLE IF NOT EXISTS strategy_decisions (
     created_at TEXT NOT NULL,
     PRIMARY KEY(run_id,cutoff)
 );
+CREATE TABLE IF NOT EXISTS month_replay_manifests (
+    session TEXT PRIMARY KEY, month TEXT NOT NULL, binding TEXT NOT NULL CHECK(json_valid(binding))
+);
+CREATE TABLE IF NOT EXISTS month_replay_steps (
+    session TEXT NOT NULL, idx INTEGER NOT NULL, payload TEXT NOT NULL CHECK(json_valid(payload)),
+    digest TEXT NOT NULL, PRIMARY KEY(session,idx)
+);
+CREATE TABLE IF NOT EXISTS statement_versions (
+ id TEXT PRIMARY KEY, series TEXT NOT NULL, version INTEGER NOT NULL, previous TEXT REFERENCES statement_versions(id),
+ raw BLOB NOT NULL, UNIQUE(series, version)
+);
+CREATE TABLE IF NOT EXISTS statement_progress (
+ id TEXT PRIMARY KEY REFERENCES statement_versions(id), cursor INTEGER NOT NULL, state TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS statement_traces (
+ id TEXT REFERENCES statement_versions(id), ordinal INTEGER NOT NULL, row_id TEXT NOT NULL, payload TEXT NOT NULL,
+ PRIMARY KEY(id,ordinal), UNIQUE(id,row_id)
+);
+CREATE TABLE IF NOT EXISTS statement_reports (
+ id TEXT PRIMARY KEY REFERENCES statement_versions(id), payload TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS plan_versions (
     id TEXT PRIMARY KEY,
     trade_id TEXT NOT NULL REFERENCES trades(id),
@@ -83,6 +113,17 @@ CREATE TABLE IF NOT EXISTS plan_versions (
     UNIQUE(trade_id,version)
 );
 CREATE INDEX IF NOT EXISTS plan_signal_link ON plan_versions(json_extract(payload,'$.signal_reference.event_key'));
+CREATE TABLE IF NOT EXISTS decision_review_steps (
+    trade_id TEXT NOT NULL, version INTEGER NOT NULL, step TEXT NOT NULL,
+    payload TEXT NOT NULL CHECK(json_valid(payload)), created_at TEXT NOT NULL,
+    PRIMARY KEY(trade_id,version,step),
+    FOREIGN KEY(trade_id,version) REFERENCES plan_versions(trade_id,version)
+);
+CREATE TABLE IF NOT EXISTS plan_paper_events (
+    trade_id TEXT NOT NULL, version INTEGER NOT NULL, sequence INTEGER NOT NULL CHECK(sequence BETWEEN 1 AND 1024),
+    payload TEXT NOT NULL CHECK(json_valid(payload)), PRIMARY KEY(trade_id,sequence),
+    FOREIGN KEY(trade_id,version) REFERENCES plan_versions(trade_id,version)
+);
 CREATE TABLE IF NOT EXISTS trade_events (
     id TEXT PRIMARY KEY,
     trade_id TEXT NOT NULL REFERENCES trades(id),
@@ -94,13 +135,20 @@ CREATE TABLE IF NOT EXISTS trade_events (
 );
 CREATE TABLE IF NOT EXISTS ai_packages (
     id TEXT PRIMARY KEY,
-    trade_id TEXT NOT NULL REFERENCES trades(id),
-    plan_version INTEGER NOT NULL,
+    trade_id TEXT REFERENCES trades(id),
+    plan_version INTEGER,
     knowledge_cutoff TEXT NOT NULL,
     location TEXT NOT NULL,
     sha256 TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    CHECK ((trade_id IS NOT NULL AND plan_version IS NOT NULL)
+        OR (trade_id IS NULL AND plan_version IS NULL))
 );
+CREATE TABLE IF NOT EXISTS recorded_package_sources (
+    package_id TEXT PRIMARY KEY REFERENCES ai_packages(id),
+    replay_session TEXT NOT NULL REFERENCES month_replay_manifests(session)
+);
+CREATE INDEX IF NOT EXISTS recorded_package_sessions ON recorded_package_sources(replay_session);
 CREATE TABLE IF NOT EXISTS ai_reviews (
     id TEXT PRIMARY KEY,
     package_id TEXT NOT NULL REFERENCES ai_packages(id),
@@ -114,6 +162,20 @@ CREATE TABLE IF NOT EXISTS ai_review_originals (
   review_id TEXT PRIMARY KEY REFERENCES ai_reviews(id),
   body BLOB NOT NULL,
   sha256 TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS ai_review_integrity (
+  review_id TEXT PRIMARY KEY REFERENCES ai_review_originals(review_id),
+  status TEXT NOT NULL,
+  duplicate_key TEXT,
+  corrects_review_id TEXT REFERENCES ai_reviews(id)
+);
+CREATE TABLE IF NOT EXISTS ai_review_decisions (
+    review_id TEXT NOT NULL REFERENCES ai_reviews(id),
+    sequence INTEGER NOT NULL CHECK(sequence>0),
+    decision TEXT NOT NULL CHECK(decision IN ('ACCEPTED','REJECTED','NEEDS_FOLLOW_UP')),
+    rationale TEXT NOT NULL CHECK(length(rationale) BETWEEN 1 AND 2500),
+    created_at TEXT NOT NULL,
+    PRIMARY KEY(review_id, sequence)
 );
 CREATE TABLE IF NOT EXISTS trade_outcomes (
     trade_id TEXT PRIMARY KEY REFERENCES trades(id),
@@ -136,6 +198,15 @@ CREATE TABLE IF NOT EXISTS datasets (
     relative_path TEXT NOT NULL UNIQUE,
     sha256 TEXT NOT NULL,
     created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS recorded_strategy_checkpoints (
+    session_id TEXT NOT NULL, cutoff_ms INTEGER NOT NULL, payload TEXT NOT NULL CHECK(json_valid(payload)),
+    payload_hash TEXT NOT NULL, PRIMARY KEY(session_id,cutoff_ms)
+);
+CREATE INDEX IF NOT EXISTS recorded_checkpoints_by_run ON recorded_strategy_checkpoints(json_extract(payload,'$.binding.run_id'));
+CREATE TABLE IF NOT EXISTS historical_bi5_sources (
+    sha256 TEXT PRIMARY KEY NOT NULL,
+    payload BLOB NOT NULL CHECK(length(payload) BETWEEN 1 AND 40000000)
 );
 CREATE TABLE IF NOT EXISTS historical_imports (
     feed_id TEXT NOT NULL,
@@ -192,6 +263,14 @@ CREATE TABLE IF NOT EXISTS replay_sessions (
     payload TEXT NOT NULL CHECK(json_valid(payload)),
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS replay_confluence_receipts (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES replay_sessions(id),
+    payload TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS replay_confluence_receipts_clock ON replay_confluence_receipts(
+    session_id, json_extract(payload,'$.profile'), json_extract(payload,'$.cutoff') DESC, id DESC
+) WHERE json_valid(payload);
 CREATE TABLE IF NOT EXISTS replay_checkpoints (
     session_id TEXT PRIMARY KEY REFERENCES replay_sessions(id),
     position INTEGER NOT NULL,
@@ -209,6 +288,13 @@ CREATE INDEX IF NOT EXISTS snapshot_signal ON chart_snapshots(json_extract(metad
 CREATE TABLE IF NOT EXISTS journal_entry_context (
     entry_id TEXT PRIMARY KEY REFERENCES journal_entries(id),
     payload TEXT NOT NULL CHECK(json_valid(payload))
+);
+CREATE TABLE IF NOT EXISTS learning_attempts (
+    lesson_id TEXT PRIMARY KEY,
+    choice TEXT NOT NULL CHECK(choice IN ('confirmed','not_yet')),
+    hypothesis TEXT NOT NULL CHECK(length(hypothesis) BETWEEN 10 AND 1000),
+    journal_id TEXT NOT NULL UNIQUE REFERENCES journal_entries(id),
+    submitted_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS jobs (
     id TEXT PRIMARY KEY,
@@ -281,9 +367,9 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 );
 '''
 
-IMMUTABLE_TABLES = ['plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
-IMMUTABLE_TABLES += ["arrival_sessions", "arrival_observations", "arrival_receipts",
-                     "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
+IMMUTABLE_TABLES = ['ai_review_integrity','recorded_package_sources','statement_versions','statement_traces','statement_reports','month_replay_manifests','month_replay_steps','decision_review_steps','plan_paper_events','plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
+IMMUTABLE_TABLES += ["replay_confluence_receipts", "learning_attempts", "arrival_sessions", "arrival_observations", "arrival_receipts",
+                     "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "historical_bi5_sources", "recorded_strategy_checkpoints", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
 
 
 def connect():
@@ -305,11 +391,39 @@ def transaction():
         conn.close()
 
 
+def upgrade_package_subject(db):
+    # Rebuild only the package parent. Child FK definitions and IDs stay intact.
+    if any(r["name"] == "trade_id" and not r["notnull"] for r in db.execute("PRAGMA table_info(ai_packages)")):
+        return
+    db.execute("PRAGMA foreign_keys=OFF")
+    try:
+        db.execute("BEGIN IMMEDIATE")
+        if not any(r["name"] == "trade_id" and not r["notnull"] for r in db.execute("PRAGMA table_info(ai_packages)")):
+            start = SCHEMA.index("CREATE TABLE IF NOT EXISTS ai_packages")
+            ddl = SCHEMA[start:SCHEMA.index(";",start)]
+            db.execute(ddl.replace("IF NOT EXISTS ai_packages", "ai_packages_new"))
+            cols = "id,trade_id,plan_version,knowledge_cutoff,location,sha256,created_at"
+            db.execute(f"INSERT INTO ai_packages_new({cols}) SELECT {cols} FROM ai_packages")
+            db.execute("DROP TABLE ai_packages")
+            db.execute("ALTER TABLE ai_packages_new RENAME TO ai_packages")
+            for op in ("UPDATE", "DELETE"):
+                db.execute(f"CREATE TRIGGER protect_ai_packages_{op.lower()} BEFORE {op} ON ai_packages "
+                           "BEGIN SELECT RAISE(ABORT,'immutable record'); END")
+            for table in ("ai_packages","ai_reviews"):
+                if db.execute(f"PRAGMA foreign_key_check({table})").fetchone():
+                    raise RuntimeError("Package migration found an invalid evidence reference")
+        db.commit()
+    finally:
+        db.rollback()
+        db.execute("PRAGMA foreign_keys=ON")
+
+
 def initialize():
     with transaction() as db:
         db.execute('PRAGMA journal_mode=WAL')
         db.execute('PRAGMA synchronous=FULL')
         db.executescript(SCHEMA)
+        upgrade_package_subject(db)
         from .historical_strategy_store import install
         install(db)
         for table in IMMUTABLE_TABLES:
@@ -318,6 +432,9 @@ def initialize():
                 db.execute(f'''CREATE TRIGGER IF NOT EXISTS {name}
                     BEFORE {op} ON {table} BEGIN
                     SELECT RAISE(ABORT,'immutable record'); END''')
+
+        from .review_integrity import backfill
+        backfill(db)
 
 
 def rows(query: str, args: tuple=()) -> list[dict]:

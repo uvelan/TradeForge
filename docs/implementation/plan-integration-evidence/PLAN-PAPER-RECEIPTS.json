@@ -1,0 +1,347 @@
+{
+  "trade": "TD-81E273FC25D3",
+  "snapshot": "480f8d4f6a7a3b63eaf0d89607c5fb51ecf95c962cdac6da02a27cc43c8ceb08",
+  "events": [
+    {
+      "policy": "PLAN_EURUSD_CASH_MARKET_V1",
+      "trade_id": "TD-81E273FC25D3",
+      "plan_version_id": "PLAN-CF701A260247",
+      "plan_sha256": "e48f797a5df7e1916b9b96b87f1479615d93f66569786c31144e083530bdceb4",
+      "plan_cutoff_ms": 1763039100000,
+      "snapshot_id": "480f8d4f6a7a3b63eaf0d89607c5fb51ecf95c962cdac6da02a27cc43c8ceb08",
+      "signal_reference": null,
+      "request": {
+        "version": 1,
+        "sequence": 1,
+        "kind": "ENTRY",
+        "quantity_eur": 1000,
+        "decision_ms": 1763039100000
+      },
+      "event": {
+        "order": {
+          "id": "2a665002333010abe8c5350240ad2fb9473d6b494d7c633669275bc3c17739de",
+          "symbol": "EURUSD",
+          "side": "BUY",
+          "quantity_units": 1000
+        },
+        "quote": {
+          "id": "8ac6eef4a21232687968426c7a06414cbb7cdca916160c212a929942156840e8",
+          "symbol": "EURUSD",
+          "observed_at_ms": 1763039102028,
+          "bid_units": 116207,
+          "ask_units": 116211
+        },
+        "decision_at_ms": 1763039102028,
+        "status": "PAPER_FILLED",
+        "reason": null,
+        "price_units": 116211,
+        "cash_units": 883789000,
+        "position_units": 1000,
+        "mode": "PAPER",
+        "schema_version": 1
+      },
+      "fill_id": "5c665e4721d622177aa8dce0ebbb7e69919313a0e07c69481f2380d730c9ac0f",
+      "quote": {
+        "time_ms": 1763039102028,
+        "source_order": 506,
+        "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+        "bid_units": 116207,
+        "ask_units": 116211
+      },
+      "sources": [
+        {
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "start": 1763038800,
+          "end": 1763042400
+        }
+      ],
+      "feed_id": "dukascopy-bi5-v2",
+      "side": "ASK",
+      "fee_units": 0,
+      "scale": 100000,
+      "delivery_delay_ms": 0,
+      "realized_usd_units": 0,
+      "planned": {
+        "entry": "1.16210",
+        "stop": "1.16110",
+        "target": "1.16410",
+        "management": "No automatic execution. Manual exit at planned levels.",
+        "risk_percent": "0.5",
+        "equity_usd": "10000"
+      }
+    },
+    {
+      "policy": "PLAN_EURUSD_CASH_MARKET_V1",
+      "trade_id": "TD-81E273FC25D3",
+      "plan_version_id": "PLAN-CF701A260247",
+      "plan_sha256": "e48f797a5df7e1916b9b96b87f1479615d93f66569786c31144e083530bdceb4",
+      "plan_cutoff_ms": 1763039100000,
+      "snapshot_id": "480f8d4f6a7a3b63eaf0d89607c5fb51ecf95c962cdac6da02a27cc43c8ceb08",
+      "signal_reference": null,
+      "request": {
+        "version": 1,
+        "sequence": 2,
+        "kind": "REDUCE",
+        "quantity_eur": 400,
+        "decision_ms": 1763039160000
+      },
+      "event": {
+        "order": {
+          "id": "3fca90e93ee2ca34f8bb4369d77af0fe5c768fe46d6aed4493a0a04ef5218f52",
+          "symbol": "EURUSD",
+          "side": "SELL",
+          "quantity_units": 400
+        },
+        "quote": {
+          "id": "cbe4c6d19f59a9ba11f93f9bb33141a37bea7eb08ab0b99fd57d8c32252558f8",
+          "symbol": "EURUSD",
+          "observed_at_ms": 1763039160038,
+          "bid_units": 116199,
+          "ask_units": 116205
+        },
+        "decision_at_ms": 1763039160038,
+        "status": "PAPER_FILLED",
+        "reason": null,
+        "price_units": 116199,
+        "cash_units": 930268600,
+        "position_units": 600,
+        "mode": "PAPER",
+        "schema_version": 1
+      },
+      "fill_id": "bb8d3244d4ad86b02328f34b67b4fa0189cdbec6a013fc0df83870ed2e23f9bb",
+      "quote": {
+        "time_ms": 1763039160038,
+        "source_order": 558,
+        "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+        "bid_units": 116199,
+        "ask_units": 116205
+      },
+      "sources": [
+        {
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "start": 1763038800,
+          "end": 1763042400
+        }
+      ],
+      "feed_id": "dukascopy-bi5-v2",
+      "side": "BID",
+      "fee_units": 0,
+      "scale": 100000,
+      "delivery_delay_ms": 0,
+      "realized_usd_units": -4800,
+      "planned": {
+        "entry": "1.16210",
+        "stop": "1.16110",
+        "target": "1.16410",
+        "management": "No automatic execution. Manual exit at planned levels.",
+        "risk_percent": "0.5",
+        "equity_usd": "10000"
+      }
+    },
+    {
+      "policy": "PLAN_EURUSD_CASH_MARKET_V1",
+      "trade_id": "TD-81E273FC25D3",
+      "plan_version_id": "PLAN-CF701A260247",
+      "plan_sha256": "e48f797a5df7e1916b9b96b87f1479615d93f66569786c31144e083530bdceb4",
+      "plan_cutoff_ms": 1763039100000,
+      "snapshot_id": "480f8d4f6a7a3b63eaf0d89607c5fb51ecf95c962cdac6da02a27cc43c8ceb08",
+      "signal_reference": null,
+      "request": {
+        "version": 1,
+        "sequence": 3,
+        "kind": "CLOSE",
+        "quantity_eur": 600,
+        "decision_ms": 1763039220000
+      },
+      "event": {
+        "order": {
+          "id": "3ef205696ff60cc1f7ccd1280d387182ced86a36ef3d7af7b256d8aedb96d7a5",
+          "symbol": "EURUSD",
+          "side": "SELL",
+          "quantity_units": 600
+        },
+        "quote": {
+          "id": "255714d1c34564939701a3ad3f4c4659fb180a03e1011763e8f97206e2ab8c5c",
+          "symbol": "EURUSD",
+          "observed_at_ms": 1763039225141,
+          "bid_units": 116194,
+          "ask_units": 116197
+        },
+        "decision_at_ms": 1763039225141,
+        "status": "PAPER_FILLED",
+        "reason": null,
+        "price_units": 116194,
+        "cash_units": 999985000,
+        "position_units": 0,
+        "mode": "PAPER",
+        "schema_version": 1
+      },
+      "fill_id": "80afddcc518d7bb37b29c22c92be311943163bf7ac2e4b8595c5e0544acdd068",
+      "quote": {
+        "time_ms": 1763039225141,
+        "source_order": 595,
+        "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+        "bid_units": 116194,
+        "ask_units": 116197
+      },
+      "sources": [
+        {
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "start": 1763038800,
+          "end": 1763042400
+        }
+      ],
+      "feed_id": "dukascopy-bi5-v2",
+      "side": "BID",
+      "fee_units": 0,
+      "scale": 100000,
+      "delivery_delay_ms": 0,
+      "realized_usd_units": -15000,
+      "planned": {
+        "entry": "1.16210",
+        "stop": "1.16110",
+        "target": "1.16410",
+        "management": "No automatic execution. Manual exit at planned levels.",
+        "risk_percent": "0.5",
+        "equity_usd": "10000"
+      }
+    }
+  ],
+  "no_trade": {
+    "id": "TD-0CA3AC89DD8E",
+    "reason": "Required setup was absent.",
+    "orders": 0
+  },
+  "review": {
+    "id": "T-00001",
+    "content": "Reduced 400 EUR and closed the remaining 600 EUR below the planned entry.",
+    "plan_reference": {
+      "trade_id": "TD-81E273FC25D3",
+      "version": 1
+    }
+  },
+  "signal": "TD-79ABDC71712B",
+  "signal_pins": [
+    [
+      {
+        "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+        "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+      }
+    ],
+    [
+      {
+        "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+        "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+      }
+    ]
+  ],
+  "seconds": {
+    "entry": 13.5,
+    "partial": 13.94,
+    "close": 16.36,
+    "signal": 11.93,
+    "signal-reopen": 15.45
+  },
+  "checkpoints": [
+    {
+      "phase": "entry",
+      "orders": 1,
+      "fills": [
+        "5c665e4721d622177aa8dce0ebbb7e69919313a0e07c69481f2380d730c9ac0f"
+      ],
+      "position_eur": 1000,
+      "cash_units": 883789000
+    },
+    {
+      "phase": "partial",
+      "orders": 2,
+      "fills": [
+        "5c665e4721d622177aa8dce0ebbb7e69919313a0e07c69481f2380d730c9ac0f",
+        "bb8d3244d4ad86b02328f34b67b4fa0189cdbec6a013fc0df83870ed2e23f9bb"
+      ],
+      "position_eur": 600,
+      "cash_units": 930268600
+    },
+    {
+      "phase": "close",
+      "orders": 3,
+      "fills": [
+        "5c665e4721d622177aa8dce0ebbb7e69919313a0e07c69481f2380d730c9ac0f",
+        "bb8d3244d4ad86b02328f34b67b4fa0189cdbec6a013fc0df83870ed2e23f9bb",
+        "80afddcc518d7bb37b29c22c92be311943163bf7ac2e4b8595c5e0544acdd068"
+      ],
+      "position_eur": 0,
+      "cash_units": 999985000
+    },
+    {
+      "phase": "signal",
+      "orders": 3,
+      "fills": [
+        "5c665e4721d622177aa8dce0ebbb7e69919313a0e07c69481f2380d730c9ac0f",
+        "bb8d3244d4ad86b02328f34b67b4fa0189cdbec6a013fc0df83870ed2e23f9bb",
+        "80afddcc518d7bb37b29c22c92be311943163bf7ac2e4b8595c5e0544acdd068"
+      ],
+      "position_eur": 0,
+      "cash_units": 999985000
+    },
+    {
+      "phase": "signal-reopen",
+      "orders": 3,
+      "fills": [
+        "5c665e4721d622177aa8dce0ebbb7e69919313a0e07c69481f2380d730c9ac0f",
+        "bb8d3244d4ad86b02328f34b67b4fa0189cdbec6a013fc0df83870ed2e23f9bb",
+        "80afddcc518d7bb37b29c22c92be311943163bf7ac2e4b8595c5e0544acdd068"
+      ],
+      "position_eur": 0,
+      "cash_units": 999985000
+    }
+  ],
+  "original_evidence": {
+    "plan_version_id": "PLAN-CF701A260247",
+    "plan_bytes_sha256": "41520b9dfe203a47ee88e683f23e1322c36b086f89f0bad40ed11a1dfa545515",
+    "snapshot_id": "480f8d4f6a7a3b63eaf0d89607c5fb51ecf95c962cdac6da02a27cc43c8ceb08",
+    "png_sha256": "f02c99a2ae3c3b5a832df758f0612c98d9baf3c20c07348a63b7acd863434f93",
+    "lanes": [
+      {
+        "bar_times": [
+          1763038800
+        ],
+        "feed_id": "dukascopy-bi5-v2",
+        "last_bar": {
+          "close": 1.16206,
+          "high": 1.16249,
+          "low": 1.16205,
+          "open": 1.16229,
+          "time": 1763038800
+        },
+        "ohlc_sha256": "d2015b60e542e107f4f264603e81398247efe2be20f7a1e23b60f818c35f4da3",
+        "partitions": [
+          {
+            "id": "55e8bd216f5d2b9e2b130ddedd0579dce0aa54fd561cfb6e86a633228a127b0d",
+            "sha256": "a6a0d7ee85e62b4947e9b0735d31ed4985871d0cb90d2efb8c621f7d14b63e41"
+          },
+          {
+            "id": "42d67cb27e0d1b3554cd2f787b4d3268f8fdd9b022a520e2ce68477a2b1f6ca4",
+            "sha256": "e577e7e92bf826da9fdd2ba3ea791f20a858da732ba864d3984a21bf67a87626"
+          }
+        ],
+        "price_basis": "BID",
+        "role": "primary",
+        "symbol": "EURUSD",
+        "timeframe": "M5"
+      }
+    ]
+  }
+}

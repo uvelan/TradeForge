@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, FiniteFloat, model_validator
 from .strategy_evidence import EvidenceRegistry
 from .causal_timing import TemporalEvidence, evidence as timing_evidence
 from .fvg import identity
-from .indicator_coverage import MarketSchedule, inspect_window
+from .indicator_coverage import MarketSchedule, aggregate_ohlc, inspect_window
 from .structure_continuity import continuity_reason
 from .structure_pages import EventPage
 
@@ -106,7 +106,8 @@ def references(rows, cutoff, step, frame, rules, native, quality, *, strict=Fals
                 status="UNVERIFIED_MARKET_SCHEDULE"
             quality[status]+=1
             continue
-        values=[members[0][0].open,max(b.high for b,_ in members),min(b.low for b,_ in members),members[-1][0].close]
+        candle = aggregate_ohlc([bar for bar, _ in members])
+        values = [candle[key] for key in ("open", "high", "low", "close")]
         if values[1]<=values[2]:
             quality["ZERO_WIDTH_REFERENCE"]+=1
             continue

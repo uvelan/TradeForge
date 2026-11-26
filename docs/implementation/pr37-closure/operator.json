@@ -1,0 +1,78 @@
+{
+  "source": {
+    "base_main": "517f8122b633f9143324f99dd7b075c7c689df3f",
+    "reviewed_pr": "989b4f82ff3729b5d495527c3c034d0453621f73",
+    "local_fix": "4292ec4210e50190ed32d6d54863b22d85a468af",
+    "pushed": false
+  },
+  "committed_save": {
+    "browser": "Headless Chromium 159.0.8154.6",
+    "tested_sha": "989b4f82ff3729b5d495527c3c034d0453621f73",
+    "strategy_id": "ST-20494bc32fa24fbfbbde4391e244bedb",
+    "versions": [
+      {
+        "version": 1,
+        "version_id": "SV-f97ce6a5120143619ec70de8fd7318fa",
+        "post_status": 201,
+        "independent_persisted_get_status": 200,
+        "injected_browser_history_get_status": 503
+      },
+      {
+        "version": 2,
+        "version_id": "SV-2524ca2d168e465694c52bad7cfb60a9",
+        "post_status": 201,
+        "independent_persisted_get_status": 200,
+        "injected_browser_history_get_status": 503,
+        "injected_browser_library_get_status": 503
+      }
+    ],
+    "operator_recovery": {
+      "confirmations": [
+        "Definition saved as version 1",
+        "Definition saved as version 2"
+      ],
+      "editor": "v2 · DRAFT",
+      "retry": "Refresh saved views",
+      "new_posts_on_retry": 0,
+      "create_posts": 1,
+      "revision_posts": 1,
+      "persisted_sqlite_versions": 2,
+      "persisted_pagination_control_versions": 45
+    },
+    "restart": {
+      "tested_sha": "4292ec4210e50190ed32d6d54863b22d85a468af",
+      "original_fixture_api_pid": 15680,
+      "production_app": "tradeforge.api:app",
+      "production_api_pid": 28836,
+      "fresh_vite_pid": 37700,
+      "fresh_chromium": true,
+      "history_get_status": 200,
+      "history_order": [
+        "SV-2524ca2d168e465694c52bad7cfb60a9",
+        "SV-f97ce6a5120143619ec70de8fd7318fa"
+      ],
+      "description": "Version two is committed without a library refresh.",
+      "browser_posts": 0
+    },
+    "isolation": "Ports 8782 and 4782. Independently read SQLite in read-only mode after original API and browser shut down. Faults injected only in browser route handlers.",
+    "scope": "Controlled optional follow-up read failures. The original hosted timeout cause remains unestablished."
+  },
+  "library_reopen": {
+    "baseline_result": "Injected initial strategy library GET 503. Template buttons absent and no in-app retry.",
+    "corrected_result": "Template buttons remain available. Explicit library failure and read-only retry persist through a second 503. When the fault is lifted, the original v1 opens and history contains exactly its original version ID.",
+    "corrected_run": "3 targeted Chromium cases passed in 16.5 s. TypeScript tsc --noEmit passed."
+  },
+  "market_terminal": {
+    "tested_sha": "4292ec4210e50190ed32d6d54863b22d85a468af",
+    "data": "Pinned Dukascopy EURUSD and GBPUSD M5 BID, 48 bars each, 2026-11-13 12:00–16:00 UTC.",
+    "receipt_id": "d14c0e07c2e602d10d8c69647cf960e70e33342f7bec278c28c29f418d2481de",
+    "receipt_cutoff_utc": "2026-11-13T13:25:00Z",
+    "session_id": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+    "initial_api_pid": 34644,
+    "restarted_api_pid": 37368,
+    "initial_browser_pid": 12696,
+    "restarted_browser_pid": 40688,
+    "initial_browser_passed": true,
+    "restart_browser_passed": true
+  }
+}

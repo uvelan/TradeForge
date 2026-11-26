@@ -1,6 +1,6 @@
 import {FvgLayer} from './FvgLayer';
 import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
-import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType, type IChartApi, type ISeriesApi, type IPriceLine, type SeriesMarker, type UTCTimestamp} from 'lightweight-charts';
+import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType, type MouseEventParams, type IChartApi, type ISeriesApi, type IPriceLine, type SeriesMarker, type UTCTimestamp} from 'lightweight-charts';
 import type { IndicatorResult } from './indicators';
 import type { SmtEvent } from './smt';
 import {useCandleColors} from './candleColors';
@@ -25,9 +25,9 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot,savingSnapshot,snapshotStatus}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
-  onAddLevel?:(price:number)=>void;showSnapshot?:boolean;symbol?:string;precision?:number;indicators?:IndicatorResult[]
+  onAddLevel?:(price:number)=>void;showSnapshot?:boolean;showDataLegend?:boolean;symbol?:string;precision?:number;indicators?:IndicatorResult[]
   timeframe?: string;
   drawingPrompt?: string;
   focus?: {epoch:number;sequence:number};
@@ -36,17 +36,19 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   placementDraft?:DrawingLayer['preview']; placementInteraction?:object;
   placementDrag?:PlacementDrag; requirePlacementCandle?:boolean;
   onPlacementPreview?:(points:{bar:Candle;price:number}[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void;
-  directEdit?:{selected:string;enabled:boolean;revision?:number;snap:boolean;save:(item:Drawing,anchors:Anchor[])=>void}; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>;
+  directEdit?:{selected:string;enabled:boolean;revision?:number;snap:boolean;save:(item:Drawing,anchors:Anchor[])=>void}; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>; savingSnapshot?:boolean; snapshotStatus?:string;
   comparison?: {symbol:string; candles:Candle[]; precision:number; placement:ComparisonPlacement;
-    onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]}
+    onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]; smtWindowOnly?:boolean}
 }){
   const element=useRef<HTMLDivElement>(null);
   const pointerGuide=useRef<HTMLDivElement>(null);
   const surface=useRef<HTMLDivElement>(null);
   const [fullscreen,setFullscreen]=useState(false);
+  const [localSnapshotStatus,setLocalSnapshotStatus]=useState("");
+  const [localSavingSnapshot,setLocalSavingSnapshot]=useState(false);
+  const controlledSnapshot=savingSnapshot!==undefined;
+  const captureStatus=controlledSnapshot?snapshotStatus:localSnapshotStatus;
   const [fullscreenError,setFullscreenError]=useState("");
-  const [snapshotStatus,setSnapshotStatus]=useState("");
-  const [savingSnapshot,setSavingSnapshot]=useState(false);
   const [cursorTime,setCursorTime]=useState<number>();
   const [missingLinkedTime,setMissingLinkedTime]=useState<number>();
   const linkedBars=useRef(new Map<number,Candle>());
@@ -129,7 +131,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     series.attachPrimitive(toolLayer);
     if(drawing.current)toolLayer.showPreview(draft.current);
     else toolLayer.select(editing.current?.selected??'');
-    const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime}):undefined;
+    const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime,
+      linkedTime:setCursorTime}):undefined;
     const scale=chart.timeScale();
     const viewport=()=>{editReset.current?.();if(linkId)link?.viewport(linkId);};
     const activate=()=>{if(linkId)link?.activate(linkId);setMissingLinkedTime(undefined);};
@@ -209,21 +212,25 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     container.addEventListener('wheel',activate,{passive:true});
     container.addEventListener('pointerleave',leave);
     scale.subscribeVisibleLogicalRangeChange(viewport);
-    chart.subscribeCrosshairMove(param=>{
+    const onCrosshair=(param:MouseEventParams)=>{
       const time=typeof param.time==='number'?param.time:undefined;
       setCursorTime(time);
       if(linkId)link?.cursor(linkId,time);
-    });
-    chart.subscribeClick(param=>{
+    };
+    chart.subscribeCrosshairMove(onCrosshair);
+    const onClick=(param:MouseEventParams)=>{
       if(drawing.current)return;
       if(typeof param.hoveredObjectId==='string'&&param.hoveredObjectId.startsWith('smt:')){
         const event=markerEvents.current.find(item=>item.id===param.hoveredObjectId?.toString().slice(4));
         if(event?.event_key)markerSelection.current?.(event);
         return;
       }
-    });
+    };
+    chart.subscribeClick(onClick);
     return ()=>{
       container.removeEventListener('pointerenter',activate);
+      chart.unsubscribeClick(onClick);
+      chart.unsubscribeCrosshairMove(onCrosshair);
       input.dispose();placementReset.current=undefined;editReset.current=undefined;
       resize.disconnect();
       document.removeEventListener('fullscreenchange',input.cancelEdit);
@@ -616,7 +623,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     {missingLinkedTime!==undefined&&link?.options.crosshair&&<span className="linked-no-candle" role="status">No candle at {timestamp.format(missingLinkedTime*1000)}</span>}
     <div ref={pointerGuide} className="chart-pointer-guide" aria-hidden="true" hidden/>
     {drawMode&&<div className="drawing-prompt">{drawingPrompt??'Click the chart to place a horizontal level'}</div>}
-    {(fullscreen||comparison)&&<div className="chart-data-legend" aria-label="Chart data">
+    {(fullscreen||comparison||showDataLegend)&&<div className="chart-data-legend" aria-label="Chart data">
       <div className="chart-legend-meta">
         {timeframe&&<strong>{timeframe}</strong>}
         {displayTime!==undefined&&<span>{timestamp.format(displayTime*1000)} · {zone}</span>}
@@ -626,6 +633,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       {legendRow(symbol,primaryBar,precision)}
       {comparison&&legendRow(comparison.symbol,comparisonBar,comparison.precision,true)}
       {comparison&&smtEvents&&<span className="chart-legend-meta">
+        {comparison.smtWindowOnly&&'SMT within chart range · '}
         {smtEvents.filter(event=>event.status==="SMT_CONFIRMED").length} confirmed · {smtEvents.filter(event=>event.status==="SMT_CANDIDATE").length} candidates · {smtEvents.filter(event=>event.status==="SMT_INVALIDATED").length} invalidated
       </span>}
       {hoveredSmt?.map(event=><div key={event.id} className="chart-legend-meta">
@@ -642,16 +650,21 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       <button type="button" className="snapshot-btn" aria-label="Show recent candles" title="Show recent candles"
         onClick={()=>showRecentCandles(candles)}><SkipForward size={15}/></button>
       {showSnapshot&&<button type="button" className="snapshot-btn" title="Download chart PNG" onClick={snapshot}><Camera size={15}/> Snapshot</button>}
-      {onSaveSnapshot&&<button type="button" className="snapshot-btn" disabled={savingSnapshot} onClick={()=>{
+      {onSaveSnapshot&&<button type="button" className="snapshot-btn" disabled={savingSnapshot??localSavingSnapshot} onClick={()=>{
         const canvas=chartRef.current?.takeScreenshot();
         if(!canvas)return;
         const png=canvas.toDataURL('image/png').split(',')[1];
         if(!png)return;
-        setSavingSnapshot(true);setSnapshotStatus('');
-        void onSaveSnapshot(png).then(()=>setSnapshotStatus('Chart capture saved')).catch(error=>setSnapshotStatus(error.message))
-          .finally(()=>setSavingSnapshot(false));
+        if(controlledSnapshot) {
+          void onSaveSnapshot(png);
+        } else {
+          setLocalSavingSnapshot(true);setLocalSnapshotStatus('');
+          void onSaveSnapshot(png).then(()=>setLocalSnapshotStatus('Chart capture saved'))
+            .catch(error=>setLocalSnapshotStatus(error instanceof Error?error.message:'Chart capture could not be saved'))
+            .finally(()=>setLocalSavingSnapshot(false));
+        }
       }}>Save chart evidence</button>}
-      {snapshotStatus&&<span role="status">{snapshotStatus}</span>}
+      {captureStatus&&<span role="status">{captureStatus}</span>}
       <button type="button" className="snapshot-btn" aria-label={fullscreen?"Exit fullscreen":"Fullscreen chart"}
         title={fullscreen?"Exit fullscreen (Esc)":"Fullscreen chart"} onClick={()=>void toggleFullscreen()}>
         {fullscreen?<Minimize size={15}/>:<Maximize size={15}/>}

@@ -3,12 +3,12 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from datetime import datetime,timedelta,timezone
 from decimal import Decimal
-from pathlib import Path
+from typing import Literal
 from hashlib import sha256
 import asyncio
 import json
 import uuid
-from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Request, Response
+from fastapi import APIRouter, FastAPI, HTTPException, Query, UploadFile, File, Request, Response
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel,Field, model_validator
@@ -18,21 +18,36 @@ from .db import initialize, rows, one, transaction, utc_now
 from .market import mt5_connection, mt5_rates, mt5_recent_deals,mt5_quote,mt5_symbols,demo_candles,BASE,FRAME_MIN
 from .storage import write_partition, read_partition
 from .historical_import import import_bi5
+from .reviewed_archives import import_reviewed, candle_origin
+import errno
+from .legacy_quote_evidence import read_v2_quote_evidence
 from .domain import create_trade,get_trade,revise,decline_trade,close_trade,list_trades,analytics,export_ai,import_ai,journal_add,journal_list,journal_materialize
 from .risk import evaluate
 from .backtest import breakout_backtest
 from .tick_replay import effective_tick_period, replay_breakout, replay_coverage, validate_bid_extremes
 from .schemas import TradePlan,Outcome,ReviewInput,ReviewV1,JournalInput,RiskInput,SignalReference
 from . import domain
+from .review_integrity import ReviewUploadRoute
 from .drawings import router as drawing_router
 from .arrival_capture import CaptureManager
 from .arrival_routes import router as arrival_router
+from .ai_review_decisions import router as review_decision_router
 from .workspace_routes import router as workspace_router
+from .learning import router as learning_router
+from .historical_packages import HistoricalReview, import_historical, router as historical_package_router
+from .month_replay import router as month_router
+from .decision_reviews import router as decision_review_router
 from .strategy_routes import router as strategy_router
 from .strategy_evaluation_routes import router as strategy_evaluation_router
 from .historical_strategy_routes import router as historical_strategy_router
 from .historical_strategy_worker import supervise as supervise_strategy_history
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
+from .indicator_coverage import replay_availability
+from .replay_confluence import inspect_confluence, list_pinned_confluence, pin_confluence
+from .replay_crt import inspect_crt
+from .replay_hour import inspect_hour
+from .replay_structure import inspect_structure_liquidity
+from .replay_zones import inspect_zones
 from .saved_history import chart_range, tick_partitions, read_tick_partitions, tick_source_manifests
 
 
@@ -53,10 +68,19 @@ async def lifespan(app:FastAPI):
         await monitor
         await history
 app=FastAPI(title='TradeForge Local API',version='0.1.0',lifespan=lifespan)
+from .plan_paper import router as paper_router
+app.include_router(paper_router)
 app.include_router(indicator_router)
 app.include_router(arrival_router)
+app.include_router(review_decision_router)
 app.include_router(drawing_router)
 app.include_router(workspace_router)
+app.include_router(learning_router)
+app.include_router(decision_review_router)
+from .statement_routes import router as statement_router
+app.include_router(statement_router)
+app.include_router(month_router)
+app.include_router(historical_package_router)
 app.include_router(strategy_router)
 app.include_router(strategy_evaluation_router)
 app.include_router(historical_strategy_router)
@@ -110,7 +134,7 @@ def market_candles(symbol:str='EURUSD',timeframe:str='M5',source:str='DEMO',limi
             raise HTTPException(404, str(error)) from error
         except (ValueError, RuntimeError, OSError) as error:
             raise HTTPException(409, str(error)) from error
-        return {"source":source, "synthetic":False, **result}
+        return {"source":source, "synthetic":False, "source_completeness":"UNVERIFIED", **result}
     raise HTTPException(422,'Unsupported source')
 
 
@@ -180,25 +204,29 @@ def create_export(uid:str, plan_version:int|None=Query(None,ge=1)):return export
 
 
 @app.get('/api/ai/packages')
-def list_packages():return rows('SELECT id,trade_id,plan_version,knowledge_cutoff,sha256,created_at FROM ai_packages ORDER BY created_at DESC')
+def list_packages():return rows('SELECT id,trade_id,plan_version,knowledge_cutoff,sha256,created_at FROM ai_packages WHERE trade_id IS NOT NULL ORDER BY created_at DESC')
 
 
 @app.get('/api/ai/packages/{pkg}/download')
 def download_ai(pkg:str):
     p=one('SELECT * FROM ai_packages WHERE id=?',(pkg,))
     if not p:raise HTTPException(404,'Package not found')
-    path=Path(p['location']).resolve()
-    if not path.is_relative_to(domain.EXPORT_DIR.resolve()) or not path.is_file():raise HTTPException(404,'Package file missing')
-    if sha256(path.read_bytes()).hexdigest()!=p['sha256']:raise HTTPException(409,'Export checksum mismatch')
-    return FileResponse(path,media_type='application/zip',filename=f'{pkg}.zip')
+    payload=domain.read_package_bytes(p,missing_status=404,missing_detail="Package file missing",
+                                      checksum_detail="Export checksum mismatch")
+    return Response(payload,media_type='application/zip',headers={'Content-Disposition':f'attachment; filename="{pkg}.zip"'})
 
 
-@app.post('/api/ai/reviews',status_code=201)
-async def import_review(review: ReviewV1 | ReviewInput, request: Request):
+review_upload = APIRouter(route_class=ReviewUploadRoute)
+
+
+@review_upload.post('/api/ai/reviews',status_code=201)
+async def import_review(review: HistoricalReview | ReviewV1 | ReviewInput, request: Request):
     original = await request.body()
-    if len(original) > 1_000_000:
-        raise HTTPException(413, "AI review exceeds 1 MB")
-    return await asyncio.to_thread(import_ai, review, original)
+    importer = import_historical if isinstance(review, HistoricalReview) else import_ai
+    return await asyncio.to_thread(importer, review, original)
+
+
+app.include_router(review_upload)
 
 
 @app.get('/api/ai/reviews/{review_id}/original')
@@ -215,8 +243,10 @@ def download_review_original(review_id: str):
 @app.get('/api/ai/reviews')
 def reviews():
     return rows("""SELECT id,package_id,assessment,verification,created_at,
+        COALESCE(i.status,'ORIGINAL_UNAVAILABLE') AS original_integrity,i.duplicate_key,i.corrects_review_id,
+        EXISTS(SELECT 1 FROM recorded_package_sources src WHERE src.package_id=ai_reviews.package_id) AS recorded_package,
         EXISTS(SELECT 1 FROM ai_review_originals WHERE review_id=ai_reviews.id) AS has_original
-        FROM ai_reviews ORDER BY created_at DESC""")
+        FROM ai_reviews LEFT JOIN ai_review_integrity i ON i.review_id=ai_reviews.id ORDER BY ai_reviews.rowid DESC""")
 
 
 @app.get('/api/journal')
@@ -269,7 +299,7 @@ def dataset_coverage(dataset_id:str):
             gaps.append({"start": cursor, "end": end})
         return {"source":dataset["provider"]+"_SAVED","synthetic":False,"symbol":dataset["symbol"],
                 "timeframe":dataset["timeframe"],"feed_id":dataset["feed_id"],"price_basis":dataset["price_basis"],
-                "candles":values[-1:], "partitions":[{"id":dataset["id"],"sha256":dataset["sha256"]}],
+                "candles":values[-1:], "origin":candle_origin(dataset, values, step), "partitions":[{"id":dataset["id"],"sha256":dataset["sha256"]}],
                 "coverage":{"start":first,"end":end,"gaps":gaps,"duplicate_bars":duplicates,
                             "truncated":truncated}}
     except (RuntimeError, OSError, ValueError, KeyError) as error:
@@ -306,6 +336,23 @@ async def import_dukascopy_bi5(symbol:str,day:str,hour:int|None=Query(None,ge=0,
         payload=await file.read(40_000_001)
         return await asyncio.to_thread(import_bi5,payload,symbol,date,hour)
     except (RuntimeError,ValueError,ImportError) as ex:raise HTTPException(422,str(ex)) from ex
+
+
+@app.post('/api/market/import/reviewed')
+async def import_reviewed_archive(file: UploadFile = File(...)):
+    payload = await file.read(1_048_577)
+    if len(payload) > 1_048_576:
+        raise HTTPException(413, "Reviewed archive files must fit within 1 MiB")
+    try:
+        return await asyncio.to_thread(import_reviewed, payload)
+    except OSError as error:
+        if error.errno == errno.ENOSPC:
+            raise HTTPException(507, "Insufficient storage to publish the archive") from error
+        raise
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    except RuntimeError as error:
+        raise HTTPException(409, str(error)) from error
 
 
 @app.post('/api/market/import/mt5-deals')
@@ -441,7 +488,7 @@ def load_backtest(run_id:str):
 
 
 @app.get('/api/backtest/runs/{run_id}/trades/{trade_index}/quotes')
-def run_quotes(run_id:str,trade_index:int,offset:int=Query(0,ge=0,le=500_000),limit:int=Query(250,ge=1,le=2000)):
+def run_quotes(run_id:str,trade_index:int,response:Response,offset:int=Query(0,ge=0,le=500_000),limit:int=Query(250,ge=1,le=2000)):
     snapshot = load_backtest(run_id)
     result = snapshot["result"]
     if not 0<=trade_index<len(result["trades"]):
@@ -458,8 +505,12 @@ def run_quotes(run_id:str,trade_index:int,offset:int=Query(0,ge=0,le=500_000),li
             raise HTTPException(409,"Original quote partition unavailable")
         datasets.append(row)
     try:
-        period = result.get("replay_coverage", {}).get("required_period")
-        quotes = read_tick_partitions(datasets, period=period)
+        if result["execution_model"].get("version") == 2:
+            quotes = read_v2_quote_evidence(datasets)
+            response.headers["X-TradeForge-Quote-Order"] = "historical-v2"
+        else:
+            period = result.get("replay_coverage", {}).get("required_period")
+            quotes = read_tick_partitions(datasets, period=period)
     except (RuntimeError,OSError,ValueError,KeyError) as error:
         raise HTTPException(409,f"Original quote partitions failed verification: {error}") from error
     start = (trade["entry_time_ms"],trade["entry_source_order"])
@@ -511,8 +562,11 @@ def captured_replay(request:ReplayRequest,symbol:str,timeframe:str,cutoff:int):
             raise HTTPException(422,"No completed window for this replay timeframe")
     market=market_candles(symbol,timeframe,request.source,limit=600,include_latest=(request.source=="MT5"),
                           start=start,end=end)
-    bars=[{**bar,"available_at":bar.get("available_at",bar["time"]+step)} for bar in market["candles"]
-          if bar.get("available_at",bar["time"]+step)<=cutoff]
+    bars = []
+    for bar in market["candles"]:
+        available = replay_availability(bar, step)
+        if available <= cutoff:
+            bars.append({**bar, "available_at": available})
     if any(right["time"]<=left["time"] or right["available_at"]<left["available_at"]
            for left,right in zip(bars,bars[1:])):
         raise HTTPException(409,"Replay candle timestamps are inconsistent")
@@ -580,6 +634,61 @@ def replay_session(session_id:str):
     return {"id":session_id,**json.loads(row["payload"]),
             "checkpoint":{"position":checkpoint["position"],"bookmarks":json.loads(checkpoint["bookmarks"])}
             if checkpoint else None}
+
+
+@app.get('/api/replay/sessions/{session_id}/higher-timeframe')
+def replay_higher_timeframe(session_id: str, hour_start: int = Query(ge=0), cutoff: int = Query(ge=0),
+                            view: str = Query(default="primary", pattern=r"^(primary|comparison|[234])$")):
+    return inspect_hour(replay_session(session_id), view, hour_start, cutoff)
+
+
+@app.get('/api/replay/sessions/{session_id}/structure-liquidity')
+def replay_structure_liquidity(session_id: str, cutoff: int = Query(ge=0),
+                               view: str = Query(default="primary", pattern=r"^(primary|comparison|[234])$"),
+                               event_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+                               before: int | None = Query(default=None, ge=0)):
+    return inspect_structure_liquidity(replay_session(session_id), view, cutoff, event_id, before)
+
+
+@app.get('/api/replay/sessions/{session_id}/crt')
+def replay_crt(session_id: str, cutoff: int = Query(ge=0),
+               view: str = Query(default="primary", pattern=r"^(primary|comparison|[234])$"),
+               range_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+               before: int | None = Query(default=None, ge=0)):
+    return inspect_crt(replay_session(session_id), view, cutoff, range_id, before)
+
+
+@app.get('/api/replay/sessions/{session_id}/confluence')
+def replay_confluence(session_id: str, cutoff: int = Query(ge=0),
+                      profile: Literal["CRT_SMT_M5_V1"] = "CRT_SMT_M5_V1",
+                      receipt_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$")):
+    return inspect_confluence(replay_session(session_id), cutoff, profile, receipt_id)
+
+
+@app.get('/api/replay/sessions/{session_id}/confluence/receipts')
+def saved_replay_confluence(session_id: str, cutoff: int = Query(ge=0),
+                            profile: Literal["CRT_SMT_M5_V1"] = "CRT_SMT_M5_V1",
+                            limit: int = Query(default=24, ge=1, le=48),
+                            before_cutoff: int | None = Query(default=None, ge=0),
+                            before_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+                            selected_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$")):
+    return list_pinned_confluence(replay_session(session_id), cutoff, profile, limit, before_cutoff, before_id, selected_id)
+
+
+@app.post('/api/replay/sessions/{session_id}/confluence')
+def pin_replay_confluence(session_id: str, cutoff: int = Query(ge=0),
+                          receipt_id: str = Query(pattern=r"^[a-f0-9]{64}$"),
+                          profile: Literal["CRT_SMT_M5_V1"] = "CRT_SMT_M5_V1"):
+    return pin_confluence(replay_session(session_id), cutoff, profile, receipt_id)
+
+
+@app.get('/api/replay/sessions/{session_id}/zones')
+def replay_zones(session_id: str, cutoff: int = Query(ge=0),
+                 view: str = Query(default="primary", pattern=r"^(primary|comparison|[234])$"),
+                 mitigation: Literal["wick", "close"] = "wick",
+                 zone_id: str | None = Query(default=None, pattern=r"^[a-f0-9]{64}$"),
+                 before: int | None = Query(default=None, ge=0)):
+    return inspect_zones(replay_session(session_id), view, cutoff, mitigation, zone_id, before)
 
 
 @app.post('/api/replay/sessions/{session_id}/checkpoint')

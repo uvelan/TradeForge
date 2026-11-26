@@ -1,7 +1,8 @@
 """Causal indicator definitions for ordered OHLC bars."""
 
 from dataclasses import dataclass
-from math import sqrt
+from decimal import Decimal
+from math import isfinite, sqrt
 from typing import Callable
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, model_validator
@@ -128,6 +129,116 @@ def normalized_atr(bars: list[Bar], period: int) -> dict[str, Values]:
                      for bar, value in zip(bars, atr(bars, period)["ATR"])]}
 
 
+def directional_movement(bars: list[Bar], period: int) -> dict[str, Values]:
+    up_moves, down_moves, ranges = [], [], []
+    for previous, bar in zip(bars, bars[1:]):
+        up, down = bar.high - previous.high, previous.low - bar.low
+        up_moves.append(up if up > max(down, 0) else 0.0)
+        down_moves.append(down if down > max(up, 0) else 0.0)
+        ranges.append(true_range(bar, previous.close))
+    smoothed = [average(values, period, "WILDER") for values in (up_moves, down_moves, ranges)]
+    plus_di, minus_di = [], []
+    dx = []
+    for up, down, span in zip(*smoothed):
+        if up is None or down is None or span is None:
+            continue
+        plus, minus = (100 * up / span, 100 * down / span) if span else (0.0, 0.0)
+        plus_di.append(plus)
+        minus_di.append(minus)
+        dx.append(100 * abs(plus - minus) / (plus + minus) if plus + minus else 0.0)
+    seed = [None] * min(period, len(bars))
+    return {"ADX": seed + average(dx, period, "WILDER"), "+DI": seed + plus_di, "-DI": seed + minus_di}
+
+
+def range_percent(value: float, low: float, high: float) -> float:
+    return 50.0 if high == low else 100 * (value - low) / (high - low)
+
+
+def stochastic(bars: list[Bar], period: int) -> dict[str, Values]:
+    values = []
+    for index in range(period - 1, len(bars)):
+        window = bars[index-period+1:index+1]
+        values.append(range_percent(bars[index].close, min(bar.low for bar in window),
+                                    max(bar.high for bar in window)))
+    seed = [None] * min(period - 1, len(bars))
+    return {"%K": seed + values, "%D": seed + average(values, 3, "SMA")}
+
+
+def stochastic_rsi(bars: list[Bar], period: int) -> dict[str, Values]:
+    strength = [v for v in rsi(bars, period)["RSI"] if v is not None]
+    values = []
+    for index in range(period - 1, len(strength)):
+        window = strength[index-period+1:index+1]
+        values.append(range_percent(strength[index], min(window), max(window)))
+    seed = [None] * min(2 * period - 1, len(bars))
+    return {"%K": seed + values, "%D": seed + average(values, 3, "SMA")}
+
+
+def commodity_channel(bars: list[Bar], period: int) -> dict[str, Values]:
+    values: Values = [None] * min(period - 1, len(bars))
+    if len(bars) < period:
+        return {"CCI": values}
+
+    # Preserve the preview's existing numeric-range limit for OHLC totals.
+    decimal_prices = []
+    for bar in bars:
+        if not isfinite(bar.high + bar.low + bar.close):
+            raise ValueError("Indicator calculation exceeded supported numeric range")
+        # Bar has already parsed positive finite floats. Its shortest round-trip
+        # spelling preserves distinct representable prices and the decimal
+        # relationships users supplied, e.g. 1.3 + 1.1 + 1.2 == 3 * 1.2.
+        decimal_prices.append([Decimal(str(price)).as_tuple()
+                               for price in (bar.high, bar.low, bar.close)])
+
+    # The common exact decimal scale and typical-price divisor (3) cancel.
+    # Integer totals avoid relying on the active Decimal precision context.
+    exponents = {price.exponent for row in decimal_prices for price in row}
+    exponent_floor = min(exponents)
+    scales = {exponent: 10 ** (exponent - exponent_floor) for exponent in exponents}
+    totals = [sum(int("".join(map(str, price.digits))) * scales[price.exponent] for price in row)
+              for row in decimal_prices]
+    for index in range(period - 1, len(bars)):
+        window = totals[index-period+1:index+1]
+        window_sum = sum(window)
+        deviation_sum = sum(abs(period * total - window_sum) for total in window)
+        current_delta = period * totals[index] - window_sum
+        # 0.015 = 3 / 200. Dividing by mean absolute deviation contributes period.
+        values.append(200 * period * current_delta / (3 * deviation_sum) if deviation_sum else 0.0)
+    return {"CCI": values}
+
+
+def keltner(bars: list[Bar], period: int) -> dict[str, Values]:
+    basis = average([bar.close for bar in bars], period, "EMA")
+    ranges = atr(bars, period)["ATR"]
+    widths = [(mid, 2 * span) if mid is not None and span is not None else None
+              for mid, span in zip(basis, ranges)]
+    return {"Upper": [point[0] + point[1] if point else None for point in widths],
+            "Basis": basis,
+            "Lower": [point[0] - point[1] if point else None for point in widths]}
+
+
+def supertrend(bars: list[Bar], period: int) -> dict[str, Values]:
+    line: Values = [None] * min(period - 1, len(bars))
+    upper = lower = None
+    bullish = False
+    for index, span in enumerate(atr(bars, period)["ATR"]):
+        if span is None:
+            continue
+        bar = bars[index]
+        mid = (bar.high + bar.low) / 2
+        top, bottom = mid + 3 * span, mid - 3 * span
+        if upper is None or lower is None:
+            upper, lower = top, bottom
+        else:
+            previous = bars[index - 1].close
+            upper = top if top < upper or previous > upper else upper
+            lower = bottom if bottom > lower or previous < lower else lower
+            # A touch does not switch direction; the current closed bar decides.
+            bullish = bar.close >= lower if bullish else bar.close > upper
+        line.append(lower if bullish else upper)
+    return {"SuperTrend": line}
+
+
 @dataclass(frozen=True)
 class Definition:
     label: str
@@ -153,17 +264,29 @@ REGISTRY = {
     "swings": Definition("Confirmed swing levels", "markers", 3, lambda p: 2 * p + 1, swing_points),
     "roc": Definition("Rate of change", "pane", 12, lambda p: p + 1, rate_of_change),
     "natr": Definition("Normalized ATR", "pane", 14, window_bars, normalized_atr),
+    "adx": Definition("ADX / Directional Movement", "pane", 14, lambda p: 2 * p, directional_movement),
+    "stochastic": Definition("Stochastic", "pane", 14, lambda p: p + 2, stochastic),
+    "stochrsi": Definition("Stochastic RSI", "pane", 14, lambda p: 2 * p + 2, stochastic_rsi),
+    "cci": Definition("Commodity Channel Index", "pane", 20, window_bars, commodity_channel),
+    "keltner": Definition("Keltner Channels", "overlay", 20, window_bars, keltner),
+    "supertrend": Definition("SuperTrend", "overlay", 10, window_bars, supertrend),
 }
 
 
 def calculate(bars: list[Bar], name: str, period: int) -> dict:
     definition = REGISTRY[name]
     series = {}
-    for label, values in definition.calculate(bars, period).items():
+    try:
+        calculated = definition.calculate(bars, period)
+    except (OverflowError, ZeroDivisionError) as error:
+        raise ValueError("Indicator calculation exceeded supported numeric range") from error
+    for label, values in calculated.items():
         points = []
         for index, value in enumerate(values):
             if value is None:
                 continue
+            if not isfinite(value):
+                raise ValueError("Indicator calculation exceeded supported numeric range")
             point = {"time": bars[index].time, "value": value}
             if name == "swings":
                 point["pivot_time"] = bars[index - period].time

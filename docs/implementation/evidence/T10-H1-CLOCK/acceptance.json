@@ -1,0 +1,514 @@
+{
+  "pinned_provider_day": "2026-11-13",
+  "controlled_partitions": {
+    "EURUSD": {
+      "provider_csv_sha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6",
+      "pin": {
+        "id": "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11",
+        "sha256": "1f84a78589ec3ccc670b9b8dfb64e2fb58c39824c3ef56f2d0d0d4dc220e2834"
+      }
+    },
+    "GBPUSD": {
+      "provider_csv_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928",
+      "pin": {
+        "id": "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625",
+        "sha256": "27fa0280aeb4421b027f8a43f0763fa6f7eb2e6b8c722b0cfbda39725db496b2"
+      }
+    }
+  },
+  "baseline": {
+    "revision": "f273342db68aa61a8694d61693d9e1c1afbb5ee0",
+    "api_started": "2026-11-26T12:03:11.331+05:30",
+    "api_seconds": 3.85,
+    "api": [
+      {
+        "probe": "primary just before delayed child",
+        "symbol": "EURUSD",
+        "cutoff": "2026-11-13T14:00:19Z",
+        "http": 200,
+        "passed": true,
+        "status": "UNRESOLVED",
+        "reason": "MISSING_OPEN_CANDLES",
+        "availability": null,
+        "ohlc": null,
+        "child_count": 0,
+        "missing_slots": [
+          "2026-11-13T13:55:00Z"
+        ]
+      },
+      {
+        "probe": "peer at nominal cutoff",
+        "symbol": "GBPUSD",
+        "cutoff": "2026-11-13T14:00:00Z",
+        "http": 200,
+        "passed": true,
+        "status": "COMPLETE",
+        "reason": null,
+        "availability": "2026-11-13T14:00:00Z",
+        "ohlc": {
+          "open": 1.32256,
+          "high": 1.32503,
+          "low": 1.32238,
+          "close": 1.32319
+        },
+        "child_count": 12
+      },
+      {
+        "probe": "primary at shared cutoff",
+        "symbol": "EURUSD",
+        "cutoff": "2026-11-13T14:00:20Z",
+        "http": 200,
+        "passed": true,
+        "status": "COMPLETE",
+        "reason": null,
+        "availability": "2026-11-13T14:00:20Z",
+        "ohlc": {
+          "open": 1.10503,
+          "high": 1.10693,
+          "low": 1.10486,
+          "close": 1.10499
+        },
+        "child_count": 12
+      },
+      {
+        "probe": "peer at shared cutoff",
+        "symbol": "GBPUSD",
+        "cutoff": "2026-11-13T14:00:20Z",
+        "http": 422,
+        "passed": false,
+        "detail": "Requested UTC hour or cutoff outside the captured replay window"
+      },
+      {
+        "probe": "fully missing open hour at close",
+        "symbol": "GBPUSD",
+        "cutoff": "2026-11-13T15:00:00Z",
+        "http": 200,
+        "passed": true,
+        "status": "UNRESOLVED",
+        "reason": "REFERENCE_ABSENT",
+        "availability": null,
+        "ohlc": null,
+        "child_count": 0,
+        "missing_slots": [
+          "2026-11-13T14:00:00Z",
+          "2026-11-13T14:05:00Z",
+          "2026-11-13T14:10:00Z",
+          "2026-11-13T14:15:00Z",
+          "2026-11-13T14:20:00Z",
+          "2026-11-13T14:25:00Z",
+          "2026-11-13T14:30:00Z",
+          "2026-11-13T14:35:00Z",
+          "2026-11-13T14:40:00Z",
+          "2026-11-13T14:45:00Z",
+          "2026-11-13T14:50:00Z",
+          "2026-11-13T14:55:00Z"
+        ]
+      },
+      {
+        "probe": "later peer hour",
+        "symbol": "GBPUSD",
+        "cutoff": "2026-11-13T16:00:00Z",
+        "http": 200,
+        "passed": true,
+        "status": "COMPLETE",
+        "reason": null,
+        "availability": "2026-11-13T16:00:00Z",
+        "ohlc": {
+          "open": 1.32455,
+          "high": 1.32465,
+          "low": 1.32178,
+          "close": 1.3221
+        },
+        "child_count": 12
+      },
+      {
+        "probe": "fully missing open hour after later candles",
+        "symbol": "GBPUSD",
+        "cutoff": "2026-11-13T16:00:00Z",
+        "http": 200,
+        "passed": true,
+        "status": "UNRESOLVED",
+        "reason": "REFERENCE_ABSENT",
+        "availability": null,
+        "ohlc": null,
+        "child_count": 0,
+        "missing_slots": [
+          "2026-11-13T14:00:00Z",
+          "2026-11-13T14:05:00Z",
+          "2026-11-13T14:10:00Z",
+          "2026-11-13T14:15:00Z",
+          "2026-11-13T14:20:00Z",
+          "2026-11-13T14:25:00Z",
+          "2026-11-13T14:30:00Z",
+          "2026-11-13T14:35:00Z",
+          "2026-11-13T14:40:00Z",
+          "2026-11-13T14:45:00Z",
+          "2026-11-13T14:50:00Z",
+          "2026-11-13T14:55:00Z"
+        ]
+      }
+    ],
+    "chromium": "159.0.8154.6",
+    "chromium_started": "2026-11-26T12:02:41.143+05:30",
+    "chromium_ended": "2026-11-26T12:03:30.853+05:30",
+    "chromium_phases": {
+      "initial": {
+        "exit_code": 1,
+        "elapsed_seconds": 39.23
+      },
+      "restart": {
+        "exit_code": 1,
+        "elapsed_seconds": 8.91
+      }
+    },
+    "delayed": {
+      "session_id": "9752759eae0106e1f731a622304669c1c512d96cb546e9df793ac8cad17a271e",
+      "cutoff": "2026-11-13T14:00:20Z",
+      "peer_http_initial": 422,
+      "peer_http_restart": 422
+    },
+    "gap": {
+      "session_id": "c9a2cb22c833a808559160c512d4eb6ca591219a2ae673e46c083d0aec7c0c40",
+      "cutoff": "2026-11-13T16:00:00Z",
+      "selectable_hour_starts_initial": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T15:00:00Z"
+      ],
+      "selectable_hour_starts_restart": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T15:00:00Z"
+      ]
+    }
+  },
+  "fixed": {
+    "revision": "cda68a43e20ad0329fb97d23fc66107dab18d495",
+    "api_started": "2026-11-26T12:05:31.632+05:30",
+    "api_seconds": 2.41,
+    "api": [
+      {
+        "probe": "primary just before delayed child",
+        "symbol": "EURUSD",
+        "cutoff": "2026-11-13T14:00:19Z",
+        "http": 200,
+        "passed": true,
+        "status": "UNRESOLVED",
+        "reason": "MISSING_OPEN_CANDLES",
+        "availability": null,
+        "ohlc": null,
+        "child_count": 0,
+        "missing_slots": [
+          "2026-11-13T13:55:00Z"
+        ]
+      },
+      {
+        "probe": "peer at nominal cutoff",
+        "symbol": "GBPUSD",
+        "cutoff": "2026-11-13T14:00:00Z",
+        "http": 200,
+        "passed": true,
+        "status": "COMPLETE",
+        "reason": null,
+        "availability": "2026-11-13T14:00:00Z",
+        "ohlc": {
+          "open": 1.32256,
+          "high": 1.32503,
+          "low": 1.32238,
+          "close": 1.32319
+        },
+        "child_count": 12
+      },
+      {
+        "probe": "primary at shared cutoff",
+        "symbol": "EURUSD",
+        "cutoff": "2026-11-13T14:00:20Z",
+        "http": 200,
+        "passed": true,
+        "status": "COMPLETE",
+        "reason": null,
+        "availability": "2026-11-13T14:00:20Z",
+        "ohlc": {
+          "open": 1.10503,
+          "high": 1.10693,
+          "low": 1.10486,
+          "close": 1.10499
+        },
+        "child_count": 12
+      },
+      {
+        "probe": "peer at shared cutoff",
+        "symbol": "GBPUSD",
+        "cutoff": "2026-11-13T14:00:20Z",
+        "http": 200,
+        "passed": true,
+        "status": "COMPLETE",
+        "reason": null,
+        "availability": "2026-11-13T14:00:00Z",
+        "ohlc": {
+          "open": 1.32256,
+          "high": 1.32503,
+          "low": 1.32238,
+          "close": 1.32319
+        },
+        "child_count": 12
+      },
+      {
+        "probe": "fully missing open hour at close",
+        "symbol": "GBPUSD",
+        "cutoff": "2026-11-13T15:00:00Z",
+        "http": 200,
+        "passed": true,
+        "status": "UNRESOLVED",
+        "reason": "REFERENCE_ABSENT",
+        "availability": null,
+        "ohlc": null,
+        "child_count": 0,
+        "missing_slots": [
+          "2026-11-13T14:00:00Z",
+          "2026-11-13T14:05:00Z",
+          "2026-11-13T14:10:00Z",
+          "2026-11-13T14:15:00Z",
+          "2026-11-13T14:20:00Z",
+          "2026-11-13T14:25:00Z",
+          "2026-11-13T14:30:00Z",
+          "2026-11-13T14:35:00Z",
+          "2026-11-13T14:40:00Z",
+          "2026-11-13T14:45:00Z",
+          "2026-11-13T14:50:00Z",
+          "2026-11-13T14:55:00Z"
+        ]
+      },
+      {
+        "probe": "later peer hour",
+        "symbol": "GBPUSD",
+        "cutoff": "2026-11-13T16:00:00Z",
+        "http": 200,
+        "passed": true,
+        "status": "COMPLETE",
+        "reason": null,
+        "availability": "2026-11-13T16:00:00Z",
+        "ohlc": {
+          "open": 1.32455,
+          "high": 1.32465,
+          "low": 1.32178,
+          "close": 1.3221
+        },
+        "child_count": 12
+      },
+      {
+        "probe": "fully missing open hour after later candles",
+        "symbol": "GBPUSD",
+        "cutoff": "2026-11-13T16:00:00Z",
+        "http": 200,
+        "passed": true,
+        "status": "UNRESOLVED",
+        "reason": "REFERENCE_ABSENT",
+        "availability": null,
+        "ohlc": null,
+        "child_count": 0,
+        "missing_slots": [
+          "2026-11-13T14:00:00Z",
+          "2026-11-13T14:05:00Z",
+          "2026-11-13T14:10:00Z",
+          "2026-11-13T14:15:00Z",
+          "2026-11-13T14:20:00Z",
+          "2026-11-13T14:25:00Z",
+          "2026-11-13T14:30:00Z",
+          "2026-11-13T14:35:00Z",
+          "2026-11-13T14:40:00Z",
+          "2026-11-13T14:45:00Z",
+          "2026-11-13T14:50:00Z",
+          "2026-11-13T14:55:00Z"
+        ]
+      }
+    ],
+    "chromium": "159.0.8154.6",
+    "chromium_started": "2026-11-26T12:05:34.293+05:30",
+    "chromium_controlled_ended": "2026-11-26T12:06:02.909+05:30",
+    "chromium_phases": {
+      "initial": {
+        "exit_code": 0,
+        "elapsed_seconds": 15.47
+      },
+      "restart": {
+        "exit_code": 0,
+        "elapsed_seconds": 10.86
+      }
+    },
+    "delayed": {
+      "session_id": "9752759eae0106e1f731a622304669c1c512d96cb546e9df793ac8cad17a271e",
+      "cutoff": "2026-11-13T14:00:20Z",
+      "peer_http_initial": 200,
+      "peer_http_restart": 200,
+      "checkpoint": {
+        "position": 11,
+        "bookmarks": []
+      },
+      "restart_rows_match_initial": true,
+      "primary": {
+        "symbol": "EURUSD",
+        "hour_start": "2026-11-13T13:00:00Z",
+        "availability": "2026-11-13T14:00:20Z",
+        "ohlc": {
+          "open": 1.10503,
+          "high": 1.10693,
+          "low": 1.10486,
+          "close": 1.10499
+        },
+        "child_source_ids": [
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794574800",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794575100",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794575400",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794575700",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794576000",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794576300",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794576600",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794576900",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794577200",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794577500",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794577800",
+          "74669667281e284ed3eac708f880c140f393a31332209116cb0833b86359ab11:1794578100"
+        ],
+        "last_child_availability": "2026-11-13T14:00:20Z"
+      },
+      "peer": {
+        "symbol": "GBPUSD",
+        "hour_start": "2026-11-13T13:00:00Z",
+        "availability": "2026-11-13T14:00:00Z",
+        "ohlc": {
+          "open": 1.32256,
+          "high": 1.32503,
+          "low": 1.32238,
+          "close": 1.32319
+        },
+        "child_source_ids": [
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794574800",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794575100",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794575400",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794575700",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794576000",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794576300",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794576600",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794576900",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794577200",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794577500",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794577800",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794578100"
+        ],
+        "last_child_availability": "2026-11-13T14:00:00Z"
+      }
+    },
+    "gap": {
+      "session_id": "c9a2cb22c833a808559160c512d4eb6ca591219a2ae673e46c083d0aec7c0c40",
+      "cutoff": "2026-11-13T16:00:00Z",
+      "selectable_hour_starts_initial": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T14:00:00Z",
+        "2026-11-13T15:00:00Z"
+      ],
+      "selectable_hour_starts_restart": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T14:00:00Z",
+        "2026-11-13T15:00:00Z"
+      ],
+      "checkpoint": {
+        "position": 35,
+        "bookmarks": []
+      },
+      "restart_evidence_matches_initial": true,
+      "status": "UNRESOLVED",
+      "status_text": "Unresolved \u00b7 reference absent",
+      "missing_slots": [
+        "2026-11-13T14:00:00Z",
+        "2026-11-13T14:05:00Z",
+        "2026-11-13T14:10:00Z",
+        "2026-11-13T14:15:00Z",
+        "2026-11-13T14:20:00Z",
+        "2026-11-13T14:25:00Z",
+        "2026-11-13T14:30:00Z",
+        "2026-11-13T14:35:00Z",
+        "2026-11-13T14:40:00Z",
+        "2026-11-13T14:45:00Z",
+        "2026-11-13T14:50:00Z",
+        "2026-11-13T14:55:00Z"
+      ],
+      "ohlc": null,
+      "availability": null,
+      "child_count": 0,
+      "later": {
+        "symbol": "GBPUSD",
+        "hour_start": "2026-11-13T15:00:00Z",
+        "availability": "2026-11-13T16:00:00Z",
+        "ohlc": {
+          "open": 1.32455,
+          "high": 1.32465,
+          "low": 1.32178,
+          "close": 1.3221
+        },
+        "child_source_ids": [
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794582000",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794582300",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794582600",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794582900",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794583200",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794583500",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794583800",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794584100",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794584400",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794584700",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794585000",
+          "634979491047d28734a5bab584cd14bb4bbb6ea302503f0d13498cc8569b8625:1794585300"
+        ],
+        "last_child_availability": "2026-11-13T16:00:00Z"
+      }
+    },
+    "genuine": {
+      "exact_controls_matched_committed_receipt": [
+        {
+          "symbol": "EURUSD",
+          "hour_start": "2026-11-13T13:00:00Z",
+          "ohlc": {
+            "open": 1.10503,
+            "high": 1.10693,
+            "low": 1.10486,
+            "close": 1.10499
+          }
+        },
+        {
+          "symbol": "EURUSD",
+          "hour_start": "2026-11-13T14:00:00Z",
+          "ohlc": {
+            "open": 1.10501,
+            "high": 1.10598,
+            "low": 1.10429,
+            "close": 1.10568
+          }
+        },
+        {
+          "symbol": "GBPUSD",
+          "hour_start": "2026-11-13T13:00:00Z",
+          "ohlc": {
+            "open": 1.32256,
+            "high": 1.32503,
+            "low": 1.32238,
+            "close": 1.32319
+          }
+        },
+        {
+          "symbol": "GBPUSD",
+          "hour_start": "2026-11-13T14:00:00Z",
+          "ohlc": {
+            "open": 1.32321,
+            "high": 1.32508,
+            "low": 1.32245,
+            "close": 1.32456
+          }
+        }
+      ],
+      "initial_seconds": 19.69,
+      "restart_seconds": 11.36,
+      "ended": "2026-11-26T12:06:34.198+05:30",
+      "retries": 0,
+      "receipt_sha256": "ec94df945fa67e227999e663cbd1a8f76c7516799d220559fe0a6cc261c5b3d1"
+    }
+  }
+}

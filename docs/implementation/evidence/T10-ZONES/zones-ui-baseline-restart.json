@@ -1,0 +1,26 @@
+{
+  "chromium": "159.0.8154.6",
+  "session_id": "73b908f0d88c11e62dda35e5c9ad42a9c9c2b50016e7bcd6f628a4ca1ebecca6",
+  "timings_ms": {
+    "structure-liquidity": {
+      "cold browser reopen": {
+        "count": 8,
+        "median": 386.96590000000015,
+        "p95": 720.8557999999998,
+        "samples": [
+          720.8557999999998,
+          658.5272,
+          437.5104999999994,
+          324.01860000000033,
+          386.8194000000003,
+          374.97839999999997,
+          373.5587999999989,
+          387.1124
+        ]
+      }
+    }
+  },
+  "first_reopen_after_service_restart_ms": {
+    "structure-liquidity": 720.8557999999998
+  }
+}

@@ -228,6 +228,64 @@ def test_supervisor_terminates_uncooperative_process(prepared, monkeypatch, reas
     assert outcome["diagnostic"]==diagnostic
 
 
+def test_supervisor_claim_recovers_after_sqlite_busy(prepared, monkeypatch):
+    import asyncio
+    from contextlib import closing
+    from contextvars import ContextVar
+    import sqlite3
+    from threading import Event
+
+    from research_backend.app.db import DATABASE
+    from research_backend.app import historical_strategy_worker as worker
+
+    _, run, _, _ = prepared()
+    identifier = store.enqueue(run)
+    own_supervisor = ContextVar("own_supervisor", default=False)
+    hit_lock = Event()
+    child_started = Event()
+
+    def claim(owner):
+        if not own_supervisor.get():
+            return None
+        if not hit_lock.is_set():
+            with closing(sqlite3.connect(DATABASE, timeout=0)) as contender:
+                try:
+                    contender.execute("PRAGMA synchronous=FULL")
+                except sqlite3.OperationalError as error:
+                    assert error.sqlite_errorcode == sqlite3.SQLITE_BUSY
+                    hit_lock.set()
+                    raise
+        return store.claim(owner)
+
+    def launch(command, **options):
+        assert command[-2] == identifier
+        child_started.set()
+        raise OSError("Child launch deliberately disabled for this test")
+
+    monkeypatch.setattr(worker, "claim", claim)
+    monkeypatch.setattr(worker.subprocess, "Popen", launch)
+
+    async def check_recovery():
+        own_supervisor.set(True)
+        stop = asyncio.Event()
+        with closing(sqlite3.connect(DATABASE)) as holder:
+            holder.execute("PRAGMA locking_mode=EXCLUSIVE")
+            holder.execute("BEGIN IMMEDIATE")
+            supervisor = asyncio.create_task(worker.supervise(stop))
+            assert await asyncio.to_thread(hit_lock.wait, 2)
+        try:
+            async with asyncio.timeout(5):
+                while not supervisor.done() and not child_started.is_set():
+                    await asyncio.sleep(.02)
+        finally:
+            stop.set()
+            await supervisor
+        assert child_started.is_set()
+        assert store.status(identifier)["state"] == "FAILED"
+
+    asyncio.run(check_recovery())
+
+
 @pytest.mark.parametrize("legacy",[False,True])
 def test_opportunity_accounting_fvg_and_legacy_api(client,prepared,legacy):
     _,run,model,evidence = prepared()
