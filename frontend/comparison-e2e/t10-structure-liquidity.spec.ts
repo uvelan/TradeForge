@@ -11,10 +11,16 @@ type Bar = Prices & {time: number; available_at: number};
 type Expected = {
   type: string; side: string; anchor_time: number; observation_time: number;
   available_at: number; confirmation_time: number | null; level_price: string | number;
-  direction: string | null; status: string; reference_opens: number[];
+  direction: string | null; status: string; reference_opens: number[]; displacement?: string;
 };
-type Summary = Omit<Expected, 'reference_opens'> & {id: string; rule_version: number; supporting_ids: string[]};
-type Source = Bar & {source_id: string; partitions: Pin[]; availability_basis: string};
+type Summary = Omit<Expected, 'reference_opens' | 'displacement'> & {
+  id: string; rule_version: number; supporting_ids: string[];
+  level_available_at?: number; break_price?: number; displacement?: number;
+  liquidity_side?: string; lower?: number; upper?: number; state_before?: string; state_after?: string;
+};
+type Source = Bar & {
+  source_id: string; partitions: Pin[]; availability_basis: string; roles: {role: string; event_id: string}[];
+};
 type Receipt = Summary & {evidence: Source[]};
 type EventPage = {
   session_id: string; symbol: Symbol; view: View; timeframe: string; cutoff: number;
@@ -90,6 +96,8 @@ async function createSession(page: Page, primary: Symbol, peer: Symbol) {
   expect(session.views['2'].symbol).toBe(peer);
   expect(session.views['2']).toMatchObject({partitions: [reference.symbols[peer].partition]});
   expect(session.market.candles.length).toBe((end - start) / frame);
+  await expect(panel(page)).toHaveCount(0);
+  await page.locator('summary').getByText('Replay structure and liquidity', {exact: true}).click();
   await expect(events(page)).toHaveValue('');
   return session;
 }
@@ -106,6 +114,11 @@ function verifySourceRows(receipt: Receipt, symbol: Symbol, expected: Expected) 
   const sourceTimes = receipt.evidence.map(row => row.time);
   expect(new Set(sourceTimes).size).toBe(sourceTimes.length);
   expect(sourceTimes).toEqual(expect.arrayContaining(expected.reference_opens));
+  const anchor = receipt.evidence.find(row => row.time === expected.anchor_time);
+  const observation = receipt.evidence.find(row => row.time === expected.observation_time);
+  expect(anchor?.roles).toEqual(expect.arrayContaining([expect.objectContaining({role: 'PIVOT_ANCHOR'})]));
+  expect(observation?.roles).toContainEqual({role: 'EVENT_OBSERVATION', event_id: receipt.id});
+  expect(receipt.evidence.some(row => row.roles.length === 0)).toBe(true);
   for (const row of receipt.evidence) {
     const bar = byTime.get(row.time);
     expect(bar).toBeDefined();
@@ -129,26 +142,48 @@ async function verifyReceipt(page: Page, receipt: Receipt) {
     ['Confirmation', receipt.confirmation_time === null ? 'Unconfirmed' : utc(receipt.confirmation_time)],
     ['First available', utc(receipt.available_at)], ['Rule version', String(receipt.rule_version)],
     ['Event ID', receipt.id],
+    ...(receipt.level_available_at != null ? [['Level first available', utc(receipt.level_available_at)]] : []),
+    ...(receipt.break_price != null ? [['Crossing price', String(receipt.break_price)]] : []),
+    ...(receipt.displacement != null ? [['Directional body', String(receipt.displacement)], ['MSS threshold (price)', '0.001']] : []),
+    ...(receipt.liquidity_side ? [['Liquidity side', receipt.liquidity_side]] : []),
+    ...(receipt.lower != null && receipt.upper != null ? [['Pool range', receipt.lower + ' – ' + receipt.upper]] : []),
+    ...(receipt.state_before && receipt.state_after ? [['State change', words(receipt.state_before) + ' → ' + words(receipt.state_after)]] : []),
     ...(receipt.supporting_ids.length ? [['Supporting events', receipt.supporting_ids.join(', ')]] : []),
   ]);
   for (const [field, value] of Object.entries(fields)) {
     await expect(article.getByText(field, {exact: true}).locator('..').locator('dd')).toHaveText(value);
   }
-  const disclosure = article.locator('details');
-  const count = receipt.evidence.length;
-  await expect(disclosure.locator('summary')).toHaveText(count + ' source candles');
+  const direct = receipt.evidence.filter(row => row.roles.length > 0);
+  const context = receipt.evidence.filter(row => row.roles.length === 0);
+  const disclosure = article.locator('details').filter({hasText: direct.length + ' direct source candles'});
   if (await disclosure.getAttribute('open') === null) await disclosure.locator('summary').click();
-  const rows = article.getByRole('table', {name: 'Event source candles'}).locator('tbody tr');
-  await expect(rows).toHaveCount(count);
   const pins = [...new Map(receipt.evidence.flatMap(row => row.partitions).map(pin => [pin.id, pin])).values()];
   await expect(disclosure.locator('li')).toHaveText(pins.map(pin => 'Dataset ' + pin.id + ' · SHA-256 ' + pin.sha256));
-  const displayed = await rows.evaluateAll(elements => elements.map(element =>
-    [...(element as HTMLTableRowElement).cells].map(cell => cell.innerText.trim())));
-  expect(displayed).toEqual(receipt.evidence.map(row => [
-    utc(row.time), utc(row.available_at), words(row.availability_basis), ...prices.map(price => String(row[price])),
-    row.source_id, row.partitions.map(pin => pin.id.slice(0, 12)).join(' '),
-  ]));
-  return {fields, pins, rows: displayed};
+  const directRows = await verifySourceTable(article, 'Direct event source candles', direct);
+  const details = article.locator('details').filter({hasText: context.length + ' calculation context candles'});
+  await details.locator('summary').click();
+  const contextRows = await verifySourceTable(article, 'Calculation context candles', context);
+  await details.locator('summary').click();
+  return {fields, pins, directRows, contextRows};
+}
+
+async function verifySourceTable(article: Locator, name: string, expected: Source[]) {
+  const rows = article.getByRole('table', {name}).locator('tbody tr');
+  await expect(rows).toHaveCount(expected.length);
+  const displayed = await rows.evaluateAll(elements => elements.map(element => {
+    const cells = [...(element as HTMLTableRowElement).cells];
+    const roles = [...(cells[8]?.children ?? [])].map(role => ({
+      role: role.firstChild?.textContent?.trim(),
+      event_id: role.querySelector('code')?.title,
+    }));
+    return {values: cells.slice(0, 8).map(cell => cell.innerText.trim()), roles};
+  }));
+  expect(displayed).toEqual(expected.map(row => ({
+    values: [utc(row.time), utc(row.available_at), words(row.availability_basis),
+      ...prices.map(price => String(row[price])), row.source_id],
+    roles: row.roles.map(({role, event_id}) => ({role: words(role).toLowerCase(), event_id})),
+  })));
+  return displayed;
 }
 
 async function verifyUnavailable(page: Page, id: string) {
@@ -217,6 +252,7 @@ test('initial: sees first availability, retains scoped selections and ignores a 
   const swept = await chooseAtFirstAvailability(page, '2', 'GBPUSD', first('GBPUSD', 'SWEPT'), timings);
   const mss = await chooseAtFirstAvailability(page, '2', 'GBPUSD', first('GBPUSD', 'MSS'), timings);
   expect(mss.receipt.supporting_ids.length).toBeGreaterThan(0);
+  expect(mss.receipt.displacement).toBe(Number(first('GBPUSD', 'MSS').displacement));
 
   const id = mss.receipt.id;
   const available = mss.receipt.available_at;

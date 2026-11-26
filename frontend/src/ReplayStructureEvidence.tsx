@@ -7,6 +7,7 @@ type Partition = {id: string; sha256: string};
 type SourceCandle = Required<Pick<Candle, 'time' | 'available_at' | 'open' | 'high' | 'low' | 'close'>> & {
   source_id: string; partitions: Partition[];
   availability_basis: 'ARCHIVE_SUPPLIED' | 'MODELED_NOMINAL_CLOSE';
+  roles: {role: string; event_id: string}[];
 };
 type EventSummary = {
   id: string; type: string; side: 'HIGH' | 'LOW'; direction: 'BULLISH' | 'BEARISH' | null;
@@ -38,6 +39,7 @@ export function ReplayStructureEvidence({session, cutoff, symbol, timeframe, lin
   session: ReplaySession; cutoff: number; symbol: string; timeframe: Timeframe; linkedViews: number;
 }) {
   const [preferred, setPreferred] = useWorkspacePreference<string>('replay-structure-pane.' + session.id, 'primary');
+  const [open, setOpen] = useWorkspacePreference('replay-structure-open.' + session.id, 'off', ['on', 'off']);
   const lanes: Lane[] = [];
   if (supportsEvidence(session.market, symbol, timeframe)) lanes.push({view: 'primary', symbol});
   for (const [view, market] of Object.entries(session.views)) {
@@ -48,21 +50,27 @@ export function ReplayStructureEvidence({session, cutoff, symbol, timeframe, lin
   }
   const lane = lanes.find(({view}) => view === preferred) ?? lanes[0];
   if (!lane) return null;
-  return <section className="card replay-structure-evidence" aria-label="Replay structure and liquidity">
-    <h3>Replay structure and liquidity</h3>
-    <p>M5 replay cutoff {utc(cutoff)}</p>
-    {lanes.length > 1 && <div className="research-controls">
-      <label>Event chart pane <select value={lane.view} onChange={event => setPreferred(event.target.value)}>
-        {lanes.map(({view, symbol: name}) => <option key={view} value={view}>{laneLabel(view)} · {name}</option>)}
-      </select></label>
-    </div>}
-    <LaneEvidence key={lane.view} sessionId={session.id} cutoff={cutoff} lane={lane}/>
-  </section>;
+  return <details className="card replay-structure-evidence" open={open === 'on'}
+    onToggle={event => setOpen(event.currentTarget.open ? 'on' : 'off')}>
+    <summary>Replay structure and liquidity</summary>
+    {open === 'on' && <section aria-label="Replay structure and liquidity">
+      <p>M5 replay cutoff {utc(cutoff)}</p>
+      {lanes.length > 1 && <div className="research-controls">
+        <label>Event chart pane <select value={lane.view} onChange={event => setPreferred(event.target.value)}>
+          {lanes.map(({view, symbol: name}) => <option key={view} value={view}>{laneLabel(view)} · {name}</option>)}
+        </select></label>
+      </div>}
+      {lanes.map(choice => <LaneEvidence key={choice.view} sessionId={session.id} cutoff={cutoff}
+        lane={choice} active={choice.view === lane.view}/>)}
+    </section>}
+  </details>;
 }
 
-function LaneEvidence({sessionId, cutoff, lane}: {sessionId: string; cutoff: number; lane: Lane}) {
+function LaneEvidence({sessionId, cutoff, lane, active}: {
+  sessionId: string; cutoff: number; lane: Lane; active: boolean;
+}) {
   const [eventId, setEventId] = useWorkspacePreference<string>('replay-structure-event.' + sessionId + '.' + lane.view, '');
-  return <CutoffEvidence key={cutoff} sessionId={sessionId} cutoff={cutoff} lane={lane}
+  return active && <CutoffEvidence key={cutoff} sessionId={sessionId} cutoff={cutoff} lane={lane}
     eventId={eventId} onEvent={setEventId}/>;
 }
 
@@ -129,6 +137,8 @@ function eventLabel(event: EventSummary) {
 }
 
 function EventReceipt({event, mssThreshold}: {event: ReplayEvent; mssThreshold: number}) {
+  const direct = event.evidence.filter(row => row.roles.length > 0);
+  const context = event.evidence.filter(row => row.roles.length === 0);
   const partitions = [...new Map(event.evidence.flatMap(row => row.partitions).map(pin => [pin.id, pin])).values()];
   const rows = [
     ['Event', words(event.type)], ['Side', words(event.side)], ['Direction', event.direction ?? '—'],
@@ -153,23 +163,34 @@ function EventReceipt({event, mssThreshold}: {event: ReplayEvent; mssThreshold: 
         {event.supporting_ids.join(', ')}
       </dd></div>}
     </dl>
-    {event.evidence.length > 0 && <details>
-      <summary>{event.evidence.length} source candles</summary>
+    {direct.length > 0 && <details>
+      <summary>{direct.length} direct source candles</summary>
       <ul>{partitions.map(pin => <li key={pin.id} className="evidence-id">
         Dataset <code>{pin.id}</code> · SHA-256 <code>{pin.sha256}</code>
       </li>)}</ul>
-      <div className="replay-evidence-sources">
-        <table aria-label="Event source candles">
-          <thead><tr>{['Opened', 'Available', 'Availability basis', 'Open', 'High', 'Low', 'Close', 'Source ID', 'Dataset'].map(label =>
-            <th key={label} scope="col">{label}</th>)}</tr></thead>
-          <tbody>{event.evidence.map(row => <tr key={row.source_id}>
-            <td>{utc(row.time)}</td><td>{utc(row.available_at)}</td>
-            <td>{words(row.availability_basis)}</td><td>{row.open}</td><td>{row.high}</td><td>{row.low}</td><td>{row.close}</td>
-            <td className="evidence-id"><code>{row.source_id}</code></td>
-            <td>{row.partitions.map(pin => <code key={pin.id} title={pin.id}>{pin.id.slice(0, 12)} </code>)}</td>
-          </tr>)}</tbody>
-        </table>
-      </div>
+      <SourceTable name="Direct event source candles" rows={direct} direct/>
+    </details>}
+    {context.length > 0 && <details>
+      <summary>{context.length} calculation context candles</summary>
+      <SourceTable name="Calculation context candles" rows={context}/>
     </details>}
   </article>;
+}
+
+function SourceTable({name, rows, direct = false}: {name: string; rows: SourceCandle[]; direct?: boolean}) {
+  const columns = ['Opened', 'Available', 'Availability basis', 'Open', 'High', 'Low', 'Close', 'Source ID'];
+  return <div className="replay-evidence-sources" tabIndex={0}>
+    <table aria-label={name}>
+      <thead><tr>{[...columns, ...(direct ? ['Event role'] : [])].map(label =>
+        <th key={label} scope="col">{label}</th>)}</tr></thead>
+      <tbody>{rows.map(row => <tr key={row.source_id}>
+        <td>{utc(row.time)}</td><td>{utc(row.available_at)}</td>
+        <td>{words(row.availability_basis)}</td><td>{row.open}</td><td>{row.high}</td><td>{row.low}</td><td>{row.close}</td>
+        <td className="evidence-id"><code>{row.source_id}</code></td>
+        {direct && <td>{row.roles.map(({role, event_id}) => <div key={role + event_id}>
+          {words(role).toLowerCase()} <code title={event_id}>{event_id.slice(0, 12)}</code>
+        </div>)}</td>}
+      </tr>)}</tbody>
+    </table>
+  </div>;
 }
