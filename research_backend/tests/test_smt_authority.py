@@ -228,6 +228,36 @@ def test_signal_keyset_paginates_tied_transitions(client):
     assert client.get(path, params={"cursor": "1:"+"z"*64}).status_code == 422
 
 
+def test_exact_family_lookup_at_cutoff_is_independent_of_discovery_page(client):
+    import json
+
+    from research_backend.app.db import transaction
+
+    a, b = "a" * 64, "b" * 64
+    # A also cites B's key in its provenance. A fuzzy search would admit A before B exists.
+    with transaction() as db:
+        for key, status, at, revision, cited in [
+            (a, "SMT_CANDIDATE", 60, "a0", b),
+            (b, "SMT_CANDIDATE", 120, "b0", None),
+            (a, "SMT_CONFIRMED", 180, "a1", b),
+            (b, "SMT_CONFIRMED", 240, "b1", None),
+        ]:
+            payload = dict(event_key=key, status=status, strategy_revision={"id": revision},
+                           provenance={"cited": cited})
+            db.execute("INSERT INTO smt_event_history VALUES (?,?,?,?,?)",
+                       (key, "scope", status, at, json.dumps(payload)))
+    path = "/api/indicators/signals"
+    assert client.get(path, params={"as_of": 180, "limit": 1}).json()["items"][0]["event_key"] == a
+    for cutoff, expected in [(119, []), (120, ["b0"]), (239, ["b0"]), (240, ["b1"]), (119, [])]:
+        response = client.get(path, params={"as_of": cutoff, "event_key": b, "limit": 1})
+        assert response.status_code == 200
+        page = response.json()
+        assert page["next_cursor"] is None
+        assert [(e["event_key"], e["strategy_revision"]["id"]) for e in page["items"]] == [(b, r) for r in expected]
+    assert client.get(path, params={"event_key": b}).json()["items"][0]["strategy_revision"]["id"] == "b1"
+    assert client.get(path, params={"event_key": b[:-1]}).status_code == 422
+
+
 def test_live_gap_recovers_without_rewriting_prior_alert(client, monkeypatch):
     close = int(datetime.now(UTC).timestamp()) // 60 * 60
     start = close - 600
