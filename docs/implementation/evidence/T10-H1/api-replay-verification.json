@@ -1,0 +1,547 @@
+{
+  "status": "PASS",
+  "results": {
+    "genuine": {
+      "EURUSD": {
+        "timeline": [
+          {
+            "hour": [
+              "2026-11-13T13:00:00+00:00",
+              "2026-11-13T14:00:00+00:00"
+            ],
+            "cutoff": "2026-11-13T13:59:59+00:00",
+            "status": "FORMING",
+            "reason": "PERIOD_OPEN",
+            "available_at": null,
+            "ohlc": null,
+            "child_source_ids": [],
+            "missing_slots": []
+          },
+          {
+            "hour": [
+              "2026-11-13T13:00:00+00:00",
+              "2026-11-13T14:00:00+00:00"
+            ],
+            "cutoff": "2026-11-13T14:00:00+00:00",
+            "status": "COMPLETE",
+            "reason": null,
+            "available_at": "2026-11-13T14:00:00+00:00",
+            "ohlc": {
+              "open": 1.10503,
+              "high": 1.10693,
+              "low": 1.10486,
+              "close": 1.10499
+            },
+            "child_source_ids": [
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794574800",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575100",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575400",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794575700",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576000",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576300",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576600",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794576900",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577200",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577500",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794577800",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794578100"
+            ],
+            "missing_slots": []
+          },
+          {
+            "hour": [
+              "2026-11-13T14:00:00+00:00",
+              "2026-11-13T15:00:00+00:00"
+            ],
+            "cutoff": "2026-11-13T14:59:59+00:00",
+            "status": "FORMING",
+            "reason": "PERIOD_OPEN",
+            "available_at": null,
+            "ohlc": null,
+            "child_source_ids": [],
+            "missing_slots": []
+          },
+          {
+            "hour": [
+              "2026-11-13T14:00:00+00:00",
+              "2026-11-13T15:00:00+00:00"
+            ],
+            "cutoff": "2026-11-13T15:00:00+00:00",
+            "status": "COMPLETE",
+            "reason": null,
+            "available_at": "2026-11-13T15:00:00+00:00",
+            "ohlc": {
+              "open": 1.10501,
+              "high": 1.10598,
+              "low": 1.10429,
+              "close": 1.10568
+            },
+            "child_source_ids": [
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794578400",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794578700",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794579000",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794579300",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794579600",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794579900",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794580200",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794580500",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794580800",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794581100",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794581400",
+              "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e:1794581700"
+            ],
+            "missing_slots": []
+          }
+        ],
+        "earlier_hour_identical_after_later_candles_and_rewind": true,
+        "source": {
+          "symbol": "EURUSD",
+          "timeframe": "M5",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ]
+        },
+        "provider_csv_sha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6"
+      },
+      "GBPUSD": {
+        "timeline": [
+          {
+            "hour": [
+              "2026-11-13T13:00:00+00:00",
+              "2026-11-13T14:00:00+00:00"
+            ],
+            "cutoff": "2026-11-13T13:59:59+00:00",
+            "status": "FORMING",
+            "reason": "PERIOD_OPEN",
+            "available_at": null,
+            "ohlc": null,
+            "child_source_ids": [],
+            "missing_slots": []
+          },
+          {
+            "hour": [
+              "2026-11-13T13:00:00+00:00",
+              "2026-11-13T14:00:00+00:00"
+            ],
+            "cutoff": "2026-11-13T14:00:00+00:00",
+            "status": "COMPLETE",
+            "reason": null,
+            "available_at": "2026-11-13T14:00:00+00:00",
+            "ohlc": {
+              "open": 1.32256,
+              "high": 1.32503,
+              "low": 1.32238,
+              "close": 1.32319
+            },
+            "child_source_ids": [
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794574800",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575100",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575400",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794575700",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576000",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576300",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576600",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794576900",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577200",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577500",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794577800",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794578100"
+            ],
+            "missing_slots": []
+          },
+          {
+            "hour": [
+              "2026-11-13T14:00:00+00:00",
+              "2026-11-13T15:00:00+00:00"
+            ],
+            "cutoff": "2026-11-13T14:59:59+00:00",
+            "status": "FORMING",
+            "reason": "PERIOD_OPEN",
+            "available_at": null,
+            "ohlc": null,
+            "child_source_ids": [],
+            "missing_slots": []
+          },
+          {
+            "hour": [
+              "2026-11-13T14:00:00+00:00",
+              "2026-11-13T15:00:00+00:00"
+            ],
+            "cutoff": "2026-11-13T15:00:00+00:00",
+            "status": "COMPLETE",
+            "reason": null,
+            "available_at": "2026-11-13T15:00:00+00:00",
+            "ohlc": {
+              "open": 1.32321,
+              "high": 1.32508,
+              "low": 1.32245,
+              "close": 1.32456
+            },
+            "child_source_ids": [
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794578400",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794578700",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579000",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579300",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579600",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794579900",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794580200",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794580500",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794580800",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794581100",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794581400",
+              "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0:1794581700"
+            ],
+            "missing_slots": []
+          }
+        ],
+        "earlier_hour_identical_after_later_candles_and_rewind": true,
+        "source": {
+          "symbol": "GBPUSD",
+          "timeframe": "M5",
+          "source": "DUKASCOPY_SAVED",
+          "feed_id": "dukascopy-web-m1-v1",
+          "price_basis": "BID",
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ]
+        },
+        "provider_csv_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928"
+      }
+    },
+    "missing": {
+      "controlled": true,
+      "fixture": "missing",
+      "symbol": "EURUSD",
+      "changed_child_open": "2026-11-13T13:25:00+00:00",
+      "partitions": [
+        {
+          "id": "8e47022763b07a536fcc1a30b52ca9432768a8479ed2b189030b79f8d42730bc",
+          "sha256": "5f98f555fe853d2f5e2d1df340c25b87cc5871503576f8583debb1f425421710"
+        },
+        {
+          "id": "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9",
+          "sha256": "27f472133c841da3e2d9a686d9250210a2eefcd76661b0320d220b9587076c75"
+        }
+      ],
+      "timeline": [
+        {
+          "hour": [
+            "2026-11-13T13:00:00+00:00",
+            "2026-11-13T14:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T13:59:59+00:00",
+          "status": "FORMING",
+          "reason": "PERIOD_OPEN",
+          "available_at": null,
+          "ohlc": null,
+          "child_source_ids": [],
+          "missing_slots": []
+        },
+        {
+          "hour": [
+            "2026-11-13T13:00:00+00:00",
+            "2026-11-13T14:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T14:00:00+00:00",
+          "status": "UNRESOLVED",
+          "reason": "MISSING_OPEN_CANDLES",
+          "available_at": null,
+          "ohlc": null,
+          "child_source_ids": [],
+          "missing_slots": [
+            "2026-11-13T13:25:00+00:00"
+          ]
+        },
+        {
+          "hour": [
+            "2026-11-13T13:00:00+00:00",
+            "2026-11-13T14:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T15:00:00+00:00",
+          "status": "UNRESOLVED",
+          "reason": "MISSING_OPEN_CANDLES",
+          "available_at": null,
+          "ohlc": null,
+          "child_source_ids": [],
+          "missing_slots": [
+            "2026-11-13T13:25:00+00:00"
+          ]
+        },
+        {
+          "hour": [
+            "2026-11-13T14:00:00+00:00",
+            "2026-11-13T15:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T15:00:00+00:00",
+          "status": "COMPLETE",
+          "reason": null,
+          "available_at": "2026-11-13T15:00:00+00:00",
+          "ohlc": {
+            "open": 1.10501,
+            "high": 1.10598,
+            "low": 1.10429,
+            "close": 1.10568
+          },
+          "child_source_ids": [
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794578400",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794578700",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794579000",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794579300",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794579600",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794579900",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794580200",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794580500",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794580800",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794581100",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794581400",
+            "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9:1794581700"
+          ],
+          "missing_slots": []
+        }
+      ]
+    },
+    "delayed": {
+      "controlled": true,
+      "fixture": "delayed",
+      "symbol": "GBPUSD",
+      "changed_child_open": "2026-11-13T13:55:00+00:00",
+      "partitions": [
+        {
+          "id": "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf",
+          "sha256": "5b0f699138a77b84f7dd2188f47172dbeca878ff0952d84517fe3340da64cc97"
+        },
+        {
+          "id": "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6",
+          "sha256": "f6790c1529d48a5facc5a9707603bfe93578b6ac8433a115089256166063c8a3"
+        }
+      ],
+      "timeline": [
+        {
+          "hour": [
+            "2026-11-13T13:00:00+00:00",
+            "2026-11-13T14:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T13:59:59+00:00",
+          "status": "FORMING",
+          "reason": "PERIOD_OPEN",
+          "available_at": null,
+          "ohlc": null,
+          "child_source_ids": [],
+          "missing_slots": []
+        },
+        {
+          "hour": [
+            "2026-11-13T13:00:00+00:00",
+            "2026-11-13T14:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T14:00:00+00:00",
+          "status": "UNRESOLVED",
+          "reason": "MISSING_OPEN_CANDLES",
+          "available_at": null,
+          "ohlc": null,
+          "child_source_ids": [],
+          "missing_slots": [
+            "2026-11-13T13:55:00+00:00"
+          ]
+        },
+        {
+          "hour": [
+            "2026-11-13T13:00:00+00:00",
+            "2026-11-13T14:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T14:00:19+00:00",
+          "status": "UNRESOLVED",
+          "reason": "MISSING_OPEN_CANDLES",
+          "available_at": null,
+          "ohlc": null,
+          "child_source_ids": [],
+          "missing_slots": [
+            "2026-11-13T13:55:00+00:00"
+          ]
+        },
+        {
+          "hour": [
+            "2026-11-13T13:00:00+00:00",
+            "2026-11-13T14:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T14:00:20+00:00",
+          "status": "COMPLETE",
+          "reason": null,
+          "available_at": "2026-11-13T14:00:20+00:00",
+          "ohlc": {
+            "open": 1.32256,
+            "high": 1.32503,
+            "low": 1.32238,
+            "close": 1.32319
+          },
+          "child_source_ids": [
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794574800",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794575100",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794575400",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794575700",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794576000",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794576300",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794576600",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794576900",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794577200",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794577500",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794577800",
+            "f744b0bae59e81fcf8bd32a7feb1b4faa92bcff1e6a3dcc75feeb96412b42fdf:1794578100"
+          ],
+          "missing_slots": []
+        },
+        {
+          "hour": [
+            "2026-11-13T14:00:00+00:00",
+            "2026-11-13T15:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T15:00:00+00:00",
+          "status": "COMPLETE",
+          "reason": null,
+          "available_at": "2026-11-13T15:00:00+00:00",
+          "ohlc": {
+            "open": 1.32321,
+            "high": 1.32508,
+            "low": 1.32245,
+            "close": 1.32456
+          },
+          "child_source_ids": [
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794578400",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794578700",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794579000",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794579300",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794579600",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794579900",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794580200",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794580500",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794580800",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794581100",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794581400",
+            "893cc0858e1c3e3e9e7451af714c4d261525565ecfd66d50d03a5311b3c2acc6:1794581700"
+          ],
+          "missing_slots": []
+        }
+      ]
+    },
+    "suffix": {
+      "controlled": true,
+      "fixture": "suffix",
+      "symbol": "EURUSD",
+      "changed_child_open": null,
+      "partitions": [
+        {
+          "id": "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb",
+          "sha256": "f1663c6e870870c03190d8ff133c0fac860fba98e70fa3d7e08735671b325fb7"
+        },
+        {
+          "id": "422cefddad90c15b086dc8c7198ccba639de8c89f50d7a16bc7a175a445829c9",
+          "sha256": "27f472133c841da3e2d9a686d9250210a2eefcd76661b0320d220b9587076c75"
+        }
+      ],
+      "timeline": [
+        {
+          "hour": [
+            "2026-11-13T13:00:00+00:00",
+            "2026-11-13T14:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T14:00:00+00:00",
+          "status": "COMPLETE",
+          "reason": null,
+          "available_at": "2026-11-13T14:00:00+00:00",
+          "ohlc": {
+            "open": 1.10503,
+            "high": 1.10693,
+            "low": 1.10486,
+            "close": 1.10499
+          },
+          "child_source_ids": [
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794574800",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794575100",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794575400",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794575700",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576000",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576300",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576600",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576900",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794577200",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794577500",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794577800",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794578100"
+          ],
+          "missing_slots": []
+        },
+        {
+          "hour": [
+            "2026-11-13T13:00:00+00:00",
+            "2026-11-13T14:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T15:00:00+00:00",
+          "status": "COMPLETE",
+          "reason": null,
+          "available_at": "2026-11-13T14:00:00+00:00",
+          "ohlc": {
+            "open": 1.10503,
+            "high": 1.10693,
+            "low": 1.10486,
+            "close": 1.10499
+          },
+          "child_source_ids": [
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794574800",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794575100",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794575400",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794575700",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576000",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576300",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576600",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576900",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794577200",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794577500",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794577800",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794578100"
+          ],
+          "missing_slots": []
+        },
+        {
+          "hour": [
+            "2026-11-13T13:00:00+00:00",
+            "2026-11-13T14:00:00+00:00"
+          ],
+          "cutoff": "2026-11-13T14:00:00+00:00",
+          "status": "COMPLETE",
+          "reason": null,
+          "available_at": "2026-11-13T14:00:00+00:00",
+          "ohlc": {
+            "open": 1.10503,
+            "high": 1.10693,
+            "low": 1.10486,
+            "close": 1.10499
+          },
+          "child_source_ids": [
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794574800",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794575100",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794575400",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794575700",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576000",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576300",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576600",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794576900",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794577200",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794577500",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794577800",
+            "05613db2cca86c88f1d7e811c597ea4b7d868a5686a239f33c671ea046cddafb:1794578100"
+          ],
+          "missing_slots": []
+        }
+      ]
+    }
+  }
+}
