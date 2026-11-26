@@ -1,0 +1,172 @@
+{
+  "case": "contiguous",
+  "baseline_git_revision": "4e03463a36f176b701ba36558bf03ffa9c8795a2",
+  "fixed_git_revision": "018df92c18f1174dc33dc7b20140b97017977dca",
+  "session_id": "304b68632abb3fddd58095a802b18d8785eae9535e81c0e56b22e6e700939a04",
+  "manifest": {
+    "date_utc": "2026-11-13",
+    "start": 1794574500,
+    "end": 1794577800,
+    "symbols": {
+      "EURUSD": {
+        "type": "FVG",
+        "anchor": 1794574500,
+        "formation": 1794575100,
+        "previous": 1794576000,
+        "successor": 1794576300,
+        "T": 1794576600,
+        "reason": null,
+        "missing": [],
+        "partitions": [
+          {
+            "id": "eef1ccbaca074d9a2016fe5797a5ca0bb437cfff1e4f16d252be4eae1c18f8d7",
+            "sha256": "1ae5e0bb3bec9551d7e012247d580d88235d2af12d3244daab64c41e6e559981"
+          }
+        ],
+        "partition": {
+          "id": "eef1ccbaca074d9a2016fe5797a5ca0bb437cfff1e4f16d252be4eae1c18f8d7",
+          "sha256": "1ae5e0bb3bec9551d7e012247d580d88235d2af12d3244daab64c41e6e559981"
+        }
+      },
+      "GBPUSD": {
+        "type": "OB",
+        "anchor": 1794576300,
+        "formation": 1794576600,
+        "previous": 1794577200,
+        "successor": 1794577500,
+        "T": 1794577800,
+        "reason": null,
+        "missing": [],
+        "partitions": [
+          {
+            "id": "ce7e99b24825dc385fc011f45616f2bde2bc749203641ab6565b8548325d7a1c",
+            "sha256": "8411163ad6ba64b8b5747528c30981e4bd99f1ae5b5c3f9c3d998b4aadecd19b"
+          }
+        ],
+        "partition": {
+          "id": "ce7e99b24825dc385fc011f45616f2bde2bc749203641ab6565b8548325d7a1c",
+          "sha256": "8411163ad6ba64b8b5747528c30981e4bd99f1ae5b5c3f9c3d998b4aadecd19b"
+        }
+      }
+    }
+  },
+  "symbols": {
+    "EURUSD": {
+      "wick": {
+        "T": "2026-11-13T13:30:00Z",
+        "T-1": {
+          "zone_id": "f465c57730f5b23cea684f690ea4abc723da40613e5ad069e7b40664e510b81f",
+          "id": "c1f39c71075ec4aea44953cbf75b6278a6632dbcab6b66858f65c185666e16a3",
+          "state": "ACTIVE",
+          "reason": "THREE_CLOSED_CANDLES",
+          "revision": 1,
+          "observation_time": 1794575100,
+          "confirmation_time": 1794575400,
+          "available_at": 1794575400
+        },
+        "at_T": {
+          "zone_id": "f465c57730f5b23cea684f690ea4abc723da40613e5ad069e7b40664e510b81f",
+          "id": "c1f39c71075ec4aea44953cbf75b6278a6632dbcab6b66858f65c185666e16a3",
+          "state": "ACTIVE",
+          "reason": "THREE_CLOSED_CANDLES",
+          "revision": 1,
+          "observation_time": 1794575100,
+          "confirmation_time": 1794575400,
+          "available_at": 1794575400
+        },
+        "baseline_witness_rows": [],
+        "fixed_witness_rows": [],
+        "continuity": null,
+        "shared_prior_contract_sha256": "48a98439a0f0569eb4f4988560b266067a66004e3d5c247ddc2d9763c4ec359d",
+        "rewind_matches_T_minus_1": true
+      },
+      "close": {
+        "T": "2026-11-13T13:30:00Z",
+        "T-1": {
+          "zone_id": "71e63d8eb2a91a96b402322b657827c9185bbfef9d8aa839af9d916cd4f106a7",
+          "id": "84f520e934ede1b86cdf4202b634cf9ff238d3d68d775ccb8d8a654d518ff3cb",
+          "state": "ACTIVE",
+          "reason": "THREE_CLOSED_CANDLES",
+          "revision": 1,
+          "observation_time": 1794575100,
+          "confirmation_time": 1794575400,
+          "available_at": 1794575400
+        },
+        "at_T": {
+          "zone_id": "71e63d8eb2a91a96b402322b657827c9185bbfef9d8aa839af9d916cd4f106a7",
+          "id": "84f520e934ede1b86cdf4202b634cf9ff238d3d68d775ccb8d8a654d518ff3cb",
+          "state": "ACTIVE",
+          "reason": "THREE_CLOSED_CANDLES",
+          "revision": 1,
+          "observation_time": 1794575100,
+          "confirmation_time": 1794575400,
+          "available_at": 1794575400
+        },
+        "baseline_witness_rows": [],
+        "fixed_witness_rows": [],
+        "continuity": null,
+        "shared_prior_contract_sha256": "aa03cec1a0f7583526db56be0abce8e751196f284e233f0069409f806aa7bc8d",
+        "rewind_matches_T_minus_1": true
+      }
+    },
+    "GBPUSD": {
+      "wick": {
+        "T": "2026-11-13T13:50:00Z",
+        "T-1": {
+          "zone_id": "eafb5b8283ba0b3e18fc4053093033e0e96e8edd0b08ded106b31d44621cd0d0",
+          "id": "0d83b9c411182479bafd5c3dee5ae12a28f8a46ba171352745ce4100fc8504c3",
+          "state": "ACTIVE",
+          "reason": "CONFIRMED_BOS",
+          "revision": 1,
+          "observation_time": 1794576600,
+          "confirmation_time": 1794576900,
+          "available_at": 1794576900
+        },
+        "at_T": {
+          "zone_id": "eafb5b8283ba0b3e18fc4053093033e0e96e8edd0b08ded106b31d44621cd0d0",
+          "id": "0d83b9c411182479bafd5c3dee5ae12a28f8a46ba171352745ce4100fc8504c3",
+          "state": "ACTIVE",
+          "reason": "CONFIRMED_BOS",
+          "revision": 1,
+          "observation_time": 1794576600,
+          "confirmation_time": 1794576900,
+          "available_at": 1794576900
+        },
+        "baseline_witness_rows": [],
+        "fixed_witness_rows": [],
+        "continuity": null,
+        "shared_prior_contract_sha256": "280ad21482abf105d8ee3dacd3d32acc10795532d8d3f71ffe8e292e135be213",
+        "rewind_matches_T_minus_1": true
+      },
+      "close": {
+        "T": "2026-11-13T13:50:00Z",
+        "T-1": {
+          "zone_id": "9097875688c4549616603194271b67b18b2a1438d6f290c7057afe4cb3619c49",
+          "id": "bd5ff8bc9cf265bc24191568fc501759d1c12a2e90da269d26d34ab27b5a2f2a",
+          "state": "ACTIVE",
+          "reason": "CONFIRMED_BOS",
+          "revision": 1,
+          "observation_time": 1794576600,
+          "confirmation_time": 1794576900,
+          "available_at": 1794576900
+        },
+        "at_T": {
+          "zone_id": "9097875688c4549616603194271b67b18b2a1438d6f290c7057afe4cb3619c49",
+          "id": "bd5ff8bc9cf265bc24191568fc501759d1c12a2e90da269d26d34ab27b5a2f2a",
+          "state": "ACTIVE",
+          "reason": "CONFIRMED_BOS",
+          "revision": 1,
+          "observation_time": 1794576600,
+          "confirmation_time": 1794576900,
+          "available_at": 1794576900
+        },
+        "baseline_witness_rows": [],
+        "fixed_witness_rows": [],
+        "continuity": null,
+        "shared_prior_contract_sha256": "defabdfe4f09a54caffd0f6337386e1c565ca3e238af8f0b58a38ad195aa4e84",
+        "rewind_matches_T_minus_1": true
+      }
+    }
+  },
+  "existing_receipts_match": true
+}
