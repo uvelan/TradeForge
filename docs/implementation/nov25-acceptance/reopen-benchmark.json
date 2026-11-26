@@ -1,0 +1,20 @@
+{
+  "base": {
+    "samples": 30,
+    "median_ms": 11.637450003036065,
+    "p95_ms": 13.971300002594944,
+    "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+    "checkpoint_digest": "517266ab22127f5c407ee64e9197dc76277cc99cf16d45c5cbccd6681db59cc8",
+    "gap_count": null,
+    "revision": "ad000f939de3bbbb8c5ba7b15a58cfd4ec102311"
+  },
+  "candidate": {
+    "samples": 30,
+    "median_ms": 27.32299999843235,
+    "p95_ms": 34.701000004133675,
+    "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+    "checkpoint_digest": "517266ab22127f5c407ee64e9197dc76277cc99cf16d45c5cbccd6681db59cc8",
+    "gap_count": 2881,
+    "revision": "f37f58390039cf38e9f1b0ef175dd43fff234680"
+  }
+}
