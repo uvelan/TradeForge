@@ -323,6 +323,23 @@ test('initial: sees first availability, retains scoped selections and ignores a 
   await button(panel(page), 'Older replay events').click();
   expect((await older).selected).toEqual(eql.receipt);
   await expect(selectedReceipt(page)).toHaveAttribute('data-event-id', eql.receipt.id);
+  const latest = waitForEvents(page, 'primary', end, eql.receipt.id);
+  await button(panel(page), 'Latest replay events').click();
+  expect((await latest).selected).toEqual(eql.receipt);
+  const failedRead = 'Replay archive integrity could not be verified';
+  await page.route(pattern, route => {
+    const url = new URL(route.request().url());
+    if (url.searchParams.get('view') !== 'primary' || !url.searchParams.has('before')) return route.continue();
+    return route.fulfill({status: 409, json: {detail: failedRead}});
+  });
+  try {
+    await button(panel(page), 'Older replay events').click();
+    await expect(panel(page).getByRole('alert')).toHaveText(failedRead);
+    await expect(selectedReceipt(page)).toHaveCount(0);
+    await expect(events(page)).toHaveCount(0);
+  } finally {
+    await page.unroute(pattern);
+  }
   await pane(page).selectOption('2');
   await expect(selectedReceipt(page)).toHaveAttribute('data-event-id', id);
   await button(replay(page), 'Save replay position').click();
@@ -344,7 +361,7 @@ test('initial: sees first availability, retains scoped selections and ignores a 
   const checkpoint = {
     session_id: session.id, swapped_session_id: swapped.id, cutoff: end, timings_ms: timings,
     chromium: browser.version(), observed: {bos, choch, eql, swept, mss},
-    held_response_selected_id: id, rewind_missing_at: available - frame,
+    held_response_selected_id: id, rewind_missing_at: available - frame, archive_error_hid_evidence: true,
     sources: Object.fromEntries(Object.entries(reference.symbols).map(([symbol, lane]) =>
       [symbol, {csv_sha256: lane.csv_sha256, partition: lane.partition}])),
   };

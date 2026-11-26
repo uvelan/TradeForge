@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {api} from './api';
 import type {Candle, CandleResponse, ReplaySession, Timeframe} from './types';
 import {useWorkspacePreference} from './useWorkspacePreference';
@@ -80,6 +80,7 @@ function CutoffEvidence({sessionId, cutoff, lane, eventId, onEvent}: {
   const [response, setResponse] = useState<{eventId: string; url: string; page: Evidence}>();
   const [error, setError] = useState<{url: string; message: string}>();
   const [before, setBefore] = useState<number>();
+  const activeRequest = useRef<{url: string; receipt: Promise<Evidence>}>(undefined);
   const {view, symbol} = lane;
   const path = '/replay/sessions/' + encodeURIComponent(sessionId) + '/structure-liquidity';
   const query = new URLSearchParams({
@@ -90,11 +91,17 @@ function CutoffEvidence({sessionId, cutoff, lane, eventId, onEvent}: {
 
   useEffect(() => {
     let current = true;
-    api.get<Evidence>(url).then(receipt => {
+    // React's development remount can repeat setup for the same view.
+    const receipt = activeRequest.current?.url === url ? activeRequest.current.receipt : api.get<Evidence>(url);
+    activeRequest.current = {url, receipt};
+    receipt.then(receipt => {
       if (receipt.session_id !== sessionId || receipt.view !== view || receipt.symbol !== symbol || receipt.cutoff !== cutoff) {
         throw new Error('Replay event evidence did not match this pane and cutoff.');
       }
-      if (current) setResponse({eventId, url, page: receipt});
+      if (current) {
+        setResponse({eventId, url, page: receipt});
+        setError(undefined);
+      }
     }).catch(reason => {
       if (current) setError({url, message: reason instanceof Error ? reason.message : String(reason)});
     });
@@ -106,7 +113,7 @@ function CutoffEvidence({sessionId, cutoff, lane, eventId, onEvent}: {
   const inList = page?.events.some(event => event.id === eventId);
   const pending = response?.url !== url;
   const failure = error?.url === url ? error.message : undefined;
-  if (failure && !page) return <p role="alert">{failure}</p>;
+  if (failure) return <p role="alert">{failure}</p>;
   if (!page) return <p role="status">Loading replay events…</p>;
   return <>
     <p>{page.symbol} {page.timeframe} · {page.price_basis} · {page.feed_id} · {page.authority === 'RESEARCH_ONLY' && 'Research only'}</p>
@@ -118,15 +125,14 @@ function CutoffEvidence({sessionId, cutoff, lane, eventId, onEvent}: {
         </option>}
         {[...page.events].reverse().map(event => <option key={event.id} value={event.id}>{eventLabel(event)}</option>)}
       </select></label>
-      {page.previous_before != null && <button type="button" className="small-tool" disabled={pending && !failure}
-        onClick={() => setBefore(page.previous_before!)}>Older replay events</button>}
+      {page.previous_before != null && <button type="button" className="small-tool" disabled={pending}
+        onClick={() => setBefore(page.previous_before ?? undefined)}>Older replay events</button>}
       {before != null && <button type="button" className="small-tool" onClick={() => setBefore(undefined)}>
         Latest replay events
       </button>}
       {page.total > page.events.length && <small>{page.events.length} of {page.total} events</small>}
     </div>
-    {failure && <p role="alert">{failure}</p>}
-    {selected ? <EventReceipt event={selected} mssThreshold={page.rules.mss.min_displacement}/> : eventId && !failure ?
+    {selected ? <EventReceipt event={selected} mssThreshold={page.rules.mss.min_displacement}/> : eventId ?
       <p role="status">{pending ? 'Loading selected replay event…' : 'Selected event unavailable at this cutoff.'}</p> :
       page.events.length === 0 && <p role="status">No replay events at this cutoff.</p>}
   </>;
