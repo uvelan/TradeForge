@@ -164,7 +164,7 @@ def evaluate_fvg(rows, step, cutoff, rules, delivery, provenance, frozen, *, on_
                "formation_available_at":zone.formation_available_at,"observation_time":bar.time,
                "confirmation_time":bar.time+step,"available_at":available,"evidence_cutoff":available,
                "observed_price":observed,"warnings":sorted(warnings),**extra}
-        if include_gap_boundary and reason == "MISSING_OPEN_CANDLES":
+        if include_gap_boundary and continuity_from is not None:
             event["previous_observed_open"] = continuity_from
         if strict:
             decision=("STRADDLING_OBSERVATION" if state=="UNCERTAIN" else

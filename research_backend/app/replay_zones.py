@@ -107,10 +107,13 @@ def inspect_zones(session, view, cutoff, mitigation, zone_id, before):
             if "previous_observed_open" in event:
                 previous, current = event["previous_observed_open"], event["observation_time"]
                 # Exclude the observed bars and the closed parts of a mixed weekend gap.
-                intervals = open_intervals(previous + STEP, current, SCHEDULE)
+                missing = None
+                if event["reason"] == "MISSING_OPEN_CANDLES":
+                    missing = [{"start": left, "end": right}
+                               for left, right in open_intervals(previous + STEP, current, SCHEDULE)]
                 summary = {**summary, "continuity": {
                     "previous_observed_open": previous, "next_observed_open": current, "step_seconds": STEP,
-                    "missing_open_intervals": [{"start": left, "end": right} for left, right in intervals],
+                    "missing_open_intervals": missing,
                     "schedule": SCHEDULE.model_dump()}}
             revisions.append(summary)
             if summary["revision"] == 1:

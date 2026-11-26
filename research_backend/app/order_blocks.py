@@ -154,7 +154,7 @@ class OrderBlockStream:
                  "mitigation_pct": float(100*zone.depth/zone.width),
                  "remaining_lower": float(zone.lower if zone.sign == 1 else zone.lower+zone.depth),
                  "remaining_upper": float(zone.upper-zone.depth if zone.sign == 1 else zone.upper)}
-        if self.include_gap_boundary and reason == "MISSING_OPEN_CANDLES":
+        if self.include_gap_boundary and previous_time is not None:
             event["previous_observed_open"] = previous_time
         if self.timing_cutoff is not None:
             decision=timing_reason or ("EXPIRED_REFERENCE" if state=="EXPIRED" else

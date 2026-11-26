@@ -86,3 +86,23 @@ def test_weekend_only_closure_and_mixed_open_intervals(client, kind, missed_open
         assert selected["state"] == "ACTIVE" and selected["revision"] == 1
         assert "continuity" not in selected["revisions"][0]
         assert not any(role["role"].startswith("GAP_") for row in selected["evidence"] for role in row["roles"])
+
+
+@pytest.mark.parametrize("kind", ["FVG", "OB"])
+def test_out_of_session_successor_keeps_observed_boundaries_and_unknown_interval(client, kind):
+    previous, successor = utc(13, 21, 55), utc(14, 12, 0)
+    values = gap_fixture(kind, previous, successor)
+    publish(values)
+    cutoff = successor + STEP
+    key = session(client, start=values[0]["time"], end=cutoff)
+    active = next(z for z in receipt(client, key, cutoff - 1)["zones"]
+                  if z["type"] == kind and z["formation_time"] == values[2 if kind == "FVG" else 6]["time"])
+    selected = receipt(client, key, cutoff, zone_id=active["zone_id"])["selected"]
+    terminal = selected["revisions"][-1]
+    assert (terminal["state"], terminal["reason"]) == ("INVALIDATED", "UNVERIFIABLE_CLOSURE")
+    proof = terminal["continuity"]
+    assert proof["previous_observed_open"] == previous and proof["next_observed_open"] == successor
+    assert proof["missing_open_intervals"] is None
+    assert {(row["time"], role["role"]) for row in selected["evidence"] for role in row["roles"]
+            if role["event_id"] == terminal["id"] and role["role"].startswith("GAP_")} == {
+                (previous, "GAP_PREVIOUS_OBSERVED"), (successor, "GAP_NEXT_OBSERVED")}
