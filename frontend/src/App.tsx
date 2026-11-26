@@ -19,6 +19,7 @@ import {ChartView,frameMinutes,useViewCandles} from './chartViews';
 import {useChartIndicator} from './indicators';
 import {smtCoverageNotice,smtFeed,useSmt} from './smt';
 import {SmtMonitor} from './SmtMonitor';
+import {FrozenSmtReceipt} from './FrozenSmtReceipt';
 import {ArchiveSmtWatch} from './ArchiveSmtWatch';
 import {ArrivalPanel} from './ArrivalPanel';
 import {closedCandles, ReplayControls} from './ReplayControls';
@@ -575,7 +576,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
         </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(interaction.mode==='navigate'?'active':'')} title="Crosshair (Esc)" onClick={()=>setInteraction({mode:'navigate'})}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
         <div className={'terminal-chart-columns '+(viewCount!=='1'?'multi-chart':'')}>
           <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':exactEvidence?'FROZEN STRATEGY EVIDENCE':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} focus={exactEvidence&&initialLocation?.timestamp!==undefined?
-            {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
+            {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events,smtWindowOnly:savedSource&&replayActive}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
               item.anchors.every(anchor=>anchor.time+frameMinutes[timeframe]*60<=cutoff))}
             drawMode={interaction.mode!=='navigate'} placementInteraction={interaction}
             onSaveSnapshot={canSaveCapture?saveChartEvidence:undefined} savingSnapshot={currentCapture?.saving??false} snapshotStatus={currentCapture?.status}
@@ -602,7 +603,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
               const prices=[...interaction.prices,price.toFixed(digits)];
               if(prices.length===3){setPlanPrices(prices);setInteraction({mode:'navigate'});}
               else setInteraction({mode:'plan',prices});
-            }:interaction.mode==='level'?addLevel:undefined} showSnapshot/>:<Empty title="Market data unavailable" body="Connect MetaTrader 5 or import saved MT5 / Dukascopy candles."/>}</div>
+            }:interaction.mode==='level'?addLevel:undefined} showSnapshot showDataLegend/>:<Empty title="Market data unavailable" body="Connect MetaTrader 5 or import saved MT5 / Dukascopy candles."/>}</div>
           {Array.from({length:Number(viewCount)-1},(_,index)=><ChartView key={index+2} number={index+2}
             mainSymbol={symbol} source={source} options={options} refresh={refreshCount} cutoff={linkReplay==='on'?cutoff:undefined} precision={precisionFor} range={range}
             frozen={replayActive&&linkReplay==='on'?(replaySession?.views[String(index+2)]??
@@ -627,6 +628,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             </div>}
           <div className="terminal-footer-info">{zone} · {visibleCandles.length} bars · {data?.price_basis||'unverified'}</div>
         </div>
+        {savedSource&&cutoff!=null&&firstFeed&&(!compare||secondFeed)&&
+          <FrozenSmtReceipt cutoff={cutoff} timeframe={timeframe} primary={firstFeed} comparison={compare?secondFeed:undefined}/>}
       </section>
       <aside className="market-watchlist"><div className="watch-head"><div><span className="eyebrow">INSTRUMENTS</span><h3>Watchlist</h3></div><ListFilter size={17}/></div><div className="watch-columns"><span>PAIR</span><span>{isBinance?'LAST':'BID'}</span></div>{isBinance&&<div className='watch-row current'><strong>BTCUSDT</strong><span>{last?.close.toFixed(2)??'—'}</span></div>}{(isBinance?[]:watchSymbols).map(w=><button key={w} className={'watch-row '+((source==='MT5'?symbol===w||symbol.toUpperCase().includes(w):symbol===w)?'current':'')} onClick={()=>source==='MT5'?setBrokerSymbol(instruments.find(item=>item.name.toUpperCase().includes(w))?.name ?? w):setSymbol(w)}><span className="watch-symbol"><strong>{w}</strong><small>{w==='XAUUSD'?'Spot gold':w.slice(0,3)+' / '+w.slice(3)}</small></span><span className="watch-price">{quotes[w]===undefined||quotes[w]===null?'—':quotes[w]?.toFixed(w==='EURUSD'||w==='GBPUSD'?5:3)}</span></button>)}
         <div className="watch-detail"><span className="eyebrow">ACTIVE WORKSPACE</span><div><span>Feed</span><strong>{source}</strong></div><div><span>Instrument</span><strong>{symbol}</strong></div><div><span>Session clock</span><strong>{zone}</strong></div><p>{source==='DEMO'?'All displayed demo quotes are synthetic and are not suitable for market decisions.':'Broker/data availability is not guaranteed. Confirm quote freshness before use.'}</p></div>

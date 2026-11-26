@@ -2,7 +2,7 @@ import type {IChartApi, ISeriesApi, UTCTimestamp} from 'lightweight-charts';
 import type {Candle} from './types';
 
 export type LinkOptions = {crosshair:boolean;range:boolean;zoom:boolean};
-type Member = {chart:IChartApi;series:ISeriesApi<'Candlestick'>;bars:()=>Map<number,Candle>;missing:(time?:number)=>void};
+type Member = {chart:IChartApi;series:ISeriesApi<'Candlestick'>;bars:()=>Map<number,Candle>;missing:(time?:number)=>void;linkedTime?:(time?:number)=>void};
 
 export class ChartLink {
   options:LinkOptions={crosshair:false,range:false,zoom:false};
@@ -16,8 +16,8 @@ export class ChartLink {
     this.pointer=undefined;
   }
   private clearPeers(source:string){
-    this.members.forEach(({chart,missing},id)=>{
-      if(id!==source){chart.clearCrosshairPosition();missing();}
+    this.members.forEach(({chart,missing,linkedTime},id)=>{
+      if(id!==source){chart.clearCrosshairPosition();missing();linkedTime?.();}
     });
   }
   private release(id:string,member:Member){
@@ -54,9 +54,10 @@ export class ChartLink {
       const pointer=this.pointer;
       this.pointer=undefined;
       if(!pointer||!this.options.crosshair||this.members.get(pointer.source)!==pointer.member)return;
-      this.members.forEach(({chart,series,bars,missing},id)=>{
+      this.members.forEach(({chart,series,bars,missing,linkedTime},id)=>{
         if(id===pointer.source)return;
         const candle=pointer.time===undefined?undefined:bars().get(pointer.time);
+        linkedTime?.(candle?.time);
         if(candle){
           missing();
           chart.setCrosshairPosition(candle.close,candle.time as UTCTimestamp,series);

@@ -25,9 +25,9 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot,savingSnapshot,snapshotStatus}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot,savingSnapshot,snapshotStatus}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
-  onAddLevel?:(price:number)=>void;showSnapshot?:boolean;symbol?:string;precision?:number;indicators?:IndicatorResult[]
+  onAddLevel?:(price:number)=>void;showSnapshot?:boolean;showDataLegend?:boolean;symbol?:string;precision?:number;indicators?:IndicatorResult[]
   timeframe?: string;
   drawingPrompt?: string;
   focus?: {epoch:number;sequence:number};
@@ -38,7 +38,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   onPlacementPreview?:(points:{bar:Candle;price:number}[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void;
   directEdit?:{selected:string;enabled:boolean;revision?:number;snap:boolean;save:(item:Drawing,anchors:Anchor[])=>void}; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>; savingSnapshot?:boolean; snapshotStatus?:string;
   comparison?: {symbol:string; candles:Candle[]; precision:number; placement:ComparisonPlacement;
-    onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]}
+    onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]; smtWindowOnly?:boolean}
 }){
   const element=useRef<HTMLDivElement>(null);
   const pointerGuide=useRef<HTMLDivElement>(null);
@@ -131,7 +131,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     series.attachPrimitive(toolLayer);
     if(drawing.current)toolLayer.showPreview(draft.current);
     else toolLayer.select(editing.current?.selected??'');
-    const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime}):undefined;
+    const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime,
+      linkedTime:setCursorTime}):undefined;
     const scale=chart.timeScale();
     const viewport=()=>{editReset.current?.();if(linkId)link?.viewport(linkId);};
     const activate=()=>{if(linkId)link?.activate(linkId);setMissingLinkedTime(undefined);};
@@ -622,7 +623,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     {missingLinkedTime!==undefined&&link?.options.crosshair&&<span className="linked-no-candle" role="status">No candle at {timestamp.format(missingLinkedTime*1000)}</span>}
     <div ref={pointerGuide} className="chart-pointer-guide" aria-hidden="true" hidden/>
     {drawMode&&<div className="drawing-prompt">{drawingPrompt??'Click the chart to place a horizontal level'}</div>}
-    {(fullscreen||comparison)&&<div className="chart-data-legend" aria-label="Chart data">
+    {(fullscreen||comparison||showDataLegend)&&<div className="chart-data-legend" aria-label="Chart data">
       <div className="chart-legend-meta">
         {timeframe&&<strong>{timeframe}</strong>}
         {displayTime!==undefined&&<span>{timestamp.format(displayTime*1000)} · {zone}</span>}
@@ -632,6 +633,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       {legendRow(symbol,primaryBar,precision)}
       {comparison&&legendRow(comparison.symbol,comparisonBar,comparison.precision,true)}
       {comparison&&smtEvents&&<span className="chart-legend-meta">
+        {comparison.smtWindowOnly&&'SMT within chart range · '}
         {smtEvents.filter(event=>event.status==="SMT_CONFIRMED").length} confirmed · {smtEvents.filter(event=>event.status==="SMT_CANDIDATE").length} candidates · {smtEvents.filter(event=>event.status==="SMT_INVALIDATED").length} invalidated
       </span>}
       {hoveredSmt?.map(event=><div key={event.id} className="chart-legend-meta">

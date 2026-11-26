@@ -6,13 +6,16 @@ export async function installProbe(page:Page) {
     const counts={charts:0,subscriptions:0,observers:0,listeners:0,timers:0,frames:0};
     const live=new Map<Element,any>();
     const primary=()=>live.get(document.querySelector('.primary-chart .chart-input')!);
+    const selected=(selector?:string)=>selector ? live.get(document.querySelector(selector)!) : primary();
     const audit={comparisonSeries:()=>primary()?.panes().flatMap((pane:any)=>pane.getSeries()
       .filter((series:any)=>series.seriesType()==='Candlestick')
       .map((series:any)=>({title:series.options().title,data:series.data()})))??[],
-      viewRange:(from:number,to:number)=>primary().timeScale().setVisibleRange({from,to}),
+      series:(selector:string)=>selected(selector)?.panes().map((pane:any)=>pane.getSeries()
+        .map((series:any)=>({title:series.options().title,type:series.seriesType(),data:series.data()})))??[],
+      viewRange:(from:number,to:number,selector?:string)=>selected(selector).timeScale().setVisibleRange({from,to}),
       bars:()=>Array.from(live.values(),api=>api.panes()[0].getSeries()[0].data()),
-      point:(time:number)=>{
-        const el=document.querySelector('.primary-chart .chart-input')!;
+      point:(time:number,selector='.primary-chart .chart-input')=>{
+        const el=document.querySelector(selector)!;
         const api=live.get(el), rect=el.getBoundingClientRect();
         return {x:rect.left+api.priceScale('left').width()+api.timeScale().timeToCoordinate(time),y:rect.top+rect.height*.65};
       },range:()=>Array.from(live.values())[0]?.timeScale().getVisibleLogicalRange(),counts,created:0,disposed:0,retain:false,retained:new Set<Function>(),linkedCursor:0,linkedRange:0,
