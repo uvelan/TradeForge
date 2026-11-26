@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime, time
 from hashlib import sha256
 import io
 import json
+import os
 from pathlib import Path
 import sqlite3
 
@@ -16,7 +17,7 @@ PIN = ROOT / "docs/implementation/evidence/TF-I10A1-dukascopy-nov13/pin.json"
 
 def reference(day: date, destination: Path | None = None):
     selection = json.loads(PIN.read_text())["run"]["selection"]["series"]
-    source = ROOT / "storage/research"
+    source = Path(os.environ.get("TRADEFORGE_COMPARISON_SOURCE_DIR", ROOT / "storage/research")).resolve()
     start = int(datetime.combine(day, time(13), UTC).timestamp())
     result = {}
     with closing(sqlite3.connect((source / "tradeforge.sqlite3").as_uri() + "?mode=ro", uri=True)) as db:
