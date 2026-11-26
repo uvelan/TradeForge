@@ -1,0 +1,225 @@
+{
+  "absolute_tolerance": 1e-10,
+  "availability_basis": "nominal M5 close",
+  "chart_backend_endpoint": "/api/indicators/evaluate",
+  "end_exclusive_utc": "2026-11-13T15:00:00+00:00",
+  "instruments": {
+    "EURUSD": {
+      "append_invariance_checks": 24,
+      "candle_count": 24,
+      "closed_prefixes_checked": 25,
+      "dataset_id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+      "feed_id": "dukascopy-web-m1-v1",
+      "fixed_cutoff_future_input_checks": 24,
+      "one_second_before_close_checks": 24,
+      "partitions": [
+        {
+          "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+          "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+        }
+      ],
+      "price_basis": "BID",
+      "provider_csv_sha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6",
+      "series": {
+        "%D": {
+          "count": 9,
+          "final": {
+            "available_utc": "2026-11-13T15:00:00+00:00",
+            "bar_open_utc": "2026-11-13T14:55:00+00:00",
+            "reference_value": 78.22000662616925,
+            "value": 78.22000662616809
+          },
+          "first": {
+            "available_utc": "2026-11-13T14:20:00+00:00",
+            "bar_open_utc": "2026-11-13T14:15:00+00:00",
+            "reference_value": 17.55233494363929,
+            "value": 17.5523349436433
+          },
+          "first_availability_boundary": {
+            "at_count": 1,
+            "at_utc": "2026-11-13T14:20:00+00:00",
+            "before_count": 0,
+            "before_utc": "2026-11-13T14:19:59+00:00"
+          },
+          "last_point_before_final_cutoff": {
+            "available_utc": "2026-11-13T14:55:00+00:00",
+            "bar_open_utc": "2026-11-13T14:50:00+00:00",
+            "reference_value": 66.2088795368932,
+            "value": 66.2088795368921
+          },
+          "max_abs_error": 4.593658786689048e-12
+        },
+        "%K": {
+          "count": 11,
+          "final": {
+            "available_utc": "2026-11-13T15:00:00+00:00",
+            "bar_open_utc": "2026-11-13T14:55:00+00:00",
+            "reference_value": 82.24852071005917,
+            "value": 82.2485207100608
+          },
+          "first": {
+            "available_utc": "2026-11-13T14:10:00+00:00",
+            "bar_open_utc": "2026-11-13T14:05:00+00:00",
+            "reference_value": 27.053140096618357,
+            "value": 27.053140096623746
+          },
+          "first_availability_boundary": {
+            "at_count": 1,
+            "at_utc": "2026-11-13T14:10:00+00:00",
+            "before_count": 0,
+            "before_utc": "2026-11-13T14:09:59+00:00"
+          },
+          "last_point_before_final_cutoff": {
+            "available_utc": "2026-11-13T14:55:00+00:00",
+            "bar_open_utc": "2026-11-13T14:50:00+00:00",
+            "reference_value": 77.04918032786885,
+            "value": 77.04918032786408
+          },
+          "max_abs_error": 7.098321930243401e-12
+        },
+        "CCI": {
+          "count": 5,
+          "final": {
+            "available_utc": "2026-11-13T15:00:00+00:00",
+            "bar_open_utc": "2026-11-13T14:55:00+00:00",
+            "reference_value": 55.176431424766974,
+            "value": 55.176431424766974
+          },
+          "first": {
+            "available_utc": "2026-11-13T14:40:00+00:00",
+            "bar_open_utc": "2026-11-13T14:35:00+00:00",
+            "reference_value": -101.42536105479861,
+            "value": -101.42536105479861
+          },
+          "first_availability_boundary": {
+            "at_count": 1,
+            "at_utc": "2026-11-13T14:40:00+00:00",
+            "before_count": 0,
+            "before_utc": "2026-11-13T14:39:59+00:00"
+          },
+          "last_point_before_final_cutoff": {
+            "available_utc": "2026-11-13T14:55:00+00:00",
+            "bar_open_utc": "2026-11-13T14:50:00+00:00",
+            "reference_value": 63.15730273887858,
+            "value": 63.15730273887858
+          },
+          "max_abs_error": 0
+        }
+      },
+      "source": "DUKASCOPY_SAVED",
+      "symbol": "EURUSD",
+      "timeframe": "M5"
+    },
+    "GBPUSD": {
+      "append_invariance_checks": 24,
+      "candle_count": 24,
+      "closed_prefixes_checked": 25,
+      "dataset_id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+      "feed_id": "dukascopy-web-m1-v1",
+      "fixed_cutoff_future_input_checks": 24,
+      "one_second_before_close_checks": 24,
+      "partitions": [
+        {
+          "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+          "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+        }
+      ],
+      "price_basis": "BID",
+      "provider_csv_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928",
+      "series": {
+        "%D": {
+          "count": 9,
+          "final": {
+            "available_utc": "2026-11-13T15:00:00+00:00",
+            "bar_open_utc": "2026-11-13T14:55:00+00:00",
+            "reference_value": 85.93155893536121,
+            "value": 85.93155893535982
+          },
+          "first": {
+            "available_utc": "2026-11-13T14:20:00+00:00",
+            "bar_open_utc": "2026-11-13T14:15:00+00:00",
+            "reference_value": 26.045283018867924,
+            "value": 26.045283018867092
+          },
+          "first_availability_boundary": {
+            "at_count": 1,
+            "at_utc": "2026-11-13T14:20:00+00:00",
+            "before_count": 0,
+            "before_utc": "2026-11-13T14:19:59+00:00"
+          },
+          "last_point_before_final_cutoff": {
+            "available_utc": "2026-11-13T14:55:00+00:00",
+            "bar_open_utc": "2026-11-13T14:50:00+00:00",
+            "reference_value": 81.15267093072381,
+            "value": 81.15267093072326
+          },
+          "max_abs_error": 4.092726157978177e-12
+        },
+        "%K": {
+          "count": 11,
+          "final": {
+            "available_utc": "2026-11-13T15:00:00+00:00",
+            "bar_open_utc": "2026-11-13T14:55:00+00:00",
+            "reference_value": 80.22813688212928,
+            "value": 80.22813688212739
+          },
+          "first": {
+            "available_utc": "2026-11-13T14:10:00+00:00",
+            "bar_open_utc": "2026-11-13T14:05:00+00:00",
+            "reference_value": 37.735849056603776,
+            "value": 37.73584905660219
+          },
+          "first_availability_boundary": {
+            "at_count": 1,
+            "at_utc": "2026-11-13T14:10:00+00:00",
+            "before_count": 0,
+            "before_utc": "2026-11-13T14:09:59+00:00"
+          },
+          "last_point_before_final_cutoff": {
+            "available_utc": "2026-11-13T14:55:00+00:00",
+            "bar_open_utc": "2026-11-13T14:50:00+00:00",
+            "reference_value": 77.56653992395437,
+            "value": 77.56653992395206
+          },
+          "max_abs_error": 7.8053119523247e-12
+        },
+        "CCI": {
+          "count": 5,
+          "final": {
+            "available_utc": "2026-11-13T15:00:00+00:00",
+            "bar_open_utc": "2026-11-13T14:55:00+00:00",
+            "reference_value": 120.0880165128325,
+            "value": 120.0880165128325
+          },
+          "first": {
+            "available_utc": "2026-11-13T14:40:00+00:00",
+            "bar_open_utc": "2026-11-13T14:35:00+00:00",
+            "reference_value": 23.71439285206305,
+            "value": 23.71439285206305
+          },
+          "first_availability_boundary": {
+            "at_count": 1,
+            "at_utc": "2026-11-13T14:40:00+00:00",
+            "before_count": 0,
+            "before_utc": "2026-11-13T14:39:59+00:00"
+          },
+          "last_point_before_final_cutoff": {
+            "available_utc": "2026-11-13T14:55:00+00:00",
+            "bar_open_utc": "2026-11-13T14:50:00+00:00",
+            "reference_value": 140.86642895200623,
+            "value": 140.86642895200623
+          },
+          "max_abs_error": 0
+        }
+      },
+      "source": "DUKASCOPY_SAVED",
+      "symbol": "GBPUSD",
+      "timeframe": "M5"
+    }
+  },
+  "one_second_before_final_cutoff_utc": "2026-11-13T14:59:59+00:00",
+  "reference": "exact rational arithmetic on provider CSV decimals, rounded to binary float for comparison",
+  "start_inclusive_utc": "2026-11-13T13:00:00+00:00",
+  "status": "PASS",
+  "timing_policy": "LEGACY_RESEARCH"
+}
