@@ -1,0 +1,446 @@
+{
+  "description": "Local Chromium acceptance on the original November 13, 2026 EURUSD/GBPUSD M5 BID archive.",
+  "command": "npm.cmd --prefix frontend run e2e -- --config playwright.smt-pin.config.ts --retries=0 --reporter=line",
+  "environment": {
+    "TRADEFORGE_COMPARISON_DAY": "2026-11-13",
+    "TRADEFORGE_COMPARISON_SOURCE_DIR": "<workspace with pinned archive>/storage/research",
+    "TRADEFORGE_E2E_PYTHON": "<workspace with dependencies>/.venv/Scripts/python.exe",
+    "TRADEFORGE_E2E_API_PORT": "8582",
+    "TRADEFORGE_E2E_UI_PORT": "4582"
+  },
+  "fixture": "Each run uses a fresh temporary SQLite catalog. The production watcher derives families from the checksum-verified partitions. Browser routing lowers only the browse-page limit to two and pauses one real response until after the replay cutoff changes.",
+  "test_commit": "545a125b764e6e184f619882363a103d1dd1175e",
+  "spec_path": "frontend/comparison-e2e/smt-pin.spec.ts",
+  "local_spec_sha256": "5f603c536a6d88c207f754aa2a644df2fc3527e2d14605f3455ceb30abbfdd2f",
+  "production_fix_commit": "c67dad211193c2ccab445ec8d69f0ff7470de0e2",
+  "baseline": {
+    "checkout": "566dc22d48f0b810dc3240413f0fa665098cdf34",
+    "exit": 1,
+    "elapsed_seconds": 28.78,
+    "raw_receipt_sha256": "ceb8bae58fbe4149386c9b1a893d7ae4efb7454874630383c35cb67ed8d31c1d",
+    "first_page_at_13_25": {
+      "cutoff": "1794576300",
+      "cursor": null,
+      "family": null,
+      "limit": "2",
+      "nextCursor": "1794576300:5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+      "items": [
+        {
+          "event": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+          "state": "SMT_CONFIRMED",
+          "revision": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0"
+        },
+        {
+          "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+          "state": "SMT_CANDIDATE",
+          "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+        }
+      ]
+    },
+    "older_page_at_13_25": {
+      "cutoff": "1794576300",
+      "cursor": "1794576300:5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+      "family": null,
+      "limit": "2",
+      "nextCursor": "1794565500:25a2ee9b25d747b0038838a2af338d41d2ca0e36a0e24a6708a88893bddba8a5",
+      "items": [
+        {
+          "event": "81c3aa747549f900f47a3d050fc5facb1ee929560775c55fd525940f93d275d3",
+          "state": "SMT_CANDIDATE",
+          "revision": "7133f6b5dcdc606d02fd82b650b777078885971caf811009a02194881103c282"
+        },
+        {
+          "event": "25a2ee9b25d747b0038838a2af338d41d2ca0e36a0e24a6708a88893bddba8a5",
+          "state": "SMT_INVALIDATED",
+          "revision": null
+        }
+      ]
+    },
+    "checkpoints": [
+      {
+        "step": "13:25 automatic preview displays A",
+        "picker_value": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+        "displayed": [
+          {
+            "event": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+            "revision": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+            "state": "SMT_CONFIRMED",
+            "visibleId": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0"
+          }
+        ]
+      },
+      {
+        "step": "13:25 B selected once",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "13:20 rewind before B, with A eligible",
+        "picker_value": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+        "displayed": [
+          {
+            "event": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+            "revision": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318"
+          }
+        ]
+      },
+      {
+        "step": "13:25 return to the same B candidate revision",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "13:25 older page browses C and retains the B receipt",
+        "picker_value": "81c3aa747549f900f47a3d050fc5facb1ee929560775c55fd525940f93d275d3",
+        "displayed": [
+          {
+            "event": "81c3aa747549f900f47a3d050fc5facb1ee929560775c55fd525940f93d275d3",
+            "revision": "7133f6b5dcdc606d02fd82b650b777078885971caf811009a02194881103c282",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "7133f6b5dcdc606d02fd82b650b777078885971caf811009a02194881103c282"
+          }
+        ]
+      },
+      {
+        "step": "13:25 first page retains the B receipt",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "13:30 advance resolves the B invalidated revision",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "3366e60877d258ce0291262b38da1ba632854749abd2dbe19718b24380cacc2e",
+            "state": "SMT_INVALIDATED",
+            "visibleId": "3366e60877d258ce0291262b38da1ba632854749abd2dbe19718b24380cacc2e"
+          }
+        ]
+      },
+      {
+        "step": "13:20 newer visit resolves before the delayed 13:30 response",
+        "picker_value": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+        "displayed": [
+          {
+            "event": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+            "revision": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318"
+          }
+        ]
+      },
+      {
+        "step": "13:20 delayed 13:30 response leaves B unavailable",
+        "picker_value": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+        "displayed": [
+          {
+            "event": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+            "revision": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318"
+          }
+        ]
+      },
+      {
+        "step": "13:25 after stale response returns to B candidate",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "fresh Chromium context reopens B at the saved cutoff",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "swapped GBPUSD/EURUSD scope uses the automatic A preview",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "returning to EURUSD/GBPUSD restores only its B pin",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      }
+    ],
+    "displayed_archive_pins_at_13_25": [
+      {
+        "lane": "EURUSD · chart primary · BID",
+        "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+        "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+      },
+      {
+        "lane": "GBPUSD · chart comparison · BID",
+        "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+        "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+      }
+    ],
+    "stale_response": {
+      "delivered": false
+    }
+  },
+  "fixed": {
+    "checkout": "24d1b178cf323bb7fda9556bfe71427d0f69ad8f",
+    "exit": 0,
+    "elapsed_seconds": 16.13,
+    "raw_receipt_sha256": "fb2eee296bc112bdc62370558935f599f834577673ed820db312a91e6afea4e4",
+    "first_page_at_13_25": {
+      "cutoff": "1794576300",
+      "cursor": null,
+      "family": null,
+      "limit": "2",
+      "nextCursor": "1794576300:5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+      "items": [
+        {
+          "event": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+          "state": "SMT_CONFIRMED",
+          "revision": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0"
+        },
+        {
+          "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+          "state": "SMT_CANDIDATE",
+          "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+        }
+      ]
+    },
+    "older_page_at_13_25": {
+      "cutoff": "1794576300",
+      "cursor": "1794576300:5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+      "family": null,
+      "limit": "2",
+      "nextCursor": "1794565500:25a2ee9b25d747b0038838a2af338d41d2ca0e36a0e24a6708a88893bddba8a5",
+      "items": [
+        {
+          "event": "81c3aa747549f900f47a3d050fc5facb1ee929560775c55fd525940f93d275d3",
+          "state": "SMT_CANDIDATE",
+          "revision": "7133f6b5dcdc606d02fd82b650b777078885971caf811009a02194881103c282"
+        },
+        {
+          "event": "25a2ee9b25d747b0038838a2af338d41d2ca0e36a0e24a6708a88893bddba8a5",
+          "state": "SMT_INVALIDATED",
+          "revision": null
+        }
+      ]
+    },
+    "checkpoints": [
+      {
+        "step": "13:25 automatic preview displays A",
+        "picker_value": "",
+        "displayed": [
+          {
+            "event": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+            "revision": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+            "state": "SMT_CONFIRMED",
+            "visibleId": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0"
+          }
+        ]
+      },
+      {
+        "step": "13:25 B selected once",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "13:20 rewind before B, with A eligible",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [],
+        "unavailable_notice": true
+      },
+      {
+        "step": "13:25 return to the same B candidate revision",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "13:25 older page browses C and retains the B receipt",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "13:25 first page retains the B receipt",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "13:30 advance resolves the B invalidated revision",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "3366e60877d258ce0291262b38da1ba632854749abd2dbe19718b24380cacc2e",
+            "state": "SMT_INVALIDATED",
+            "visibleId": "3366e60877d258ce0291262b38da1ba632854749abd2dbe19718b24380cacc2e"
+          }
+        ]
+      },
+      {
+        "step": "13:20 newer visit resolves before the delayed 13:30 response",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [],
+        "unavailable_notice": true
+      },
+      {
+        "step": "13:20 delayed 13:30 response leaves B unavailable",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [],
+        "unavailable_notice": true
+      },
+      {
+        "step": "13:25 after stale response returns to B candidate",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "fresh Chromium context reopens B at the saved cutoff",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      },
+      {
+        "step": "swapped GBPUSD/EURUSD scope uses the automatic A preview",
+        "picker_value": "",
+        "displayed": [
+          {
+            "event": "20b2f3eaaaf199141ef695db9a1a53674d31abc1b771ddaed0d014e0467ef940",
+            "revision": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+            "state": "SMT_CONFIRMED",
+            "visibleId": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0"
+          }
+        ]
+      },
+      {
+        "step": "returning to EURUSD/GBPUSD restores only its B pin",
+        "picker_value": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "displayed": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "revision": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2",
+            "state": "SMT_CANDIDATE",
+            "visibleId": "cc454f320070e8fa8175503e4a0831f3b1b8496fab0e6ffd5791637e24ab05a2"
+          }
+        ]
+      }
+    ],
+    "displayed_archive_pins_at_13_25": [
+      {
+        "lane": "EURUSD · chart primary · BID",
+        "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+        "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+      },
+      {
+        "lane": "GBPUSD · chart comparison · BID",
+        "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+        "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+      }
+    ],
+    "stale_response": {
+      "response": {
+        "cutoff": "1794576600",
+        "cursor": null,
+        "family": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+        "limit": "1",
+        "nextCursor": null,
+        "items": [
+          {
+            "event": "5aaf19ac4d08237796dccf3154fc0e0dcc333229e6656ca778424fdbbed54a7b",
+            "state": "SMT_INVALIDATED",
+            "revision": "3366e60877d258ce0291262b38da1ba632854749abd2dbe19718b24380cacc2e"
+          }
+        ]
+      },
+      "delivered": true
+    }
+  }
+}
