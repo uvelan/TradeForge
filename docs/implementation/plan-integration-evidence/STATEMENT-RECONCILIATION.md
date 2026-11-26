@@ -2,6 +2,8 @@
 
 **Implementation verified on a controlled fixture, broker-statement acceptance pending.** Starting revision `404216d424622778cd9985f425d9149cfeca4318`, PR #37. The local research database contained zero imported broker fills. The available market-data files supply quotes and candles and do not establish broker cash, account mode, commissions or opening inventory.
 
+The [closing-valuation correction and historical receipt checks](STATEMENT-CLOSING-VALUATION.md) document current timestamp precision, specification selection and reopening V1 results.
+
 ## Operator workflow
 
 1. In separate Windows PowerShell windows run `.\start-api.ps1` and `.\start-terminal.ps1`. Open the local terminal, select **Data Library → Broker statement reconciliation**, and download the controlled JSON example to inspect the input format.

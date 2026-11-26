@@ -1,9 +1,10 @@
 """Redacted V1 interchange for linear, weighted-average broker accounts."""
 from datetime import datetime, timezone
+import re
 from typing import Annotated, Literal
 from fractions import Fraction
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictInt, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictInt, ValidationInfo, model_validator
 
 ID = Annotated[str, Field(pattern=r"^[A-Za-z0-9_.:-]{1,100}$")]
 Number = Annotated[str, Field(pattern=r"^-?(0|[1-9][0-9]{0,15})(\.[0-9]{1,10})?$")]
@@ -11,13 +12,29 @@ Currency = Annotated[str, Field(pattern=r"^[A-Z]{3}$")]
 MINOR = {"USD":2,"EUR":2,"GBP":2,"CHF":2,"CAD":2,"AUD":2,"NZD":2,"JPY":0,"KWD":3}
 
 
-def utc(value):
-    if not isinstance(value,str) or "T" not in value:
+# Offset minutes and whole UTC microseconds are the interchange precision.
+STAMP_PATTERN = re.compile(
+    r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
+    r"(?:[.,]([0-9]+))?(?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])"
+)
+
+
+def utc(value, info: ValidationInfo):
+    if not isinstance(value, str) or "T" not in value:
         raise ValueError("Use an ISO timestamp with explicit offset")
-    dt=datetime.fromisoformat(value)
-    if dt.tzinfo is None:
-        raise ValueError("Timestamp requires a UTC offset")
-    return dt.astimezone(timezone.utc).isoformat(timespec="microseconds")
+    if not (info.context or {}).get("read_v1"):
+        match = STAMP_PATTERN.fullmatch(value)
+        if not match:
+            raise ValueError("Expected ISO date, hours, minutes, seconds and Z or ±HH:MM")
+        if (match[1] or "")[6:].strip("0"):
+            raise ValueError("Timestamp is not exactly representable in microseconds")
+    try:
+        dt = datetime.fromisoformat(value)
+        if dt.tzinfo is None:
+            raise ValueError("Timestamp requires a UTC offset")
+        return dt.astimezone(timezone.utc).isoformat(timespec="microseconds")
+    except OverflowError as exc:
+        raise ValueError("Timestamp outside UTC range") from exc
 
 
 Stamp=Annotated[str,AfterValidator(utc)]

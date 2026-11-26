@@ -5,7 +5,7 @@ type Version={id:string;book:string;start:string;version:number};
 type Report={amounts:Record<string,string|null>;status:string;currency:string;minor_decimals:number;opening:string|null;broker_closing:string|null;broker_equity:string|null;
   external_known_minor:number;realized_known_minor:number;charges_known_minor:number;closing_minor:number|null;balance_residual_minor:number|null;
   unrealized_minor:number|null;equity_minor:number|null;issues:{source:string;reason:string}[];positions:unknown[];loss_limits:unknown};
-type Receipt=Version&{end:string;mode:string;cursor:number;total:number;report:Report|null};
+type Receipt=Version&{end:string;mode:string;cursor:number;total:number;report:Report|null;original_v1_report:Report|null;assessment_policy:string;assessment_error:{field:(string|number)[];reason:string;value:unknown}|null};
 type Trace={row:{id:string;kind:string};cash_after_minor:number|null};
 export default function StatementReconciliation(){
   const [versions,setVersions]=useState<Version[]>([]),[receipt,setReceipt]=useState<Receipt|null>(null);
@@ -28,7 +28,10 @@ export default function StatementReconciliation(){
       <option value="" disabled>Select a statement</option>{versions.map(v=><option key={v.id} value={v.id}>{v.book} · {v.start.slice(0,10)} · v{v.version}</option>)}</select></label>
     {error&&<p role="alert">{error}</p>}
     {receipt&&<><p>{receipt.mode} · {receipt.start} to {receipt.end} · {receipt.cursor}/{receipt.total} rows committed</p>
-    {!r&&<button disabled={busy} onClick={()=>void act(async()=>show(await api.post('/statements/'+receipt.id+'/advance?cursor='+receipt.cursor,{})))}>Reconcile next batch</button>}
+    {receipt.original_v1_report&&<><p>Historical V1 receipt · current assessment uses closing valuation V2.</p>
+    <details><summary>Inspect original V1 verdict · {receipt.original_v1_report.status}</summary><pre>{JSON.stringify(receipt.original_v1_report,null,2)}</pre></details></>}
+    {receipt.assessment_error&&<p role="alert">Current assessment unavailable · {receipt.assessment_error.field.join('.')} · {String(receipt.assessment_error.value)} · {receipt.assessment_error.reason}</p>}
+    {!r&&!receipt.assessment_error&&<button disabled={busy} onClick={()=>void act(async()=>show(await api.post('/statements/'+receipt.id+'/advance?cursor='+receipt.cursor,{})))}>Reconcile next batch</button>}
     {r&&<><h3>{r.status} · {r.currency}</h3><table><tbody>{Object.entries({
       'Opening balance':r.opening,'External movements (known)':r.amounts.external_known_minor,'Realized trading (known)':r.amounts.realized_known_minor,
       'Charges (known)':r.amounts.charges_known_minor,'Calculated balance':r.amounts.closing_minor,'Broker balance':r.broker_closing,

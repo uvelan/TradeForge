@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from .db import transaction
 from .statement_contract import Statement
-from .statement_ledger import apply, finalize, initial
+from .statement_ledger import VALUATION_POLICY, apply, finalize, initial
 
 router = APIRouter(prefix="/api/statements")
 MAX_BYTES = 2 * 1024 * 1024
@@ -24,16 +24,42 @@ def source(db, identity):
     record = db.execute("SELECT * FROM statement_versions WHERE id=?", (identity,)).fetchone()
     if record is None:
         raise HTTPException(404, "Unknown statement version")
-    return record, Statement.model_validate(json.loads(record["raw"].decode("utf-8-sig")))
+    return record, Statement.model_validate(json.loads(record["raw"].decode("utf-8-sig")), context={"read_v1": True})
 
 
 def receipt(db, record, statement):
     identity = record["id"]
     report = db.execute("SELECT payload FROM statement_reports WHERE id=?", (identity,)).fetchone()
     cursor = db.execute("SELECT cursor FROM statement_progress WHERE id=?", (identity,)).fetchone()[0]
+    stored = json.loads(report[0]) if report else None
+    current = stored
+    original = None
+    limitation = None
+    if stored is None or "valuation_policy" not in stored:
+        original = stored
+        # The original bytes are authoritative. A normalized V1 timestamp
+        # may already have lost the very precision being checked here.
+        try:
+            exact = Statement.model_validate(json.loads(record["raw"].decode("utf-8-sig")))
+        except ValidationError as exc:
+            current = None
+            item = exc.errors(include_url=False)[0]
+            limitation = dict(field=list(item["loc"]), reason=item["msg"], value=item.get("input"))
+        else:
+            if original is not None:
+                # Rebuild from immutable rows. The V1 checkpoint may include
+                # obsolete closing issues appended by its finalization.
+                state = initial(exact)
+                for row in sorted(exact.rows,key=lambda r:(r.at,r.sequence)):
+                    apply(exact,state,row)
+                current = finalize(exact,state)
     return dict(id=identity, previous=record["previous"], version=record["version"], book=statement.book,
                 start=statement.start, end=statement.end, currency=statement.currency, mode=statement.mode,
-                cursor=cursor, total=len(statement.rows), report=json.loads(report[0]) if report else None)
+                cursor=cursor, total=len(statement.rows), report=current, original_v1_report=original,
+                assessment_policy=VALUATION_POLICY, assessment_error=limitation,
+                assessment_id=hashlib.sha256(f"{identity}:{VALUATION_POLICY}".encode()).hexdigest())
+
+
 
 
 @router.post("", status_code=201)
@@ -85,6 +111,10 @@ def advance(identity: str, cursor: int = Query(ge=0), limit: int = Query(100, ge
         if cursor > progress["cursor"]:
             raise HTTPException(409, "Requested frontier has not committed")
         if cursor == progress["cursor"] and not db.execute("SELECT 1 FROM statement_reports WHERE id=?", (identity,)).fetchone():
+            try:
+                s = Statement.model_validate(json.loads(record["raw"].decode("utf-8-sig")))
+            except ValidationError as exc:
+                raise HTTPException(422, "Historical source requires corrected timestamps before processing") from exc
             state = json.loads(progress["state"])
             ordered = sorted(s.rows,key=lambda r:(r.at,r.sequence))
             end = min(cursor+limit,len(ordered))

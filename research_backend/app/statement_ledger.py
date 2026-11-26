@@ -165,6 +165,9 @@ def apply(s,state,row):
     return trace
 
 
+VALUATION_POLICY = "STATEMENT_CLOSING_VALUATION_V2"
+
+
 def finalize(s,state):
     expected={}
     if s.closing_positions is None:
@@ -183,6 +186,8 @@ def finalize(s,state):
             if actual.get(k)!=expected.get(k):
                 problem(state,"closing_positions/"+k,"CLOSING_POSITION_MISMATCH")
 
+    cutoff = datetime.fromisoformat(s.end)
+    last_period_instant = (cutoff - timedelta(microseconds=1)).isoformat(timespec="microseconds")
     marks={m.symbol:m for m in s.marks}
     unrealized=0
     margin=0
@@ -192,14 +197,21 @@ def finalize(s,state):
     for k,p in state["positions"].items():
         result={"position":k,**p}
         try:
-            spec=spec_at(s,p["symbol"],s.end)
-            if F(spec.contract_size)!=F(p["contract"]) or spec.quote_currency!=p["currency"]:
-                raise Missing("POSITION_CONTRACT_DISCONTINUITY")
             mark=marks.get(p["symbol"])
             if not mark:
                 raise Missing("MISSING_CLOSING_MARK")
-            if mark.available>s.end or (datetime.fromisoformat(s.end)-datetime.fromisoformat(mark.as_of)).total_seconds()>s.max_age_seconds:
+            result.update(mark=mark.model_dump(), valuation_cutoff=s.end)
+            if mark.available > s.end or cutoff - datetime.fromisoformat(mark.as_of) > timedelta(seconds=s.max_age_seconds):
                 raise Missing("STALE_OR_UNAVAILABLE_MARK")
+            # Closing observations may arrive at cutoff. Contract terms belong
+            # to the observed price and cannot come from the following period.
+            terms_at = min(mark.as_of, last_period_instant)
+            result["terms_at"] = terms_at
+            spec=spec_at(s,p["symbol"],terms_at)
+            result.update(spec=spec.id, contract_size=spec.contract_size, leverage=spec.leverage,
+                          spec_start=spec.start, spec_end=spec.end)
+            if F(spec.contract_size)!=F(p["contract"]) or spec.quote_currency!=p["currency"]:
+                raise Missing("POSITION_CONTRACT_DISCONTINUITY")
             qty=F(p["lots"])
             price=F(mark.bid if qty>0 else mark.ask)
             value=(price-F(p["average"]))*qty*F(spec.contract_size)
@@ -221,7 +233,7 @@ def finalize(s,state):
 
     closing=cash(s,state)
     equity=closing+unrealized if closing is not None and valued else None
-    report=dict(currency=s.currency,minor_decimals=MINOR[s.currency],opening=s.opening_balance,
+    report=dict(valuation_policy=VALUATION_POLICY,valuation_cutoff=s.end,currency=s.currency,minor_decimals=MINOR[s.currency],opening=s.opening_balance,
                 external_known_minor=state["external"],realized_known_minor=state["realized"],charges_known_minor=state["charges"],
                 closing_minor=closing,broker_closing=s.closing_balance,unrealized_minor=unrealized if valued else None,
                 equity_minor=equity,broker_equity=s.closing_equity,positions=positions,margin_minor=margin if margin_known else None,
