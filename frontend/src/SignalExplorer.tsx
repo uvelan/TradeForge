@@ -15,6 +15,7 @@ type SignalFeed = {symbol:string; source:string; feed_id:string; price_basis:str
   dataset_id?:string; sha256?:string; partitions?:{id:string;sha256:string}[]};
 export type SignalRecord = Omit<SmtEvent,'status'|'transitions'> & {
   source_correction?:{observed_at:number;changes:unknown[]}; watch_published_at?:number; chart_cutoff?:number; event_key:string; status:SignalStatus; version:number; rules:SmtRules;
+  strategy_revision?:{id:string;available_at:number};
   transitions:{status:SignalStatus;time:number}[];
   provenance:{authority:string; timeframe:Timeframe; primary:SignalFeed; comparison:SignalFeed};
 };
@@ -138,11 +139,21 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
   const cutoff=bar?(bar.available_at??bar.time+step):undefined;
   const left=capture?(cutoff===undefined?capture.primary:visibleAt(capture.primary,cutoff,step)):[];
   const right=capture?(cutoff===undefined?capture.comparison:visibleAt(capture.comparison,cutoff,step)):undefined;
-  const calculated=useSmt(left,right,timeframe,replay,signal.rules,undefined,undefined,true,0,step);
-  const recorded = signal.status==='SMT_SOURCE_CORRECTED'?undefined:
-    {...signal,status:signal.status,transitions:signal.transitions.filter(t=>t.status!=='SMT_SOURCE_CORRECTED') as SmtEvent['transitions'],
-      confirmation_bar_time:signal.confirmed_at==null?null:signal.confirmed_at-step};
-  const events=!showLines?[]:replay?(calculated.events?.filter(event=>event.id===signal.id&&event.confirmed_at!==null)??[]):recorded&&recorded.confirmed_at!==null?[recorded]:[];
+  const archiveWatch=signal.chart_cutoff!=null && Boolean(signal.strategy_revision);
+  const calculated=useSmt(left,right,timeframe,replay&&!archiveWatch,signal.rules,undefined,undefined,true,0,step);
+  const transitions=signal.transitions.filter((t):t is SmtEvent['transitions'][number]=>
+    t.status!=='SMT_SOURCE_CORRECTED' && (cutoff===undefined || t.time<=cutoff));
+  const latest=transitions.at(-1);
+  const confirmation=transitions.find(t=>t.status==='SMT_CONFIRMED');
+  const recorded:SmtEvent|undefined=signal.status!=='SMT_SOURCE_CORRECTED' && latest ? {
+    id:signal.id, event_key:signal.event_key, direction:signal.direction, leader:signal.leader,
+    primary:signal.primary, comparison:signal.comparison, status:latest.status, transitions, timing:signal.timing,
+    confirmed_at:confirmation?.time??null, confirmation_bar_time:confirmation?confirmation.time-step:null,
+  } : undefined;
+  const visibleEvent=replay&&!archiveWatch
+    ? calculated.events?.find(event=>event.id===signal.id&&event.confirmed_at!==null)
+    : recorded && (archiveWatch || recorded.confirmed_at!==null) ? recorded : undefined;
+  const events=showLines&&visibleEvent?[visibleEvent]:[];
   async function open() {
     if(capture||loading)return;
     setLoading(true);setError('');
@@ -170,7 +181,7 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
   const moveLabel=(epoch:number)=>capture?<button className="text-button" onClick={()=>move(epoch)}>{at(epoch)}</button>:at(epoch);
   const eligible=['EURUSD','GBPUSD','USDJPY','XAUUSD'].includes(primary.symbol);
   return <aside className="card signal-evidence" aria-label="Evidence Inspector">
-    <header><h2>Evidence Inspector</h2><p>{signalSummary(signal).split(' | ').slice(0,3).join(' · ')}</p></header>
+    <header><h2>Evidence Inspector</h2><p>{replay?`${primary.symbol} / ${comparison.symbol} ${timeframe}`:signalSummary(signal).split(' | ').slice(0,3).join(' · ')}</p></header>
     <div className="research-controls">
       <button className="small-tool" disabled={loading||Boolean(capture)} onClick={()=>void open()}>{loading?'Loading chart…':capture?'Recorded chart loaded':'Open recorded chart'}</button>
       {!replay&&<button className="small-tool" onClick={()=>onJournal(signal,snapshot)}>Record lesson</button>}
@@ -183,6 +194,9 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
     {!replay&&<><dl className="evidence-grid">
       {signal.watch_published_at!=null&&<div><dt>Watch publication</dt><dd>{at(signal.watch_published_at)}</dd></div>}{signal.chart_cutoff!=null&&<div><dt>Frozen chart cutoff</dt><dd>{at(signal.chart_cutoff)}</dd></div>}
       <div><dt>Signal ID</dt><dd className="evidence-id">{signal.event_key}</dd></div>
+      {archiveWatch&&signal.strategy_revision&&<><div><dt>Strategy revision ID</dt><dd className="evidence-id">{signal.strategy_revision.id}</dd></div>
+        <div><dt>Last contributing candle open</dt><dd>{at(signal.chart_cutoff!-step)}</dd></div>
+        <div><dt>Modeled availability</dt><dd>{at(signal.strategy_revision.available_at)}</dd></div></>}
       <div><dt>Leading instrument</dt><dd>{(signal.leader==='primary'?primary:comparison).symbol}</dd></div>
       <div><dt>Confirmed at ({zone})</dt><dd>{signal.confirmed_at==null?'—':capture?<button className="text-button" onClick={()=>move(signal.confirmed_at!-step)}>{at(signal.confirmed_at)}</button>:at(signal.confirmed_at)}</dd></div>
       <div><dt>Matching window closed</dt><dd>{at(signal.transitions[0]?.time)}</dd></div>
@@ -220,7 +234,7 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
       <div className="research-controls">
         {!replay&&<button className="small-tool" disabled={loading} onClick={()=>void replayEvidence()}>Replay recorded evidence</button>}
         <label><input type="checkbox" checked={showLines} onChange={e=>setShowLines(e.target.checked)}/> SMT lines</label>
-        {replay&&<span role="status">{events.length?labels[events[0].status]:'No visible confirmation at this cutoff'}</span>}
+        {replay&&<span role="status">{visibleEvent?labels[visibleEvent.status]:archiveWatch?'No visible signal at this cutoff':'No visible confirmation at this cutoff'}</span>}
       </div>
       <CandleChart onSaveSnapshot={replay?undefined:async png=>{
         const saved=await api.saveSnapshot(png,primary.symbol,timeframe,primary.source,signal.chart_cutoff,
@@ -236,8 +250,8 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
         onCheckpoint={frozenReplay?async(position,bookmarks)=>{
           await api.saveCheckpoint(frozenReplay.id,position,bookmarks);
         }:undefined}
-        jumps={[{label:'Primary pivot close',time:signal.primary.current.time+step},
-          ...(signal.confirmed_at===null?[]:[{label:'Signal confirmation',time:signal.confirmed_at}])]}/>}
+        jumps={[{label:archiveWatch?'Selected receipt’s primary pivot close':'Primary pivot close',time:signal.primary.current.time+step},
+          ...(signal.confirmed_at===null?[]:[{label:archiveWatch?'Selected receipt’s confirmation':'Signal confirmation',time:signal.confirmed_at}])]}/>}
     </div>}
   </aside>;
 }

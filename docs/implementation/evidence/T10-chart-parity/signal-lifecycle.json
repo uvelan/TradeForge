@@ -1,0 +1,197 @@
+{
+  "date_utc": "2026-11-13",
+  "event_key": "7e9485b627eb7c327f80ae78f4e524920c33ef6ffe6802ecdd76397c53985e43",
+  "feed": "dukascopy-web-m1-v1",
+  "timeframe": "M5",
+  "price_basis": "BID",
+  "watch_start": 1794572100,
+  "verified_through": 1794577200,
+  "availability_basis": "MODELED_NOMINAL_CLOSE_PLUS_DELAY",
+  "delay_seconds": 0,
+  "pins": {
+    "primary": {
+      "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+      "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+    },
+    "comparison": {
+      "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+      "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+    }
+  },
+  "rules": {
+    "alignment_bars": 0,
+    "confirmation_bars": 1,
+    "period": 2,
+    "tolerance_bps": 0.0
+  },
+  "direction": "bearish",
+  "leader": "primary",
+  "pivots": {
+    "primary": {
+      "current": {
+        "confirmed_at": 1794576000,
+        "price": 1.10557,
+        "time": 1794575100
+      },
+      "previous": {
+        "confirmed_at": 1794574200,
+        "price": 1.10549,
+        "time": 1794573300
+      }
+    },
+    "comparison": {
+      "current": {
+        "confirmed_at": 1794576000,
+        "price": 1.32306,
+        "time": 1794575100
+      },
+      "previous": {
+        "confirmed_at": 1794574200,
+        "price": 1.32316,
+        "time": 1794573300
+      }
+    }
+  },
+  "probes": [
+    {
+      "as_of": 1794575999,
+      "utc": "13:19:59",
+      "status": null,
+      "revision_id": null
+    },
+    {
+      "as_of": 1794576000,
+      "utc": "13:20",
+      "status": "SMT_CANDIDATE",
+      "revision_id": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318"
+    },
+    {
+      "as_of": 1794576299,
+      "utc": "13:24:59",
+      "status": "SMT_CANDIDATE",
+      "revision_id": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318"
+    },
+    {
+      "as_of": 1794576300,
+      "utc": "13:25",
+      "status": "SMT_CONFIRMED",
+      "revision_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0"
+    },
+    {
+      "as_of": 1794576599,
+      "utc": "13:29:59",
+      "status": "SMT_CONFIRMED",
+      "revision_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0"
+    },
+    {
+      "as_of": 1794576600,
+      "utc": "13:30",
+      "status": "SMT_INVALIDATED",
+      "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df"
+    }
+  ],
+  "revisions": [
+    {
+      "status": "SMT_CANDIDATE",
+      "revision_id": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318",
+      "modeled_available_at": 1794576000,
+      "supporting_candles": [
+        {
+          "symbol": "EURUSD",
+          "bar_count": 13,
+          "last_candle": {
+            "time": 1794575700,
+            "open": 1.10512,
+            "high": 1.10527,
+            "low": 1.10486,
+            "close": 1.1049
+          },
+          "ohlc_sha256": "69470f7caaaf89a1d3f1035670e1a6c113c7f63c5ad60d6cf32697b06e2a774f"
+        },
+        {
+          "symbol": "GBPUSD",
+          "bar_count": 13,
+          "last_candle": {
+            "time": 1794575700,
+            "open": 1.32288,
+            "high": 1.32295,
+            "low": 1.32253,
+            "close": 1.32256
+          },
+          "ohlc_sha256": "4ee924d0428912d9b573b3465b770f1d20a6ad03b71d7d992c76dff42febb07a"
+        }
+      ]
+    },
+    {
+      "status": "SMT_CONFIRMED",
+      "revision_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+      "modeled_available_at": 1794576300,
+      "supporting_candles": [
+        {
+          "symbol": "EURUSD",
+          "bar_count": 14,
+          "last_candle": {
+            "time": 1794576000,
+            "open": 1.10489,
+            "high": 1.10519,
+            "low": 1.10489,
+            "close": 1.10513
+          },
+          "ohlc_sha256": "022d9d6fa5fa4c75c2169c2aa522dd1a69940acc3781e7eab74549399e9ec2ac"
+        },
+        {
+          "symbol": "GBPUSD",
+          "bar_count": 14,
+          "last_candle": {
+            "time": 1794576000,
+            "open": 1.32257,
+            "high": 1.32297,
+            "low": 1.32257,
+            "close": 1.32289
+          },
+          "ohlc_sha256": "dceed473d0ef04a37d65993f0a9eb233129e2cb7182813fc4af9e1ddf9b2b41a"
+        }
+      ]
+    },
+    {
+      "status": "SMT_INVALIDATED",
+      "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+      "modeled_available_at": 1794576600,
+      "supporting_candles": [
+        {
+          "symbol": "EURUSD",
+          "bar_count": 15,
+          "last_candle": {
+            "time": 1794576300,
+            "open": 1.10514,
+            "high": 1.10568,
+            "low": 1.10497,
+            "close": 1.10552
+          },
+          "ohlc_sha256": "f2323fbb425e5cd0ca7aaab70be38b8ad471c88a4d22c7922a0fc6cbee58ac3b"
+        },
+        {
+          "symbol": "GBPUSD",
+          "bar_count": 15,
+          "last_candle": {
+            "time": 1794576300,
+            "open": 1.32288,
+            "high": 1.32328,
+            "low": 1.32267,
+            "close": 1.32305
+          },
+          "ohlc_sha256": "0e8560a8fdd5f27a15487a25ab1ccbdbb2702c99d2d38be33aa264e0b5c0f44d"
+        }
+      ]
+    }
+  ],
+  "rewind": {
+    "session_id": "9d7a85e3e33a48d58d2921fd59c65e2f19e14358474c340e7bd385ec98855971",
+    "event_key": "7e9485b627eb7c327f80ae78f4e524920c33ef6ffe6802ecdd76397c53985e43",
+    "restored_revision_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+    "latest_status": "SMT_INVALIDATED",
+    "as_of": 1794576300,
+    "original_verified_through": 1794576300,
+    "original_invalidated_revision_http_status": 404
+  }
+}
