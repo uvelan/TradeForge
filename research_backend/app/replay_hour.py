@@ -11,10 +11,11 @@ STEP = 300
 HOUR = 3600
 
 
-def verified_children(lane, visible):
+def verified_children(lane, visible, *, include_availability_basis=False):
     """Identify the contributing files, even if the selected range spans overlapping partitions."""
     by_time = {bar.time: (bar.model_dump(), available) for bar, available in visible}
     origins = {stamp: [] for stamp in by_time}
+    recorded = {}
     expected = dict(provider=lane["source"].removesuffix("_SAVED"), kind="candles", symbol=lane["symbol"],
                     timeframe="M5", feed_id=lane["feed_id"], price_basis=lane["price_basis"])
     pins = lane.get("partitions") or []
@@ -37,6 +38,9 @@ def verified_children(lane, visible):
                         raise ValueError(f"M5 candle at {stamp} differs from captured replay")
                     if origins[stamp] and origins[stamp][-1] == pin:
                         raise ValueError(f"Ambiguous M5 source row at {stamp}")
+                    basis = "ARCHIVE_SUPPLIED" if archived.get("available_at") is not None else "MODELED_NOMINAL_CLOSE"
+                    if include_availability_basis and recorded.setdefault(stamp, basis) != basis:
+                        raise ValueError(f"Conflicting M5 availability basis at {stamp}")
                     origins[stamp].append(pin)
             except (ValueError, OSError, RuntimeError) as exc:
                 raise HTTPException(409, f"Replay archive {pin['id']}: {exc}") from exc
@@ -45,7 +49,8 @@ def verified_children(lane, visible):
         parts = origins[stamp]
         if not parts:
             raise HTTPException(409, f"No pinned archive contains replay M5 candle at {stamp}")
-        children.append({**bar, "available_at": available, "partitions": parts,
+        basis = {"availability_basis": recorded[stamp]} if include_availability_basis else {}
+        children.append({**bar, **basis, "available_at": available, "partitions": parts,
                          "source_id": f"{parts[0]['id']}:{stamp}"})
     return children
 
