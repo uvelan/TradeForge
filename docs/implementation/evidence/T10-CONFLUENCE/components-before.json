@@ -1,0 +1,50 @@
+[
+  {
+    "component": "CRT",
+    "cutoff": 1794574799,
+    "bytes": 867,
+    "sha256": "8cb33fb6e0f1ef926df2f763665e16cd6ae1631bfa2bc1c6b67b35a93ed4497f"
+  },
+  {
+    "component": "SMT",
+    "cutoff": 1794574799,
+    "bytes": 2751,
+    "sha256": "c647edfa87c41c55a55a621595f9897368b7ba8735f56959d791035810f1d736"
+  },
+  {
+    "component": "CRT",
+    "cutoff": 1794574800,
+    "bytes": 1884,
+    "sha256": "4ee50eb8af1c5ad36e39821b400a55f8cbc8b833b5c2d595304ac076665f2510"
+  },
+  {
+    "component": "SMT",
+    "cutoff": 1794574800,
+    "bytes": 2751,
+    "sha256": "cfc58fe3e1a595b57874b18665af3718c17a2b525181680e89e2bdad367e2a66"
+  },
+  {
+    "component": "CRT",
+    "cutoff": 1794576300,
+    "bytes": 2181,
+    "sha256": "3b450161943c3ee5cd0d24506e0293560e906783bef84fb26e1189cef7823a5f"
+  },
+  {
+    "component": "SMT",
+    "cutoff": 1794576300,
+    "bytes": 18657,
+    "sha256": "01835470b43f36a98c8b57759437dc5acea528db0f33a4484114a021e17412f7"
+  },
+  {
+    "component": "CRT",
+    "cutoff": 1794585600,
+    "bytes": 5725,
+    "sha256": "67f896d9ecd5eb3f8c0ce55f9b272cdee85a471e22cf1eb3484b324e42608916"
+  },
+  {
+    "component": "SMT",
+    "cutoff": 1794585600,
+    "bytes": 40865,
+    "sha256": "3942c95a1008ab05e88be86aed879d21e7c22091eb365f584f9672e3cbe2b1b1"
+  }
+]
