@@ -236,3 +236,97 @@ def test_legacy_implicit_availability_preserves_historical_crt_identity(client):
     joined = actual["components"]["crt"]
     assert (joined["family_id"],joined["revision_id"]) == (crt["range_id"],crt["id"])
     assert joined["revision_id"] != receipt(client,key,at(13))["components"]["crt"]["revision_id"]
+
+
+@pytest.mark.parametrize("delay_peer", [False, True])
+def test_quiet_join_recovery_carries_every_decisive_candle(client, delay_peer):
+    arrival = at(14) + 17  # Quiet 14:05 EURUSD candle closes at 14:10 UTC.
+    left = candles(LEFT) + [bar(12,16,18,15), bar(13,15,arrival=arrival), bar(14,10,11,9)]
+    right = candles(RIGHT) + [bar(12,24), bar(13,24,arrival=arrival if delay_peer else None), bar(14,24)]
+    key, pins = capture(client, left, right)
+
+    baseline = receipt(client, key, at(13))
+    assert baseline["status"] == "ALIGNED"
+    for clock in (at(14), arrival - 1):
+        blocked = receipt(client, key, clock)
+        assert (blocked["status"], blocked["first_available_at"]) == ("INCOMPLETE", None)
+        assert blocked["reason"] == "MISSING_OPEN_CANDLES"
+        assert [issue["symbol"] for issue in blocked["components"]["smt"]["coverage_issues"]] == (
+            ["EURUSD", "GBPUSD"] if delay_peer else ["EURUSD"])
+        assert blocked["coverage_recoveries"] == []
+
+    recovered = receipt(client, key, arrival)
+    assert (recovered["status"], recovered["first_available_at"]) == ("ALIGNED", arrival)
+    for name, entry in recovered["components"].items():
+        prior = baseline["components"][name]
+        assert (entry["revision_id"], entry["available_at"]) == (prior["revision_id"], prior["available_at"])
+        assert entry["available_at"] < arrival
+        assert all((row["symbol"], row["time"]) != ("EURUSD", at(13)) for row in entry["evidence"])
+    wanted = [
+        dict(symbol=symbol, time=at(13), nominal_close=at(14), available_at=arrival,
+             availability_basis="ARCHIVE_SUPPLIED", source_id=f"{part['id']}:{at(13)}",
+             partitions=[dict(id=part["id"], sha256=part["sha256"])])
+        for symbol, part in zip(("EURUSD", "GBPUSD") if delay_peer else ("EURUSD",), pins)
+    ]
+    assert recovered["rule_version"] == 2
+    assert recovered["coverage_recoveries"] == wanted
+    assert receipt(client, key, arrival + 1)["coverage_recoveries"] == wanted
+    later = receipt(client, key, at(15))
+    assert later["first_available_at"] == at(15) and later["coverage_recoveries"] == []
+    assert receipt(client, key, arrival - 1) == blocked
+
+
+def test_recovery_tied_with_a_component_publication_is_retained(client):
+    arrival = at(13) + 17
+    left = candles(LEFT) + [bar(12,16,18,15,arrival=arrival), bar(13,15)]
+    right = candles(RIGHT) + [bar(12,24), bar(13,24)]
+    key, _ = capture(client, left, right)
+    recovered = receipt(client, key, arrival)
+    assert recovered["status"] == "ALIGNED"
+    assert recovered["first_available_at"] == recovered["components"]["crt"]["available_at"] == arrival
+    witness, = recovered["coverage_recoveries"]
+    assert (witness["symbol"], witness["time"], witness["available_at"]) == ("EURUSD", at(12), arrival)
+
+
+def test_recovery_retains_all_overlapping_dataset_pins(client):
+    arrival = at(14) + 17
+    quiet = bar(13,15,arrival=arrival)
+    left = candles(LEFT) + [bar(12,16,18,15), quiet, bar(14,15)]
+    right = candles(RIGHT) + [bar(i,24) for i in range(12,15)]
+    extra = publish([quiet])
+    key, pins = capture(client, left, right)
+    result = receipt(client, key, arrival)
+    witness, = result["coverage_recoveries"]
+    originals = sorted((extra, pins[0]), key=lambda partition: partition["id"])
+    assert witness["partitions"] == [{k: part[k] for k in ("id","sha256")} for part in originals]
+    assert witness["source_id"] == f"{originals[0]['id']}:{at(13)}"
+
+
+def test_historical_pin_and_retry_preserve_exact_saved_payload(client, monkeypatch):
+    arrival = at(14) + 17
+    left = candles(LEFT) + [bar(12,16,18,15), bar(13,15,arrival=arrival), bar(14,15)]
+    right = candles(RIGHT) + [bar(i,24) for i in range(12,15)]
+    key, pins = capture(client, left, right)
+    current = receipt(client, key, arrival)
+    # V1 stored these same producer snapshots and join clock without recovery provenance.
+    legacy = {k:v for k,v in current.items() if k not in ("receipt_id","coverage_recoveries")}
+    legacy["rule_version"] = 1
+    encoded = json.dumps(legacy, sort_keys=True, separators=(",",":"), allow_nan=False)
+    old_id = sha256(encoded.encode()).hexdigest()
+    with db.transaction() as conn:
+        conn.execute("INSERT INTO replay_confluence_receipts(id,session_id,payload) VALUES(?,?,?)",
+                     (old_id,key,encoded))
+    assert old_id != current["receipt_id"]
+    receipt(client, key, arrival, verb="post", receipt_id=current["receipt_id"])
+    db.initialize()
+    monkeypatch.setattr("research_backend.app.replay_confluence.crt_component", lambda *_:pytest.fail("recomputed pin"))
+    opened = request(client, key, arrival, receipt_id=old_id)
+    assert opened.status_code == 200 and opened.json() == {**legacy, "receipt_id":old_id}
+    retried = request(client, key, arrival, verb="post", receipt_id=old_id)
+    assert retried.status_code == 200 and retried.content == opened.content
+    assert db.one("SELECT payload FROM replay_confluence_receipts WHERE id=?", (old_id,))["payload"] == encoded
+    assert db.one("SELECT count(*) AS n FROM replay_confluence_receipts")["n"] == 2
+    assert request(client, key, arrival+1, verb="post", receipt_id=old_id).status_code == 409
+    (storage.MARKET_DIR/pins[0]["relative_path"]).write_bytes(b"controlled corruption")
+    for verb in ("get", "post"):
+        assert request(client, key, arrival, verb=verb, receipt_id=old_id).status_code == 409

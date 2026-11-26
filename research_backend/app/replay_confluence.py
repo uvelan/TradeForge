@@ -53,6 +53,7 @@ def validate_cutoff(session, cutoff):
     if not capture_start(primary) <= cutoff <= horizon:
         raise HTTPException(422, "Requested cutoff outside the captured replay session clock")
 
+
 def read_panes(session, cutoff):
     validate_cutoff(session, cutoff)
     primary = session["market"]
@@ -278,19 +279,45 @@ def list_pinned_confluence(session, cutoff, profile, limit, before_cutoff, befor
     return result
 
 
+def join_availability(crt, smt, panes):
+    """Report all delayed closed slots that establish the current join clock."""
+    first_available = max(crt["available_at"], smt["available_at"])
+    witnesses = []
+    for symbol in SYMBOLS:
+        for child in panes[symbol]["children"]:
+            arrival = child["available_at"]
+            close = child["time"] + STEP
+            if arrival <= close or arrival < first_available:
+                continue
+            if arrival > first_available:
+                first_available = arrival
+                witnesses.clear()
+            witnesses.append(dict(symbol=symbol, time=child["time"], nominal_close=close,
+                                  available_at=arrival, availability_basis=child["availability_basis"],
+                                  source_id=child["source_id"], partitions=child["partitions"]))
+    return first_available, sorted(witnesses, key=lambda row: (row["symbol"], row["time"]))
+
+
+def stored_receipt(session, cutoff, profile, receipt_id):
+    record = one("SELECT payload FROM replay_confluence_receipts WHERE session_id=? AND id=?", (session["id"], receipt_id))
+    if record is None:
+        return None
+    saved = json.loads(record["payload"])
+    if (fingerprint(saved) != receipt_id or saved["session_id"] != session["id"] or
+            (saved["cutoff"], saved["profile"]) != (cutoff, profile)):
+        raise HTTPException(409, "Pinned confluence receipt differs from the requested clock or profile")
+    # Exact opens and idempotent retries both reverify the frozen archive.
+    read_panes(session, cutoff)
+    return {**saved, "receipt_id":receipt_id}
+
+
 def inspect_confluence(session, cutoff, profile=PROFILE, receipt_id=None):
-    saved = None
     if receipt_id:
-        record = one("SELECT payload FROM replay_confluence_receipts WHERE session_id=? AND id=?", (session["id"], receipt_id))
-        if record is None:
+        saved = stored_receipt(session, cutoff, profile, receipt_id)
+        if saved is None:
             raise HTTPException(409, "Unknown receipt for this replay session")
-        saved = json.loads(record["payload"])
-        if (fingerprint(saved) != receipt_id or saved["session_id"] != session["id"] or
-                (saved["cutoff"], saved["profile"]) != (cutoff, profile)):
-            raise HTTPException(409, "Pinned confluence receipt differs from the requested clock or profile")
+        return saved
     panes, issues = read_panes(session, cutoff)
-    if saved is not None:
-        return {**saved, "receipt_id":receipt_id}
 
     crt = crt_component(panes["EURUSD"], cutoff) if "EURUSD" in panes else component([], issues["EURUSD"]["reason"])
     smt = smt_component(panes, cutoff)
@@ -299,13 +326,9 @@ def inspect_confluence(session, cutoff, profile=PROFILE, receipt_id=None):
         if entry["coverage_issues"]:
             entry.update(condition="INCOMPLETE", coverage_reason=entry["coverage_issues"][0]["reason"])
     status, reason, direction = joined_state(crt, smt)
-    first_available = None
-    if status != "INCOMPLETE":
-        # A closed slot with an outstanding delivery made the join incomplete
-        # until recovery, even if neither producer published a newer revision.
-        recoveries = (stamp for p in panes.values() for bar, stamp in p["rows"] if stamp > bar.time+STEP)
-        first_available = max(crt["available_at"], smt["available_at"], max(recoveries, default=0))
-    receipt = dict(session_id=session["id"], cutoff=cutoff, profile=profile, rule_version=1, authority="RESEARCH_ONLY",
+    first_available, recoveries = (None, []) if status == "INCOMPLETE" else join_availability(crt, smt, panes)
+    receipt = dict(session_id=session["id"], cutoff=cutoff, profile=profile, rule_version=2, authority="RESEARCH_ONLY",
+                   coverage_recoveries=recoveries,
                    availability_policy=POLICY, rules=dict(crt=RULES.model_dump(), smt=SMT_RULES, crt_version=CRT_VERSION,
                    smt_algorithm_version=ALGORITHM_VERSION, smt_lifecycle_version=LIFECYCLE_VERSION,
                    availability_mode=SIMULATION_MODE), status=status, reason=reason, direction=direction,
@@ -314,6 +337,9 @@ def inspect_confluence(session, cutoff, profile=PROFILE, receipt_id=None):
 
 
 def pin_confluence(session, cutoff, profile, expected_id):
+    saved = stored_receipt(session, cutoff, profile, expected_id)
+    if saved is not None:
+        return saved
     receipt = inspect_confluence(session, cutoff, profile)
     key = receipt.pop("receipt_id")
     if key != expected_id:
