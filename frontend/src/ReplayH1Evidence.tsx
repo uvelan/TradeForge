@@ -15,10 +15,26 @@ type H1Evidence = {
 type Lane = {view: string; symbol: string; market: CandleResponse};
 
 const hour = 3600;
+const day = 24 * hour;
+const hourAt = (time: number) => Math.floor(time / hour) * hour;
+const dayAt = (time: number) => Math.floor(time / day) * day;
 const labels = {FORMING: 'Still forming', COMPLETE: 'Complete', UNRESOLVED: 'Unresolved', CLOSED: 'Market closed'};
 const utc = (time: number) => new Date(time * 1000).toISOString().replace('T', ' ').replace('.000Z', ' UTC');
 const columns = ['open', 'high', 'low', 'close'] as const;
 const laneLabel = (view: string) => view === 'primary' ? 'Primary' : view === 'comparison' ? 'Comparison' : 'View ' + view;
+
+function capturedHourBounds(market: CandleResponse, cutoff: number) {
+  const {coverage, candles} = market;
+  if (!coverage) return;
+  const left = coverage.truncated ? candles[0]?.time : coverage.start;
+  // Use the captured interval even when an entire hour has no source rows.
+  const right = Math.min(coverage.end, cutoff);
+  if (left == null || right <= left) return;
+  return {
+    first: hourAt(left),
+    last: Math.ceil(right / hour) * hour - hour,
+  };
+}
 
 function supportsHour(market: CandleResponse, symbol: string, timeframe: Timeframe) {
   return market.source === 'DUKASCOPY_SAVED' && Boolean(market.coverage) &&
@@ -53,23 +69,31 @@ export function ReplayH1Evidence({session, cutoff, symbol, timeframe, linkedView
 
 function LaneEvidence({sessionId, cutoff, lane}: {sessionId: string; cutoff: number; lane: Lane}) {
   const [picked, setPicked] = useState<number>();
-  const hourAt = (time: number) => Math.floor(time / hour) * hour;
-  const starts = [...new Set(lane.market.candles.filter(candle => (candle.available_at ?? candle.time + 300) <= cutoff)
-    .map(candle => hourAt(candle.time)))];
-  const firstOpen = lane.market.coverage?.start ?? lane.market.candles[0]?.time;
-  if (firstOpen == null || cutoff <= firstOpen) return <p>No captured H1 interval at this cutoff for {lane.symbol}.</p>;
-  const currentHour = hourAt(cutoff - 1);
-  if (!starts.includes(currentHour)) starts.push(currentHour);
-  const recentClosed = [...starts].reverse().find(start => start + hour <= cutoff);
-  const start = picked != null && starts.includes(picked) ? picked : recentClosed ?? starts.at(-1)!;
+  const bounds = capturedHourBounds(lane.market, cutoff);
+  const selected = picked !== undefined && bounds && picked >= bounds.first && picked <= bounds.last
+    ? picked : undefined;
+  if (picked !== selected) setPicked(selected);
+  if (!bounds) return <p>No captured H1 interval at this cutoff for {lane.symbol}.</p>;
+  const {first, last} = bounds;
+  const start = selected ?? Math.max(first, Math.min(last, hourAt(cutoff) - hour));
+  const browseByDay = last - first >= 31 * day;
+  const selectedDay = dayAt(start);
+  const optionFirst = browseByDay ? Math.max(first, selectedDay) : first;
+  const optionLast = browseByDay ? Math.min(last, selectedDay + day - hour) : last;
+  const hours = Array.from({length: (optionLast - optionFirst) / hour + 1}, (_, i) => optionFirst + i * hour);
   const url = '/replay/sessions/' + encodeURIComponent(sessionId) + '/higher-timeframe?' +
     new URLSearchParams({view: lane.view, cutoff: String(cutoff), hour_start: String(start)});
   return <>
     <div className="research-controls">
-      <label>H1 interval <select value={picked === start ? start : ''} onChange={event =>
+      {browseByDay && <label>H1 UTC date <input type="date" value={utc(selectedDay).slice(0, 10)}
+        min={utc(first).slice(0, 10)} max={utc(last).slice(0, 10)} onChange={event => {
+          const chosenDay = event.target.valueAsNumber / 1000;
+          if (chosenDay >= dayAt(first) && chosenDay <= dayAt(last)) setPicked(Math.max(first, chosenDay));
+        }}/></label>}
+      <label>H1 interval <select value={selected ?? ''} onChange={event =>
         setPicked(event.target.value ? Number(event.target.value) : undefined)}>
-        <option value="">Latest closed hour · or forming hour</option>
-        {starts.map(value => <option key={value} value={value}>{utc(value)} – {utc(value + hour)}</option>)}
+        <option value="">Latest elapsed hour or current forming hour</option>
+        {hours.map(value => <option key={value} value={value}>{utc(value)} – {utc(value + hour)}</option>)}
       </select></label>
     </div>
     <CandleEvidence key={url} url={url}/>
