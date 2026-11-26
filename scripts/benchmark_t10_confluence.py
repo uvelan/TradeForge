@@ -2,6 +2,7 @@
 
 import argparse
 from datetime import UTC, datetime
+import hashlib
 import json
 from pathlib import Path
 import runpy
@@ -23,6 +24,7 @@ INSPECTION_CLOCKS = (ALIGNMENT - STEP, ALIGNMENT, ALIGNMENT + STEP, ALIGNMENT + 
                      ALIGNMENT + 12*STEP, ALIGNMENT + 27*STEP, END)
 METRICS = ("http_requests", "http_request_bytes", "http_response_bytes", "sql_statements", "sql_selects",
            "replay_database_connections", "verified_artifacts", "verified_snapshot_bytes",
+           "verified_direct_bytes", "verified_archive_bytes",
            "parquet_opens", "decoded_rows", "returned_components", "returned_revisions", "returned_evidence_rows")
 
 
@@ -31,6 +33,27 @@ def record_components(components, counters):
         counters["returned_components"] += 1
         counters["returned_revisions"] += len(component.get("revisions", []))
         counters["returned_evidence_rows"] += len(component.get("evidence", []))
+
+
+def count_direct_verification(counters):
+    original = hashlib.file_digest
+
+    def file_digest(file, *args, **kwargs):
+        start = file.tell()
+        result = original(file, *args, **kwargs)
+        counters["verified_direct_bytes"] += file.tell() - start
+        return result
+
+    hashlib.file_digest = file_digest
+
+
+def measure_sample(perform, counters):
+    result, _ = sample(perform, counters)
+    metric = result["counters"]
+    metric["verified_archive_bytes"] = metric.get("verified_direct_bytes", 0) + metric.get(
+        "verified_snapshot_bytes", 0
+    )
+    return result
 
 
 def prepare(raw, storage):
@@ -63,6 +86,7 @@ def worker(operation, spec, source, repetitions):
         session = spec["session"]
         pins = {int(clock): receipt for clock, receipt in spec["pins"].items()}
         counters = install_counters()
+        count_direct_verification(counters)
         client = CountedClient(raw, counters)
         rss_peak = runpy.run_path(str(ROOT / "docs/implementation/evidence/TF-I08C/benchmark.py"))["rss_peak"]
         route = f"/api/replay/sessions/{session}"
@@ -85,8 +109,7 @@ def worker(operation, spec, source, repetitions):
                 reopen()
                 if operation in {"cold-current", "cold-pinned"}:
                     confluence(ALIGNMENT, pinned=operation == "cold-pinned")
-            result, _ = sample(cold, counters)
-            return {"sample": result, "peak_kib": rss_peak()}
+            return {"sample": measure_sample(cold, counters), "peak_kib": rss_peak()}
 
         captured = reopen()
 
@@ -140,7 +163,7 @@ def worker(operation, spec, source, repetitions):
         save(ALIGNMENT)
 
         def series(run, clocks):
-            return [sample(lambda: run(cutoff), counters)[0] for cutoff in clocks]
+            return [measure_sample(lambda: run(cutoff), counters) for cutoff in clocks]
 
         repeat = [ALIGNMENT] * repetitions
         step = list(INSPECTION_CLOCKS) * repetitions
@@ -198,7 +221,8 @@ def measure(args):
                   "and separate legacy CRT detail plus SMT requests on the same pinned market. "
                   "Save samples repeat explicit save of the same ID. OS page cache is uncontrolled.",
         "counters": "HTTP bytes measure serialized request and response bodies. SQL counts are trace callbacks. "
-                    "Verified snapshot bytes and decoded rows are instrumented backend reads, including OS cache "
+                    "Verified snapshot and direct hash bytes count total archive bytes verified, while decoded rows "
+                    "count Parquet rows decoded by the backend. All counts include OS cache "
                     "hits. The strict SMT component returns event/pivot metadata; the joined receipt includes "
                     "more source-row proof than the separate indicator responses.",
         "coverage_utc": [utc(START), utc(END)], "clocks_utc": [utc(clock) for clock in INSPECTION_CLOCKS],
@@ -232,4 +256,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
