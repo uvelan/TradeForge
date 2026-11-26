@@ -21,6 +21,10 @@ export function useSavedConfluenceReceipts(sessionId: string, cutoff: number, re
   const generation = useRef(0);
   const cursor = request?.cutoff === cutoff ? request.cursor : undefined;
 
+  // Start a fresh page sequence after a chart clock change, including when
+  // the operator later returns to a cutoff they previously paginated.
+  useEffect(() => {requestPage(undefined);}, [sessionId, cutoff]);
+
   const refresh = useCallback(() => {
     generation.current++;
     requestPage(undefined);
