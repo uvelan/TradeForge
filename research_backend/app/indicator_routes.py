@@ -441,12 +441,12 @@ def signals(q: str = Query("", max_length=128), direction: Literal["bullish", "b
             timeframe: str | None = Query(None, max_length=10), source: str | None = Query(None, max_length=30),
             instrument: str | None = Query(None, max_length=64), start: int | None = Query(None, ge=0),
             end: int | None = Query(None, ge=0), as_of: int | None = Query(None,ge=0), cursor: str | None = Query(None, max_length=90),
-            limit: int = Query(25, ge=1, le=100)):
+            limit: int = Query(25, ge=1, le=100), event_key: str | None = Query(None, pattern=r"^[0-9a-f]{64}$")):
     if start is not None and end is not None and start >= end:
         raise HTTPException(422, "Choose an end time after the start")
     conditions, parameters = [], []
     for sql, value in (
-        ("status=?", status), ("json_extract(payload,'$.direction')=?", direction),
+        ("event_key=?", event_key), ("status=?", status), ("json_extract(payload,'$.direction')=?", direction),
         ("json_extract(payload,'$.provenance.timeframe')=?", timeframe),
         ("json_extract(payload,'$.provenance.primary.source')=?", source),
         ("event_time>=?", start), ("event_time<?", end),
