@@ -14,7 +14,7 @@ from .recorded_session import read_session
 from .strategy_evidence import fingerprint
 
 router = APIRouter(prefix="/api/month-replay")
-POLICY = "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V1"
+POLICY = "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2"
 BATCH_SECONDS = 600
 CALENDAR = MarketSchedule(kind="forex_weekly")
 
@@ -73,19 +73,24 @@ def run_batch(state, hour, quotes, session):
         events.append(record)
         return record["id"]
     end = hour["end"] * 1000
+    def unresolved(reason, **timing):
+        position = state["position"]
+        if position and not state["unresolved"]:
+            event("UNRESOLVED", state["last"], reason=reason, decision_id=position["decision_id"],
+                  remaining=int("fill" in position), **timing)
+            state["unresolved"] = True
+
     def gap(left,right):
         if left >= right:
             return
         gaps.append([left,right])
-        if state["position"] and not state["unresolved"]:
-            event("UNRESOLVED", state["last"], missing_from_ms=left, reason="OPEN_SESSION_QUOTE_GAP",
-                  decision_id=state["position"]["decision_id"])
-            state["unresolved"] = True
+        unresolved("OPEN_SESSION_QUOTE_GAP", missing_from_ms=left)
         state["anchor"] = None
     cursor = state["pending_since"]
     if hour["status"] == "SCHEDULED_CLOSURE":
         if cursor is not None:
             gap(cursor,t*1000)
+        unresolved("SCHEDULED_MARKET_CLOSURE", closure_at_ms=t*1000)
         state["pending_since"] = None
         state["anchor"] = None
         return events,gaps
@@ -150,7 +155,7 @@ def inspect(month: str, session: str | None = None):
             raise HTTPException(404,"Unknown pinned monthly session")
         sid=fingerprint(binding)
         sessions=[r[0] for r in db.execute("SELECT session FROM month_replay_manifests WHERE month=? ORDER BY rowid DESC",(month,))]
-        return dict(session=sid,binding=binding,checkpoint=latest(db,sid),sessions=sessions)
+        return dict(session=sid,binding=binding,policy_current=binding["policy"]==POLICY,checkpoint=latest(db,sid),sessions=sessions)
 
 
 def load_manifest(db,month,sid):
@@ -179,6 +184,8 @@ def advance(month: str,session: str, index: int=Query(ge=0,le=4463)):
             if old and fingerprint(json.loads(old[0]))==old[1]:
                 return json.loads(old[0])
             raise HTTPException(409,"Not an intact committed batch boundary")
+        if binding["policy"] != POLICY:
+            raise HTTPException(409,"Historical monthly policy is read-only; start a new replay for this month")
         total=(binding["end"]-binding["start"])//BATCH_SECONDS
         if index!=next_index or index>=total:
             raise HTTPException(409,"Invalid replay frontier")

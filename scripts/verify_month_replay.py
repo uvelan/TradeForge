@@ -93,6 +93,29 @@ def worker(mode):
                     observed_missing_intervals_ms=[gap for h in received if h["status"]=="OBSERVED" for gap in h["gaps"]])))
 
 
+def compare_accepted_control(report):
+    baseline=json.loads((ROOT/"docs/implementation/plan-integration-evidence/month-replay.json").read_text())
+    old,new=baseline["cold"],report["cold"]
+    assert baseline["missing_open_utc_hours"]==report["missing_open_utc_hours"]
+    for field in ("quotes","inputs","counts","observed_missing_intervals_ms"):
+        assert old[field]==new[field],field
+    assert old["session"]!=new["session"]
+    old_decision,new_decision=old["events"][0]["id"],new["events"][0]["id"]
+    identities={}
+    for before,after in zip(old["events"],new["events"],strict=True):
+        expected=dict(before)
+        if "decision_id" in expected:
+            assert expected["decision_id"]==old_decision
+            expected["decision_id"]=new_decision
+        assert before["id"]!=after["id"]
+        expected["id"]=after["id"]
+        assert expected==after
+        identities[after["kind"]]={"v1":before["id"],"v2":after["id"]}
+    assert baseline["restart"]["frontier"]==report["restart"]["frontier"]
+    assert baseline["restart"]["position"]|{"decision_id":new_decision}==report["restart"]["position"]
+    return identities
+
+
 def main(output,browser=False):
     # Raw-format oracle for qualification, the next executable ask, and first closing-side threshold.
     raw=(ROOT/"storage/t06-input/13h_ticks.bi5").read_bytes()
@@ -123,6 +146,7 @@ def main(output,browser=False):
         report=dict(cold=cold,warm=warm,restart=dict(frontier=stop["through"],position=stop["state"]["position"],
                     final_ledger=resume["ledger_sha256"]),missing_open_utc_hours=[
                     datetime.fromtimestamp(h["start"],UTC).isoformat() for h in manifest["hours"] if h["status"]=="MISSING_OPEN"])
+        report["accepted_control_event_ids"]=compare_accepted_control(report)
         output.write_text(json.dumps(report,indent=2)+"\n",encoding="utf8")
         if browser:
             webroot=root/"browser"
