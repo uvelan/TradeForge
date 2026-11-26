@@ -3,7 +3,6 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from datetime import datetime,timedelta,timezone
 from decimal import Decimal
-from pathlib import Path
 from hashlib import sha256
 import asyncio
 import json
@@ -204,10 +203,8 @@ def list_packages():return rows('SELECT id,trade_id,plan_version,knowledge_cutof
 def download_ai(pkg:str):
     p=one('SELECT * FROM ai_packages WHERE id=?',(pkg,))
     if not p:raise HTTPException(404,'Package not found')
-    path=Path(p['location']).resolve()
-    if not path.is_relative_to(domain.EXPORT_DIR.resolve()) or not path.is_file():raise HTTPException(404,'Package file missing')
-    payload=path.read_bytes()
-    if sha256(payload).hexdigest()!=p['sha256']:raise HTTPException(409,'Export checksum mismatch')
+    payload=domain.read_package_bytes(p,missing_status=404,missing_detail="Package file missing",
+                                      checksum_detail="Export checksum mismatch")
     return Response(payload,media_type='application/zip',headers={'Content-Disposition':f'attachment; filename="{pkg}.zip"'})
 
 

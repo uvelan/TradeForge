@@ -4,7 +4,6 @@ from decimal import Decimal
 import hashlib
 import io
 import json
-from pathlib import Path
 from typing import Literal
 import zipfile
 
@@ -126,12 +125,8 @@ def contents(package_id:str):
     pkg=one("SELECT p.*,s.replay_session FROM ai_packages p JOIN recorded_package_sources s ON p.id=s.package_id WHERE p.id=?",(package_id,))
     if pkg is None:
         raise HTTPException(404,"Recorded replay package not found")
-    path=Path(pkg["location"]).resolve()
-    if not path.is_relative_to(domain.EXPORT_DIR.resolve()) or not path.is_file():
-        raise HTTPException(409,"Recorded package file unavailable")
-    raw=path.read_bytes()
-    if hashlib.sha256(raw).hexdigest()!=pkg["sha256"]:
-        raise HTTPException(409,"Recorded package checksum mismatch")
+    raw=domain.read_package_bytes(pkg,missing_detail="Recorded package file unavailable",
+                                  checksum_detail="Recorded package checksum mismatch")
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         manifest=json.loads(archive.read("manifest.json"))
         if (manifest["package_id"],manifest["session"],manifest["review_type"])!=(package_id,pkg["replay_session"],TYPE):

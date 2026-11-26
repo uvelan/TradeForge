@@ -53,3 +53,17 @@ npm --prefix frontend run e2e -- --config playwright.recorded.config.ts --retrie
 The final local backend suite ran once: 1,057 passed, one skipped, and one Starlette test-client deprecation warning in 608.16 seconds. The focused suites had 31 passes in 19.81 seconds plus one source-reconciliation test in 1.99 seconds. Frontend unit tests passed 13/13 (2.94 seconds wall clock), and TypeScript plus the Vite production build passed (18.51 seconds). Standard Chromium passed 85/85 in 7.9 minutes with zero retries. The separate 2025 recorded-data test passed 100 chart navigation cycles in a 2.1-minute browser run. The five browser phases of the recovery drill passed with zero retries.
 
 To roll back, stop the restored instance, restart with the original storage settings, and revert the milestone commit. Prior readers can use the existing Parquet files and catalog IDs. The new source-bytes table is additive and can be retained for audit.
+
+## Review ZIPs after relocation
+
+At baseline `9db563956dd6696bd6990a489566dbfcc790ca06`, offline verification accepted both copied ZIP formats, but the restored app returned 404 on both downloads, 409 on both structured review imports, and 409 on recorded replay detail. The catalog still correctly retained the original absolute location as issuance provenance. The app now reads the issued filename only under the active profile's export directory, checking the filename, physical file and original SHA-256. It never looks for a package in the old profile.
+
+The isolated mounted-app test creates a package of each format, runs the real offline restore to a fresh absolute root, confirms the original package row and copied ZIP are unchanged, then opens the restored app after removing the original profile. Both downloads and recorded detail return 200; structured review imports return 201, retain the submitted JSON, and deduplicate retries. A missing active copy returns 404 on download even while the original still exists. Changed bytes return 409 and create no extra review.
+
+```sh
+python -m pytest -q research_backend/tests/test_review_package_relocation.py research_backend/tests/test_historical_packages.py research_backend/tests/test_ai_review_decisions.py tests/test_restore_rehearsal.py
+```
+
+The same new two-case test failed as described on the baseline (exit 1) and the combined suite passed on the corrected tree (7 passed, one existing Starlette deprecation warning; Linux Python 3.12, locked dependencies except Windows-only MetaTrader5). Independent diff review found no blocking defect. This is an isolated restore test, not a rerun against a production archive or a separate Windows account.
+
+Rollback by reverting the locator change; no database migration, row rewrite or archive modification is required. Older code again needs the issuing profile at its original path, so keep the original workspace or its backup until operator acceptance. Trading gates are unchanged.

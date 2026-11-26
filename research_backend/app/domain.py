@@ -7,9 +7,10 @@ import hashlib
 import io
 import json
 import os
+import re
 import uuid
 import zipfile
-from pathlib import Path
+from pathlib import PureWindowsPath
 from fastapi import HTTPException
 from .schemas import SignalReference, TradePlan, Outcome, JournalInput, ReviewInput, ReviewV1
 from .risk import evaluate
@@ -271,6 +272,29 @@ def publish_package(items,package_id,cutoff,*,trade_id=None,plan_version=None,re
     return {'package_id':package_id,'sha256':digest,'download_url':f'/research/api/ai/packages/{package_id}/download'}
 
 
+def read_package_bytes(pkg: dict, *, missing_status: int = 409,
+                       missing_detail: str = "Package file unavailable",
+                       checksum_detail: str = "Package checksum mismatch") -> bytes:
+    """Read only the canonical active-root copy of an immutable export."""
+    key = pkg["id"]
+    filename = f"{key}.zip"
+    if (not re.fullmatch(r"PKG-[A-Za-z0-9-]+", key)
+            or PureWindowsPath(pkg["location"]).name != filename):
+        raise HTTPException(missing_status, missing_detail)
+    # The issuing profile's absolute path is provenance, not a portable locator.
+    # Keep the catalog row intact and apply the same filename rule as restore.
+    try:
+        candidate = EXPORT_DIR.resolve() / filename
+        if candidate.resolve(strict=True) != candidate or not candidate.is_file():
+            raise HTTPException(missing_status, missing_detail)
+        payload = candidate.read_bytes()
+    except (OSError, RuntimeError):
+        raise HTTPException(missing_status, missing_detail) from None
+    if hashlib.sha256(payload).hexdigest() != pkg["sha256"]:
+        raise HTTPException(409, checksum_detail)
+    return payload
+
+
 def import_ai(data: ReviewV1 | ReviewInput, original: bytes) -> dict:
     pkg=one('SELECT * FROM ai_packages WHERE id=?',(data.package_id,))
     if not pkg:raise HTTPException(404,'AI package not found')
@@ -279,12 +303,7 @@ def import_ai(data: ReviewV1 | ReviewInput, original: bytes) -> dict:
     if isinstance(data, ReviewV1):
         if data.review_type != "PRE_TRADE":
             raise HTTPException(422, "Review type differs from the exported package")
-        path = Path(pkg["location"]).resolve()
-        if not path.is_relative_to(EXPORT_DIR.resolve()) or not path.is_file():
-            raise HTTPException(409, "Package file unavailable")
-        payload = path.read_bytes()
-        if hashlib.sha256(payload).hexdigest() != pkg["sha256"]:
-            raise HTTPException(409, "Package checksum mismatch")
+        payload = read_package_bytes(pkg)
         with zipfile.ZipFile(io.BytesIO(payload)) as archive:
             metrics = json.loads(archive.read("data/risk_metrics.json"))
             manifest = json.loads(archive.read("manifest.json"))
