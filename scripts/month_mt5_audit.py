@@ -27,6 +27,12 @@ def verified_bytes(path, expected, size_limit):
     return raw
 
 
+def on_point_grid(prices):
+    points = prices * 100000
+    # MT5 doubles may carry one binary rounding step from decimal conversion.
+    return np.all(np.abs(points - np.rint(points)) <= 2 * np.spacing(points))
+
+
 def day_ticks(directory, claim, start):
     day = datetime.fromtimestamp(start, UTC).date().isoformat()
     if (claim["day"], claim["start"], claim["end"]) != (day, start, start + 86400):
@@ -48,7 +54,8 @@ def day_ticks(directory, claim, start):
     if (np.any(ms < start * 1000) or np.any(ms >= (start + 86400) * 1000) or
             np.any(ms[1:] < ms[:-1]) or np.any(ticks["time"] != ms // 1000) or
             not np.isfinite(bid).all() or not np.isfinite(ask).all() or
-            np.any(bid <= 0) or np.any(ask < bid)):
+            np.any(bid <= 0) or np.any(ask < bid) or
+            not on_point_grid(bid) or not on_point_grid(ask)):
         raise ValueError(f"Invalid recorded EURUSD quote or timestamp: {day}")
     return ms
 

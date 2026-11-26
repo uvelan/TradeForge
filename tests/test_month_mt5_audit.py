@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 import numpy as np
 import pytest
 
-from scripts.month_mt5_audit import START, audit
+from scripts.month_mt5_audit import START, audit, on_point_grid
 
 
 def capture(tmp_path):
@@ -47,3 +47,8 @@ def test_changed_daily_bytes_or_manifest_pin_rejected(tmp_path):
     (tmp_path / "2025-11-07.npy").write_bytes(b"replacement")
     with pytest.raises(ValueError, match="2025-11-07"):
         audit(path, pin)
+
+
+def test_provider_double_encoding_vs_fractional_point():
+    assert on_point_grid(np.array([1.1529099999999999, 1.1534200000000001]))
+    assert not on_point_grid(np.array([1.152915]))
