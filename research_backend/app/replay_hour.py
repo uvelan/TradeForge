@@ -2,7 +2,7 @@
 from fastapi import HTTPException
 
 from .db import transaction
-from .indicator_coverage import MarketSchedule, aggregate_ohlc, inspect_window
+from .indicator_coverage import MarketSchedule, aggregate_ohlc, inspect_window, replay_availability
 from .indicators import Bar
 from .storage import iter_complete_partition
 
@@ -32,7 +32,7 @@ def verified_children(lane, visible):
                         continue
                     bar, available = by_time[stamp]
                     if (any(archived[k] != value for k, value in bar.items())
-                            or archived.get("available_at", stamp + STEP) != available):
+                            or replay_availability(archived, STEP) != available):
                         raise ValueError(f"M5 candle at {stamp} differs from captured replay")
                     if origins[stamp] and origins[stamp][-1] == pin:
                         raise ValueError(f"Ambiguous M5 source row at {stamp}")
@@ -59,7 +59,7 @@ def inspect_hour(session, view, hour_start, cutoff):
     coverage = lane["coverage"]
     bars = lane["candles"]
     left = bars[0]["time"] if bars and coverage["truncated"] else coverage["start"]
-    horizon = max(coverage["end"], bars[-1]["available_at"]) if bars else coverage["end"]
+    horizon = max(coverage["end"], replay_availability(bars[-1], STEP)) if bars else coverage["end"]
     end = hour_start + HOUR
     if (hour_start % HOUR or not left <= cutoff <= horizon or hour_start > cutoff
             or end <= left or hour_start >= coverage["end"]):
@@ -75,11 +75,15 @@ def inspect_hour(session, view, hour_start, cutoff):
     visible = []
     for row in bars:
         if hour_start <= row["time"] < end:
-            available = row["available_at"]
+            available = replay_availability(row, STEP)
             if type(available) is not int or available < row["time"] + STEP:
                 raise HTTPException(409, "Invalid M5 candle availability in replay")
             if available <= cutoff:
-                visible.append((Bar.model_validate(row), available))
+                try:
+                    bar = Bar.model_validate(row)
+                except ValueError as exc:
+                    raise HTTPException(409, f"Invalid replay M5 candle at {row['time']}") from exc
+                visible.append((bar, available))
     report = inspect_window(hour_start, end, STEP, visible, schedule, cutoff)
     status = report["status"]
     if status == "MARKET_CLOSED":

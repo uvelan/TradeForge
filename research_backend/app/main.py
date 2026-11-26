@@ -41,6 +41,7 @@ from .strategy_evaluation_routes import router as strategy_evaluation_router
 from .historical_strategy_routes import router as historical_strategy_router
 from .historical_strategy_worker import supervise as supervise_strategy_history
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
+from .indicator_coverage import replay_availability
 from .replay_hour import inspect_hour
 from .saved_history import chart_range, tick_partitions, read_tick_partitions, tick_source_manifests
 
@@ -556,8 +557,11 @@ def captured_replay(request:ReplayRequest,symbol:str,timeframe:str,cutoff:int):
             raise HTTPException(422,"No completed window for this replay timeframe")
     market=market_candles(symbol,timeframe,request.source,limit=600,include_latest=(request.source=="MT5"),
                           start=start,end=end)
-    bars=[{**bar,"available_at":bar.get("available_at",bar["time"]+step)} for bar in market["candles"]
-          if bar.get("available_at",bar["time"]+step)<=cutoff]
+    bars = []
+    for bar in market["candles"]:
+        available = replay_availability(bar, step)
+        if available <= cutoff:
+            bars.append({**bar, "available_at": available})
     if any(right["time"]<=left["time"] or right["available_at"]<left["available_at"]
            for left,right in zip(bars,bars[1:])):
         raise HTTPException(409,"Replay candle timestamps are inconsistent")
