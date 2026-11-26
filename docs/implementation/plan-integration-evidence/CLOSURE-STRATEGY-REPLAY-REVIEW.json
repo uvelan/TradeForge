@@ -1,0 +1,260 @@
+{
+  "audited_pr_head": "989b4f82ff3729b5d495527c3c034d0453621f73",
+  "comparison_main": "517f8122b633f9143324f99dd7b075c7c689df3f",
+  "platform": "Local Windows",
+  "natural_fvg": {
+    "recipe_file": "docs/implementation/plan-integration-evidence/REPLAY-FVG-DEFINITION.json",
+    "command": "python -m scripts.verify_recorded_backtest --source <local BI5 directory>",
+    "raw_capture_sha256": "9b8f2060c85f0b511a75036715bc5bbcffd79e43d3c8e95fea69ee7497eb68b7",
+    "api_parquet_opens": 2,
+    "worker_open_count_and_peak_bytes": [
+      [
+        2,
+        84267008
+      ]
+    ],
+    "seconds": 2.468266299998504,
+    "process_peak_bytes": 150446080,
+    "recipe": {
+      "evaluator_version": 6,
+      "purpose": "HISTORICAL_SIMULATION",
+      "selection_id": "WORKSPACE",
+      "selection_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+      "strategy_id": "ST-69da336874224c14a8ebc6fb6230ff0f",
+      "strategy_version_id": "SV-cc3c6c96697c46038168a8daa4eb6f41",
+      "configuration_fingerprint": "f8b850e6108bf37c308c66e22e243ffa0b0e79f1af35bf2117bbb62a0d1acd5b",
+      "partitions": [
+        "55e8bd216f5d2b9e2b130ddedd0579dce0aa54fd561cfb6e86a633228a127b0d",
+        "42d67cb27e0d1b3554cd2f787b4d3268f8fdd9b022a520e2ce68477a2b1f6ca4"
+      ],
+      "warmup_start": 1763038800,
+      "evaluation_start": 1763042400,
+      "cutoff": 1763046000
+    },
+    "decisions": [
+      {
+        "id": "HD-3891ad99f05393816c5e31cb905bc2e21d584ef2f1dab2002d6fd2c358330be3",
+        "attempt_id": "ATT-802f1527ed1ad17300de4246fffe7ba4e299156fae423f79b5a59abf1177bc23",
+        "state": "INVALIDATED",
+        "cutoff": 1763046000,
+        "reason": "EXPLICIT_INVALIDATION",
+        "available_at": 1763046000
+      }
+    ],
+    "positions": [],
+    "binding": {
+      "policy": "RECORDED_STRATEGY_POSITION_V1",
+      "run_id": "HR-86d444950273755ff68b7b0f317d19f6f7cd5fa5bd0564ae84c984c6afa446b6",
+      "symbol": "EURUSD",
+      "feed": "dukascopy-bi5-v2",
+      "basis": "BID_ASK_UNITS",
+      "start": 1763038800,
+      "end": 1763046000,
+      "sources": [
+        {
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "start": 1763038800,
+          "end": 1763042400
+        },
+        {
+          "partition": {
+            "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+            "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+          },
+          "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+          "start": 1763042400,
+          "end": 1763046000
+        }
+      ],
+      "delay_ms": 0,
+      "spread": "OBSERVED_BID_ASK",
+      "slippage_bps": 0.0,
+      "declared_commission_bps": 0.0,
+      "quantity_unit": "FRACTION_OF_INITIAL_POSITION",
+      "max_gap_ms": 60000,
+      "calendar": "DUKASCOPY_FX_NY17_V1"
+    },
+    "unverified_intervals_ms": [
+      [
+        1763038800000,
+        1763038800089
+      ],
+      [
+        1763045999826,
+        1763046000000
+      ]
+    ],
+    "intervals": [
+      {
+        "start_ms": 1763038800089,
+        "end_ms": 1763045999825
+      }
+    ],
+    "observed_quotes": 8636,
+    "parquet_reads": 2,
+    "bi5_reads": 2
+  },
+  "monthly_bid_rise": {
+    "recipe": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+    "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+    "source": "Original 13 November 2025 hourly EURUSD BI5 files supplied locally; no provider fetch.",
+    "hour_inventory": {
+      "SCHEDULED_CLOSURE": 238,
+      "MISSING_OPEN": 480,
+      "REGISTERED": 2
+    },
+    "before_exit": {
+      "cutoff": "2025-11-13T13:31:38.102+00:00",
+      "package_id": "PKG-734275E98869",
+      "event_kinds": [
+        "QUALIFIED",
+        "ENTRY"
+      ],
+      "metrics": {}
+    },
+    "at_exit": {
+      "cutoff": "2025-11-13T13:31:38.103+00:00",
+      "package_id": "PKG-1423CF30A34D",
+      "component_hashes": {
+        "data/replay.json": "829911a608165977a1ba3e9156801f70c176314182acdbe2b94488e628696195",
+        "response/AI_REVIEW_TEMPLATE.json": "85087f60299bbe3141f2c21935abbb811e3b3fd355635833eaeafb2678c90ca1"
+      },
+      "events": [
+        {
+          "kind": "QUALIFIED",
+          "quote": {
+            "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+            "partition": {
+              "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+              "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+            },
+            "ordinal": 5,
+            "time_ms": 1763038800666,
+            "bid_units": 116239,
+            "ask_units": 116242
+          },
+          "anchor": {
+            "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+            "partition": {
+              "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+              "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+            },
+            "ordinal": 0,
+            "time_ms": 1763038800089,
+            "bid_units": 116229,
+            "ask_units": 116231
+          },
+          "id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+          "available_at_ms": 1763038800666
+        },
+        {
+          "kind": "ENTRY",
+          "quote": {
+            "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+            "partition": {
+              "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+              "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+            },
+            "ordinal": 6,
+            "time_ms": 1763038800771,
+            "bid_units": 116239,
+            "ask_units": 116243
+          },
+          "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+          "side": "ASK",
+          "price_units": 116243,
+          "remaining": 1,
+          "id": "06ce962ed046b24e07194460e8c43a041296ec1985fe9ae200d2efba408c6b31",
+          "available_at_ms": 1763038800771
+        },
+        {
+          "kind": "STOP",
+          "quote": {
+            "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+            "partition": {
+              "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+              "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+            },
+            "ordinal": 1564,
+            "time_ms": 1763040698103,
+            "bid_units": 116143,
+            "ask_units": 116144
+          },
+          "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+          "side": "BID",
+          "price_units": 116143,
+          "remaining": 0,
+          "id": "282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387",
+          "available_at_ms": 1763040698103
+        }
+      ],
+      "metrics": {
+        "PRICE_CHANGE-282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387": {
+          "metric_id": "PRICE_CHANGE-282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387",
+          "value": "-0.00100",
+          "unit": "USD per EUR",
+          "available_at_ms": 1763040698103,
+          "interval_ms": [
+            1763038800771,
+            1763040698103
+          ],
+          "entry_ref": "06ce962ed046b24e07194460e8c43a041296ec1985fe9ae200d2efba408c6b31",
+          "exit_ref": "282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387",
+          "decision_ref": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+          "calculation": "exit BID minus entry ASK",
+          "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2"
+        }
+      }
+    },
+    "review_id": "REVIEW-EEF300D6A7DB",
+    "original_review_sha256": "2d00fdcd46c72b337f3e716bbf37df77c4365a02cef3c0090d5a1109c4f1b942",
+    "operator_decision": {
+      "sequence": 1,
+      "decision": "ACCEPTED",
+      "rationale": "Verified source ordinals 6 and 1564"
+    },
+    "browser": {
+      "spec": "frontend/paper-e2e/historical-package.spec.ts",
+      "phases": [
+        "package-create",
+        "package-restart"
+      ],
+      "elapsed_seconds": [
+        10.6,
+        6.1
+      ],
+      "api_port": 8781,
+      "ui_port": 4781,
+      "retries": 0,
+      "passed": [
+        1,
+        1
+      ]
+    },
+    "independent_check": "Decoded retained BI5 via lzma and >IIIff, found ordinals 5, 6, 1564 from raw bid thresholds and compared both sides and event milliseconds to exported receipts.",
+    "race": {
+      "distinct_json_uploads": 2,
+      "new_canonical_revisions": 1,
+      "revision_id": "REVIEW-937807DDA77A",
+      "original_sha256": "5692fe223c06dede08f0e4803841916ab46f38dd4e92e3cf61de8f9c5df819b2"
+    },
+    "raw_capture_sha256": "97c05fcf3e27cddac6c97e4c4e32a80943f79d6142608326e54d85474b4f3c78"
+  },
+  "pre_trade_package_regression": {
+    "implementation": "b4674d981dfced122090eb0708abd07a723b1074",
+    "test": "research_backend/tests/test_plan_paper.py::test_pre_trade_export_requires_an_unexecuted_paper_plan",
+    "input": "Independent controlled EURUSD paper-plan fixture",
+    "baseline_returned_after_entry": 201,
+    "candidate_before_entry": 201,
+    "candidate_after_entry": 422,
+    "candidate_after_exit": 422,
+    "existing_export_byte_identical": true,
+    "persisted_package_count": 1,
+    "focused_test_command": "python -m pytest -q research_backend/tests/test_plan_paper.py research_backend/tests/test_ai_evidence_snapshot.py research_backend/tests/test_review_package_relocation.py",
+    "focused_passed": 8
+  }
+}
