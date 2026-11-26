@@ -49,12 +49,28 @@ export type ConfluencePin = {
   receipt_id: string;
 };
 
-export type ConfluenceReceipt = ConfluencePin & {
+export type ConfluenceReceiptSummary = ConfluencePin & {
   session_id: string;
-  authority: 'RESEARCH_ONLY';
   status: ConfluenceStatus;
   reason: string;
   direction: ConfluenceDirection;
   first_available_at: number | null;
+};
+
+export type ConfluenceReceiptCursor = Pick<ConfluencePin, 'cutoff' | 'receipt_id'>;
+export type ConfluenceReceiptPage = {
+  receipts: ConfluenceReceiptSummary[];
+  next_cursor: ConfluenceReceiptCursor | null;
+  selected?: ConfluenceReceiptSummary | null;
+};
+
+export type ConfluenceCoverageRecovery = Pick<ConfluenceCandle,
+  'symbol' | 'time' | 'available_at' | 'availability_basis' | 'source_id' | 'partitions'> & {
+  nominal_close: number;
+};
+
+export type ConfluenceReceipt = ConfluenceReceiptSummary & {
+  authority: 'RESEARCH_ONLY';
+  coverage_recoveries?: ConfluenceCoverageRecovery[];
   components: {crt: ConfluenceComponent; smt: ConfluenceComponent};
 };

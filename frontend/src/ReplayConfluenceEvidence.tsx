@@ -4,6 +4,7 @@ import {EvidenceDisclosure, ReplaySourcePins, ReplaySourceTable, evidenceWords a
 import {replayEvidenceLanes, type ReplayEvidenceProps} from './replayEvidenceLanes';
 import {confluenceProfile, type ConfluenceCandle, type ConfluenceComponent, type ConfluencePin,
   type ConfluenceReceipt} from './replayConfluenceTypes';
+import {announceSavedConfluence, useSavedConfluenceReceipts} from './useSavedConfluenceReceipts';
 import {useWorkspacePreference} from './useWorkspacePreference';
 
 const title = 'Replay CRT and SMT confluence';
@@ -27,15 +28,6 @@ function isPin(item: unknown): item is ConfluencePin {
     Number.isSafeInteger(pin.cutoff) && typeof pin.receipt_id === 'string' && /^[a-f0-9]{64}$/.test(pin.receipt_id);
 }
 
-function readPins(key: string): ConfluencePin[] {
-  try {
-    const value: unknown = JSON.parse(localStorage.getItem(key) ?? '[]');
-    return Array.isArray(value) ? value.filter(isPin) : [];
-  } catch {
-    return [];
-  }
-}
-
 export function ReplayConfluenceEvidence({session, cutoff, symbol, timeframe, linkedViews}: ReplayEvidenceProps) {
   const [open, setOpen] = useWorkspacePreference('replay-confluence-open.' + session.id, 'off', ['on', 'off']);
   const coverage = session.market.coverage;
@@ -55,8 +47,8 @@ function receiptPath(sessionId: string, cutoff: number, pin?: ConfluencePin) {
   return '/replay/sessions/' + encodeURIComponent(sessionId) + '/confluence?' + query;
 }
 
-function verifyReceipt(value: ConfluenceReceipt, sessionId: string, cutoff: number, version: number, id?: string) {
-  if (value.session_id !== sessionId || value.cutoff !== cutoff || value.rule_version !== version ||
+function verifyReceipt(value: ConfluenceReceipt, sessionId: string, cutoff: number, version?: number, id?: string) {
+  if (value.session_id !== sessionId || value.cutoff !== cutoff || (version != null && value.rule_version !== version) ||
       !isPin(value) || value.authority !== 'RESEARCH_ONLY' || (id && value.receipt_id !== id)) {
     throw new Error('The confluence receipt does not match the requested replay, rule version and cutoff.');
   }
@@ -67,7 +59,7 @@ function useReceipt(sessionId: string, cutoff: number | null, pin?: ConfluencePi
   const request = useRef<{url: string; promise: Promise<ConfluenceReceipt>}>(undefined);
   const url = cutoff == null ? null : receiptPath(sessionId, cutoff, pin);
   const pinnedId = pin?.receipt_id;
-  const version = pin?.rule_version ?? 1;
+  const version = pin?.rule_version;
 
   useEffect(() => {
     if (!url || cutoff == null) {
@@ -90,20 +82,29 @@ function useReceipt(sessionId: string, cutoff: number | null, pin?: ConfluencePi
 }
 
 function ConfluenceInspector({sessionId, chartCutoff, start}: {sessionId: string; chartCutoff: number; start: number}) {
-  const pinsKey = 'tradeforge.replay-confluence-receipts.' + sessionId;
-  const [pins, setPins] = useState(() => readPins(pinsKey));
   const [selection, select] = useWorkspacePreference<string>('replay-confluence-selected.' + sessionId, '');
+  const [restore] = useState(() => /^[a-f0-9]{64}$/.test(selection) ? selection : undefined);
+  const [selectedPin, remember] = useState<ConfluencePin>();
   const [probe, setProbe] = useState<{chartCutoff: number; cutoff: number}>();
   const cutoff = probe?.chartCutoff === chartCutoff ? probe.cutoff : chartCutoff;
-  const availablePins = pins.filter(pin => pin.cutoff <= chartCutoff);
+  const savedList = useSavedConfluenceReceipts(sessionId, chartCutoff, restore);
+  const page = savedList.page;
+  const availablePins: ConfluencePin[] = (page?.receipts ?? []).filter(item =>
+    isPin(item) && item.session_id === sessionId && item.cutoff <= chartCutoff);
+  const extra = selectedPin ?? page?.selected;
+  if (isPin(extra) && extra.receipt_id === selection && extra.cutoff <= chartCutoff &&
+      !availablePins.some(item => item.receipt_id === extra.receipt_id)) {
+    availablePins.push(extra);
+  }
   const pin = availablePins.find(item => item.receipt_id === selection);
+  const awaitingSelection = Boolean(restore === selection && !page && savedList.loading);
   const [saveMessage, setSaveMessage] = useState('');
   const [saveError, setSaveError] = useState('');
   const [saving, setSaving] = useState(false);
   useEffect(() => {
     if (probe && probe.chartCutoff !== chartCutoff) setProbe(undefined);
   }, [probe, chartCutoff]);
-  const current = useReceipt(sessionId, pin ? null : cutoff);
+  const current = useReceipt(sessionId, pin || awaitingSelection ? null : cutoff);
   const saved = useReceipt(sessionId, pin?.cutoff ?? null, pin);
   const reading = pin ? saved : selection === follow ? current : undefined;
   const receipt = reading?.value;
@@ -119,14 +120,8 @@ function ConfluenceInspector({sessionId, chartCutoff, start}: {sessionId: string
     try {
       const pinned = await api.post<ConfluenceReceipt>(receiptPath(sessionId, cutoff, pin), {});
       verifyReceipt(pinned, sessionId, cutoff, rule_version, receipt_id);
-      const next = [pin, ...pins];
-      setPins(next);
-      try {
-        localStorage.setItem(pinsKey, JSON.stringify(next));
-        setSaveMessage('Exact receipt saved.');
-      } catch {
-        setSaveError('The server saved the receipt, but browser storage could not remember its selection.');
-      }
+      announceSavedConfluence(sessionId);
+      setSaveMessage('Exact receipt saved.');
     } catch (reason) {
       setSaveError(reason instanceof Error ? reason.message : String(reason));
     } finally {
@@ -135,7 +130,7 @@ function ConfluenceInspector({sessionId, chartCutoff, start}: {sessionId: string
   }
 
   return <section aria-label={title}>
-    <p><code>{confluenceProfile}</code> · Rule v1 · Research only</p>
+    <p><code>{confluenceProfile}</code> · Research only</p>
     <p>The latest EURUSD H1 CRT reference, built from M5 candles, and the newest EURUSD SMT candidate family
       must support the same direction. A low reclaim pairs with an active bullish confirmation. A high reclaim
       pairs with an active bearish confirmation. SMT uses exact GBPUSD M5 opens, pivot period 2, alignment 0,
@@ -145,22 +140,31 @@ function ConfluenceInspector({sessionId, chartCutoff, start}: {sessionId: string
       onCutoff={stamp => {setProbe({chartCutoff, cutoff: stamp}); select(follow);}}/>
     <div className="research-controls">
       <label>Confluence receipt <select value={pin || selection === follow ? selection : ''}
-        onChange={event => select(event.target.value)}>
+        onChange={event => {
+          const value = event.target.value;
+          remember(availablePins.find(item => item.receipt_id === value));
+          select(value);
+        }}>
         <option value="">Choose a confluence receipt</option>
         <option value={follow}>{currentLabel}</option>
         {availablePins.map(item => <option key={item.receipt_id} value={item.receipt_id}>
           Saved · {utc(item.cutoff)} · v{item.rule_version} · {item.receipt_id.slice(0, 12)}
         </option>)}
       </select></label>
+      {savedList.loadOlder && <button type="button" className="small-tool" disabled={savedList.loading}
+        onClick={savedList.loadOlder}>Load older saved receipts</button>}
+      {savedList.error && <button type="button" className="small-tool"
+        onClick={savedList.refresh}>Retry saved receipts</button>}
     </div>
-    {selection && selection !== follow && !pin &&
+    {savedList.error && <p role="alert">Saved receipts could not be loaded. {savedList.error}</p>}
+    {selection && selection !== follow && !pin && !awaitingSelection && !savedList.error &&
       <p role="status">The saved receipt is unavailable at this chart cutoff.</p>}
     {error && <p role="alert">{error}</p>}
     {!reading && (pin || !current) && <p role="status">Loading replay confluence…</p>}
     {saveMessage && <p role="status">{saveMessage}</p>}
     {saveError && <p role="alert">{saveError}</p>}
     {receipt && <ConfluenceDetail key={receipt.receipt_id} receipt={receipt}
-      showSave={!pins.some(item => item.receipt_id === receipt.receipt_id)} saving={saving} onSave={() => void save(receipt)}/>}
+      showSave={!availablePins.some(item => item.receipt_id === receipt.receipt_id)} saving={saving} onSave={() => void save(receipt)}/>}
   </section>;
 }
 
@@ -192,6 +196,7 @@ function ConfluenceDetail({receipt, showSave, saving, onSave}: {
       ['Receipt cutoff', timeValue(receipt.cutoff)], ['First available', timeValue(receipt.first_available_at)],
       ['Rule version', receipt.rule_version], ['Receipt ID', idValue(receipt.receipt_id)],
     ]}/>
+    <CoverageRecoveries receipt={receipt}/>
     {showSave && <div className="research-controls">
       <button type="button" className="small-tool" disabled={saving} onClick={onSave}>Save exact receipt</button>
     </div>}
@@ -200,6 +205,24 @@ function ConfluenceDetail({receipt, showSave, saving, onSave}: {
       <ComponentDetail name="SMT" scope="EURUSD and GBPUSD M5" component={receipt.components.smt}/>
     </div>
   </article>;
+}
+
+function CoverageRecoveries({receipt}: {receipt: ConfluenceReceipt}) {
+  const recoveries = receipt.coverage_recoveries;
+  if (receipt.rule_version === 1) return <p>Coverage recovery evidence is unavailable in this version 1 receipt.</p>;
+  if (!recoveries?.length) return null;
+  return <EvidenceDisclosure label={'Coverage recovery witnesses (' + recoveries.length + ')'}>
+    <ul aria-label="Coverage recovery witnesses">
+      {recoveries.map(witness => <li key={witness.source_id}>
+        <Fields label={witness.symbol + ' coverage recovery'} entries={[
+          ['Feed', witness.symbol], ['Candle open', timeValue(witness.time)],
+          ['Nominal close', timeValue(witness.nominal_close)], ['Available', timeValue(witness.available_at)],
+          ['Availability basis', words(witness.availability_basis)], ['Source ID', idValue(witness.source_id)],
+        ]}/>
+        <ReplaySourcePins rows={[witness]}/>
+      </li>)}
+    </ul>
+  </EvidenceDisclosure>;
 }
 
 function ComponentDetail({name, scope, component}: {name: string; scope: string; component: ConfluenceComponent}) {
