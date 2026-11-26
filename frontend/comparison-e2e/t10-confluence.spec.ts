@@ -823,3 +823,38 @@ test('@phase-discovery@end loads older pages and restores an older selected rece
     record('discovery-pagination', {session, first_page: firstPage, selected: earliest.receipt_id});
   });
 });
+
+
+test('@phase-quiet-reopen@end restores the saved coverage witness after restarting the API and browser', async ({baseURL, browser}) => {
+  const original = JSON.parse(readFileSync(join(output, 'quiet-coverage-recovery.json'), 'utf8')) as {
+    session: string; current: ConfluenceReceipt; legacy: ConfluenceReceipt; immutable_rows: {id: string; payload_sha256: string}[];
+  };
+  const context = await browser.newContext({baseURL, serviceWorkers: 'block'});
+  try {
+    const page = await context.newPage();
+    await resumeInTab(page, original.session, original.current.cutoff);
+    await panel(page).locator('summary').first().click();
+    for (const receipt of [original.legacy, original.current]) {
+      await expect(receiptOption(page, receipt.receipt_id)).toHaveCount(1);
+      const response = responseAt(page, receipt.cutoff, receipt.receipt_id);
+      await receiptSelect(page).selectOption(receipt.receipt_id);
+      expect((await response).receipt).toEqual(receipt);
+      await ready(page, receipt);
+    }
+    await selected(page).getByText('Coverage recovery witnesses (1)', {exact: true}).click();
+    const proof = selected(page).getByRole('list', {name: 'Coverage recovery witnesses'});
+    const witness = original.current.coverage_recoveries![0];
+    await expect(field(proof, 'Source ID')).toHaveText(witness.source_id);
+    await expect(field(proof, 'Available')).toHaveText(utc(witness.available_at));
+    for (const partition of witness.partitions) {
+      await expect(proof.getByText(partition.id, {exact: true})).toBeVisible();
+      await expect(proof.getByText(partition.sha256, {exact: true})).toBeVisible();
+    }
+    expect(persistedRows(original.session)).toEqual(original.immutable_rows);
+    record('quiet-reopened', {session: original.session, cutoff: original.current.cutoff,
+      original_id: original.legacy.receipt_id, recovered_id: original.current.receipt_id,
+      witness, immutable_rows: original.immutable_rows});
+  } finally {
+    await context.close();
+  }
+});
