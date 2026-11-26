@@ -69,10 +69,6 @@ def read_panes(session, cutoff):
         _, rows, children = verified_replay_rows(session, view, cutoff)
         start, end = capture_start(lane), lane["coverage"]["end"]
         meta = dict(**source(lane), partitions=lane["partitions"], start=start, end=end)
-        # Older captures can omit the materialized nominal arrival. The
-        # archive comparison above established the same basis for each row.
-        rows = [(bar if bar.available_at == available else bar.model_copy(update={"available_at":available}), available)
-                for bar, available in rows]
         panes[symbol] = dict(lane=lane, rows=rows, children=children, source=meta)
         # Checking the closed prefix also catches a missing trailing child that has
         # no successor yet. Never use the capture's eventual gap list at an earlier clock.
@@ -188,7 +184,11 @@ def smt_component(panes, cutoff):
         # The caller just verified these exact child bytes against the frozen
         # catalog. Preserve each child's own arrival, including a delayed peer.
         pane = panes[feed.symbol]
-        return dict(rows=pane["rows"], evidence=dict(context_authority=SIMULATION_AUTHORITY,
+        # Historical payloads may omit a materialized nominal close. Only the
+        # SMT simulator needs it populated on the bar as well as on the tuple.
+        rows = [(bar if bar.available_at == available else bar.model_copy(update={"available_at":available}), available)
+                for bar, available in pane["rows"]]
+        return dict(rows=rows, evidence=dict(context_authority=SIMULATION_AUTHORITY,
                     context_partitions=pane["source"]["partitions"], availability_policy=POLICY))
 
     selected = None

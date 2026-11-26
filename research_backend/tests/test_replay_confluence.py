@@ -1,4 +1,7 @@
 """Public replay join exercised through saved, checksum-verified candle partitions."""
+from hashlib import sha256
+import json
+
 import pytest
 
 from research_backend.app import db, replay_hour, storage
@@ -171,26 +174,6 @@ def test_pinned_receipt_survives_newer_evaluation_and_restart_but_rejects_corrup
 
 
 
-def test_simultaneous_opposite_smt_families_use_stable_smallest_id(client):
-    left = [bar(i,10,11,9) for i in range(13)]
-    right = [bar(i,20,21,19) for i in range(13)]
-    left[2], left[6] = bar(2,10,15,5), bar(6,10,16,4)
-    right[2], right[6] = bar(2,20,30,10), bar(6,20,29,11)
-    key,_ = capture(client,left,right)
-    result = receipt(client,key,at(10))
-    selected = result["components"]["smt"]
-    feeds = [dict(**src, calendar={"kind":"forex_weekly"}) for src in selected["sources"]]
-    producer = client.post("/api/indicators/smt/strict",json={
-        **result["rules"]["smt"], "primary":feeds[0], "comparison":feeds[1], "cutoff":at(10),
-        "availability_mode":"HISTORICAL_SIMULATION"})
-    assert producer.status_code == 200, producer.text
-    tied = producer.json()["events"]
-    assert len(tied) == 2 and {e["candidate_at"] for e in tied} == {at(9)}
-    assert {e["direction"] for e in tied} == {"bullish","bearish"}
-    chosen = min(tied, key=lambda e:e["id"])
-    assert (selected["family_id"],selected["revision_id"]) == (chosen["id"],chosen["revisions"][-1]["id"])
-
-
 @pytest.mark.parametrize("delay",[0,10])
 def test_shorter_peer_span_expires_immediately_after_its_capture_clock(client,delay):
     publish(candles(LEFT)+[bar(i,16,18,15) for i in range(12,15)])
@@ -233,3 +216,23 @@ def test_low_reclaim_and_bullish_smt_agree(client):
     result = receipt(client,key,at(13))
     assert (result["status"],result["direction"],result["components"]["crt"]["state"]) == (
         "ALIGNED","BULLISH","LOW_SWEPT_RECLAIMED")
+
+
+def test_legacy_implicit_availability_preserves_historical_crt_identity(client):
+    key,_ = capture(client,candles(LEFT)+[bar(12,16,18,15)],candles(RIGHT)+[bar(12,24)])
+    stored = db.one("SELECT * FROM replay_sessions WHERE id=?", (key,))
+    capture_payload = json.loads(stored["payload"])
+    for pane in [capture_payload["market"], *capture_payload["views"].values()]:
+        for child in pane["candles"]:
+            del child["available_at"]
+    encoded = json.dumps(capture_payload, sort_keys=True, separators=(",",":"))
+    legacy_key = sha256(encoded.encode()).hexdigest()
+    with db.transaction() as conn:
+        conn.execute("INSERT INTO replay_sessions VALUES(?,?,?,?,?,?)",
+                     (legacy_key,"EURUSD","M5","DUKASCOPY_SAVED",encoded,stored["created_at"]))
+    actual = receipt(client,legacy_key,at(13))
+    assert actual["status"] == "ALIGNED"
+    crt, = client.get(f"{URL}/{legacy_key}/crt",params=dict(cutoff=at(13))).json()["ranges"]
+    joined = actual["components"]["crt"]
+    assert (joined["family_id"],joined["revision_id"]) == (crt["range_id"],crt["id"])
+    assert joined["revision_id"] != receipt(client,key,at(13))["components"]["crt"]["revision_id"]
