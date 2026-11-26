@@ -1,0 +1,77 @@
+{
+  "tested_sha": "928f8558cb435665085c4401712ce73f7729178b",
+  "os": "Windows",
+  "python": "3.13.14",
+  "node": "24.14.0",
+  "npm": "11.1.0",
+  "runs": [
+    {
+      "name": "frontend-build",
+      "command": "npm --prefix frontend run build",
+      "start": "2026-11-26T09:35:50.558Z",
+      "finished": "2026-11-26T09:36:17.652Z",
+      "elapsed_seconds": 21.2406454,
+      "exit_code": 0
+    },
+    {
+      "name": "frontend-unit",
+      "command": "npm --prefix frontend test",
+      "start": "2026-11-26T09:35:50.558Z",
+      "finished": "2026-11-26T09:35:57.862Z",
+      "elapsed_seconds": 1.5310174,
+      "exit_code": 0
+    },
+    {
+      "name": "standard-chromium",
+      "command": "npm --prefix frontend run e2e -- --retries=0",
+      "start": "2026-11-26T09:35:50.558Z",
+      "finished": "2026-11-26T09:43:19.952Z",
+      "elapsed_seconds": 443.5584975,
+      "exit_code": 0
+    },
+    {
+      "name": "oracle-combined",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_zones --source-storage storage --output docs/implementation/evidence/T10-ZONES/oracle-combined.json",
+      "start": "2026-11-26T09:35:50.558Z",
+      "finished": "2026-11-26T09:39:29.521Z",
+      "elapsed_seconds": 216.14553,
+      "exit_code": 0
+    },
+    {
+      "name": "full-backend",
+      "command": ".venv/Scripts/python.exe -m pytest -q",
+      "start": "2026-11-26T09:35:50.557Z",
+      "finished": "2026-11-26T09:46:58.041Z",
+      "elapsed_seconds": 661.8449804,
+      "exit_code": 0
+    }
+  ],
+  "backend": {
+    "passed": 1150,
+    "skipped": 1,
+    "warning": "Starlette TestClient httpx deprecation",
+    "skip": "POSIX FIFO fixture"
+  },
+  "frontend": {
+    "unit_passed": 13,
+    "build": "PASS",
+    "chromium_passed": 88,
+    "chromium_retries": 0
+  },
+  "genuine_browser": {
+    "initial_active_tests_passed": 2,
+    "restart_active_tests_passed": 2,
+    "initial_seconds": 40.4,
+    "restart_seconds": 33.92,
+    "retries": 0,
+    "each_invocation_filters_the_opposite_phase": true
+  },
+  "previous_structure_recheck_seconds": 42.99,
+  "focused_backend": {
+    "passed": 139,
+    "seconds": 26.84
+  },
+  "api_benchmark_seconds": 32.586,
+  "ui_common_measurement_seconds": 21.292,
+  "legacy_fingerprints_exact": 8
+}
