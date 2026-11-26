@@ -1,7 +1,7 @@
 {
   "case": "missing",
   "baseline_git_revision": "4e03463a36f176b701ba36558bf03ffa9c8795a2",
-  "fixed_git_revision": "018df92c18f1174dc33dc7b20140b97017977dca",
+  "fixed_git_revision": "57157f1f4898d818c99505e95447bd99b774ab8b",
   "session_id": "625583e3783a6aa8df50a277f137656057da7ce5ed6cee1bd9113f02817d95a7",
   "manifest": {
     "date_utc": "2026-11-13",

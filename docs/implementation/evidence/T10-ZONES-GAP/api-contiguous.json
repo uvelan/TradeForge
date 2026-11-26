@@ -1,7 +1,7 @@
 {
   "case": "contiguous",
   "baseline_git_revision": "4e03463a36f176b701ba36558bf03ffa9c8795a2",
-  "fixed_git_revision": "018df92c18f1174dc33dc7b20140b97017977dca",
+  "fixed_git_revision": "57157f1f4898d818c99505e95447bd99b774ab8b",
   "session_id": "304b68632abb3fddd58095a802b18d8785eae9535e81c0e56b22e6e700939a04",
   "manifest": {
     "date_utc": "2026-11-13",
