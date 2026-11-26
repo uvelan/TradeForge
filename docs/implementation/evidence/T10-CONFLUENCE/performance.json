@@ -1,0 +1,1164 @@
+{
+  "revision": "694aa2b90ee06246af3909f8913b1619b3961eb3",
+  "started_at": "2026-11-26T11:52:42+00:00",
+  "finished_at": "2026-11-26T11:53:18+00:00",
+  "method": "Serial in-process HTTP against a Windows TestClient. Fresh-process samples reopen the saved checkpoint and optionally perform one current or pinned read; startup and import are excluded. Warm samples compare step/rewind/current/explicit save/pinned reads and separate legacy CRT detail plus SMT requests on the same pinned market. Save samples repeat explicit save of the same ID. OS page cache is uncontrolled.",
+  "counters": "HTTP bytes measure serialized request and response bodies. SQL counts are trace callbacks. Verified snapshot and direct hash bytes count total archive bytes verified, while decoded rows count Parquet rows decoded by the backend. All counts include OS cache hits. The strict SMT component returns event/pivot metadata; the joined receipt includes more source-row proof than the separate indicator responses.",
+  "coverage_utc": [
+    "2026-11-13T12:00:00Z",
+    "2026-11-13T16:00:00Z"
+  ],
+  "clocks_utc": [
+    "2026-11-13T13:20:00Z",
+    "2026-11-13T13:25:00Z",
+    "2026-11-13T13:30:00Z",
+    "2026-11-13T14:00:00Z",
+    "2026-11-13T14:25:00Z",
+    "2026-11-13T15:40:00Z",
+    "2026-11-13T16:00:00Z"
+  ],
+  "pins": {
+    "EURUSD": {
+      "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+      "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+    },
+    "GBPUSD": {
+      "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+      "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+    }
+  },
+  "peak_working_set_kib": {
+    "cold-reopen": [
+      92792,
+      92908,
+      92808,
+      92688,
+      92924,
+      92800
+    ],
+    "cold-current": [
+      122616,
+      121160,
+      121224,
+      121184,
+      121276,
+      121116
+    ],
+    "cold-pinned": [
+      121016,
+      120944,
+      121212,
+      121120,
+      121064,
+      120872
+    ],
+    "warm": 126168
+  },
+  "timings": {
+    "cold-reopen": {
+      "samples": 6,
+      "p50_ms": 50.183,
+      "p95_ms": 83.562,
+      "min_ms": 48.757,
+      "max_ms": 90.748,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          0,
+          0
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          1,
+          1
+        ],
+        "http_response_bytes": [
+          13290,
+          13290
+        ],
+        "parquet_opens": [
+          0,
+          0
+        ],
+        "replay_database_connections": [
+          2,
+          2
+        ],
+        "sql_selects": [
+          2,
+          2
+        ],
+        "sql_statements": [
+          2,
+          2
+        ],
+        "verified_archive_bytes": [
+          0,
+          0
+        ],
+        "verified_artifacts": [
+          0,
+          0
+        ],
+        "verified_snapshot_bytes": [
+          0,
+          0
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ],
+        "returned_components": [
+          0,
+          0
+        ],
+        "returned_revisions": [
+          0,
+          0
+        ],
+        "returned_evidence_rows": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        48.757,
+        50.446,
+        49.758,
+        90.748,
+        62.005,
+        49.92
+      ]
+    },
+    "cold-current": {
+      "samples": 6,
+      "p50_ms": 348.643,
+      "p95_ms": 364.25,
+      "min_ms": 340.461,
+      "max_ms": 366.93,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          528,
+          528
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          2,
+          2
+        ],
+        "http_response_bytes": [
+          56868,
+          56868
+        ],
+        "parquet_opens": [
+          2,
+          2
+        ],
+        "replay_database_connections": [
+          6,
+          6
+        ],
+        "returned_components": [
+          2,
+          2
+        ],
+        "returned_evidence_rows": [
+          49,
+          49
+        ],
+        "returned_revisions": [
+          6,
+          6
+        ],
+        "sql_selects": [
+          6,
+          6
+        ],
+        "sql_statements": [
+          10,
+          10
+        ],
+        "verified_archive_bytes": [
+          20818,
+          20818
+        ],
+        "verified_artifacts": [
+          2,
+          2
+        ],
+        "verified_snapshot_bytes": [
+          20818,
+          20818
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        340.869,
+        347.982,
+        366.93,
+        340.461,
+        356.208,
+        349.303
+      ]
+    },
+    "cold-pinned": {
+      "samples": 6,
+      "p50_ms": 345.295,
+      "p95_ms": 379.352,
+      "min_ms": 339.339,
+      "max_ms": 387.353,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          528,
+          528
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          2,
+          2
+        ],
+        "http_response_bytes": [
+          56868,
+          56868
+        ],
+        "parquet_opens": [
+          2,
+          2
+        ],
+        "replay_database_connections": [
+          7,
+          7
+        ],
+        "returned_components": [
+          2,
+          2
+        ],
+        "returned_evidence_rows": [
+          49,
+          49
+        ],
+        "returned_revisions": [
+          6,
+          6
+        ],
+        "sql_selects": [
+          7,
+          7
+        ],
+        "sql_statements": [
+          11,
+          11
+        ],
+        "verified_archive_bytes": [
+          20818,
+          20818
+        ],
+        "verified_artifacts": [
+          2,
+          2
+        ],
+        "verified_snapshot_bytes": [
+          20818,
+          20818
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        339.339,
+        355.35,
+        345.851,
+        387.353,
+        344.738,
+        343.632
+      ]
+    },
+    "warm_current_list_step": {
+      "samples": 28,
+      "p50_ms": 22.08,
+      "p95_ms": 27.603,
+      "min_ms": 19.641,
+      "max_ms": 28.81,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          528,
+          528
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          1,
+          1
+        ],
+        "http_response_bytes": [
+          38735,
+          73465
+        ],
+        "parquet_opens": [
+          2,
+          2
+        ],
+        "replay_database_connections": [
+          4,
+          5
+        ],
+        "returned_components": [
+          2,
+          2
+        ],
+        "returned_evidence_rows": [
+          47,
+          101
+        ],
+        "returned_revisions": [
+          3,
+          8
+        ],
+        "sql_selects": [
+          4,
+          6
+        ],
+        "sql_statements": [
+          8,
+          13
+        ],
+        "verified_archive_bytes": [
+          20818,
+          20818
+        ],
+        "verified_artifacts": [
+          2,
+          2
+        ],
+        "verified_snapshot_bytes": [
+          20818,
+          20818
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        21.43,
+        20.859,
+        22.282,
+        22.691,
+        23.496,
+        27.235,
+        27.626,
+        19.641,
+        21.03,
+        21.837,
+        20.714,
+        22.415,
+        26.308,
+        28.81,
+        20.396,
+        20.786,
+        22.005,
+        21.425,
+        22.155,
+        26.961,
+        27.463,
+        20.272,
+        20.459,
+        21.762,
+        21.078,
+        22.619,
+        27.152,
+        27.561
+      ]
+    },
+    "warm_current_rewind": {
+      "samples": 28,
+      "p50_ms": 22.515,
+      "p95_ms": 31.46,
+      "min_ms": 19.782,
+      "max_ms": 70.591,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          528,
+          528
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          1,
+          1
+        ],
+        "http_response_bytes": [
+          38735,
+          73465
+        ],
+        "parquet_opens": [
+          2,
+          2
+        ],
+        "replay_database_connections": [
+          4,
+          4
+        ],
+        "returned_components": [
+          2,
+          2
+        ],
+        "returned_evidence_rows": [
+          47,
+          101
+        ],
+        "returned_revisions": [
+          3,
+          8
+        ],
+        "sql_selects": [
+          4,
+          4
+        ],
+        "sql_statements": [
+          8,
+          8
+        ],
+        "verified_archive_bytes": [
+          20818,
+          20818
+        ],
+        "verified_artifacts": [
+          2,
+          2
+        ],
+        "verified_snapshot_bytes": [
+          20818,
+          20818
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        27.319,
+        26.699,
+        21.922,
+        21.052,
+        21.551,
+        21.842,
+        24.484,
+        32.365,
+        29.781,
+        22.67,
+        22.775,
+        21.528,
+        21.759,
+        21.951,
+        28.04,
+        70.591,
+        23.895,
+        22.591,
+        21.77,
+        20.833,
+        20.924,
+        27.14,
+        25.624,
+        23.19,
+        22.33,
+        22.315,
+        22.439,
+        19.782
+      ]
+    },
+    "warm_current_same_clock": {
+      "samples": 4,
+      "p50_ms": 20.561,
+      "p95_ms": 21.239,
+      "min_ms": 19.964,
+      "max_ms": 21.286,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          528,
+          528
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          1,
+          1
+        ],
+        "http_response_bytes": [
+          43578,
+          43578
+        ],
+        "parquet_opens": [
+          2,
+          2
+        ],
+        "replay_database_connections": [
+          4,
+          4
+        ],
+        "returned_components": [
+          2,
+          2
+        ],
+        "returned_evidence_rows": [
+          49,
+          49
+        ],
+        "returned_revisions": [
+          6,
+          6
+        ],
+        "sql_selects": [
+          4,
+          4
+        ],
+        "sql_statements": [
+          8,
+          8
+        ],
+        "verified_archive_bytes": [
+          20818,
+          20818
+        ],
+        "verified_artifacts": [
+          2,
+          2
+        ],
+        "verified_snapshot_bytes": [
+          20818,
+          20818
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        19.964,
+        20.977,
+        20.146,
+        21.286
+      ]
+    },
+    "warm_pinned_same_clock": {
+      "samples": 4,
+      "p50_ms": 19.781,
+      "p95_ms": 20.472,
+      "min_ms": 19.523,
+      "max_ms": 20.579,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          528,
+          528
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          1,
+          1
+        ],
+        "http_response_bytes": [
+          43578,
+          43578
+        ],
+        "parquet_opens": [
+          2,
+          2
+        ],
+        "replay_database_connections": [
+          5,
+          6
+        ],
+        "returned_components": [
+          2,
+          2
+        ],
+        "returned_evidence_rows": [
+          49,
+          49
+        ],
+        "returned_revisions": [
+          6,
+          6
+        ],
+        "sql_selects": [
+          5,
+          7
+        ],
+        "sql_statements": [
+          9,
+          14
+        ],
+        "verified_archive_bytes": [
+          20818,
+          20818
+        ],
+        "verified_artifacts": [
+          2,
+          2
+        ],
+        "verified_snapshot_bytes": [
+          20818,
+          20818
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        19.863,
+        20.579,
+        19.7,
+        19.523
+      ]
+    },
+    "warm_pinned_rewind": {
+      "samples": 28,
+      "p50_ms": 21.142,
+      "p95_ms": 25.433,
+      "min_ms": 18.182,
+      "max_ms": 42.087,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          528,
+          528
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          1,
+          1
+        ],
+        "http_response_bytes": [
+          38735,
+          73465
+        ],
+        "parquet_opens": [
+          2,
+          2
+        ],
+        "replay_database_connections": [
+          5,
+          5
+        ],
+        "returned_components": [
+          2,
+          2
+        ],
+        "returned_evidence_rows": [
+          47,
+          101
+        ],
+        "returned_revisions": [
+          3,
+          8
+        ],
+        "sql_selects": [
+          5,
+          5
+        ],
+        "sql_statements": [
+          9,
+          9
+        ],
+        "verified_archive_bytes": [
+          20818,
+          20818
+        ],
+        "verified_artifacts": [
+          2,
+          2
+        ],
+        "verified_snapshot_bytes": [
+          20818,
+          20818
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        23.314,
+        23.065,
+        19.338,
+        19.535,
+        19.732,
+        18.657,
+        19.748,
+        21.969,
+        22.199,
+        18.8,
+        18.982,
+        20.082,
+        18.497,
+        18.678,
+        22.756,
+        21.799,
+        19.068,
+        18.182,
+        23.628,
+        23.81,
+        22.128,
+        25.718,
+        22.443,
+        42.087,
+        24.903,
+        20.787,
+        21.051,
+        21.234
+      ]
+    },
+    "warm_save_current_selection": {
+      "samples": 4,
+      "p50_ms": 47.885,
+      "p95_ms": 48.727,
+      "min_ms": 44.792,
+      "max_ms": 48.821,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          1056,
+          1056
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          2,
+          2
+        ],
+        "http_response_bytes": [
+          87156,
+          87156
+        ],
+        "parquet_opens": [
+          4,
+          4
+        ],
+        "replay_database_connections": [
+          9,
+          9
+        ],
+        "returned_components": [
+          4,
+          4
+        ],
+        "returned_evidence_rows": [
+          98,
+          98
+        ],
+        "returned_revisions": [
+          12,
+          12
+        ],
+        "sql_selects": [
+          9,
+          9
+        ],
+        "sql_statements": [
+          20,
+          20
+        ],
+        "verified_archive_bytes": [
+          41636,
+          41636
+        ],
+        "verified_artifacts": [
+          4,
+          4
+        ],
+        "verified_snapshot_bytes": [
+          41636,
+          41636
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        47.575,
+        48.196,
+        48.821,
+        44.792
+      ]
+    },
+    "warm_crt_component_list": {
+      "samples": 4,
+      "p50_ms": 11.995,
+      "p95_ms": 12.05,
+      "min_ms": 11.639,
+      "max_ms": 12.058,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          264,
+          264
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          1,
+          1
+        ],
+        "http_response_bytes": [
+          2181,
+          2181
+        ],
+        "parquet_opens": [
+          1,
+          1
+        ],
+        "replay_database_connections": [
+          3,
+          3
+        ],
+        "returned_components": [
+          1,
+          1
+        ],
+        "sql_selects": [
+          3,
+          3
+        ],
+        "sql_statements": [
+          5,
+          5
+        ],
+        "verified_archive_bytes": [
+          10538,
+          10538
+        ],
+        "verified_artifacts": [
+          1,
+          1
+        ],
+        "verified_snapshot_bytes": [
+          10538,
+          10538
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ],
+        "returned_revisions": [
+          0,
+          0
+        ],
+        "returned_evidence_rows": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        11.639,
+        11.988,
+        12.003,
+        12.058
+      ]
+    },
+    "warm_crt_component_drill": {
+      "samples": 4,
+      "p50_ms": 12.84,
+      "p95_ms": 13.305,
+      "min_ms": 12.212,
+      "max_ms": 13.361,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          264,
+          264
+        ],
+        "file_digest_calls": [
+          0,
+          0
+        ],
+        "http_request_bytes": [
+          0,
+          0
+        ],
+        "http_requests": [
+          1,
+          1
+        ],
+        "http_response_bytes": [
+          21197,
+          21197
+        ],
+        "parquet_opens": [
+          1,
+          1
+        ],
+        "replay_database_connections": [
+          3,
+          3
+        ],
+        "returned_components": [
+          1,
+          1
+        ],
+        "returned_evidence_rows": [
+          15,
+          15
+        ],
+        "returned_revisions": [
+          4,
+          4
+        ],
+        "sql_selects": [
+          3,
+          3
+        ],
+        "sql_statements": [
+          5,
+          5
+        ],
+        "verified_archive_bytes": [
+          10538,
+          10538
+        ],
+        "verified_artifacts": [
+          1,
+          1
+        ],
+        "verified_snapshot_bytes": [
+          10538,
+          10538
+        ],
+        "verified_direct_bytes": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        12.988,
+        13.361,
+        12.692,
+        12.212
+      ]
+    },
+    "warm_smt_component": {
+      "samples": 4,
+      "p50_ms": 17.117,
+      "p95_ms": 18.393,
+      "min_ms": 16.634,
+      "max_ms": 18.584,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          528,
+          528
+        ],
+        "file_digest_calls": [
+          2,
+          2
+        ],
+        "http_request_bytes": [
+          1029,
+          1029
+        ],
+        "http_requests": [
+          1,
+          1
+        ],
+        "http_response_bytes": [
+          18657,
+          18657
+        ],
+        "parquet_opens": [
+          2,
+          2
+        ],
+        "replay_database_connections": [
+          4,
+          5
+        ],
+        "returned_components": [
+          1,
+          1
+        ],
+        "returned_evidence_rows": [
+          0,
+          0
+        ],
+        "returned_revisions": [
+          2,
+          2
+        ],
+        "sql_selects": [
+          4,
+          6
+        ],
+        "sql_statements": [
+          4,
+          9
+        ],
+        "verified_archive_bytes": [
+          20818,
+          20818
+        ],
+        "verified_artifacts": [
+          0,
+          0
+        ],
+        "verified_direct_bytes": [
+          20818,
+          20818
+        ],
+        "verified_snapshot_bytes": [
+          0,
+          0
+        ]
+      },
+      "latency_ms": [
+        17.313,
+        16.634,
+        18.584,
+        16.921
+      ]
+    },
+    "warm_compose_component_reads": {
+      "samples": 4,
+      "p50_ms": 41.774,
+      "p95_ms": 41.966,
+      "min_ms": 40.175,
+      "max_ms": 41.971,
+      "counts_per_sample_min_max": {
+        "decoded_rows": [
+          1056,
+          1056
+        ],
+        "file_digest_calls": [
+          2,
+          2
+        ],
+        "http_request_bytes": [
+          1029,
+          1029
+        ],
+        "http_requests": [
+          3,
+          3
+        ],
+        "http_response_bytes": [
+          42035,
+          42035
+        ],
+        "parquet_opens": [
+          4,
+          4
+        ],
+        "replay_database_connections": [
+          10,
+          10
+        ],
+        "returned_components": [
+          3,
+          3
+        ],
+        "returned_evidence_rows": [
+          15,
+          15
+        ],
+        "returned_revisions": [
+          6,
+          6
+        ],
+        "sql_selects": [
+          10,
+          10
+        ],
+        "sql_statements": [
+          14,
+          14
+        ],
+        "verified_archive_bytes": [
+          41894,
+          41894
+        ],
+        "verified_artifacts": [
+          2,
+          2
+        ],
+        "verified_direct_bytes": [
+          20818,
+          20818
+        ],
+        "verified_snapshot_bytes": [
+          21076,
+          21076
+        ]
+      },
+      "latency_ms": [
+        41.938,
+        41.971,
+        41.609,
+        40.175
+      ]
+    }
+  }
+}

@@ -1,0 +1,3786 @@
+{
+  "revision": "694aa2b90ee06246af3909f8913b1619b3961eb3",
+  "verified_at": "2026-11-26T11:52:17+00:00",
+  "method": "Independent Decimal wick pivot and H1-to-M5 CRT lifecycles from verified source OHLC. GET requests cover the entire pinned acceptance window at T-1 and T for each close and delayed publication. Controlled OHLC rows are synthetic.",
+  "cases": {
+    "genuine": {
+      "session": "525f50e92235e4a44fab141a5007e83bc6fbfeee9cf98ae9340c588729152c28",
+      "case": "genuine",
+      "coverage_utc": [
+        "2026-11-13T12:00:00Z",
+        "2026-11-13T16:00:00Z"
+      ],
+      "sources": {
+        "EURUSD": {
+          "partitions": [
+            {
+              "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+              "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+            }
+          ],
+          "basis": "MODELED_NOMINAL_CLOSE",
+          "csv_sha256": "bc2e49a78edad37b73ac1bcdc006892f54aab60c3e769ec837998773cb5960f6"
+        },
+        "GBPUSD": {
+          "partitions": [
+            {
+              "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+              "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+            }
+          ],
+          "basis": "MODELED_NOMINAL_CLOSE",
+          "csv_sha256": "a2b4947d5e79198920589263a9626e476012650a09d8ba52386e244ab78c1928"
+        }
+      },
+      "boundaries_checked": 97,
+      "rewind_reads": 194,
+      "transitions": [
+        {
+          "utc": "2026-11-13T12:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_CRT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": null,
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_CRT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "c8461ff5fce854f1b8ef7b1f1453b82463229decd59570d75cca07c9497d23a2"
+        },
+        {
+          "utc": "2026-11-13T13:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+              "revision_id": "e8e20e159f4457744b688fbae893b6ae689119f736fc1a7d167f8b48214ab4e6",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T13:00:00Z",
+              "observation_time": "2026-11-13T12:00:00Z",
+              "confirmation_time": "2026-11-13T13:00:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "60a92a43179845287ce7e7910a702235005db58925c880c323c9c45c97d9a931"
+        },
+        {
+          "utc": "2026-11-13T13:05:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "HIGH_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+              "revision_id": "d1d73f7816175e43df4377772af64f4041327dac485d5d4716bb9b63ba6b556b",
+              "revision": 2,
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T13:05:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T13:05:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "8278f75b6f2dce824c8d6786a9232c61636d4495348ca7c05fe24ff7d8e76fac"
+        },
+        {
+          "utc": "2026-11-13T13:10:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "HIGH_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+              "revision_id": "49aece0c332eeb7d5cea03ec280acb3b87bf1611acc61d77cf4231a6cff9b176",
+              "revision": 3,
+              "state": "HIGH_SWEPT_RECLAIMED",
+              "reason": "NEW_SWEEP_EXTREME",
+              "available_at": "2026-11-13T13:10:00Z",
+              "observation_time": "2026-11-13T13:05:00Z",
+              "confirmation_time": "2026-11-13T13:10:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "96bbdca4fc0fec353fd6f7a2c9b91a928939ad634c7da4cf6fe83d008b09a398"
+        },
+        {
+          "utc": "2026-11-13T13:20:00Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+              "revision_id": "828cf3b23c25fca8b0efa8aeb4c5a5620a33f7be59ce2d05db5a86b12e11c451",
+              "revision": 4,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T13:20:00Z",
+              "observation_time": "2026-11-13T13:15:00Z",
+              "confirmation_time": "2026-11-13T13:20:00Z"
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2283b00d97e3c216c0c142f48303f315cb89fce5f6407a4b6e8135e33f357318",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T13:20:00Z",
+              "observation_time": "2026-11-13T12:55:00Z",
+              "confirmation_time": "2026-11-13T13:20:00Z"
+            }
+          },
+          "receipt_id": "b5198f8f7c192bf81bb4c180372487bbaa655c22fc2e733ffaf1e894924fc181"
+        },
+        {
+          "utc": "2026-11-13T13:25:00Z",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BEARISH",
+          "first_available_at": "2026-11-13T13:25:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+              "revision_id": "828cf3b23c25fca8b0efa8aeb4c5a5620a33f7be59ce2d05db5a86b12e11c451",
+              "revision": 4,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T13:20:00Z",
+              "observation_time": "2026-11-13T13:15:00Z",
+              "confirmation_time": "2026-11-13T13:20:00Z"
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "c04e4d87c513f365988fa35d9e81f4c67eb80afb603623b550b7d82e012c9ff0",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T13:25:00Z",
+              "observation_time": "2026-11-13T13:20:00Z",
+              "confirmation_time": "2026-11-13T13:25:00Z"
+            }
+          },
+          "receipt_id": "fc5627b440c2fff1f9f90d86738b6a5250506e06eeb1acb35841fcd735b1fe89"
+        },
+        {
+          "utc": "2026-11-13T13:30:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T13:30:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "INVALIDATED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "022c601e8cbbc801da0b38320e32e766e626cb04332b5ff794f3e1f73a43ef1c",
+              "revision_id": "9ca2e4a3914f74ee8fa0661999fa5e4e7466b83d544cb174486d985910642405",
+              "revision": 5,
+              "state": "INVALIDATED",
+              "reason": "CLOSE_BEYOND_INVALIDATION",
+              "available_at": "2026-11-13T13:30:00Z",
+              "observation_time": "2026-11-13T13:25:00Z",
+              "confirmation_time": "2026-11-13T13:30:00Z"
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T13:30:00Z",
+              "observation_time": "2026-11-13T13:25:00Z",
+              "confirmation_time": "2026-11-13T13:30:00Z"
+            }
+          },
+          "receipt_id": "0140bfc09f53985186ce083c4afd5c1a564f6f2168d7cc0d81733168cd0e70ec"
+        },
+        {
+          "utc": "2026-11-13T14:00:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:00:00Z",
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+              "revision_id": "9a8b0b829e8d37b0305dd8c5572c46856c43f2ba93c064080982806a72b9dacb",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T14:00:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z"
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T13:30:00Z",
+              "observation_time": "2026-11-13T13:25:00Z",
+              "confirmation_time": "2026-11-13T13:30:00Z"
+            }
+          },
+          "receipt_id": "5cce87c5ef3bd647e7fa94d356628715f3988bfca986e09d5a4bd0c783b51db1"
+        },
+        {
+          "utc": "2026-11-13T14:25:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "SMT_NOT_CONFIRMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:25:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+              "revision_id": "ac8ce76376f1162fb2c4cec4d8291f638bc4fb999dddfa2bc130cd431a2688ce",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T13:30:00Z",
+              "observation_time": "2026-11-13T13:25:00Z",
+              "confirmation_time": "2026-11-13T13:30:00Z"
+            }
+          },
+          "receipt_id": "486913cd041c4973ead622abfdeb5eb80eb11c32f4a2a5f57b47e93c93caf44c"
+        },
+        {
+          "utc": "2026-11-13T14:30:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "SMT_NOT_CONFIRMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:30:00Z",
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+              "revision_id": "7f5f533619cd19b59c174cf82ed36bd2fda292096cc32c603532f1befb57d82c",
+              "revision": 3,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "OUTSIDE_CLOSE",
+              "available_at": "2026-11-13T14:30:00Z",
+              "observation_time": "2026-11-13T14:25:00Z",
+              "confirmation_time": "2026-11-13T14:30:00Z"
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T13:30:00Z",
+              "observation_time": "2026-11-13T13:25:00Z",
+              "confirmation_time": "2026-11-13T13:30:00Z"
+            }
+          },
+          "receipt_id": "9be6481904e8cc3d50c1bef2fc3f0c54743fac01d04e4de72d8e829009cf82cc"
+        },
+        {
+          "utc": "2026-11-13T14:55:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "SMT_NOT_CONFIRMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:55:00Z",
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "02bba45560968fd25dce5af82a5b8ac4bfe517289625e10a53a4a09b8f147bae",
+              "revision_id": "075e7d5afbb240d52ede507ea6aa371e2bafc7b78d4527e67c30d8c6561ec4a8",
+              "revision": 4,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:55:00Z",
+              "observation_time": "2026-11-13T14:50:00Z",
+              "confirmation_time": "2026-11-13T14:55:00Z"
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T13:30:00Z",
+              "observation_time": "2026-11-13T13:25:00Z",
+              "confirmation_time": "2026-11-13T13:30:00Z"
+            }
+          },
+          "receipt_id": "8a560a6ad401016fff8a0b9063f15d64055ab0d8f2d0e1de6f7bed821ece0030"
+        },
+        {
+          "utc": "2026-11-13T15:00:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T15:00:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "81d3c9c6a9b85359e7aa90d57df8379725d67b6dbbf8dd99fd0dc0548fa25f46",
+              "revision_id": "7137f8fd48bac1c98784285240a59c6e775928955927ff74c2fe0157eb4bbb40",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T15:00:00Z",
+              "observation_time": "2026-11-13T14:00:00Z",
+              "confirmation_time": "2026-11-13T15:00:00Z"
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T13:30:00Z",
+              "observation_time": "2026-11-13T13:25:00Z",
+              "confirmation_time": "2026-11-13T13:30:00Z"
+            }
+          },
+          "receipt_id": "1f032f46547b3cf5d508f6b4276dab016c57ab9daa1180f0e27021e4ce44fdad"
+        },
+        {
+          "utc": "2026-11-13T15:30:00Z",
+          "status": "INCOMPLETE",
+          "reason": "CRT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "LOW_SWEEP_CANDIDATE",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "81d3c9c6a9b85359e7aa90d57df8379725d67b6dbbf8dd99fd0dc0548fa25f46",
+              "revision_id": "caac181ae973c82a4d9fe4994c33c7873b777db1f08f2e6dfae96b7f6bf192c3",
+              "revision": 2,
+              "state": "LOW_SWEEP_CANDIDATE",
+              "reason": "NO_SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T15:30:00Z",
+              "observation_time": "2026-11-13T15:25:00Z",
+              "confirmation_time": "2026-11-13T15:30:00Z"
+            },
+            "smt": {
+              "family_id": "2f04d27d613654dbf1b26deae7d407ff40d7227f04ac5567f6b421930decb7d2",
+              "revision_id": "2d8c348da578ee8e3d7335c9d674c215d67798f007b37404b6ab9d821d7738df",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T13:30:00Z",
+              "observation_time": "2026-11-13T13:25:00Z",
+              "confirmation_time": "2026-11-13T13:30:00Z"
+            }
+          },
+          "receipt_id": "93fe25bb407cefc1bea6cc1911590b24bd123e1f05d30ebf8d0db72eb4a2ccea"
+        },
+        {
+          "utc": "2026-11-13T15:40:00Z",
+          "status": "INCOMPLETE",
+          "reason": "CRT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEEP_CANDIDATE",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "81d3c9c6a9b85359e7aa90d57df8379725d67b6dbbf8dd99fd0dc0548fa25f46",
+              "revision_id": "caac181ae973c82a4d9fe4994c33c7873b777db1f08f2e6dfae96b7f6bf192c3",
+              "revision": 2,
+              "state": "LOW_SWEEP_CANDIDATE",
+              "reason": "NO_SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T15:30:00Z",
+              "observation_time": "2026-11-13T15:25:00Z",
+              "confirmation_time": "2026-11-13T15:30:00Z"
+            },
+            "smt": {
+              "family_id": "6a3a91b6d1c9401f34bda548cb25a162318b2fe5a48a0cefea4a6533842dd859",
+              "revision_id": "0c5034ba4059b2c71c10ae1917d72411d190fab8a86be6da090de3fd57449192",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T15:40:00Z",
+              "observation_time": "2026-11-13T15:15:00Z",
+              "confirmation_time": "2026-11-13T15:40:00Z"
+            }
+          },
+          "receipt_id": "79d15cce2228f94b8fec5032b3676bc1c4846c313d7a77338ee0e720487ab3df"
+        },
+        {
+          "utc": "2026-11-13T15:45:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T15:45:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPIRED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "81d3c9c6a9b85359e7aa90d57df8379725d67b6dbbf8dd99fd0dc0548fa25f46",
+              "revision_id": "bd2f132b1bd8b903374c2fce3dd7d70f8745d88594dfb9470d8a144c37a59b2d",
+              "revision": 3,
+              "state": "EXPIRED",
+              "reason": "CANDIDATE_AGE",
+              "available_at": "2026-11-13T15:45:00Z",
+              "observation_time": "2026-11-13T15:40:00Z",
+              "confirmation_time": "2026-11-13T15:45:00Z"
+            },
+            "smt": {
+              "family_id": "6a3a91b6d1c9401f34bda548cb25a162318b2fe5a48a0cefea4a6533842dd859",
+              "revision_id": "c98c0ec75f547da919cbbe1f1d2218d7b58c03d39fd675b6348b61be2b804b82",
+              "revision": 2,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T15:45:00Z",
+              "observation_time": "2026-11-13T15:40:00Z",
+              "confirmation_time": "2026-11-13T15:45:00Z"
+            }
+          },
+          "receipt_id": "e0929be81e7af0fc1085f5b83c21baec2b850eb1fec1f7c97f400b1cbcaa0772"
+        },
+        {
+          "utc": "2026-11-13T16:00:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T16:00:00Z",
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "60efb0054b5fd50f513f1314bbde37eacee94050583ef2bad52fe7c3f1166141",
+              "revision_id": "4c417d8f83b2a7696f48898a8d93da41957a1a8c1c7962b59390b31befdb113d",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T16:00:00Z",
+              "observation_time": "2026-11-13T15:00:00Z",
+              "confirmation_time": "2026-11-13T16:00:00Z"
+            },
+            "smt": {
+              "family_id": "6a3a91b6d1c9401f34bda548cb25a162318b2fe5a48a0cefea4a6533842dd859",
+              "revision_id": "c98c0ec75f547da919cbbe1f1d2218d7b58c03d39fd675b6348b61be2b804b82",
+              "revision": 2,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T15:45:00Z",
+              "observation_time": "2026-11-13T15:40:00Z",
+              "confirmation_time": "2026-11-13T15:45:00Z"
+            }
+          },
+          "receipt_id": "89f9564e53ab2e69bc452b0a6d7ac6da8406867ea7e8b7569bd212e147b2a766"
+        }
+      ],
+      "verdicts": {
+        "ALIGNED": 2,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 55,
+        "INCOMPLETE": 40
+      },
+      "families": {
+        "crt": 4,
+        "smt": 2
+      },
+      "restart_probes": [
+        {
+          "cutoff": 1794571200,
+          "receipt_id": "c8461ff5fce854f1b8ef7b1f1453b82463229decd59570d75cca07c9497d23a2",
+          "payload_sha256": "9ca2d1cdd5ad22dca8418b2cfee6a6c5c2cde4aacc29faf41ec291ceaae2d910"
+        },
+        {
+          "cutoff": 1794574800,
+          "receipt_id": "60a92a43179845287ce7e7910a702235005db58925c880c323c9c45c97d9a931",
+          "payload_sha256": "982c1615f9d1f8b318c19654a7c34703064e3dab8f249aa2e9073fe4a4e679f2"
+        },
+        {
+          "cutoff": 1794575100,
+          "receipt_id": "8278f75b6f2dce824c8d6786a9232c61636d4495348ca7c05fe24ff7d8e76fac",
+          "payload_sha256": "2a4072d606e9c01be0d00d6f2fdfaba77d6f09eff8ab1bc58d5027cc932df578"
+        },
+        {
+          "cutoff": 1794575400,
+          "receipt_id": "96bbdca4fc0fec353fd6f7a2c9b91a928939ad634c7da4cf6fe83d008b09a398",
+          "payload_sha256": "90c6ce61b7d5ea9af9391ef4a891686a1fb231fa298a8ac86a35af18aab2f4c0"
+        },
+        {
+          "cutoff": 1794576000,
+          "receipt_id": "b5198f8f7c192bf81bb4c180372487bbaa655c22fc2e733ffaf1e894924fc181",
+          "payload_sha256": "752ae051860b24ab52cda19fc18c30c34c9d28d330255c3d00ab7188e8f5c980"
+        },
+        {
+          "cutoff": 1794576300,
+          "receipt_id": "fc5627b440c2fff1f9f90d86738b6a5250506e06eeb1acb35841fcd735b1fe89",
+          "payload_sha256": "d085cde979270124ef9724e54cca65fff7881c11a6746df82fc3573473fa8723"
+        },
+        {
+          "cutoff": 1794576600,
+          "receipt_id": "0140bfc09f53985186ce083c4afd5c1a564f6f2168d7cc0d81733168cd0e70ec",
+          "payload_sha256": "aea96f7ecec73d85ad5cb3e8650d4a6f013bd1f386a984fe277aab2db90c2764"
+        },
+        {
+          "cutoff": 1794578400,
+          "receipt_id": "5cce87c5ef3bd647e7fa94d356628715f3988bfca986e09d5a4bd0c783b51db1",
+          "payload_sha256": "9f535c78031ad4b18ed4845a73da14ae26d7f9ffc2be04d62949b43e1f2c7525"
+        },
+        {
+          "cutoff": 1794579900,
+          "receipt_id": "486913cd041c4973ead622abfdeb5eb80eb11c32f4a2a5f57b47e93c93caf44c",
+          "payload_sha256": "7023201b1efa13deba18e8f2e95b088cab4c92695cd1f2b66c32255c1fc50acf"
+        },
+        {
+          "cutoff": 1794580200,
+          "receipt_id": "9be6481904e8cc3d50c1bef2fc3f0c54743fac01d04e4de72d8e829009cf82cc",
+          "payload_sha256": "be121b60872f376d52fc1be179b33ea22f1c86bf0ff142a242282a3332a5f7cd"
+        },
+        {
+          "cutoff": 1794581700,
+          "receipt_id": "8a560a6ad401016fff8a0b9063f15d64055ab0d8f2d0e1de6f7bed821ece0030",
+          "payload_sha256": "975a4337c84d164cc23f63abc158a3a793eb0fe7776ca606834f3c05ad70c0e3"
+        },
+        {
+          "cutoff": 1794582000,
+          "receipt_id": "1f032f46547b3cf5d508f6b4276dab016c57ab9daa1180f0e27021e4ce44fdad",
+          "payload_sha256": "5ae29c221dea736fac0520bfccf72beac2c5779ce0b19bad85b72326399e658e"
+        },
+        {
+          "cutoff": 1794583800,
+          "receipt_id": "93fe25bb407cefc1bea6cc1911590b24bd123e1f05d30ebf8d0db72eb4a2ccea",
+          "payload_sha256": "83642ace574906beaa4de895b2594eb47e881e64e00940473076b5fe9f4ce1c8"
+        },
+        {
+          "cutoff": 1794584400,
+          "receipt_id": "79d15cce2228f94b8fec5032b3676bc1c4846c313d7a77338ee0e720487ab3df",
+          "payload_sha256": "a7b4371b9b6b17495bfc26be7d78660ab7a584da040bb131c34211403e4e11e8"
+        },
+        {
+          "cutoff": 1794584700,
+          "receipt_id": "e0929be81e7af0fc1085f5b83c21baec2b850eb1fec1f7c97f400b1cbcaa0772",
+          "payload_sha256": "02cadf6c09035b650a0da795fafad5eede131c734f69554eab44844d30ca9db5"
+        },
+        {
+          "cutoff": 1794585600,
+          "receipt_id": "89f9564e53ab2e69bc452b0a6d7ac6da8406867ea7e8b7569bd212e147b2a766",
+          "payload_sha256": "efd0441ed807f3079be76bc0eeca7a38eb92e764b2f3d157286faaa4f7435789"
+        }
+      ],
+      "fresh_backend_restart_reads": 32
+    },
+    "disjoint": {
+      "session": "87433f3ef0901a7a40ac45a6dbc4fc0eee7b6ef937bdd83b2fe9b8adca01ca29",
+      "case": "disjoint",
+      "coverage_utc": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T14:50:00Z"
+      ],
+      "sources": {
+        "EURUSD": {
+          "partitions": [
+            {
+              "id": "3a79e45b066da0b13b11122c09849374444dc4f35c8c5964a05ec2c6a18b0b2b",
+              "sha256": "1898d8d4ba2e71380e840bf403848b9bc99d98470b835bafe87d03b3adf7a745"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        },
+        "GBPUSD": {
+          "partitions": [
+            {
+              "id": "5092ce54996d332d4e2b70742e47ae80f7e20b03a6da6f1af07be5c719f1e0f4",
+              "sha256": "4d9b3689e0a39a368650ab08ff88d598e58967840ba722f4e4a4d43e0d330c7a"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        }
+      },
+      "boundaries_checked": 45,
+      "rewind_reads": 90,
+      "transitions": [
+        {
+          "utc": "2026-11-13T13:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_CRT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": null,
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_CRT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "ae8fb0c983682b3be4f2cd15bc3f5b06a6274ec365dfcac0be70c82651955a8d"
+        },
+        {
+          "utc": "2026-11-13T14:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "51f3de808c0abd522c3c7412a0a62fcc883b2c0ef930791db0898ce97e005beb",
+              "revision_id": "4c6c37bb24835539626f3661d58e2b2783db61c99fe8f44de69d893b91e79e3b",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T14:00:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "f83c929b77aafaa70d127d6b7624de964d556dbbba5da479c63a66321e43c7ce"
+        },
+        {
+          "utc": "2026-11-13T14:10:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "51f3de808c0abd522c3c7412a0a62fcc883b2c0ef930791db0898ce97e005beb",
+              "revision_id": "a30071d2a41e7f54a08dca6651de200c8a103dfa39d8c5f0049de15634e98f1e",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:10:00Z",
+              "observation_time": "2026-11-13T14:05:00Z",
+              "confirmation_time": "2026-11-13T14:10:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "de9496db524bb6c62087756f06fe552e044eef42780aac061562ea34e373d757"
+        },
+        {
+          "utc": "2026-11-13T14:15:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "51f3de808c0abd522c3c7412a0a62fcc883b2c0ef930791db0898ce97e005beb",
+              "revision_id": "715018cbb929a331d1701bd20c71b8cd5e68a5e0aa2aa1cfce15d7912ad17d39",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "44d26fca1e94256cc38662a6902b6282865abb9c65bfabd461cd768b57f1ea0d"
+        },
+        {
+          "utc": "2026-11-13T14:20:00Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "51f3de808c0abd522c3c7412a0a62fcc883b2c0ef930791db0898ce97e005beb",
+              "revision_id": "e7111b29993af563d5704f0ec9b932e75566176935129db113b5fbb25f227e8a",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T14:15:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            },
+            "smt": {
+              "family_id": "e6954cb795ef45b5233d8e33415fd61a628c1b2f581e467b7e180b60c773e0bf",
+              "revision_id": "c53b048bd756c292d09f51c29f11505dd338f76ad8ff53a1c4e01835a6089002",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T13:55:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            }
+          },
+          "receipt_id": "26c00a19160f28d8d24be8bd1c6aa70e8c9c25b3ea891c9c1879e1440dc855b2"
+        },
+        {
+          "utc": "2026-11-13T14:25:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:25:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "51f3de808c0abd522c3c7412a0a62fcc883b2c0ef930791db0898ce97e005beb",
+              "revision_id": "e7111b29993af563d5704f0ec9b932e75566176935129db113b5fbb25f227e8a",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T14:15:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            },
+            "smt": {
+              "family_id": "e6954cb795ef45b5233d8e33415fd61a628c1b2f581e467b7e180b60c773e0bf",
+              "revision_id": "23a24ecf9021f9a2ead6c579ad781b071febbbfd6512c9638393ffed4e80d62c",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "5b30a4f36437b28a92e5db1d92199c7cf5d6e010217f6394b693c4ce2e280056"
+        },
+        {
+          "utc": "2026-11-13T14:50:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:50:00Z",
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "51f3de808c0abd522c3c7412a0a62fcc883b2c0ef930791db0898ce97e005beb",
+              "revision_id": "e7111b29993af563d5704f0ec9b932e75566176935129db113b5fbb25f227e8a",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T14:15:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            },
+            "smt": {
+              "family_id": "e6954cb795ef45b5233d8e33415fd61a628c1b2f581e467b7e180b60c773e0bf",
+              "revision_id": "27630265112ae72f6a6b66642e673cec713ce15f687d8a43a47471b605ac4069",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T14:50:00Z",
+              "observation_time": "2026-11-13T14:45:00Z",
+              "confirmation_time": "2026-11-13T14:50:00Z"
+            }
+          },
+          "receipt_id": "0c39f97a754c03f8e5211130b5f11b2b00154b8b04fda2b9e2e0d716c6889677"
+        }
+      ],
+      "verdicts": {
+        "ALIGNED": 0,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 11,
+        "INCOMPLETE": 34
+      },
+      "families": {
+        "crt": 1,
+        "smt": 1
+      },
+      "restart_probes": [
+        {
+          "cutoff": 1794574800,
+          "receipt_id": "ae8fb0c983682b3be4f2cd15bc3f5b06a6274ec365dfcac0be70c82651955a8d",
+          "payload_sha256": "07d7d22deea2249892b43cf5f6218fc06045952322e49620c333adbd5fe18384"
+        },
+        {
+          "cutoff": 1794578400,
+          "receipt_id": "f83c929b77aafaa70d127d6b7624de964d556dbbba5da479c63a66321e43c7ce",
+          "payload_sha256": "065f1f76eb4c377da0116479999fb7127a3a309de0e1d66e2c71fc2b3656dfac"
+        },
+        {
+          "cutoff": 1794579000,
+          "receipt_id": "de9496db524bb6c62087756f06fe552e044eef42780aac061562ea34e373d757",
+          "payload_sha256": "bdff62c5db3b7378b20a27ca2f72ab2233ee31a64e703ac2920bee3b1aa4addf"
+        },
+        {
+          "cutoff": 1794579300,
+          "receipt_id": "44d26fca1e94256cc38662a6902b6282865abb9c65bfabd461cd768b57f1ea0d",
+          "payload_sha256": "8ef93e830ab0edd5db35850bb92a02439d7d2a61770888b3e9ddd23fcfb2f294"
+        },
+        {
+          "cutoff": 1794579600,
+          "receipt_id": "26c00a19160f28d8d24be8bd1c6aa70e8c9c25b3ea891c9c1879e1440dc855b2",
+          "payload_sha256": "dc316693d6bb3caad17b3563e46f489b91558a9ab8602b15af002035fa80aede"
+        },
+        {
+          "cutoff": 1794579900,
+          "receipt_id": "5b30a4f36437b28a92e5db1d92199c7cf5d6e010217f6394b693c4ce2e280056",
+          "payload_sha256": "d5e1ba5f04bcd22f1ca915550f2661cfeaa482a33fd4bc9518613c44532ca601"
+        },
+        {
+          "cutoff": 1794581400,
+          "receipt_id": "0c39f97a754c03f8e5211130b5f11b2b00154b8b04fda2b9e2e0d716c6889677",
+          "payload_sha256": "c4dfcb694fca7137aabaa4eaef774658b007149e36728c0edeb9c1ae34246698"
+        }
+      ]
+    },
+    "overlap": {
+      "session": "59f5b2dd2be5038f35b392258e8e6dd2eeadb3eb0595a6bdf5b1b50a6165577e",
+      "case": "overlap",
+      "coverage_utc": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T14:50:00Z"
+      ],
+      "sources": {
+        "EURUSD": {
+          "partitions": [
+            {
+              "id": "deeb6d6b2eeeb9b3ea990343ff694797cbfbfe175b16c52149861ea22b588319",
+              "sha256": "94a5c9f9d0363c98d9418bc0c68dfe7899a5783440302ca808f5ab243d56a247"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        },
+        "GBPUSD": {
+          "partitions": [
+            {
+              "id": "f3934ce74b487f61cf67ed561b8e687efff391e6ffe3e02fb0b171ad0cf61a97",
+              "sha256": "4d9b3689e0a39a368650ab08ff88d598e58967840ba722f4e4a4d43e0d330c7a"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        }
+      },
+      "boundaries_checked": 45,
+      "rewind_reads": 90,
+      "transitions": [
+        {
+          "utc": "2026-11-13T13:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_CRT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": null,
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_CRT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "f888b28fa098f801805cfb1e0949679112bb65b8fd73e35087cc09b6f9d99a48"
+        },
+        {
+          "utc": "2026-11-13T14:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "7a2c27ea574a13f2d5dbcbd0f491986190f3de4858f9177df877c6e0b25e9467",
+              "revision_id": "7827d7c2ffecf031403fcc7a0f2b655f9000282da582846b3040c670affc3e07",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T14:00:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "6e623a9fed7e68726abdd0dce9420e3c40bd814a470aff3917f01caaecbd0991"
+        },
+        {
+          "utc": "2026-11-13T14:10:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "7a2c27ea574a13f2d5dbcbd0f491986190f3de4858f9177df877c6e0b25e9467",
+              "revision_id": "7852c0318fd942ca432d6b93f2ae35267dad5c5802d4a9bc42e5e69bd4385c41",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:10:00Z",
+              "observation_time": "2026-11-13T14:05:00Z",
+              "confirmation_time": "2026-11-13T14:10:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "015569569843d445d310b0fb0b9448df2ac22e0e67d384f9c16d05f3c53020ab"
+        },
+        {
+          "utc": "2026-11-13T14:15:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "7a2c27ea574a13f2d5dbcbd0f491986190f3de4858f9177df877c6e0b25e9467",
+              "revision_id": "f4f50e2799e7c4bd6b5238412ba0d07600191f580eafd8019ad94b67247c5105",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "3c1dc076028a20e17e88bc7f165842a85b42250ca2eaa253e4fa8992f2ed6c25"
+        },
+        {
+          "utc": "2026-11-13T14:20:00Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "7a2c27ea574a13f2d5dbcbd0f491986190f3de4858f9177df877c6e0b25e9467",
+              "revision_id": "f4f50e2799e7c4bd6b5238412ba0d07600191f580eafd8019ad94b67247c5105",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "a809f3f72cacf02a631f599603681fbe14679669eb128c795b5e0c6a91a43241",
+              "revision_id": "e817f606e9f128e480a45a77ce684de71fe33557e469cc5423524ab76945e283",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T13:55:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            }
+          },
+          "receipt_id": "d0db9db310f6f8c36a3448ab00a16a1545ee6b08873ccfb93212603e8c5139b0"
+        },
+        {
+          "utc": "2026-11-13T14:25:00Z",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BULLISH",
+          "first_available_at": "2026-11-13T14:25:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "7a2c27ea574a13f2d5dbcbd0f491986190f3de4858f9177df877c6e0b25e9467",
+              "revision_id": "f4f50e2799e7c4bd6b5238412ba0d07600191f580eafd8019ad94b67247c5105",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "a809f3f72cacf02a631f599603681fbe14679669eb128c795b5e0c6a91a43241",
+              "revision_id": "0138d5d9bb8e46988fea91ebf96e71064f886c13308e0b3f41dd45d8b464ad97",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "793a54b826364150f2543ad15e013140c8ec9f366bc520325583783a704f12d7"
+        },
+        {
+          "utc": "2026-11-13T14:45:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:45:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "7a2c27ea574a13f2d5dbcbd0f491986190f3de4858f9177df877c6e0b25e9467",
+              "revision_id": "0ae1cd4b23398f6437b3e04457f976bbba8ae7bd7b1caaeb711f09c4e1e753e5",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:45:00Z",
+              "observation_time": "2026-11-13T14:40:00Z",
+              "confirmation_time": "2026-11-13T14:45:00Z"
+            },
+            "smt": {
+              "family_id": "a809f3f72cacf02a631f599603681fbe14679669eb128c795b5e0c6a91a43241",
+              "revision_id": "0138d5d9bb8e46988fea91ebf96e71064f886c13308e0b3f41dd45d8b464ad97",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "56decd01c3b3aac6f32a79a3c185104d24073942d997318ef68cdcd30701c45f"
+        },
+        {
+          "utc": "2026-11-13T14:50:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:50:00Z",
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "7a2c27ea574a13f2d5dbcbd0f491986190f3de4858f9177df877c6e0b25e9467",
+              "revision_id": "0ae1cd4b23398f6437b3e04457f976bbba8ae7bd7b1caaeb711f09c4e1e753e5",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:45:00Z",
+              "observation_time": "2026-11-13T14:40:00Z",
+              "confirmation_time": "2026-11-13T14:45:00Z"
+            },
+            "smt": {
+              "family_id": "a809f3f72cacf02a631f599603681fbe14679669eb128c795b5e0c6a91a43241",
+              "revision_id": "804e8a0588fb187d2a4b810ee4e1beb4f8355ef05b22a5231fa5e668780f418d",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T14:50:00Z",
+              "observation_time": "2026-11-13T14:45:00Z",
+              "confirmation_time": "2026-11-13T14:50:00Z"
+            }
+          },
+          "receipt_id": "93322c96d7b193f0c48c5c2bf9be8b9fa23c807a50db1dddea1916cf1a287357"
+        }
+      ],
+      "verdicts": {
+        "ALIGNED": 8,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 3,
+        "INCOMPLETE": 34
+      },
+      "families": {
+        "crt": 1,
+        "smt": 1
+      },
+      "restart_probes": [
+        {
+          "cutoff": 1794574800,
+          "receipt_id": "f888b28fa098f801805cfb1e0949679112bb65b8fd73e35087cc09b6f9d99a48",
+          "payload_sha256": "ff5852606378c586ccefeba4a6b7598bb3bd42c261a7618d7796846a98ef0e51"
+        },
+        {
+          "cutoff": 1794578400,
+          "receipt_id": "6e623a9fed7e68726abdd0dce9420e3c40bd814a470aff3917f01caaecbd0991",
+          "payload_sha256": "a384b1cce4cbb3b75681bb787c8df04509d7391ac75249948b0b551119609313"
+        },
+        {
+          "cutoff": 1794579000,
+          "receipt_id": "015569569843d445d310b0fb0b9448df2ac22e0e67d384f9c16d05f3c53020ab",
+          "payload_sha256": "b612a5a158551dc4ed9f8c15dcc3b44161900840a884421ddbea6f61e31670f9"
+        },
+        {
+          "cutoff": 1794579300,
+          "receipt_id": "3c1dc076028a20e17e88bc7f165842a85b42250ca2eaa253e4fa8992f2ed6c25",
+          "payload_sha256": "eb0be12cc659eb46c4891091ef05a7acdc34ed3c5720f57371df3529143fe236"
+        },
+        {
+          "cutoff": 1794579600,
+          "receipt_id": "d0db9db310f6f8c36a3448ab00a16a1545ee6b08873ccfb93212603e8c5139b0",
+          "payload_sha256": "6fa302425dd36c0feb9b71a8075f0a06b807b3e38b36d6b060919fbd00a13f2c"
+        },
+        {
+          "cutoff": 1794579900,
+          "receipt_id": "793a54b826364150f2543ad15e013140c8ec9f366bc520325583783a704f12d7",
+          "payload_sha256": "110565c6a3fbe365f67147aaa9fd7c162cb4789a3eb2e9e82228ab9c962da8de"
+        },
+        {
+          "cutoff": 1794581100,
+          "receipt_id": "56decd01c3b3aac6f32a79a3c185104d24073942d997318ef68cdcd30701c45f",
+          "payload_sha256": "fe379eeceb88d624d937f8248de62e32b83bef28d1c73670fcb3ff4e512f60e6"
+        },
+        {
+          "cutoff": 1794581400,
+          "receipt_id": "93322c96d7b193f0c48c5c2bf9be8b9fa23c807a50db1dddea1916cf1a287357",
+          "payload_sha256": "2085d34fc599125a664a22cb7a9179a2de05bef993de59a0b69a047ed1d10d37"
+        }
+      ]
+    },
+    "delayed-overlap": {
+      "session": "bbf60ee2f48cae3e2b597c623450ee771476fdf7b6049b79ccc812eb85d31235",
+      "case": "delayed-overlap",
+      "coverage_utc": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T14:50:00Z"
+      ],
+      "sources": {
+        "EURUSD": {
+          "partitions": [
+            {
+              "id": "e952d8517920f1e61456abb4691a4bf6d704abcf1712d310180e82a8ae3cded0",
+              "sha256": "64f0548c81c23747cb6ff968887e229b0ddbf96f5a6a9feb45a37630e5ea9f5a"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        },
+        "GBPUSD": {
+          "partitions": [
+            {
+              "id": "7c83107ee0cafe78b1b75d950d4f03470c6375464c19545cbb61c8f7b231c67d",
+              "sha256": "283951ee7a655a1230db8b2c841b760e0dc9cd6fe1e905faf2dffc29301af77f"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        }
+      },
+      "boundaries_checked": 49,
+      "rewind_reads": 98,
+      "transitions": [
+        {
+          "utc": "2026-11-13T13:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_CRT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": null,
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_CRT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "693b24a217611d339a26bf58c2b6551380373f7bd205c456308445772e09e340"
+        },
+        {
+          "utc": "2026-11-13T14:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "cb874aa88bb211e4cc1395c0aece93345d86d3f186506087368310f6f3fc564e",
+              "revision_id": "3d110428d5f9bec1e81b30ae3ecc06d12b9a77d98c7aa58e32eb2a01315e0f9d",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T14:00:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "bee52005f645a129e055f80ba9abc78f4b9a59dabcd623414250c9652e610eff"
+        },
+        {
+          "utc": "2026-11-13T14:10:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "cb874aa88bb211e4cc1395c0aece93345d86d3f186506087368310f6f3fc564e",
+              "revision_id": "63b1f21f34ee89f4e49e2675e834677cf9c572221b00adb3305ba9ff06fd9f30",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:10:00Z",
+              "observation_time": "2026-11-13T14:05:00Z",
+              "confirmation_time": "2026-11-13T14:10:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "9e528c6fb0c222dbc92265fa07ff5327ba1b42a74e5b2b345c2f41a03107eb25"
+        },
+        {
+          "utc": "2026-11-13T14:15:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "cb874aa88bb211e4cc1395c0aece93345d86d3f186506087368310f6f3fc564e",
+              "revision_id": "d14d2ea21928b2bf90d589af17a606dbf8c296d869f8bcbe50cbaac9f06d953a",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "47ed01e2943a8095756dde72bded42a5b45f883938fd7a15d20db30c27a05f25"
+        },
+        {
+          "utc": "2026-11-13T14:20:00Z",
+          "status": "INCOMPLETE",
+          "reason": "MISSING_OPEN_CANDLES",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": false,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "cb874aa88bb211e4cc1395c0aece93345d86d3f186506087368310f6f3fc564e",
+              "revision_id": "d14d2ea21928b2bf90d589af17a606dbf8c296d869f8bcbe50cbaac9f06d953a",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "cac8b026fa4acf8d91e22f8a21349726ae13f0827313e075f49f1279273c5004"
+        },
+        {
+          "utc": "2026-11-13T14:20:17Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "cb874aa88bb211e4cc1395c0aece93345d86d3f186506087368310f6f3fc564e",
+              "revision_id": "d14d2ea21928b2bf90d589af17a606dbf8c296d869f8bcbe50cbaac9f06d953a",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "583972576f982bb2b5a5755e57f0c82ce7b14139e6b412a8f6bb2bd874c0b82d",
+              "revision_id": "f37623ce702f68b6eeb41acc0a8772391fa0c19961c83e06fdd17689ae572d78",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:20:17Z",
+              "observation_time": "2026-11-13T13:55:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            }
+          },
+          "receipt_id": "fa2c12b1041ad0fc4a3b09c24c4f7cb8d2d9794d5f6b20cc234cd2cf92351b5a"
+        },
+        {
+          "utc": "2026-11-13T14:30:00Z",
+          "status": "INCOMPLETE",
+          "reason": "MISSING_OPEN_CANDLES",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": false,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "cb874aa88bb211e4cc1395c0aece93345d86d3f186506087368310f6f3fc564e",
+              "revision_id": "d14d2ea21928b2bf90d589af17a606dbf8c296d869f8bcbe50cbaac9f06d953a",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "583972576f982bb2b5a5755e57f0c82ce7b14139e6b412a8f6bb2bd874c0b82d",
+              "revision_id": "f37623ce702f68b6eeb41acc0a8772391fa0c19961c83e06fdd17689ae572d78",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:20:17Z",
+              "observation_time": "2026-11-13T13:55:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            }
+          },
+          "receipt_id": "ddc21ff19f5afacf1b2d00cb0cd3e8ea9d03b8798f3ebcc77d61726dc34bc115"
+        },
+        {
+          "utc": "2026-11-13T14:30:23Z",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BULLISH",
+          "first_available_at": "2026-11-13T14:30:23Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "cb874aa88bb211e4cc1395c0aece93345d86d3f186506087368310f6f3fc564e",
+              "revision_id": "d14d2ea21928b2bf90d589af17a606dbf8c296d869f8bcbe50cbaac9f06d953a",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "583972576f982bb2b5a5755e57f0c82ce7b14139e6b412a8f6bb2bd874c0b82d",
+              "revision_id": "99b71c9edb931ceb524d0eab23ce8678cddb051ccef521bafff2ae471871b23f",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:30:23Z",
+              "observation_time": "2026-11-13T14:25:00Z",
+              "confirmation_time": "2026-11-13T14:30:00Z"
+            }
+          },
+          "receipt_id": "13dd00459df8158ca5a47f58f0ef12ef184fbb162e1545511f144ca22293c7d6"
+        },
+        {
+          "utc": "2026-11-13T14:45:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:45:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "cb874aa88bb211e4cc1395c0aece93345d86d3f186506087368310f6f3fc564e",
+              "revision_id": "1c736c4d62929c1a4d25a985505a4c5d098a3fe08c3c7cf171cf621ecb4c324a",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:45:00Z",
+              "observation_time": "2026-11-13T14:40:00Z",
+              "confirmation_time": "2026-11-13T14:45:00Z"
+            },
+            "smt": {
+              "family_id": "583972576f982bb2b5a5755e57f0c82ce7b14139e6b412a8f6bb2bd874c0b82d",
+              "revision_id": "99b71c9edb931ceb524d0eab23ce8678cddb051ccef521bafff2ae471871b23f",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:30:23Z",
+              "observation_time": "2026-11-13T14:25:00Z",
+              "confirmation_time": "2026-11-13T14:30:00Z"
+            }
+          },
+          "receipt_id": "4035bd47db84c152271e57f1e0867485a66634a6d5afa3436b3738e94389ca78"
+        },
+        {
+          "utc": "2026-11-13T14:50:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:50:00Z",
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "cb874aa88bb211e4cc1395c0aece93345d86d3f186506087368310f6f3fc564e",
+              "revision_id": "1c736c4d62929c1a4d25a985505a4c5d098a3fe08c3c7cf171cf621ecb4c324a",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:45:00Z",
+              "observation_time": "2026-11-13T14:40:00Z",
+              "confirmation_time": "2026-11-13T14:45:00Z"
+            },
+            "smt": {
+              "family_id": "583972576f982bb2b5a5755e57f0c82ce7b14139e6b412a8f6bb2bd874c0b82d",
+              "revision_id": "f1aab39543d6f27ced6235832b79f16322f1d0ce42cf85a8d403c21eb41227fd",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T14:50:00Z",
+              "observation_time": "2026-11-13T14:45:00Z",
+              "confirmation_time": "2026-11-13T14:50:00Z"
+            }
+          },
+          "receipt_id": "f6f9a0e3ad8916a4584a9c56e92127244c6357b3880b3a75cd08222af7a16da2"
+        }
+      ],
+      "verdicts": {
+        "ALIGNED": 6,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 3,
+        "INCOMPLETE": 40
+      },
+      "families": {
+        "crt": 1,
+        "smt": 1
+      },
+      "restart_probes": [
+        {
+          "cutoff": 1794574800,
+          "receipt_id": "693b24a217611d339a26bf58c2b6551380373f7bd205c456308445772e09e340",
+          "payload_sha256": "040d28c899771b23d6437bd9c86105c6bd8ad83d980feaf363bcf2f469592616"
+        },
+        {
+          "cutoff": 1794578400,
+          "receipt_id": "bee52005f645a129e055f80ba9abc78f4b9a59dabcd623414250c9652e610eff",
+          "payload_sha256": "acff4af1a297b36c534c894c57b650bab4ba9b72003b11ffbe17a9758e0a66df"
+        },
+        {
+          "cutoff": 1794579000,
+          "receipt_id": "9e528c6fb0c222dbc92265fa07ff5327ba1b42a74e5b2b345c2f41a03107eb25",
+          "payload_sha256": "3d5029730f726b9f81103d4f478b6877d114cd6fda39c096106541b1f0a76376"
+        },
+        {
+          "cutoff": 1794579300,
+          "receipt_id": "47ed01e2943a8095756dde72bded42a5b45f883938fd7a15d20db30c27a05f25",
+          "payload_sha256": "74124b17b19a2e1cd5829f15c3a48deb646f43126606bf95004f852a292bd38d"
+        },
+        {
+          "cutoff": 1794579600,
+          "receipt_id": "cac8b026fa4acf8d91e22f8a21349726ae13f0827313e075f49f1279273c5004",
+          "payload_sha256": "5d477cfd9bacf32332082cde8f99f225c2c516827a0d5cd3b61a1f14198561c6"
+        },
+        {
+          "cutoff": 1794579617,
+          "receipt_id": "fa2c12b1041ad0fc4a3b09c24c4f7cb8d2d9794d5f6b20cc234cd2cf92351b5a",
+          "payload_sha256": "61600785d2e6ff792f9f9b631687ae2239976a18c5d9b125add7882b239af3c4"
+        },
+        {
+          "cutoff": 1794580200,
+          "receipt_id": "ddc21ff19f5afacf1b2d00cb0cd3e8ea9d03b8798f3ebcc77d61726dc34bc115",
+          "payload_sha256": "c5cdc770dce9097faf23320777d8b5d556565205350a8da2cea64d84fab80073"
+        },
+        {
+          "cutoff": 1794580223,
+          "receipt_id": "13dd00459df8158ca5a47f58f0ef12ef184fbb162e1545511f144ca22293c7d6",
+          "payload_sha256": "489796118debb17d4dd5731c8dfe8c5ea7534474453e66463e5fd94d84e4335d"
+        },
+        {
+          "cutoff": 1794581100,
+          "receipt_id": "4035bd47db84c152271e57f1e0867485a66634a6d5afa3436b3738e94389ca78",
+          "payload_sha256": "fe6fc5d66642a1b4e023a5190414dd4c648a78b460fdd3119561e26088531abb"
+        },
+        {
+          "cutoff": 1794581400,
+          "receipt_id": "f6f9a0e3ad8916a4584a9c56e92127244c6357b3880b3a75cd08222af7a16da2",
+          "payload_sha256": "3782942f570018d3eda526362f94451b7b4f8900a935a6e7ccb5d0c6ba73935b"
+        }
+      ],
+      "fresh_backend_restart_reads": 20
+    },
+    "contradiction": {
+      "session": "3c04e4166cfe519b57c101cf83aaf6685f514bd279f30b7836785250beb423bb",
+      "case": "contradiction",
+      "coverage_utc": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T14:50:00Z"
+      ],
+      "sources": {
+        "EURUSD": {
+          "partitions": [
+            {
+              "id": "d950d3aa6ec2d4bc6c8d6b744420e11e5e34f72f0774752742ac0b255813d92a",
+              "sha256": "4ac6895231301632601b66c4c02f72e88f5ffc67eb018de97337b9f4d3f1c00f"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        },
+        "GBPUSD": {
+          "partitions": [
+            {
+              "id": "14fc651c31e69ff7a5087d868e2433ee2755869d5309eaea6714529a73819ab5",
+              "sha256": "186fd8ef1bebc4bb0940ecc818cdb8a4a31726e90c0c1f6cdb5affcd223b49d3"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        }
+      },
+      "boundaries_checked": 45,
+      "rewind_reads": 90,
+      "transitions": [
+        {
+          "utc": "2026-11-13T13:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_CRT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": null,
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_CRT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "fe457a24558347e0a7d5fbbd42c6c09378463b1ab83519e25229fabbfa33a1d1"
+        },
+        {
+          "utc": "2026-11-13T14:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "d92245782ae53f5bb4471dfbb160f2c5806b84fceed3d487bb6e8bb8c9115a60",
+              "revision_id": "af4339dfa0e9b2778016afb1498f0834e4bf3e6767747c14d6104f55a4d38c3d",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T14:00:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "e8833ef8dc47fc723929bd95e8d50cdcb6efaab2f325e243cb5e3d9617d54dea"
+        },
+        {
+          "utc": "2026-11-13T14:15:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "d92245782ae53f5bb4471dfbb160f2c5806b84fceed3d487bb6e8bb8c9115a60",
+              "revision_id": "a8ded2bc53ce8c325e1851592cafa45918e9e23aec8e9b118c678d91429fb4b6",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "31e75421f8f2898afe4ad67f63af8b921961871e8e63b573dfd682cf67a1e760"
+        },
+        {
+          "utc": "2026-11-13T14:20:00Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "d92245782ae53f5bb4471dfbb160f2c5806b84fceed3d487bb6e8bb8c9115a60",
+              "revision_id": "a8ded2bc53ce8c325e1851592cafa45918e9e23aec8e9b118c678d91429fb4b6",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "355d878ffaeb5ac12e15775cbd279d5317fb3ca7efab2d9e2d4c84dccab6f26c",
+              "revision_id": "ff747a11399c8dae8c33a03f1d9009ce3942db0328c1c0c1b44f59c97b6d5de2",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T13:55:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            }
+          },
+          "receipt_id": "f14ba9885aea78cf4d4556f4ae4748cd6d33224007669faf004ece486f988d87"
+        },
+        {
+          "utc": "2026-11-13T14:25:00Z",
+          "status": "CONTRADICTED",
+          "reason": "OPPOSITE_DIRECTIONS",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:25:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "d92245782ae53f5bb4471dfbb160f2c5806b84fceed3d487bb6e8bb8c9115a60",
+              "revision_id": "a8ded2bc53ce8c325e1851592cafa45918e9e23aec8e9b118c678d91429fb4b6",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "355d878ffaeb5ac12e15775cbd279d5317fb3ca7efab2d9e2d4c84dccab6f26c",
+              "revision_id": "11253e5afd33da1edd0de07f2038e9432b2b72b2a741abc2dba4c341e23ad279",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "7fe5a6415103f3d8a85e4c168d7f93dc2795637cef0358a1af39740308e8b0e6"
+        }
+      ],
+      "verdicts": {
+        "ALIGNED": 0,
+        "CONTRADICTED": 11,
+        "NOT_ALIGNED": 0,
+        "INCOMPLETE": 34
+      },
+      "families": {
+        "crt": 1,
+        "smt": 1
+      },
+      "restart_probes": [
+        {
+          "cutoff": 1794574800,
+          "receipt_id": "fe457a24558347e0a7d5fbbd42c6c09378463b1ab83519e25229fabbfa33a1d1",
+          "payload_sha256": "665596aa927a66d3e4e7d9edfa97ca1d065673c6d835b5c2b7bd73f971f3f5ef"
+        },
+        {
+          "cutoff": 1794578400,
+          "receipt_id": "e8833ef8dc47fc723929bd95e8d50cdcb6efaab2f325e243cb5e3d9617d54dea",
+          "payload_sha256": "c7fe74789d3ee4318ffe0ab2cfc41293baf9ab1514dc0bcaac8cebd530a891c2"
+        },
+        {
+          "cutoff": 1794579300,
+          "receipt_id": "31e75421f8f2898afe4ad67f63af8b921961871e8e63b573dfd682cf67a1e760",
+          "payload_sha256": "3559a80a49203b97fa1c9c1cc1efe88cc8441c0f332e3c01708a21a67b8c7b3f"
+        },
+        {
+          "cutoff": 1794579600,
+          "receipt_id": "f14ba9885aea78cf4d4556f4ae4748cd6d33224007669faf004ece486f988d87",
+          "payload_sha256": "f55d1b6d1c142f6bc4a59a6c849dbf6d53e42ddcb0071642a0aad68a408e79f4"
+        },
+        {
+          "cutoff": 1794579900,
+          "receipt_id": "7fe5a6415103f3d8a85e4c168d7f93dc2795637cef0358a1af39740308e8b0e6",
+          "payload_sha256": "bebd84021a20be5c8847c1ef54fa5e209b0e415f70d5bcdb6b9dcb69e5cb9244"
+        },
+        {
+          "cutoff": 1794581400,
+          "receipt_id": "623e89bfd86f5f4e069710205aa7c268d34bd864deac9d99e8def5bdc0e8b1ca",
+          "payload_sha256": "c7d6a5af458cad7d4d2d586560e815d97d946d7edf8882fb7a49502671be17bb"
+        }
+      ]
+    },
+    "terminal-tie": {
+      "session": "6aef7e317317b2f95f64714d5071b9c8e5ddebc3f187a93d07dba3f7519da363",
+      "case": "terminal-tie",
+      "coverage_utc": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T14:50:00Z"
+      ],
+      "sources": {
+        "EURUSD": {
+          "partitions": [
+            {
+              "id": "145ce300cc7f8bba0b412d5fa823e1f26351ffea2947c518cc41290fc20b69ee",
+              "sha256": "94a5c9f9d0363c98d9418bc0c68dfe7899a5783440302ca808f5ab243d56a247"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        },
+        "GBPUSD": {
+          "partitions": [
+            {
+              "id": "aac6d970bc2b68f5fabab6731bca5da799b1a5886d0bee1bfb41fa7c371a16f2",
+              "sha256": "7139177b1381d7093b48d8634e03e43a38103ffbc19e38e6381201548044975a"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        }
+      },
+      "boundaries_checked": 45,
+      "rewind_reads": 90,
+      "transitions": [
+        {
+          "utc": "2026-11-13T13:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_CRT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": null,
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_CRT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "1c3eed724671f90a7c88b0c1de730557d5ea4184b76a762107773b392273d135"
+        },
+        {
+          "utc": "2026-11-13T14:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "8e65df712e7672aede0f395894f80f0867a7825e42af9536f9bb4f81c29ab035",
+              "revision_id": "31060595474f98b2a384db73bbdaacf0fb8e594f2208aa131c8d729b3beb8bdb",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T14:00:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "e990c2228fa6cb1cbbfdfb6beee58eb12ad8d4920b198ce51908ea89d59b6251"
+        },
+        {
+          "utc": "2026-11-13T14:10:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "8e65df712e7672aede0f395894f80f0867a7825e42af9536f9bb4f81c29ab035",
+              "revision_id": "55bcc4d5963149c4e002989d8a5e785ce3f90f89635d149e7e58aef319e6759a",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:10:00Z",
+              "observation_time": "2026-11-13T14:05:00Z",
+              "confirmation_time": "2026-11-13T14:10:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "2cec215e2e324d612035acd229f1ad79a81eb74fbc99f20f5257ac9373819cfd"
+        },
+        {
+          "utc": "2026-11-13T14:15:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "8e65df712e7672aede0f395894f80f0867a7825e42af9536f9bb4f81c29ab035",
+              "revision_id": "cdd529280110407de9428920e69d46be652754341785134b883600454ba4e8f1",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "0c1a917dc78318da2825db11ba8528c4785ce1c52d07455654e2ab77d486694c"
+        },
+        {
+          "utc": "2026-11-13T14:20:00Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "8e65df712e7672aede0f395894f80f0867a7825e42af9536f9bb4f81c29ab035",
+              "revision_id": "cdd529280110407de9428920e69d46be652754341785134b883600454ba4e8f1",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "76448065c904d72fc178bf78ee83a5d24c19baed7d34bc0b5f202fc3f2430e1c",
+              "revision_id": "22f1efc5b8d8006754509591987956d904004ec8985717d75c4a24cc4032acde",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T13:55:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            }
+          },
+          "receipt_id": "3bba4ae935a6bd9e1e3b2b7685b96ddcdf20e9c93e8d1b3ba858879d459c56e1"
+        },
+        {
+          "utc": "2026-11-13T14:25:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "SMT_NOT_CONFIRMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:25:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "8e65df712e7672aede0f395894f80f0867a7825e42af9536f9bb4f81c29ab035",
+              "revision_id": "cdd529280110407de9428920e69d46be652754341785134b883600454ba4e8f1",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "76448065c904d72fc178bf78ee83a5d24c19baed7d34bc0b5f202fc3f2430e1c",
+              "revision_id": "4f99c5c406a933911f682a23372daffcccdab71600fe49c059615ab7071c892e",
+              "revision": 2,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "399c676e00a8182d2d0dd5e98450e39fbb015b2dfd63dc4aec8d04ef00c7ee6a"
+        },
+        {
+          "utc": "2026-11-13T14:45:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:45:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "8e65df712e7672aede0f395894f80f0867a7825e42af9536f9bb4f81c29ab035",
+              "revision_id": "45fd045d42f719615b97efebd10fe56d24d9da915bdd327525458fc8e0ed81e8",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:45:00Z",
+              "observation_time": "2026-11-13T14:40:00Z",
+              "confirmation_time": "2026-11-13T14:45:00Z"
+            },
+            "smt": {
+              "family_id": "76448065c904d72fc178bf78ee83a5d24c19baed7d34bc0b5f202fc3f2430e1c",
+              "revision_id": "4f99c5c406a933911f682a23372daffcccdab71600fe49c059615ab7071c892e",
+              "revision": 2,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "45b2b28f135c8ef03ef261e1f506cd9b7809165276830686f9eb446495b46328"
+        }
+      ],
+      "verdicts": {
+        "ALIGNED": 0,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 11,
+        "INCOMPLETE": 34
+      },
+      "families": {
+        "crt": 1,
+        "smt": 1
+      },
+      "restart_probes": [
+        {
+          "cutoff": 1794574800,
+          "receipt_id": "1c3eed724671f90a7c88b0c1de730557d5ea4184b76a762107773b392273d135",
+          "payload_sha256": "5a2930c4ac949ed37b1a693890c75570aa34c46b3a27992ee8bfff49bb5073b1"
+        },
+        {
+          "cutoff": 1794578400,
+          "receipt_id": "e990c2228fa6cb1cbbfdfb6beee58eb12ad8d4920b198ce51908ea89d59b6251",
+          "payload_sha256": "5ce59904fbac23fb3e0cc2f1ed097ebe86db167065e9c208b6a0c2ebdbdbe6d2"
+        },
+        {
+          "cutoff": 1794579000,
+          "receipt_id": "2cec215e2e324d612035acd229f1ad79a81eb74fbc99f20f5257ac9373819cfd",
+          "payload_sha256": "6d6ca8b15cea6f1097c3dcfb8d7185d3d49971ed057d345ee9dcee653f9347d4"
+        },
+        {
+          "cutoff": 1794579300,
+          "receipt_id": "0c1a917dc78318da2825db11ba8528c4785ce1c52d07455654e2ab77d486694c",
+          "payload_sha256": "f70327d7448de0775f88e56035ba766f023c3e5928b91b0d14974cb5366ee2e0"
+        },
+        {
+          "cutoff": 1794579600,
+          "receipt_id": "3bba4ae935a6bd9e1e3b2b7685b96ddcdf20e9c93e8d1b3ba858879d459c56e1",
+          "payload_sha256": "61aa279de55b11a155ef9169cc5af0bea20888d54ddce6246d0e7439083f24b0"
+        },
+        {
+          "cutoff": 1794579900,
+          "receipt_id": "399c676e00a8182d2d0dd5e98450e39fbb015b2dfd63dc4aec8d04ef00c7ee6a",
+          "payload_sha256": "078d42e46c7cb957fd06e8c14258d6e850fc9e6369fc0863e348b3b99ea0bcf3"
+        },
+        {
+          "cutoff": 1794581100,
+          "receipt_id": "45b2b28f135c8ef03ef261e1f506cd9b7809165276830686f9eb446495b46328",
+          "payload_sha256": "580fdb1b3b69fad443b2a7574bd5c465c0c6bd75faa0687b0200ef3f9843f7f2"
+        },
+        {
+          "cutoff": 1794581400,
+          "receipt_id": "839b263ddc077471ef374981f14698bb3bcaa70941529728d5a3f9462f38a989",
+          "payload_sha256": "fe2262c3a3791e932d63a0dbacfa6cdde418a92a5be62fc706ed3b15b919c8b8"
+        }
+      ]
+    },
+    "smt-terminal": {
+      "session": "34feb77e8daa4b0d71bc8bf0dac6bfab70fd8537ba69adff359f59c87c54df3d",
+      "case": "smt-terminal",
+      "coverage_utc": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T14:50:00Z"
+      ],
+      "sources": {
+        "EURUSD": {
+          "partitions": [
+            {
+              "id": "c30ff1f63afe124e8a0642272cad29cb4d0f609d51c10a4e51411c5b6b732498",
+              "sha256": "94a5c9f9d0363c98d9418bc0c68dfe7899a5783440302ca808f5ab243d56a247"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        },
+        "GBPUSD": {
+          "partitions": [
+            {
+              "id": "8c662bf6a48a4ff3bffa45b08f98db85a8bf7c9a5a9817ee773fede70ccc7402",
+              "sha256": "e01507bf3c3219edb4480ae82c5e981cf0bd333b6fdfcdc8af287d039c79cfce"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        }
+      },
+      "boundaries_checked": 45,
+      "rewind_reads": 90,
+      "transitions": [
+        {
+          "utc": "2026-11-13T13:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_CRT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": null,
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_CRT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "d4a72cfdc9a448e2622439c0b678ea9e1c9fe91ddd568fe2bedf5d77f2d25190"
+        },
+        {
+          "utc": "2026-11-13T14:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "919eee8fd1a782e18c9c6ae166b36059ec48089c9f611aa107b401dc121647ef",
+              "revision_id": "d6c968f034367df0a644dbbb9065e58bb10690e74da2022eec9785a3732f4037",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T14:00:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "dacbc6038a2cc3415c255d1effab403cbd257ad49517d0e94f2c194dc156da75"
+        },
+        {
+          "utc": "2026-11-13T14:10:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "919eee8fd1a782e18c9c6ae166b36059ec48089c9f611aa107b401dc121647ef",
+              "revision_id": "0d86555f716cbcf822fb4950521703dc68f79cf1fab6096f96ba753883c73767",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:10:00Z",
+              "observation_time": "2026-11-13T14:05:00Z",
+              "confirmation_time": "2026-11-13T14:10:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "2792192f49c607a01fcbdafcab341a7e31b7f40877d299494daf090e5afdcb96"
+        },
+        {
+          "utc": "2026-11-13T14:15:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "919eee8fd1a782e18c9c6ae166b36059ec48089c9f611aa107b401dc121647ef",
+              "revision_id": "efbed34812169e96eddbdb2cbd346802f39169a392ab7bdc5a02d3f0b40b0d93",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "92377c123637e60f2bdb17cd8c0aa24eb519ab7995c25cc5c3d4fef88c305371"
+        },
+        {
+          "utc": "2026-11-13T14:20:00Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "919eee8fd1a782e18c9c6ae166b36059ec48089c9f611aa107b401dc121647ef",
+              "revision_id": "efbed34812169e96eddbdb2cbd346802f39169a392ab7bdc5a02d3f0b40b0d93",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "f6bdad1e6df61d5627c43a6cd39e24004e60a434092227ee376c8229bb0dc2b7",
+              "revision_id": "ea046fcc5ad1f5cf5f98e1b0ff157cf0633e9b595361c1509735b0008097e918",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T13:55:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            }
+          },
+          "receipt_id": "859c0b36a4d930181d15d43d02f989b8bb1812d149f195a72a6425842553c3f0"
+        },
+        {
+          "utc": "2026-11-13T14:25:00Z",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BULLISH",
+          "first_available_at": "2026-11-13T14:25:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "919eee8fd1a782e18c9c6ae166b36059ec48089c9f611aa107b401dc121647ef",
+              "revision_id": "efbed34812169e96eddbdb2cbd346802f39169a392ab7bdc5a02d3f0b40b0d93",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "f6bdad1e6df61d5627c43a6cd39e24004e60a434092227ee376c8229bb0dc2b7",
+              "revision_id": "53d28b38bfab22805a4704179d752fbdd77db0cb9ead9aff2e83c102777c292a",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "7bd6fcc4d0de62833e3490d6c052446f60312b0882603e4a452e19206b759f28"
+        },
+        {
+          "utc": "2026-11-13T14:35:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "SMT_NOT_CONFIRMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:35:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "919eee8fd1a782e18c9c6ae166b36059ec48089c9f611aa107b401dc121647ef",
+              "revision_id": "efbed34812169e96eddbdb2cbd346802f39169a392ab7bdc5a02d3f0b40b0d93",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "f6bdad1e6df61d5627c43a6cd39e24004e60a434092227ee376c8229bb0dc2b7",
+              "revision_id": "f9978a867c1192b669849f0fee025d6c29071a0b3d614eb015641bb6011947d0",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T14:35:00Z",
+              "observation_time": "2026-11-13T14:30:00Z",
+              "confirmation_time": "2026-11-13T14:35:00Z"
+            }
+          },
+          "receipt_id": "95a42ff7281c069c69cdbc31022d33e5d2fffeadd7c9362b315ab8883ca9ef79"
+        },
+        {
+          "utc": "2026-11-13T14:45:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T14:45:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "919eee8fd1a782e18c9c6ae166b36059ec48089c9f611aa107b401dc121647ef",
+              "revision_id": "5518549bde72794e79734b47e4cadac028a7ba09db2eace5fd05384bf5216aa1",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:45:00Z",
+              "observation_time": "2026-11-13T14:40:00Z",
+              "confirmation_time": "2026-11-13T14:45:00Z"
+            },
+            "smt": {
+              "family_id": "f6bdad1e6df61d5627c43a6cd39e24004e60a434092227ee376c8229bb0dc2b7",
+              "revision_id": "f9978a867c1192b669849f0fee025d6c29071a0b3d614eb015641bb6011947d0",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T14:35:00Z",
+              "observation_time": "2026-11-13T14:30:00Z",
+              "confirmation_time": "2026-11-13T14:35:00Z"
+            }
+          },
+          "receipt_id": "4804762f88fb035be2706bf3d1e024c5f5ba6c85e38327f7b6326663bdf5391a"
+        }
+      ],
+      "verdicts": {
+        "ALIGNED": 4,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 7,
+        "INCOMPLETE": 34
+      },
+      "families": {
+        "crt": 1,
+        "smt": 1
+      },
+      "restart_probes": [
+        {
+          "cutoff": 1794574800,
+          "receipt_id": "d4a72cfdc9a448e2622439c0b678ea9e1c9fe91ddd568fe2bedf5d77f2d25190",
+          "payload_sha256": "cef30c488f2620740d5151efad530131ed08b858fce61bb137bbf063c55ca7eb"
+        },
+        {
+          "cutoff": 1794578400,
+          "receipt_id": "dacbc6038a2cc3415c255d1effab403cbd257ad49517d0e94f2c194dc156da75",
+          "payload_sha256": "ba2a427e68089d631c70c46a527a5c4e55d4f4d2ea0e393e5220570cf9d39f39"
+        },
+        {
+          "cutoff": 1794579000,
+          "receipt_id": "2792192f49c607a01fcbdafcab341a7e31b7f40877d299494daf090e5afdcb96",
+          "payload_sha256": "ac0ed495ebe5bfa4b73be78831dd42d89395b3e3adc2c73bf9ed8c5916c183a8"
+        },
+        {
+          "cutoff": 1794579300,
+          "receipt_id": "92377c123637e60f2bdb17cd8c0aa24eb519ab7995c25cc5c3d4fef88c305371",
+          "payload_sha256": "00d873714e2ecb51c2fe3ed6f174ae4393660b92ccdaf6e87f88b8c7a73e5c1e"
+        },
+        {
+          "cutoff": 1794579600,
+          "receipt_id": "859c0b36a4d930181d15d43d02f989b8bb1812d149f195a72a6425842553c3f0",
+          "payload_sha256": "9bf4470be9ee463456070042364b5b9a223c0e16fea489878b12c4e1fa99d7f4"
+        },
+        {
+          "cutoff": 1794579900,
+          "receipt_id": "7bd6fcc4d0de62833e3490d6c052446f60312b0882603e4a452e19206b759f28",
+          "payload_sha256": "0a309fdd0a0272b8b05e118c022ba1153d1abbca4b7cafb25bb4c142c60e43ea"
+        },
+        {
+          "cutoff": 1794580500,
+          "receipt_id": "95a42ff7281c069c69cdbc31022d33e5d2fffeadd7c9362b315ab8883ca9ef79",
+          "payload_sha256": "5e4e68e13e7a475cbbaa019dde75ac4c50836c33139803d126a9c59fa356ee0e"
+        },
+        {
+          "cutoff": 1794581100,
+          "receipt_id": "4804762f88fb035be2706bf3d1e024c5f5ba6c85e38327f7b6326663bdf5391a",
+          "payload_sha256": "76560c2603351f97b5005cf9cb50c0e07c124470750c2a3f77396ce606fc9b4d"
+        },
+        {
+          "cutoff": 1794581400,
+          "receipt_id": "7287f938fccd6e234bd2e6b2d456eabb7173eee55aaba6ee9ec018ac8c00f4c2",
+          "payload_sha256": "4b8d248e3d44f4d79dba1725c6bae092b42a4e6233db20ad64b5716be986b8ef"
+        }
+      ]
+    },
+    "newest-crt": {
+      "session": "658690fcfefb85b3dfe9c27cc3a03d0c5e0285ffac171331615345571db5b842",
+      "case": "newest-crt",
+      "coverage_utc": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T15:10:00Z"
+      ],
+      "sources": {
+        "EURUSD": {
+          "partitions": [
+            {
+              "id": "a2b884bd25c65435d1f4832c405b6a8043c9742503cdfe5dc36e7f66a186cf05",
+              "sha256": "c2bff32413d05e535b97e99dd2d0a2f34e7137fc811ea4175912af65d12d5269"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        },
+        "GBPUSD": {
+          "partitions": [
+            {
+              "id": "4175f1760956f7cd9ad9de5fdad969329f5fe50e13880bee71a46f3dd1fbf4f4",
+              "sha256": "2d47ec55d74401636af0a85359029901dbfd92162b6e6b99c95de34657b0380b"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        }
+      },
+      "boundaries_checked": 53,
+      "rewind_reads": 106,
+      "transitions": [
+        {
+          "utc": "2026-11-13T13:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_CRT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": null,
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_CRT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "76a2766edb3241557ff38c36edf5b40076548d187230c4d11bf41b92fee13f8f"
+        },
+        {
+          "utc": "2026-11-13T14:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "328164f82a2d8d860db863efd9a080fad0a97b630bf148127a6cf8eb9fa1bd25",
+              "revision_id": "664365b0849bb70a5b3d29ea61a30d377243ec1f21095a49d783cd6e42380078",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T14:00:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "8d67bf9e070fa98444c889a9229e06931c5b8f4119e54a14fb4c59b2899bdcd5"
+        },
+        {
+          "utc": "2026-11-13T14:10:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "328164f82a2d8d860db863efd9a080fad0a97b630bf148127a6cf8eb9fa1bd25",
+              "revision_id": "c0960aeae74f4c68f2162c89f0da659576925963899024f8dfc241089769e7b9",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:10:00Z",
+              "observation_time": "2026-11-13T14:05:00Z",
+              "confirmation_time": "2026-11-13T14:10:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "a735fd8d92f9e58e6dc266e2fec8c4ca40f95c7f029328c1c05c88173176519f"
+        },
+        {
+          "utc": "2026-11-13T14:15:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "328164f82a2d8d860db863efd9a080fad0a97b630bf148127a6cf8eb9fa1bd25",
+              "revision_id": "32be21237d1fbf5d05c65df81781f357b0df5ef5239d01c1e17a624c1df7deb3",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "1e82a46198513d3afbb0cfac4a0aeea830e356f54df069f41053e8e0889fcbc1"
+        },
+        {
+          "utc": "2026-11-13T14:20:00Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "328164f82a2d8d860db863efd9a080fad0a97b630bf148127a6cf8eb9fa1bd25",
+              "revision_id": "32be21237d1fbf5d05c65df81781f357b0df5ef5239d01c1e17a624c1df7deb3",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "016a01b08a2f996e2437a14bd0aba0270da393a39843a779833870716c54d908",
+              "revision_id": "edb612fa100dac78a55b540f398564e279f37c2ee62f0c030e919e769055c0cf",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T13:55:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            }
+          },
+          "receipt_id": "cd7807e107150c268985030b4adf6bc11b997f0721176ec843c6cfdb222d4023"
+        },
+        {
+          "utc": "2026-11-13T14:25:00Z",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BULLISH",
+          "first_available_at": "2026-11-13T14:25:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "328164f82a2d8d860db863efd9a080fad0a97b630bf148127a6cf8eb9fa1bd25",
+              "revision_id": "32be21237d1fbf5d05c65df81781f357b0df5ef5239d01c1e17a624c1df7deb3",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "016a01b08a2f996e2437a14bd0aba0270da393a39843a779833870716c54d908",
+              "revision_id": "1ea6c929628df05b1fac0a18f340a10be316f6d51603f5c3ecb4c05fcf95e543",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "8fd3cb58833f9898ac2a393f2c094c023a699891be562b68af05cc51fd53d7e8"
+        },
+        {
+          "utc": "2026-11-13T15:00:00Z",
+          "status": "NOT_ALIGNED",
+          "reason": "CRT_NOT_RECLAIMED",
+          "direction": null,
+          "first_available_at": "2026-11-13T15:00:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "85c9134ce996a27752be796e2202086ca845248d6f284976cbada899a7d5a941",
+              "revision_id": "a63d07345e8e82e8f413ea82302cad512ead6b2a4ee611727a56643fcdb18c22",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T15:00:00Z",
+              "observation_time": "2026-11-13T14:00:00Z",
+              "confirmation_time": "2026-11-13T15:00:00Z"
+            },
+            "smt": {
+              "family_id": "016a01b08a2f996e2437a14bd0aba0270da393a39843a779833870716c54d908",
+              "revision_id": "1ea6c929628df05b1fac0a18f340a10be316f6d51603f5c3ecb4c05fcf95e543",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "1eef09baac89094bb1c5d300dab82f832f2f5abe47433f35685be3ee96fc3239"
+        }
+      ],
+      "verdicts": {
+        "ALIGNED": 14,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 5,
+        "INCOMPLETE": 34
+      },
+      "families": {
+        "crt": 2,
+        "smt": 1
+      },
+      "restart_probes": [
+        {
+          "cutoff": 1794574800,
+          "receipt_id": "76a2766edb3241557ff38c36edf5b40076548d187230c4d11bf41b92fee13f8f",
+          "payload_sha256": "8cc9b8e736607b66acb4bf2a2316885695327b05fdab123cb5f57225695e581d"
+        },
+        {
+          "cutoff": 1794578400,
+          "receipt_id": "8d67bf9e070fa98444c889a9229e06931c5b8f4119e54a14fb4c59b2899bdcd5",
+          "payload_sha256": "00c8d6e64beb7c5d2562179fb0f40becf06d39eb687cb3e1820b76aed469e9bb"
+        },
+        {
+          "cutoff": 1794579000,
+          "receipt_id": "a735fd8d92f9e58e6dc266e2fec8c4ca40f95c7f029328c1c05c88173176519f",
+          "payload_sha256": "6b17df25bedfa865f6ba9565b45b28c9011366eb2f13918014670ba90eb68eea"
+        },
+        {
+          "cutoff": 1794579300,
+          "receipt_id": "1e82a46198513d3afbb0cfac4a0aeea830e356f54df069f41053e8e0889fcbc1",
+          "payload_sha256": "94cfe9cec8644087f7add7ebf326a77603a6c4b75c3210e37c488d4b37a8e8e1"
+        },
+        {
+          "cutoff": 1794579600,
+          "receipt_id": "cd7807e107150c268985030b4adf6bc11b997f0721176ec843c6cfdb222d4023",
+          "payload_sha256": "f2bc250396f44b850c7fd113446deb2f6216937f0e0a5ab014771eb95f01e429"
+        },
+        {
+          "cutoff": 1794579900,
+          "receipt_id": "8fd3cb58833f9898ac2a393f2c094c023a699891be562b68af05cc51fd53d7e8",
+          "payload_sha256": "676dfde25f837775720af8c88854b700425f32e0394e91e58c9a537b5c52f195"
+        },
+        {
+          "cutoff": 1794582000,
+          "receipt_id": "1eef09baac89094bb1c5d300dab82f832f2f5abe47433f35685be3ee96fc3239",
+          "payload_sha256": "306e9c86507b7f760c1ccce6cb33047a4b87624c023a2d074c73ba90abe44db2"
+        },
+        {
+          "cutoff": 1794582600,
+          "receipt_id": "89d050439f5333bbaccce78b712e7dcf9a5e0bb3363e684295a51b711d210fcb",
+          "payload_sha256": "e2b1f3fed6341863d6873f13c579d40c4a652f29f611ef9d96da55b0f43170f5"
+        }
+      ]
+    },
+    "newest-smt": {
+      "session": "c7f2185dd5018380f2345fbd0be8c9ffff6df12132130459a7e81a15d6c92bad",
+      "case": "newest-smt",
+      "coverage_utc": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T14:55:00Z"
+      ],
+      "sources": {
+        "EURUSD": {
+          "partitions": [
+            {
+              "id": "5716639d1c3b8b09fd7db908cd6eb4b856e9edb9f38a9a9d5523ff951aa8d070",
+              "sha256": "29eea287af6bbecdb3124eff68f83f791b2db72b08c163835e149df580f145b5"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        },
+        "GBPUSD": {
+          "partitions": [
+            {
+              "id": "fab461558d06590c3d113a9ca42ad2682451b51053abf49f9fb3a7e54329d7cb",
+              "sha256": "d63f0062a9f8abb18452607972e17f818cfcb4ddfe47de3669b370947a10fdc3"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        }
+      },
+      "boundaries_checked": 47,
+      "rewind_reads": 94,
+      "transitions": [
+        {
+          "utc": "2026-11-13T13:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_CRT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": null,
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_CRT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "21728796aa21e6b1cba882b0efbe22dcbb137df55b1daf6aab690b20a4268f85"
+        },
+        {
+          "utc": "2026-11-13T14:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "c3164ad9fc663624d0a3e08d9cab55704a2b83702154cfa4efc655e27ceb58fd",
+              "revision_id": "f4c3d5c980f436262d4e8213b96ef171b07e0ec19dbf516ed791c3606f041738",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T14:00:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "cb32d39675f5cdf53a3d8e80ad5156e5893943a103bcf50c70614f8252f564e7"
+        },
+        {
+          "utc": "2026-11-13T14:10:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "c3164ad9fc663624d0a3e08d9cab55704a2b83702154cfa4efc655e27ceb58fd",
+              "revision_id": "f69b4698f707d6190ad3776446cefe72a970d738f29c160027089e329544497c",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:10:00Z",
+              "observation_time": "2026-11-13T14:05:00Z",
+              "confirmation_time": "2026-11-13T14:10:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "1f77b8e1ce32cfa24e1f12e4082016d2e9006ca10dd952063cffeeabae1b7d23"
+        },
+        {
+          "utc": "2026-11-13T14:15:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "c3164ad9fc663624d0a3e08d9cab55704a2b83702154cfa4efc655e27ceb58fd",
+              "revision_id": "ccb34e649f7391324dc4f87bbb55b63e7705f9a4bc97f7ce28d62feeffd0894b",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "a4f627027cf05c12871183205c7fb53b808f3e3868cbed7d12609b7b47e75753"
+        },
+        {
+          "utc": "2026-11-13T14:20:00Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "c3164ad9fc663624d0a3e08d9cab55704a2b83702154cfa4efc655e27ceb58fd",
+              "revision_id": "ccb34e649f7391324dc4f87bbb55b63e7705f9a4bc97f7ce28d62feeffd0894b",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "570a576995db51a0901c8f0aa7f23b25da14bc27e57697a4dbd92018a3af2158",
+              "revision_id": "f8fe30b27f941afb51b2bc2788a27f3f5603b71b2c2ea87034af1d6ae3e706a8",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T13:55:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            }
+          },
+          "receipt_id": "a8e6716da159bc309b674049042e7fd0b83dab778a0293bf34635b076a48b172"
+        },
+        {
+          "utc": "2026-11-13T14:25:00Z",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BULLISH",
+          "first_available_at": "2026-11-13T14:25:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "c3164ad9fc663624d0a3e08d9cab55704a2b83702154cfa4efc655e27ceb58fd",
+              "revision_id": "ccb34e649f7391324dc4f87bbb55b63e7705f9a4bc97f7ce28d62feeffd0894b",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "570a576995db51a0901c8f0aa7f23b25da14bc27e57697a4dbd92018a3af2158",
+              "revision_id": "485136b6c4cf8c384ef4c772712005929e01ac2fc2662ed9c34d93fe57b095f4",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "9494e60689eb7660e2513d26157956ccdae686c1c06783ff4bddcc3d69db2dc5"
+        },
+        {
+          "utc": "2026-11-13T14:45:00Z",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BULLISH",
+          "first_available_at": "2026-11-13T14:45:00Z",
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "c3164ad9fc663624d0a3e08d9cab55704a2b83702154cfa4efc655e27ceb58fd",
+              "revision_id": "8147fe69837b6ae7c402ff557182a308d2e20789324584381b46819cc1effa9e",
+              "revision": 4,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "NEW_SWEEP_EXTREME",
+              "available_at": "2026-11-13T14:45:00Z",
+              "observation_time": "2026-11-13T14:40:00Z",
+              "confirmation_time": "2026-11-13T14:45:00Z"
+            },
+            "smt": {
+              "family_id": "570a576995db51a0901c8f0aa7f23b25da14bc27e57697a4dbd92018a3af2158",
+              "revision_id": "485136b6c4cf8c384ef4c772712005929e01ac2fc2662ed9c34d93fe57b095f4",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "01b60313bb1f880ca8597c769b734256cd1fcea4a1f5a4a0236aea5f0d43302c"
+        },
+        {
+          "utc": "2026-11-13T14:55:00Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "c3164ad9fc663624d0a3e08d9cab55704a2b83702154cfa4efc655e27ceb58fd",
+              "revision_id": "8147fe69837b6ae7c402ff557182a308d2e20789324584381b46819cc1effa9e",
+              "revision": 4,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "NEW_SWEEP_EXTREME",
+              "available_at": "2026-11-13T14:45:00Z",
+              "observation_time": "2026-11-13T14:40:00Z",
+              "confirmation_time": "2026-11-13T14:45:00Z"
+            },
+            "smt": {
+              "family_id": "2d8b19470bc0581b362c5b54b606eb04badfe53c58fb40dcb0ff2886d16998f7",
+              "revision_id": "ba725ac40f458410258a147e74faaca8430b66b648ce7f11c1258e523f4c17f5",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:55:00Z",
+              "observation_time": "2026-11-13T14:30:00Z",
+              "confirmation_time": "2026-11-13T14:55:00Z"
+            }
+          },
+          "receipt_id": "b40b5a9d9c0b3b32557b9fb893e8b096f86bd7a3dc8305346b6d40347824fa79"
+        }
+      ],
+      "verdicts": {
+        "ALIGNED": 12,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 0,
+        "INCOMPLETE": 35
+      },
+      "families": {
+        "crt": 1,
+        "smt": 2
+      },
+      "restart_probes": [
+        {
+          "cutoff": 1794574800,
+          "receipt_id": "21728796aa21e6b1cba882b0efbe22dcbb137df55b1daf6aab690b20a4268f85",
+          "payload_sha256": "7a40c25a4cbb157b79985da1db47f88ae7d1f872ae2af25a1a32ca37b68a7091"
+        },
+        {
+          "cutoff": 1794578400,
+          "receipt_id": "cb32d39675f5cdf53a3d8e80ad5156e5893943a103bcf50c70614f8252f564e7",
+          "payload_sha256": "8afab1b0fb51c98f5a75db1c463f97f642f203adc9bdd736c4db0ec275c81c18"
+        },
+        {
+          "cutoff": 1794579000,
+          "receipt_id": "1f77b8e1ce32cfa24e1f12e4082016d2e9006ca10dd952063cffeeabae1b7d23",
+          "payload_sha256": "6ac4234bd8d5c7723d8199505c9d7f17c80565249f9ae4c19e31acb6070afec8"
+        },
+        {
+          "cutoff": 1794579300,
+          "receipt_id": "a4f627027cf05c12871183205c7fb53b808f3e3868cbed7d12609b7b47e75753",
+          "payload_sha256": "d4e40ced0b19e00dd8553d16fc94354f190f8740bb3a139f7ba54939e57dc593"
+        },
+        {
+          "cutoff": 1794579600,
+          "receipt_id": "a8e6716da159bc309b674049042e7fd0b83dab778a0293bf34635b076a48b172",
+          "payload_sha256": "ce5e33d411cc314d38305a566c5c4c22b6ccb7c80a40d70b443470ccdad56f41"
+        },
+        {
+          "cutoff": 1794579900,
+          "receipt_id": "9494e60689eb7660e2513d26157956ccdae686c1c06783ff4bddcc3d69db2dc5",
+          "payload_sha256": "73c9a9b7a9152421560ac094a8d4efe47a14145df73e6ee3686974329bf39a87"
+        },
+        {
+          "cutoff": 1794581100,
+          "receipt_id": "01b60313bb1f880ca8597c769b734256cd1fcea4a1f5a4a0236aea5f0d43302c",
+          "payload_sha256": "a914cdf11ef850f1c355c977e8fda1a34a81490c9f86e68f0e811aa27b372c9a"
+        },
+        {
+          "cutoff": 1794581700,
+          "receipt_id": "b40b5a9d9c0b3b32557b9fb893e8b096f86bd7a3dc8305346b6d40347824fa79",
+          "payload_sha256": "02d12bc9500cbf3f0de7bbf1b1afdea2d26dbac92001f3f6e05bac4d2d2b5ab9"
+        }
+      ]
+    },
+    "peer-gap": {
+      "session": "5d2dfb1cda666e7027397bb085a83040f583b1d4ddd532e10c0cfb338ea2e600",
+      "case": "peer-gap",
+      "coverage_utc": [
+        "2026-11-13T13:00:00Z",
+        "2026-11-13T14:50:00Z"
+      ],
+      "sources": {
+        "EURUSD": {
+          "partitions": [
+            {
+              "id": "fd99dc1d9807146e06c93d0ad510d70933b5318f3f38e11c753178bde281aa4a",
+              "sha256": "94a5c9f9d0363c98d9418bc0c68dfe7899a5783440302ca808f5ab243d56a247"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        },
+        "GBPUSD": {
+          "partitions": [
+            {
+              "id": "da8c8e0d52cd2f99c93631c44c526d516155494cc457b8c46db34da8bb40c01f",
+              "sha256": "0edd97021b6afd379aa30a171039d0d90e66e238cb84e7e865d3353690de59a6"
+            }
+          ],
+          "basis": "ARCHIVE_SUPPLIED"
+        }
+      },
+      "boundaries_checked": 45,
+      "rewind_reads": 90,
+      "transitions": [
+        {
+          "utc": "2026-11-13T13:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_CRT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": null,
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_CRT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "0aba79ed7e669294e1f9e37850a3a571f8cfbe50943648bc0dcc210efb17b610"
+        },
+        {
+          "utc": "2026-11-13T14:00:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "ACTIVE",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "4bf4c031745451108c887d785c48c566fa867a2dba2eda8d7256d4760e3fc391",
+              "revision_id": "db598498800b26cb0e060c842b74a2b582233180fd41ad345da9eb646884dd0c",
+              "revision": 1,
+              "state": "ACTIVE",
+              "reason": "CLOSED_REFERENCE",
+              "available_at": "2026-11-13T14:00:00Z",
+              "observation_time": "2026-11-13T13:00:00Z",
+              "confirmation_time": "2026-11-13T14:00:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "cd45aa8f938aa153f3d0ae8d9f92321e082ef5d0447ecaab28da2c9933236afa"
+        },
+        {
+          "utc": "2026-11-13T14:10:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "LOW_SWEPT_RECLAIMED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "4bf4c031745451108c887d785c48c566fa867a2dba2eda8d7256d4760e3fc391",
+              "revision_id": "ddaba157f3d841ad01351de99cba40a1de802ace8da7f958b9ac10a2441d7c96",
+              "revision": 2,
+              "state": "LOW_SWEPT_RECLAIMED",
+              "reason": "SAME_CANDLE_RECLAIM",
+              "available_at": "2026-11-13T14:10:00Z",
+              "observation_time": "2026-11-13T14:05:00Z",
+              "confirmation_time": "2026-11-13T14:10:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "ffa53579efde6c2cd1edfe3db325e03d120e6604238e90f4e9b5ef315e5745a3"
+        },
+        {
+          "utc": "2026-11-13T14:15:00Z",
+          "status": "INCOMPLETE",
+          "reason": "NO_VISIBLE_SMT_FAMILY",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": null,
+          "components": {
+            "crt": {
+              "family_id": "4bf4c031745451108c887d785c48c566fa867a2dba2eda8d7256d4760e3fc391",
+              "revision_id": "6fe93e39a6518a0f90658cd27b46fda783b36a845fcd5d5bd80105e4200c2fba",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": null,
+              "revision_id": null,
+              "revision": null,
+              "state": "UNAVAILABLE",
+              "reason": "NO_VISIBLE_SMT_FAMILY",
+              "available_at": null,
+              "observation_time": null,
+              "confirmation_time": null
+            }
+          },
+          "receipt_id": "5d1f02de5651f5c431b574b666778d17b34d63e5131960ac3f76b50f5e049da1"
+        },
+        {
+          "utc": "2026-11-13T14:20:00Z",
+          "status": "INCOMPLETE",
+          "reason": "SMT_CANDIDATE",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CANDIDATE",
+          "components": {
+            "crt": {
+              "family_id": "4bf4c031745451108c887d785c48c566fa867a2dba2eda8d7256d4760e3fc391",
+              "revision_id": "6fe93e39a6518a0f90658cd27b46fda783b36a845fcd5d5bd80105e4200c2fba",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "7b43233c9ea528e78efb60ab58d2b269cdab5fc46c1a32681f17e20f001ed7c4",
+              "revision_id": "6923785294cf8889a1c10eeb2da97424581fe461581894d92db0437f9c326fd5",
+              "revision": 1,
+              "state": "SMT_CANDIDATE",
+              "reason": "PENDING_SHARED_CONFIRMATION",
+              "available_at": "2026-11-13T14:20:00Z",
+              "observation_time": "2026-11-13T13:55:00Z",
+              "confirmation_time": "2026-11-13T14:20:00Z"
+            }
+          },
+          "receipt_id": "13470f51c93b6dddfc00c31dde633601bf2c4aa05267902338150dbdb1ba69b6"
+        },
+        {
+          "utc": "2026-11-13T14:25:00Z",
+          "status": "ALIGNED",
+          "reason": "MATCHING_DIRECTIONS",
+          "direction": "BULLISH",
+          "first_available_at": "2026-11-13T14:25:00Z",
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "SMT_CONFIRMED",
+          "components": {
+            "crt": {
+              "family_id": "4bf4c031745451108c887d785c48c566fa867a2dba2eda8d7256d4760e3fc391",
+              "revision_id": "6fe93e39a6518a0f90658cd27b46fda783b36a845fcd5d5bd80105e4200c2fba",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "7b43233c9ea528e78efb60ab58d2b269cdab5fc46c1a32681f17e20f001ed7c4",
+              "revision_id": "800d4b21153675dd512446633ddb8578d405ef732186fe63e63b78b5e6f930b6",
+              "revision": 2,
+              "state": "SMT_CONFIRMED",
+              "reason": "SMT_CONFIRMED",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "381fe9ea79d86d996572a4fd450d681d2268de6f5fdbc22ae64ca845d7d4eb3c"
+        },
+        {
+          "utc": "2026-11-13T14:35:00Z",
+          "status": "INCOMPLETE",
+          "reason": "MISSING_OPEN_CANDLES",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": true,
+          "component_changed": true,
+          "crt_state": "EXPANSION_OBSERVED",
+          "smt_state": "UNCERTAIN",
+          "components": {
+            "crt": {
+              "family_id": "4bf4c031745451108c887d785c48c566fa867a2dba2eda8d7256d4760e3fc391",
+              "revision_id": "6fe93e39a6518a0f90658cd27b46fda783b36a845fcd5d5bd80105e4200c2fba",
+              "revision": 3,
+              "state": "EXPANSION_OBSERVED",
+              "reason": "POST_RECLAIM_MIDPOINT",
+              "available_at": "2026-11-13T14:15:00Z",
+              "observation_time": "2026-11-13T14:10:00Z",
+              "confirmation_time": "2026-11-13T14:15:00Z"
+            },
+            "smt": {
+              "family_id": "7b43233c9ea528e78efb60ab58d2b269cdab5fc46c1a32681f17e20f001ed7c4",
+              "revision_id": "800d4b21153675dd512446633ddb8578d405ef732186fe63e63b78b5e6f930b6",
+              "revision": 2,
+              "state": "UNCERTAIN",
+              "reason": "MISSING_LAGGARD_OBSERVATION",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "da3fb9ac6ffcd0b5b387c0a412a037f035095815e529a6df7ea6043a93b19af2"
+        },
+        {
+          "utc": "2026-11-13T14:45:00Z",
+          "status": "INCOMPLETE",
+          "reason": "MISSING_OPEN_CANDLES",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "UNCERTAIN",
+          "components": {
+            "crt": {
+              "family_id": "4bf4c031745451108c887d785c48c566fa867a2dba2eda8d7256d4760e3fc391",
+              "revision_id": "51af13f3f6e2e88f2573d1348687d0b72cdd38dcf62a686c44de819e3e61be15",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:45:00Z",
+              "observation_time": "2026-11-13T14:40:00Z",
+              "confirmation_time": "2026-11-13T14:45:00Z"
+            },
+            "smt": {
+              "family_id": "7b43233c9ea528e78efb60ab58d2b269cdab5fc46c1a32681f17e20f001ed7c4",
+              "revision_id": "800d4b21153675dd512446633ddb8578d405ef732186fe63e63b78b5e6f930b6",
+              "revision": 2,
+              "state": "UNCERTAIN",
+              "reason": "MISSING_LAGGARD_OBSERVATION",
+              "available_at": "2026-11-13T14:25:00Z",
+              "observation_time": "2026-11-13T14:20:00Z",
+              "confirmation_time": "2026-11-13T14:25:00Z"
+            }
+          },
+          "receipt_id": "ab2a71732726a9e17dedcc117d8198ad16769abf6349e8e79c83f7b1be796954"
+        },
+        {
+          "utc": "2026-11-13T14:50:00Z",
+          "status": "INCOMPLETE",
+          "reason": "MISSING_OPEN_CANDLES",
+          "direction": null,
+          "first_available_at": null,
+          "verdict_changed": false,
+          "component_changed": true,
+          "crt_state": "OPPOSITE_BOUNDARY_REACHED",
+          "smt_state": "SMT_INVALIDATED",
+          "components": {
+            "crt": {
+              "family_id": "4bf4c031745451108c887d785c48c566fa867a2dba2eda8d7256d4760e3fc391",
+              "revision_id": "51af13f3f6e2e88f2573d1348687d0b72cdd38dcf62a686c44de819e3e61be15",
+              "revision": 4,
+              "state": "OPPOSITE_BOUNDARY_REACHED",
+              "reason": "POST_RECLAIM_BOUNDARY",
+              "available_at": "2026-11-13T14:45:00Z",
+              "observation_time": "2026-11-13T14:40:00Z",
+              "confirmation_time": "2026-11-13T14:45:00Z"
+            },
+            "smt": {
+              "family_id": "7b43233c9ea528e78efb60ab58d2b269cdab5fc46c1a32681f17e20f001ed7c4",
+              "revision_id": "8d95c558dd7ee1c0c5393949d7edeec9dfd9d995844d3f7b8f620b056203726a",
+              "revision": 3,
+              "state": "SMT_INVALIDATED",
+              "reason": "SMT_INVALIDATED",
+              "available_at": "2026-11-13T14:50:00Z",
+              "observation_time": "2026-11-13T14:45:00Z",
+              "confirmation_time": "2026-11-13T14:50:00Z"
+            }
+          },
+          "receipt_id": "6f740d41ca259255e3162c7422ea864bf29bcd8a074fe29e7949e7ece8dd034a"
+        }
+      ],
+      "verdicts": {
+        "ALIGNED": 4,
+        "CONTRADICTED": 0,
+        "NOT_ALIGNED": 0,
+        "INCOMPLETE": 41
+      },
+      "families": {
+        "crt": 1,
+        "smt": 1
+      },
+      "restart_probes": [
+        {
+          "cutoff": 1794574800,
+          "receipt_id": "0aba79ed7e669294e1f9e37850a3a571f8cfbe50943648bc0dcc210efb17b610",
+          "payload_sha256": "48877b13ca236786bc8313d750142133070b187731eeaa18e1e4fa9798985e3b"
+        },
+        {
+          "cutoff": 1794578400,
+          "receipt_id": "cd45aa8f938aa153f3d0ae8d9f92321e082ef5d0447ecaab28da2c9933236afa",
+          "payload_sha256": "eb881765f3388e4bf7802c0eea2b70824ded46a8d33eedc6114dd6c0c0e046c7"
+        },
+        {
+          "cutoff": 1794579000,
+          "receipt_id": "ffa53579efde6c2cd1edfe3db325e03d120e6604238e90f4e9b5ef315e5745a3",
+          "payload_sha256": "f22f2042d1a7069baac1950d87354bcc55701e082843c8310373c193e32d7f37"
+        },
+        {
+          "cutoff": 1794579300,
+          "receipt_id": "5d1f02de5651f5c431b574b666778d17b34d63e5131960ac3f76b50f5e049da1",
+          "payload_sha256": "e5916e2f2752b74328947a4d373f4dc10be2913fee9454f92bbac4428369c2e9"
+        },
+        {
+          "cutoff": 1794579600,
+          "receipt_id": "13470f51c93b6dddfc00c31dde633601bf2c4aa05267902338150dbdb1ba69b6",
+          "payload_sha256": "828093158bbf3bb414aef820fce05d49ee8841ddbd81e490aa0bd745c0e61639"
+        },
+        {
+          "cutoff": 1794579900,
+          "receipt_id": "381fe9ea79d86d996572a4fd450d681d2268de6f5fdbc22ae64ca845d7d4eb3c",
+          "payload_sha256": "7649ea741855b41d42572109734baaf8b923a7620451458740f535dd612ed9af"
+        },
+        {
+          "cutoff": 1794580500,
+          "receipt_id": "da3fb9ac6ffcd0b5b387c0a412a037f035095815e529a6df7ea6043a93b19af2",
+          "payload_sha256": "091c3a7069ba148640476008fb611ad2acb81c5cb6ac47be34c88ef2df5274e8"
+        },
+        {
+          "cutoff": 1794581100,
+          "receipt_id": "ab2a71732726a9e17dedcc117d8198ad16769abf6349e8e79c83f7b1be796954",
+          "payload_sha256": "b4058db2aa9714b0feef4441552de3e4866ce224f92a4fd062b01314b91c3307"
+        },
+        {
+          "cutoff": 1794581400,
+          "receipt_id": "6f740d41ca259255e3162c7422ea864bf29bcd8a074fe29e7949e7ece8dd034a",
+          "payload_sha256": "b9ddf65f9f55a3991a9bbc40bb953b22f96810d67bea90d7ad81b10c9446e86b"
+        }
+      ]
+    }
+  }
+}

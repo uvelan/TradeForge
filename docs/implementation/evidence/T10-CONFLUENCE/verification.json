@@ -1,0 +1,128 @@
+{
+  "tested_sha": "694aa2b90ee06246af3909f8913b1619b3961eb3",
+  "windows": "Windows-11-10.0.26200-SP0",
+  "python": "3.13.14",
+  "node": "v24.14.0",
+  "times": "ISO UTC start and end include orchestration. Elapsed is wall seconds inside the local command wrapper.",
+  "commands": [
+    {
+      "id": "focused",
+      "command": ".venv/Scripts/python.exe -m pytest -q research_backend/tests/test_replay_confluence.py research_backend/tests/test_confluence_family_tie.py research_backend/tests/test_replay_crt.py research_backend/tests/test_smt.py",
+      "start": "2026-11-26T11:49:07.149Z",
+      "end": "2026-11-26T11:49:27.251Z",
+      "code": 0,
+      "elapsed": 15.1345412,
+      "summary": [
+        "32 passed, 1 warning in 13.38s"
+      ]
+    },
+    {
+      "id": "oracle",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence --source-storage storage --output docs/implementation/evidence/T10-CONFLUENCE/oracle.json",
+      "start": "2026-11-26T11:49:07.149Z",
+      "end": "2026-11-26T11:52:17.103Z",
+      "code": 0,
+      "elapsed": 185.0401115,
+      "summary": []
+    },
+    {
+      "id": "compat",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence_compatibility --check-join --source-storage storage --compare docs/implementation/evidence/T10-CONFLUENCE/components-before.json --output storage/t10-confluence-integration/components-after.json",
+      "start": "2026-11-26T11:49:07.149Z",
+      "end": "2026-11-26T11:49:14.393Z",
+      "code": 0,
+      "elapsed": 3.6536074,
+      "summary": []
+    },
+    {
+      "id": "sparse-before",
+      "command": ".venv/Scripts/python.exe -m scripts.benchmark_t10_zone_gaps --repo ../TradeForge-confluence-base --output docs/implementation/evidence/T10-CONFLUENCE/sparse-before.json",
+      "start": "2026-11-26T11:52:26.414Z",
+      "end": "2026-11-26T11:52:33.375Z",
+      "code": 0,
+      "elapsed": 3.9151946,
+      "summary": []
+    },
+    {
+      "id": "sparse-after",
+      "command": ".venv/Scripts/python.exe -m scripts.benchmark_t10_zone_gaps --output docs/implementation/evidence/T10-CONFLUENCE/sparse-after.json",
+      "start": "2026-11-26T11:52:33.375Z",
+      "end": "2026-11-26T11:52:39.617Z",
+      "code": 0,
+      "elapsed": 3.5873942,
+      "summary": []
+    },
+    {
+      "id": "bench",
+      "command": ".venv/Scripts/python.exe -m scripts.benchmark_t10_confluence --source-storage storage --cold-samples 6 --repetitions 4 --output docs/implementation/evidence/T10-CONFLUENCE/performance.json",
+      "start": "2026-11-26T11:52:39.617Z",
+      "end": "2026-11-26T11:53:18.272Z",
+      "code": 0,
+      "elapsed": 36.0808161,
+      "summary": []
+    },
+    {
+      "id": "browser",
+      "command": ".venv/Scripts/python.exe -m scripts.verify_t10_confluence_browser --source-storage storage --case all --samples 20 --output storage/t10-confluence-integration/browser --api-port 8752 --ui-port 4752",
+      "start": "2026-11-26T11:53:18.272Z",
+      "end": "2026-11-26T11:56:47.344Z",
+      "code": 0,
+      "elapsed": 141.1199372,
+      "summary": [
+        "1 passed (52.3s)",
+        "controlled initial: {'exit_code': 0, 'elapsed_seconds': 53.27}",
+        "1 passed (10.5s)",
+        "controlled restart: {'exit_code': 0, 'elapsed_seconds': 11.44}",
+        "1 passed (54.5s)",
+        "genuine initial: {'exit_code': 0, 'elapsed_seconds': 55.28}",
+        "1 passed (7.5s)",
+        "genuine restart: {'exit_code': 0, 'elapsed_seconds': 8.38}"
+      ]
+    },
+    {
+      "id": "backend",
+      "command": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\n.venv/Scripts/python.exe -m pytest -q",
+      "start": "2026-11-26T11:57:02.628Z",
+      "end": "2026-11-26T12:08:44.137Z",
+      "code": 0,
+      "elapsed": 695.953949,
+      "summary": [
+        "1182 passed, 1 skipped, 1 warning in 694.44s (0:11:34)"
+      ]
+    },
+    {
+      "id": "unit",
+      "command": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\nnpm --prefix frontend test",
+      "start": "2026-11-26T11:57:02.628Z",
+      "end": "2026-11-26T11:57:08.896Z",
+      "code": 0,
+      "elapsed": 1.4698817,
+      "summary": [
+        "Test Files  4 passed (4)",
+        "Tests  13 passed (13)"
+      ]
+    },
+    {
+      "id": "build",
+      "command": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\nnpm --prefix frontend run build",
+      "start": "2026-11-26T11:57:02.629Z",
+      "end": "2026-11-26T11:57:26.495Z",
+      "code": 0,
+      "elapsed": 17.1400567,
+      "summary": [
+        "\u2713 built in 1.05s"
+      ]
+    },
+    {
+      "id": "standard",
+      "command": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\n$env:TRADEFORGE_E2E_API_PORT='8750'\n$env:TRADEFORGE_E2E_UI_PORT='4750'\nnpm --prefix frontend run e2e -- --retries=0",
+      "start": "2026-11-26T11:57:02.629Z",
+      "end": "2026-11-26T12:04:53.511Z",
+      "code": 0,
+      "elapsed": 465.4751417,
+      "summary": [
+        "88 passed (7.7m)"
+      ]
+    }
+  ]
+}

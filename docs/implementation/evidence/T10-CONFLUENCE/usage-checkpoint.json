@@ -1,0 +1,235 @@
+{
+  "snapshot_utc": "2026-11-26T12:09:15.816215+00:00",
+  "milestone_start_utc": "2026-11-26T11:31:11.594Z",
+  "agents": [
+    {
+      "agent": "confluence_api",
+      "model": "gpt-6.2-astra",
+      "started": "2026-11-26T11:32:47.641Z",
+      "completed": "2026-11-26T11:47:30.341Z",
+      "usage_through": "2026-11-26T11:47:29.440Z",
+      "counter_records": 63,
+      "reported_stream_errors": 0,
+      "input_tokens": 4990078,
+      "cached_input_tokens": 4908800,
+      "output_tokens": 18683,
+      "reasoning_output_tokens": 2317,
+      "total_tokens": 5008761,
+      "uncached_input_tokens": 81278
+    },
+    {
+      "agent": "confluence_api approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T11:33:02.683Z",
+      "completed": "2026-11-26T11:47:18.907Z",
+      "usage_through": "2026-11-26T11:47:18.904Z",
+      "counter_records": 36,
+      "reported_stream_errors": 0,
+      "input_tokens": 4343718,
+      "cached_input_tokens": 3784832,
+      "output_tokens": 2972,
+      "reasoning_output_tokens": 814,
+      "total_tokens": 4346690,
+      "uncached_input_tokens": 558886
+    },
+    {
+      "agent": "confluence_reference",
+      "model": "gpt-6.2-sol",
+      "started": "2026-11-26T11:33:14.929Z",
+      "completed": "2026-11-26T11:50:15.139Z",
+      "usage_through": "2026-11-26T11:50:15.120Z",
+      "counter_records": 69,
+      "reported_stream_errors": 0,
+      "input_tokens": 5762224,
+      "cached_input_tokens": 5660288,
+      "output_tokens": 28066,
+      "reasoning_output_tokens": 5957,
+      "total_tokens": 5790290,
+      "uncached_input_tokens": 101936
+    },
+    {
+      "agent": "confluence_reference approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T11:33:28.801Z",
+      "completed": "2026-11-26T11:50:03.271Z",
+      "usage_through": "2026-11-26T11:50:03.269Z",
+      "counter_records": 45,
+      "reported_stream_errors": 0,
+      "input_tokens": 5681997,
+      "cached_input_tokens": 4974080,
+      "output_tokens": 3639,
+      "reasoning_output_tokens": 1174,
+      "total_tokens": 5685636,
+      "uncached_input_tokens": 707917
+    },
+    {
+      "agent": "confluence_ui",
+      "model": "gpt-6.2-sol",
+      "started": "2026-11-26T11:33:00.101Z",
+      "completed": "2026-11-26T11:51:48.159Z",
+      "usage_through": "2026-11-26T11:51:48.131Z",
+      "counter_records": 91,
+      "reported_stream_errors": 0,
+      "input_tokens": 8615231,
+      "cached_input_tokens": 8494976,
+      "output_tokens": 36632,
+      "reasoning_output_tokens": 12030,
+      "total_tokens": 8651863,
+      "uncached_input_tokens": 120255
+    },
+    {
+      "agent": "confluence_ui approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T11:33:05.083Z",
+      "completed": "2026-11-26T11:51:40.631Z",
+      "usage_through": "2026-11-26T11:51:40.628Z",
+      "counter_records": 35,
+      "reported_stream_errors": 0,
+      "input_tokens": 4151582,
+      "cached_input_tokens": 3605632,
+      "output_tokens": 3046,
+      "reasoning_output_tokens": 853,
+      "total_tokens": 4154628,
+      "uncached_input_tokens": 545950
+    },
+    {
+      "agent": "integration",
+      "model": "gpt-6.2-astra",
+      "started": "2026-11-26T11:31:11.594Z",
+      "completed": null,
+      "usage_through": "2026-11-26T12:08:57.422Z",
+      "counter_records": 138,
+      "reported_stream_errors": 0,
+      "input_tokens": 24386382,
+      "cached_input_tokens": 24016896,
+      "output_tokens": 26457,
+      "reasoning_output_tokens": 4416,
+      "total_tokens": 24412839,
+      "uncached_input_tokens": 369486
+    },
+    {
+      "agent": "integration approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T11:44:01.662Z",
+      "completed": "2026-11-26T11:54:55.500Z",
+      "usage_through": "2026-11-26T11:54:55.495Z",
+      "counter_records": 36,
+      "reported_stream_errors": 0,
+      "input_tokens": 3426549,
+      "cached_input_tokens": 3312640,
+      "output_tokens": 2942,
+      "reasoning_output_tokens": 650,
+      "total_tokens": 3429491,
+      "uncached_input_tokens": 113909
+    },
+    {
+      "agent": "integration approval reviewer",
+      "model": "codex-auto-review",
+      "started": "2026-11-26T11:57:03.931Z",
+      "completed": "2026-11-26T12:09:14.007Z",
+      "usage_through": "2026-11-26T12:09:14.004Z",
+      "counter_records": 23,
+      "reported_stream_errors": 0,
+      "input_tokens": 1818434,
+      "cached_input_tokens": 1656704,
+      "output_tokens": 1896,
+      "reasoning_output_tokens": 469,
+      "total_tokens": 1820330,
+      "uncached_input_tokens": 161730
+    }
+  ],
+  "total": {
+    "input_tokens": 63176195,
+    "cached_input_tokens": 60414848,
+    "output_tokens": 124333,
+    "reasoning_output_tokens": 28680,
+    "total_tokens": 63300528,
+    "uncached_input_tokens": 2761347
+  },
+  "by_model": {
+    "codex-auto-review": {
+      "input_tokens": 19422280,
+      "cached_input_tokens": 17333888,
+      "output_tokens": 14495,
+      "reasoning_output_tokens": 3960,
+      "total_tokens": 19436775,
+      "uncached_input_tokens": 2088392
+    },
+    "gpt-6.2-astra": {
+      "input_tokens": 29376460,
+      "cached_input_tokens": 28925696,
+      "output_tokens": 45140,
+      "reasoning_output_tokens": 6733,
+      "total_tokens": 29421600,
+      "uncached_input_tokens": 450764
+    },
+    "gpt-6.2-sol": {
+      "input_tokens": 14377455,
+      "cached_input_tokens": 14155264,
+      "output_tokens": 64698,
+      "reasoning_output_tokens": 17987,
+      "total_tokens": 14442153,
+      "uncached_input_tokens": 222191
+    }
+  },
+  "method": "Per linked session, differences of observed provider cumulative counters from the last sample before the owner turn to the last available sample. Cached input and reasoning are subsets of input and output. All visible retries are included; opaque provider retry and pricing details are unavailable.",
+  "scope": "integration owner, three workers, and their linked approval reviewer sessions",
+  "worker_commits": {
+    "confluence_api": [
+      "bbaeb6a",
+      "1e59a67",
+      "c4f789c"
+    ],
+    "confluence_ui": [
+      "d9cd166",
+      "7f1fe88"
+    ],
+    "confluence_reference": [
+      "78a9c9d",
+      "f0f4f03",
+      "3b308ca"
+    ]
+  },
+  "dispatch_utc": {
+    "confluence_api": "11:32:45.859",
+    "confluence_ui": "11:32:58.252",
+    "confluence_reference": "11:33:13.305"
+  },
+  "starting_sha": "6e2eb41ee81af599dec0f80ad9c076e76e2f41b5",
+  "combined_tested_sha": "694aa2b90ee06246af3909f8913b1619b3961eb3",
+  "integration_started": "2026-11-26T11:42:28.311Z",
+  "simultaneous_worker_overlap_seconds": 855.412,
+  "rework_observed_seconds": {
+    "standalone_fingerprint_test_failure_to_corrected_probe": 52.28,
+    "tie_fixture_failure_to_corrected_probe": 14.604,
+    "browser_redundant_request_failure_to_corrected_genuine_initial_pass": 159.135
+  },
+  "rework_method": "Failure to observed corrected pass, including test execution and polling. Separate lane intervals, not exclusive engineering time. Additional review-driven changes did not have a separate rework timer.",
+  "critical_path": "Rule and isolated lanes; integrated API and compatibility corrections; last UI restart verification; serial idle benchmark and integrated browser; longest full local suite; evidence commit, push and remote verification.",
+  "cost": "UNAVAILABLE: no applicable billing rate",
+  "parallel_speedup": "UNMEASURED: no equivalent serial milestone",
+  "sampling_note": "Last observed counters per linked agent; work after this sampling instant is excluded. Multiple reviewer sessions on one lane are separate records.",
+  "full_verification_window_seconds": 701.509,
+  "full_verification_last_finished": "backend",
+  "git_numstat_through": "694aa2b90ee06246af3909f8913b1619b3961eb3",
+  "churn": {
+    "evidence_and_docs": {
+      "files": 2,
+      "binary_files": 0,
+      "added": 59,
+      "removed": 0
+    },
+    "test_and_verification": {
+      "files": 8,
+      "binary_files": 0,
+      "added": 1780,
+      "removed": 0
+    },
+    "production": {
+      "files": 8,
+      "binary_files": 0,
+      "added": 648,
+      "removed": 2
+    }
+  }
+}
