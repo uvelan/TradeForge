@@ -243,6 +243,8 @@ def export_ai(uid:str, plan_version:int|None=None)->dict:
             raise HTTPException(404,"Trade not found")
         if trade["status"] not in ("PLANNED","REVIEWED"):
             raise HTTPException(422,"Pre-trade review packages require an open plan")
+        if db.execute("SELECT 1 FROM plan_paper_events WHERE trade_id=? LIMIT 1", (uid,)).fetchone():
+            raise HTTPException(422, "Pre-trade review requires a decision with no submitted paper fills")
         latest=dict(db.execute(
             "SELECT version,payload,created_at FROM plan_versions WHERE trade_id=? ORDER BY version DESC LIMIT 1",
             (uid,)).fetchone())

@@ -69,3 +69,22 @@ def test_unsupported_sizing_chronology_and_no_trade(client,journey):
     assert client.post("/api/trades/"+trade["id"]+"/decline",json={"reason":"Entry conditions did not hold"}).is_success
     assert client.post(path,json=cmd).status_code==409
     assert rows("SELECT * FROM plan_paper_events")==[]
+
+
+def test_pre_trade_export_requires_an_unexecuted_paper_plan(client, journey):
+    trade, _, order = journey
+    export = "/api/ai/exports/" + trade["id"]
+    original = client.post(export)
+    assert original.status_code == 201
+    archive = original.json()["download_url"].removeprefix("/research")
+    original_bytes = client.get(archive).content
+
+    actions = "/api/paper/plans/" + trade["id"] + "/actions"
+    assert client.post(actions, json=order).is_success
+    assert client.post(export).status_code == 422
+
+    close = dict(order, kind="CLOSE", sequence=2, decision_ms=order["decision_ms"] + 1000)
+    assert client.post(actions, json=close).is_success
+    assert client.post(export).status_code == 422
+    assert client.get(archive).content == original_bytes
+    assert len(rows("SELECT id FROM ai_packages")) == 1
