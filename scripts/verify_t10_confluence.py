@@ -399,7 +399,7 @@ def verify_case(client, name, manifest):
         cutoff = expected["cutoff"]
         actual = successful(read_confluence(client, session, cutoff))
         assert (actual["session_id"], actual["cutoff"], actual["profile"], actual["rule_version"]) == (
-            session, cutoff, PROFILE, 1,
+            session, cutoff, PROFILE, 2,
         )
         assert actual["authority"] == "RESEARCH_ONLY"
         assert actual["availability_policy"] == "PINNED_M5_AVAILABLE_AT_OR_MODELED_NOMINAL_CLOSE"
@@ -423,6 +423,20 @@ def verify_case(client, name, manifest):
             assert actual["first_available_at"] == max(
                 [entry["available_at"] for entry in actual["components"].values()] + recoveries
             ) <= cutoff
+        # The chart must explain the join clock from the archive, including
+        # every tied arrival and even when no producer published a revision.
+        expected_witnesses = []
+        for symbol, lane in sorted(manifest["symbols"].items()):
+            for row in lane["bars"]:
+                stamp = row["time"]
+                arrived = row["available_at"]
+                if stamp + STEP < arrived == actual["first_available_at"]:
+                    partition = lane["origins"][stamp]
+                    expected_witnesses.append((symbol, stamp, stamp + STEP, arrived,
+                                               f"{partition['id']}:{stamp}", [partition]))
+        actual_witnesses = [(w["symbol"], w["time"], w["nominal_close"], w["available_at"],
+                             w["source_id"], w["partitions"]) for w in actual["coverage_recoveries"]]
+        assert actual_witnesses == expected_witnesses, (name, utc(cutoff), actual_witnesses, expected_witnesses)
         receipt = actual["receipt_id"]
         assert_identity(receipt)
         assert digest({key: value for key, value in actual.items() if key != "receipt_id"}) == receipt
