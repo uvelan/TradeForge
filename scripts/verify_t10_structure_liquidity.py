@@ -91,8 +91,9 @@ def pivot_class(side, current, previous):
 
 def structure_reference(bars):
     """Apply the documented chronological pivot and protected-break rules to Decimal OHLC."""
-    assert all(a["time"] + STEP == b["time"] and a["available_at"] < b["available_at"]
+    assert all(a["time"] + STEP == b["time"] and a["available_at"] <= b["available_at"]
                for a, b in zip(bars, bars[1:])), "This reference is for contiguous, monotonically available M5."
+    arrival = {bar["time"]: bar["available_at"] for bar in bars}
     active = {}
     spent = set()
     candidate_open = {}
@@ -120,6 +121,11 @@ def structure_reference(bars):
             opposing = trend is not None and trend != direction
             refs = [*pivot["reference_opens"], at]
             candidate = candidate_open.get(key)
+            if candidate is not None:
+                if outside_close and arrival[candidate] >= at + STEP:
+                    candidate = None
+                if not outside_close and not outside_wick and arrival[candidate] > at:
+                    continue
             if candidate is not None:
                 refs.append(candidate)
             if outside_close:
