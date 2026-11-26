@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from . import domain, month_replay
 from .db import one, rows, transaction
 from .strategy_evidence import fingerprint
+from .schemas import CorrectableReview
 
 router = APIRouter(prefix="/api")
 TYPE = "RECORDED_REPLAY_REVIEW_V1"
@@ -26,7 +27,7 @@ class MetricClaim(BaseModel):
     unit: str = Field(min_length=1,max_length=80)
 
 
-class HistoricalReview(BaseModel):
+class HistoricalReview(CorrectableReview):
     model_config = ConfigDict(extra="forbid")
     review_type: Literal["RECORDED_REPLAY_REVIEW_V1"]
     package_id: str = Field(pattern=r"^PKG-[A-Za-z0-9-]+$",max_length=120)
@@ -106,7 +107,7 @@ def export(month:str, session:str, cutoff_ms:int=Query(ge=0,le=32503680000000)):
     claims=[{k:m[k] for k in ("metric_id","value","unit")} for m in evidence["metrics"].values()]
     template=HistoricalReview(review_type=TYPE,package_id=uid,session=session,assessment="INSUFFICIENT_DATA",comment="",claims=claims)
     files={"data/replay.json":json.dumps(evidence,indent=2).encode(),
-           "response/AI_REVIEW_TEMPLATE.json":template.model_dump_json(indent=2).encode()}
+           "response/AI_REVIEW_TEMPLATE.json":template.model_dump_json(indent=2,exclude={"corrects_review_id"}).encode()}
     manifest=dict(review_type=TYPE,package_id=uid,session=session,knowledge_cutoff_utc=cutoff,
                   evidence_snapshot=dict(policy="SQLITE_READ_SNAPSHOT_V1",components_sha256={
                       name:hashlib.sha256(body).hexdigest() for name,body in files.items()}))

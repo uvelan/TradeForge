@@ -1,0 +1,218 @@
+{
+  "old": {
+    "results": {
+      "value/wrong-first": [
+        201,
+        [
+          1,
+          1
+        ]
+      ],
+      "value/wrong-last": [
+        422,
+        [
+          1,
+          1
+        ]
+      ],
+      "unit/wrong-first": [
+        201,
+        [
+          1,
+          1
+        ]
+      ],
+      "unit/wrong-last": [
+        422,
+        [
+          1,
+          1
+        ]
+      ],
+      "package_id/wrong-first": [
+        201,
+        [
+          1,
+          1
+        ]
+      ],
+      "package_id/wrong-last": [
+        404,
+        [
+          1,
+          1
+        ]
+      ]
+    },
+    "clean": "REVIEW-3778074A1EC3",
+    "clean_sha256": "222e3ca466433b9490056dec840381c66ae9ce7ae64ce0d0b8cd9e1c841ff9cd",
+    "counts": [
+      2,
+      2
+    ],
+    "review": {
+      "review_type": "RECORDED_REPLAY_REVIEW_V1",
+      "package_id": "PKG-9D77CB1A2815",
+      "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+      "assessment": "INSUFFICIENT_DATA",
+      "comment": "Controlled integrity check",
+      "claims": [
+        {
+          "metric_id": "PRICE_CHANGE-282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387",
+          "value": "-0.00100",
+          "unit": "USD per EUR"
+        }
+      ]
+    },
+    "affected": "REVIEW-F2416D18831F",
+    "affected_sha256": "1133942504d4f05810ce64726b2be574e03fdfa5df768582382d7efdd7b8c0e8",
+    "decisions": {
+      "REVIEW-F2416D18831F": {
+        "review_id": "REVIEW-F2416D18831F",
+        "current_sequence": 1,
+        "decisions": [
+          {
+            "review_id": "REVIEW-F2416D18831F",
+            "sequence": 1,
+            "decision": "NEEDS_FOLLOW_UP",
+            "rationale": "Prior operator decision",
+            "created_at": "2026-11-26T04:05:07.414Z"
+          }
+        ]
+      },
+      "REVIEW-3778074A1EC3": {
+        "review_id": "REVIEW-3778074A1EC3",
+        "current_sequence": 1,
+        "decisions": [
+          {
+            "review_id": "REVIEW-3778074A1EC3",
+            "sequence": 1,
+            "decision": "NEEDS_FOLLOW_UP",
+            "rationale": "Prior operator decision",
+            "created_at": "2026-11-26T04:05:07.439Z"
+          }
+        ]
+      }
+    }
+  },
+  "fresh": {
+    "results": {
+      "value/wrong-first": [
+        422,
+        [
+          0,
+          0
+        ]
+      ],
+      "value/wrong-last": [
+        422,
+        [
+          0,
+          0
+        ]
+      ],
+      "unit/wrong-first": [
+        422,
+        [
+          0,
+          0
+        ]
+      ],
+      "unit/wrong-last": [
+        422,
+        [
+          0,
+          0
+        ]
+      ],
+      "package_id/wrong-first": [
+        422,
+        [
+          0,
+          0
+        ]
+      ],
+      "package_id/wrong-last": [
+        422,
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    "clean": "REVIEW-47992607BC44",
+    "clean_sha256": "580874e6fafd6d5d5311f11a3cd0a2d3c6dfed71d550aa1e5f55767093dbb016",
+    "counts": [
+      1,
+      1
+    ],
+    "review": {
+      "review_type": "RECORDED_REPLAY_REVIEW_V1",
+      "package_id": "PKG-B40BE2DB17D3",
+      "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+      "assessment": "INSUFFICIENT_DATA",
+      "comment": "Controlled integrity check",
+      "claims": [
+        {
+          "metric_id": "PRICE_CHANGE-282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387",
+          "value": "-0.00100",
+          "unit": "USD per EUR"
+        }
+      ]
+    },
+    "race": {
+      "id": "REVIEW-C87D44AA30E3",
+      "input_hashes": [
+        "b9a3713abd5b704eb70cf1d273bd1da9ee3027cad7fb3a4b2b5caaeba5ef40c7",
+        "eda277ee97dfd75cf51fbfb936a46130353db3b23991953949c62f9f97d357f7"
+      ],
+      "retained": "b9a3713abd5b704eb70cf1d273bd1da9ee3027cad7fb3a4b2b5caaeba5ef40c7",
+      "counts": [
+        2,
+        2
+      ]
+    }
+  },
+  "restart": {
+    "affected": {
+      "id": "REVIEW-F2416D18831F",
+      "sha256": "1133942504d4f05810ce64726b2be574e03fdfa5df768582382d7efdd7b8c0e8",
+      "decisions": {
+        "review_id": "REVIEW-F2416D18831F",
+        "current_sequence": 1,
+        "decisions": [
+          {
+            "review_id": "REVIEW-F2416D18831F",
+            "sequence": 1,
+            "decision": "NEEDS_FOLLOW_UP",
+            "rationale": "Prior operator decision",
+            "created_at": "2026-11-26T04:05:07.414Z"
+          }
+        ]
+      }
+    },
+    "clean": {
+      "id": "REVIEW-3778074A1EC3",
+      "sha256": "222e3ca466433b9490056dec840381c66ae9ce7ae64ce0d0b8cd9e1c841ff9cd",
+      "decisions": {
+        "review_id": "REVIEW-3778074A1EC3",
+        "current_sequence": 1,
+        "decisions": [
+          {
+            "review_id": "REVIEW-3778074A1EC3",
+            "sequence": 1,
+            "decision": "NEEDS_FOLLOW_UP",
+            "rationale": "Prior operator decision",
+            "created_at": "2026-11-26T04:05:07.439Z"
+          }
+        ]
+      }
+    },
+    "correction": "REVIEW-C4F00DB50BC1",
+    "counts": [
+      3,
+      3
+    ],
+    "correction_sha256": "eb09576765882f1f2a99c9855fe4b91c6fae386e59ca78c902cbb2fc806be3e7"
+  }
+}

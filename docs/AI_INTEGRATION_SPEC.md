@@ -5,3 +5,5 @@ Planned exports pin the plan version, context cutoff, dataset and cost-model ver
 An importer validates a versioned response schema, exact package and plan identity, and independent evidence and metric references before persisting the original response. Human disposition remains distinct from the imported assessment.
 
 The draft [version 1 response schema](schemas/ai-review-v1.schema.json) defines the transport contract. The future importer must resolve every reference against the exact export manifest and check unsupported numeric claims in review prose.
+
+Review uploads must use unique JSON member names within each object, including objects nested in arrays. HTTP 422 identifies a duplicate before reference validation. To correct a classified ambiguous historical original, submit a clean review in the same package with its optional `corrects_review_id` set to the affected review ID. See the [historical correction and original-byte evidence](implementation/plan-integration-evidence/REVIEW-ORIGINAL-INTEGRITY.md).

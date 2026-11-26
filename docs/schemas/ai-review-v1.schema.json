@@ -58,6 +58,20 @@
   },
   "additionalProperties": false,
   "properties": {
+    "corrects_review_id": {
+      "anyOf": [
+        {
+          "maxLength": 120,
+          "pattern": "^REVIEW-[A-Za-z0-9-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Corrects Review Id"
+    },
     "schema_version": {
       "const": 1,
       "title": "Schema Version",

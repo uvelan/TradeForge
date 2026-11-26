@@ -7,7 +7,7 @@ type Event={id:string;kind:string;quote:Quote};
 type Metric={metric_id:string;value:string;unit:string;entry_ref:string;exit_ref:string;available_at_ms:number};
 type Contents={manifest:{package_id:string;knowledge_cutoff_utc:string};template:unknown;evidence:{metrics:Record<string,Metric>;events:Event[];unavailable:Record<string,string>}};
 type Decision={sequence:number;decision:string;rationale:string};
-type Review={id:string;package_id:string;assessment:string};
+import type {Review} from './types';
 
 export function RecordedPackageReview({route,initialCutoff}:{route:string;initialCutoff:number}){
   const [selectedCutoff,setCutoff]=useState<string>();
@@ -19,11 +19,12 @@ export function RecordedPackageReview({route,initialCutoff}:{route:string;initia
   const [choice,setChoice]=useState('NEEDS_FOLLOW_UP'),[rationale,setRationale]=useState('');
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[verified,setVerified]=useState('');
   useEffect(()=>{let active=true;api.get<PackageRow[]>(route+'/packages').then(r=>{if(active)setHistory(r)}).catch(e=>{if(active)setError(String(e))});return()=>{active=false}},[route]);
-  async function work(fn:()=>Promise<void>){setBusy(true);setError('');try{await fn()}catch(e){setError(String(e))}finally{setBusy(false)}}
-  async function chooseReview(id:string){
+  async function work(fn:()=>Promise<unknown>){setBusy(true);setError('');try{await fn()}catch(e){setError(String(e))}finally{setBusy(false)}}
+  async function chooseReview(id:string,list=reviews){
+    const unambiguous=list.find(r=>r.id===id)?.original_integrity==='UNAMBIGUOUS_JSON';
     const [log,original]=await Promise.all([
       api.get<{current_sequence:number;decisions:Decision[]}>('/ai/reviews/'+id+'/decisions'),
-      api.get<NonNullable<typeof saved>>('/ai/reviews/'+id+'/original')]);
+      unambiguous?api.get<NonNullable<typeof saved>>('/ai/reviews/'+id+'/original'):Promise.resolve(undefined)]);
     setSaved(original);
     setReview(id);setSeq(log.current_sequence);setDecisions(log.decisions);setRationale('');
   }
@@ -31,13 +32,15 @@ export function RecordedPackageReview({route,initialCutoff}:{route:string;initia
     const [p,all]=await Promise.all([api.get<Contents>('/ai/packages/'+id+'/recorded'),api.reviews()]);
     const matching=all.filter(r=>r.package_id===id);
     setPkg(p);setReviews(matching);setReview('');setDecisions([]);setVerified('');setInput(JSON.stringify(p.template,null,2));
-    if(matching.length)await chooseReview(matching[0].id);
+    if(matching.length)await chooseReview(matching[0].id,matching);
+    return matching;
   }
   async function upload(body:string|File){
     const raw=typeof body==='string'?body:await body.text();
     if(JSON.parse(raw).package_id!==pkg?.manifest.package_id)throw Error('Select the package cited by this review.');
-    const saved=await api.importReview(body);await open(pkg!.manifest.package_id);await chooseReview(saved.id);
+    const saved=await api.importReview(body);const matching=await open(pkg!.manifest.package_id);await chooseReview(saved.id,matching);
   }
+  const selected=reviews.find(r=>r.id===review);
   return <section aria-label="Recorded replay evidence"><h3>Recorded replay evidence</h3>
     <fieldset disabled={busy}><label>Evidence cutoff (UTC ISO timestamp)<input value={cutoff} onChange={e=>setCutoff(e.target.value)}/></label>
     <button onClick={()=>void work(async()=>{const ms=Date.parse(cutoff);
@@ -60,6 +63,9 @@ export function RecordedPackageReview({route,initialCutoff}:{route:string;initia
     <button onClick={()=>void work(()=>upload(input))}>Import recorded review</button>
     <label>Upload original review file<input type="file" accept=".json" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void work(()=>upload(file))}}/></label>
     {reviews.length>0&&<><label>Imported review<select value={review} onChange={e=>void work(()=>chooseReview(e.target.value))}>{reviews.map(r=><option key={r.id} value={r.id}>{r.assessment} · {r.id}</option>)}</select></label>
+    {selected?.original_integrity==='DUPLICATE_JSON_KEY'&&<><p role="alert">Ambiguous historical original · duplicate JSON key {selected.duplicate_key}</p>
+    <button onClick={()=>setInput(JSON.stringify({...pkg.template as object,corrects_review_id:review},null,2))}>Prepare linked correction</button></>}
+    {selected?.corrects_review_id&&<p>Corrects original {selected.corrects_review_id}</p>}
     {saved&&<div><p>{saved.comment}</p>{saved.claims.map((claim,i)=><p key={i}><a href={'#'+claim.metric_id} onClick={e=>{e.preventDefault();document.getElementById(claim.metric_id)?.scrollIntoView()}}>Trace claim {claim.value} {claim.unit}</a></p>)}</div>}
     <a href={'/research/api/ai/reviews/'+review+'/original'}>Original review bytes</a>
     {decisions.map(d=><p key={d.sequence}>{d.sequence} · {d.decision} · {d.rationale}</p>)}

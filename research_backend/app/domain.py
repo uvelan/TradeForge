@@ -14,6 +14,7 @@ from pathlib import PureWindowsPath
 from fastapi import HTTPException
 from .schemas import SignalReference, TradePlan, Outcome, JournalInput, ReviewInput, ReviewV1
 from .risk import evaluate
+from .review_integrity import AMBIGUOUS, CLEAN
 from .db import transaction, rows, one, utc_now
 from .config import EXPORT_DIR, JOURNAL_DIR, JOURNAL_FILE
 
@@ -209,7 +210,7 @@ def _package_files(t:dict,package_id:str,cutoff:str,signal,snapshot)->dict[str,b
       plan_version=latest['version'], review_type='PRE_TRADE', assessment='INSUFFICIENT_DATA',
       findings=[{'summary':'State one evidence-linked finding','evidence_refs':['PLAN','RISK'],'metric_refs':[]}],
       evidence_refs=['PLAN','RISK'], missing_evidence=[], contradictions=[], risk_concerns=[],
-      suggested_actions=[], limitations=[]).model_dump(mode="json")
+      suggested_actions=[], limitations=[]).model_dump(mode="json",exclude={"corrects_review_id"})
     manifest={'schema_version':'1.0.0','package_id':package_id,'trade_decision_id':t['id'],
       'plan_version':latest['version'],'review_type':'PRE_TRADE','knowledge_cutoff_utc':cutoff,
       'evidence_refs':evidence_refs, 'generated_at':utc_now(),'source':'Local plan only; no verified historical analogs'}
@@ -333,20 +334,33 @@ def import_ai(data: ReviewV1 | ReviewInput, original: bytes) -> dict:
 
 
 def store_review(data,original):
-    serialized=_json(data.model_dump())
+    target = data.corrects_review_id
+    # Preserve the pre-upgrade canonical representation for ordinary duplicates.
+    serialized=_json(data.model_dump(exclude={"corrects_review_id"} if target is None else set()))
     uid = _id('REVIEW')
     with transaction() as db:
         db.execute("BEGIN IMMEDIATE")
+        if target:
+            parent = db.execute("""SELECT r.package_id,i.status FROM ai_reviews r
+                LEFT JOIN ai_review_integrity i ON i.review_id=r.id WHERE r.id=?""",(target,)).fetchone()
+            if not parent or parent["package_id"] != data.package_id or parent["status"] != AMBIGUOUS:
+                raise HTTPException(422,"Correction requires an ambiguous original in the same package")
         existing = db.execute(
-            "SELECT id,assessment FROM ai_reviews WHERE package_id=? AND response=?",
+            """SELECT r.id,r.assessment,i.status FROM ai_reviews r LEFT JOIN ai_review_integrity i
+               ON i.review_id=r.id WHERE r.package_id=? AND r.response=?""",
             (data.package_id, serialized),
         ).fetchone()
         if existing:
+            if existing["status"] == AMBIGUOUS:
+                raise HTTPException(409, f"Ambiguous original: submit a clean review with corrects_review_id={existing['id']}")
+            if existing["status"] != CLEAN:
+                raise HTTPException(409,"Existing review original cannot be verified")
             return {"id": existing["id"], "assessment": existing["assessment"], "verification": "DUPLICATE_IGNORED"}
         db.execute('INSERT INTO ai_reviews VALUES(?,?,?,?,?,?)',
           (uid,data.package_id,data.assessment,serialized,'STRUCTURE_VALID_CONTENT_UNVERIFIED',utc_now()))
         db.execute("INSERT INTO ai_review_originals VALUES(?,?,?)",
                    (uid, original, hashlib.sha256(original).hexdigest()))
+        db.execute("INSERT INTO ai_review_integrity VALUES(?,?,NULL,?)",(uid,CLEAN,target))
     return {'id':uid,'assessment':data.assessment,'verification':'STRUCTURE_VALID_CONTENT_UNVERIFIED',
       'warning':'Free-text findings are not fact-checked by a model or by this importer.'}
 

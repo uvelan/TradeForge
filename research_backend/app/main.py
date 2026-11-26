@@ -7,7 +7,7 @@ from hashlib import sha256
 import asyncio
 import json
 import uuid
-from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Request, Response
+from fastapi import APIRouter, FastAPI, HTTPException, Query, UploadFile, File, Request, Response
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel,Field, model_validator
@@ -26,6 +26,7 @@ from .backtest import breakout_backtest
 from .tick_replay import effective_tick_period, replay_breakout, replay_coverage, validate_bid_extremes
 from .schemas import TradePlan,Outcome,ReviewInput,ReviewV1,JournalInput,RiskInput,SignalReference
 from . import domain
+from .review_integrity import ReviewUploadRoute
 from .drawings import router as drawing_router
 from .arrival_capture import CaptureManager
 from .arrival_routes import router as arrival_router
@@ -208,13 +209,17 @@ def download_ai(pkg:str):
     return Response(payload,media_type='application/zip',headers={'Content-Disposition':f'attachment; filename="{pkg}.zip"'})
 
 
-@app.post('/api/ai/reviews',status_code=201)
+review_upload = APIRouter(route_class=ReviewUploadRoute)
+
+
+@review_upload.post('/api/ai/reviews',status_code=201)
 async def import_review(review: HistoricalReview | ReviewV1 | ReviewInput, request: Request):
     original = await request.body()
-    if len(original) > 1_000_000:
-        raise HTTPException(413, "AI review exceeds 1 MB")
     importer = import_historical if isinstance(review, HistoricalReview) else import_ai
     return await asyncio.to_thread(importer, review, original)
+
+
+app.include_router(review_upload)
 
 
 @app.get('/api/ai/reviews/{review_id}/original')
@@ -231,9 +236,10 @@ def download_review_original(review_id: str):
 @app.get('/api/ai/reviews')
 def reviews():
     return rows("""SELECT id,package_id,assessment,verification,created_at,
+        COALESCE(i.status,'ORIGINAL_UNAVAILABLE') AS original_integrity,i.duplicate_key,i.corrects_review_id,
         EXISTS(SELECT 1 FROM recorded_package_sources src WHERE src.package_id=ai_reviews.package_id) AS recorded_package,
         EXISTS(SELECT 1 FROM ai_review_originals WHERE review_id=ai_reviews.id) AS has_original
-        FROM ai_reviews ORDER BY created_at DESC""")
+        FROM ai_reviews LEFT JOIN ai_review_integrity i ON i.review_id=ai_reviews.id ORDER BY ai_reviews.rowid DESC""")
 
 
 @app.get('/api/journal')

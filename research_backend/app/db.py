@@ -163,6 +163,12 @@ CREATE TABLE IF NOT EXISTS ai_review_originals (
   body BLOB NOT NULL,
   sha256 TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ai_review_integrity (
+  review_id TEXT PRIMARY KEY REFERENCES ai_review_originals(review_id),
+  status TEXT NOT NULL,
+  duplicate_key TEXT,
+  corrects_review_id TEXT REFERENCES ai_reviews(id)
+);
 CREATE TABLE IF NOT EXISTS ai_review_decisions (
     review_id TEXT NOT NULL REFERENCES ai_reviews(id),
     sequence INTEGER NOT NULL CHECK(sequence>0),
@@ -353,7 +359,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 );
 '''
 
-IMMUTABLE_TABLES = ['recorded_package_sources','statement_versions','statement_traces','statement_reports','month_replay_manifests','month_replay_steps','decision_review_steps','plan_paper_events','plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
+IMMUTABLE_TABLES = ['ai_review_integrity','recorded_package_sources','statement_versions','statement_traces','statement_reports','month_replay_manifests','month_replay_steps','decision_review_steps','plan_paper_events','plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 IMMUTABLE_TABLES += ["learning_attempts", "arrival_sessions", "arrival_observations", "arrival_receipts",
                      "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "historical_bi5_sources", "recorded_strategy_checkpoints", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
 
@@ -418,6 +424,9 @@ def initialize():
                 db.execute(f'''CREATE TRIGGER IF NOT EXISTS {name}
                     BEFORE {op} ON {table} BEGIN
                     SELECT RAISE(ABORT,'immutable record'); END''')
+
+        from .review_integrity import backfill
+        backfill(db)
 
 
 def rows(query: str, args: tuple=()) -> list[dict]:
