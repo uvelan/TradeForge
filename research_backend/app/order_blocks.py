@@ -70,7 +70,9 @@ class Block:
 
 
 class OrderBlockStream:
-    def __init__(self, rules, structure, provenance, step, delivery, *, on_formation=None, timing_cutoff=None, registry=None):
+    def __init__(self, rules, structure, provenance, step, delivery, *, on_formation=None, timing_cutoff=None,
+                 registry=None, include_gap_boundary=False):
+        self.include_gap_boundary = include_gap_boundary
         self.on_formation = on_formation
         self.timing_cutoff = timing_cutoff
         self.registry = registry if registry is not None else EvidenceRegistry()
@@ -152,6 +154,8 @@ class OrderBlockStream:
                  "mitigation_pct": float(100*zone.depth/zone.width),
                  "remaining_lower": float(zone.lower if zone.sign == 1 else zone.lower+zone.depth),
                  "remaining_upper": float(zone.upper-zone.depth if zone.sign == 1 else zone.upper)}
+        if self.include_gap_boundary and reason == "MISSING_OPEN_CANDLES":
+            event["previous_observed_open"] = previous_time
         if self.timing_cutoff is not None:
             decision=timing_reason or ("EXPIRED_REFERENCE" if state=="EXPIRED" else
                 "INSUFFICIENT_HISTORY" if state=="INVALIDATED" else

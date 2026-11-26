@@ -2,6 +2,7 @@
 from collections import defaultdict
 
 from .fvg import FVGDelivery, FVGRules, evaluate_fvg
+from .indicator_coverage import open_intervals
 from .indicator_engine import structure_scope
 from .market_structure import detect_structure
 from .order_blocks import OrderBlockDelivery, OrderBlockRules, OrderBlockStream
@@ -75,6 +76,9 @@ def zone_detail(latest, formation, revisions, breaks, pivots, rows, children):
 
     for revision in revisions:
         mark(revision["observation_time"], "REVISION_OBSERVATION", revision["id"])
+        if continuity := revision.get("continuity"):
+            mark(continuity["previous_observed_open"], "GAP_PREVIOUS_OBSERVED", revision["id"])
+            mark(continuity["next_observed_open"], "GAP_NEXT_OBSERVED", revision["id"])
     evidence = [{**row, "roles": roles[row["time"]]} for row in children if row["time"] in roles]
     return {**latest, "revisions": revisions, "evidence": evidence, "structure": structure}
 
@@ -100,6 +104,14 @@ def inspect_zones(session, view, cutoff, mitigation, zone_id, before):
         # including distinct observations sharing one arrival timestamp.
         latest[family] = summary
         if family == zone_id:
+            if "previous_observed_open" in event:
+                previous, current = event["previous_observed_open"], event["observation_time"]
+                # Exclude the observed bars and the closed parts of a mixed weekend gap.
+                intervals = open_intervals(previous + STEP, current, SCHEDULE)
+                summary = {**summary, "continuity": {
+                    "previous_observed_open": previous, "next_observed_open": current, "step_seconds": STEP,
+                    "missing_open_intervals": [{"start": left, "end": right} for left, right in intervals],
+                    "schedule": SCHEDULE.model_dump()}}
             revisions.append(summary)
             if summary["revision"] == 1:
                 formation = event
@@ -110,10 +122,10 @@ def inspect_zones(session, view, cutoff, mitigation, zone_id, before):
 
     registry = EvidenceRegistry(event_sink=collect)
     evaluate_fvg(rows, STEP, cutoff, fvg, FVGDelivery(formation_limit=0, revision_limit=0, current_limit=0),
-                 provenance, True, registry=registry)
+                 provenance, True, registry=registry, include_gap_boundary=zone_id is not None)
     stream = ReplayOrderBlocks(ob, STRUCTURE, provenance, STEP,
                                OrderBlockDelivery(formation_limit=0, revision_limit=0, current_limit=0),
-                               timing_cutoff=cutoff, registry=registry)
+                               timing_cutoff=cutoff, registry=registry, include_gap_boundary=zone_id is not None)
     detect_structure(rows, STEP, STRUCTURE, structure_scope(provenance), StructureDelivery(pivot_limit=0, break_limit=0),
                      {"cutoff": cutoff, "frozen": True, "provenance": provenance},
                      consumer=stream.observe, public_event=structure_event, registry=registry)
