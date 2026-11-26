@@ -3,7 +3,7 @@ import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {chromium, expect, test, type Page, type Locator, type Response} from '@playwright/test';
 import {confluenceProfile, type ConfluenceCandle, type ConfluenceDirection, type ConfluenceReceipt,
-  type ConfluenceStatus} from '../src/replayConfluenceTypes';
+  type ConfluenceStatus, type ConfluenceReceiptPage, type ConfluenceCoverageRecovery} from '../src/replayConfluenceTypes';
 import type {ReplaySession} from '../src/types';
 
 type Symbol = 'EURUSD' | 'GBPUSD';
@@ -37,6 +37,11 @@ const selected = (page: Page) => scope(page).getByRole('article', {name: 'Select
 const component = (page: Page, name: 'CRT' | 'SMT') => selected(page).getByRole('region', {name: name + ' component'});
 const field = (scope: Locator, label: string) => scope.locator('dt').filter({hasText: new RegExp('^' + label + '$')}).locator('..').locator('dd');
 const isConfluence = (url: URL) => url.pathname.endsWith('/confluence');
+const isSavedList = (url: URL) => url.pathname.endsWith('/confluence/receipts');
+const receiptOption = (page: Page, id: string) => receiptSelect(page).locator('option[value="' + id + '"]');
+const browserPath = (session: string) => '/research/api/replay/sessions/' + session + '/confluence';
+const exactQuery = ({cutoff, profile, receipt_id}: ConfluenceReceipt) =>
+  new URLSearchParams({cutoff: String(cutoff), profile, receipt_id});
 const chosen = manifest.checkpoints.find(item => item.verdict === 'ALIGNED')!;
 const newer = manifest.checkpoints.find(item => item.cutoff > chosen.cutoff && item.verdict !== 'ALIGNED')!;
 const finalChartCutoff = Math.max(...manifest.symbols.EURUSD.bars.map(bar => bar.available_at));
@@ -146,7 +151,7 @@ async function ready(page: Page, receipt: ConfluenceReceipt) {
 
 async function verifyReceipt(page: Page, receipt: ConfluenceReceipt, expected?: Checkpoint) {
   await ready(page, receipt);
-  expect(receipt).toMatchObject({profile: confluenceProfile, rule_version: 1, authority: 'RESEARCH_ONLY'});
+  expect(receipt).toMatchObject({profile: confluenceProfile, rule_version: 2, authority: 'RESEARCH_ONLY'});
   expect(receipt.receipt_id).toMatch(/^[a-f0-9]{64}$/);
   if (expected) {
     expect(receipt).toMatchObject({cutoff: expected.cutoff, status: expected.verdict, direction: expected.direction});
@@ -295,7 +300,12 @@ test('@phase-initial@end freezes conjunction, witnesses, saved receipt and swapp
   test.setTimeout(240_000);
   await profileRun(baseURL, async (page, processes) => {
     const requests: string[] = [];
-    page.on('request', request => {if (isConfluence(new URL(request.url()))) requests.push(request.url());});
+    const savedListRequests: string[] = [];
+    page.on('request', request => {
+      const url = new URL(request.url());
+      if (isConfluence(url)) requests.push(request.url());
+      if (isSavedList(url)) savedListRequests.push(request.url());
+    });
     await configure(page);
     const started = performance.now();
     const session = await startSession(page, 'EURUSD', 'GBPUSD');
@@ -305,6 +315,7 @@ test('@phase-initial@end freezes conjunction, witnesses, saved receipt and swapp
     expect(hidden.inspector_nodes).toBe(1);
     expect(hidden.source_rows).toBe(0);
     expect(requests).toHaveLength(0);
+    expect(savedListRequests).toHaveLength(0);
 
     const timings = await measureListAndSelect(page, requests, finalChartCutoff);
     const delayed = Object.entries(manifest.symbols).flatMap(([symbol, lane]) => lane.bars
@@ -466,5 +477,349 @@ test('@phase-restart@end reopens the exact older receipt after API and browser r
     await component(page, 'SMT').getByRole('region', {name: 'SMT exact source candle'})
       .screenshot({path: join(output, 'reopened-smt-candle.png')});
     record('restart', {processes, receipt, measurement: summary([cold])});
+  });
+});
+
+test('@phase-discovery@end finds server-saved receipts in a fresh browser profile', async ({baseURL, browser}) => {
+  test.setTimeout(120_000);
+  await profileRun(baseURL, async page => {
+    await configure(page);
+    const session = await startSession(page, 'EURUSD', 'GBPUSD');
+    await moveChart(page, finalChartCutoff);
+    if (!(await panel(page).evaluate(details => (details as HTMLDetailsElement).open))) {
+      await panel(page).locator('summary').first().click();
+    }
+    const inspected = responseAt(page, chosen.cutoff);
+    await probe(page, chosen.cutoff);
+    const {receipt} = await inspected;
+    const saved = responseAt(page, receipt.cutoff, receipt.receipt_id, 'POST');
+    await button(selected(page), 'Save exact receipt').click();
+    expect((await saved).receipt).toEqual(receipt);
+    await button(replay(page), 'Save replay position').click();
+    await expect(replay(page).getByText('Replay position saved', {exact: true})).toBeVisible();
+
+    const fresh = await browser.newContext({baseURL, serviceWorkers: 'block'});
+    try {
+      const reopened = await fresh.newPage();
+      await configure(reopened);
+      await combo(reopened, 'Resume saved replay').selectOption(session);
+      await expect(replay(reopened).locator('output')).toContainText(iso(finalChartCutoff));
+      expect(await reopened.evaluate(() => Object.keys(localStorage).filter(key => key.includes('confluence-receipts'))))
+        .toEqual([]);
+      await panel(reopened).locator('summary').first().click();
+      await expect(receiptOption(reopened, receipt.receipt_id)).toHaveCount(1);
+      const exact = responseAt(reopened, receipt.cutoff, receipt.receipt_id);
+      await receiptSelect(reopened).selectOption(receipt.receipt_id);
+      expect((await exact).receipt).toEqual(receipt);
+      await ready(reopened, receipt);
+      record('discovery-fresh-browser', {session, receipt_id: receipt.receipt_id, cutoff: receipt.cutoff,
+        browser: await reopened.evaluate(() => navigator.userAgent), immutable_rows: persistedRows(session)});
+    } finally {
+      await fresh.close();
+    }
+  });
+});
+
+async function inspectAt(page: Page, cutoff: number) {
+  const inspected = responseAt(page, cutoff);
+  await probe(page, cutoff);
+  const {receipt} = await inspected;
+  await ready(page, receipt);
+  return receipt;
+}
+
+async function resumeInTab(page: Page, session: string, cutoff: number) {
+  await openTerminal(page);
+  await combo(page, 'Market data source').selectOption('DUKASCOPY_SAVED');
+  await combo(page, 'Resume saved replay').selectOption(session);
+  await expect(replay(page).locator('output')).toContainText(iso(cutoff));
+}
+
+function gate() {
+  let open!: () => void;
+  const wait = new Promise<void>(resolve => {open = resolve;});
+  return {open, wait};
+}
+
+async function holdPost(page: Page, receipt: ConfluenceReceipt) {
+  const predicate = (url: URL) => isConfluence(url) && url.searchParams.get('receipt_id') === receipt.receipt_id;
+  const held = gate();
+  const arrived = gate();
+  await page.route(predicate, async route => {
+    if (route.request().method() === 'POST') {
+      arrived.open();
+      await held.wait;
+    }
+    await route.continue();
+  });
+  return {release: held.open, arrived: arrived.wait, dispose: async () => {
+    held.open();
+    await page.unroute(predicate);
+  }};
+}
+
+async function list(page: Page, session: string, cutoff: number) {
+  const result = await page.request.get(browserPath(session) + '/receipts', {params: {cutoff}});
+  expect(result.status(), await result.text()).toBe(200);
+  return await result.json() as ConfluenceReceiptPage;
+}
+
+function persistedRows(session: string): {id: string; payload_sha256: string}[] {
+  const program = [
+    'import hashlib, json, sqlite3, sys',
+    'from research_backend.app.config import DATABASE',
+    'db = sqlite3.connect(DATABASE.as_uri() + "?mode=ro", uri=True)',
+    'rows = db.execute("SELECT id,CAST(payload AS BLOB) FROM replay_confluence_receipts WHERE session_id=? ORDER BY id", (sys.argv[1],))',
+    'print(json.dumps([dict(id=key,payload_sha256=hashlib.sha256(data).hexdigest()) for key,data in rows]))',
+  ].join('\n');
+  const result = spawnSync(process.env.TRADEFORGE_E2E_PYTHON!, ['-c', program, session], {encoding: 'utf8', cwd: '..'});
+  expect(result.status, result.stderr).toBe(0);
+  return JSON.parse(result.stdout);
+}
+
+test('@phase-discovery@end preserves both tabs’ saves in either completion order and isolates replay sessions', async ({baseURL}) => {
+  test.setTimeout(120_000);
+  await profileRun(baseURL, async page => {
+    await configure(page);
+    const session = await startSession(page, 'EURUSD', 'GBPUSD');
+    await moveChart(page, finalChartCutoff);
+    await button(replay(page), 'Save replay position').click();
+    await expect(replay(page).getByText('Replay position saved', {exact: true})).toBeVisible();
+    const peer = await page.context().newPage();
+    await resumeInTab(peer, session, finalChartCutoff);
+    for (const tab of [page, peer]) {
+      if (!(await panel(tab).evaluate(details => (details as HTMLDetailsElement).open))) {
+        await panel(tab).locator('summary').first().click();
+      }
+    }
+    const proof: {order: string[]; ids: string[]}[] = [];
+    for (const [index, order] of [[0, [0, 1]], [1, [1, 0]]] as const) {
+      const tabs = [page, peer];
+      const receipts = await Promise.all(tabs.map((tab, offset) => inspectAt(tab, chosen.cutoff + 1 + index * 2 + offset)));
+      const holds = await Promise.all(tabs.map((tab, offset) => holdPost(tab, receipts[offset])));
+      try {
+        const responses = tabs.map((tab, offset) =>
+          responseAt(tab, receipts[offset].cutoff, receipts[offset].receipt_id, 'POST'));
+        await Promise.all(tabs.map(tab => button(selected(tab), 'Save exact receipt').click()));
+        await Promise.all(holds.map(hold => hold.arrived));
+        for (const offset of order) {
+          holds[offset].release();
+          expect((await responses[offset]).receipt).toEqual(receipts[offset]);
+          await expect(scope(tabs[offset]).getByText('Exact receipt saved.', {exact: true})).toBeVisible();
+        }
+        for (const tab of tabs) {
+          for (const receipt of receipts) await expect(receiptOption(tab, receipt.receipt_id)).toHaveCount(1);
+        }
+        proof.push({order: order.map(offset => receipts[offset].receipt_id), ids: receipts.map(item => item.receipt_id)});
+      } finally {
+        await Promise.all(holds.map(hold => hold.dispose()));
+      }
+    }
+    const beforeRetry = persistedRows(session);
+    const saved = await list(page, session, finalChartCutoff);
+    for (const summary of saved.receipts) {
+      const query = new URLSearchParams({cutoff: String(summary.cutoff), profile: summary.profile, receipt_id: summary.receipt_id});
+      const get = await page.request.get(browserPath(session) + '?' + query);
+      const retry = await page.request.post(browserPath(session) + '?' + query, {data: {}});
+      expect(retry.status()).toBe(200);
+      expect(await retry.json()).toEqual(await get.json());
+    }
+    expect(persistedRows(session)).toEqual(beforeRetry);
+    for (const row of beforeRetry) expect(row.payload_sha256).toBe(row.id);
+
+    await button(replay(page), 'Exit replay').click();
+    await instrument(page, 'GBPUSD', 'EURUSD');
+    const foreign = await startSession(page, 'GBPUSD', 'EURUSD');
+    expect(foreign).not.toBe(session);
+    await moveChart(page, finalChartCutoff);
+    await panel(page).locator('summary').first().click();
+    expect((await list(page, foreign, finalChartCutoff)).receipts).toEqual([]);
+    for (const summary of saved.receipts) await expect(receiptOption(page, summary.receipt_id)).toHaveCount(0);
+    const example = saved.receipts[0];
+    const foreignQuery = new URLSearchParams({cutoff: String(example.cutoff), profile: example.profile,
+      receipt_id: example.receipt_id});
+    const foreignPath = browserPath(foreign) + '?' + foreignQuery;
+    expect((await page.request.get(foreignPath)).status()).toBe(409);
+    expect((await page.request.post(foreignPath, {data: {}})).status()).toBe(409);
+    expect(persistedRows(foreign)).toEqual([]);
+    record('discovery-two-tabs', {session, foreign, proof, immutable_rows: beforeRetry});
+  });
+});
+
+test('@phase-discovery@end refreshes after a save completes across collapse and ignores a delayed older list', async ({baseURL}) => {
+  test.setTimeout(120_000);
+  await profileRun(baseURL, async page => {
+    await configure(page);
+    const session = await startSession(page, 'EURUSD', 'GBPUSD');
+    await moveChart(page, finalChartCutoff);
+    const toggle = panel(page).locator('summary').first();
+    if (!(await panel(page).evaluate(details => (details as HTMLDetailsElement).open))) await toggle.click();
+    const receipt = await inspectAt(page, chosen.cutoff - 1);
+    const hold = await holdPost(page, receipt);
+    const deliveredList = gate();
+    const staleFetched = gate();
+    const staleReturned = gate();
+    const target = (url: URL) => isSavedList(url) && url.searchParams.get('cutoff') === String(finalChartCutoff);
+    let holdNext = true;
+    try {
+      const saved = responseAt(page, receipt.cutoff, receipt.receipt_id, 'POST');
+      await button(selected(page), 'Save exact receipt').click();
+      await hold.arrived;
+      await toggle.click();
+      await expect(scope(page)).toHaveCount(0);
+      await page.route(target, async route => {
+        if (!holdNext) {
+          await route.continue();
+          return;
+        }
+        holdNext = false;
+        const response = await route.fetch();
+        const before = await response.json() as ConfluenceReceiptPage;
+        expect(before.receipts.some(item => item.receipt_id === receipt.receipt_id)).toBe(false);
+        staleFetched.open();
+        await deliveredList.wait;
+        await route.fulfill({response});
+        staleReturned.open();
+      });
+      await toggle.click();
+      await staleFetched.wait;
+      hold.release();
+      expect((await saved).receipt).toEqual(receipt);
+      await expect(receiptOption(page, receipt.receipt_id)).toHaveCount(1);
+      deliveredList.open();
+      await staleReturned.wait;
+      await expect(receiptOption(page, receipt.receipt_id)).toHaveCount(1);
+
+      const exact = responseAt(page, receipt.cutoff, receipt.receipt_id);
+      await receiptSelect(page).selectOption(receipt.receipt_id);
+      expect((await exact).receipt).toEqual(receipt);
+      await ready(page, receipt);
+      await moveChart(page, beforeChartCutoff);
+      await expect(receiptOption(page, receipt.receipt_id)).toHaveCount(0);
+      expect((await list(page, session, beforeChartCutoff)).receipts.map(item => item.receipt_id))
+        .not.toContain(receipt.receipt_id);
+      await expect(selected(page)).toHaveCount(0);
+      await moveChart(page, finalChartCutoff);
+      await ready(page, receipt);
+      record('discovery-delayed-save', {session, receipt_id: receipt.receipt_id, before_chart_cutoff: beforeChartCutoff,
+        final_chart_cutoff: finalChartCutoff, immutable_rows: persistedRows(session)});
+    } finally {
+      deliveredList.open();
+      await hold.dispose();
+      await page.unroute(target);
+    }
+  });
+});
+
+test('@phase-quiet-recovery@end shows the exact recovery witness and the old receipt limitation', async ({baseURL, browser}) => {
+  const fixture = process.env.TRADEFORGE_T10_CONFLUENCE_QUIET_WRITER;
+  test.skip(!fixture, 'Set TRADEFORGE_T10_CONFLUENCE_QUIET_WRITER to the old-writer fixture output');
+  test.setTimeout(120_000);
+  const plan: {session: string; saved: {summary: ConfluenceReceipt; original_payload_utf8: string}[];
+    witnesses: ConfluenceCoverageRecovery[]} = JSON.parse(readFileSync(fixture!, 'utf8'));
+  const witness = plan.witnesses[0];
+  const legacy = plan.saved.find(item => item.summary.cutoff === witness.available_at)!;
+  const context = await browser.newContext({baseURL, serviceWorkers: 'block'});
+  try {
+    const page = await context.newPage();
+    await resumeInTab(page, plan.session, witness.available_at);
+    expect(await page.evaluate(() => Object.keys(localStorage).filter(key => key.includes('confluence-receipts')))).toEqual([]);
+    await panel(page).locator('summary').first().click();
+    const before = await inspectAt(page, witness.available_at - 1);
+    expect(before.status).toBe('INCOMPLETE');
+    expect(before.first_available_at).toBeNull();
+    expect(before.coverage_recoveries).toEqual([]);
+    await expect(page.getByText(/Coverage recovery witnesses/)).toHaveCount(0);
+    const current = await inspectAt(page, witness.available_at);
+    expect(current.status).toBe('ALIGNED');
+    expect(current.first_available_at).toBe(witness.available_at);
+    expect(current.coverage_recoveries).toEqual(plan.witnesses);
+    await expect(selected(page).getByText('Coverage recovery witnesses (1)', {exact: true})).toBeVisible();
+    const save = responseAt(page, current.cutoff, current.receipt_id, 'POST');
+    await button(selected(page), 'Save exact receipt').click();
+    expect((await save).receipt).toEqual(current);
+
+    const exactLegacy = responseAt(page, legacy.summary.cutoff, legacy.summary.receipt_id);
+    await receiptSelect(page).selectOption(legacy.summary.receipt_id);
+    const {receipt: oldReceipt} = await exactLegacy;
+    expect(oldReceipt).toEqual({...JSON.parse(legacy.original_payload_utf8), receipt_id: legacy.summary.receipt_id});
+    await ready(page, oldReceipt);
+    await expect(selected(page).getByText('Coverage recovery evidence is unavailable in this version 1 receipt.',
+      {exact: true})).toBeVisible();
+
+    const exactCurrent = responseAt(page, current.cutoff, current.receipt_id);
+    await receiptSelect(page).selectOption(current.receipt_id);
+    expect((await exactCurrent).receipt).toEqual(current);
+    await ready(page, current);
+    await selected(page).getByText('Coverage recovery witnesses (1)', {exact: true}).click();
+    const proof = selected(page).getByRole('list', {name: 'Coverage recovery witnesses'});
+    await expect(field(proof, 'Symbol')).toHaveText(witness.symbol);
+    await expect(field(proof, 'Candle open')).toHaveText(utc(witness.time));
+    await expect(field(proof, 'Nominal close')).toHaveText(utc(witness.nominal_close));
+    await expect(field(proof, 'Available')).toHaveText(utc(witness.available_at));
+    await expect(field(proof, 'Availability basis')).toHaveText(words(witness.availability_basis));
+    await expect(field(proof, 'Source ID')).toHaveText(witness.source_id);
+    for (const pin of witness.partitions) {
+      await expect(proof.getByText(pin.id, {exact: true})).toBeVisible();
+      await expect(proof.getByText(pin.sha256, {exact: true})).toBeVisible();
+    }
+    await proof.screenshot({path: join(output, 'quiet-coverage-recovery.png')});
+    const retry = await page.request.post(browserPath(plan.session) + '?' + exactQuery(oldReceipt), {data: {}});
+    expect(await retry.json()).toEqual(oldReceipt);
+    const rows = persistedRows(plan.session);
+    expect(rows).toHaveLength(3);
+    for (const row of rows) expect(row.payload_sha256).toBe(row.id);
+    record('quiet-coverage-recovery', {session: plan.session, before, current, legacy: oldReceipt, immutable_rows: rows});
+  } finally {
+    await context.close();
+  }
+});
+
+test('@phase-discovery@end loads older pages and restores an older selected receipt', async ({baseURL}) => {
+  test.setTimeout(120_000);
+  await profileRun(baseURL, async page => {
+    await configure(page);
+    const session = await startSession(page, 'EURUSD', 'GBPUSD');
+    await moveChart(page, finalChartCutoff);
+    const toggle = panel(page).locator('summary').first();
+    if (await panel(page).evaluate(details => (details as HTMLDetailsElement).open)) await toggle.click();
+    const path = browserPath(session);
+    const inserted: ConfluenceReceipt[] = [];
+    for (let index = 0; index < 25; index++) {
+      const result = await page.request.get(path, {params: {cutoff: chosen.cutoff - 100 + index}});
+      expect(result.status(), await result.text()).toBe(200);
+      const receipt = await result.json() as ConfluenceReceipt;
+      const saved = await page.request.post(path + '?' + exactQuery(receipt), {data: {}});
+      expect(saved.status(), await saved.text()).toBe(200);
+      inserted.push(receipt);
+    }
+    const earliest = inserted[0];
+    await toggle.click();
+    const loadOlder = button(scope(page), 'Load older saved receipts');
+    const firstPage = await list(page, session, finalChartCutoff);
+    expect(firstPage.receipts).toHaveLength(24);
+    expect(firstPage.receipts.some(item => item.receipt_id === earliest.receipt_id)).toBe(false);
+    const newest = firstPage.receipts[0].receipt_id;
+    await expect(loadOlder).toBeVisible();
+    await expect(receiptOption(page, earliest.receipt_id)).toHaveCount(0);
+    await loadOlder.click();
+    await expect(receiptOption(page, earliest.receipt_id)).toHaveCount(1);
+    const exact = responseAt(page, earliest.cutoff, earliest.receipt_id);
+    await receiptSelect(page).selectOption(earliest.receipt_id);
+    expect((await exact).receipt).toEqual(earliest);
+    await ready(page, earliest);
+    await moveChart(page, beforeChartCutoff);
+    await expect(receiptOption(page, earliest.receipt_id)).toHaveCount(0);
+    await moveChart(page, finalChartCutoff);
+    await expect(receiptOption(page, newest)).toHaveCount(1);
+    await ready(page, earliest);
+    await toggle.click();
+    await expect(scope(page)).toHaveCount(0);
+    const restored = responseAt(page, earliest.cutoff, earliest.receipt_id);
+    await toggle.click();
+    expect((await restored).receipt).toEqual(earliest);
+    await expect(receiptSelect(page)).toHaveValue(earliest.receipt_id);
+    await ready(page, earliest);
+    record('discovery-pagination', {session, first_page: firstPage, selected: earliest.receipt_id});
   });
 });

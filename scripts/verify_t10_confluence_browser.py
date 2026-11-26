@@ -38,7 +38,7 @@ def run(mode, args, root, npm):
         subprocess.run(seed, check=True, cwd=root, env=env)
 
         phases = {}
-        for phase in ("initial", "restart"):
+        for phase in args.phase or ("initial", "restart"):
             started = perf_counter()
             completed = subprocess.run(
                 [npm, "run", "e2e", "--", "--config", "playwright.t10-confluence.config.ts",
@@ -58,6 +58,8 @@ def main():
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--source-storage", type=Path)
     parser.add_argument("--case", choices=["controlled", "genuine", "all"], default="all")
+    parser.add_argument("--phase", action="append", choices=["initial", "restart", "discovery"],
+                        help="Run selected phases in order. By default runs initial and restart.")
     parser.add_argument("--samples", type=int, default=20)
     parser.add_argument("--api-port", type=int, default=8742)
     parser.add_argument("--ui-port", type=int, default=4742)
