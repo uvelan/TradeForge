@@ -254,14 +254,20 @@ def export_ai(uid:str, plan_version:int|None=None)->dict:
         snapshot=validate_plan_snapshot(db,plan)
     package_id=_id("PKG")
     items=_package_files({"id":uid,"versions":[latest],"events":events},package_id,cutoff,signal,snapshot)
+    return publish_package(items,package_id,cutoff,trade_id=uid,plan_version=latest['version'])
+
+
+def publish_package(items,package_id,cutoff,*,trade_id=None,plan_version=None,replay_session=None):
     path=EXPORT_DIR/f'{package_id}.zip';partial=path.with_suffix('.pending')
     with zipfile.ZipFile(partial,'w',compression=zipfile.ZIP_DEFLATED) as z:
         for name,content in items.items():z.writestr(name,content)
     os.replace(partial,path)
     digest=hashlib.sha256(path.read_bytes()).hexdigest()
     with transaction() as db:
-        db.execute('INSERT INTO ai_packages VALUES(?,?,?,?,?,?,?)',
-          (package_id,uid,latest['version'],cutoff,str(path),digest,utc_now()))
+        db.execute('INSERT INTO ai_packages(id,trade_id,plan_version,knowledge_cutoff,location,sha256,created_at) VALUES(?,?,?,?,?,?,?)',
+          (package_id,trade_id,plan_version,cutoff,str(path),digest,utc_now()))
+        if replay_session is not None:
+            db.execute("INSERT INTO recorded_package_sources VALUES(?,?)",(package_id,replay_session))
     return {'package_id':package_id,'sha256':digest,'download_url':f'/research/api/ai/packages/{package_id}/download'}
 
 
@@ -304,6 +310,10 @@ def import_ai(data: ReviewV1 | ReviewInput, original: bytes) -> dict:
             raise HTTPException(422,'Finding references unsupported evidence')
         if 'metric_claims' in f:
             raise HTTPException(422,'Unverified numerical metric claims are not permitted')
+    return store_review(data,original)
+
+
+def store_review(data,original):
     serialized=_json(data.model_dump())
     uid = _id('REVIEW')
     with transaction() as db:

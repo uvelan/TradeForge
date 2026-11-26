@@ -135,13 +135,20 @@ CREATE TABLE IF NOT EXISTS trade_events (
 );
 CREATE TABLE IF NOT EXISTS ai_packages (
     id TEXT PRIMARY KEY,
-    trade_id TEXT NOT NULL REFERENCES trades(id),
-    plan_version INTEGER NOT NULL,
+    trade_id TEXT REFERENCES trades(id),
+    plan_version INTEGER,
     knowledge_cutoff TEXT NOT NULL,
     location TEXT NOT NULL,
     sha256 TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    CHECK ((trade_id IS NOT NULL AND plan_version IS NOT NULL)
+        OR (trade_id IS NULL AND plan_version IS NULL))
 );
+CREATE TABLE IF NOT EXISTS recorded_package_sources (
+    package_id TEXT PRIMARY KEY REFERENCES ai_packages(id),
+    replay_session TEXT NOT NULL REFERENCES month_replay_manifests(session)
+);
+CREATE INDEX IF NOT EXISTS recorded_package_sessions ON recorded_package_sources(replay_session);
 CREATE TABLE IF NOT EXISTS ai_reviews (
     id TEXT PRIMARY KEY,
     package_id TEXT NOT NULL REFERENCES ai_packages(id),
@@ -346,7 +353,7 @@ CREATE TABLE IF NOT EXISTS arrival_partitions (
 );
 '''
 
-IMMUTABLE_TABLES = ['statement_versions','statement_traces','statement_reports','month_replay_manifests','month_replay_steps','decision_review_steps','plan_paper_events','plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
+IMMUTABLE_TABLES = ['recorded_package_sources','statement_versions','statement_traces','statement_reports','month_replay_manifests','month_replay_steps','decision_review_steps','plan_paper_events','plan_versions', 'trade_events', 'ai_packages', 'ai_reviews', 'ai_review_originals', 'ai_review_decisions', 'imported_fills', 'journal_entries', 'smt_event_history', 'smt_source_corrections', 'smt_alerts', 'journal_signal_links', 'chart_drawing_versions', 'backtest_runs', 'replay_sessions', 'chart_snapshots', 'journal_entry_context']
 IMMUTABLE_TABLES += ["learning_attempts", "arrival_sessions", "arrival_observations", "arrival_receipts",
                      "arrival_publications", "arrival_manifests", "arrival_partitions", "historical_imports", "historical_bi5_sources", "recorded_strategy_checkpoints", "strategy_versions", "strategy_evaluations", "strategy_decisions"]
 
@@ -370,11 +377,39 @@ def transaction():
         conn.close()
 
 
+def upgrade_package_subject(db):
+    # Rebuild only the package parent. Child FK definitions and IDs stay intact.
+    if any(r["name"] == "trade_id" and not r["notnull"] for r in db.execute("PRAGMA table_info(ai_packages)")):
+        return
+    db.execute("PRAGMA foreign_keys=OFF")
+    try:
+        db.execute("BEGIN IMMEDIATE")
+        if not any(r["name"] == "trade_id" and not r["notnull"] for r in db.execute("PRAGMA table_info(ai_packages)")):
+            start = SCHEMA.index("CREATE TABLE IF NOT EXISTS ai_packages")
+            ddl = SCHEMA[start:SCHEMA.index(";",start)]
+            db.execute(ddl.replace("IF NOT EXISTS ai_packages", "ai_packages_new"))
+            cols = "id,trade_id,plan_version,knowledge_cutoff,location,sha256,created_at"
+            db.execute(f"INSERT INTO ai_packages_new({cols}) SELECT {cols} FROM ai_packages")
+            db.execute("DROP TABLE ai_packages")
+            db.execute("ALTER TABLE ai_packages_new RENAME TO ai_packages")
+            for op in ("UPDATE", "DELETE"):
+                db.execute(f"CREATE TRIGGER protect_ai_packages_{op.lower()} BEFORE {op} ON ai_packages "
+                           "BEGIN SELECT RAISE(ABORT,'immutable record'); END")
+            for table in ("ai_packages","ai_reviews"):
+                if db.execute(f"PRAGMA foreign_key_check({table})").fetchone():
+                    raise RuntimeError("Package migration found an invalid evidence reference")
+        db.commit()
+    finally:
+        db.rollback()
+        db.execute("PRAGMA foreign_keys=ON")
+
+
 def initialize():
     with transaction() as db:
         db.execute('PRAGMA journal_mode=WAL')
         db.execute('PRAGMA synchronous=FULL')
         db.executescript(SCHEMA)
+        upgrade_package_subject(db)
         from .historical_strategy_store import install
         install(db)
         for table in IMMUTABLE_TABLES:

@@ -1,5 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {api} from './api';
+import {RecordedPackageReview} from './RecordedPackageReview';
 import {Card} from './components';
 
 type Event={missing_from_ms?:number;closure_at_ms?:number;kind:string;id:string;quote:{time_ms:number;ordinal:number};price_units?:number};
@@ -78,5 +79,6 @@ export function MonthReplay(){
     {page.length>0&&<details><summary>Verified batch coverage and unresolved intervals</summary><pre>{JSON.stringify(page.map(s=>s.coverage),null,2)}</pre></details>}
     {step&&<><button disabled={busy} onClick={()=>receipts(-1)}>First receipt page</button>
     <button disabled={busy||!page.length||page.at(-1)!.next_index>=step.next_index} onClick={()=>receipts(page.at(-1)!.index)}>Next receipt page</button></>}
+    {step&&<RecordedPackageReview key={manifest.session} route={base+'/'+manifest.session} initialCutoff={step.through*1000-1}/>}
     </>}</section></Card>;
 }

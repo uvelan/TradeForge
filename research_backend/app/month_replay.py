@@ -249,17 +249,21 @@ def source_quote(month:str, session:str, time_ms:int=Query(ge=0), ordinal:int=Qu
         checkpoint=latest(db,session) if binding else None
         if not checkpoint or not binding["start"]*1000<=time_ms<checkpoint["through"]*1000:
             raise HTTPException(404,"Quote outside the committed replay frontier")
-        second=time_ms//1000
-        pin=binding["hours"][(second-binding["start"])//3600]["pin"]
-        if not pin:
-            raise HTTPException(404,"No pinned source at that time")
-        try:
-            records,pins,_,_=read_session(db,"EURUSD",second,second+1,[])
-        except (ValueError,RuntimeError,OSError) as exc:
-            raise HTTPException(409,f"Source verification failed: {exc}") from exc
-        if pins!=[pin]:
-            raise HTTPException(409,"Source differs from the frozen monthly manifest")
-        for record in records:
-            if (record["time_ms"],record["source_order"])==(time_ms,ordinal):
-                return evidence(record,pin)
-        raise HTTPException(404,"No observation at the requested time and source ordinal")
+        return verified_quote(db, binding, time_ms, ordinal)
+
+
+def verified_quote(db, binding, time_ms, ordinal):
+    second=time_ms//1000
+    pin=binding["hours"][(second-binding["start"])//3600]["pin"]
+    if not pin:
+        raise HTTPException(404,"No pinned source at that time")
+    try:
+        records,pins,_,_=read_session(db,"EURUSD",second,second+1,[])
+    except (ValueError,RuntimeError,OSError) as exc:
+        raise HTTPException(409,f"Source verification failed: {exc}") from exc
+    if pins!=[pin]:
+        raise HTTPException(409,"Source differs from the frozen monthly manifest")
+    for record in records:
+        if (record["time_ms"],record["source_order"])==(time_ms,ordinal):
+            return evidence(record,pin)
+    raise HTTPException(404,"No observation at the requested time and source ordinal")

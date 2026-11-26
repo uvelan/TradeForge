@@ -33,6 +33,7 @@ from .arrival_routes import router as arrival_router
 from .ai_review_decisions import router as review_decision_router
 from .workspace_routes import router as workspace_router
 from .learning import router as learning_router
+from .historical_packages import HistoricalReview, import_historical, router as historical_package_router
 from .month_replay import router as month_router
 from .decision_reviews import router as decision_review_router
 from .strategy_routes import router as strategy_router
@@ -72,6 +73,7 @@ app.include_router(decision_review_router)
 from .statement_routes import router as statement_router
 app.include_router(statement_router)
 app.include_router(month_router)
+app.include_router(historical_package_router)
 app.include_router(strategy_router)
 app.include_router(strategy_evaluation_router)
 app.include_router(historical_strategy_router)
@@ -195,7 +197,7 @@ def create_export(uid:str, plan_version:int|None=Query(None,ge=1)):return export
 
 
 @app.get('/api/ai/packages')
-def list_packages():return rows('SELECT id,trade_id,plan_version,knowledge_cutoff,sha256,created_at FROM ai_packages ORDER BY created_at DESC')
+def list_packages():return rows('SELECT id,trade_id,plan_version,knowledge_cutoff,sha256,created_at FROM ai_packages WHERE trade_id IS NOT NULL ORDER BY created_at DESC')
 
 
 @app.get('/api/ai/packages/{pkg}/download')
@@ -204,16 +206,18 @@ def download_ai(pkg:str):
     if not p:raise HTTPException(404,'Package not found')
     path=Path(p['location']).resolve()
     if not path.is_relative_to(domain.EXPORT_DIR.resolve()) or not path.is_file():raise HTTPException(404,'Package file missing')
-    if sha256(path.read_bytes()).hexdigest()!=p['sha256']:raise HTTPException(409,'Export checksum mismatch')
-    return FileResponse(path,media_type='application/zip',filename=f'{pkg}.zip')
+    payload=path.read_bytes()
+    if sha256(payload).hexdigest()!=p['sha256']:raise HTTPException(409,'Export checksum mismatch')
+    return Response(payload,media_type='application/zip',headers={'Content-Disposition':f'attachment; filename="{pkg}.zip"'})
 
 
 @app.post('/api/ai/reviews',status_code=201)
-async def import_review(review: ReviewV1 | ReviewInput, request: Request):
+async def import_review(review: HistoricalReview | ReviewV1 | ReviewInput, request: Request):
     original = await request.body()
     if len(original) > 1_000_000:
         raise HTTPException(413, "AI review exceeds 1 MB")
-    return await asyncio.to_thread(import_ai, review, original)
+    importer = import_historical if isinstance(review, HistoricalReview) else import_ai
+    return await asyncio.to_thread(importer, review, original)
 
 
 @app.get('/api/ai/reviews/{review_id}/original')
@@ -230,6 +234,7 @@ def download_review_original(review_id: str):
 @app.get('/api/ai/reviews')
 def reviews():
     return rows("""SELECT id,package_id,assessment,verification,created_at,
+        EXISTS(SELECT 1 FROM recorded_package_sources src WHERE src.package_id=ai_reviews.package_id) AS recorded_package,
         EXISTS(SELECT 1 FROM ai_review_originals WHERE review_id=ai_reviews.id) AS has_original
         FROM ai_reviews ORDER BY created_at DESC""")
 
