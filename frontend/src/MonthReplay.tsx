@@ -6,11 +6,13 @@ import {Card} from './components';
 type Event={missing_from_ms?:number;closure_at_ms?:number;kind:string;id:string;quote:{time_ms:number;ordinal:number};price_units?:number};
 type Step={index:number;next_index:number;completed:boolean;through:number;quote_count:number;events:Event[];
   coverage:{start:number;status:string;gaps:number[][];count:number}[]};
-type Manifest={policy_current:boolean;sessions:string[];session:string;binding:{month:string;hours:{start:number;status:string;pin:unknown}[]};checkpoint:Step|null};
+type Manifest={policy_current:boolean;sessions:string[];session:string;binding:{month:string;hours:{start:number;status:string;pin:unknown}[]};
+  checkpoint:Step|null;open_gap_intervals:number};
 const utc=(sec:number)=>new Date(sec*1000).toISOString();
 export function MonthReplay(){
   const [month,setMonth]=useState('2025-11'),[manifest,setManifest]=useState<Manifest>();
   const [step,setStep]=useState<Step|null>(null),[page,setPage]=useState<Step[]>([]);
+  const [openGaps,setOpenGaps]=useState(0);
   const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
   const [checked,setChecked]=useState<{id:string;quote:unknown}>();
   const generation=useRef(0),paused=useRef(false);
@@ -22,7 +24,7 @@ export function MonthReplay(){
     try{
       const result=await api.get<Manifest>(base+(saved?'?session='+saved:''));
       const first=await api.get<Step[]>(base+'/'+result.session+'/steps');
-      if(token===generation.current){setManifest(result);setStep(result.checkpoint);setPage(first)}
+      if(token===generation.current){setManifest(result);setStep(result.checkpoint);setPage(first);setOpenGaps(result.open_gap_intervals)}
     }catch(e){if(token===generation.current)setMessage(String(e))}
     finally{if(token===generation.current)setBusy(false)}
   }
@@ -36,6 +38,7 @@ export function MonthReplay(){
         const result=await api.post<Step>(route+'/advance?index='+index,{});
         if(token!==generation.current)return;
         setStep(result);index=result.next_index;
+        setOpenGaps(count=>count+result.coverage.reduce((sum,batch)=>sum+batch.gaps.length,0));
         if(result.completed)break;
       }
       const first=await api.get<Step[]>(route+'/steps');
@@ -73,7 +76,9 @@ export function MonthReplay(){
     <details><summary>Hourly source pins and coverage</summary><pre>{JSON.stringify(manifest.binding,null,2)}</pre></details>
     <button disabled={busy||!manifest.policy_current||step?.completed} onClick={run}>{step?'Resume monthly replay':'Run monthly strategy'}</button>
     {busy&&<button onClick={()=>{paused.current=true}}>Pause after batch</button>}
-    {step&&<p>{step.completed?'Completed':'Committed'} through {utc(step.through)} · {step.next_index}/{manifest.binding.hours.length*6} ten-minute intervals · {step.quote_count} verified observations</p>}
+    {step&&<p>{step.completed?'Replay ledger complete':'Replay committed'} through {utc(step.through)} · {step.next_index}/{manifest.binding.hours.length*6} ten-minute intervals · {step.quote_count} verified observations</p>}
+    {step&&openGaps>0&&<p role="note">{openGaps} recorded open-session gap intervals through the committed frontier, including intervals within registered hours.</p>}
+    <p role="note">Month-level performance metrics are unavailable. Evidence packages report price change for verified completed trades.</p>
     {page.flatMap(s=>s.events).map(e=><details key={e.id}><summary>{e.kind} · {utc((e.missing_from_ms??e.closure_at_ms??e.quote.time_ms)/1000)}</summary><pre>{JSON.stringify(e,null,2)}</pre><button onClick={()=>verify(e)}>Verify source quote</button>
       {checked?.id===e.id&&<output>Verified archive observation {JSON.stringify(checked.quote)}</output>}</details>)}
     {page.length>0&&<details><summary>Verified batch coverage and unresolved intervals</summary><pre>{JSON.stringify(page.map(s=>s.coverage),null,2)}</pre></details>}

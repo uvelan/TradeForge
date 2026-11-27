@@ -147,15 +147,31 @@ def latest(db, sid):
     return step
 
 
+def committed_open_gaps(db, sid):
+    """Count recorded gaps across the committed ledger, regardless of receipt paging."""
+    count = 0
+    for row in db.execute("SELECT payload,digest FROM month_replay_steps WHERE session=? ORDER BY idx", (sid,)):
+        step = json.loads(row["payload"])
+        if fingerprint(step) != row["digest"]:
+            raise HTTPException(409, "Month receipt integrity failure")
+        # A scheduled-closure receipt can record a missing tail of the
+        # preceding open session. Closed time never appears in gaps.
+        count += sum(len(batch["gaps"]) for batch in step["coverage"])
+    return count
+
+
 @router.get("/{month}")
 def inspect(month: str, session: str | None = None):
     with transaction() as db:
+        db.execute("BEGIN")
         binding=load_manifest(db,month,session) if session else inventory(db,month)
         if not binding:
             raise HTTPException(404,"Unknown pinned monthly session")
         sid=fingerprint(binding)
         sessions=[r[0] for r in db.execute("SELECT session FROM month_replay_manifests WHERE month=? ORDER BY rowid DESC",(month,))]
-        return dict(session=sid,binding=binding,policy_current=binding["policy"]==POLICY,checkpoint=latest(db,sid),sessions=sessions)
+        checkpoint = latest(db, sid)
+        return dict(session=sid,binding=binding,policy_current=binding["policy"]==POLICY,checkpoint=checkpoint,
+                    sessions=sessions,open_gap_intervals=committed_open_gaps(db,sid) if checkpoint else 0)
 
 
 def load_manifest(db,month,sid):

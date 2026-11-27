@@ -1,0 +1,38 @@
+{
+  "combined_tested_sha": "b21a8d2139cba745bc258eb77a13ddc4893aa48b",
+  "dukascopy": {
+    "baseline": {
+      "passed": true,
+      "first_divergence": null,
+      "verified_quote_rows": 8636,
+      "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+      "expected_gap_intervals": 2881,
+      "reopened_gap_intervals": null,
+      "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be"
+    },
+    "candidate": {
+      "passed": true,
+      "first_divergence": null,
+      "verified_quote_rows": 8636,
+      "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+      "expected_gap_intervals": 2881,
+      "reopened_gap_intervals": 2881,
+      "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be"
+    }
+  },
+  "mt5": {
+    "commit": "b21a8d2139cba745bc258eb77a13ddc4893aa48b",
+    "status": "REJECTED",
+    "reasons": [
+      "RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR",
+      "OPEN_SESSION_COVERAGE_INCOMPLETE"
+    ],
+    "first_divergence": null,
+    "parity_passed": true,
+    "hourly_receipts_sha256": "31943d30975d5218d2be7364f4b3f4b77042827e1acb3574196d9c047d4b238f"
+  },
+  "same_archive_inputs": {
+    "same_sha256_inputs_as_control": true,
+    "registered": 2
+  }
+}

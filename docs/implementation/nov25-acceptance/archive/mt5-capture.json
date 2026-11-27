@@ -1,0 +1,403 @@
+{
+  "symbol": "EURUSD",
+  "source": "MT5_COPY_TICKS_ALL",
+  "digits": 5,
+  "server_hash": "6b2cf3592011606b05543645",
+  "terminal_build": 6331,
+  "connected": true,
+  "python_package": "5.0.6231",
+  "started_utc": "2026-11-26T16:36:56.728131+00:00",
+  "finished_utc": "2026-11-26T16:36:57.971459+00:00",
+  "days": [
+    {
+      "day": "2025-11-01",
+      "start": 1761955200,
+      "end": 1762041600,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 0
+        }
+      ],
+      "rows": 0,
+      "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+    },
+    {
+      "day": "2025-11-02",
+      "start": 1762041600,
+      "end": 1762128000,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 0
+        }
+      ],
+      "rows": 0,
+      "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+    },
+    {
+      "day": "2025-11-03",
+      "start": 1762128000,
+      "end": 1762214400,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 52100
+        }
+      ],
+      "rows": 52100,
+      "sha256": "27c2ba647f56e5821f86df572fc5ef3380c4158de3e21278c57f963dcfb3b79a"
+    },
+    {
+      "day": "2025-11-04",
+      "start": 1762214400,
+      "end": 1762300800,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 60854
+        }
+      ],
+      "rows": 60854,
+      "sha256": "5da4d2d7b2bf565ede754263ce4f4765d31678ef9a8a0232c14a2bd7751f9d15"
+    },
+    {
+      "day": "2025-11-05",
+      "start": 1762300800,
+      "end": 1762387200,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 60794
+        }
+      ],
+      "rows": 60794,
+      "sha256": "2ac5274adcbddd079a81272a731ac547fec7e15f0b57cd09c83c607b50cc0b31"
+    },
+    {
+      "day": "2025-11-06",
+      "start": 1762387200,
+      "end": 1762473600,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 51117
+        }
+      ],
+      "rows": 51117,
+      "sha256": "3e3c67cfd54ae0315ddb42076ed645ddb964f4ba0524471f994c861e828dbee2"
+    },
+    {
+      "day": "2025-11-07",
+      "start": 1762473600,
+      "end": 1762560000,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 50540
+        }
+      ],
+      "rows": 50540,
+      "sha256": "87b84ec21b877cda608ba837bb529ccd2537a5bcc74dd6dd91bacc50595cfe01"
+    },
+    {
+      "day": "2025-11-08",
+      "start": 1762560000,
+      "end": 1762646400,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 0
+        }
+      ],
+      "rows": 0,
+      "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+    },
+    {
+      "day": "2025-11-09",
+      "start": 1762646400,
+      "end": 1762732800,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 0
+        }
+      ],
+      "rows": 0,
+      "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+    },
+    {
+      "day": "2025-11-10",
+      "start": 1762732800,
+      "end": 1762819200,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 49907
+        }
+      ],
+      "rows": 49907,
+      "sha256": "f32abf5b470675e838aa62f2792f8456e756ad95a62165af4d62828f270b9a73"
+    },
+    {
+      "day": "2025-11-11",
+      "start": 1762819200,
+      "end": 1762905600,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 48474
+        }
+      ],
+      "rows": 48474,
+      "sha256": "e6c947b43461c9244f29c784511645d5380a91969587c79d5054ef3682e5ebe7"
+    },
+    {
+      "day": "2025-11-12",
+      "start": 1762905600,
+      "end": 1762992000,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 48905
+        }
+      ],
+      "rows": 48905,
+      "sha256": "cc46384080b85e32dd5159d1ce786fec20cb4ebe55105e0bb90a28635a86d10a"
+    },
+    {
+      "day": "2025-11-13",
+      "start": 1762992000,
+      "end": 1763078400,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 54537
+        }
+      ],
+      "rows": 54537,
+      "sha256": "d64ee0a80861fbac730a172088d9857991ce8a0bbc192d20141125ae1a027b43"
+    },
+    {
+      "day": "2025-11-14",
+      "start": 1763078400,
+      "end": 1763164800,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 59419
+        }
+      ],
+      "rows": 59419,
+      "sha256": "d271ee6962d6b0197a84cb5a714975de6e611234ee0292d60cbbae4a907abb4a"
+    },
+    {
+      "day": "2025-11-15",
+      "start": 1763164800,
+      "end": 1763251200,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 0
+        }
+      ],
+      "rows": 0,
+      "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+    },
+    {
+      "day": "2025-11-16",
+      "start": 1763251200,
+      "end": 1763337600,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 0
+        }
+      ],
+      "rows": 0,
+      "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+    },
+    {
+      "day": "2025-11-17",
+      "start": 1763337600,
+      "end": 1763424000,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 54021
+        }
+      ],
+      "rows": 54021,
+      "sha256": "f2e8a6b7d587d557f814088e0bc4a5b8080a1d78ad70ba1f6f65625ac259cb5c"
+    },
+    {
+      "day": "2025-11-18",
+      "start": 1763424000,
+      "end": 1763510400,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 51950
+        }
+      ],
+      "rows": 51950,
+      "sha256": "ad9c9c6694e26f20739ffffaf255ce9df2c9c9a3f43a79a390804bec7fadb1ce"
+    },
+    {
+      "day": "2025-11-19",
+      "start": 1763510400,
+      "end": 1763596800,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 53967
+        }
+      ],
+      "rows": 53967,
+      "sha256": "6e015d81af3f8578edcdf813bd83b169bb25638253f4ba5bba1d91b2ea8232ef"
+    },
+    {
+      "day": "2025-11-20",
+      "start": 1763596800,
+      "end": 1763683200,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 60001
+        }
+      ],
+      "rows": 60001,
+      "sha256": "387b8bbfde6d636726bc731e3f900fa559d2f61c258d6f5218a61db548a6cec1"
+    },
+    {
+      "day": "2025-11-21",
+      "start": 1763683200,
+      "end": 1763769600,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 60495
+        }
+      ],
+      "rows": 60495,
+      "sha256": "182acd583ee855698933de495b5f42433a778b4e47d7372c849531a5164f191f"
+    },
+    {
+      "day": "2025-11-22",
+      "start": 1763769600,
+      "end": 1763856000,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 0
+        }
+      ],
+      "rows": 0,
+      "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+    },
+    {
+      "day": "2025-11-23",
+      "start": 1763856000,
+      "end": 1763942400,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 0
+        }
+      ],
+      "rows": 0,
+      "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+    },
+    {
+      "day": "2025-11-24",
+      "start": 1763942400,
+      "end": 1764028800,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 52169
+        }
+      ],
+      "rows": 52169,
+      "sha256": "b8c3e109a5d0f82d51678a06d2094340bbe8d8437edac024e9446b4fb38a8eb4"
+    },
+    {
+      "day": "2025-11-25",
+      "start": 1764028800,
+      "end": 1764115200,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 59259
+        }
+      ],
+      "rows": 59259,
+      "sha256": "2895647fc2ba1d37c08e49282c3bbfe61ed113e26360518c7398ecc796e7a163"
+    },
+    {
+      "day": "2025-11-26",
+      "start": 1764115200,
+      "end": 1764201600,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 61218
+        }
+      ],
+      "rows": 61218,
+      "sha256": "e10f9f39193593b1a8299755715a904623fb79bd834684048da87cd823f35683"
+    },
+    {
+      "day": "2025-11-27",
+      "start": 1764201600,
+      "end": 1764288000,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 40952
+        }
+      ],
+      "rows": 40952,
+      "sha256": "533d9ca8d003746e6ee4e10efdc7c15959cee8835c2db6c9a24c5e1b9c20464e"
+    },
+    {
+      "day": "2025-11-28",
+      "start": 1764288000,
+      "end": 1764374400,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 91113
+        }
+      ],
+      "rows": 91113,
+      "sha256": "e31a5f99b52ca984581f0fa2ed25beadcb9a915b51f5a3d0d9c65419663a2bcb"
+    },
+    {
+      "day": "2025-11-29",
+      "start": 1764374400,
+      "end": 1764460800,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 0
+        }
+      ],
+      "rows": 0,
+      "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+    },
+    {
+      "day": "2025-11-30",
+      "start": 1764460800,
+      "end": 1764547200,
+      "attempts": [
+        {
+          "code": 1,
+          "response_rows": 0
+        }
+      ],
+      "rows": 0,
+      "sha256": "2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+    }
+  ]
+}
