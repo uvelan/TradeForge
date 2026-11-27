@@ -218,9 +218,10 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
         if(event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
         if(event.key==='Enter'){
           event.preventDefault();
-          if(!target)positionKeyboard();
-          if(target&&!linkedBars.current.has(target.anchor.time)){clearKeyboard();return;}
-          if(target&&!event.repeat)anchorHandler.current?.([target.anchor]);
+          if(event.repeat)return;
+          if(!target){positionKeyboard();return;}
+          if(!linkedBars.current.has(target.anchor.time)){clearKeyboard();return;}
+          anchorHandler.current?.([target.anchor]);
         }else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){
           event.preventDefault();
           positionKeyboard(event.key);

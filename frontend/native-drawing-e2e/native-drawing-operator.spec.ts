@@ -252,3 +252,77 @@ test('keyboard target announces the exact persisted archive anchor with wick sna
     expect.soft(Math.abs(displayedRow-expectedRow)).toBeLessThan(1);
   }
 });
+
+test('focused plot after zoom previews the first Enter and commits only the second',async({page})=>{
+  await openReplay(page,'/?timezone=UTC');
+  const pane=page.getByRole('region',{name:'Primary chart'});
+  const marker=pane.locator('.drawing-keyboard-target');
+  const readout=pane.locator('.drawing-prompt output');
+  const initial=await scene(page);
+  let writes=0;
+  page.on('request',r=>{if(r.method()==='POST'&&new URL(r.url()).pathname.endsWith('/drawings'))writes++;});
+  await control(page,'Draw').press('Enter');
+  await tabToPlot(page,pane);
+  await expect(marker).toBeVisible();
+  const center=await coords(pane,.5,.5);
+  await page.mouse.move(center.x,center.y);
+  await page.mouse.wheel(0,-180);
+  await expect(marker).toHaveCount(0);
+  await expect(readout).toHaveText('');
+  await expect(plot(pane)).toBeFocused();
+
+  await page.keyboard.press('Enter');
+  await expect(marker).toBeVisible();
+  const [utc,price]=(await readout.innerText()).split(' · ');
+  expect(writes).toBe(0);
+  expect(await scene(page)).toEqual(initial);
+  const formatter=new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',dateStyle:'medium',timeStyle:'short'});
+  const bars=fixture.panes.primary.candles as {time:number}[];
+  const matching=bars.filter(bar=>formatter.format(bar.time*1000)===utc);
+  expect(matching).toHaveLength(1);
+  await page.keyboard.press('Enter');
+  await expect.poll(async()=>(await scene(page)).revision).toBe(initial.revision+1);
+  const saved=await scene(page);
+  expect(saved.items.slice(0,-1)).toEqual(initial.items);
+  expect(saved.items.at(-1)?.anchors).toEqual([{time:matching[0].time,price}]);
+  expect(writes).toBe(1);
+});
+
+test('out-of-window trendline move keeps its editor open for an earlier origin',async({page})=>{
+  await openReplay(page);
+  await control(page,'Previous candle').click();
+  const pane=page.getByRole('region',{name:'Primary chart'});
+  const selector='.primary-chart .chart-input';
+  const candles=fixture.panes.primary.candles as {time:number;close:number}[];
+  const bars=candles.slice(-7,-1);
+  const point=async(bar:typeof bars[number])=>{
+    await plot(pane).scrollIntoViewIfNeeded();
+    const p=await page.evaluate(({selector,bar})=>window.workspaceProbe.candlePoint(selector,bar.time,bar.close),{selector,bar});
+    await page.mouse.click(p.x,p.y);
+  };
+  await page.getByLabel('Drawing tool',{exact:true}).selectOption('trend');
+  await control(page,'Draw').click();
+  await point(bars[0]);
+  await point(bars[1]);
+  await expect(selected(page)).toHaveValue(/^[a-f0-9-]{36}$/);
+  const id=await selected(page).inputValue();
+  const initial=await scene(page);
+  const original=initial.items.find(i=>i.id===id)!;
+  expect(original.anchors.map(a=>a.time)).toEqual([bars[0].time,bars[1].time]);
+  let writes=0;
+  page.on('request',r=>{if(r.method()==='POST'&&new URL(r.url()).pathname.endsWith('/drawings'))writes++;});
+  await control(page,'Move drawing').click();
+  await point(bars[5]);
+  expect(await scene(page)).toEqual(initial);
+  expect(writes).toBe(0);
+  await expect(pane.locator('.drawing-prompt')).toContainText('new origin');
+  await expect(page.getByRole('alert').filter({hasText:'available replay candles'})).toBeVisible();
+  await point(bars[2]);
+  await expect.poll(async()=>(await scene(page)).revision).toBe(initial.revision+1);
+  const saved=await scene(page);
+  expect(saved.items.find(i=>i.id===id)?.anchors.map(a=>a.time)).toEqual([bars[2].time,bars[3].time]);
+  expect(saved.items.filter(i=>i.id!==id)).toEqual(initial.items.filter(i=>i.id!==id));
+  expect(writes).toBe(1);
+  await expect(pane.locator('.drawing-prompt')).toHaveCount(0);
+  await expect(page.getByRole('alert').filter({hasText:'available replay candles'})).toHaveCount(0);
+});

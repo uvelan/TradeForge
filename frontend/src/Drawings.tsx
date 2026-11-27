@@ -145,6 +145,10 @@ function useDrawingBook(document:ReturnType<typeof useDrawingDocument>,snap:bool
         return point;
       });
       if(anchors.some(point=>point.time<0||Number(point.price)<0)){setError('Move would leave the supported time or price range');return;}
+      if(edit.mode==='move'&&!eligible(anchors)){
+        setError('A moved anchor falls outside the available replay candles. Choose another origin.');
+        return;
+      }
       if(item.kind==='risk-reward'&&!bracketsEntry(anchors)){
         setError('Stop and target must bracket entry. Select the anchor again.');
         return;
