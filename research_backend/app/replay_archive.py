@@ -1,5 +1,5 @@
 """Bounded, verified historical candle windows for opt-in replay capture."""
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from datetime import UTC, datetime
 from io import SEEK_END
 
@@ -29,25 +29,32 @@ def replay_catalog():
     manifest = manifest_path()
     if manifest is not None:
         with open_resolver(manifest, "research", db.DATABASE, storage.MARKET_DIR) as resolver:
-            yield resolver.source, resolver
+            with closing(resolver.source.cursor()) as cursor:
+                yield cursor, resolver
     else:
         with db.transaction() as connection:
             connection.execute("BEGIN")
-            yield connection, None
+            with closing(connection.cursor()) as cursor:
+                yield cursor, None
 
 
 def utc(timestamp):
     return datetime.fromtimestamp(timestamp, UTC).isoformat()
 
 
-def stamp(iso):
-    return int(datetime.fromisoformat(iso).timestamp())
+def partition_stamp(part, field):
+    from tradeforge.shadow_manifest import utc_seconds
+
+    try:
+        return utc_seconds(part[field])
+    except (ValueError, OverflowError) as error:
+        raise ValueError(f"INVALID_UTC_TIMESTAMP: {field} (research, {part['id']})") from error
 
 
 def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, limit, cutoff):
     import pyarrow.parquet as pq
 
-    connection, resolver = catalog
+    cursor, resolver = catalog
     explicit = start is not None
     requested_start, requested_end = start, end
     if explicit:
@@ -63,7 +70,7 @@ def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, 
         lower = "AND last_time >= ?"
         params.append(utc(start))
     # The first unopened partition's maximum timestamp certifies when the recent tail is complete.
-    cursor = connection.execute(f"""SELECT {columns} FROM datasets WHERE kind='candles'
+    cursor.execute(f"""SELECT {columns} FROM datasets WHERE kind='candles'
         AND provider=? AND symbol=? AND timeframe=? AND (provider<>'DUKASCOPY' OR price_basis='BID')
         AND first_time < ? {lower} ORDER BY last_time DESC, first_time DESC, id LIMIT ?""",
         (*params, MAX_FILES + 1))
@@ -73,7 +80,12 @@ def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, 
     truncated = False
     for row in cursor:
         part = dict(row)
-        part_first, part_last = stamp(part["first_time"]), stamp(part["last_time"])
+        if resolver:
+            resolver.resolve_mapping(part)
+        part_first = partition_stamp(part, "first_time")
+        part_last = partition_stamp(part, "last_time")
+        if part_last < part_first:
+            raise ValueError(f"EVENT_RANGE_MISMATCH: last_time precedes first_time (research, {part['id']})")
         if tail_start is not None and part_last < tail_start:
             truncated = True
             break
@@ -84,8 +96,10 @@ def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, 
             raise ValueError("Replay contains incompatible feeds or price bases")
         identity = feed
         expected = part["rows_count"]
+        if type(expected) is not int or expected <= 0:
+            raise ValueError(f"ROW_COUNT_MISMATCH: rows_count must be a positive integer (research, {part['id']})")
         row_count += expected
-        if expected <= 0 or row_count > MAX_ROWS:
+        if row_count > MAX_ROWS:
             raise ValueError("Replay partition rows exceed the read budget")
         require_market_partition(part["id"])
         remaining = MAX_BYTES - encoded_bytes
