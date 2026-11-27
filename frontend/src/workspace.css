@@ -455,6 +455,31 @@
   color: #d4f5ed;
   background: #173330;
 }
+.chart-input:focus-visible {
+  outline: 2px solid var(--workspace-accent);
+  outline-offset: -2px;
+}
+.chart-surface .drawing-prompt {
+  top: auto;
+  bottom: 39px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  white-space: normal;
+  text-align: center;
+  z-index: 4;
+}
+.drawing-prompt span,.drawing-prompt output { display: block; }
+.drawing-keyboard-target {
+  position: absolute;
+  z-index: 5;
+  width: 14px;
+  height: 14px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid #ffdc86;
+  outline: 2px solid #0c131e;
+  pointer-events: none;
+}
 .chart-replay-guide {
   position: absolute;
   top: 0;
