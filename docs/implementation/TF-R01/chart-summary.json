@@ -1,0 +1,68 @@
+[
+  {
+    "size": 600,
+    "panes": 1,
+    "trials": 7,
+    "frames": 122,
+    "median_ms": 16.699999999999818,
+    "p95_ms": 16.799999999999272,
+    "unmounted_heap_first_bytes": 12817344,
+    "unmounted_heap_last_bytes": 13428412,
+    "unmounted_heap_max_bytes": 13570700
+  },
+  {
+    "size": 600,
+    "panes": 2,
+    "trials": 7,
+    "frames": 123,
+    "median_ms": 16.69999999999891,
+    "p95_ms": 16.799999999999272,
+    "unmounted_heap_first_bytes": 13818884,
+    "unmounted_heap_last_bytes": 13641408,
+    "unmounted_heap_max_bytes": 13896196
+  },
+  {
+    "size": 600,
+    "panes": 4,
+    "trials": 7,
+    "frames": 122,
+    "median_ms": 16.69999999999709,
+    "p95_ms": 16.799999999999272,
+    "unmounted_heap_first_bytes": 13747716,
+    "unmounted_heap_last_bytes": 14111360,
+    "unmounted_heap_max_bytes": 14111360
+  },
+  {
+    "size": 5000,
+    "panes": 1,
+    "trials": 7,
+    "frames": 122,
+    "median_ms": 16.699999999999818,
+    "p95_ms": 16.700000000000728,
+    "unmounted_heap_first_bytes": 12836468,
+    "unmounted_heap_last_bytes": 13433448,
+    "unmounted_heap_max_bytes": 13433448
+  },
+  {
+    "size": 5000,
+    "panes": 2,
+    "trials": 7,
+    "frames": 119,
+    "median_ms": 16.69999999999891,
+    "p95_ms": 16.700000000000728,
+    "unmounted_heap_first_bytes": 13546528,
+    "unmounted_heap_last_bytes": 13648436,
+    "unmounted_heap_max_bytes": 13648436
+  },
+  {
+    "size": 5000,
+    "panes": 4,
+    "trials": 7,
+    "frames": 122,
+    "median_ms": 16.700000000000728,
+    "p95_ms": 16.700000000000728,
+    "unmounted_heap_first_bytes": 13785716,
+    "unmounted_heap_last_bytes": 13853212,
+    "unmounted_heap_max_bytes": 13853212
+  }
+]

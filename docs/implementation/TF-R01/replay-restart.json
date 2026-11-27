@@ -1,0 +1,84 @@
+{
+  "session": "3a2f94b1921fa540888234bcc8d3835a4a9266c810e03ea920e1fb290fb759a9",
+  "distinct_api_processes": 3,
+  "checkpoints": [
+    {
+      "index": 1806,
+      "through_utc": "2025-11-13T13:10:00.000Z",
+      "position": {
+        "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+        "qualified_at": 1763038800666,
+        "fill": {
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "ordinal": 6,
+          "time_ms": 1763038800771,
+          "bid_units": 116239,
+          "ask_units": 116243
+        }
+      },
+      "concurrent_duplicate_deliveries": 2
+    },
+    {
+      "index": 1811,
+      "through_utc": "2025-11-13T14:00:00.000Z",
+      "position": null,
+      "concurrent_duplicate_deliveries": 2
+    }
+  ],
+  "receipt_count": 43,
+  "ledger_sha256": "7a6795c12f0e0585e2f7ab85fdac682d8839f53f36a221dcd9140ba8d3c98254",
+  "quote_count": 8636,
+  "open_gap_intervals": 2881,
+  "month_level_metrics": "UNAVAILABLE",
+  "verified_quotes": [
+    {
+      "kind": "QUALIFIED",
+      "id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+      "quote": {
+        "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+        "partition": {
+          "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+          "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+        },
+        "ordinal": 5,
+        "time_ms": 1763038800666,
+        "bid_units": 116239,
+        "ask_units": 116242
+      }
+    },
+    {
+      "kind": "ENTRY",
+      "id": "06ce962ed046b24e07194460e8c43a041296ec1985fe9ae200d2efba408c6b31",
+      "quote": {
+        "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+        "partition": {
+          "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+          "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+        },
+        "ordinal": 6,
+        "time_ms": 1763038800771,
+        "bid_units": 116239,
+        "ask_units": 116243
+      }
+    },
+    {
+      "kind": "STOP",
+      "id": "282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387",
+      "quote": {
+        "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+        "partition": {
+          "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+          "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+        },
+        "ordinal": 1564,
+        "time_ms": 1763040698103,
+        "bid_units": 116143,
+        "ask_units": 116144
+      }
+    }
+  ]
+}

@@ -1,0 +1,247 @@
+{
+  "cold": {
+    "ledger_sha256": "7a6795c12f0e0585e2f7ab85fdac682d8839f53f36a221dcd9140ba8d3c98254",
+    "quotes": 8636,
+    "counts": {
+      "REGISTERED": 2,
+      "SCHEDULED_CLOSURE": 238,
+      "MISSING_OPEN": 480
+    },
+    "inputs": [
+      {
+        "start": 1763038800,
+        "status": "REGISTERED",
+        "pin": {
+          "start": 1763038800,
+          "end": 1763042400,
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          }
+        },
+        "bi5_bytes": 15332,
+        "parquet_bytes": 38231
+      },
+      {
+        "start": 1763042400,
+        "status": "REGISTERED",
+        "pin": {
+          "start": 1763042400,
+          "end": 1763046000,
+          "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+          "partition": {
+            "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+            "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+          }
+        },
+        "bi5_bytes": 24809,
+        "parquet_bytes": 62062
+      }
+    ],
+    "events": [
+      {
+        "kind": "QUALIFIED",
+        "quote": {
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "ordinal": 5,
+          "time_ms": 1763038800666,
+          "bid_units": 116239,
+          "ask_units": 116242
+        },
+        "anchor": {
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "ordinal": 0,
+          "time_ms": 1763038800089,
+          "bid_units": 116229,
+          "ask_units": 116231
+        },
+        "id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea"
+      },
+      {
+        "kind": "ENTRY",
+        "quote": {
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "ordinal": 6,
+          "time_ms": 1763038800771,
+          "bid_units": 116239,
+          "ask_units": 116243
+        },
+        "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+        "side": "ASK",
+        "price_units": 116243,
+        "remaining": 1,
+        "id": "06ce962ed046b24e07194460e8c43a041296ec1985fe9ae200d2efba408c6b31"
+      },
+      {
+        "kind": "STOP",
+        "quote": {
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "ordinal": 1564,
+          "time_ms": 1763040698103,
+          "bid_units": 116143,
+          "ask_units": 116144
+        },
+        "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+        "side": "BID",
+        "price_units": 116143,
+        "remaining": 0,
+        "id": "282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387"
+      }
+    ],
+    "observed_missing_intervals_ms": [
+      [
+        1763038800000,
+        1763038800089
+      ]
+    ]
+  },
+  "warm": {
+    "ledger_sha256": "7a6795c12f0e0585e2f7ab85fdac682d8839f53f36a221dcd9140ba8d3c98254",
+    "quotes": 8636,
+    "counts": {
+      "REGISTERED": 2,
+      "SCHEDULED_CLOSURE": 238,
+      "MISSING_OPEN": 480
+    },
+    "inputs": [
+      {
+        "start": 1763038800,
+        "status": "REGISTERED",
+        "pin": {
+          "start": 1763038800,
+          "end": 1763042400,
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          }
+        },
+        "bi5_bytes": 15332,
+        "parquet_bytes": 38231
+      },
+      {
+        "start": 1763042400,
+        "status": "REGISTERED",
+        "pin": {
+          "start": 1763042400,
+          "end": 1763046000,
+          "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+          "partition": {
+            "id": "8c201493b65ef8c53da08c0ba53cbb54b6d435d0ff33a38365e13fdbd42f5a02",
+            "sha256": "6944703b23da14f4727177baab237abc04c36cb502a2f95db97e4493dd11e5c8"
+          }
+        },
+        "bi5_bytes": 24809,
+        "parquet_bytes": 62062
+      }
+    ],
+    "events": [
+      {
+        "kind": "QUALIFIED",
+        "quote": {
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "ordinal": 5,
+          "time_ms": 1763038800666,
+          "bid_units": 116239,
+          "ask_units": 116242
+        },
+        "anchor": {
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "ordinal": 0,
+          "time_ms": 1763038800089,
+          "bid_units": 116229,
+          "ask_units": 116231
+        },
+        "id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea"
+      },
+      {
+        "kind": "ENTRY",
+        "quote": {
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "ordinal": 6,
+          "time_ms": 1763038800771,
+          "bid_units": 116239,
+          "ask_units": 116243
+        },
+        "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+        "side": "ASK",
+        "price_units": 116243,
+        "remaining": 1,
+        "id": "06ce962ed046b24e07194460e8c43a041296ec1985fe9ae200d2efba408c6b31"
+      },
+      {
+        "kind": "STOP",
+        "quote": {
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "partition": {
+            "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+            "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+          },
+          "ordinal": 1564,
+          "time_ms": 1763040698103,
+          "bid_units": 116143,
+          "ask_units": 116144
+        },
+        "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+        "side": "BID",
+        "price_units": 116143,
+        "remaining": 0,
+        "id": "282ed58db32a484442840a47e6cc4ca4847747ba034c82908a32bb6eba414387"
+      }
+    ],
+    "observed_missing_intervals_ms": [
+      [
+        1763038800000,
+        1763038800089
+      ]
+    ]
+  },
+  "restart": {
+    "frontier": 1763039400,
+    "position": {
+      "decision_id": "16a586ef6b3f24d291e84d0244739e70a59c9f4ee79bd564440b3d4e0ae1d0ea",
+      "qualified_at": 1763038800666,
+      "fill": {
+        "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+        "partition": {
+          "id": "713b347197c528d5d92242630e3369924152e83e7e9728079ef22a39c32170e2",
+          "sha256": "ca71608096bb6ec870c2a621d761910f0d9a45d7d9ce7fe9e99569ef983e6276"
+        },
+        "ordinal": 6,
+        "time_ms": 1763038800771,
+        "bid_units": 116239,
+        "ask_units": 116243
+      }
+    },
+    "final_ledger": "7a6795c12f0e0585e2f7ab85fdac682d8839f53f36a221dcd9140ba8d3c98254"
+  }
+}
