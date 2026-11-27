@@ -98,11 +98,16 @@ async function panZoom(page:Page,selector:string){
   await page.mouse.down();
   await page.mouse.move(x+45,y,{steps:12});
   await page.mouse.up();
+  const afterPan=await page.evaluate(selector=>window.workspaceProbe.range(selector),selector);
   await page.mouse.wheel(0,-180);
   await twoFrames(page);
   const frames=await page.evaluate(()=>window.drawingCapacity.stopFrames());
   expect(frames.length).toBeGreaterThan(1);
-  await expect.poll(()=>page.evaluate(selector=>window.workspaceProbe.range(selector),selector)).not.toEqual(before);
+  expect(afterPan).not.toEqual(before);
+  await expect.poll(async()=>{
+    const zoomed=await page.evaluate(selector=>window.workspaceProbe.range(selector),selector);
+    return zoomed.to-zoomed.from;
+  }).toBeLessThan(afterPan.to-afterPan.from);
   // Let zoom/draw updates settle before taking a fresh selection timing.
   await page.locator(selector).locator('xpath=..').getByTitle('Show recent candles',{exact:true}).click();
   await twoFrames(page);
@@ -168,6 +173,7 @@ async function dragOnChart(page:Page,selector:string,target:Drawing,path:string,
   expect(next.items.slice(1)).toEqual(before.items.slice(1));
   expect(next.items[0]).toMatchObject({id:target.id,kind:target.kind,color:target.color,anchors:[{time:target.anchors[0].time}]});
   expect(next.items[0].anchors).not.toEqual(target.anchors);
+  expect(Number(next.items[0].anchors[0].price)).toBeGreaterThan(0);
   expect(Number(next.items[0].anchors[0].price)<Number(target.anchors[0].price)).toBe(delta>0);
   expect(await readBook(page,path)).toEqual(next);
   await page.waitForFunction(({selector,color,expected})=>{
@@ -224,9 +230,9 @@ test('drawing capacity on a real four-pane saved replay',async({page,browser},in
       const before=await readBook(page,paths[i]);
       const result=await page.request.post(paths[i],{data:{...before,items:seed(lanes[i],i,250)}});
       const after=await readBook(page,paths[i]);
-      report.exploratory.push({scope:scopes[i],attempted:250,status:result.status(),persisted:after.items.length,
+      report.exploratory.push({scope:scopes[i],attempted:250,status:result.status(),persistedBefore:before.items.length,persistedAfter:after.items.length,
         revisionUnchanged:after.revision===before.revision,detail:result.ok()?undefined:await result.json().then(
-          body=>JSON.stringify(body.detail).slice(0,400))});
+          body=>Array.isArray(body.detail)?body.detail.map(({type,msg,ctx}:{type:string;msg:string;ctx:object})=>({type,msg,ctx})):body.detail)});
       if(!result.ok())expect(after).toEqual(before);
     }
     publish();
