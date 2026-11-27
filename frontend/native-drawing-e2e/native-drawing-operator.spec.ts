@@ -24,20 +24,20 @@ const scene=async(page:Page,pane:'primary'|'4'='primary'):Promise<Scene>=>{
 const control=(page:Page,name:string)=>page.getByRole('button',{name,exact:true});
 const selected=(page:Page)=>page.getByRole('combobox',{name:/^Select drawing/});
 
-async function openReplay(page:Page,url='/'){
+async function openReplay(page:Page,url='/',archive=fixture){
   await installProbe(page);
   await page.goto(url);
   await control(page,'Market Terminal').click();
   await page.getByLabel('Market data source').selectOption(fixture.request.source);
   const saved=page.getByLabel('Resume saved replay');
-  const id=fixture.session_id;
+  const id=archive.session_id;
   await expect(saved.locator('option[value="'+id+'"]')).toBeAttached({timeout:20000});
   const [opened]=await Promise.all([
     page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/replay/sessions/'+id)),
     saved.selectOption(id),
   ]);
   expect(opened.ok()).toBeTruthy();
-  const paneCounts=Object.entries(fixture.panes).map(([id,lane])=>({
+  const paneCounts=Object.entries(archive.panes).map(([id,lane])=>({
     selector:id==='primary'?'.primary-chart .chart-input':`[aria-label="Chart view ${id}"] .chart-input`,
     candles:lane.candles.length,
   }));
@@ -45,7 +45,8 @@ async function openReplay(page:Page,url='/'){
     window.workspaceProbe.series(selector).flat().find((series:{type:string})=>series.type==='Candlestick')?.data.length,
   ),paneCounts),{timeout:20000}).toEqual(paneCounts.map(lane=>lane.candles));
   await page.getByRole('combobox',{name:'Inspection pane',exact:true}).selectOption('primary');
-  await page.getByText(/^Drawing toolbox/).click();
+  const summary=page.getByText(/^Drawing toolbox/);
+  if(!await summary.evaluate(el=>el.closest('details')!.open))await summary.click();
   await page.getByLabel('Drawing tool',{exact:true}).selectOption('horizontal');
 }
 
@@ -271,8 +272,10 @@ test('focused plot after zoom previews the first Enter and commits only the seco
   await expect(readout).toHaveText('');
   await expect(plot(pane)).toBeFocused();
 
-  await page.keyboard.press('Enter');
+  await page.keyboard.down('Enter');
   await expect(marker).toBeVisible();
+  await page.keyboard.down('Enter'); // repeat while still held
+  await page.keyboard.up('Enter');
   const [utc,price]=(await readout.innerText()).split(' · ');
   expect(writes).toBe(0);
   expect(await scene(page)).toEqual(initial);
@@ -292,23 +295,7 @@ test('out-of-window trendline move keeps its editor open for an earlier origin',
   await openReplay(page);
   await control(page,'Previous candle').click();
   const pane=page.getByRole('region',{name:'Primary chart'});
-  const selector='.primary-chart .chart-input';
-  const candles=fixture.panes.primary.candles as {time:number;close:number}[];
-  const bars=candles.slice(-7,-1);
-  const point=async(bar:typeof bars[number])=>{
-    await plot(pane).scrollIntoViewIfNeeded();
-    const p=await page.evaluate(({selector,bar})=>window.workspaceProbe.candlePoint(selector,bar.time,bar.close),{selector,bar});
-    await page.mouse.click(p.x,p.y);
-  };
-  await page.getByLabel('Drawing tool',{exact:true}).selectOption('trend');
-  await control(page,'Draw').click();
-  await point(bars[0]);
-  await point(bars[1]);
-  await expect(selected(page)).toHaveValue(/^[a-f0-9-]{36}$/);
-  const id=await selected(page).inputValue();
-  const initial=await scene(page);
-  const original=initial.items.find(i=>i.id===id)!;
-  expect(original.anchors.map(a=>a.time)).toEqual([bars[0].time,bars[1].time]);
+  const {point,bars,id,initial}=await drawTrend(page,pane);
   let writes=0;
   page.on('request',r=>{if(r.method()==='POST'&&new URL(r.url()).pathname.endsWith('/drawings'))writes++;});
   await control(page,'Move drawing').click();
@@ -326,3 +313,102 @@ test('out-of-window trendline move keeps its editor open for an earlier origin',
   await expect(pane.locator('.drawing-prompt')).toHaveCount(0);
   await expect(page.getByRole('alert').filter({hasText:'available replay candles'})).toHaveCount(0);
 });
+
+async function drawTrend(page:Page,pane:Locator,selector='.primary-chart .chart-input'){
+  const candles=fixture.panes.primary.candles as {time:number;close:number}[];
+  const bars=candles.slice(-7,-1);
+  const point=async(bar:typeof bars[number])=>{
+    await plot(pane).scrollIntoViewIfNeeded();
+    const p=await page.evaluate(({selector,bar})=>window.workspaceProbe.candlePoint(selector,bar.time,bar.close),{selector,bar});
+    await page.mouse.click(p.x,p.y);
+  };
+  await page.getByLabel('Drawing tool',{exact:true}).selectOption('trend');
+  await control(page,'Draw').click();
+  await point(bars[0]);
+  await point(bars[1]);
+  await expect(selected(page)).toHaveValue(/^[a-f0-9-]{36}$/);
+  const id=await selected(page).inputValue();
+  const initial=await scene(page);
+  const original=initial.items.find(i=>i.id===id)!;
+  expect(original.anchors.map(a=>a.time)).toEqual([bars[0].time,bars[1].time]);
+  return {point,bars,id,initial};
+}
+
+for(const action of ['lock move','restyle companion anchor'] as const){
+  test('stale drawing edit after '+action,async({page},info)=>{
+    let archive=fixture;
+    const companion=action==='restyle companion anchor';
+    if(companion){
+      const request={...fixture.request,views:[{view:'2',symbol:fixture.request.symbol,timeframe:fixture.request.timeframe}]};
+      const response=await page.request.post('/research/api/replay/sessions',{data:request});
+      expect(response.status(),await response.text()).toBe(201);
+      const session=await response.json();
+      const checkpoint=await page.request.post('/research/api/replay/sessions/'+session.id+'/checkpoint',{data:{position:session.market.replay_cutoffs.length-1,bookmarks:[]}});
+      expect(checkpoint.ok()).toBeTruthy();
+      archive={...fixture,session_id:session.id,panes:{primary:fixture.panes.primary,'2':fixture.panes.primary}};
+    }
+    await openReplay(page,'/?timezone=UTC',archive);
+    await control(page,'Previous candle').click();
+    if(companion)await page.getByRole('combobox',{name:'Inspection pane',exact:true}).selectOption('2');
+    const pane=page.getByRole('region',{name:companion?'Chart view 2':'Primary chart',exact:true});
+    const {point,bars,id,initial}=await drawTrend(page,pane,companion?'[aria-label="Chart view 2"] .chart-input':'.primary-chart .chart-input');
+    const bodies:unknown[]=[];
+    page.on('request',r=>{if(r.method()==='POST'&&new URL(r.url()).pathname.endsWith('/drawings'))bodies.push(r.postDataJSON());});
+    if(companion){
+      await control(page,'Set anchor 2').press('Enter');
+      await tabToPlot(page,pane);
+      await expect(pane.locator('.drawing-keyboard-target')).toBeVisible();
+      await page.getByLabel('Label',{exact:true}).fill('Saved companion label');
+      await control(page,'Save style').click();
+    }else{
+      await control(page,'Move drawing').click();
+      await point(bars[5]);
+      await expect(pane.locator('.drawing-prompt')).toContainText('new origin');
+      await expect(page.getByRole('alert').filter({hasText:'available replay candles'})).toBeVisible();
+      expect(await scene(page)).toEqual(initial);
+      expect(bodies).toHaveLength(0);
+      await control(page,'Lock').click();
+    }
+    await expect.poll(async()=>(await scene(page)).revision).toBe(initial.revision+1);
+    const changed=await scene(page);
+    const updated=changed.items.find(i=>i.id===id)!;
+    expect(updated).toMatchObject(companion?{label:'Saved companion label'}:{locked:true});
+    expect(updated.anchors).toEqual(initial.items.find(i=>i.id===id)!.anchors);
+    expect(bodies).toHaveLength(1);
+    await point(bars[2]);
+    await page.keyboard.press('Enter');
+    if(bodies.length>1)await expect.poll(async()=>(await scene(page)).revision).toBe(changed.revision+1);
+    const after=await scene(page);
+    writeFileSync(info.outputPath('stale-edit.json'),JSON.stringify({action,id,initial,changed,after,bodies},null,2));
+    expect(bodies).toHaveLength(1);
+    expect(after).toEqual(changed);
+    await expect(pane.locator('.drawing-prompt,.drawing-keyboard-target')).toHaveCount(0);
+    await expect(page.getByRole('status').filter({hasText:'Drawing edit canceled'})).toBeVisible();
+    await expect(plot(pane)).not.toHaveAttribute('tabindex','0');
+    await openReplay(page,'/?timezone=UTC',archive);
+    expect(await scene(page)).toEqual(changed);
+    await selected(page).selectOption(id);
+    if(companion){
+      await expect(page.getByLabel('Label',{exact:true})).toHaveValue('Saved companion label');
+      await page.getByRole('combobox',{name:'Inspection pane',exact:true}).selectOption('2');
+      await selected(page).selectOption(id);
+    }else{
+      await control(page,'Unlock').click();
+      await expect(control(page,'Move drawing')).toBeEnabled();
+    }
+    const beforeRetry=await scene(page);
+    const count=bodies.length;
+    await control(page,'Move drawing').press('Enter');
+    await tabToPlot(page,pane);
+    await expect(plot(pane)).toBeFocused();
+    // Use an earlier valid candle for the explicit retry.
+    await point(bars[2]);
+    await expect.poll(async()=>(await scene(page)).revision).toBe(beforeRetry.revision+1);
+    expect(bodies).toHaveLength(count+1);
+    const final=await scene(page);
+    expect(final.items.find(i=>i.id===id)).toMatchObject({locked:false,anchors:[{time:bars[2].time},{time:bars[3].time}]});
+    if(companion)expect(final.items.find(i=>i.id===id)).toMatchObject({label:'Saved companion label'});
+    expect(final.items.filter(i=>i.id!==id)).toEqual(initial.items.filter(i=>i.id!==id));
+    writeFileSync(info.outputPath('stale-edit.json'),JSON.stringify({action,id,initial,changed,after,final,bodies},null,2));
+  });
+}

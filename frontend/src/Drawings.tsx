@@ -19,7 +19,8 @@ export type Drawing={
 type Version={schema_version:1;revision:number;items:Drawing[]};
 type Edit={kind:DrawingTool;anchors:Anchor[];item?:Drawing;mode?:'move'|number};
 type ChartInteraction=
-  | {mode:'navigate'|'level'}
+  | {mode:'navigate';notice?:string}
+  | {mode:'level'}
   | {mode:'plan';prices:string[]}
   | {mode:'place'|'edit';draft:Edit};
 const now=()=>Math.floor(Date.now()/1000);
@@ -89,10 +90,17 @@ function useDrawingBook(document:ReturnType<typeof useDrawingDocument>,snap:bool
   useLayoutEffect(()=>{if(selectedId&&!selected)setSelected('');},[selectedId,selected]);
   const [storedInteraction,setInteraction]=useState<ChartInteraction>({mode:'navigate'});
   const draft='draft' in storedInteraction?storedInteraction.draft:undefined;
-  const canceled=draft&&(!eligible(draft.anchors)||(draft.item&&!items.some(item=>item.id===draft.item!.id)));
+  const original=draft?.item;
+  const latest=original&&current?.items.find(item=>item.id===original.id);
+  // A book write decodes fresh objects even when it only changes a different drawing.
+  const superseded=Boolean(original&&(!latest||latest.locked||
+    (latest!==original&&JSON.stringify(latest)!==JSON.stringify(original))));
+  const canceled=draft&&(superseded||!eligible(draft.anchors)||(original&&!eligible(original.anchors)));
   const interaction:ChartInteraction=canceled?{mode:'navigate'}:storedInteraction;
   const edit=canceled?undefined:draft;
-  useLayoutEffect(()=>{if(canceled)setInteraction({mode:'navigate'});},[canceled]);
+  useLayoutEffect(()=>{
+    if(canceled)setInteraction({mode:'navigate',notice:superseded?'Drawing edit canceled because the saved drawing changed.':undefined});
+  },[canceled,superseded]);
   const setEdit=useCallback((draft?:Edit)=>setInteraction(
     draft?{mode:draft.item?'edit':'place',draft}:{mode:'navigate'},
   ),[]);
@@ -135,7 +143,8 @@ function useDrawingBook(document:ReturnType<typeof useDrawingDocument>,snap:bool
     const next=additions[additions.length-1];
     const nearest=Number(next.price);
     if(edit.item&&edit.mode!==undefined){
-      const item=edit.item;
+      if(!latest||latest.locked||superseded)return;
+      const item=latest;
       const anchors=item.anchors.map((point,index)=>{
         if(edit.mode===index)return next;
         if(edit.mode==='move'){
@@ -231,6 +240,7 @@ export function DrawingToolbox({book,destination}: {book:DrawingBook;destination
   };
   return <details className="data-trust" open={expanded==="open"} onToggle={e=>setExpanded(e.currentTarget.open?"open":"closed")}><summary>Drawing toolbox {book.current?`(${book.items.length})`:''}{destination&&<small className="muted"> · {destination}</small>}</summary>
     {book.error&&<p role="alert">{book.error} <button className="small-tool" disabled={book.saving} onClick={book.reload}>Reload drawings</button></p>}
+    {book.interaction.mode==='navigate'&&book.interaction.notice&&<p role="status">{book.interaction.notice}</p>}
     {!book.current&&!book.error&&<p role="status">Loading drawings</p>}
     <div className="research-controls">
       <label>Drawing tool<select aria-label="Drawing tool" value={tool} onChange={event=>setTool(event.target.value as DrawingTool)}>
