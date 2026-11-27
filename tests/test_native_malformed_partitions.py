@@ -117,3 +117,61 @@ def test_blob_first_time_is_outside_native_sql_selection(tmp_path, monkeypatch, 
     assert_neighbor(response.json()["market"], good, explicit)
     assert session_count() == 1
     assert (storage.MARKET_DIR / bad["relative_path"]).resolve() not in opened
+
+@pytest.mark.parametrize("shadow", [False, True], ids=["default", "shadow"])
+@pytest.mark.parametrize("upper", ["before", "equal", "malformed"])
+def test_full_recent_window_selection_boundary(tmp_path, monkeypatch, shadow, upper):
+    root, market_dir = tmp_path / "fixed", tmp_path / "market"
+    monkeypatch.delenv(FLAG, raising=False)
+    monkeypatch.setattr(db, "DATABASE", tmp_path / "catalog.sqlite")
+    monkeypatch.setattr(storage, "MARKET_DIR", market_dir)
+    db.initialize()
+    open_database(root).dispose()
+    minute = 60
+    bars = [dict(time=START + i * minute, open=1.10, high=1.12, low=1.09, close=1.11)
+            for i in range(5000)]
+    def write(records):
+        return storage.write_partition("DUKASCOPY", "fixture", "EURUSD", "candles", "M1", "BID", records)
+
+    good = write(bars)
+    bad_time = START if upper == "equal" else START - minute
+    bad = write([{**bars[0], "time": bad_time}])
+    with closing(sqlite3.connect(db.DATABASE)) as conn, conn:
+        conn.execute("UPDATE datasets SET rows_count=CAST(rows_count AS BLOB) WHERE id=?", (bad["id"],))
+        if upper == "malformed":
+            # Text sorts after the newer partition in this descending scan, but lacks a UTC offset.
+            conn.execute("UPDATE datasets SET last_time='2019-12-31T23:59:00' WHERE id=?", (bad["id"],))
+    manifest = tmp_path / "manifest.sqlite"
+    assert register(root, db.DATABASE, market_dir, manifest)["research"] == {
+        "inspected": 2, "mapped": 1, "unresolved": 1}
+    if shadow:
+        monkeypatch.setenv(FLAG, str(manifest))
+
+    opened = []
+    def track_open(path, *args, **kwargs):
+        opened.append(Path(path).resolve())
+        return open(path, *args, **kwargs)
+
+    monkeypatch.setattr(catalog, "open", track_open, raising=False)
+    assert session_count() == 0
+    with closing(TestClient(create_app(), base_url="http://localhost", raise_server_exceptions=False)) as client:
+        response = replay(client, "EURUSD", False, timeframe="M1")
+    assert (market_dir / bad["relative_path"]).resolve() not in opened
+    assert (market_dir / good["relative_path"]).resolve() in opened
+    if upper == "before":
+        assert response.status_code == 201, (response.text, session_count())
+        assert session_count() == 1
+        market = response.json()["market"]
+        assert market["partitions"] == [{"id": good["id"], "sha256": good["sha256"]}]
+        assert market["candles"] == [
+            {**bar, "available_at": bar["time"] + minute, "availability_basis": "MODELED_NOMINAL_CLOSE",
+             "source_partition_indexes": [0]} for bar in bars]
+        assert market["replay_cutoffs"] == [bar["time"] + minute for bar in bars]
+        assert market["coverage"] == {"start": START, "end": START + 5000 * minute, "gaps": [],
+                                      "duplicate_bars": 0, "truncated": True}
+    else:
+        assert response.status_code == 409, response.text
+        assert session_count() == 0
+        detail = response.json()["detail"]
+        assert bad["id"] in detail
+        assert ("ROW_COUNT_MISMATCH" if upper == "equal" else "INVALID_UTC_TIMESTAMP") in detail

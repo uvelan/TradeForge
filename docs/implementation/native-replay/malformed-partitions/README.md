@@ -27,3 +27,19 @@ The focused suite passed 54 tests; the independent reviewer separately reran all
 Production churn was +23/−9 lines; independent tests added 119 lines. The rework interval from the single-row corrected probe to the candidate commit was 2 min 9 s, including the neighboring-row Windows lock reproduction, correction and focused checks. No full suite needed a retry. The separate diagnostic matrix was rerun to release baseline SQLite handles before deleting its disposable workspace. At 08:03:58 UTC, sampled totals were 13,239,211 owner tokens, 5,040,354 independent reviewer tokens and 2,217,276 approval-review tokens. Cached input and reasoning are included once. [Per-agent usage](usage.json)
 
 Rollback by reverting `f4a540aa9a8136486516badddff76001ce2bde29` and restarting the API. There are no database migrations, archive rewrites or changes to persisted session formats.
+
+### Full automatic recent window
+
+On `a112d00d234e0e728515f3445dfa30907cedde2b`, shadow mode consulted the mapping of an older partition after the newer one had already supplied the requested 5,000 closed M1 candles. The native reader scans the catalog by descending upper timestamp. Once the window is full, it now validates that upper timestamp first. A strictly earlier upper bound ends the scan. Equality keeps the partition in scope and requires full validation.
+
+The mounted replay POST used two real, controlled Parquet files, completed shadow registration, source `DUKASCOPY_SAVED`, and no explicit range. Each request started with zero saved sessions. Cells show **HTTP status / final session count**.
+
+| Older upper bound and metadata | Starting default | Starting shadow | Corrected default and shadow |
+|---|---|---|---|
+| 2019-12-31 23:59 UTC, invalid row count | 201 / 1 | 409 / 0, row count | 201 / 1 |
+| 2020-01-01 00:00 UTC, invalid row count | 409 / 0, row count | 409 / 0, row count | 409 / 0, `ROW_COUNT_MISMATCH` |
+| 2019-12-31 23:59 without an offset, invalid row count | 409 / 0, timestamp | 409 / 0, row count | 409 / 0, `INVALID_UTC_TIMESTAMP` |
+
+Both successful readers returned identical candles, all 5,000 availability cutoffs, and the same saved session ID `e9911f19c773b29ad97203bde32e9786eb6e01da8c3bf2592fd978ae54d79632`. The last cutoff was 2020-01-04 11:20 UTC (1578136800). The contributing partition was `7d647772c75320bfca6a5773fea03c69199ee29406ae85754ff42273ec5bc683`, SHA-256 `22b97395843f9189dc4fda0f11fb128f3f48843357c49076889ddacd4778c27d`. The timestamp errors identified partition `f76216597d53272e4010ed7d83e4448ec7a10ce7775c2b0b62c2812d5fd325e1`. The overlap errors identified `a63631806b6fc4032d2c119d6d72aa80db2e766a50443489517523627c1e12ac`. Instrumentation observed zero file opens for the older partition in all six cases.
+
+Reproduce with `.venv/Scripts/python.exe -m pytest -q tests/test_native_malformed_partitions.py -k full_recent_window_selection_boundary`. Reverting the selection-boundary commit and restarting the API restores the preceding behavior with the same stored sessions.

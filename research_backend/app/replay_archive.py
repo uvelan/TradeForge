@@ -80,15 +80,16 @@ def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, 
     truncated = False
     for row in cursor:
         part = dict(row)
+        # A full recent window only needs this row's upper bound to rule it out.
+        if tail_start is not None and partition_stamp(part, "last_time") < tail_start:
+            truncated = True
+            break
         if resolver:
             resolver.resolve_mapping(part)
         part_first = partition_stamp(part, "first_time")
         part_last = partition_stamp(part, "last_time")
         if part_last < part_first:
             raise ValueError(f"EVENT_RANGE_MISMATCH: last_time precedes first_time (research, {part['id']})")
-        if tail_start is not None and part_last < tail_start:
-            truncated = True
-            break
         if len(pins) == MAX_FILES:
             raise ValueError("Replay partition count exceeds the read budget")
         feed = (part["feed_id"], part["price_basis"])
