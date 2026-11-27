@@ -1,11 +1,13 @@
 """Independent source and policy oracle for the November 2025 EURUSD replay."""
 
 from datetime import UTC, datetime
+from fnmatch import fnmatch
 from hashlib import sha256
 from itertools import groupby
 from io import BytesIO
 import lzma
 import math
+import os
 import struct
 from typing import NamedTuple
 from zoneinfo import ZoneInfo
@@ -77,13 +79,23 @@ def control_files(folder):
 class BI5Source:
     def __init__(self, controls, archive=None):
         self.files = control_files(controls)
-        if archive:
-            for path in sorted(archive.glob("2025-11-??/[0-2][0-9]h_ticks.bi5")):
-                day = datetime.fromisoformat(path.parent.name).replace(tzinfo=UTC)
+        self.archive_file_count = 0
+        if archive is None:
+            return
+
+        # glob() suppresses directory scan errors, which can look like an empty archive.
+        with os.scandir(archive) as entries:
+            folders = sorted(archive / entry.name for entry in entries
+                             if fnmatch(entry.name, "2025-11-??") and entry.is_dir())
+        for folder in folders:
+            paths = sorted(path for path in folder.iterdir() if fnmatch(path.name, "[0-2][0-9]h_ticks.bi5"))
+            for path in paths:
+                day = datetime.fromisoformat(folder.name).replace(tzinfo=UTC)
                 stamp = int(day.replace(hour=int(path.name[:2])).timestamp())
                 if stamp in self.files and path.read_bytes() != self.files[stamp].read_bytes():
                     raise ValueError(f"Conflicting input files at {stamp}")
                 self.files[stamp] = path
+                self.archive_file_count += 1
 
     def hours(self):
         for stamp, path in sorted(self.files.items()):

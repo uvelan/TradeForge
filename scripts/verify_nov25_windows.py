@@ -517,7 +517,9 @@ def main():
             verify_control(expected(control))
             report[source] = windows_replay(control, args.baseline, args.candidate,
                                             args.repeats, args.workspace.resolve())
-            if args.archive:
+            control_count = len(control.files)
+            report[source].update(control_files=control_count, unique_inputs=control_count)
+            if args.archive is not None:
                 source = "dukascopy_archive"
                 archive = BI5Source(args.controls, args.archive)
                 if archive.files.keys() == control.files.keys():
@@ -526,6 +528,8 @@ def main():
                 else:
                     report[source] = windows_replay(archive, args.baseline, args.candidate,
                                                     args.repeats, args.workspace.resolve())
+                report[source].update(control_files=control_count, archive_files=archive.archive_file_count,
+                                      unique_inputs=len(archive.files))
         except Exception as error:
             report[source] = dict(first_divergence=dict(stage="source_validation", diagnostic=error_diagnostic(error)))
     first = first_report_divergence(report)
