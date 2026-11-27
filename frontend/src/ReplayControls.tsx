@@ -9,8 +9,8 @@ export function visibleAt(candles: Candle[], cutoff: number, step: number): Cand
   return candles.filter(bar => (bar.available_at ?? bar.time + step) <= cutoff);
 }
 
-export function ReplayControls({candles,index,onSeek,onExit,step,initialBookmarks,onCheckpoint,jumps=[]}: {
-  candles:Candle[]; index:number; onSeek:(index:number)=>void; onExit?:()=>void; step:number; initialBookmarks?:number[]; onCheckpoint?:(index:number,bookmarks:number[])=>Promise<void>;
+export function ReplayControls({candles,cutoffs,index,onSeek,onExit,step,initialBookmarks,onCheckpoint,jumps=[]}: {
+  candles:Candle[]; cutoffs?:number[]; index:number; onSeek:(index:number)=>void; onExit?:()=>void; step:number; initialBookmarks?:number[]; onCheckpoint?:(index:number,bookmarks:number[])=>Promise<void>;
   jumps?:{label:string;time:number}[];
 }) {
   const [playing,setPlaying] = useState(false);
@@ -20,7 +20,8 @@ export function ReplayControls({candles,index,onSeek,onExit,step,initialBookmark
   const [bookmarks,setBookmarks] = useState<number[]>(initialBookmarks??[]);
   const [checkpointStatus,setCheckpointStatus]=useState("");
   const [saving,setSaving]=useState(false);
-  const last = candles.length-1;
+  const count = cutoffs?.length ?? candles.length;
+  const last = count - 1;
   const seek = (next:number) => {setPlaying(false);onSeek(Math.max(0,Math.min(last,next)));};
   useEffect(()=>{
     if (!playing || index>=last) return;
@@ -42,8 +43,13 @@ export function ReplayControls({candles,index,onSeek,onExit,step,initialBookmark
     return ()=>window.removeEventListener('keydown',shortcut);
   },[index,last,onSeek]);
   const canBookmark = Number.isInteger(index)&&index>=0&&index<=last;
-  const cutoff = candles[index] && (candles[index].available_at ?? candles[index].time+step);
-  return <div className="research-controls" aria-label="Historical replay">
+  const cutoff = cutoffs ? cutoffs[index] : candles[index] && (candles[index].available_at ?? candles[index].time+step);
+  function positionAt(time:number){
+    if (!cutoffs) return visibleAt(candles,time,step).length-1;
+    for (let cursor=cutoffs.length-1;cursor>=0;cursor--) if (cutoffs[cursor]<=time) return cursor;
+    return -1;
+  }
+  return <div className="research-controls" role="region" aria-label="Historical replay">
     {onExit && <button className="small-tool" onClick={onExit}>Exit replay</button>}
     <button className="small-tool" disabled={index===0} onClick={()=>seek(0)}>Restart</button>
     <button className="small-tool" disabled={index===0} onClick={()=>seek(index-1)}>Previous candle</button>
@@ -52,20 +58,21 @@ export function ReplayControls({candles,index,onSeek,onExit,step,initialBookmark
     <button className="small-tool" disabled={index>=last} onClick={()=>seek(last)}>Last candle</button>
     <label>Speed <select value={speed} onChange={event=>setSpeed(Number(event.target.value))}>{[0.5,1,2,5,10].map(rate=><option key={rate}>{rate}</option>)}</select></label>
     <label className="replay-seek">Replay timeline <input type="range" min={0} max={last} value={index} onChange={event=>seek(Number(event.target.value))}/></label>
-    <output>{index+1} / {candles.length} {cutoff!==undefined&&new Date(cutoff*1000).toISOString()}</output>
+    <output>{index+1} / {count} {cutoff!==undefined&&new Date(cutoff*1000).toISOString()}</output>
+    {cutoffs && index===last && count>candles.length && <span>End of the requested range</span>}
     <label>Jump to UTC <input type="datetime-local" value={jump} onChange={event=>{setJump(event.target.value);setJumpError('');}}/></label>
     <button className="small-tool" disabled={!jump} onClick={()=>{
       const upto=Date.parse(jump+'Z')/1000;
       if(!Number.isFinite(upto))return;
-      const visible=visibleAt(candles,upto,step).length;
-      if(visible)seek(visible-1);
+      const position=positionAt(upto);
+      if(position>=0)seek(position);
       else setJumpError('No completed candle is available at that time.');
     }}>Seek</button>
     {jumpError&&<span role="alert">{jumpError}</span>}
     {jumps.length>0&&<label>Jump to event <select value="" onChange={event=>{
-      if(event.target.value){const item=jumps[Number(event.target.value)];seek(visibleAt(candles,item.time,step).length-1);}
+      if(event.target.value){const item=jumps[Number(event.target.value)];seek(positionAt(item.time));}
     }}><option value="">Choose event</option>{jumps.map((item,itemIndex)=>{
-      const position=visibleAt(candles,item.time,step).length-1;
+      const position=positionAt(item.time);
       return <option key={item.label} value={itemIndex} disabled={position<0}>{item.label}</option>;
     })}</select></label>}
     {onCheckpoint&&<button className="small-tool" disabled={saving} onClick={()=>{
@@ -78,7 +85,7 @@ export function ReplayControls({candles,index,onSeek,onExit,step,initialBookmark
       onClick={()=>setBookmarks(current=>!canBookmark||current.includes(index)||current.length>=50
         ?current:[...current,index].sort((a,b)=>a-b))}>Bookmark candle</button>
     {bookmarks.length>0&&<label>Bookmarks <select value="" onChange={event=>{if(event.target.value)seek(Number(event.target.value)-1);}}>
-      <option value="">Choose candle</option>{bookmarks.map(value=><option key={value} value={value+1}>{new Date(candles[value].time*1000).toISOString()}</option>)}
+      <option value="">Choose candle</option>{bookmarks.map(value=><option key={value} value={value+1}>{new Date((cutoffs?.[value]??candles[value].time)*1000).toISOString()}</option>)}
     </select></label>}
   </div>;
 }

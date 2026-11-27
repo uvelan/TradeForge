@@ -6,6 +6,7 @@ from .indicator_coverage import MarketSchedule, aggregate_ohlc, inspect_window, 
 from .indicators import Bar
 from .market import FRAME_MIN
 from .storage import iter_complete_partition
+from .replay_archive import MAX_ROWS
 
 STEP = 300
 HOUR = 3600
@@ -19,7 +20,12 @@ def verified_children(lane, visible, *, include_availability_basis=False):
     expected = dict(provider=lane["source"].removesuffix("_SAVED"), kind="candles", symbol=lane["symbol"],
                     timeframe="M5", feed_id=lane["feed_id"], price_basis=lane["price_basis"])
     pins = lane.get("partitions") or []
-    if not 1 <= len(pins) <= 50:
+    native = "replay_cutoffs" in lane
+    if native:
+        # The frozen native snapshot records every file that contributed each row.
+        indexes = {i for row in lane["candles"] if row["time"] in by_time for i in row["source_partition_indexes"]}
+        pins = [pins[i] for i in indexes]
+    elif not 1 <= len(pins) <= 50:
         raise HTTPException(409, "Replay requires immutable candle partition references")
     with transaction() as db:
         db.execute("BEGIN")
@@ -28,7 +34,7 @@ def verified_children(lane, visible, *, include_availability_basis=False):
             if not row or row["sha256"] != pin["sha256"] or any(row[k] != value for k, value in expected.items()):
                 raise HTTPException(409, f"Replay archive pin conflicts with catalog: {pin['id']}")
             try:
-                for archived in iter_complete_partition(dict(row), max_rows=2000):
+                for archived in iter_complete_partition(dict(row), max_rows=MAX_ROWS if native else 2000):
                     stamp = archived["time"]
                     if stamp not in by_time:
                         continue
@@ -57,7 +63,18 @@ def verified_children(lane, visible, *, include_availability_basis=False):
 
 def capture_start(lane):
     coverage = lane["coverage"]
-    return lane["candles"][0]["time"] if coverage["truncated"] and lane["candles"] else coverage["start"]
+    return lane["candles"][0]["time"] if coverage["truncated"] and lane["candles"] else coverage.get("slot_start", coverage["start"])
+
+
+def capture_end(lane):
+    coverage = lane["coverage"]
+    return coverage.get("slot_end", coverage["end"])
+
+
+def capture_horizon(lane):
+    arrivals = lane.get("replay_cutoffs")
+    final = arrivals[-1] if arrivals else replay_availability(lane["candles"][-1], FRAME_MIN[lane["timeframe"]] * 60)
+    return max(capture_end(lane), final)
 
 
 def inspect_hour(session, view, hour_start, cutoff):
@@ -68,15 +85,14 @@ def inspect_hour(session, view, hour_start, cutoff):
             or lane["symbol"] not in ("EURUSD", "GBPUSD") or not lane.get("coverage")):
         raise HTTPException(422, "H1 inspection requires a saved Dukascopy EURUSD or GBPUSD M5 archive range")
     primary = session["market"]
-    primary_step = FRAME_MIN[primary["timeframe"]] * 60
-    horizon = max(primary["coverage"]["end"], replay_availability(primary["candles"][-1], primary_step))
+    horizon = capture_horizon(primary)
     if not capture_start(primary) <= cutoff <= horizon:
         raise HTTPException(422, "Requested cutoff outside the captured replay session clock")
 
     left = capture_start(lane)
     end = hour_start + HOUR
     if (hour_start % HOUR or cutoff < left or hour_start > cutoff
-            or end <= left or hour_start >= lane["coverage"]["end"]):
+            or end <= left or hour_start >= capture_end(lane)):
         raise HTTPException(422, "Requested UTC hour outside the captured pane window at this cutoff")
     schedule = MarketSchedule(kind="forex_weekly")
     receipt = dict(session_id=session["id"], view=view, symbol=lane["symbol"], source=lane["source"],

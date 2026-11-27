@@ -39,7 +39,7 @@ class CatalogIntegrityError(ValueError):
     """A registered or pre-existing immutable catalog artifact cannot be verified."""
 
 
-def verify_artifact(path: Path, checksum: str, snapshot=None):
+def verify_artifact(path: Path, checksum: str, snapshot=None, *, max_bytes=None):
     try:
         if not path.is_file():
             raise CatalogIntegrityError("Dataset artifact is not a regular file")
@@ -52,7 +52,11 @@ def verify_artifact(path: Path, checksum: str, snapshot=None):
             if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
                 raise CatalogIntegrityError("Dataset artifact is not a regular file")
             digest = hashlib.sha256()
+            size = 0
             while block := file.read(1024 * 1024):
+                size += len(block)
+                if max_bytes is not None and size > max_bytes:
+                    raise CatalogIntegrityError("Dataset exceeds the replay read budget")
                 digest.update(block)
                 if snapshot is not None:
                     snapshot.write(block)

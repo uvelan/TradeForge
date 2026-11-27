@@ -277,6 +277,11 @@ CREATE TABLE IF NOT EXISTS replay_checkpoints (
     bookmarks TEXT NOT NULL CHECK(json_valid(bookmarks)),
     updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS replay_selections (
+    session_id TEXT PRIMARY KEY REFERENCES replay_checkpoints(session_id),
+    view TEXT NOT NULL,
+    candle_time INTEGER NOT NULL
+);
 CREATE INDEX IF NOT EXISTS replay_context ON replay_sessions(symbol,timeframe,source,created_at DESC);
 CREATE TABLE IF NOT EXISTS chart_snapshots (
     id TEXT PRIMARY KEY,

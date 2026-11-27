@@ -50,12 +50,14 @@ export const api={
     }),
   backtestRuns:()=>request<import('./types').BacktestRunSummary[]>('/backtest/runs'),
   backtestRun:(id:string)=>request<import('./types').BacktestRun>('/backtest/runs/'+encodeURIComponent(id)),
-  startReplay:(symbol:string,timeframe:Timeframe,source:ChartSource,views:import('./types').ReplayViewRequest[],range?:CandleRange)=>
-    post<import('./types').ReplaySession>('/replay/sessions',{symbol,timeframe,source,views,...range}),
+  startReplay:(symbol:string,timeframe:Timeframe,source:ChartSource,views:import('./types').ReplayViewRequest[],range?:CandleRange,windowBars?:number)=>
+    post<import('./types').ReplaySession>('/replay/sessions',{symbol,timeframe,source,views,...range,
+      ...(windowBars===undefined ? {} : {window_bars:windowBars})}),
   replays:(symbol:string,timeframe:Timeframe,source:ChartSource)=>
     request<{id:string;position:number;updated_at:string}[]>('/replay/sessions?'+new URLSearchParams({symbol,timeframe,source})),
   replay:(id:string)=>request<import('./types').ReplaySession>('/replay/sessions/'+encodeURIComponent(id)),
-  saveCheckpoint:(id:string,position:number,bookmarks:number[])=>post('/replay/sessions/'+encodeURIComponent(id)+'/checkpoint',{position,bookmarks}),
+  saveCheckpoint:(id:string,position:number,bookmarks:number[],selected?:import('./types').ReplaySelection)=>
+    post('/replay/sessions/'+encodeURIComponent(id)+'/checkpoint',{position,bookmarks,...(selected ? {selected} : {})}),
   saveSnapshot:(png:string,symbol:string,timeframe:Timeframe,source:string,cutoff?:number,
     signal_reference?:import('./types').SignalReference,lanes?:import('./snapshotLanes').SnapshotLane[])=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference,lanes}),
   importMt5:(symbol:SymbolName,timeframe:Timeframe,limit:number)=>post('/market/import/mt5',{symbol,timeframe,limit}),

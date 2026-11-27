@@ -8,10 +8,10 @@ from .analysis_evidence import ResourceLimit
 from .arrival_policy import SIMULATION_AUTHORITY, SIMULATION_MODE
 from .crt import VERSION as CRT_VERSION, evaluate_crt
 from .db import one, rows, transaction
-from .indicator_coverage import open_intervals, replay_availability
+from .indicator_coverage import open_intervals
 from .market import FRAME_MIN
 from .replay_crt import DELIVERY, RULES, continuity, range_detail, summarize
-from .replay_hour import STEP, capture_start
+from .replay_hour import STEP, capture_end, capture_horizon, capture_start
 from .replay_structure import SCHEDULE, replay_provenance, verified_replay_rows
 from .smt_causal import ALGORITHM_VERSION, LIFECYCLE_VERSION, FrozenFeed, StrictSmtRequest, evaluate_strict_smt
 from .strategy_evidence import EvidenceRegistry, fingerprint
@@ -49,7 +49,7 @@ def validate_cutoff(session, cutoff):
     if (primary.get("source") != "DUKASCOPY_SAVED" or not primary.get("coverage") or
             not primary.get("candles") or primary.get("timeframe") not in FRAME_MIN):
         raise HTTPException(422, "Confluence requires a saved Dukascopy replay clock")
-    horizon = max(primary["coverage"]["end"], replay_availability(primary["candles"][-1], FRAME_MIN[primary["timeframe"]]*60))
+    horizon = capture_horizon(primary)
     if not capture_start(primary) <= cutoff <= horizon:
         raise HTTPException(422, "Requested cutoff outside the captured replay session clock")
 
@@ -71,7 +71,7 @@ def read_panes(session, cutoff):
             issues[symbol] = coverage_issue(symbol, "AMBIGUOUS_REQUIRED_PANE")
             continue
         _, rows, children = verified_replay_rows(session, view, cutoff)
-        start, end = capture_start(lane), lane["coverage"]["end"]
+        start, end = capture_start(lane), capture_end(lane)
         meta = dict(**source(lane), partitions=lane["partitions"], start=start, end=end)
         panes[symbol] = dict(lane=lane, rows=rows, children=children, source=meta)
         # Checking the closed prefix also catches a missing trailing child that has
@@ -81,7 +81,7 @@ def read_panes(session, cutoff):
             continue
         # A delayed final captured candle extends only its own knowledge clock.
         # No later nominal close beyond the pane can be treated as covered.
-        final_arrival = replay_availability(lane["candles"][-1], STEP) if lane["candles"] else end
+        final_arrival = capture_horizon(lane) if lane["candles"] else end
         if cutoff < start or cutoff > max(end, final_arrival) or cutoff//STEP*STEP > end:
             issues[symbol] = coverage_issue(symbol, "OUTSIDE_CAPTURED_PANE_WINDOW")
             continue

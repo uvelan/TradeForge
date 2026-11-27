@@ -1,10 +1,11 @@
 """TradeForge — localhost-only API, no execution/trading authority."""
 from __future__ import annotations
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 from datetime import datetime,timedelta,timezone
 from decimal import Decimal
 from typing import Literal
 from hashlib import sha256
+from functools import cache, partial
 import asyncio
 import json
 import uuid
@@ -43,6 +44,7 @@ from .historical_strategy_routes import router as historical_strategy_router
 from .historical_strategy_worker import supervise as supervise_strategy_history
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
 from .indicator_coverage import replay_availability
+from .replay_archive import MAX_WINDOW, NoCompleteSlot, WindowTooLarge, replay_catalog, saved_replay_window
 from .replay_confluence import inspect_confluence, list_pinned_confluence, pin_confluence
 from .replay_crt import inspect_crt
 from .replay_hour import inspect_hour
@@ -533,33 +535,56 @@ class ReplayRequest(BaseModel):
     source: str = Field(max_length=30)
     start: int | None = Field(None,ge=0)
     end: int | None = Field(None,ge=0)
+    window_bars: int | None = Field(default=None, strict=True, ge=1, le=MAX_WINDOW)
     views: list[ReplayView] = Field(default_factory=list,max_length=4)
     signal_reference: SignalReference | None = None
     @model_validator(mode="after")
     def paired_range(self):
         if (self.start is None) != (self.end is None) or self.start is not None and self.start>=self.end:
             raise ValueError("Replay range requires an ordered start and end")
+        if self.window_bars is not None and (self.signal_reference or self.source not in {"MT5_SAVED","DUKASCOPY_SAVED"}):
+            raise ValueError("Native replay windows require a saved candle source")
         if len({view.view for view in self.views}) != len(self.views):
             raise ValueError("Duplicate replay view")
         return self
 
 
+class ReplaySelection(BaseModel):
+    view: Literal["primary", "comparison", "2", "3", "4"]
+    time: int = Field(ge=0, strict=True)
+
+
 class ReplayCheckpoint(BaseModel):
-    position:int = Field(ge=0,lt=2000)
+    selected: ReplaySelection | None = None
+    position:int = Field(ge=0,le=MAX_WINDOW)
     bookmarks:list[int] = Field(default_factory=list,max_length=50)
 
 
-def captured_replay(request:ReplayRequest,symbol:str,timeframe:str,cutoff:int):
+def captured_replay(request:ReplayRequest,symbol:str,timeframe:str,cutoff:int,catalog=None):
     if timeframe not in FRAME_MIN:
         raise HTTPException(422,"Unsupported replay timeframe")
     step = FRAME_MIN[timeframe]*60
     start,end=request.start,request.end
-    if start is not None:
+    if start is not None and catalog is None:
         start = start//step*step
         end = (end+step-1)//step*step
         end = min(end, cutoff//step*step)
         if end <= start:
             raise HTTPException(422,"No completed window for this replay timeframe")
+    if catalog is not None:
+        try:
+            result = saved_replay_window(catalog, request.source.removesuffix("_SAVED"), symbol, timeframe,
+                                         start, end, step, request.window_bars, cutoff)
+        except WindowTooLarge:
+            raise
+        except NoCompleteSlot as error:
+            raise HTTPException(422, str(error)) from error
+        except FileNotFoundError as error:
+            raise HTTPException(404, str(error)) from error
+        except (OSError, RuntimeError, ValueError) as error:
+            raise HTTPException(409, str(error)) from error
+        return {**result, "source": request.source, "source_completeness": "UNVERIFIED", "synthetic": False,
+                "latest_unconfirmed": False, "symbol": symbol, "timeframe": timeframe}
     market=market_candles(symbol,timeframe,request.source,limit=600,include_latest=(request.source=="MT5"),
                           start=start,end=end)
     bars = []
@@ -594,19 +619,30 @@ def create_replay(request:ReplayRequest):
         market=pane(primary,captures["primary"])
         panes["comparison"]=pane(comparison,captures["comparison"])
     else:
-        market = captured_replay(request,request.symbol,request.timeframe,clock)
-        if market.get("coverage",{}).get("truncated") and request.start is not None:
-            raise HTTPException(422,"Choose a replay range of at most 600 primary candles")
-        for view in request.views:
-            try:
-                panes[view.view] = captured_replay(request,view.symbol,view.timeframe,clock)
-            except HTTPException as error:
-                if error.status_code not in (404,409,422,503):
-                    raise
-                panes[view.view] = {"symbol":view.symbol,"timeframe":view.timeframe,"error":str(error.detail)}
+        try:
+            catalog_context = replay_catalog() if request.window_bars is not None else nullcontext()
+            with catalog_context as catalog:
+                capture = partial(captured_replay, request, cutoff=clock, catalog=catalog)
+                if catalog is not None:
+                    capture = cache(capture)  # Identical native panes share a single verified read in this request.
+                market = capture(request.symbol, request.timeframe)
+                if market.get("coverage",{}).get("truncated") and request.start is not None:
+                    raise HTTPException(422,"Choose a replay range of at most 600 primary candles")
+                for view in request.views:
+                    try:
+                        panes[view.view] = capture(view.symbol, view.timeframe)
+                    except HTTPException as error:
+                        if error.status_code not in (404,409,422,503):
+                            raise
+                        panes[view.view] = {"symbol":view.symbol,"timeframe":view.timeframe,"error":str(error.detail)}
+        except WindowTooLarge as error:
+            raise HTTPException(422, str(error)) from error
+        except (OSError, RuntimeError, ValueError) as error:
+            raise HTTPException(409, str(error)) from error
     if not market["candles"]:
         raise HTTPException(422,"No completed replay candles")
-    snapshot = {"schema_version":1,"request":request.model_dump(),"market":market,"views":panes}
+    settings = request.model_dump(exclude={"window_bars"} if request.window_bars is None else set())
+    snapshot = {"schema_version":1,"request":settings,"market":market,"views":panes}
     encoded=json.dumps(snapshot,sort_keys=True,separators=(",",":"),allow_nan=False)
     session_id=sha256(encoded.encode()).hexdigest()
     with transaction() as db:
@@ -630,10 +666,16 @@ def replay_session(session_id:str):
         raise HTTPException(404,"Replay session unavailable")
     if sha256(row["payload"].encode()).hexdigest()!=session_id:
         raise HTTPException(409,"Replay session checksum mismatch")
-    checkpoint=one("SELECT position,bookmarks FROM replay_checkpoints WHERE session_id=?",(session_id,))
-    return {"id":session_id,**json.loads(row["payload"]),
-            "checkpoint":{"position":checkpoint["position"],"bookmarks":json.loads(checkpoint["bookmarks"])}
-            if checkpoint else None}
+    checkpoint=one("""SELECT c.position,c.bookmarks,s.view,s.candle_time FROM replay_checkpoints c
+                   LEFT JOIN replay_selections s USING(session_id) WHERE c.session_id=?""",(session_id,))
+    if checkpoint:
+        selected = checkpoint.pop("view")
+        time = checkpoint.pop("candle_time")
+        checkpoint["bookmarks"] = json.loads(checkpoint["bookmarks"])
+        if selected is not None:
+            checkpoint["selected"] = {"view": selected, "time": time}
+    return {"id": session_id, **json.loads(row["payload"]), "checkpoint": checkpoint}
+
 
 
 @app.get('/api/replay/sessions/{session_id}/higher-timeframe')
@@ -694,11 +736,26 @@ def replay_zones(session_id: str, cutoff: int = Query(ge=0),
 @app.post('/api/replay/sessions/{session_id}/checkpoint')
 def checkpoint_replay(session_id:str,checkpoint:ReplayCheckpoint):
     session=replay_session(session_id)
-    size=len(session["market"]["candles"])
+    market = session["market"]
+    size = len(market.get("replay_cutoffs", market["candles"]))
     if checkpoint.position>=size or any(not 0<=index<size for index in checkpoint.bookmarks):
         raise HTTPException(422,"Replay position or bookmark is outside the frozen snapshot")
+    selected = checkpoint.selected
+    if selected is not None:
+        pane = session["market"] if selected.view == "primary" else session["views"].get(selected.view, {})
+        if not any(bar["time"] == selected.time for bar in pane.get("candles", [])):
+            raise HTTPException(422, "Selected candle is outside its frozen replay pane")
+    result = {"position": checkpoint.position, "bookmarks": sorted(set(checkpoint.bookmarks))}
     with transaction() as db:
         db.execute("""INSERT INTO replay_checkpoints VALUES(?,?,?,?) ON CONFLICT(session_id) DO UPDATE
                       SET position=excluded.position,bookmarks=excluded.bookmarks,updated_at=excluded.updated_at""",
-                   (session_id,checkpoint.position,json.dumps(sorted(set(checkpoint.bookmarks))),utc_now()))
-    return {"position":checkpoint.position,"bookmarks":sorted(set(checkpoint.bookmarks))}
+                   (session_id,checkpoint.position,json.dumps(result["bookmarks"]),utc_now()))
+        if selected:
+            db.execute("""INSERT INTO replay_selections VALUES(?,?,?) ON CONFLICT(session_id) DO UPDATE
+                          SET view=excluded.view,candle_time=excluded.candle_time""",(session_id,selected.view,selected.time))
+        elif "selected" in checkpoint.model_fields_set:
+            db.execute("DELETE FROM replay_selections WHERE session_id=?", (session_id,))
+        selection = db.execute("SELECT view,candle_time AS time FROM replay_selections WHERE session_id=?", (session_id,)).fetchone()
+        if selection:
+            result["selected"] = dict(selection)
+    return result

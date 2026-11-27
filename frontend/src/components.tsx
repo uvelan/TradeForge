@@ -19,18 +19,20 @@ export function Metric({title,value,change,icon}:{title:string;value:string;chan
 export function Empty({icon,title,body}:{icon?:React.ReactNode;title:string;body:string}){return <div className="empty-state">{icon&&<div className="empty-icon">{icon}</div>}<strong>{title}</strong><p>{body}</p></div>}
 export function Spinner(){return <LoaderCircle className="spinning" size={19}/>}
 export function Notice({children,tone='amber'}:{children:React.ReactNode;tone?:'amber'|'blue'|'red'}){return <div className={`notice notice-${tone}`}><TriangleAlert size={17}/><span>{children}</span></div>}
-export function Select({value,onChange,options,label}:{value:string;onChange:(s:string)=>void;options:string[];label?:string}){return <div className="select-wrap"><select aria-label={label} value={value} onChange={e=>onChange(e.target.value)}>{options.map(o=><option key={o} value={o}>{o === "DEMO" ? "DEMO (synthetic)" : o === "BINANCE_SPOT" ? "Binance Spot" : o}</option>)}</select><ChevronDown size={15}/></div>}
+export function Select({value,onChange,options,label,disabled}:{value:string;onChange:(s:string)=>void;options:string[];label?:string;disabled?:boolean}){return <div className="select-wrap"><select aria-label={label} value={value} disabled={disabled} onChange={e=>onChange(e.target.value)}>{options.map(o=><option key={o} value={o}>{o === "DEMO" ? "DEMO (synthetic)" : o === "BINANCE_SPOT" ? "Binance Spot" : o}</option>)}</select><ChevronDown size={15}/></div>}
 export function PriceChange({value}:{value:number}){return <span className={value>=0?'positive':'negative'}>{value>=0?<ArrowUpRight size={14}/>:<ArrowDownRight size={14}/>} {value>=0?'+':''}{value.toFixed(2)}%</span>}
 
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot,savingSnapshot,snapshotStatus}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot,savingSnapshot,snapshotStatus,replayCandleTime,onReplayCandleSelect}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
   onAddLevel?:(price:number)=>void;showSnapshot?:boolean;showDataLegend?:boolean;symbol?:string;precision?:number;indicators?:IndicatorResult[]
   timeframe?: string;
   drawingPrompt?: string;
   focus?: {epoch:number;sequence:number};
+  replayCandleTime?:number;
+  onReplayCandleSelect?:(time:number)=>void;
   link?:ChartLink; linkId?:string;
   drawings?:Drawing[]; onAnchor?:(points:{bar:Candle;price:number}[])=>void;
   placementDraft?:DrawingLayer['preview']; placementInteraction?:object;
@@ -42,6 +44,11 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
 }){
   const element=useRef<HTMLDivElement>(null);
   const pointerGuide=useRef<HTMLDivElement>(null);
+  const replayGuide=useRef<HTMLDivElement>(null);
+  const replayGuideTime=useRef(replayCandleTime);
+  replayGuideTime.current=replayCandleTime;
+  const replaySelection=useRef(onReplayCandleSelect);
+  replaySelection.current=onReplayCandleSelect;
   const surface=useRef<HTMLDivElement>(null);
   const [fullscreen,setFullscreen]=useState(false);
   const [localSnapshotStatus,setLocalSnapshotStatus]=useState("");
@@ -101,6 +108,19 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   const drawing=useRef(drawMode);
   clickHandler.current=onAddLevel;
   drawing.current=drawMode;
+  function updateReplayGuide(){
+    const chart=chartRef.current;
+    const guide=replayGuide.current;
+    const time=replayGuideTime.current;
+    if(!chart||!guide||time===undefined)return;
+    const scale=chart.timeScale();
+    const x=scale.timeToCoordinate(time as UTCTimestamp);
+    guide.hidden=x===null||x<0||x>=scale.width();
+    if(x!==null){
+      guide.style.left=`${x+chart.priceScale('left').width()}px`;
+      guide.style.bottom=`${scale.height()}px`;
+    }
+  }
   function showRecentCandles(rows: Candle[]){
     const scale=chartRef.current?.timeScale();
     if(!scale||!rows.length)return;
@@ -134,7 +154,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime,
       linkedTime:setCursorTime}):undefined;
     const scale=chart.timeScale();
-    const viewport=()=>{editReset.current?.();if(linkId)link?.viewport(linkId);};
+    const viewport=()=>{editReset.current?.();updateReplayGuide();if(linkId)link?.viewport(linkId);};
     const activate=()=>{if(linkId)link?.activate(linkId);setMissingLinkedTime(undefined);};
     const leave=()=>{if(linkId)link?.clearCursor(linkId);};
     const container=element.current;
@@ -204,6 +224,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       const next=size();
       if(next[0]!==dimensions[0]||next[1]!==dimensions[1])input.cancelEdit();
       dimensions=next;
+      updateReplayGuide();
     });
     resize.observe(container);
     document.addEventListener('fullscreenchange',input.cancelEdit);
@@ -224,6 +245,9 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
         const event=markerEvents.current.find(item=>item.id===param.hoveredObjectId?.toString().slice(4));
         if(event?.event_key)markerSelection.current?.(event);
         return;
+      }
+      if(typeof param.time==='number'&&linkedBars.current.has(param.time)){
+        replaySelection.current?.(param.time);
       }
     };
     chart.subscribeClick(onClick);
@@ -296,7 +320,20 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     linkedBars.current=new Map(sorted.map(bar=>[bar.time,bar]));
     series.setData(sorted.map(c=>({time:c.time as UTCTimestamp,open:c.open,high:c.high,low:c.low,close:c.close})));
     if(!didFit.current&&sorted.length){showRecentCandles(sorted);didFit.current=true}
+    updateReplayGuide();
   },[candles,symbol,precision]);
+  useEffect(()=>{
+    const chart=chartRef.current;
+    if(!chart||replayCandleTime===undefined)return;
+    const scale=chart.timeScale();
+    const index=scale.timeToIndex(replayCandleTime as UTCTimestamp);
+    const range=scale.getVisibleLogicalRange();
+    if(index!==null&&range&&(index<range.from||index>range.to)){
+      const radius=(range.to-range.from)/2;
+      scale.setVisibleLogicalRange({from:index-radius,to:index+radius});
+    }
+    updateReplayGuide();
+  },[replayCandleTime,symbol,precision]);
   useEffect(()=>{
     const series=seriesRef.current;
     if(!series)return;
@@ -585,7 +622,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   };
   const comparisonBars=useMemo(()=>new Map(comparison?.candles.map(bar=>[bar.time,bar])),[comparison?.candles]);
   const commonBar=comparison?candles.slice().reverse().find(bar=>comparisonBars.has(bar.time)):undefined;
-  const displayTime=cursorTime ?? commonBar?.time ?? candles.at(-1)?.time;
+  const displayTime=cursorTime ?? replayCandleTime ?? commonBar?.time ?? candles.at(-1)?.time;
   const primaryBar=candles.find(bar=>bar.time===displayTime);
   const comparisonBar=displayTime===undefined?undefined:comparisonBars.get(displayTime);
   const hoveredSmt=smtEvents?.filter(event=>
@@ -622,6 +659,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       onPointerLeave={()=>{if(pointerGuide.current)pointerGuide.current.hidden=true}}/>
     {missingLinkedTime!==undefined&&link?.options.crosshair&&<span className="linked-no-candle" role="status">No candle at {timestamp.format(missingLinkedTime*1000)}</span>}
     <div ref={pointerGuide} className="chart-pointer-guide" aria-hidden="true" hidden/>
+    {replayCandleTime!==undefined&&<div ref={replayGuide} className="chart-replay-guide"
+      data-replay-candle={replayCandleTime} aria-hidden="true" hidden/>}
     {drawMode&&<div className="drawing-prompt">{drawingPrompt??'Click the chart to place a horizontal level'}</div>}
     {(fullscreen||comparison||showDataLegend)&&<div className="chart-data-legend" aria-label="Chart data">
       <div className="chart-legend-meta">

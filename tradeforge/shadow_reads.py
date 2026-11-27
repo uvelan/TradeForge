@@ -67,7 +67,7 @@ class CandleResolver:
         return claim
 
     @contextmanager
-    def artifact(self, entry, *, max_rows=None):
+    def artifact(self, entry, *, max_rows=None, max_bytes=None):
         claim = self.resolve_mapping(entry)
         if max_rows is not None and claim["rows"] > max_rows:
             raise ShadowReadError("Partition exceeds the bounded range reader")
@@ -81,7 +81,7 @@ class CandleResolver:
             raise ShadowReadError("SHADOW_INVALID_PATH")
         with TemporaryFile() as snapshot:
             try:
-                verify_artifact(path, claim["sha256"], snapshot)
+                verify_artifact(path, claim["sha256"], snapshot, **({"max_bytes": max_bytes} if max_bytes is not None else {}))
             except CatalogIntegrityError as error:
                 raise ShadowReadError(f"SHADOW_ARTIFACT_INTEGRITY: {error}") from error
             snapshot.seek(0)

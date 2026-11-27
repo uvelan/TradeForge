@@ -53,18 +53,22 @@ export function useViewCandles(symbol: string, frame: Timeframe, source: ChartSo
   }, [generation, symbol, frame, source, follow, replay]);
   const current = frozen ? ('error' in frozen ? {error:frozen.error,data:undefined} : {data:frozen,error:undefined}) :
     result?.generation === generation ? result : undefined;
-  const candles = current?.data?.candles;
+  const bars = current?.data?.candles;
+  const candles = useMemo(()=>cutoff === undefined ? bars : bars && visibleAt(bars, cutoff, frameMinutes[frame] * 60),
+    [bars,cutoff,frame]);
   return {
-    candles: cutoff === undefined ? candles : candles && visibleAt(candles, cutoff, frameMinutes[frame] * 60),
+    candles,
     error: current?.error,
     feed: current?.data,
   };
 }
 
-export function ChartView({number, mainSymbol, source, options, refresh, cutoff, precision,range,link,linkedFrame,linkedSymbol,frozen}: {
+export function ChartView({number, mainSymbol, source, options, refresh, cutoff, precision,range,link,linkedFrame,linkedSymbol,frozen,
+  inspecting, selectedCandle, onCandleSelect, onConfigurationChange}: {
   number: number; mainSymbol: string; source: ChartSource; options: string[]; refresh: number;
   cutoff?: number; precision: (symbol: string) => number;
   range?:CandleRange; link?:ChartLink; linkedFrame?:Timeframe; linkedSymbol?:string; frozen?:ReplayPane;
+  inspecting?:boolean; selectedCandle?:number; onCandleSelect?:(time:number)=>void; onConfigurationChange?:()=>void;
 }) {
   const [savedSymbol, setSymbol] = useWorkspacePreference<string>(`view-${number}-symbol`, "");
   const defaultFrame = number === 2 ? "H1" : number === 3 ? "M15" : "H4";
@@ -80,15 +84,22 @@ export function ChartView({number, mainSymbol, source, options, refresh, cutoff,
   const last=closed?.at(-1);
   const asOf=cutoff??Math.min(Math.floor(Date.now()/1000),Math.max((last?.time??0)+frameMinutes[frame]*60,last?.available_at??0));
   const indicators=useChartIndicator(Boolean(last)&&source!=="BINANCE_SPOT",closed??[],source,frame,symbol,asOf,feed,Boolean(frozen),undefined,"view-"+number);
-  return <section className="secondary-chart" aria-label={`Chart view ${number}`}>
+  return <section className="secondary-chart" aria-label={`Chart view ${number}`} data-inspecting={inspecting||undefined}>
     <div className="pane-label view-controls">
-      {(frozen||linkedSymbol)?<span>{symbol}</span>:<Select label={`View ${number} instrument`} value={symbol} options={options} onChange={setSymbol}/>}
-      {(frozen||linkedFrame)?<span>{frame}</span>:<Select label={`View ${number} timeframe`} value={frame} options={Object.keys(frameMinutes)} onChange={value=>setFrame(value as Timeframe)}/>}
+      {(frozen||linkedSymbol)?<span>{symbol}</span>:<Select label={`View ${number} instrument`} value={symbol} options={options} onChange={value=>{
+        onConfigurationChange?.();
+        setSymbol(value);
+      }}/>}
+      {(frozen||linkedFrame)?<span>{frame}</span>:<Select label={`View ${number} timeframe`} value={frame} options={Object.keys(frameMinutes)} onChange={value=>{
+        onConfigurationChange?.();
+        setFrame(value as Timeframe);
+      }}/>}
     </div>
     <details onToggle={e=>setShowIndicators(e.currentTarget.open)}><summary>View {number} indicators</summary>
       {showIndicators&&indicators.controls}</details>
     {candles?.length ? <CandleChart key={`${symbol}-${frame}-${source}`} candles={candles} height={360}
-      symbol={symbol} timeframe={frame} indicators={indicators.data} precision={precision(symbol)} link={link} linkId={String(number)} showSnapshot showDataLegend/> :
+      symbol={symbol} timeframe={frame} indicators={indicators.data} precision={precision(symbol)} link={link} linkId={String(number)}
+      replayCandleTime={selectedCandle} onReplayCandleSelect={onCandleSelect} showSnapshot showDataLegend/> :
       <div className="chart-loading" role="status">{error ?? (candles ? "No completed candles at this time" : "Loading candles…")}</div>}
   </section>;
 }

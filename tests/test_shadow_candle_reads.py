@@ -283,3 +283,27 @@ def test_research_matrix(fixture, monkeypatch, case):
             assert data["candles"] == [research_bar(t) for t in range(T+900,end,300)]
             assert data["coverage"]["truncated"] and data["coverage"]["duplicate_bars"] == 1
     assert source_hashes(args) == before
+
+
+@pytest.mark.parametrize("corrupt", [False, True])
+def test_native_shadow_window_verifies_source_files_without_legacy_fallback(fixture, monkeypatch, corrupt):
+    args, _, part, manifest = fixture
+    register(*args, manifest)
+    monkeypatch.setenv(FLAG, str(manifest))
+    forbid_legacy(monkeypatch)
+    def legacy_file(*args, **kwargs):
+        pytest.fail("Native shadow replay fell back to a live catalog partition")
+    monkeypatch.setattr(storage, "verified_partition_file", legacy_file)
+    if corrupt:
+        (args[2] / part["relative_path"]).write_bytes(b"corrupted shadow candle fixture")
+    with closing(TestClient(research_app)) as client:
+        response = client.post("/api/replay/sessions", json={"source":"DUKASCOPY_SAVED", "symbol":"EURUSD",
+                               "timeframe":"M5", "window_bars":5000, "start":T, "end":T+600})
+    if corrupt:
+        assert response.status_code == 409 and "SHADOW_ARTIFACT_INTEGRITY" in response.json()["detail"]
+        assert db.one("SELECT count(*) AS n FROM replay_sessions")["n"] == 0
+    else:
+        assert response.status_code == 201, response.text
+        market = response.json()["market"]
+        assert market["partitions"] == [{"id":part["id"], "sha256":part["sha256"]}]
+        assert [bar["time"] for bar in market["candles"]] == [T, T+300]

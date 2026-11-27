@@ -139,6 +139,8 @@ const coverageLabels: Record<string, string> = {
 
 const preference = "tradeforge.workspace.indicators-v1";
 const emptyResults: IndicatorResult[] = [];
+const candleInputLimit = 2000;
+const partitionInputLimit = 500;
 function stored(key: string): Settings[] {
   try {
     const value: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
@@ -217,10 +219,14 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
           tick_size_reference:item.tickSize?.[scheduleScope]?.size&&item.tickSize?.[scheduleScope]?.reference?item.tickSize[scheduleScope].reference:undefined}}:{})}];
     });
   }, [definitions, periodText, primary, scheduleScope, settings, source, timeframe]);
-  const body = useMemo(() => enabled && active.length && (candles.length || active.some(item => item.id.startsWith("previous_")))
+  const replayLimit = feed?.replay_cutoffs ?
+    candles.length > candleInputLimit ? 'Indicators unavailable at this cutoff. Evaluation accepts up to 2,000 candles.' :
+      (feed.partitions?.length ?? 0) > partitionInputLimit ?
+        'Indicators unavailable for this archive. Evaluation accepts up to 500 source partitions.' : undefined : undefined;
+  const body = useMemo(() => enabled && !replayLimit && active.length && (candles.length || active.some(item => item.id.startsWith("previous_")))
     ? JSON.stringify({source, timeframe, symbol, cutoff, frozen, timing_policy:timingPolicy, load_reference: true, feed_id: feed?.feed_id,
-        dataset_id: feed?.dataset_id, partitions: feed?.partitions, price_basis: feed?.price_basis, indicators: active, candles: candles.slice(-2000)})
-    : "", [active, candles, cutoff, enabled, frozen, feed?.dataset_id, feed?.feed_id, feed?.price_basis, feed?.partitions, source, symbol, timeframe,timingPolicy]);
+        dataset_id: feed?.dataset_id, partitions: feed?.partitions, price_basis: feed?.price_basis, indicators: active, candles: candles.slice(-candleInputLimit)})
+    : "", [active, candles, cutoff, enabled, frozen, feed?.dataset_id, feed?.feed_id, feed?.price_basis, feed?.partitions, source, symbol, timeframe,timingPolicy,replayLimit]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -814,7 +820,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       return <small key={row.id} role="status">{label} · {status}
         {row.coverage.confirmation_status === "provisional" && " · provisional evidence"}</small>;
     })}
-    <small role="status">{libraryError || current?.error || (warnings.length ? warnings.map(value => value.toLowerCase().replaceAll("_", " ")).join(" · ") :
+    <small role="status">{libraryError || (active.length && replayLimit) || current?.error || (warnings.length ? warnings.map(value => value.toLowerCase().replaceAll("_", " ")).join(" · ") :
       selected === "swings" ? "Markers appear at the pivot after confirmation" : active.length ? "Closed candles · dashed session levels are developing" : "")}</small>
   </div>;
   return {data, controls};
