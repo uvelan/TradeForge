@@ -1,0 +1,69 @@
+{
+  "combined_tested_sha": "a77cf74d64681c616ae1ff9a5adfa0868de7376a",
+  "baseline_frame_sha": "9db18748765736d8ed326f34af718359e44fed33",
+  "suites": [
+    {
+      "id": "backend",
+      "start": "2026-11-27T07:19:59.955Z",
+      "end": "2026-11-27T07:34:59.488Z",
+      "code": 0,
+      "elapsed": 895.2129039,
+      "tail": "  K:\\Projects\\TradeForge\\.venv\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\r\n    from starlette.testclient import TestClient as TestClient  # noqa\r\n\r\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\r\n1256 passed, 1 skipped, 1 warning in 889.73s (0:14:49)\r\nELAPSED=895.2129039\r\n",
+      "cmd": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\n$env:TRADEFORGE_T07_REAL_BI5=(Resolve-Path storage/t06-input/13h_ticks.bi5).Path\n.venv/Scripts/python.exe -m pytest -q"
+    },
+    {
+      "id": "unit",
+      "start": "2026-11-27T07:19:59.956Z",
+      "end": "2026-11-27T07:20:09.918Z",
+      "code": 0,
+      "elapsed": 5.3351656,
+      "tail": " Test Files  4 passed (4)\r\n      Tests  13 passed (13)\r\n   Start at  12:50:08\r\n   Duration  1.57s (transform 82%, import 10%, tests 4%, worker 3%)\r\n\r\nELAPSED=5.3351656\r\n",
+      "cmd": "npm --prefix frontend test"
+    },
+    {
+      "id": "build",
+      "start": "2026-11-27T07:19:59.956Z",
+      "end": "2026-11-27T07:20:20.698Z",
+      "code": 0,
+      "elapsed": 17.7986958,
+      "tail": "   │ \r\n   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives\r\n───╯\r\n\r\n✓ built in 1.22s\r\nELAPSED=17.7986958\r\n",
+      "cmd": "npm --prefix frontend run build"
+    },
+    {
+      "id": "standard",
+      "start": "2026-11-27T07:19:59.956Z",
+      "end": "2026-11-27T07:30:05.788Z",
+      "code": 0,
+      "elapsed": 601.2744539,
+      "tail": "  ok 92 e2e\\drawing-placement.spec.ts:624:1 › Escape cancels all armed modes and an active drag cannot complete in a replacement mode (5.1s)\r\n  ok 93 e2e\\drawing-placement.spec.ts:668:1 › horizontal drags reject outside, missing candle and pointer cancellation (2.8s)\r\n  ok 94 e2e\\drawing-placement.spec.ts:703:1 › negative chart prices are rejected and navigation still pans and zooms (4.3s)\r\n\r\n  94 passed (10.0m)\r\nELAPSED=601.2744539\r\n",
+      "cmd": "$env:TRADEFORGE_E2E_API_PORT='8796'\n$env:TRADEFORGE_E2E_UI_PORT='4796'\nnpm --prefix frontend run e2e -- --retries=0"
+    },
+    {
+      "id": "recorded",
+      "start": "2026-11-27T07:19:59.956Z",
+      "end": "2026-11-27T07:22:56.701Z",
+      "code": 0,
+      "elapsed": 172.3569788,
+      "tail": "(Use `node --trace-warnings ...` to show where the warning was created)\r\n  ok 1 recorded-e2e\\recorded-backtest.spec.ts:5:1 › Strategy Lab checkpoints and reopens the recorded EURUSD historical session (12.0s)\r\n  ok 2 recorded-e2e\\recorded-workspace.spec.ts:28:1 › pinned recorded EURUSD ticks reach the chart, frozen replay and saved evidence (2.4m)\r\n\r\n  2 passed (2.8m)\r\nELAPSED=172.3569788\r\n",
+      "cmd": "$env:TRADEFORGE_E2E_API_PORT='8797'\n$env:TRADEFORGE_E2E_UI_PORT='4797'\nnpm --prefix frontend run e2e -- --config playwright.recorded.config.ts --retries=0"
+    },
+    {
+      "id": "current-frame",
+      "start": "2026-11-27T07:18:17.517Z",
+      "end": "2026-11-27T07:19:50.108Z",
+      "code": 0,
+      "elapsed": 89.5650043,
+      "tail": "(node:37108) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\r\n(Use `node --trace-warnings ...` to show where the warning was created)\r\n  ok 1 native-capacity\\native-replay.spec.ts:12:1 › native saved replay open, inspect, pan and release (1.4m)\r\n\r\n  1 passed (1.5m)\r\nELAPSED=89.5650043\r\n",
+      "cmd": "$env:TRADEFORGE_NATIVE_FIXTURE=(Resolve-Path storage/native-accept/final-browser/native-replay-HWbpZY/prepare.json).Path\n$env:TRADEFORGE_NATIVE_STORAGE=(Resolve-Path storage/native-accept/final-browser/native-replay-HWbpZY).Path\n$env:TRADEFORGE_E2E_API_PORT='8791'\n$env:TRADEFORGE_E2E_UI_PORT='4791'\nnpm --prefix frontend run e2e -- --config playwright.native-capacity.config.ts --retries=0 --output ../storage/native-owner/current-frame"
+    },
+    {
+      "id": "base-frame",
+      "start": "2026-11-27T06:53:15.362Z",
+      "end": "2026-11-27T06:53:56.101Z",
+      "code": 0,
+      "elapsed": 37.1740941,
+      "tail": "(node:24464) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\r\n(Use `node --trace-warnings ...` to show where the warning was created)\r\n  ok 1 capacity-e2e\\r01-capacity.spec.ts:6:3 › controlled renderer, 5000 candles per pane (29.9s)\r\n\r\n  1 passed (34.9s)\r\nELAPSED=37.1740941\r\n",
+      "cmd": "$env:TRADEFORGE_E2E_API_PORT='8790'\n$env:TRADEFORGE_E2E_UI_PORT='4790'\nnpm --prefix frontend run e2e -- --config playwright.capacity.config.ts --grep '5000 candles' --retries=0 --output ../storage/native-owner/baseline-frame"
+    }
+  ]
+}
