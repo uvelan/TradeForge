@@ -224,22 +224,31 @@ def first_difference(stage, want, got):
     return None
 
 
-def parity_report(want, got):
+def reopened_gap_difference(count, observed, candidate):
+    if observed is None and not candidate:
+        return None  # Historical baseline versions did not publish this field.
+    if type(observed) is not int or observed != count:
+        return dict(stage="reopened_gap_count", expected=count, actual=observed)
+    return None
+
+
+def parity_report(want, got, candidate, *, verify_quote_rows=True):
     differences = [
         first_difference(key, want[key], got[key]) for key in ("inventory", "coverage", "events")
     ]
     differences.append(got["first_quote_divergence"])
     first = min((d for d in differences if d), key=lambda d: d["at_ms"], default=None)
-    if first is None and want["quote_count"] != got["verified_quote_rows"]:
+    if first is None and verify_quote_rows and want["quote_count"] != got["verified_quote_rows"]:
         first = dict(stage="quote_count", expected=want["quote_count"], actual=got["verified_quote_rows"])
     if first is None and want["quote_count"] != got["quote_count"]:
         first = dict(stage="checkpoint_quote_count", expected=want["quote_count"], actual=got["quote_count"])
     gap_count = sum(len(slot["gaps"]) for slot in want["coverage"])
-    if first is None and got["service_open_gap_intervals"] not in (None, gap_count):
-        first = dict(stage="reopened_gap_count", expected=gap_count, actual=got["service_open_gap_intervals"])
+    reopened = got.get("service_open_gap_intervals")
+    if first is None:
+        first = reopened_gap_difference(gap_count, reopened, candidate)
     return dict(passed=first is None, first_divergence=first,
                 verified_quote_rows=got["verified_quote_rows"], policy=got["policy"],
-                expected_gap_intervals=gap_count, reopened_gap_intervals=got["service_open_gap_intervals"],
+                expected_gap_intervals=gap_count, reopened_gap_intervals=reopened,
                 ledger_sha256=got["ledger_sha256"])
 
 
@@ -287,44 +296,70 @@ def clean_commit(repo):
 def windows_replay(source, baseline, candidate, repeats, workspace):
     want = expected(source)
     if want["closed_observations"]:
-        return dict(first_closed_hour=want["closed_observations"][0], reason="SOURCE_CALENDAR_CONTRADICTION")
+        closed = want["closed_observations"][0]
+        return dict(first_closed_hour=closed, reason="SOURCE_CALENDAR_CONTRADICTION",
+                    first_divergence=dict(stage="source_calendar", expected="SCHEDULED_CLOSURE", actual=closed))
     report = dict(oracle=summarize(want), variants={})
-    with TemporaryDirectory(prefix="nov25-", dir=workspace) as temp:
-        root = Path(temp)
-        file_map = root / "files.json"
-        file_map.write_text(json.dumps({stamp: str(path.resolve()) for stamp, path in source.files.items()}))
-        seed = root / "seed"
-        run_process(baseline, seed, "seed", file_map, root)
-        variants = {"baseline": baseline}
-        if candidate:
-            variants["candidate"] = candidate
+    mode, label, trial = "seed", "baseline", None
+    try:
+        with TemporaryDirectory(prefix="nov25-", dir=workspace) as temp:
+            root = Path(temp)
+            file_map = root / "files.json"
+            file_map.write_text(json.dumps({stamp: str(path.resolve()) for stamp, path in source.files.items()}))
+            seed = root / "seed"
+            run_process(baseline, seed, "seed", file_map, root)
+            variants = {"baseline": baseline}
+            if candidate:
+                variants["candidate"] = candidate
 
-        def run(label, mode):
-            copy = (root / f"{label}-{mode}").resolve()
-            if not copy.is_relative_to(root.resolve()):
-                raise ValueError("Replay copy escaped the isolated workspace")
-            shutil.copytree(seed, copy)
-            try:
-                return run_process(variants[label], copy, mode, file_map, root)
-            finally:
-                shutil.rmtree(copy)
+            def run(label, mode):
+                copy = (root / f"{label}-{mode}").resolve()
+                if not copy.is_relative_to(root.resolve()):
+                    raise ValueError("Replay copy escaped the isolated workspace")
+                shutil.copytree(seed, copy)
+                try:
+                    return run_process(variants[label], copy, mode, file_map, root)
+                finally:
+                    shutil.rmtree(copy)
 
-        for label, repo in variants.items():
-            commit = clean_commit(repo)
-            report["variants"][label] = dict(commit=commit, parity=parity_report(want, run(label, "parity")),
-                                             measurements=[])
-        for trial in range(repeats):
-            order = list(variants) if trial % 2 == 0 else list(reversed(variants))
-            for mode in ("cold", "warm"):
-                for label in order:
-                    measured = run(label, mode)
-                    match = report["variants"][label]["parity"]["ledger_sha256"] == measured["ledger_sha256"]
-                    for key in ("inventory", "coverage", "events", "first_quote_divergence", "verified_quote_rows"):
-                        measured.pop(key)
-                    report["variants"][label]["measurements"].append(measured | {"parity_ledger_match": match})
-        for label, repo in variants.items():
-            if clean_commit(repo) != report["variants"][label]["commit"]:
-                raise ValueError(f"{label} worktree changed during the run")
+            mode = "parity"
+            for label, repo in variants.items():
+                commit = clean_commit(repo)
+                parity = parity_report(want, run(label, "parity"), candidate=label == "candidate")
+                report["variants"][label] = dict(commit=commit, parity=parity, measurements=[])
+                if difference := parity["first_divergence"]:
+                    report.setdefault("first_divergence", dict(variant=label, mode=mode, **difference))
+            for trial in range(repeats):
+                order = list(variants) if trial % 2 == 0 else list(reversed(variants))
+                for mode in ("cold", "warm"):
+                    for label in order:
+                        measured = run(label, mode)
+                        variant = report["variants"][label]
+                        parity = variant["parity"]
+                        ledger = measured["ledger_sha256"]
+                        match = parity["ledger_sha256"] == ledger
+                        comparison = parity_report(want, measured, candidate=label == "candidate",
+                                                   verify_quote_rows=False)
+                        difference = comparison["first_divergence"]
+                        if difference is None and not match:
+                            difference = dict(stage="timed_ledger_sha256", expected=parity["ledger_sha256"], actual=ledger)
+                        if difference:
+                            report.setdefault("first_divergence", dict(variant=label, mode=mode, trial=trial + 1,
+                                                                       **difference))
+                        for key in ("inventory", "coverage", "events", "first_quote_divergence", "verified_quote_rows"):
+                            measured.pop(key)
+                        variant["measurements"].append(dict(measured, parity_ledger_match=match,
+                                                            trial=trial + 1, first_divergence=difference))
+            mode = "verify_commit"
+            for label, repo in variants.items():
+                if clean_commit(repo) != report["variants"][label]["commit"]:
+                    raise ValueError(f"{label} worktree changed during the run")
+    except Exception as error:
+        difference = dict(stage="comparison_error", variant=label, mode=mode,
+                          diagnostic=error_diagnostic(error))
+        if trial is not None:
+            difference["trial"] = trial + 1
+        report.setdefault("first_divergence", difference)
     return report
 
 
@@ -393,7 +428,11 @@ def mt5_calendar_report(receipt, expected_sha, preflight):
                   open_gaps_ms=gaps, max_open_gap_ms=max((b - a for a, b in gaps), default=0),
                   accepted_for_replay=accepted, used_raw_timestamps=True)
     if preflight:
-        report["product_preflight"] = verify_preflight(preflight, receipt, receipt_sha, hours, report)
+        try:
+            report["product_preflight"] = verify_preflight(preflight, receipt, receipt_sha, hours, report)
+        except Exception as error:
+            report["product_preflight"] = dict(parity_passed=False, first_divergence=dict(
+                stage="mt5_preflight_error", diagnostic=error_diagnostic(error)))
     return report
 
 
@@ -405,18 +444,37 @@ def verify_preflight(repo, receipt, receipt_sha, hours, oracle):
                        check=True, capture_output=True, text=True)
         observed = json.loads(result.read_text())
     expected_status = "ELIGIBLE_FOR_INDEPENDENT_REPLAY" if oracle["accepted_for_replay"] else "REJECTED"
-    want = {"status": expected_status, "hours": hours, "counts": oracle["counts"],
+    reasons = []
+    if oracle["closed_rows"]:
+        reasons.append("RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR")
+    if oracle["missing_open_seconds"] or oracle["open_gaps_ms"]:
+        reasons.append("OPEN_SESSION_COVERAGE_INCOMPLETE")
+    want = {"status": expected_status, "reasons": reasons, "capture_sha256": receipt_sha,
+            "hours": hours, "counts": oracle["counts"],
             "rows": oracle["source_rows"], "closed_rows": oracle["closed_rows"],
             "open_gaps_ms": oracle["open_gaps_ms"]}
-    first = next((key for key, value in want.items() if observed[key] != value), None)
+    first = next((key for key, value in want.items() if observed.get(key) != value), None)
     difference = None
-    if first == "hours":
+    if first == "hours" and isinstance(observed.get("hours"), list):
         difference = first_difference("mt5_preflight_hours", hours, observed["hours"])
     elif first:
-        difference = dict(stage=f"mt5_preflight_{first}", expected=want[first], actual=observed[first])
+        difference = dict(stage=f"mt5_preflight_{first}", expected=want[first], actual=observed.get(first))
     commit = clean_commit(repo)
-    return dict(commit=commit, status=observed["status"], reasons=observed["reasons"], first_divergence=difference,
-                parity_passed=difference is None, hourly_receipts_sha256=digest(observed["hours"]))
+    return dict(commit=commit, status=observed.get("status"), reasons=observed.get("reasons"), first_divergence=difference,
+                parity_passed=difference is None, hourly_receipts_sha256=digest(observed.get("hours")))
+
+
+def error_diagnostic(error):
+    detail = getattr(error, "stderr", None) or str(error)
+    return f"{type(error).__name__}: {detail[-5000:]}"
+
+
+def first_report_divergence(report):
+    for source, result in report.items():
+        preflight = result.get("product_preflight", {})
+        if difference := result.get("first_divergence") or preflight.get("first_divergence"):
+            return dict(source=source, **difference)
+    return None
 
 
 def main():
@@ -447,24 +505,35 @@ def main():
 
     report = {}
     if args.mt5_capture:
-        report["mt5"] = mt5_calendar_report(args.mt5_capture, args.mt5_sha256, args.mt5_preflight)
+        try:
+            report["mt5"] = mt5_calendar_report(args.mt5_capture, args.mt5_sha256, args.mt5_preflight)
+        except Exception as error:
+            report["mt5"] = dict(first_divergence=dict(stage="source_validation", diagnostic=error_diagnostic(error)))
     if args.controls:
-        args.workspace.mkdir(parents=True, exist_ok=True)
-        control = BI5Source(args.controls)
-        verify_control(expected(control))
-        report["dukascopy_control"] = windows_replay(control, args.baseline, args.candidate,
-                                                     args.repeats, args.workspace.resolve())
-        if args.archive:
-            archive = BI5Source(args.controls, args.archive)
-            if archive.files.keys() == control.files.keys():
-                # BI5Source already checked these overlapping inputs byte-for-byte.
-                report["dukascopy_archive"] = {"same_sha256_inputs_as_control": True, "registered": len(archive.files)}
-            else:
-                report["dukascopy_archive"] = windows_replay(archive, args.baseline, args.candidate,
-                                                             args.repeats, args.workspace.resolve())
+        source = "dukascopy_control"
+        try:
+            args.workspace.mkdir(parents=True, exist_ok=True)
+            control = BI5Source(args.controls)
+            verify_control(expected(control))
+            report[source] = windows_replay(control, args.baseline, args.candidate,
+                                            args.repeats, args.workspace.resolve())
+            if args.archive:
+                source = "dukascopy_archive"
+                archive = BI5Source(args.controls, args.archive)
+                if archive.files.keys() == control.files.keys():
+                    # BI5Source already checked these overlapping inputs byte-for-byte.
+                    report[source] = {"same_sha256_inputs_as_control": True, "registered": len(archive.files)}
+                else:
+                    report[source] = windows_replay(archive, args.baseline, args.candidate,
+                                                    args.repeats, args.workspace.resolve())
+        except Exception as error:
+            report[source] = dict(first_divergence=dict(stage="source_validation", diagnostic=error_diagnostic(error)))
+    first = first_report_divergence(report)
+    report.update(passed=first is None, first_divergence=first)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    return int(first is not None)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
