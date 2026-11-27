@@ -84,10 +84,20 @@ test('first pointer placement, selection, edit and undo on a four-pane archive',
   await expect.poll(()=>page.evaluate(()=>window.workspaceProbe.range())).not.toEqual(beforeRange);
   await click(page,primary,.38,.79);
   await expect(select).toHaveValue('');
-  await click(page,primary,.49,.61);
+  // Pan and zoom can change the autoscale on genuine history. Hit the saved price
+  // in the current viewport, as an operator clicking the visible line would.
+  const price=Number(created.items.find(item=>item.id===id)!.anchors[0].price);
+  const linePoint=async(x:number)=>{
+    const top=await coords(primary,x,0);
+    const row=await page.evaluate(price=>window.workspaceProbe.priceRow('.primary-chart .chart-input',price),price);
+    if(row==null)throw Error('Saved drawing price is outside the plot');
+    return {x:top.x,y:top.y+row};
+  };
+  const line=await linePoint(.49);
+  await page.mouse.click(line.x,line.y);
   await expect(select).toHaveValue(id);
   await page.screenshot({path:info.outputPath('pointer-selected.png')});
-  const handle=await coords(primary,.5,.61);
+  const handle=await linePoint(.5);
   await page.mouse.move(handle.x,handle.y);
   await page.mouse.down();
   await page.mouse.move(handle.x,handle.y-29,{steps:8});
