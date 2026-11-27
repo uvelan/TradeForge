@@ -21,14 +21,15 @@
     "verified_merge": "a3c9fe40e18b43f09afffdc20731e40381dc5c50",
     "production_source_diff_from_tested_head": []
   },
-  "candidate": "56233e8",
+  "candidate": "54db125365e7c753de96779d9ca035455dc2d197",
+  "run": "canonical Windows command with fresh isolated storage",
   "browser": {
     "api_processes": 2,
     "browser_processes": 2,
     "source_cases": [
       {
         "source": "CONTROLLED_BI5",
-        "session": "f520d5524394c0e146d63620a7bd91a0e0f8066d42c55beaf2d60766114a1b46",
+        "session": "780c62b874899b7db576c9921e073af8db1ece40184c50beaeda322667e0a753",
         "full": {
           "2": 5000,
           "3": 5000,
@@ -56,7 +57,7 @@
       },
       {
         "source": "CONTROLLED_ARCHIVE_AVAILABILITY",
-        "session": "e880986454e474516e66629d3438364057ef634b5fb5de04df5309d438fd3ad9",
+        "session": "91919792372703d9c183f6e23d7fb9a0ca2f1ddc4958bd1d63b81c8a64a600f2",
         "full": {
           "2": 3,
           "primary": 4
@@ -68,6 +69,14 @@
         "tiedRelease": {
           "2": 2,
           "primary": 3
+        },
+        "lastPrimaryRelease": {
+          "2": 2,
+          "primary": 4
+        },
+        "exactTerminalRelease": {
+          "2": 3,
+          "primary": 4
         }
       }
     ],
@@ -154,7 +163,7 @@
           }
         ]
       },
-      "session_id": "f520d5524394c0e146d63620a7bd91a0e0f8066d42c55beaf2d60766114a1b46",
+      "session_id": "780c62b874899b7db576c9921e073af8db1ece40184c50beaeda322667e0a753",
       "source_kind": "CONTROLLED_BI5",
       "panes": {
         "2": {
@@ -166,6 +175,7 @@
           "last_available": 1713431700,
           "ordered_bar_sha256": "18bb49c574797267918bf777019aff75b6a9b62d40c1e47397cd11a2417c92c6",
           "partitions": 18,
+          "partition_manifest_sha256": "6a9172542787c612a64c0cda6a85e842f31d64d99cf54bbf3e92dbc5c63e93fe",
           "origin_count_distribution": {
             "1": 5000
           }
@@ -179,6 +189,7 @@
           "last_available": 1713431700,
           "ordered_bar_sha256": "c9bb96beb2b8dfbc413c7ec3059bb5cc1a07c285ceaca826d37c1fb704babd8d",
           "partitions": 18,
+          "partition_manifest_sha256": "81764ee655df1518594ca8c1915c5e0e18ee1497077f950479063f875c502815",
           "origin_count_distribution": {
             "1": 5000
           }
@@ -192,6 +203,7 @@
           "last_available": 1713431580,
           "ordered_bar_sha256": "906bac0a02d44b301750fecbad3621820f31aaba2fcf21f3669ff4c6f9a5549f",
           "partitions": 18,
+          "partition_manifest_sha256": "b6b97e124f2ac2202a71dfa451cc2e224e1815fa27675a02cec64b50ce34f548",
           "origin_count_distribution": {
             "1": 5000
           }
@@ -205,6 +217,7 @@
           "last_available": 1713431700,
           "ordered_bar_sha256": "20ccef8ffe9f0988d80e198b6d2ce06e5b158c25b6e4ea3a19e83a993abd701b",
           "partitions": 18,
+          "partition_manifest_sha256": "4dc2e3fd5268bfd74a3fb1f5cc3c1048b504977409fd81d984358eca54d8c7c8",
           "origin_count_distribution": {
             "1": 5000
           }
@@ -228,6 +241,24 @@
         "response": {
           "detail": "Choose a replay range of at most 5000 closed candles per pane"
         }
+      },
+      "terminal_range": {
+        "session": "1ec22b2187cb8c7f4f803583ef8e80e7b39ad86836d471b0c87089762a373a76",
+        "candles": 5000,
+        "clock_positions": 5001,
+        "cutoff": 1713431701,
+        "checkpoint": {
+          "position": 5000,
+          "bookmarks": [
+            4999,
+            5000
+          ],
+          "selected": {
+            "view": "3",
+            "time": 1713431100
+          }
+        },
+        "invalid_position_status": 422
       }
     },
     {
@@ -258,6 +289,7 @@
           "last_available": 1763046000,
           "ordered_bar_sha256": "a810e6702ae2758391b3863e10e6150e87b2fa1ee9cf97b65526b73fa588604b",
           "partitions": 2,
+          "partition_manifest_sha256": "4df4492976931ed6128745774708869db33c2dc45c45d164be14192cb7cc831f",
           "origin_count_distribution": {
             "1": 24
           }
@@ -271,6 +303,7 @@
           "last_available": 1763046000,
           "ordered_bar_sha256": "940394375e0d75d81d4b38cd4715e54129481e7be7d78ae90b833e376dae45ff",
           "partitions": 2,
+          "partition_manifest_sha256": "75307dc7ab2ef3f1bbb21a42a4de2fad578ea44cccd93feea992165b5ebb4142",
           "origin_count_distribution": {
             "1": 120
           }
@@ -331,6 +364,7 @@
           "last_available": 1794952800,
           "ordered_bar_sha256": "572b423b863582244a822c52b9977c4bd38d7da282942e642bf233c234f8e6cd",
           "partitions": 4,
+          "partition_manifest_sha256": "26704bf024597dd9bf73a27e2befe371e6fc1398d902eb36ecaab87804256735",
           "origin_count_distribution": {
             "1": 997
           }
@@ -344,6 +378,7 @@
           "last_available": 1794952800,
           "ordered_bar_sha256": "a9f8489bb5246a60a2e6b2f37f2adda8a78677c46381f0dc6884837c38af95a0",
           "partitions": 4,
+          "partition_manifest_sha256": "d60216a53af7cdc425faf4e68829aac397f20e0614e2bf38f9d0578ea571a237",
           "origin_count_distribution": {
             "1": 5000
           }
@@ -357,6 +392,7 @@
           "last_available": 1794952800,
           "ordered_bar_sha256": "a551868e68e16c620628303c7941b1a1dd7ed9a733fbf01bd4a577eb30f3515b",
           "partitions": 4,
+          "partition_manifest_sha256": "e1e65f6797b970e418ac1e4c7f1e846e3bc7da2621449a11c7edee52f25eb44d",
           "origin_count_distribution": {
             "1": 998
           }
@@ -370,6 +406,7 @@
           "last_available": 1794952800,
           "ordered_bar_sha256": "61e55934dccaf57c9809cef6d37599047de13a78ba615c9fddd73c4833d6d82e",
           "partitions": 4,
+          "partition_manifest_sha256": "fd210d1d826046fea63286cfdf545a229ca7fd8a530cb5a4c8e4fb4afc116d00",
           "origin_count_distribution": {
             "1": 5000
           }
@@ -502,7 +539,7 @@
         "timeframe": "M5",
         "source": "DUKASCOPY_SAVED",
         "start": 1711324800,
-        "end": 1711326000,
+        "end": 1711326060,
         "window_bars": 5000,
         "views": [
           {
@@ -512,7 +549,7 @@
           }
         ]
       },
-      "session_id": "e880986454e474516e66629d3438364057ef634b5fb5de04df5309d438fd3ad9",
+      "session_id": "91919792372703d9c183f6e23d7fb9a0ca2f1ddc4958bd1d63b81c8a64a600f2",
       "source_kind": "CONTROLLED_ARCHIVE_AVAILABILITY",
       "panes": {
         "primary": {
@@ -524,6 +561,7 @@
           "last_available": 1711326000,
           "ordered_bar_sha256": "ada2c5b355f3c9abebe8339e5306ff1b4e6d4934a5e3ba9b5970d611bb156462",
           "partitions": 2,
+          "partition_manifest_sha256": "91713ccfb6b33420802a0bad52022496f977e3276661056792008a54eea56f14",
           "origin_count_distribution": {
             "1": 3,
             "2": 1
@@ -548,9 +586,10 @@
           "bars": 3,
           "first_open": 1711324860,
           "last_open": 1711324980,
-          "last_available": 1711326000,
-          "ordered_bar_sha256": "4210acf8bbce69210dad8fbcaf4b8d595e9190d73ef5eb34f211650cb0bcbf1c",
+          "last_available": 1711326060,
+          "ordered_bar_sha256": "1bebce384d45ae4f10c34e78525c0c2a1ed2aeb64e07405d3db2d93775a6e041",
           "partitions": 1,
+          "partition_manifest_sha256": "5155d253454bafa2142e48e8baa96ea996e423e14f8c1512dd3563d7dcbbf482",
           "origin_count_distribution": {
             "1": 3
           }

@@ -228,7 +228,7 @@ async function checkFixture(browser, fixture, pinChange = false) {
     await configure(page, details);
     await freeze(page, details.request, details.session_id);
     await expect(page.getByLabel('Replay timeline')).toHaveValue(String(details.checkpoint.position));
-    const end = details.panes.primary.candles.at(-1).available_at;
+    const end = details.request.end;
     const full = await verifyBars(page, details.panes, end);
     if (pinChange) {
       await activate(page, 'Exit replay');
@@ -255,14 +255,23 @@ async function checkFixture(browser, fixture, pinChange = false) {
     if (details.source_kind === 'CONTROLLED_ARCHIVE_AVAILABILITY') {
       const primary = details.panes.primary.candles;
       await verifySelection(page, details.panes.primary, primary[0]);
-      await page.getByRole('button', {name: 'Restart', exact: true}).click();
+      await expect(page.getByText('End of the requested range', {exact: true})).toBeVisible();
+      await activate(page, 'Restart');
       result.firstRelease = await verifyBars(page, details.panes, primary[1].available_at);
       await expect(page.getByLabel('Selected candle OHLC', {exact: true})).toHaveCount(0);
-      await page.getByRole('button', {name: 'Next candle', exact: true}).click();
+      await activate(page, 'Next candle');
       result.tiedRelease = await verifyBars(page, details.panes, primary[0].available_at);
       await verifySelection(page, details.panes.primary, primary[0]);
-      await page.getByRole('button', {name: 'Next candle', exact: true}).click();
+      await tabTo(page, page.getByLabel('Inspect candle', {exact: true}));
+      await page.keyboard.press('ArrowRight');
+      await verifySelection(page, details.panes.primary, primary[1]);
+      await activate(page, 'Next candle');
       assert.deepEqual(await verifyBars(page, details.panes, primary[0].available_at), result.tiedRelease);
+      await activate(page, 'Next candle');
+      result.lastPrimaryRelease = await verifyBars(page, details.panes, primary.at(-1).available_at);
+      await activate(page, 'Last candle');
+      result.exactTerminalRelease = await verifyBars(page, details.panes, end);
+      await expect(page.getByText('End of the requested range', {exact: true})).toBeVisible();
     }
     uiActions.push(result);
   } finally {

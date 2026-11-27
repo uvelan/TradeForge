@@ -152,8 +152,13 @@ def verify_snapshot(session, panes):
         assert sorted(map(key, captured["partitions"])) == sorted(map(key, expected["partitions"])), (
             view, "partitions"
         )
-        if view == "primary":
-            assert captured["replay_cutoffs"] == sorted(bar["available_at"] for bar in expected["candles"])
+        arrival_clock = sorted(bar["available_at"] for bar in expected["candles"])
+        requested_end = session["request"]["end"]
+        terminal = requested_end if arrival_clock[-1] < requested_end else None
+        if terminal is not None:
+            arrival_clock.append(terminal)
+        assert captured["replay_cutoffs"] == arrival_clock, (view, "arrival clock")
+        assert captured.get("terminal_cutoff") == terminal, (view, "terminal cutoff")
         assert captured["source"] == SOURCE and captured["price_basis"] == "BID", view
         assert len(captured["candles"]) == len(expected["candles"]), view
         for actual, target in zip(captured["candles"], expected["candles"], strict=True):
@@ -238,6 +243,15 @@ def prepare(client):
     assert request(client, "POST", endpoint, json=checkpoint) == checkpoint
     receipt["checkpoint_controls"] = {"rewind_kept_pin": True, "unknown_candle_status": 422,
                                       "unknown_candle": invalid}
+    stop_after_last = {**checkpoint, "position": SIZE, "bookmarks": [SIZE - 1, SIZE]}
+    extra = save(client, {**payload, "end": END + 1}, panes, sources, stop_after_last)
+    extra_endpoint = f"/api/replay/sessions/{extra['session_id']}"
+    assert request(client, "GET", extra_endpoint)["checkpoint"] == stop_after_last
+    request(client, "POST", extra_endpoint + "/checkpoint", 422,
+            json={**stop_after_last, "position": SIZE + 1})
+    receipt["terminal_range"] = {"session": extra["session_id"], "candles": SIZE,
+                                 "clock_positions": SIZE + 1, "cutoff": END + 1,
+                                 "checkpoint": stop_after_last, "invalid_position_status": 422}
     receipt["source_kind"] = "CONTROLLED_BI5"
     return receipt
 
@@ -276,7 +290,7 @@ def delayed(client, storage):
     for view, symbol, frame, prices, opens, arrivals in (
         ("primary", "EURUSD", "M5", [1.081, 1.082, 1.083, 1.084], [0, 300, 600, 900],
          [900, 600, 900, 1200]),
-        ("2", "GBPUSD", "M1", [1.261, 1.262, 1.263], [60, 120, 180], [420, 1200, 350]),
+        ("2", "GBPUSD", "M1", [1.261, 1.262, 1.263], [60, 120, 180], [420, 1260, 350]),
     ):
         candles = [{"time": start + timestamp, "available_at": start + arrival, "open": price,
                     "high": price + .0003, "low": price - .0001, "close": price + .0002}
@@ -307,9 +321,9 @@ def delayed(client, storage):
     for item, pin in zip(publications, json.loads(proc.stdout), strict=True):
         panes[item["view"]]["partitions"].append({key: pin[key] for key in ("id", "sha256")})
     payload = {"symbol": "EURUSD", "timeframe": "M5", "source": SOURCE,
-               "start": start, "end": start + 1200, "window_bars": SIZE,
+               "start": start, "end": start + 1260, "window_bars": SIZE,
                "views": [{"view": "2", "symbol": "GBPUSD", "timeframe": "M1"}]}
-    checkpoint = {"position": 3, "bookmarks": [0, 1],
+    checkpoint = {"position": 4, "bookmarks": [0, 1],
                   "selected": {"view": "primary", "time": start}}
     result = save(client, payload, panes, [], checkpoint)
     # A nonaligned end inside the next primary bar cannot admit that unfinished bar or
