@@ -1,0 +1,245 @@
+{
+  "scope": "DUKASCOPY EURUSD M5 primary pane",
+  "source": "GENUINE_DUKASCOPY_WEB_CSV",
+  "session": "b14f327cde82936e3775049f349d8183e2e9d683613d7cc0c1e35459566513be",
+  "source_inventory": [
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-09",
+      "sha256": "0560cf18711672c26fc4747018cc566fca095d1abf5a6b64efd82c65dfaae3dc",
+      "m1": 1437,
+      "complete_m5": 286
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-10",
+      "sha256": "4db5776c7d7dd309daac2d01783c6dad69d34a06c5f5127a1693f602c6afe969",
+      "m1": 1433,
+      "complete_m5": 282
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-11",
+      "sha256": "a07849dcdb4585f782859f9878b7a6c93c34b6f2959ceffa150102c7e4627e9a",
+      "m1": 1438,
+      "complete_m5": 286
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-12",
+      "sha256": "4c1c30716245d43f68f1ad415c72d3f64d542aa129f93fda43917df53c67239e",
+      "m1": 1436,
+      "complete_m5": 285
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-13",
+      "sha256": "4c1e415ee7bb1c8a7cfe473364afb5d00f82d11ea9e3b48d8960b476f53f0a6d",
+      "m1": 1320,
+      "complete_m5": 264
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-16",
+      "sha256": "28d7be87a1a5642741ac9c526f13caf49fbfb5aae8c5ab8aec076ee7d31190b7",
+      "m1": 1439,
+      "complete_m5": 287
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-17",
+      "sha256": "b10f5f39e04815bb22a3aae14015002af8d4d55013f7b250913b8330c0d07a7d",
+      "m1": 1440,
+      "complete_m5": 288
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-18",
+      "sha256": "b672895c5866519b68dc25ea5dc55c0ab2fbaec7de240af4c4087dd981f46dba",
+      "m1": 1440,
+      "complete_m5": 288
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-09",
+      "sha256": "bfd85b96494e39080026e1406939dfbb3e2866eae1c3cb10b8414d6211dd1356",
+      "m1": 1435,
+      "complete_m5": 284
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-10",
+      "sha256": "ab0ef93bd47aa36b1238873e08efe3b2410d9cbdd0fe898b599a98c17a7b78f4",
+      "m1": 1435,
+      "complete_m5": 285
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-11",
+      "sha256": "14003bf93e64aecd14a7c0898e1abbaa53cb7cd8fce9fc20123c09db3a91a804",
+      "m1": 1435,
+      "complete_m5": 285
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-12",
+      "sha256": "3bbcd8915b623a30fb9b85ea722063a081bec4601791e93b05a9d75e9be77da1",
+      "m1": 1436,
+      "complete_m5": 286
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-13",
+      "sha256": "25b5f24e0973f993b721fa06bc3e1cff1870d1eef4d943db0fa97604ea4f0e75",
+      "m1": 1320,
+      "complete_m5": 264
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-16",
+      "sha256": "425cb8d421ea51b1d4ca1dc97217532da3f3ab83f7be1ca5983d409eb484e715",
+      "m1": 1439,
+      "complete_m5": 287
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-17",
+      "sha256": "656a8302fee4dd40b32d410a4d452a4384b0f8fa5f408feba71a30a72fd77f85",
+      "m1": 1437,
+      "complete_m5": 286
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-18",
+      "sha256": "dfbf707b636434d35c2dcf35e9974c13d971f8e05a42207e289feb94ff5bc7b6",
+      "m1": 1435,
+      "complete_m5": 285
+    }
+  ],
+  "utc": "2026-11-17T19:20:00Z",
+  "test": "keyboard target announces the exact persisted archive anchor with wick snap on and off",
+  "baseline": {
+    "git": "687e2315950cfe95ea8baf7fbe1d9d3a9cc49861",
+    "result": "Failed announced price and marker position on snapped edit",
+    "observations": [
+      {
+        "wick": false,
+        "revision": 4,
+        "action": "create",
+        "utc": "2026-11-17T19:20:00Z",
+        "high": 1.10119,
+        "low": 1.10099,
+        "freePrice": 1.1011,
+        "announcedPrice": "1.10110",
+        "saved": {
+          "time": 1794943200,
+          "price": "1.10110"
+        },
+        "displayedRow": 158,
+        "expectedRow": 158.18062015503477
+      },
+      {
+        "wick": true,
+        "revision": 5,
+        "action": "edit",
+        "utc": "2026-11-17T19:20:00Z",
+        "high": 1.10119,
+        "low": 1.10099,
+        "freePrice": 1.1011,
+        "announcedPrice": "1.10110",
+        "saved": {
+          "time": 1794943200,
+          "price": "1.10119"
+        },
+        "displayedRow": 158,
+        "expectedRow": 149.18201550387974
+      },
+      {
+        "wick": false,
+        "revision": 6,
+        "action": "edit",
+        "utc": "2026-11-17T19:20:00Z",
+        "high": 1.10119,
+        "low": 1.10099,
+        "freePrice": 1.1011,
+        "announcedPrice": "1.10110",
+        "saved": {
+          "time": 1794943200,
+          "price": "1.10110"
+        },
+        "displayedRow": 158,
+        "expectedRow": 158.18062015503477
+      }
+    ]
+  },
+  "candidate": {
+    "git": "5b57f3274804e244f96efad0958d8acf62d2c4ad",
+    "result": "Passed UTC, announced price, saved anchor, revision and marker row for create and edit in both modes",
+    "observations": [
+      {
+        "wick": false,
+        "revision": 13,
+        "action": "create",
+        "utc": "2026-11-17T19:20:00Z",
+        "high": 1.10119,
+        "low": 1.10099,
+        "freePrice": 1.1011,
+        "announcedPrice": "1.10110",
+        "saved": {
+          "time": 1794943200,
+          "price": "1.10110"
+        },
+        "displayedRow": 158.181,
+        "expectedRow": 158.18062015503477
+      },
+      {
+        "wick": true,
+        "revision": 14,
+        "action": "edit",
+        "utc": "2026-11-17T19:20:00Z",
+        "high": 1.10119,
+        "low": 1.10099,
+        "freePrice": 1.1011,
+        "announcedPrice": "1.10119",
+        "saved": {
+          "time": 1794943200,
+          "price": "1.10119"
+        },
+        "displayedRow": 149.182,
+        "expectedRow": 149.18201550387974
+      },
+      {
+        "wick": false,
+        "revision": 15,
+        "action": "edit",
+        "utc": "2026-11-17T19:20:00Z",
+        "high": 1.10119,
+        "low": 1.10099,
+        "freePrice": 1.1011,
+        "announcedPrice": "1.10110",
+        "saved": {
+          "time": 1794943200,
+          "price": "1.10110"
+        },
+        "displayedRow": 158.181,
+        "expectedRow": 158.18062015503477
+      },
+      {
+        "wick": true,
+        "revision": 16,
+        "action": "create",
+        "utc": "2026-11-17T19:20:00Z",
+        "high": 1.10119,
+        "low": 1.10099,
+        "freePrice": 1.1011,
+        "announcedPrice": "1.10119",
+        "saved": {
+          "time": 1794943200,
+          "price": "1.10119"
+        },
+        "displayedRow": 149.182,
+        "expectedRow": 149.18201550387974
+      }
+    ]
+  }
+}
