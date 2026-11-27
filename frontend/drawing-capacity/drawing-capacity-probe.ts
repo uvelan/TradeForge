@@ -1,14 +1,18 @@
 import type {Page} from '@playwright/test';
 
 type Stroke={color:string;row:number};
-type Gesture='selection'|'drag'|'save';
+type Gesture={type:'selection'|'save';selector:string;start?:number;observed?:number}
+  | {type:'drag';selector:string;start?:number;observed?:number;expectedRow:number};
 type ChartSurface={left:number;top:number;width:number;height:number;strokes:Stroke[]};
 
 declare global {
   interface Window {
     drawingCapacity:{
       surface:(selector:string)=>ChartSurface|undefined;
-      arm:(gesture:Gesture,selector:string)=>void;
+      armSelection:(selector:string,select:HTMLSelectElement,id:string)=>void;
+      armDrag:(selector:string,expectedRow:number)=>void;
+      armSave:(selector:string)=>void;
+      observedMs:()=>number|undefined;
       started:()=>number|undefined;
       frames:()=>void;
       stopFrames:()=>number[];
@@ -20,6 +24,7 @@ declare global {
 // A distinct color identifies each seeded drawing. A gold stroke is the edit preview.
 export async function installDrawingCapacityProbe(page:Page){
   await page.addInitScript(()=>{
+    let armed:Gesture|undefined;
     const painted=new WeakMap<HTMLCanvasElement,Map<string,number>>();
     const starts=new WeakMap<CanvasRenderingContext2D,Stroke>();
     const {clearRect,beginPath,moveTo,stroke}=CanvasRenderingContext2D.prototype;
@@ -42,16 +47,17 @@ export async function installDrawingCapacityProbe(page:Page){
       if(args.length)stroke.call(this,args[0]);else stroke.call(this);
       const point=starts.get(this);
       if(!point)return;
+      if(point.color==='#ffdc86'&&armed?.type==='drag'&&armed.start!==undefined&&armed.observed===undefined&&
+        Math.abs(point.row-armed.expectedRow)<4&&this.canvas.closest(armed.selector))armed.observed=performance.now();
       let rows=painted.get(this.canvas);
       if(!rows){rows=new Map();painted.set(this.canvas,rows);}
       rows.set(point.color,point.row);
     };
 
-    let armed:{gesture:Gesture;selector:string;start?:number}|undefined;
     function capture(event:PointerEvent){
       if(!armed||armed.start!==undefined||!(event.target instanceof Element)||!event.target.closest(armed.selector))return;
-      if((armed.gesture==='drag'&&event.type==='pointermove')||
-        (armed.gesture!=='drag'&&event.type==='pointerup')){
+      if((armed.type==='drag'&&event.type==='pointermove')||
+        (armed.type!=='drag'&&event.type==='pointerup')){
         armed.start=performance.now();
       }
     }
@@ -79,7 +85,19 @@ export async function installDrawingCapacityProbe(page:Page){
         return {left:box.left,top:box.top,width:box.width,height:box.height,
           strokes:strokes.filter(({row})=>row>=0&&row<box.height)};
       },
-      arm:(gesture,selector)=>{armed={gesture,selector};},
+      armSelection:(selector,select,id)=>{
+        const selection:Gesture={type:'selection',selector};
+        armed=selection;
+        function observe(){
+          if(armed!==selection||!select.isConnected)return;
+          if(selection.start!==undefined&&select.value===id){selection.observed=performance.now();return;}
+          requestAnimationFrame(observe);
+        }
+        requestAnimationFrame(observe);
+      },
+      armDrag:(selector,expectedRow)=>{armed={type:'drag',selector,expectedRow};},
+      armSave:selector=>{armed={type:'save',selector};},
+      observedMs:()=>armed?.start!==undefined&&armed.observed!==undefined?armed.observed-armed.start:undefined,
       started:()=>armed?.start,
       frames:()=>{intervals=[];previous=undefined;frame=requestAnimationFrame(tick);},
       stopFrames:()=>{cancelAnimationFrame(frame);return intervals;},

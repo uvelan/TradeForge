@@ -114,21 +114,25 @@ async function panZoom(page:Page,selector:string){
   return frames;
 }
 
+async function observedGesture(page:Page){
+  const observed=await page.waitForFunction(()=>{
+    const ms=window.drawingCapacity.observedMs();
+    return ms===undefined?undefined:{ms};
+  },undefined,{timeout:6000});
+  return (await observed.jsonValue()).ms;
+}
 async function selectOnChart(page:Page,selector:string,target:Drawing){
   const plot=await surface(page,selector);
   const line=plot.strokes.find(stroke=>stroke.color===target.color);
   if(!line)throw Error('Edit target not painted');
-  await expect(selectDrawing(page)).toHaveValue('');
-  await page.evaluate(selector=>window.drawingCapacity.arm('selection',selector),selector);
+  const picker=selectDrawing(page);
+  await expect(picker).toHaveValue('');
+  await picker.evaluate((element,{selector,id})=>{
+    if(!(element instanceof HTMLSelectElement))throw Error('Drawing picker is not a select');
+    window.drawingCapacity.armSelection(selector,element,id);
+  },{selector,id:target.id});
   await page.mouse.click(plot.left+plot.width*.33,plot.top+line.row);
-  const selected=await page.waitForFunction(id=>{
-    const select=document.querySelector<HTMLSelectElement>('.terminal-drawing-tools select[aria-label="Select drawing"]')
-      ??Array.from(document.querySelectorAll<HTMLLabelElement>('.terminal-drawing-tools label'))
-        .find(label=>label.textContent?.startsWith('Select drawing'))?.querySelector('select');
-    const start=window.drawingCapacity.started();
-    if(start!==undefined&&select?.value===id)return {ms:performance.now()-start};
-  },target.id,{timeout:6000});
-  return (await selected.jsonValue()).ms;
+  return observedGesture(page);
 }
 
 async function dragOnChart(page:Page,selector:string,target:Drawing,path:string,before:Book){
@@ -139,20 +143,14 @@ async function dragOnChart(page:Page,selector:string,target:Drawing,path:string,
   const delta=base.row<plot.height*.52?20:-20;
   await page.mouse.move(x,y);
   await page.mouse.down();
-  await page.evaluate(selector=>window.drawingCapacity.arm('drag',selector),selector);
+  await page.evaluate(({selector,y})=>window.drawingCapacity.armDrag(selector,y),{selector,y:base.row+delta});
   await page.mouse.move(x,y+delta);
-  const preview=await page.waitForFunction(({selector,row,y})=>{
-    const start=window.drawingCapacity.started();
-    const strokes=window.drawingCapacity.surface(selector)?.strokes;
-    if(start!==undefined&&strokes?.some(stroke=>stroke.color==='#ffdc86'&&
-      Math.abs(stroke.row-row)>4&&Math.abs(stroke.row-y)<4))return {ms:performance.now()-start};
-  },{selector,row:base.row,y:base.row+delta},{timeout:6000});
-  const dragMs=(await preview.jsonValue()).ms;
+  const dragMs=await observedGesture(page);
 
   const resourceEntriesBeforeSave=await page.evaluate(selector=>{
     const entries=performance.getEntriesByType('resource').length;
     performance.clearResourceTimings();
-    window.drawingCapacity.arm('save',selector);
+    window.drawingCapacity.armSave(selector);
     return entries;
   },selector);
   const [posted]=await Promise.all([
