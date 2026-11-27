@@ -1,0 +1,107 @@
+{
+  "api_processes": 2,
+  "browser_processes": 2,
+  "source_cases": [
+    {
+      "source": "CONTROLLED_BI5",
+      "session": "780c62b874899b7db576c9921e073af8db1ece40184c50beaeda322667e0a753",
+      "full": {
+        "2": 5000,
+        "3": 5000,
+        "4": 5000,
+        "primary": 5000
+      }
+    },
+    {
+      "source": "GENUINE_BI5",
+      "session": "4ffa6cb4eaa28238e5a92d82d770983ea94f3bc0841999f7ff706867a5c451c7",
+      "full": {
+        "2": 120,
+        "primary": 24
+      }
+    },
+    {
+      "source": "GENUINE_DUKASCOPY_WEB_CSV",
+      "session": "b14f327cde82936e3775049f349d8183e2e9d683613d7cc0c1e35459566513be",
+      "full": {
+        "2": 5000,
+        "3": 998,
+        "4": 5000,
+        "primary": 997
+      }
+    },
+    {
+      "source": "CONTROLLED_ARCHIVE_AVAILABILITY",
+      "session": "91919792372703d9c183f6e23d7fb9a0ca2f1ddc4958bd1d63b81c8a64a600f2",
+      "full": {
+        "2": 3,
+        "primary": 4
+      },
+      "firstRelease": {
+        "2": 2,
+        "primary": 1
+      },
+      "tiedRelease": {
+        "2": 2,
+        "primary": 3
+      },
+      "lastPrimaryRelease": {
+        "2": 2,
+        "primary": 4
+      },
+      "exactTerminalRelease": {
+        "2": 3,
+        "primary": 4
+      }
+    }
+  ],
+  "keyboard_journey": [
+    "Exit replay",
+    "Resume saved replay",
+    "Pick another pane",
+    "Inspect older candle",
+    "Bookmark candle",
+    "Save replay position",
+    "Resume after process restart",
+    "Rewind using bookmark",
+    "Reveal the same candle by returning to the last cutoff"
+  ],
+  "checkpoint": {
+    "position": 4999,
+    "bookmarks": [
+      602,
+      4998,
+      4999
+    ],
+    "selected": {
+      "view": "4",
+      "time": 1713431160
+    }
+  },
+  "reopened": {
+    "2": 5000,
+    "3": 5000,
+    "4": 5000,
+    "primary": 5000
+  },
+  "rewind_position": 602,
+  "rewind_bars": {
+    "2": 603,
+    "3": 603,
+    "4": 603,
+    "primary": 603
+  },
+  "selected_candle": {
+    "time": 1713431160,
+    "available_at": 1713431220,
+    "open": 2050.304,
+    "high": 2050.318,
+    "low": 2050.294,
+    "close": 2050.301,
+    "availability_basis": "MODELED_NOMINAL_CLOSE",
+    "source_partition_indexes": [
+      17
+    ]
+  },
+  "uncaught_page_errors": []
+}

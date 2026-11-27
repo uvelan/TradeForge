@@ -11,6 +11,8 @@ PR #40 was merged with GitHub's expected-head guard at `9db18748765736d8ed326f34
 
 ## Boundaries and compatibility
 
+For malformed SQLite metadata, the [partition diagnostic matrix](malformed-partitions/README.md) records primary and companion HTTP outcomes, exact selection boundaries, file-open checks and the restart regression.
+
 POST `/research/api/replay/sessions` accepts an optional `window_bars` from 1 to 5,000 per saved-source pane. Omitting it retains the existing capture path. Previously persisted session payloads keep their IDs. Explicit over-limit ranges reject before insertion. The archive path reads from a consistent catalog snapshot, authenticates the Parquet bytes it decodes, rejects contradictory overlaps, and retains original contributors to an identical overlap. Each distinct pane has separate file, row and byte limits. Repeated pane requests share verified work within the request. Native playback follows availability while candles remain plotted by UTC open time. A gap remains visible; the chart cannot attest provider completeness.
 
 The 160-cutoff strategy-evaluation cap and the smaller analytical overlay limits are independent of chart capacity. Historical intents retain `AWAITING_EXECUTION_VALIDATION`; production recorded trading is `BLOCKED`. The November 2025 MT5 tick capture remains rejected on its recorded clock evidence.

@@ -1,0 +1,68 @@
+{
+  "tested": "f4a540aa9a8136486516badddff76001ce2bde29",
+  "suites": [
+    {
+      "id": "focused",
+      "start": "2026-11-27T07:46:18.839Z",
+      "end": "2026-11-27T07:46:49.071Z",
+      "code": 0,
+      "elapsed": 27.2054956,
+      "tail": "  K:\\Projects\\TradeForge\\.venv\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\r\n    from starlette.testclient import TestClient as TestClient  # noqa\r\n\r\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\r\n54 passed, 1 warning in 26.10s\r\nELAPSED=27.2054956\r\n",
+      "cmd": ".venv/Scripts/python.exe -m pytest -q tests/test_native_malformed_partitions.py research_backend/tests/test_native_replay_window.py tests/test_shadow_candle_reads.py"
+    },
+    {
+      "id": "backend",
+      "start": "2026-11-27T07:47:38.560Z",
+      "end": "2026-11-27T08:03:33.873Z",
+      "code": 0,
+      "elapsed": 951.6877475,
+      "tail": "  K:\\Projects\\TradeForge\\.venv\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\r\n    from starlette.testclient import TestClient as TestClient  # noqa\r\n\r\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\r\n1268 passed, 1 skipped, 1 warning in 950.12s (0:15:50)\r\nELAPSED=951.6877475\r\n",
+      "cmd": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\n$env:TRADEFORGE_T07_REAL_BI5=(Resolve-Path storage/t06-input/13h_ticks.bi5).Path\n.venv/Scripts/python.exe -m pytest -q"
+    },
+    {
+      "id": "unit",
+      "start": "2026-11-27T07:47:38.560Z",
+      "end": "2026-11-27T07:47:45.375Z",
+      "code": 0,
+      "elapsed": 2.399424,
+      "tail": " Test Files  4 passed (4)\r\n      Tests  13 passed (13)\r\n   Start at  13:17:44\r\n   Duration  789ms (import 43%, transform 37%, tests 13%, worker 7%)\r\n\r\nELAPSED=2.399424\r\n",
+      "cmd": "npm --prefix frontend test"
+    },
+    {
+      "id": "build",
+      "start": "2026-11-27T07:47:38.560Z",
+      "end": "2026-11-27T07:48:20.645Z",
+      "code": 0,
+      "elapsed": 37.4896605,
+      "tail": "   │ \r\n   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives\r\n───╯\r\n\r\n✓ built in 5.56s\r\nELAPSED=37.4896605\r\n",
+      "cmd": "npm --prefix frontend run build"
+    },
+    {
+      "id": "standard",
+      "start": "2026-11-27T07:47:38.560Z",
+      "end": "2026-11-27T07:58:24.785Z",
+      "code": 0,
+      "elapsed": 642.1875223,
+      "tail": "  ok 92 e2e\\drawing-placement.spec.ts:624:1 › Escape cancels all armed modes and an active drag cannot complete in a replacement mode (5.1s)\r\n  ok 93 e2e\\drawing-placement.spec.ts:668:1 › horizontal drags reject outside, missing candle and pointer cancellation (2.8s)\r\n  ok 94 e2e\\drawing-placement.spec.ts:703:1 › negative chart prices are rejected and navigation still pans and zooms (4.1s)\r\n\r\n  94 passed (10.7m)\r\nELAPSED=642.1875223\r\n",
+      "cmd": "$env:TRADEFORGE_E2E_API_PORT='8796'\n$env:TRADEFORGE_E2E_UI_PORT='4796'\nnpm --prefix frontend run e2e -- --retries=0"
+    },
+    {
+      "id": "recorded",
+      "start": "2026-11-27T07:47:38.560Z",
+      "end": "2026-11-27T07:51:23.354Z",
+      "code": 0,
+      "elapsed": 220.2230643,
+      "tail": "(Use `node --trace-warnings ...` to show where the warning was created)\r\n  ok 1 recorded-e2e\\recorded-backtest.spec.ts:5:1 › Strategy Lab checkpoints and reopens the recorded EURUSD historical session (12.8s)\r\n  ok 2 recorded-e2e\\recorded-workspace.spec.ts:28:1 › pinned recorded EURUSD ticks reach the chart, frozen replay and saved evidence (3.1m)\r\n\r\n  2 passed (3.6m)\r\nELAPSED=220.2230643\r\n",
+      "cmd": "$env:TRADEFORGE_E2E_API_PORT='8797'\n$env:TRADEFORGE_E2E_UI_PORT='4797'\nnpm --prefix frontend run e2e -- --config playwright.recorded.config.ts --retries=0"
+    },
+    {
+      "id": "native",
+      "start": "2026-11-27T07:47:38.560Z",
+      "end": "2026-11-27T07:52:44.489Z",
+      "code": 0,
+      "elapsed": 299.3023988,
+      "tail": "K:\\Projects\\TradeForge\\storage\\malformed-owner\\browser\\native-replay-6PjwP1\\genuine-bi5.json\r\nK:\\Projects\\TradeForge\\storage\\malformed-owner\\browser\\native-replay-6PjwP1\\genuine-csv.json\r\nK:\\Projects\\TradeForge\\storage\\malformed-owner\\browser\\native-replay-6PjwP1\\delayed.json\r\nK:\\Projects\\TradeForge\\storage\\malformed-owner\\browser\\native-replay-6PjwP1\\reopen.json\r\nNative archive freeze, two-process restart and all named panes verified.\r\nELAPSED=299.3023988\r\n",
+      "cmd": "node frontend/capacity-e2e/verify-native-replay-browser.mjs --workspace storage/malformed-owner/browser --output storage/malformed-owner/restart.json --bi5 storage/t06-input --csv storage/tf-i08e-source"
+    }
+  ]
+}

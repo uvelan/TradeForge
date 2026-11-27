@@ -1,0 +1,38 @@
+{
+  "before": [
+    {
+      "field": "last_time",
+      "id": "a8bcca01e9f40eb7f1bcdaf8b57e922d46b4967e717b4a58099d0c280abfbf6b",
+      "before": 0,
+      "status": 500,
+      "body": "Internal Server Error",
+      "after": 0
+    },
+    {
+      "field": "rows_count",
+      "id": "a8bcca01e9f40eb7f1bcdaf8b57e922d46b4967e717b4a58099d0c280abfbf6b",
+      "before": 0,
+      "status": 500,
+      "body": "Internal Server Error",
+      "after": 0
+    }
+  ],
+  "after": [
+    {
+      "field": "last_time",
+      "id": "a8bcca01e9f40eb7f1bcdaf8b57e922d46b4967e717b4a58099d0c280abfbf6b",
+      "before": 0,
+      "status": 409,
+      "body": "{\"detail\":\"SHADOW_UNRESOLVED: INVALID_UTC_TIMESTAMP (research, a8bcca01e9f40eb7f1bcdaf8b57e922d46b4967e717b4a58099d0c280abfbf6b)\"}",
+      "after": 0
+    },
+    {
+      "field": "rows_count",
+      "id": "a8bcca01e9f40eb7f1bcdaf8b57e922d46b4967e717b4a58099d0c280abfbf6b",
+      "before": 0,
+      "status": 409,
+      "body": "{\"detail\":\"SHADOW_UNRESOLVED: ROW_COUNT_MISMATCH (research, a8bcca01e9f40eb7f1bcdaf8b57e922d46b4967e717b4a58099d0c280abfbf6b)\"}",
+      "after": 0
+    }
+  ]
+}
