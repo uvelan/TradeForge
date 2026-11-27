@@ -10,7 +10,10 @@ import {chromium, expect} from '@playwright/test';
 import {drawingJourney, verifyReopenedDrawings} from './native-drawing-journey.mjs';
 import {installProbe} from '../e2e/workspace-probe.ts';
 
+import {cutoffJourney, installCutoffClock, createBoundedSession, checkServerSessions} from './native-drawing-cutoff.mjs';
+
 const {values: args} = parseArgs({options: {
+  cutoff: {type: 'boolean'},
   drawings: {type: 'boolean'},
   output: {type: 'string'},
   workspace: {type: 'string'},
@@ -19,6 +22,7 @@ const {values: args} = parseArgs({options: {
   'api-port': {type: 'string', default: '8793'},
   'ui-port': {type: 'string', default: '4793'},
 }});
+if(args.cutoff&&!args.drawings)throw Error('--cutoff requires --drawings');
 if (!args.output || !args.workspace || (!args.drawings && !args.bi5) || !args.csv) {
   throw Error('Supply --output, --workspace and --csv, plus --bi5 for the full replay suite.');
 }
@@ -297,9 +301,11 @@ async function run() {
     browser = await chromium.launch();
     let page = await browser.newPage({viewport: {width: 1536, height: 900}});
     await configure(page, details);
+    if(args.cutoff)await installCutoffClock(page,details);
     await freeze(page, details.request, details.session_id);
     const bars = await verifyBars(page, details.panes, details.request.end);
-    const journey = await drawingJourney(page, details, verifySelection);
+    const journey = args.cutoff ? await cutoffJourney(page,details,verifyBars) : await drawingJourney(page, details, verifySelection);
+    const boundedId=args.cutoff?await createBoundedSession(page,details):undefined;
     await browser.close();
     browser = undefined;
     await stop(api);
@@ -310,15 +316,27 @@ async function run() {
     browser = await chromium.launch();
     page = await browser.newPage({viewport: {width: 1536, height: 900}});
     await configure(page, details, true);
+    if(args.cutoff)await installCutoffClock(page,details);
     await resume(page, details.session_id);
     await verifyBars(page, details.panes, details.request.end);
-    await verifyReopenedDrawings(page, details, journey);
+    if(args.cutoff)journey.reopened=await cutoffJourney(page,details,verifyBars,journey.entries);
+    if(boundedId){
+      await page.close();
+      page=await browser.newPage({viewport:{width:1536,height:900}});
+      await configure(page,details,true);
+      journey.server_sessions=await checkServerSessions(page,details,boundedId,journey.entries,resume);
+    }
+    else await verifyReopenedDrawings(page, details, journey);
     assert.deepEqual(errors, []);
     mkdirSync(dirname(resolve(args.output)), {recursive: true});
     writeFileSync(resolve(args.output), JSON.stringify({
       session: details.session_id, source: details.source_kind, source_hashes: details.sources.map(row => row.sha256),
-      bars, api_processes: 2, browser_processes: 2, uncaught_page_errors: errors, ...journey,
+      bars, ...(args.cutoff?{chromium:browser.version(),elapsed_seconds:performance.now()/1000,
+        clock:'Same-session rewind replaces the preceding clock slot with T-1. Server-session checks use unmodified replay responses.'}:{}),
+      api_processes: 2, browser_processes: 2, uncaught_page_errors: errors, ...journey,
     }, null, 2) + '\n');
+    if(args.cutoff)assert.deepEqual([...journey.leaks,...journey.reopened.leaks,
+      ...journey.server_sessions.filter(sample=>sample.leaked)],[], 'Future drawings exposed');
     console.log('Genuine replay drawing journey and two-process reopen passed.');
     return;
   }

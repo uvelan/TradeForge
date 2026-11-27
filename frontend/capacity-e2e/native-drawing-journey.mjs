@@ -8,12 +8,12 @@ const scopeOf = (details, view) => [
 ].join(':');
 const endpoint = scope => '/research/api/drawings?' + new URLSearchParams({scope});
 const isWrite = res => res.request().method() === 'POST' && new URL(res.url()).pathname.endsWith('/drawings');
-async function scene(page, scope) {
+export async function scene(page, scope) {
   const response = await page.request.get(new URL(endpoint(scope), page.url()).href);
   assert.equal(response.status(), 200);
   return response.json();
 }
-async function selectPane(page, view) {
+export async function selectPane(page, view) {
   await page.getByLabel('Inspection pane').selectOption(view);
   await expect(page.locator(selector(view)).locator('xpath=ancestor::*[@data-inspecting="true"]')).toHaveCount(1);
 }
@@ -24,7 +24,7 @@ async function point(page, view, x, y) {
   assert(Number.isInteger(coords.time), 'Pointer must target a real plotted candle in ' + view);
   return coords;
 }
-async function save(page, scope, act) {
+export async function save(page, scope, act) {
   const [res] = await Promise.all([page.waitForResponse(isWrite, {timeout: 8000}), act()]);
   assert.equal(new URL(res.url()).searchParams.get('scope'), scope);
   assert.equal(res.status(), 200, await res.text());
@@ -33,7 +33,7 @@ async function save(page, scope, act) {
   return saved;
 }
 const anchor = ({time, price}) => ({time, price});
-async function place(page, details, view, kind, fractions, sourceBar) {
+export async function place(page, details, view, kind, fractions, sourceBar) {
   const scope = scopeOf(details, view);
   const before = await scene(page, scope);
   await selectPane(page, view);
@@ -45,11 +45,12 @@ async function place(page, details, view, kind, fractions, sourceBar) {
     for (const [x,y] of fractions) {
       let coords;
       if(sourceBar){
+        const bar = Array.isArray(sourceBar) ? sourceBar[expected.length] : sourceBar;
         const pane=page.locator(selector(view));
         await pane.scrollIntoViewIfNeeded();
         const pixel=await pane.evaluate((_,args)=>window.workspaceProbe.candlePoint(...args),
-          [selector(view),sourceBar.time,sourceBar.high]);
-        coords={...pixel,time:sourceBar.time,price:sourceBar.high.toFixed(5)};
+          [selector(view),bar.time,bar.high]);
+        coords={...pixel,time:bar.time,price:bar.high.toFixed(5)};
       }else coords=await point(page, view, x, y);
       assert(details.panes[view].candles.some(bar => bar.time === coords.time));
       expected.push(anchor(coords));
