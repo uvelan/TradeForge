@@ -103,11 +103,13 @@ class BI5Source:
             yield stamp, quotes
 
 
-def decode_mt5_day(path, stamp):
+def decode_mt5_day(path, stamp, expected_sha):
     import numpy as np
 
     payload = path.read_bytes()
     digest = sha256(payload).hexdigest()
+    if digest != expected_sha:
+        raise ValueError(f"MT5 daily file SHA-256 mismatch for {path.stem}: expected {expected_sha}, got {digest}")
     raw = np.load(BytesIO(payload), allow_pickle=False)
     required = {"time", "time_msc", "bid", "ask", "flags"}
     if raw.ndim != 1 or not required.issubset(raw.dtype.names or ()):
@@ -126,13 +128,6 @@ def decode_mt5_day(path, stamp):
         raise ValueError(("MT5 row lacks valid five-decimal BID/ASK", stamp))
     return digest, millis, rounded_bid.astype(np.int64), rounded_ask.astype(np.int64)
 
-
-class MT5Source:
-    def __init__(self, folder):
-        self.files = {
-            int(datetime.fromisoformat(path.stem).replace(tzinfo=UTC).timestamp()): path
-            for path in sorted(folder.glob("2025-11-??.npy"))
-        }
 
 def quote_digest(quotes):
     digest = sha256()

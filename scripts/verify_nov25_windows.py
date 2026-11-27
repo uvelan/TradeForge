@@ -24,7 +24,6 @@ from nov25_source_oracle import (
     BI5Source,
     END,
     GAP_MS,
-    MT5Source,
     START,
     Quote,
     decode_bi5,
@@ -363,6 +362,32 @@ def windows_replay(source, baseline, candidate, repeats, workspace):
     return report
 
 
+def read_mt5_claim(directory, record, stamp):
+    day = datetime.fromtimestamp(stamp, UTC).date().isoformat()
+    if (record.get("day"), record.get("start"), record.get("end")) != (day, stamp, stamp + 86400):
+        raise ValueError(f"Expected an ordered MT5 query covering UTC day {day}")
+    attempts = record.get("attempts")
+    final = attempts[-1] if isinstance(attempts, list) and attempts else None
+    if not isinstance(final, dict) or type(final.get("code")) is not int:
+        raise ValueError(f"Missing terminal result for MT5 query on {day}")
+    if final["code"] != 1:
+        if "rows" in record or "sha256" in record:
+            raise ValueError(f"Failed MT5 query claimed retained data for {day}")
+        return None
+    if not record.get("sha256"):
+        raise ValueError(f"Missing SHA-256 for successful MT5 query on {day}")
+    path = directory / (day + ".npy")
+    try:
+        decoded = decode_mt5_day(path, stamp, record["sha256"])
+    except FileNotFoundError as error:
+        raise ValueError(f"Missing {path.name} for successful MT5 query") from error
+    except (ValueError, EOFError) as error:
+        raise ValueError(f"Invalid retained MT5 data for {day}: {error}") from error
+    if len(decoded[1]) != record.get("rows"):
+        raise ValueError(f"MT5 query row count differs from retained data for {day}")
+    return decoded
+
+
 def mt5_calendar_report(receipt, expected_sha, preflight):
     raw = receipt.read_bytes()
     receipt_sha = sha256(raw).hexdigest()
@@ -371,17 +396,14 @@ def mt5_calendar_report(receipt, expected_sha, preflight):
     ledger = json.loads(raw)
     if ledger["symbol"] != "EURUSD" or ledger["digits"] != 5 or ledger["source"] != "MT5_COPY_TICKS_ALL":
         raise ValueError("Only five-decimal COPY_TICKS_ALL EURUSD MT5 captures are admitted")
-    source = MT5Source(receipt.parent)
-    captured_days, raw_hours = [], {}
+    captured_days, failed_days, raw_hours = [], [], {}
     for record, stamp in zip(ledger["days"], range(START, END, 86400), strict=True):
-        path = source.files[stamp]
-        file_digest, millis, bids, asks = decode_mt5_day(path, stamp)
-        expected_claim = (path.stem, stamp, stamp + 86400, file_digest, len(millis), 1)
-        claim = (record["day"], record["start"], record["end"], record["sha256"], record["rows"],
-                 record["attempts"][-1]["code"])
-        if claim != expected_claim:
-            raise ValueError(("MT5 manifest differs from original day bytes", path.stem))
-        captured_days.append(dict(day=path.stem, sha256=file_digest, rows=len(millis)))
+        decoded = read_mt5_claim(receipt.parent, record, stamp)
+        if decoded is None:
+            failed_days.append({key: record[key] for key in ("day", "start", "end", "attempts")})
+            continue
+        file_digest, millis, bids, asks = decoded
+        captured_days.append(dict(day=record["day"], sha256=file_digest, rows=len(millis)))
         for hour, indices in groupby(range(len(millis)), lambda i: int(millis[i]) // 3_600_000):
             selected = list(indices)
             first, last = selected[0], selected[-1]
@@ -395,7 +417,10 @@ def mt5_calendar_report(receipt, expected_sha, preflight):
         times, stamps = [], list(group)
         for stamp in stamps:
             row_times, first, last = raw_hours.get(stamp, ([], None, None))
-            if is_open:
+            day_sha = ledger["days"][(stamp - START) // 86400].get("sha256")
+            if day_sha is None:
+                status = "OPEN_QUERY_FAILED" if is_open else "CLOSED_QUERY_FAILED"
+            elif is_open:
                 status = "OBSERVED_OPEN" if row_times else "MISSING_OPEN"
                 times.extend(row_times)
             else:
@@ -403,7 +428,6 @@ def mt5_calendar_report(receipt, expected_sha, preflight):
                 if row_times:
                     contradictions.append(dict(start=stamp, count=len(row_times),
                                                 first=first.proof(), last=last.proof()))
-            day_sha = captured_days[(stamp - START) // 86400]["sha256"]
             hours.append(dict(start=stamp, end=stamp + 3600, rows=len(row_times), status=status,
                               first_ms=first.time_ms if first else None,
                               last_ms=last.time_ms if last else None,
@@ -418,15 +442,21 @@ def mt5_calendar_report(receipt, expected_sha, preflight):
                 gaps.append([start_ms, end_ms])
 
     count = Counter(hour["status"] for hour in hours)
-    accepted = not contradictions and not count["MISSING_OPEN"] and not gaps
-    report = dict(capture_sha256=receipt_sha, captured_days=captured_days,
+    reasons = []
+    if contradictions:
+        reasons.append("RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR")
+    if failed_days:
+        reasons.append("INCOMPLETE_TERMINAL_QUERIES")
+    if count["MISSING_OPEN"] or gaps:
+        reasons.append("OPEN_SESSION_COVERAGE_INCOMPLETE")
+    report = dict(capture_sha256=receipt_sha, captured_days=captured_days, failed_days=failed_days,
                   source_rows=sum(day["rows"] for day in captured_days),
                   open_rows=sum(h["rows"] for h in hours if h["status"] == "OBSERVED_OPEN"),
                   counts=dict(count), closed_rows=sum(h["count"] for h in contradictions),
                   closed_hours_with_observations=contradictions,
                   missing_open_seconds=[h["start"] for h in hours if h["status"] == "MISSING_OPEN"],
                   open_gaps_ms=gaps, max_open_gap_ms=max((b - a for a, b in gaps), default=0),
-                  accepted_for_replay=accepted, used_raw_timestamps=True)
+                  accepted_for_replay=not reasons, reasons=reasons, used_raw_timestamps=True)
     if preflight:
         try:
             report["product_preflight"] = verify_preflight(preflight, receipt, receipt_sha, hours, report)
@@ -444,12 +474,7 @@ def verify_preflight(repo, receipt, receipt_sha, hours, oracle):
                        check=True, capture_output=True, text=True)
         observed = json.loads(result.read_text())
     expected_status = "ELIGIBLE_FOR_INDEPENDENT_REPLAY" if oracle["accepted_for_replay"] else "REJECTED"
-    reasons = []
-    if oracle["closed_rows"]:
-        reasons.append("RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR")
-    if oracle["missing_open_seconds"] or oracle["open_gaps_ms"]:
-        reasons.append("OPEN_SESSION_COVERAGE_INCOMPLETE")
-    want = {"status": expected_status, "reasons": reasons, "capture_sha256": receipt_sha,
+    want = {"status": expected_status, "reasons": oracle["reasons"], "capture_sha256": receipt_sha,
             "hours": hours, "counts": oracle["counts"],
             "rows": oracle["source_rows"], "closed_rows": oracle["closed_rows"],
             "open_gaps_ms": oracle["open_gaps_ms"]}

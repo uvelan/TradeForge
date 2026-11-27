@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import runpy
+import shutil
 import subprocess
 import sys
 from types import SimpleNamespace
@@ -147,38 +148,120 @@ def mt5_source(tmp_path_factory):
     return receipt
 
 
-@pytest.mark.parametrize("mismatch", [False, True])
-def test_mt5_rejection_and_preflight_disagreement(tmp_path, clean_repo, mt5_source, mismatch):
-    output = tmp_path / "acceptance.json"
-    env = os.environ | {"PYTHONPATH": str(ROOT)}
-    # Supply the real audit code through PYTHONPATH, or a deliberately divergent
-    # product checkout whose audit reports eligibility for this empty archive.
+def mt5_cli(receipt, output, repo=None):
+    pin = sha256(receipt.read_bytes()).hexdigest()
+    args = [sys.executable, str(SCRIPT), "--mt5-capture", str(receipt),
+            "--mt5-sha256", pin, "--output", str(output)]
+    if repo:
+        args += ["--mt5-preflight", str(repo)]
+    proc = subprocess.run(args, env=os.environ | {"PYTHONPATH": str(ROOT)},
+                          capture_output=True, text=True)
+    assert output.is_file(), (proc.returncode, proc.stderr)
+    return proc.returncode, json.loads(output.read_text())
+
+
+def failed_query_receipt(tmp_path, mt5_source, day):
+    directory = tmp_path / "capture"
+    shutil.copytree(mt5_source.parent, directory)
+    receipt = directory / "capture.json"
+    manifest = json.loads(receipt.read_text())
+    claim = manifest["days"][day - 1]
+    del claim["sha256"], claim["rows"]
+    claim["attempts"] = [dict(code=-1, response_rows=None), dict(code=-10005, response_rows=None)]
+    source_file = directory / (claim["day"] + ".npy")
+    if day == 1:
+        # A leftover file from a different run cannot turn a failed query into a success.
+        source_file.write_bytes(b"unclaimed bytes")
+    else:
+        source_file.unlink()
+    receipt.write_text(json.dumps(manifest))
+    return receipt, claim
+
+
+@pytest.mark.parametrize(("day", "open_hours", "closed_hours"), [(1, 0, 24), (2, 2, 22), (3, 24, 0)])
+def test_partial_mt5_queries(tmp_path, clean_repo, mt5_source, day, open_hours, closed_hours):
+    receipt, claim = failed_query_receipt(tmp_path, mt5_source, day)
+    code, report = mt5_cli(receipt, tmp_path / "report.json", clean_repo)
+    assert code == 0 and report["passed"], report["first_divergence"]
+    mt5 = report["mt5"]
+    assert not mt5["accepted_for_replay"]
+    assert mt5["failed_days"] == [claim]
+    assert len(mt5["captured_days"]) == 29
+    assert all(item["rows"] == 0 for item in mt5["captured_days"])
+    counts = mt5["counts"]
+    assert counts.get("OPEN_QUERY_FAILED", 0) == open_hours
+    assert counts.get("CLOSED_QUERY_FAILED", 0) == closed_hours
+    assert counts["MISSING_OPEN"] == 482 - open_hours
+    assert counts["SCHEDULED_CLOSURE"] == 238 - closed_hours
+    assert mt5["reasons"] == ["INCOMPLETE_TERMINAL_QUERIES", "OPEN_SESSION_COVERAGE_INCOMPLETE"]
+    preflight = mt5["product_preflight"]
+    assert preflight["parity_passed"] and preflight["status"] == "REJECTED"
+    assert preflight["reasons"] == mt5["reasons"]
+
+
+@pytest.mark.parametrize(("fault", "diagnostic"), [
+    ("missing-file", "missing"), ("missing-pin", "missing"), ("corrupt-file", "sha-256 mismatch"),
+])
+def test_successful_mt5_query_requires_pinned_bytes(tmp_path, mt5_source, fault, diagnostic):
+    directory = tmp_path / "capture"
+    shutil.copytree(mt5_source.parent, directory)
+    receipt = directory / "capture.json"
+    day = "2025-11-03"
+    path = directory / (day + ".npy")
+    if fault == "missing-file":
+        path.unlink()
+    elif fault == "missing-pin":
+        manifest = json.loads(receipt.read_text())
+        del manifest["days"][2]["sha256"]
+        receipt.write_text(json.dumps(manifest))
+    else:
+        path.write_bytes(b"corrupt bytes")
+    code, report = mt5_cli(receipt, tmp_path / "report.json")
+    assert code == 1 and not report["passed"]
+    diff = report["first_divergence"]
+    assert (diff["source"], diff["stage"]) == ("mt5", "source_validation")
+    assert day in diff["diagnostic"] and diagnostic in diff["diagnostic"].lower()
+
+
+@pytest.mark.parametrize("fault", [None, "status", "partial-hour"])
+def test_mt5_rejection_and_preflight_disagreement(tmp_path, clean_repo, mt5_source, fault):
+    receipt = mt5_source
     repo = clean_repo
-    if mismatch:
+    if fault:
         repo = tmp_path / "mutant"
         subprocess.run(["git", "clone", "--quiet", str(clean_repo), str(repo)], check=True)
         scripts = repo / "scripts"
         scripts.mkdir()
         (scripts / "__init__.py").touch()
+        if fault == "partial-hour":
+            receipt, claim = failed_query_receipt(tmp_path, mt5_source, 3)
+            mutation = 'result["hours"][48]["status"] = "MISSING_OPEN"'
+        else:
+            mutation = 'result["status"] = "ELIGIBLE_FOR_INDEPENDENT_REPLAY"'
+        audit = ROOT / "scripts" / "month_mt5_audit.py"
         (scripts / "month_mt5_audit.py").write_text(
-            "import json, sys\nfrom pathlib import Path\n"
-            "Path(sys.argv[-1]).write_text(json.dumps({'status': 'ELIGIBLE_FOR_INDEPENDENT_REPLAY'}))\n")
+            f"import runpy, sys, json\nfrom pathlib import Path\nrunpy.run_path({str(audit)!r}, run_name='__main__')\n"
+            f"path = Path(sys.argv[-1])\nresult = json.loads(path.read_text())\n{mutation}\n"
+            "path.write_text(json.dumps(result))\n")
         subprocess.run(["git", "add", "scripts"], cwd=repo, check=True)
         subprocess.run(["git", "-c", "user.email=test@example.invalid", "-c", "user.name=Test",
                         "commit", "--quiet", "-m", "divergent product audit"], cwd=repo, check=True)
-    proc = subprocess.run([sys.executable, str(SCRIPT), "--mt5-capture", str(mt5_source),
-                           "--mt5-preflight", str(repo), "--output", str(output)],
-                          env=env, capture_output=True, text=True)
-    assert proc.returncode == int(mismatch), proc.stderr
-    report = json.loads(output.read_text())
+    code, report = mt5_cli(receipt, tmp_path / "acceptance.json", repo)
+    assert code == int(bool(fault)) and report["passed"] is (fault is None), report["first_divergence"]
     assert report["mt5"]["accepted_for_replay"] is False
-    assert report["passed"] is (not mismatch)
-    if mismatch:
-        assert report["first_divergence"] == dict(source="mt5", stage="mt5_preflight_status",
-                                                 expected="REJECTED", actual="ELIGIBLE_FOR_INDEPENDENT_REPLAY")
+    diff = report["first_divergence"]
+    if fault == "status":
+        assert diff == dict(source="mt5", stage="mt5_preflight_status",
+                            expected="REJECTED", actual="ELIGIBLE_FOR_INDEPENDENT_REPLAY")
+    elif fault == "partial-hour":
+        assert diff["source"] == "mt5" and diff["stage"] == "mt5_preflight_hours"
+        assert diff["at_ms"] == claim["start"] * 1000
+        assert diff["expected"]["status"] == "OPEN_QUERY_FAILED"
+        assert diff["actual"]["status"] == "MISSING_OPEN"
+        assert report["mt5"]["product_preflight"]["status"] == "REJECTED"
     else:
         assert report["mt5"]["product_preflight"]["status"] == "REJECTED"
-        assert report["first_divergence"] is None
+        assert diff is None
 
 
 if __name__ == "__main__":
