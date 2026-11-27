@@ -406,6 +406,7 @@
 .archive-replay-coverage strong { color: #eef4fb; font-weight: 600; }
 .archive-replay-coverage strong span { color: var(--workspace-muted); white-space: nowrap; }
 .archive-replay-warning { color: #efc185; }
+.archive-replay-coverage summary { cursor: pointer; }
 .archive-replay-inspection-controls {
   display: flex;
   flex-wrap: wrap;

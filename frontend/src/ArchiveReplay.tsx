@@ -22,6 +22,9 @@ export function FrozenReplayCoverage({panes, start, end}: {
       const coverage = 'candles' in data ? data.coverage : undefined;
       const count = 'candles' in data ? data.candles.length : 0;
       const partial = coverage && (coverage.gaps.length > 0 || coverage.truncated);
+      const edges = coverage?.slot_start != null && coverage.slot_end != null &&
+        (coverage.slot_start !== coverage.start || coverage.slot_end !== coverage.end)
+        ? {start:utc(coverage.slot_start),end:utc(coverage.slot_end)} : undefined;
       return <li key={view}>
         <strong>{replayPaneName(view)} <span>{data.symbol} {data.timeframe}</span></strong>
         <span>{count.toLocaleString()} closed {count === 1 ? 'bar' : 'bars'}</span>
@@ -30,6 +33,11 @@ export function FrozenReplayCoverage({panes, start, end}: {
           partial ? <span className="archive-replay-warning">Partial coverage · {coverage.gaps.length} UTC {coverage.gaps.length === 1 ? 'gap' : 'gaps'}
             {coverage.truncated && ' · truncated'}</span> :
           !coverage ? <span>Coverage unavailable</span> : <span>No UTC gaps reported</span>}
+        {count>0&&edges&&<details>
+          <summary className="archive-replay-warning">Partial edge coverage</summary>
+          <span>Eligible whole slots from <time dateTime={edges.start}>{edges.start}</time> to
+            {' '}<time dateTime={edges.end}>{edges.end}</time> (exclusive)</span>
+        </details>}
       </li>;
     })}</ul>
   </section>;

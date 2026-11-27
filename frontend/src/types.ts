@@ -6,7 +6,8 @@ export type ChartSymbol=SymbolName|'BTCUSDT';
 export interface Candle {time:number;available_at?:number;open:number;high:number;low:number;close:number;volume?:number;
   availability_basis?:'ARCHIVE_SUPPLIED'|'MODELED_NOMINAL_CLOSE';source_partition_indexes?:number[]}
 export type CandleRange = {start:number;end:number};
-export interface CandleCoverage extends CandleRange {gaps:CandleRange[];duplicate_bars:number;truncated:boolean}
+export interface CandleCoverage extends CandleRange {gaps:CandleRange[];duplicate_bars:number;truncated:boolean;
+  slot_start?:number;slot_end?:number}
 export interface ArchiveOrigin {file_observations?:string;source_completeness:string;reconstruction:string;source_sha256?:string;start?:number;end?:number;checked_bars?:number;missing_slots?:number[]}
 export interface CandleResponse {source_completeness?:"UNVERIFIED";origin?:ArchiveOrigin;source:ChartSource;synthetic:boolean;price_basis:string;candles:Candle[];replay_cutoffs?:number[];dataset_id?:string;feed_id?:string;latest_unconfirmed?:boolean;coverage?:CandleCoverage;partitions?:{id:string;sha256:string}[]}
 export interface BrokerSymbol {name:string;description:string;digits:number}

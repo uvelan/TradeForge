@@ -10,6 +10,7 @@ export type StrictSmtContext = {
   timeframe: Timeframe;
   cutoff: number;
   rules: SmtRules;
+  unavailable?: string;
 };
 
 type Pivot = {time: number; price: number; nominal_confirmation: number; available_at: number};
@@ -48,13 +49,14 @@ export function StrictSmtEvidence({context}: {context: StrictSmtContext}) {
   const [calendar, setCalendar] = useState<Calendar>('unknown');
   const primary = frozen(context.primary, context.timeframe, calendar);
   const comparison = frozen(context.comparison, context.timeframe, calendar);
-  const body = primary && comparison && calendar !== 'unknown' ? JSON.stringify({
+  const body = !context.unavailable && primary && comparison && calendar !== 'unknown' ? JSON.stringify({
     primary, comparison, relationship: 'POSITIVE', cutoff: context.cutoff, ...context.rules,
   }) : '';
 
   return <section className="smt-rules" aria-label="Strict causal SMT">
     <small>Positive relationship · {context.timeframe} · cutoff {utc(context.cutoff)}</small>
-    {!primary || !comparison ? <small role="status">Select two compatible saved archives. Replay requires both frozen instruments.</small> :
+    {context.unavailable ? <small role="status">{context.unavailable}</small> :
+      !primary || !comparison ? <small role="status">Select two compatible saved archives. Replay requires both frozen instruments.</small> :
       <label>Shared SMT market hours
         <select value={calendar} onChange={event => setCalendar(event.target.value as Calendar)}>
           <option value="unknown">Select market hours</option>

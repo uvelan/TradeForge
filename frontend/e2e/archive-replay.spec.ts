@@ -14,12 +14,13 @@ function capture(rangeStart = start): ReplaySession {
   const metadata = {
     source:'DUKASCOPY_SAVED' as const, synthetic:false, feed_id:'fixture-feed', price_basis:'BID',
     partitions:[partition], latest_unconfirmed:false,
-    coverage:{start:rangeStart,end:rangeStart+900,gaps:[],duplicate_bars:0,truncated:false},
+    coverage:{start:rangeStart,end:rangeStart+1020,slot_start:rangeStart,slot_end:rangeStart+900,
+      gaps:[],duplicate_bars:0,truncated:false},
   };
   const candles = [bar(0,15,1.13),bar(5,10,1.14),bar(10,15,1.15)];
   return {
     id:'archive-'+rangeStart,
-    request:{start:rangeStart,end:rangeStart+900,window_bars:5000},
+    request:{start:rangeStart,end:rangeStart+1020,window_bars:5000},
     market:{...metadata,candles,replay_cutoffs:[rangeStart+600,rangeStart+900,rangeStart+900]},
     views:{
       '2':{...metadata,symbol:'GBPUSD',timeframe:'M5',candles:[bar(0,5,1.30),bar(10,15,1.31)],
@@ -31,15 +32,15 @@ function capture(rangeStart = start): ReplaySession {
   };
 }
 
-async function openArchive(page: Page) {
-  await page.addInitScript(() => {
+async function openArchive(page: Page, preferences: Record<string,string> = {}) {
+  await page.addInitScript(preferences => {
     for (const [setting,value] of Object.entries({
       source:'DUKASCOPY_SAVED', timeframe:'M5','chart-views':'4','link-replay':'off',
       'view-2-symbol':'GBPUSD','view-3-symbol':'USDJPY','view-4-symbol':'XAUUSD',
-      'secondary-timeframe':'M5','view-3-frame':'M5','view-4-frame':'M5',
+      'secondary-timeframe':'M5','view-3-frame':'M5','view-4-frame':'M5',...preferences,
     })) localStorage.setItem('tradeforge.workspace.'+setting,value);
     if (sessionStorage.getItem('different-replay-layout')) localStorage.setItem('tradeforge.workspace.chart-views','1');
-  });
+  },preferences);
   await page.route('**/research/api/market/candles?*', route => route.fulfill({
     status:404,json:{detail:'Archive preview unavailable'},
   }));
@@ -47,11 +48,12 @@ async function openArchive(page: Page) {
   await page.getByRole('button',{name:'Market Terminal',exact:true}).press('Enter');
 }
 
-async function openRange(page:Page, day = '2026-01-05') {
+async function openRange(page:Page, day = '2026-01-05', minutes = 17) {
+  const until=stamp(Date.parse(day+'T06:00Z')/1000+minutes*60);
   await page.getByLabel('From UTC',{exact:true}).fill(day);
-  await page.getByLabel('Until UTC (exclusive)',{exact:true}).fill(day);
+  await page.getByLabel('Until UTC (exclusive)',{exact:true}).fill(until.slice(0,10));
   await page.getByLabel('From time (UTC)',{exact:true}).fill('06:00');
-  await page.getByLabel('Until time (UTC)',{exact:true}).fill('06:15');
+  await page.getByLabel('Until time (UTC)',{exact:true}).fill(until.slice(11,16));
   await page.getByRole('button',{name:'Load saved range'}).press('Enter');
 }
 
@@ -63,7 +65,7 @@ test('inspects and restores the selected frozen candle without exposing out-of-c
     const body = route.request().postDataJSON();
     captured.resolve();
     expect(body).toMatchObject({
-      start,end:start+900,window_bars:5000,
+      start,end:start+1020,window_bars:5000,
       views:[
         {view:'2',symbol:'GBPUSD',timeframe:'M5' satisfies Timeframe},
         {view:'3',symbol:'USDJPY',timeframe:'M5' satisfies Timeframe},
@@ -102,6 +104,9 @@ test('inspects and restores the selected frozen candle without exposing out-of-c
   await expect(page.getByRole('region',{name:'Chart view 3'})).toContainText('No verified archive');
   const picker=page.getByRole('combobox',{name:'Inspection pane'});
   await expect(picker).toBeFocused();
+  const edge=coverage.getByText('Partial edge coverage',{exact:true}).first();
+  await edge.press('Enter');
+  await expect(edge.locator('..').locator('time').last()).toHaveAttribute('dateTime',stamp(start+900));
   await picker.press('End');
   await expect(picker).toHaveValue('4');
   const slider=page.getByRole('slider',{name:'Inspect candle'});
@@ -167,4 +172,49 @@ test('discards an old capture after the operator leaves and returns to the same 
   await freeze.press('Enter');
   await expect(page.getByRole('alert').filter({hasText:'Select a replay range of at most 5,000 bars per pane.'})).toBeVisible();
   await expect(freeze).toBeEnabled();
+});
+
+test('reports existing analysis limits without submitting out-of-bounds overlays',async({page})=>{
+  const session=capture();
+  const count=2001;
+  const interval=300;
+  const end=start+count*interval;
+  const candles=Array.from({length:count},(_,index)=>({
+    ...session.market.candles[0],time:start+index*interval,available_at:start+(index+1)*interval,
+  }));
+  session.request={...session.request,end};
+  session.market={...session.market,candles,replay_cutoffs:candles.map(bar=>bar.available_at),
+    coverage:{...session.market.coverage!,end,slot_end:end}};
+  session.views.comparison={...session.market,symbol:'GBPUSD',timeframe:'M5',
+    partitions:Array.from({length:51},(_,index)=>({...partition,id:'comparison-'+index}))};
+  await page.route('**/research/api/replay/sessions',route=>route.fulfill({status:201,json:session}));
+  const indicatorLengths: number[]=[];
+  let smtRequests=0;
+  await page.route('**/indicators/evaluate',route=>{
+    indicatorLengths.push(route.request().postDataJSON().candles.length);
+    return route.fulfill({json:{results:[]}});
+  });
+  await page.route('**/indicators/smt',route=>{
+    smtRequests++;
+    return route.fulfill({json:{events:[],alerts:[]}});
+  });
+  await page.route('**/indicators/smt/strict',route=>{
+    smtRequests++;
+    return route.fulfill({status:400,json:{detail:'Unexpected out-of-bounds SMT request'}});
+  });
+
+  await openArchive(page, {indicator:'ema','chart-comparison':'GBPUSD'});
+  await openRange(page, '2026-01-05', count*5);
+  await page.getByRole('button',{name:'Freeze range for replay'}).press('Enter');
+  await expect(page.getByText('Indicators unavailable at this cutoff. Evaluation accepts up to 2,000 candles.')).toBeVisible();
+  await expect(page.getByText('SMT overlay unavailable. Each archive must contain at most 2,000 candles.')).toBeVisible();
+  await page.getByText('SMT monitor',{exact:true}).press('Enter');
+  await page.getByRole('combobox',{name:'SMT evidence mode'}).press('End');
+  await expect(page.getByText('Strict SMT unavailable. Each archive must contain at most 50 source partitions.')).toBeVisible();
+  expect(indicatorLengths).toEqual([]);
+  expect(smtRequests).toBe(0);
+
+  await page.getByRole('slider',{name:'Replay timeline'}).press('Home');
+  await expect.poll(()=>indicatorLengths).toEqual([1]);
+  expect(smtRequests).toBe(0);
 });

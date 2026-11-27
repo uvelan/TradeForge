@@ -487,7 +487,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const options=[...new Set([symbol,...(isBinance?[]:source==='MT5'?instruments.map(item=>item.name):watchSymbols)])];
   const compare=replaySession?replaySession.views.comparison?.symbol??'':
     expanded&&comparisonSymbol!==symbol&&options.includes(comparisonSymbol)?comparisonSymbol:'';
-  const comparison=useViewCandles(compare,timeframe,source,refreshCount,cutoff,true,range,replaySession?.views.comparison);
+  const frozenComparison=replaySession?.views.comparison;
+  const comparison=useViewCandles(compare,timeframe,source,refreshCount,cutoff,true,range,frozenComparison);
   const feedIdentity=(feed:CandleResponse|null|undefined)=>feed&&[
     feed.feed_id,feed.price_basis,feed.dataset_id,feed.partitions?.map(part=>[part.id,part.sha256]),
   ];
@@ -534,7 +535,20 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const firstFeed=smtFeed(symbol,replayData??(data?.source===source?data:undefined));
   const secondFeed=smtFeed(compare,comparison.feed);
   const missingSmtFeed=source!=='DEMO'&&Boolean(compare)&&Boolean(data&&comparison.feed)&&(!firstFeed||!secondFeed);
-  const smt=useSmt(indicatorCandles,comparison.candles,timeframe,showSmt==='on'&&Boolean(compare)&&(replayActive||!busy&&!error)&&validRules&&
+  const nativeSmtPair=replayArchive&&replayData&&frozenComparison&&'candles' in frozenComparison ?
+    [replayData,frozenComparison] : [];
+  const smtPartitionLimit=nativeSmtPair.some(feed=>(feed.partitions?.length??0)>50);
+  const smtUnaligned=nativeSmtPair.some(({coverage})=>coverage&&
+    (coverage.start%replayStep!==0||coverage.end%replayStep!==0));
+  const legacySmtLimit=showSmt==='on' ? (nativeSmtPair.some(feed=>feed.candles.length>2000) ?
+    'SMT overlay unavailable. Each archive must contain at most 2,000 candles.' :
+    smtPartitionLimit ? 'SMT overlay unavailable. Each archive must contain at most 50 source partitions.' :
+    smtUnaligned ? 'SMT overlay unavailable. Archive boundaries must align with the chart timeframe.' : undefined) : undefined;
+  const strictSmtLimit=smtPartitionLimit ? 'Strict SMT unavailable. Each archive must contain at most 50 source partitions.' :
+    nativeSmtPair.some(({coverage})=>coverage&&coverage.end-coverage.start>10000*replayStep) ?
+      'Strict SMT unavailable. Each archive must span at most 10,000 UTC candle slots.' :
+      smtUnaligned ? 'Strict SMT unavailable. Archive boundaries must align with the chart timeframe.' : undefined;
+  const smt=useSmt(indicatorCandles,comparison.candles,timeframe,showSmt==='on'&&!legacySmtLimit&&Boolean(compare)&&(replayActive||!busy&&!error)&&validRules&&
     (source==='DEMO'||Boolean(firstFeed&&secondFeed)),rules,firstFeed,secondFeed,replayActive,refreshCount,frameMinutes[timeframe]*60);
   const precisionFor=(name:string)=>instruments.find(item=>item.name===name)?.digits ?? (name==='BTCUSDT'?2:name==='USDJPY'||name==='XAUUSD'?3:5);
 
@@ -673,8 +687,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             strict={compare&&validRules&&(source==='MT5_SAVED'||source==='DUKASCOPY_SAVED')
               ? {primary:replayActive||!busy&&indicatorScope===loadedIndicatorScope ? firstFeed : undefined,
                 comparison:replayActive&&!replaySession?.views.comparison ? undefined : secondFeed,
-                timeframe,cutoff:indicatorCutoff,rules} : undefined}/>
-          <small role="status">{smt.error || comparison.error || smtCoverageNotice(smt.coverage) || (smt.authority==='VERIFIED_MT5_CAPTURE'?'SMT · verified MT5 candles':smt.authority==='VERIFIED_SAVED_DATASET'?'SMT · verified archive evidence':smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
+                timeframe,cutoff:indicatorCutoff,rules,unavailable:strictSmtLimit} : undefined}/>
+          <small role="status">{legacySmtLimit || smt.error || comparison.error || smtCoverageNotice(smt.coverage) || (smt.authority==='VERIFIED_MT5_CAPTURE'?'SMT · verified MT5 candles':smt.authority==='VERIFIED_SAVED_DATASET'?'SMT · verified archive evidence':smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
           {smt.alert?.confirmed_at&&<strong role="status">{(smt.pending || smt.error || smtCoverageNotice(smt.coverage)) ? 'Saved SMT_CONFIRMED' : 'SMT_CONFIRMED'} · {smt.alert.direction} · {symbol} / {compare} · {new Date(smt.alert.confirmed_at*1000).toISOString()}</strong>}
           {smt.alert?.event_key&&onSignal&&<button className="small-tool" onClick={()=>void onSignal({
             event_key:smt.alert!.event_key!,status:'SMT_CONFIRMED'
