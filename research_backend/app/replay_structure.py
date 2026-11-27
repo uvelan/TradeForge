@@ -9,9 +9,8 @@ from .indicator_coverage import MarketSchedule, replay_availability
 from .indicator_engine import EvidenceBar, structure_scope
 from .indicators import Bar
 from .liquidity import LiquidityDelivery, LiquidityRules, LiquidityStream, digest
-from .market import FRAME_MIN
 from .market_structure import StructureRules, detect_structure
-from .replay_hour import STEP, capture_start, verified_children
+from .replay_hour import STEP, capture_horizon, capture_start, verified_children
 from .structure_pages import StructureDelivery
 
 RULE_VERSION = 1
@@ -153,7 +152,7 @@ def verified_replay_rows(session, view, cutoff):
             or lane.get("symbol") not in {"EURUSD", "GBPUSD"} or lane.get("price_basis") != "BID"
             or not lane.get("coverage") or not primary.get("coverage") or not primary.get("candles")):
         raise HTTPException(422, "Inspection requires a saved Dukascopy EURUSD or GBPUSD M5 BID archive range")
-    horizon = max(primary["coverage"]["end"], replay_availability(primary["candles"][-1], FRAME_MIN[primary["timeframe"]]*60))
+    horizon = capture_horizon(primary)
     if not capture_start(primary) <= cutoff <= horizon:
         raise HTTPException(422, "Requested cutoff outside the captured replay session clock")
     rows = []

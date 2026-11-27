@@ -123,28 +123,33 @@ def read_partition_tail(file, max_rows):
     return table.slice(max(0, table.num_rows - max_rows)).to_pylist()
 
 
+@contextmanager
+def verified_partition_file(dataset, *, max_bytes=None):
+    from tempfile import TemporaryFile
+    from tradeforge.catalog import CatalogIntegrityError, verify_artifact
+    from .archive_provenance import require_market_partition
+
+    require_market_partition(dataset["id"])
+    path = (MARKET_DIR / dataset["relative_path"]).resolve()
+    if not path.is_relative_to(MARKET_DIR.resolve()):
+        raise ValueError("Invalid stored dataset path")
+    with TemporaryFile() as file:
+        try:
+            verify_artifact(path, dataset["sha256"], file, **({"max_bytes": max_bytes} if max_bytes is not None else {}))
+        except CatalogIntegrityError as exc:
+            raise RuntimeError(str(exc)) from exc
+        file.seek(0)
+        yield file
+
+
 def iter_complete_partition(dataset, *, max_rows, batch_size=8192, columns=None):
     """Verify and read every row in bounded batches, without the chart tail limit."""
     import pyarrow.parquet as pq
 
-    from .archive_provenance import require_market_partition
-
-    require_market_partition(dataset["id"])
     expected = dataset["rows_count"]
     if not 0 < expected <= max_rows or not 0 < batch_size <= 8192:
         raise ValueError("Partition exceeds the complete-read budget")
-    path = (MARKET_DIR / dataset["relative_path"]).resolve()
-    if not path.is_relative_to(MARKET_DIR.resolve()):
-        raise ValueError("Invalid stored dataset path")
-    from tempfile import TemporaryFile
-    from tradeforge.catalog import CatalogIntegrityError, verify_artifact
-
-    with TemporaryFile() as file:
-        try:
-            verify_artifact(path, dataset["sha256"], file)
-        except CatalogIntegrityError as exc:
-            raise RuntimeError(str(exc)) from exc
-        file.seek(0)
+    with verified_partition_file(dataset) as file:
         parquet = pq.ParquetFile(file)
         if parquet.metadata.num_rows != expected:
             raise ValueError("Partition row count differs from its manifest")
