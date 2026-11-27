@@ -237,3 +237,27 @@ def test_peer_range_slots_and_arrivals_are_bounded_by_the_same_exclusive_end(cli
     assert peer["coverage"]["start"] == START+10 and peer["coverage"]["end"] == START+961
     assert (peer["coverage"]["slot_start"],peer["coverage"]["slot_end"]) == (START+300, START+900)
     assert peer["coverage"]["gaps"] == [{"start":START+600, "end":START+900}]
+
+
+def test_explicit_terminal_clock_reaches_later_companion_and_restores_5001st_step(client):
+    partition([bar(i) for i in range(5000)])
+    end = START+5001*60
+    partition([bar(5000, available_at=end)], symbol="GBPUSD")
+    response = create(client, start=START, end=end, views=[{"view":"2","symbol":"GBPUSD","timeframe":"M1"}])
+    assert response.status_code == 201, response.text
+    session = response.json()
+    pane = session["market"]
+    clock = pane["replay_cutoffs"]
+    assert len(pane["candles"]) == 5000 and len(clock) == 5001
+    assert clock[-2:] == [end-60, end] and pane["terminal_cutoff"] == end
+    peer = session["views"]["2"]
+    assert peer["replay_cutoffs"] == [end] and "terminal_cutoff" not in peer
+    assert clock[-2] < peer["candles"][0]["available_at"] == clock[-1]
+    endpoint = SESSIONS+"/"+session["id"]
+    selected = {"view":"2", "time":end-60}
+    checkpoint = {"position":5000, "bookmarks":[4999,5000], "selected":selected}
+    assert client.post(endpoint+"/checkpoint", json=checkpoint).json() == checkpoint
+    restored = client.get(endpoint).json()
+    assert restored["checkpoint"] == checkpoint and restored["market"]["replay_cutoffs"] == clock
+    assert client.post(endpoint+"/checkpoint", json={"position":5001}).status_code == 422
+    assert client.post(endpoint+"/checkpoint", json={"position":5000,"bookmarks":[5001]}).status_code == 422

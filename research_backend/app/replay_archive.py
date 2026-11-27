@@ -160,6 +160,13 @@ def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, 
     if explicit and (start, end) != (requested_start, requested_end):
         # Fragments at the edges and unelapsed slots are outside the gap denominator.
         coverage.update(slot_start=start, slot_end=end)
-    # Clock positions follow arrival, independently of the UTC-open plot order.
-    return {"replay_cutoffs": sorted(bar["available_at"] for bar in candles), "price_basis": identity[1], "feed_id": identity[0], "partitions": pins, "candles": candles,
-            "coverage": coverage}
+    # Checkpoint positions address this arrival clock, independently of UTC candle order.
+    clock = sorted(bar["available_at"] for bar in candles)
+    pane = {"replay_cutoffs": clock, "price_basis": identity[1], "feed_id": identity[0],
+            "partitions": pins, "candles": candles, "coverage": coverage}
+    if explicit and clock and clock[-1] < cutoff:
+        # A sparse primary must still reveal companion arrivals through the requested boundary.
+        # Append a clock position without inventing a candle or moving any prior position.
+        clock.append(cutoff)
+        pane["terminal_cutoff"] = cutoff
+    return pane

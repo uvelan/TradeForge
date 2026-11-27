@@ -556,7 +556,7 @@ class ReplaySelection(BaseModel):
 
 class ReplayCheckpoint(BaseModel):
     selected: ReplaySelection | None = None
-    position:int = Field(ge=0,lt=MAX_WINDOW)
+    position:int = Field(ge=0,le=MAX_WINDOW)
     bookmarks:list[int] = Field(default_factory=list,max_length=50)
 
 
@@ -736,7 +736,8 @@ def replay_zones(session_id: str, cutoff: int = Query(ge=0),
 @app.post('/api/replay/sessions/{session_id}/checkpoint')
 def checkpoint_replay(session_id:str,checkpoint:ReplayCheckpoint):
     session=replay_session(session_id)
-    size=len(session["market"]["candles"])
+    market = session["market"]
+    size = len(market.get("replay_cutoffs", market["candles"]))
     if checkpoint.position>=size or any(not 0<=index<size for index in checkpoint.bookmarks):
         raise HTTPException(422,"Replay position or bookmark is outside the frozen snapshot")
     selected = checkpoint.selected
