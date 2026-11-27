@@ -152,13 +152,19 @@ test('keyboard placement, edit, undo and cancel keep focus visible on the archiv
   expect(await scene(page)).toEqual(undone);
 });
 
-test('first pointer placement after switching the active archive pane belongs to that pane',async({page})=>{
+test('first pointer placement after switching the active archive pane belongs to that pane',async({page},info)=>{
   await openReplay(page);
   const fourth=page.getByRole('region',{name:'Chart view 4'});
   const beforePrimary=await scene(page);
   const beforeFourth=await scene(page,'4');
   await page.getByRole('combobox',{name:'Inspection pane',exact:true}).selectOption('4');
+  const lane=fixture.request.views.find(lane=>lane.view==='4')!;
+  const toolbox=page.locator('.terminal-drawing-tools');
+  await expect(toolbox.locator('summary')).toContainText(`Chart view 4 · ${lane.symbol} ${lane.timeframe}`);
   await control(page,'Draw').click();
+  await expect(fourth.locator('.drawing-prompt')).toBeVisible();
+  await expect(page.getByRole('region',{name:'Primary chart'}).locator('.drawing-prompt')).toHaveCount(0);
+  await toolbox.screenshot({path:info.outputPath('companion-toolbox.png')});
   await click(page,fourth,.48,.67);
   await expect.poll(async()=>(await scene(page,'4')).revision,{timeout:4000}).toBe(beforeFourth.revision+1);
   expect(await scene(page)).toEqual(beforePrimary);

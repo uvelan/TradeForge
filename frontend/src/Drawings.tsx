@@ -201,7 +201,7 @@ export function drawingChartProps(book:DrawingBook,digits:number,active:boolean)
   };
 }
 
-export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>}) {
+export function DrawingToolbox({book,destination}: {book:DrawingBook;destination?:string}) {
   const [tool,setTool]=useWorkspacePreference<DrawingTool>('drawing-tool','trend',Object.keys(tools) as DrawingTool[]);
   const [expanded,setExpanded]=useWorkspacePreference("drawing-toolbox","closed",["open","closed"]);
   const item=book.current?.items.find(drawing=>drawing.id===book.selected);
@@ -212,7 +212,7 @@ export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>})
     if(item&&book.current)void book.save(book.current.items.map(drawing=>drawing.id===item.id?
       {...drawing,...changes,updated_at:now()}:drawing));
   };
-  return <details className="data-trust" open={expanded==="open"} onToggle={e=>setExpanded(e.currentTarget.open?"open":"closed")}><summary>Drawing toolbox {book.current?`(${book.current.items.length})`:''}</summary>
+  return <details className="data-trust" open={expanded==="open"} onToggle={e=>setExpanded(e.currentTarget.open?"open":"closed")}><summary>Drawing toolbox {book.current?`(${book.current.items.length})`:''}{destination&&<small className="muted"> · {destination}</small>}</summary>
     {book.error&&<p role="alert">{book.error} <button className="small-tool" disabled={book.saving} onClick={book.reload}>Reload drawings</button></p>}
     {!book.current&&!book.error&&<p role="status">Loading drawings</p>}
     <div className="research-controls">

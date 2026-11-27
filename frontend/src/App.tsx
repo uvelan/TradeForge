@@ -28,7 +28,7 @@ import {ReplayConfluenceEvidence} from './ReplayConfluenceEvidence';
 import {ArchiveSmtWatch} from './ArchiveSmtWatch';
 import {ArrivalPanel} from './ArrivalPanel';
 import {ReplayControls, visibleAt} from './ReplayControls';
-import {archiveViewIds, FrozenReplayCoverage, ReplayCandleInspector, type ArchivePane, type ArchiveViewId} from './ArchiveReplay';
+import {archiveViewIds, FrozenReplayCoverage, ReplayCandleInspector, replayPaneName, type ArchivePane, type ArchiveViewId} from './ArchiveReplay';
 import {SignalExplorer,signalSummary,type SignalRecord} from './SignalExplorer';
 import {DataTrust} from './DataTrust';
 import {CommandPalette,CommandSettings,type CommandTarget} from './CommandPalette';
@@ -453,6 +453,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const inspectedPane=archivePanes.find(({view})=>view===replaySelection?.view)??archivePanes[0];
   const drawingView=inspectedPane?.view??'primary';
   const activeBook=drawingBooks[drawingView];
+  const drawingDestination=inspectedPane&&`${replayPaneName(drawingView)} · ${inspectedPane.data.symbol} ${inspectedPane.data.timeframe}`;
   // Cancel an unfinished gesture when the operator leaves its pane. Committed writes
   // still resolve against the originating book and chart market.
   useLayoutEffect(()=>()=>activeBook.setEdit(undefined),[drawingView,activeBook.setEdit]);
@@ -674,7 +675,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             {levels.map(level=><button className="small-tool" key={level.id}
               onClick={()=>changeLevels(levels.filter(item=>item.id!==level.id))}>Remove {level.price.toFixed(digits)}</button>)}
           </div></details>:null}
-        <div className="terminal-drawing-tools"><DrawingToolbox key={drawingView} book={activeBook}/></div>
+        <div className="terminal-drawing-tools"><DrawingToolbox key={drawingView} book={activeBook} destination={drawingDestination}/></div>
         {chartViewCount>1&&<details className="data-trust"><summary>Chart synchronization</summary>
           <div className="research-controls">{([
             ['Crosshair',linkCrosshair,setLinkCrosshair],['Time range',linkRange,setLinkRange],['Zoom',linkZoom,setLinkZoom],
