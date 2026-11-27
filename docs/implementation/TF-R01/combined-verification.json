@@ -1,0 +1,50 @@
+{
+  "tested": "d4b4773ffb661ecb730af0fcc4a8cc0b0ec55bc5",
+  "suites": [
+    {
+      "id": "unit",
+      "start": "2026-11-27T06:15:07.806Z",
+      "end": "2026-11-27T06:15:15.439Z",
+      "code": 0,
+      "elapsed": 3.1826561,
+      "tail": " Test Files  4 passed (4)\r\n      Tests  13 passed (13)\r\n   Start at  11:45:14\r\n   Duration  826ms (transform 53%, worker 21%, import 17%, tests 8%)\r\n\r\nELAPSED=3.1826561\r\n",
+      "cmd": "npm --prefix frontend test"
+    },
+    {
+      "id": "build",
+      "start": "2026-11-27T06:15:07.806Z",
+      "end": "2026-11-27T06:16:04.182Z",
+      "code": 0,
+      "elapsed": 51.9898087,
+      "tail": "   │ \r\n   │ Help: For more information, see https://rolldown.rs/in-depth/directives#other-directives\r\n───╯\r\n\r\n✓ built in 5.18s\r\nELAPSED=51.9898087\r\n",
+      "cmd": "npm --prefix frontend run build"
+    },
+    {
+      "id": "backend",
+      "start": "2026-11-27T06:15:07.805Z",
+      "end": "2026-11-27T06:28:21.217Z",
+      "code": 0,
+      "elapsed": 788.2706828,
+      "tail": "  K:\\Projects\\TradeForge\\.venv\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\r\n    from starlette.testclient import TestClient as TestClient  # noqa\r\n\r\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\r\n1238 passed, 1 skipped, 1 warning in 786.61s (0:13:06)\r\nELAPSED=788.2706828\r\n",
+      "cmd": "$env:TRADEFORGE_T10_SOURCE_STORAGE=(Resolve-Path storage).Path\n$env:TRADEFORGE_T07_REAL_BI5=(Resolve-Path storage/t06-input/13h_ticks.bi5).Path\n.venv/Scripts/python.exe -m pytest -q"
+    },
+    {
+      "id": "standard",
+      "start": "2026-11-27T06:15:07.806Z",
+      "end": "2026-11-27T06:23:27.248Z",
+      "code": 0,
+      "elapsed": 496.1119823,
+      "tail": "  ok 89 e2e\\drawing-placement.spec.ts:624:1 › Escape cancels all armed modes and an active drag cannot complete in a replacement mode (4.7s)\r\n  ok 90 e2e\\drawing-placement.spec.ts:668:1 › horizontal drags reject outside, missing candle and pointer cancellation (2.6s)\r\n  ok 91 e2e\\drawing-placement.spec.ts:703:1 › negative chart prices are rejected and navigation still pans and zooms (3.4s)\r\n\r\n  91 passed (8.3m)\r\nELAPSED=496.1119823\r\n",
+      "cmd": "$env:TRADEFORGE_E2E_API_PORT='8786'\n$env:TRADEFORGE_E2E_UI_PORT='4786'\nnpm --prefix frontend run e2e -- --retries=0"
+    },
+    {
+      "id": "recorded",
+      "start": "2026-11-27T06:15:07.806Z",
+      "end": "2026-11-27T06:17:51.785Z",
+      "code": 0,
+      "elapsed": 158.2907266,
+      "tail": "(Use `node --trace-warnings ...` to show where the warning was created)\r\n  ok 1 recorded-e2e\\recorded-backtest.spec.ts:5:1 › Strategy Lab checkpoints and reopens the recorded EURUSD historical session (10.2s)\r\n  ok 2 recorded-e2e\\recorded-workspace.spec.ts:28:1 › pinned recorded EURUSD ticks reach the chart, frozen replay and saved evidence (2.3m)\r\n\r\n  2 passed (2.6m)\r\nELAPSED=158.2907266\r\n",
+      "cmd": "$env:TRADEFORGE_E2E_API_PORT='8787'\n$env:TRADEFORGE_E2E_UI_PORT='4787'\nnpm --prefix frontend run e2e -- --config playwright.recorded.config.ts --retries=0"
+    }
+  ]
+}
