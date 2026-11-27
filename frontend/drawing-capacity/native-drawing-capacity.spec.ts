@@ -41,7 +41,7 @@ async function readBook(page:Page,path:string):Promise<Book>{
 }
 const controls=(page:Page)=>page.getByRole('button',{name:'Market Terminal',exact:true});
 const planner=(page:Page)=>page.getByRole('button',{name:'Trade Planner',exact:true});
-const selectDrawing=(page:Page)=>page.getByLabel('Select drawing',{exact:true});
+const selectDrawing=(page:Page)=>page.getByLabel('Select drawing');
 
 async function verifyPaint(page:Page,palette:string[][]){
   await page.waitForFunction(({panes,palette})=>panes.every((selector,index)=>{
@@ -143,7 +143,12 @@ async function dragOnChart(page:Page,target:Drawing,path:string,before:Book){
   },{selector:panes[0],row:base.row,y:base.row+delta},{timeout:6000});
   const dragMs=(await preview.jsonValue()).ms;
 
-  await page.evaluate(selector=>window.drawingCapacity.arm('save',selector),panes[0]);
+  const resourceEntriesBeforeSave=await page.evaluate(selector=>{
+    const entries=performance.getEntriesByType('resource').length;
+    performance.clearResourceTimings();
+    window.drawingCapacity.arm('save',selector);
+    return entries;
+  },panes[0]);
   const [posted]=await Promise.all([
     page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith(path)),
     page.mouse.up(),
@@ -168,12 +173,12 @@ async function dragOnChart(page:Page,target:Drawing,path:string,before:Book){
     const row=window.drawingCapacity.surface(selector)?.strokes.find(stroke=>stroke.color===color)?.row;
     return row!==undefined&&Math.abs(row-expected)<4?{row}:undefined;
   },{selector:panes[0],color:target.color,expected:base.row+delta},{timeout:6000});
-  return {dragMs,saveMs,next,row:(await finalPaint.jsonValue()).row};
+  return {dragMs,saveMs,next,resourceEntriesBeforeSave,row:(await finalPaint.jsonValue()).row};
 }
 
 type Trial={trial:number;warmup:boolean;frames:number[];frameP95Ms:number;clickToSelectionMs:number;
   dragToVisibleMs:number;releaseToSaveMs:number;reopenMs:number;rendered:number[];persisted:number[];
-  target:string;before:Anchor;after:Anchor;reopenedRow:number;unmountedHeapBytes:number;resources:Record<string,number>};
+  target:string;before:Anchor;after:Anchor;reopenedRow:number;resourceEntriesBeforeSave:number;unmountedHeapBytes:number;resources:Record<string,number>};
 type Tier={drawings:number;persisted:number[];rendered:number[];scopes:string[];samples:Trial[]};
 
 test('drawing capacity on a real four-pane saved replay',async({page,browser},info)=>{
@@ -245,6 +250,8 @@ test('drawing capacity on a real four-pane saved replay',async({page,browser},in
       await page.getByLabel('Market data source').selectOption(fixture.request.source);
       report.stage='open '+tier.drawings;
       tier.rendered=(await openReplay(page,fixture,palette)).painted;
+      const toolbox=page.locator('.terminal-drawing-tools summary');
+      if(!await toolbox.evaluate(node=>node.closest('details')?.open))await toolbox.click();
       publish();
       for(let trial=0;trial<warmups+trials;trial++){
         const stage=(action:string)=>{report.stage=[tier.drawings,trial,action].join(' ');};
@@ -254,15 +261,15 @@ test('drawing capacity on a real four-pane saved replay',async({page,browser},in
         stage('chart click selects intended drawing');
         const clickToSelectionMs=await selectOnChart(page,target);
         stage('drag preview and save');
-        const {dragMs,saveMs,next,row}=await dragOnChart(page,target,paths[0],books[0]);
+        const {dragMs,saveMs,next,row,resourceEntriesBeforeSave}=await dragOnChart(page,target,paths[0],books[0]);
         books[0]=next;
         stage('unmount and inspect retained resources');
         const unmounted=await unmount();
         expect(unmounted.created).toBe(unmounted.disposed);
         const unmountedHeapBytes=await snapshot();
         stage('reopen saved revision and verify canvas');
-        await controls(page).click();
         const response=page.waitForResponse(r=>r.request().method()==='GET'&&r.url().endsWith(paths[0]));
+        await controls(page).click();
         const reopened=await openReplay(page,fixture,palette);
         const returned:Response=await response;
         expect(await returned.json()).toEqual(next);
@@ -272,7 +279,7 @@ test('drawing capacity on a real four-pane saved replay',async({page,browser},in
         tier.samples.push({trial,warmup:trial<warmups,frames,frameP95Ms:p95(frames),clickToSelectionMs,
           dragToVisibleMs:dragMs,releaseToSaveMs:saveMs,reopenMs:reopened.ms,rendered:reopened.painted,
           persisted:books.map(book=>book.items.length),target:target.id,before:target.anchors[0],after:next.items[0].anchors[0],
-          reopenedRow:reopenedRow!,unmountedHeapBytes,resources:unmounted.remaining});
+          reopenedRow:reopenedRow!,resourceEntriesBeforeSave,unmountedHeapBytes,resources:unmounted.remaining});
         console.log('Drawing capacity '+variant+' '+tier.drawings+' '+(trial+1)+'/'+(warmups+trials));
         publish();
       }
