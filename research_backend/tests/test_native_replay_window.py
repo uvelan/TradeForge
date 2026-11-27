@@ -185,3 +185,21 @@ def test_saved_mt5_uses_its_own_feed_and_refuses_mixed_or_quarantined_history(cl
     storage.write_partition("MT5", "broker-B", "EURUSD", "candles", "M1", "BID", [bar(600)])
     mixed = create(client, source="MT5_SAVED")
     assert mixed.status_code == 409 and "incompatible feeds" in mixed.json()["detail"]
+
+
+def test_repeated_native_panes_verify_one_physical_snapshot(client, monkeypatch):
+    part = partition([bar(0)])
+    reads = []
+    original = storage.verified_partition_file
+
+    def count(part, **kwargs):
+        reads.append(part["id"])
+        return original(part, **kwargs)
+
+    monkeypatch.setattr(storage, "verified_partition_file", count)
+    views = [{"view": str(index), "symbol": "EURUSD", "timeframe": "M1"} for index in (2, 3, 4)]
+    response = create(client, views=views)
+    assert response.status_code == 201, response.text
+    frozen = response.json()
+    assert all(pane == frozen["market"] for pane in frozen["views"].values())
+    assert reads == [part["id"]]

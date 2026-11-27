@@ -5,6 +5,7 @@ from datetime import datetime,timedelta,timezone
 from decimal import Decimal
 from typing import Literal
 from hashlib import sha256
+from functools import cache, partial
 import asyncio
 import json
 import uuid
@@ -617,13 +618,17 @@ def create_replay(request:ReplayRequest):
         panes["comparison"]=pane(comparison,captures["comparison"])
     else:
         try:
-            with replay_catalog() if request.window_bars is not None else nullcontext() as catalog:
-                market = captured_replay(request,request.symbol,request.timeframe,clock,catalog)
+            catalog_context = replay_catalog() if request.window_bars is not None else nullcontext()
+            with catalog_context as catalog:
+                capture = partial(captured_replay, request, cutoff=clock, catalog=catalog)
+                if catalog is not None:
+                    capture = cache(capture)  # Identical native panes share a single verified read in this request.
+                market = capture(request.symbol, request.timeframe)
                 if market.get("coverage",{}).get("truncated") and request.start is not None:
                     raise HTTPException(422,"Choose a replay range of at most 600 primary candles")
                 for view in request.views:
                     try:
-                        panes[view.view] = captured_replay(request,view.symbol,view.timeframe,clock,catalog)
+                        panes[view.view] = capture(view.symbol, view.timeframe)
                     except HTTPException as error:
                         if error.status_code not in (404,409,422,503):
                             raise
