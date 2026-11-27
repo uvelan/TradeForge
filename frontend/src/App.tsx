@@ -516,7 +516,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
     compare,feedIdentity(comparison.feed),Boolean(comparison.candles?.length),placement,chartViewCount,
     replayActive,replaySession?.id,replayIndex,cutoff,decisionReplay]);
   const canSaveCapture=(!replayArchive||Boolean(decisionReplay))&&(replayActive||loadedPrimaryGeneration===primaryLoadGeneration&&!busy&&!error)&&!replayBusy&&
-    (!compare||(savedSource?Boolean(comparison.feed&&comparison.candles?.length):Boolean(comparison.feed||comparison.error)));
+    (Boolean(decisionReplay)||!compare||(savedSource?Boolean(comparison.feed&&comparison.candles?.length):Boolean(comparison.feed||comparison.error)));
   const captureGeneration=useMemo(()=>({}),[captureKey,primaryLoadGeneration,canSaveCapture]);
   useLayoutEffect(()=>{
     liveCaptureGeneration.current=canSaveCapture?captureGeneration:null;
@@ -530,11 +530,14 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
     const isCurrent=()=>liveCaptureGeneration.current===captureGeneration&&captureSequence.current===sequence;
     setCaptureState({generation:captureGeneration,saving:true,id:chartCapture});
     try {
-      const lanes=savedSource&&(compare||(cutoff!=null&&indicatorFeed?.feed_id==='dukascopy-bi5-v2'))?[
+      const lanes=!decisionReplay&&savedSource&&(compare||(cutoff!=null&&indicatorFeed?.feed_id==='dukascopy-bi5-v2'))?[
         snapshotLane('primary',symbol,timeframe,indicatorFeed??undefined,visibleCandles),
         ...(compare?[snapshotLane('comparison',compare,timeframe,comparison.feed,comparison.candles??[])]:[]),
       ]:undefined;
-      const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff,undefined,lanes,decisionReplay);
+      const replayLanes:('primary'|'comparison')[]=['primary'];
+      if(compare&&comparison.candles?.length)replayLanes.push('comparison');
+      const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff,undefined,lanes,decisionReplay,
+        decisionReplay?replayLanes:undefined);
       if(isCurrent())setCaptureState({generation:captureGeneration,saving:false,id:saved.id,status:'Chart capture saved'});
     } catch(error) {
       if(isCurrent())setCaptureState({generation:captureGeneration,saving:false,id:chartCapture,
@@ -673,6 +676,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
             symbol:symbol as SymbolName,timeframe,snapshot_id:chartCapture,knowledge_cutoff_utc:cutoff==null?undefined:new Date(cutoff*1000).toISOString(),context:`${source} · ${indicatorFeed?.feed_id??'unverified feed'} · ${indicatorFeed?.price_basis??'unverified basis'}`,
             entry:picked[0]??'',stop:picked[1]??'',target:picked[2]??'',
           })}>Create trade plan</button>
+          {replayArchive&&compare&&!comparison.candles?.length&&<p role="status">{compare} · {comparison.error?
+            'Comparison source unavailable · '+comparison.error:'No comparison candles available at this cutoff'}</p>}
           {replayArchive&&!chartCapture&&<small>Save chart evidence to attach this candle to a decision.</small>}
           {chartCapture&&onChartLesson&&<button className="small-tool" onClick={()=>onChartLesson(chartCapture)}>Record chart lesson</button>}
         </div>}

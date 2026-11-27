@@ -11,6 +11,7 @@ import {installProbe} from '../e2e/workspace-probe.ts';
 
 const {values: args} = parseArgs({options: {
   'forex-decisions': {type:'boolean'},
+  'decision-boundaries': {type:'boolean'},
   output: {type: 'string'},
   workspace: {type: 'string'},
   bi5: {type: 'string'},
@@ -18,7 +19,7 @@ const {values: args} = parseArgs({options: {
   'api-port': {type: 'string', default: '8793'},
   'ui-port': {type: 'string', default: '4793'},
 }});
-if (!args.output || !args.workspace || !args.bi5 || !args.csv) {
+if (!args.output || !args.workspace || (!args['decision-boundaries'] && (!args.bi5 || !args.csv))) {
   throw Error('Supply --output, --workspace, --bi5, and --csv paths.');
 }
 for (const port of [args['api-port'], args['ui-port']]) {
@@ -289,16 +290,25 @@ try {
   api = startApi();
   await awaitReady(apiOrigin, '/api/health', api);
   const pids = [api.pid];
-  if(args['forex-decisions']){
-    fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
+  if(args['forex-decisions'] || args['decision-boundaries']){
+    if(!args['decision-boundaries'])fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
     vite=startVite();
     await awaitReady(uiOrigin,'/',vite);
-    const {verifyDecisions}=await import('./forex-decisions.mjs');
-    const receipt=await verifyDecisions(uiOrigin,async()=>{
+    const restart=async()=>{
       await stop(api);
       api=startApi();
       await awaitReady(apiOrigin,'/api/health',api);
-    });
+    };
+    let receipt;
+    if(args['decision-boundaries']){
+      const fixtureData=(...args)=>JSON.parse(execFileSync(python,['-m','scripts.decision_boundary_fixture',...args],
+        {env,cwd:root,encoding:'utf8',windowsHide:true}));
+      const {verifyDecisionBoundaries}=await import('./decision-boundaries.mjs');
+      receipt=await verifyDecisionBoundaries(uiOrigin,fixtureData(),restart,()=>fixtureData('counts'));
+    }else{
+      const {verifyDecisions}=await import('./forex-decisions.mjs');
+      receipt=await verifyDecisions(uiOrigin,restart);
+    }
     mkdirSync(dirname(resolve(args.output)),{recursive:true});
     writeFileSync(resolve(args.output),JSON.stringify(receipt,null,2));
   }else{

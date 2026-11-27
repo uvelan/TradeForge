@@ -11,7 +11,8 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from .db import one, rows, transaction, utc_now
-from .chart_snapshot_lanes import ChartLane, verified_lanes
+from .chart_snapshot_lanes import ChartLane, FrozenChartLane, verified_lanes
+from .indicator_coverage import replay_availability
 from .domain import journal_detail, resolve_signal, resolve_snapshot
 from .market import FRAME_MIN
 from .schemas import SignalReference
@@ -78,6 +79,7 @@ class DecisionReplay(BaseModel):
 
 
 class ChartSnapshotRequest(BaseModel):
+    replay_lanes: tuple[Literal["primary"]] | tuple[Literal["primary"], Literal["comparison"]] | None = None
     decision_replay: DecisionReplay | None = None
     lanes: tuple[ChartLane] | tuple[ChartLane, ChartLane] | None = None
     png: str = Field(min_length=40,max_length=2_000_000)
@@ -103,16 +105,41 @@ def validate_decision_replay(db, request, ref):
     if not any(bar["time"] == ref.time and max(ref.time + FRAME_MIN[frame] * 60,
                bar.get("available_at") or 0) <= request.cutoff for bar in pane.get("candles", [])):
         raise HTTPException(409, "Decision candle unavailable in selected replay pane")
-    if "comparison" in session["views"] and len(request.lanes or ()) != 2:
-        raise HTTPException(409, "Paired decision replay requires both captured lanes")
-    for lane in request.lanes or ():
-        feed = market if lane.role == "primary" else session["views"].get("comparison", {})
-        pins = feed.get("partitions") or [{"id":feed.get("dataset_id"), "sha256":feed.get("sha256")}]
-        visible_times = [bar["time"] for bar in feed.get("candles", [])
-                         if (bar.get("available_at") or bar["time"] + FRAME_MIN[request.timeframe] * 60) <= request.cutoff]
-        if ([bar.time for bar in lane.bars] != visible_times or feed.get("symbol") != lane.symbol or feed.get("feed_id") != lane.feed_id
-                or [(p["id"], p["sha256"]) for p in pins] != [(p.id, p.sha256) for p in lane.partitions]):
-            raise HTTPException(409, "Chart capture differs from frozen replay lane")
+    feeds = {"primary": market}
+    if "comparison" in session["views"]:
+        feeds["comparison"] = session["views"]["comparison"]
+    for feed in feeds.values():
+        feed.setdefault("timeframe", request.timeframe)
+        if not feed.get("partitions") and feed.get("dataset_id") and feed.get("sha256"):
+            feed["partitions"] = [{"id": feed["dataset_id"], "sha256": feed["sha256"]}]
+    visible = {role: [bar for bar in feed.get("candles", [])
+                      if replay_availability(bar, FRAME_MIN[feed["timeframe"]] * 60) <= request.cutoff]
+               for role, feed in feeds.items()}
+    declared = request.replay_lanes or tuple(lane.role for lane in request.lanes or ())
+    expected = tuple(role for role in feeds if visible[role])
+    if declared or "comparison" in feeds:
+        if declared != expected or "primary" not in declared:
+            raise HTTPException(409, "Captured lanes differ from available replay evidence")
+    gap = None
+    if "comparison" in feeds and not visible["comparison"]:
+        peer = feeds["comparison"]
+        gap = {"symbol": peer["symbol"], "timeframe": peer["timeframe"], "status": "NO_VISIBLE_OBSERVATIONS"}
+        if "error" in peer:
+            gap.update(status="SOURCE_ERROR", error=peer["error"])
+    if request.replay_lanes is not None:
+        lanes = tuple(
+            FrozenChartLane(role=role, bars=visible[role], **feeds[role])
+            for role in declared
+        )
+        request = request.model_copy(update={"lanes":lanes})
+    else:
+        for lane in request.lanes or ():
+            feed = feeds[lane.role]
+            if ([bar.time for bar in lane.bars] != [bar["time"] for bar in visible[lane.role]]
+                    or feed["symbol"] != lane.symbol or feed["feed_id"] != lane.feed_id
+                    or feed["partitions"] != [pin.model_dump() for pin in lane.partitions]):
+                raise HTTPException(409, "Chart capture differs from frozen replay lane")
+    return request, gap
 
 
 def validate_chart_png(png:bytes) -> tuple[int,int]:
@@ -148,11 +175,15 @@ def create_snapshot(request:ChartSnapshotRequest):
     except (Base64Error,ValueError) as error:
         raise HTTPException(422,"Malformed PNG encoding") from error
     width,height=validate_chart_png(png)
-    metadata=request.model_dump(mode="json",exclude={"png","lanes","decision_replay"})
+    metadata=request.model_dump(mode="json",exclude={"png","lanes","decision_replay","replay_lanes"})
     metadata.update(width=width,height=height,authority="USER_CHART_CAPTURE")
     with transaction() as db:
+        if request.replay_lanes is not None and (request.decision_replay is None or request.lanes is not None):
+            raise HTTPException(422, "Replay lane references require a bookmark and cannot be mixed with uploaded bars")
         if request.decision_replay is not None:
-            validate_decision_replay(db, request, request.decision_replay)
+            request, gap = validate_decision_replay(db, request, request.decision_replay)
+            if gap:
+                metadata["comparison_gap"] = gap
             metadata["decision_replay"] = request.decision_replay.model_dump(exclude_none=True)
         signal=resolve_signal(db,request.signal_reference)
         if signal is not None and (signal["provenance"]["timeframe"]!=request.timeframe

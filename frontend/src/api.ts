@@ -59,7 +59,7 @@ export const api={
   saveCheckpoint:(id:string,position:number,bookmarks:number[],selected?:import('./types').ReplaySelection)=>
     post('/replay/sessions/'+encodeURIComponent(id)+'/checkpoint',{position,bookmarks,...(selected ? {selected} : {})}),
   saveSnapshot:(png:string,symbol:string,timeframe:Timeframe,source:string,cutoff?:number,
-    signal_reference?:import('./types').SignalReference,lanes?:import('./snapshotLanes').SnapshotLane[],decision_replay?:import('./types').DecisionReplay)=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference,lanes,decision_replay}),
+    signal_reference?:import('./types').SignalReference,lanes?:import('./snapshotLanes').SnapshotLane[],decision_replay?:import('./types').DecisionReplay,replay_lanes?:('primary'|'comparison')[])=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference,lanes,decision_replay,replay_lanes}),
   importMt5:(symbol:SymbolName,timeframe:Timeframe,limit:number)=>post('/market/import/mt5',{symbol,timeframe,limit}),
   importReviewed:(file:File)=>{
     const body=new FormData();body.append('file',file);

@@ -3,6 +3,8 @@ from copy import deepcopy
 from hashlib import sha256
 import json
 
+import pytest
+
 from research_backend.app.db import one, transaction
 from research_backend.app.storage import write_partition
 
@@ -148,3 +150,90 @@ def test_paired_decision_reopens_original_cutoff_and_rejects_other_candles(clien
         assert client.get(session_url).json()["request"]["smt_rules"] == frozen["request"]["smt_rules"]
         assert client.get(URL+"/"+ident).json() == saved.json()
     assert one("SELECT COUNT(*) AS n FROM chart_snapshots")["n"] == 2
+
+
+def _decision_window(client, count, peer_status):
+    start = 1_765_152_000
+    context = dict(symbol="EURUSD", timeframe="M5", source="DUKASCOPY_SAVED")
+    lanes = []
+    for role, symbol, price in (("primary", "EURUSD", 1.1), ("comparison", "GBPUSD", 1.3)):
+        if role == "comparison" and peer_status == "SOURCE_ERROR":
+            continue
+        bars = [dict(time=start+i*300, open=price, high=price, low=price, close=price) for i in range(count)]
+        if peer_status == "NO_VISIBLE_OBSERVATIONS":
+            bars[0]["available_at"] = start + (599 if role == "primary" else 600)
+        part = write_partition("DUKASCOPY", "decision-window", symbol, "candles", "M5", "BID", bars)
+        lanes.append(dict(role=role, symbol=symbol, timeframe="M5", feed_id="decision-window", price_basis="BID",
+                          partitions=[{"id":part["id"],"sha256":part["sha256"]}], bars=bars))
+    response = client.post("/api/replay/sessions", json=dict(**context, start=start, end=start+count*300,
+        window_bars=5000, views=[dict(view="comparison",symbol="GBPUSD",timeframe="M5")]))
+    assert response.status_code == 201, response.text
+    session = response.json()
+    capture = dict(**context, png=base64.b64encode(png_bytes()).decode(),
+                   decision_replay=dict(session_id=session["id"],position=0,view="primary",time=start))
+    return start, session, capture, lanes
+
+
+@pytest.mark.parametrize("status", ["SOURCE_ERROR", "NO_VISIBLE_OBSERVATIONS"])
+def test_decision_capture_without_visible_comparison(client, status):
+    start, session, capture, lanes = _decision_window(client, 3, status)
+    cutoff = session["market"]["replay_cutoffs"][0]
+    primary = {**lanes[0], "bars":lanes[0]["bars"][:1]}
+    # Same primary-only upload as the original public API reproduction.
+    for evidence in ({"lanes":[primary]}, {"replay_lanes":["primary"]}):
+        response = client.post(URL, json={**capture, **evidence, "cutoff":cutoff})
+        assert response.status_code == 201, response.text
+        shot = response.json()
+        assert shot["lanes"][0]["bar_times"] == [start]
+        assert shot["comparison_gap"]["status"] == status
+        assert shot["comparison_gap"]["symbol"] == "GBPUSD"
+        if status == "SOURCE_ERROR":
+            assert shot["comparison_gap"]["error"] == session["views"]["comparison"]["error"]
+    if status == "NO_VISIBLE_OBSERVATIONS":
+        assert cutoff == start+599
+        assert session["market"]["replay_cutoffs"][1] == start+600
+        at = {**capture, "cutoff":start+600, "decision_replay":{**capture["decision_replay"], "position":1}}
+        before = one("SELECT count(*) AS n FROM chart_snapshots")
+        for evidence in ({"lanes":[primary]}, {"replay_lanes":["primary"]}, {}):
+            assert client.post(URL,json={**at,**evidence}).status_code == 409
+        assert one("SELECT count(*) AS n FROM chart_snapshots") == before
+        paired = client.post(URL,json={**at,"replay_lanes":["primary","comparison"]})
+        assert paired.status_code == 201 and "comparison_gap" not in paired.json()
+        assert paired.json()["lanes"][1]["bar_times"] == [start,start+300]
+        assert client.get(URL+"/"+shot["id"]).json() == shot
+
+
+@pytest.mark.parametrize("n", [2000, 2001, 5000])
+def test_large_decision_retains_early_candle_and_ordinary_upload_bound(client, n):
+    start, session, capture, lanes = _decision_window(client, 5000, "COVERED")
+    capture.update(cutoff=start+n*300, decision_replay=dict(session_id=session["id"], position=n-1,
+                                                            view="comparison", time=start+300))
+    upload = [{**lane, "bars":lane["bars"][:n]} for lane in lanes]
+    response = client.post(URL,json={**capture,"lanes":upload})
+    assert response.status_code == (201 if n == 2000 else 422), response.text[:300]
+    replay = client.post(URL,json={**capture,"replay_lanes":["primary","comparison"]})
+    assert replay.status_code == 201, replay.text
+    saved = replay.json()
+    if n == 2000:
+        assert saved == response.json()
+    for item, original in zip(saved["lanes"], lanes, strict=True):
+        assert item["partitions"] == original["partitions"]
+        assert item["bar_times"] == [start+i*300 for i in range(n)]
+    assert saved["decision_replay"] == capture["decision_replay"]
+
+def test_replay_lane_reference_requires_pins_and_exclusive_input(client):
+    from research_backend.app import storage
+
+    start, session, capture, lanes = _decision_window(client, 2, "COVERED")
+    body = {**capture, "cutoff":start+300, "replay_lanes":["primary","comparison"]}
+    for changed in ({"decision_replay":None}, {"lanes":lanes}):
+        assert client.post(URL, json={**body, **changed}).status_code == 422
+    # Damage only the peer file after freezing. The immutable lane captures
+    # original prices, but publishing a new verified screenshot still checks the file.
+    dataset = one("SELECT relative_path FROM datasets WHERE id=?", (lanes[1]["partitions"][0]["id"],))
+    path = storage.MARKET_DIR / dataset["relative_path"]
+    with path.open("ab") as file:
+        file.write(b"corrupted fixture")
+    response = client.post(URL, json=body)
+    assert response.status_code == 409 and lanes[1]["partitions"][0]["id"] in response.text
+    assert one("SELECT COUNT(*) AS n FROM chart_snapshots")["n"] == 0
