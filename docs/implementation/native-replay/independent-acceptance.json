@@ -1,0 +1,568 @@
+{
+  "baseline": {
+    "baseline": "9db18748765736d8ed326f34af718359e44fed33",
+    "mode": "Production Dukascopy BI5 upload, localhost Uvicorn, Vite, Chromium",
+    "request": {
+      "symbol": "EURUSD",
+      "timeframe": "M5",
+      "source": "DUKASCOPY_SAVED",
+      "start": 1711929600,
+      "end": 1712110200
+    },
+    "independent_candle_count": 601,
+    "chart_candle_count": 600,
+    "chart_truncated": true,
+    "replay_status": 422,
+    "replay_detail": "Choose a replay range of at most 600 primary candles",
+    "shorter_range_candle_count": 600,
+    "shortened_range_status": 201,
+    "delayed_range_status": 409,
+    "delayed_range_detail": "Replay candle timestamps are inconsistent",
+    "verified_merge": "a3c9fe40e18b43f09afffdc20731e40381dc5c50",
+    "production_source_diff_from_tested_head": []
+  },
+  "candidate": "56233e8",
+  "browser": {
+    "api_processes": 2,
+    "browser_processes": 2,
+    "source_cases": [
+      {
+        "source": "CONTROLLED_BI5",
+        "session": "f520d5524394c0e146d63620a7bd91a0e0f8066d42c55beaf2d60766114a1b46",
+        "full": {
+          "2": 5000,
+          "3": 5000,
+          "4": 5000,
+          "primary": 5000
+        }
+      },
+      {
+        "source": "GENUINE_BI5",
+        "session": "4ffa6cb4eaa28238e5a92d82d770983ea94f3bc0841999f7ff706867a5c451c7",
+        "full": {
+          "2": 120,
+          "primary": 24
+        }
+      },
+      {
+        "source": "GENUINE_DUKASCOPY_WEB_CSV",
+        "session": "b14f327cde82936e3775049f349d8183e2e9d683613d7cc0c1e35459566513be",
+        "full": {
+          "2": 5000,
+          "3": 998,
+          "4": 5000,
+          "primary": 997
+        }
+      },
+      {
+        "source": "CONTROLLED_ARCHIVE_AVAILABILITY",
+        "session": "e880986454e474516e66629d3438364057ef634b5fb5de04df5309d438fd3ad9",
+        "full": {
+          "2": 3,
+          "primary": 4
+        },
+        "firstRelease": {
+          "2": 2,
+          "primary": 1
+        },
+        "tiedRelease": {
+          "2": 2,
+          "primary": 3
+        }
+      }
+    ],
+    "keyboard_journey": [
+      "Exit replay",
+      "Resume saved replay",
+      "Pick another pane",
+      "Inspect older candle",
+      "Bookmark candle",
+      "Save replay position",
+      "Resume after process restart",
+      "Rewind using bookmark",
+      "Reveal the same candle by returning to the last cutoff"
+    ],
+    "checkpoint": {
+      "position": 4999,
+      "bookmarks": [
+        602,
+        4998,
+        4999
+      ],
+      "selected": {
+        "view": "4",
+        "time": 1713431160
+      }
+    },
+    "reopened": {
+      "2": 5000,
+      "3": 5000,
+      "4": 5000,
+      "primary": 5000
+    },
+    "rewind_position": 602,
+    "rewind_bars": {
+      "2": 603,
+      "3": 603,
+      "4": 603,
+      "primary": 603
+    },
+    "selected_candle": {
+      "time": 1713431160,
+      "available_at": 1713431220,
+      "open": 2050.304,
+      "high": 2050.318,
+      "low": 2050.294,
+      "close": 2050.301,
+      "availability_basis": "MODELED_NOMINAL_CLOSE",
+      "source_partition_indexes": [
+        17
+      ]
+    },
+    "uncaught_page_errors": [],
+    "reopened_selected_partition_pins": [
+      {
+        "id": "9219ccfa00dbd6e69df0b6bbc8e280770de968b96307239ecdd4340a904234d7",
+        "sha256": "2dc615229179f944bf1bd08d2aac43a776f845b52fe505c6e700bbb5ae29b049"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "request": {
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1711929600,
+        "end": 1713431700,
+        "window_bars": 5000,
+        "views": [
+          {
+            "view": "2",
+            "symbol": "GBPUSD",
+            "timeframe": "M1"
+          },
+          {
+            "view": "3",
+            "symbol": "USDJPY",
+            "timeframe": "M5"
+          },
+          {
+            "view": "4",
+            "symbol": "XAUUSD",
+            "timeframe": "M1"
+          }
+        ]
+      },
+      "session_id": "f520d5524394c0e146d63620a7bd91a0e0f8066d42c55beaf2d60766114a1b46",
+      "source_kind": "CONTROLLED_BI5",
+      "panes": {
+        "2": {
+          "symbol": "GBPUSD",
+          "timeframe": "M1",
+          "bars": 5000,
+          "first_open": 1711929720,
+          "last_open": 1713431640,
+          "last_available": 1713431700,
+          "ordered_bar_sha256": "18bb49c574797267918bf777019aff75b6a9b62d40c1e47397cd11a2417c92c6",
+          "partitions": 18,
+          "origin_count_distribution": {
+            "1": 5000
+          }
+        },
+        "3": {
+          "symbol": "USDJPY",
+          "timeframe": "M5",
+          "bars": 5000,
+          "first_open": 1711929600,
+          "last_open": 1713431400,
+          "last_available": 1713431700,
+          "ordered_bar_sha256": "c9bb96beb2b8dfbc413c7ec3059bb5cc1a07c285ceaca826d37c1fb704babd8d",
+          "partitions": 18,
+          "origin_count_distribution": {
+            "1": 5000
+          }
+        },
+        "4": {
+          "symbol": "XAUUSD",
+          "timeframe": "M1",
+          "bars": 5000,
+          "first_open": 1711929840,
+          "last_open": 1713431520,
+          "last_available": 1713431580,
+          "ordered_bar_sha256": "906bac0a02d44b301750fecbad3621820f31aaba2fcf21f3669ff4c6f9a5549f",
+          "partitions": 18,
+          "origin_count_distribution": {
+            "1": 5000
+          }
+        },
+        "primary": {
+          "symbol": "EURUSD",
+          "timeframe": "M5",
+          "bars": 5000,
+          "first_open": 1711929600,
+          "last_open": 1713431400,
+          "last_available": 1713431700,
+          "ordered_bar_sha256": "20ccef8ffe9f0988d80e198b6d2ce06e5b158c25b6e4ea3a19e83a993abd701b",
+          "partitions": 18,
+          "origin_count_distribution": {
+            "1": 5000
+          }
+        }
+      },
+      "raw_source_manifest": {
+        "files": 72,
+        "bytes": 281625,
+        "quotes": 80016,
+        "sha256": "12abe6ae74cfb879c0639bffbdbe5cb0e7362bf281d0524a60f16ce77a36e480"
+      },
+      "checkpoint_controls": {
+        "rewind_kept_pin": true,
+        "unknown_candle_status": 422,
+        "unknown_candle": {
+          "detail": "Selected candle is outside its frozen replay pane"
+        }
+      },
+      "oversized_range": {
+        "status": 422,
+        "response": {
+          "detail": "Choose a replay range of at most 5000 closed candles per pane"
+        }
+      }
+    },
+    {
+      "request": {
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1763038800,
+        "end": 1763046000,
+        "window_bars": 5000,
+        "views": [
+          {
+            "view": "2",
+            "symbol": "EURUSD",
+            "timeframe": "M1"
+          }
+        ]
+      },
+      "session_id": "4ffa6cb4eaa28238e5a92d82d770983ea94f3bc0841999f7ff706867a5c451c7",
+      "source_kind": "GENUINE_BI5",
+      "panes": {
+        "primary": {
+          "symbol": "EURUSD",
+          "timeframe": "M5",
+          "bars": 24,
+          "first_open": 1763038800,
+          "last_open": 1763045700,
+          "last_available": 1763046000,
+          "ordered_bar_sha256": "a810e6702ae2758391b3863e10e6150e87b2fa1ee9cf97b65526b73fa588604b",
+          "partitions": 2,
+          "origin_count_distribution": {
+            "1": 24
+          }
+        },
+        "2": {
+          "symbol": "EURUSD",
+          "timeframe": "M1",
+          "bars": 120,
+          "first_open": 1763038800,
+          "last_open": 1763045940,
+          "last_available": 1763046000,
+          "ordered_bar_sha256": "940394375e0d75d81d4b38cd4715e54129481e7be7d78ae90b833e376dae45ff",
+          "partitions": 2,
+          "origin_count_distribution": {
+            "1": 120
+          }
+        }
+      },
+      "raw_sources": [
+        {
+          "symbol": "EURUSD",
+          "start": 1763038800,
+          "sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014",
+          "bytes": 15332,
+          "quotes": 3171
+        },
+        {
+          "symbol": "EURUSD",
+          "start": 1763042400,
+          "sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f",
+          "bytes": 24809,
+          "quotes": 5465
+        }
+      ]
+    },
+    {
+      "request": {
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1794472500,
+        "end": 1794952800,
+        "window_bars": 5000,
+        "views": [
+          {
+            "view": "2",
+            "symbol": "GBPUSD",
+            "timeframe": "M1"
+          },
+          {
+            "view": "3",
+            "symbol": "GBPUSD",
+            "timeframe": "M5"
+          },
+          {
+            "view": "4",
+            "symbol": "EURUSD",
+            "timeframe": "M1"
+          }
+        ]
+      },
+      "session_id": "b14f327cde82936e3775049f349d8183e2e9d683613d7cc0c1e35459566513be",
+      "source_kind": "GENUINE_DUKASCOPY_WEB_CSV",
+      "panes": {
+        "primary": {
+          "symbol": "EURUSD",
+          "timeframe": "M5",
+          "bars": 997,
+          "first_open": 1794472500,
+          "last_open": 1794952500,
+          "last_available": 1794952800,
+          "ordered_bar_sha256": "572b423b863582244a822c52b9977c4bd38d7da282942e642bf233c234f8e6cd",
+          "partitions": 4,
+          "origin_count_distribution": {
+            "1": 997
+          }
+        },
+        "2": {
+          "symbol": "GBPUSD",
+          "timeframe": "M1",
+          "bars": 5000,
+          "first_open": 1794472500,
+          "last_open": 1794952740,
+          "last_available": 1794952800,
+          "ordered_bar_sha256": "a9f8489bb5246a60a2e6b2f37f2adda8a78677c46381f0dc6884837c38af95a0",
+          "partitions": 4,
+          "origin_count_distribution": {
+            "1": 5000
+          }
+        },
+        "3": {
+          "symbol": "GBPUSD",
+          "timeframe": "M5",
+          "bars": 998,
+          "first_open": 1794472500,
+          "last_open": 1794952500,
+          "last_available": 1794952800,
+          "ordered_bar_sha256": "a551868e68e16c620628303c7941b1a1dd7ed9a733fbf01bd4a577eb30f3515b",
+          "partitions": 4,
+          "origin_count_distribution": {
+            "1": 998
+          }
+        },
+        "4": {
+          "symbol": "EURUSD",
+          "timeframe": "M1",
+          "bars": 5000,
+          "first_open": 1794472500,
+          "last_open": 1794952740,
+          "last_available": 1794952800,
+          "ordered_bar_sha256": "61e55934dccaf57c9809cef6d37599047de13a78ba615c9fddd73c4833d6d82e",
+          "partitions": 4,
+          "origin_count_distribution": {
+            "1": 5000
+          }
+        }
+      },
+      "raw_sources": [
+        {
+          "symbol": "EURUSD",
+          "day": "2026-11-09",
+          "sha256": "0560cf18711672c26fc4747018cc566fca095d1abf5a6b64efd82c65dfaae3dc",
+          "m1": 1437,
+          "complete_m5": 286
+        },
+        {
+          "symbol": "EURUSD",
+          "day": "2026-11-10",
+          "sha256": "4db5776c7d7dd309daac2d01783c6dad69d34a06c5f5127a1693f602c6afe969",
+          "m1": 1433,
+          "complete_m5": 282
+        },
+        {
+          "symbol": "EURUSD",
+          "day": "2026-11-11",
+          "sha256": "a07849dcdb4585f782859f9878b7a6c93c34b6f2959ceffa150102c7e4627e9a",
+          "m1": 1438,
+          "complete_m5": 286
+        },
+        {
+          "symbol": "EURUSD",
+          "day": "2026-11-12",
+          "sha256": "4c1c30716245d43f68f1ad415c72d3f64d542aa129f93fda43917df53c67239e",
+          "m1": 1436,
+          "complete_m5": 285
+        },
+        {
+          "symbol": "EURUSD",
+          "day": "2026-11-13",
+          "sha256": "4c1e415ee7bb1c8a7cfe473364afb5d00f82d11ea9e3b48d8960b476f53f0a6d",
+          "m1": 1320,
+          "complete_m5": 264
+        },
+        {
+          "symbol": "EURUSD",
+          "day": "2026-11-16",
+          "sha256": "28d7be87a1a5642741ac9c526f13caf49fbfb5aae8c5ab8aec076ee7d31190b7",
+          "m1": 1439,
+          "complete_m5": 287
+        },
+        {
+          "symbol": "EURUSD",
+          "day": "2026-11-17",
+          "sha256": "b10f5f39e04815bb22a3aae14015002af8d4d55013f7b250913b8330c0d07a7d",
+          "m1": 1440,
+          "complete_m5": 288
+        },
+        {
+          "symbol": "EURUSD",
+          "day": "2026-11-18",
+          "sha256": "b672895c5866519b68dc25ea5dc55c0ab2fbaec7de240af4c4087dd981f46dba",
+          "m1": 1440,
+          "complete_m5": 288
+        },
+        {
+          "symbol": "GBPUSD",
+          "day": "2026-11-09",
+          "sha256": "bfd85b96494e39080026e1406939dfbb3e2866eae1c3cb10b8414d6211dd1356",
+          "m1": 1435,
+          "complete_m5": 284
+        },
+        {
+          "symbol": "GBPUSD",
+          "day": "2026-11-10",
+          "sha256": "ab0ef93bd47aa36b1238873e08efe3b2410d9cbdd0fe898b599a98c17a7b78f4",
+          "m1": 1435,
+          "complete_m5": 285
+        },
+        {
+          "symbol": "GBPUSD",
+          "day": "2026-11-11",
+          "sha256": "14003bf93e64aecd14a7c0898e1abbaa53cb7cd8fce9fc20123c09db3a91a804",
+          "m1": 1435,
+          "complete_m5": 285
+        },
+        {
+          "symbol": "GBPUSD",
+          "day": "2026-11-12",
+          "sha256": "3bbcd8915b623a30fb9b85ea722063a081bec4601791e93b05a9d75e9be77da1",
+          "m1": 1436,
+          "complete_m5": 286
+        },
+        {
+          "symbol": "GBPUSD",
+          "day": "2026-11-13",
+          "sha256": "25b5f24e0973f993b721fa06bc3e1cff1870d1eef4d943db0fa97604ea4f0e75",
+          "m1": 1320,
+          "complete_m5": 264
+        },
+        {
+          "symbol": "GBPUSD",
+          "day": "2026-11-16",
+          "sha256": "425cb8d421ea51b1d4ca1dc97217532da3f3ab83f7be1ca5983d409eb484e715",
+          "m1": 1439,
+          "complete_m5": 287
+        },
+        {
+          "symbol": "GBPUSD",
+          "day": "2026-11-17",
+          "sha256": "656a8302fee4dd40b32d410a4d452a4384b0f8fa5f408feba71a30a72fd77f85",
+          "m1": 1437,
+          "complete_m5": 286
+        },
+        {
+          "symbol": "GBPUSD",
+          "day": "2026-11-18",
+          "sha256": "dfbf707b636434d35c2dcf35e9974c13d971f8e05a42207e289feb94ff5bc7b6",
+          "m1": 1435,
+          "complete_m5": 285
+        }
+      ],
+      "source_inventory": {
+        "primary": 2266,
+        "2": 11372,
+        "3": 2262,
+        "4": 11383
+      }
+    },
+    {
+      "request": {
+        "symbol": "EURUSD",
+        "timeframe": "M5",
+        "source": "DUKASCOPY_SAVED",
+        "start": 1711324800,
+        "end": 1711326000,
+        "window_bars": 5000,
+        "views": [
+          {
+            "view": "2",
+            "symbol": "GBPUSD",
+            "timeframe": "M1"
+          }
+        ]
+      },
+      "session_id": "e880986454e474516e66629d3438364057ef634b5fb5de04df5309d438fd3ad9",
+      "source_kind": "CONTROLLED_ARCHIVE_AVAILABILITY",
+      "panes": {
+        "primary": {
+          "symbol": "EURUSD",
+          "timeframe": "M5",
+          "bars": 4,
+          "first_open": 1711324800,
+          "last_open": 1711325700,
+          "last_available": 1711326000,
+          "ordered_bar_sha256": "ada2c5b355f3c9abebe8339e5306ff1b4e6d4934a5e3ba9b5970d611bb156462",
+          "partitions": 2,
+          "origin_count_distribution": {
+            "1": 3,
+            "2": 1
+          },
+          "overlap_proof": {
+            "time": 1711325100,
+            "pins": [
+              {
+                "id": "e69e60fb91a611fb3343319d27c77b55522f8de5a2b6cd769dcbe4f47bbd143d",
+                "sha256": "85c493505aed01102f2ea849744fef3864d67b4db1fe2282d865cca653f93862"
+              },
+              {
+                "id": "5a239b5950b30c1aa749e02e6360a6bded5538b629bfbc430c15a1c587539f7d",
+                "sha256": "5713f4052d892694c04a327d9d995dfbe91b5d2d45d87dc597025a3a307f4834"
+              }
+            ]
+          }
+        },
+        "2": {
+          "symbol": "GBPUSD",
+          "timeframe": "M1",
+          "bars": 3,
+          "first_open": 1711324860,
+          "last_open": 1711324980,
+          "last_available": 1711326000,
+          "ordered_bar_sha256": "4210acf8bbce69210dad8fbcaf4b8d595e9190d73ef5eb34f211650cb0bcbf1c",
+          "partitions": 1,
+          "origin_count_distribution": {
+            "1": 3
+          }
+        }
+      },
+      "nonaligned_cutoff": {
+        "end": 1711325750,
+        "bars": {
+          "primary": 3,
+          "2": 2
+        }
+      }
+    }
+  ]
+}

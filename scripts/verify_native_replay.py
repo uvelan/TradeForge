@@ -8,6 +8,7 @@ from datetime import UTC, date, datetime
 from hashlib import sha256
 import json
 import lzma
+from math import isfinite
 import os
 from pathlib import Path
 import struct
@@ -159,23 +160,32 @@ def verify_snapshot(session, panes):
             observed = {field: actual[field] for field in target if field != "source_partition_indexes"}
             desired = {field: value for field, value in target.items() if field != "source_partition_indexes"}
             assert observed == desired, (view, observed, desired)
-            actual_pins = [key(captured["partitions"][index]) for index in actual["source_partition_indexes"]]
+            assert all(isfinite(actual[field]) for field in FIELDS), (view, observed["time"])
+            indexes = actual["source_partition_indexes"]
+            assert indexes and len(set(indexes)) == len(indexes) and all(
+                type(index) is int and 0 <= index < len(captured["partitions"]) for index in indexes
+            ), (view, observed["time"], indexes)
+            actual_pins = [key(captured["partitions"][index]) for index in indexes]
             oracle_pins = [key(expected["partitions"][index]) for index in target["source_partition_indexes"]]
             assert sorted(actual_pins) == sorted(oracle_pins), (view, observed["time"], actual_pins, oracle_pins)
         coverage = captured["coverage"]
         start, end = session["request"]["start"], session["request"]["end"]
         step = int(expected["timeframe"][1:]) * 60
+        slot_start = (start + step - 1) // step * step
+        slot_end = end // step * step
         gaps = []
-        cursor = start
+        cursor = slot_start
         for bar in expected["candles"]:
             if bar["time"] > cursor:
                 gaps.append({"start": cursor, "end": bar["time"]})
             cursor = bar["time"] + step
-        if cursor < end:
-            gaps.append({"start": cursor, "end": end})
-        assert coverage == {"start": start, "end": end, "gaps": gaps,
-                            "duplicate_bars": expected.get("duplicate_bars", 0),
-                            "truncated": False}, view
+        if cursor < slot_end:
+            gaps.append({"start": cursor, "end": slot_end})
+        target_coverage = {"start": start, "end": end, "gaps": gaps,
+                           "duplicate_bars": expected.get("duplicate_bars", 0), "truncated": False}
+        if (slot_start, slot_end) != (start, end):
+            target_coverage.update(slot_start=slot_start, slot_end=slot_end)
+        assert coverage == target_coverage, (view, coverage, target_coverage)
 
 
 def save(client, payload, panes, sources, checkpoint):
@@ -302,7 +312,18 @@ def delayed(client, storage):
     checkpoint = {"position": 3, "bookmarks": [0, 1],
                   "selected": {"view": "primary", "time": start}}
     result = save(client, payload, panes, [], checkpoint)
-    return {**result, "source_kind": "CONTROLLED_ARCHIVE_AVAILABILITY"}
+    # A nonaligned end inside the next primary bar cannot admit that unfinished bar or
+    # any earlier bar the archive says arrived later than the requested bound.
+    short_end = start + 950
+    bounded = {view: {**pane, "candles": [bar for bar in pane["candles"]
+                                        if bar["available_at"] <= short_end]}
+               for view, pane in panes.items()}
+    shortened = request(client, "POST", "/api/replay/sessions", 201,
+                        json={**payload, "end": short_end})
+    verify_snapshot(shortened, bounded)
+    return {**result, "source_kind": "CONTROLLED_ARCHIVE_AVAILABILITY",
+            "nonaligned_cutoff": {"end": short_end,
+                                  "bars": {view: len(pane["candles"]) for view, pane in bounded.items()}}}
 
 
 def storage_env(storage):

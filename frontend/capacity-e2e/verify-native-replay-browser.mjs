@@ -104,7 +104,7 @@ async function activate(page, name) {
   await page.keyboard.press('Enter');
 }
 async function choose(page, label, value) {
-  const control = page.getByLabel(label, {exact: true});
+  const control = page.getByRole('combobox', {name: new RegExp('^' + label)});
   // Keep the picker open while traversing options. Commit the explicit choice with Enter.
   await tabTo(page, control);
   const index = await control.locator('option').evaluateAll((options, value) => {
@@ -165,9 +165,11 @@ async function freeze(page, scope, sessionId) {
   assert.equal(result.request.window_bars, scope.window_bars);
 }
 async function resume(page, sessionId) {
-  const expected = page.waitForResponse(response => response.url().endsWith('/api/replay/sessions/' + sessionId));
-  await choose(page, 'Resume saved replay', sessionId);
-  assert.equal((await expected).status(), 200);
+  const [response] = await Promise.all([
+    page.waitForResponse(response => response.url().endsWith('/api/replay/sessions/' + sessionId)),
+    choose(page, 'Resume saved replay', sessionId),
+  ]);
+  assert.equal(response.status(), 200);
   await expect(page.getByLabel('Replay timeline')).toBeVisible();
 }
 async function verifyBars(page, panes, cutoff) {
@@ -312,7 +314,7 @@ try {
   await verifySelection(page, pane, selected);
   const full = await verifyBars(page, details.panes, details.panes.primary.candles.at(-1).available_at);
   const rewind = details.checkpoint.bookmarks[0];
-  const bookmarks = page.getByLabel('Bookmarks', {exact: true});
+  const bookmarks = page.getByRole('combobox', {name: /^Bookmarks/});
   await expect(bookmarks.locator('option')).toHaveCount(details.checkpoint.bookmarks.length + 1);
   await choose(page, 'Bookmarks', String(rewind + 1));
   const rewindCounts = await verifyBars(page, details.panes, details.panes.primary.candles[rewind].available_at);
