@@ -13,6 +13,8 @@ The [verification and interrupted-acquisition correction](VERIFICATION-AND-RECOV
 
 The [source-selection correction](SOURCE-SELECTION.md) distinguishes an empty archive from a failed scan and a failed terminal query from a successful empty response.
 
+The [historical clock and session decision](MT5-CLOCK-DECISION.md) identifies the terminal server, the eight disputed raw hours, and the missing evidence for monthly MT5 admission.
+
 ### Exact missing Dukascopy open intervals
 
 All endpoints below are UTC, start inclusive and end exclusive. The complete inventory separately identifies scheduled closures.
