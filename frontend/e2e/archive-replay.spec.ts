@@ -12,7 +12,7 @@ function capture(rangeStart = start): ReplaySession {
     availability_basis:'ARCHIVE_SUPPLIED',source_partition_indexes:[0],
   });
   const metadata = {
-    source:'MT5_SAVED' as const, synthetic:false, feed_id:'fixture-feed', price_basis:'BID',
+    source:'DUKASCOPY_SAVED' as const, synthetic:false, feed_id:'fixture-feed', price_basis:'BID',
     partitions:[partition], latest_unconfirmed:false,
     coverage:{start:rangeStart,end:rangeStart+900,gaps:[],duplicate_bars:0,truncated:false},
   };
@@ -34,10 +34,11 @@ function capture(rangeStart = start): ReplaySession {
 async function openArchive(page: Page) {
   await page.addInitScript(() => {
     for (const [setting,value] of Object.entries({
-      source:'MT5_SAVED', timeframe:'M5','chart-views':'4','link-replay':'off',
+      source:'DUKASCOPY_SAVED', timeframe:'M5','chart-views':'4','link-replay':'off',
       'view-2-symbol':'GBPUSD','view-3-symbol':'USDJPY','view-4-symbol':'XAUUSD',
       'secondary-timeframe':'M5','view-3-frame':'M5','view-4-frame':'M5',
     })) localStorage.setItem('tradeforge.workspace.'+setting,value);
+    if (sessionStorage.getItem('different-replay-layout')) localStorage.setItem('tradeforge.workspace.chart-views','1');
   });
   await page.route('**/research/api/market/candles?*', route => route.fulfill({
     status:404,json:{detail:'Archive preview unavailable'},
@@ -120,9 +121,14 @@ test('inspects and restores the selected frozen candle without exposing out-of-c
   await controls.getByRole('button',{name:'Save replay position'}).press('Enter');
   await expect(controls.getByText('Replay position saved')).toBeVisible();
 
+  await page.evaluate(()=>sessionStorage.setItem('different-replay-layout','yes'));
   await page.reload();
+  const layout=page.getByRole('combobox',{name:'Chart layout',exact:true});
+  await expect(layout).toHaveValue('1');
   await page.getByRole('combobox',{name:'Resume saved replay'}).press('End');
+  await expect(layout).toHaveValue('4');
   await expect(picker).toHaveValue('4');
+  await expect(page.getByRole('combobox',{name:'H1 chart pane'}).locator('option[value="2"]')).toHaveText(/GBPUSD/);
   await expect(selected).toContainText('The selected candle is beyond the replay cutoff.');
   await controls.getByRole('button',{name:'Last candle'}).press('Enter');
   await expect(slider).toHaveAttribute('aria-valuetext',stamp(start+300));

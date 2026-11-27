@@ -738,15 +738,15 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
           (replayArchive||loadedPrimaryGeneration === primaryLoadGeneration) &&
           <>
             <ReplayH1Evidence key={replaySession.id} session={replaySession} cutoff={cutoff} symbol={symbol} timeframe={timeframe}
-              linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
+              linkedViews={replayLinked ? chartViewCount : 1}/>
             <ReplayStructureEvidence key={'events:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
+              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
             <ReplayZoneEvidence key={'zones:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
+              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
             <ReplayCrtEvidence key={'crt:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
+              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
             <ReplayConfluenceEvidence key={'confluence:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
+              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
           </>}
         {savedSource&&cutoff!=null&&firstFeed&&(!compare||secondFeed)&&
           <FrozenSmtReceipt cutoff={cutoff} timeframe={timeframe} primary={firstFeed} comparison={compare?secondFeed:undefined}/>}
