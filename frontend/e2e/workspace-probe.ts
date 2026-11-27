@@ -54,7 +54,7 @@ export async function installProbe(page:Page) {
     Object.assign(window,{workspaceProbe:audit});
     // Only direct application resource acquisitions. Ignore Playwright, React delegation
     // and library-private internals, except observers actually attached to a chart surface.
-    const owned=(stack:string|undefined)=>/\/src\/(App|components|drawingPlacement|ChartLink|chartViews|indicators|ReplayControls)\.[tj]sx?/.test(stack?.split('\n')[2]??'');
+    const owned=(stack:string|undefined)=>/\/src\/(App|components|Drawings|drawingPlacement|ChartLink|chartViews|indicators|ReplayControls)\.[tj]sx?/.test(stack?.split('\n')[2]??'');
     const originalAdd=EventTarget.prototype.addEventListener, originalRemove=EventTarget.prototype.removeEventListener;
     const registrations=new WeakMap<EventTarget, Map<string,Set<unknown>>>();
     const key=(type:string,opt?:boolean|EventListenerOptions)=>type+':'+Boolean(typeof opt==='boolean'?opt:opt?.capture);
