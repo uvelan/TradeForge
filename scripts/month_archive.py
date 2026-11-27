@@ -109,7 +109,7 @@ def _recover_receipt(stream):
     return resume_after
 
 
-def acquire(pending, receipt):
+def acquire(pending, receipt, *, observations=None):
     receipt.parent.mkdir(parents=True, exist_ok=True)
     with receipt.open("a+b") as stream:
         # Hold the lock through the provider call and receipt flush so a second
@@ -118,10 +118,10 @@ def acquire(pending, receipt):
             return "ACQUISITION_IN_PROGRESS"
         if _recover_receipt(stream) > datetime.now(UTC).timestamp():
             return "PROVIDER_COOLDOWN_ACTIVE"
-        return _acquire(pending, stream)
+        return _acquire(pending, stream, observations)
 
 
-def _acquire(pending, stream):
+def _acquire(pending, stream, observations):
     failures = 0
     for attempt in range(1, 3):
         if attempt == 2 and pending:
@@ -152,6 +152,8 @@ def _acquire(pending, stream):
                 event["stop"] = "FOUR_CONSECUTIVE_FAILURES"
             stream.write((json.dumps(event) + "\n").encode("utf-8"))
             stream.flush()
+            if observations is not None:
+                observations.append(event)
             if "stop" in event:
                 return event["stop"]
             if "sha256" not in result:

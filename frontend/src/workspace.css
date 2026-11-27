@@ -467,3 +467,5 @@
   .archive-replay-inspection-controls label { width: 100%; }
   .archive-replay-inspection-controls select { min-width: 0; }
 }
+
+.forex-coverage .coverage-fields{display:flex;flex-wrap:wrap;align-items:end;gap:12px;padding:12px 0;border:0}.coverage-fields label{display:grid;gap:4px}.forex-coverage code{overflow-wrap:anywhere}.forex-coverage details{margin:8px 0}.forex-coverage details ul{max-height:16rem;overflow:auto}.forex-coverage .table-scroll{max-height:26rem}.forex-coverage th{white-space:nowrap}

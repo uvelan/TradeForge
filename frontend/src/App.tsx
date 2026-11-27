@@ -41,10 +41,11 @@ import {DrawingToolbox,tools,useDrawingBook,type Drawing} from './Drawings';
 import {PlanHistory} from './PlanHistory';
 import {StrategyBuilder} from './StrategyBuilder';
 import type {EvidenceChartLocation} from './StrategyEvaluation';
+import {ForexCoverage} from './ForexCoverage';
 import {MonthReplay} from './MonthReplay';
 import {HistoricalResearch} from './HistoricalResearch';
 
-type ChartLocation = Partial<EvidenceChartLocation> & {indicator?:string;sequence:number};
+type ChartLocation = Partial<EvidenceChartLocation> & {indicator?:string;pairedCoverage?:boolean;sequence:number};
 
 type Section='overview'|'terminal'|'signals'|'plans'|'ai'|'lab'|'builder'|'journal'|'data'|'settings';
 const menu:{id:Section;name:string;icon:typeof Activity}[]=[
@@ -159,7 +160,7 @@ function App(){
         clearLink={()=>{setJournalSignal(undefined);setJournalContext(undefined);}}
         openPlan={(id,version)=>{setPlanLocation({id,version});go('plans');}}
         openSignal={openSignal}/>}
-      {section==='data'&&<><DataLibrary refresh={refresh} initialDataset={dataLocation}/><StatementReconciliation/></>}
+      {section==='data'&&<><DataLibrary refresh={refresh} initialDataset={dataLocation} openReplay={range=>openChart({symbol:'EURUSD',timeframe:'M5',source:'DUKASCOPY_SAVED',range,pairedCoverage:true})}/><StatementReconciliation/></>}
       {section==='settings'&&<SettingsPage/>}
       </div>
       <footer className="footer"><span>TRADEFORGE • RESEARCH ENVIRONMENT • SINGLE USER</span><span>Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">TradingView</a> · UTC storage · {zone}</span></footer>
@@ -187,7 +188,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [forexSymbol,setSymbol]=useWorkspacePreference<SymbolName>('forex-symbol','EURUSD',watchSymbols);
   const [timeframe,setTimeframe]=useWorkspacePreference<Timeframe>('timeframe','M5',chartTimeframes);
   const [source,setSource]=useWorkspacePreference<ChartSource>('source','MT5',chartSources);
-  const [selectedRange,setRange]=useState<CandleRange>();
+  const [selectedRange,setRange]=useState<CandleRange|undefined>(initialLocation?.range);
   const savedSource=source==='MT5_SAVED'||source==='DUKASCOPY_SAVED';
   const range=savedSource?selectedRange:undefined;
   const exactEvidence=Boolean(initialLocation?.evidencePath&&initialLocation.symbol===forexSymbol&&
@@ -200,6 +201,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     else if(source==='BINANCE_SPOT')setSource('MT5');
     if(initialLocation.timeframe)setTimeframe(initialLocation.timeframe);
     if(initialLocation.range)setRange(initialLocation.range);
+    if(initialLocation.pairedCoverage)setComparisonSymbol('GBPUSD');
     setBrokerSymbol(initialLocation.symbol);
     setSymbol(initialLocation.symbol);
   },[initialLocation]);
@@ -1014,7 +1016,7 @@ function Journal({refresh,incoming,clearLink,openSignal,initialEntry,initialCont
  </>
 }
 
-function DataLibrary({refresh,initialDataset}:{refresh:()=>void;initialDataset?:Dataset}){
+function DataLibrary({refresh,initialDataset,openReplay}:{refresh:()=>void;initialDataset?:Dataset;openReplay:(range:CandleRange)=>void}){
   const formatDate=useTimestampFormat();
  const [datasets,setDatasets]=useState<Dataset[]>([]);const [symbol,setSymbol]=useState<SymbolName>('EURUSD');const [timeframe,setTimeframe]=useState<Timeframe>('M5');const [day,setDay]=useState('2026-11-12');const [hour,setHour]=useState('');const [file,setFile]=useState<File|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [msg,setMsg]=useState('');
  const [inspected,setInspected]=useState<Dataset|undefined>(initialDataset);
@@ -1044,6 +1046,7 @@ function DataLibrary({refresh,initialDataset}:{refresh:()=>void;initialDataset?:
  async function importBi5(){if(!file)return;setBusy(true);setError('');try{const d=await api.importBi5(symbol,day,file,hour);setMsg(`Imported ${d.tick_dataset.rows} source ticks, ${d.candle_rows} M5 bars`);await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  return <><PageHeading eyebrow="STORAGE / PROVENANCE" title="Market data library" subtitle="Maintain separately sourced, checksummed datasets for research and replay." action={<a className="btn btn-secondary" href="/catalog.html">Open fixed-point catalog</a>}/>
  {error&&<Notice tone="red">{error}</Notice>}{msg&&<Success>{msg}</Success>}
+ <ForexCoverage openReplay={openReplay} imported={()=>{void load();refresh();}}/>
  <Card><SectionTitle title="Register a reviewed local archive"/>
  <p>Choose an EURUSD BI5 hour from 13 November 2025 (13:00 or 14:00 UTC), or the EURUSD or GBPUSD M5 BID Parquet partition from 13 November 2026. Each file is identified by checksum. To resume an interrupted import, choose the same file again.</p>
  <label className="field">Reviewed archive file<input type="file" accept=".bi5,.parquet" onChange={e=>setReviewedFile(e.target.files?.[0]??null)}/></label>

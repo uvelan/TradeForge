@@ -61,6 +61,14 @@ export const api={
   saveSnapshot:(png:string,symbol:string,timeframe:Timeframe,source:string,cutoff?:number,
     signal_reference?:import('./types').SignalReference,lanes?:import('./snapshotLanes').SnapshotLane[])=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference,lanes}),
   importMt5:(symbol:SymbolName,timeframe:Timeframe,limit:number)=>post('/market/import/mt5',{symbol,timeframe,limit}),
+  importCoverageHour:(symbol:string,hour:number,file:File)=>{
+    const body=new FormData();body.append('file',file);
+    return request<{tick_dataset:{rows:number}}>('/forex/bi5?'+new URLSearchParams({symbol,hour:String(hour)}),{method:'POST',body});
+  },
+  importCoverageCsv:(symbol:string,day:string,file:File)=>{
+    const body=new FormData();body.append('file',file);
+    return request('/forex/candles?'+new URLSearchParams({symbol,day}),{method:'POST',body});
+  },
   importReviewed:(file:File)=>{
     const body=new FormData();body.append('file',file);
     return request<{source_sha256:string;partitions:{id:string}[]}>('/market/import/reviewed',{method:'POST',body});

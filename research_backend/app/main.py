@@ -36,6 +36,7 @@ from .ai_review_decisions import router as review_decision_router
 from .workspace_routes import router as workspace_router
 from .learning import router as learning_router
 from .historical_packages import HistoricalReview, import_historical, router as historical_package_router
+from .forex_coverage import router as forex_coverage_router
 from .month_replay import router as month_router
 from .decision_reviews import router as decision_review_router
 from .strategy_routes import router as strategy_router
@@ -82,6 +83,7 @@ app.include_router(decision_review_router)
 from .statement_routes import router as statement_router
 app.include_router(statement_router)
 app.include_router(month_router)
+app.include_router(forex_coverage_router)
 app.include_router(historical_package_router)
 app.include_router(strategy_router)
 app.include_router(strategy_evaluation_router)
