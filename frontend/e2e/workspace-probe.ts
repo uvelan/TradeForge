@@ -14,6 +14,15 @@ export async function installProbe(page:Page) {
         .map((series:any)=>({title:series.options().title,type:series.seriesType(),data:series.data()})))??[],
       viewRange:(from:number,to:number,selector?:string)=>selected(selector).timeScale().setVisibleRange({from,to}),
       bars:()=>Array.from(live.values(),api=>api.panes()[0].getSeries()[0].data()),
+      drawingPoint:(selector:string, horizontal:number, vertical:number)=>{
+        const el=document.querySelector(selector)!;
+        const chart=live.get(el), rect=el.getBoundingClientRect(), scale=chart.timeScale();
+        const series=chart.panes()[0].getSeries()[0];
+        const x=Math.round(rect.left+chart.priceScale('left').width()+scale.width()*horizontal);
+        const y=Math.round(rect.top+chart.paneSize(0).height*vertical);
+        return {x,y,time:scale.coordinateToTime(x-rect.left-chart.priceScale('left').width()),
+          price:series.coordinateToPrice(y-rect.top).toFixed(5),range:scale.getVisibleLogicalRange()};
+      },
       point:(time:number,selector='.primary-chart .chart-input')=>{
         const el=document.querySelector(selector)!;
         const api=live.get(el), rect=el.getBoundingClientRect();

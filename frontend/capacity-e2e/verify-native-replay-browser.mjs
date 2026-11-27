@@ -7,9 +7,11 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
 import {chromium, expect} from '@playwright/test';
+import {drawingJourney, verifyReopenedDrawings} from './native-drawing-journey.mjs';
 import {installProbe} from '../e2e/workspace-probe.ts';
 
 const {values: args} = parseArgs({options: {
+  drawings: {type: 'boolean'},
   output: {type: 'string'},
   workspace: {type: 'string'},
   bi5: {type: 'string'},
@@ -17,7 +19,7 @@ const {values: args} = parseArgs({options: {
   'api-port': {type: 'string', default: '8793'},
   'ui-port': {type: 'string', default: '4793'},
 }});
-if (!args.output || !args.workspace || !args.bi5 || !args.csv) {
+if (!args.output || !args.workspace || (!args.drawings && !args.bi5) || !args.csv) {
   throw Error('Supply --output, --workspace, --bi5, and --csv paths.');
 }
 for (const port of [args['api-port'], args['ui-port']]) {
@@ -288,6 +290,37 @@ try {
   api = startApi();
   await awaitReady(apiOrigin, '/api/health', api);
   const pids = [api.pid];
+  if (args.drawings) {
+    const {details, output} = fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
+    vite = startVite();
+    await awaitReady(uiOrigin, '/', vite);
+    browser = await chromium.launch();
+    let page = await browser.newPage({viewport: {width: 1536, height: 900}});
+    await configure(page, details);
+    await freeze(page, details.request, details.session_id);
+    const bars = await verifyBars(page, details.panes, details.request.end);
+    const journey = await drawingJourney(page, details);
+    await browser.close();
+    browser = undefined;
+    await stop(api);
+    api = startApi();
+    await awaitReady(apiOrigin, '/api/health', api);
+    assert.notEqual(api.pid, pids[0]);
+    fixture('reopen', ['--fixture', output]);
+    browser = await chromium.launch();
+    page = await browser.newPage({viewport: {width: 1536, height: 900}});
+    await configure(page, details, true);
+    await resume(page, details.session_id);
+    await verifyBars(page, details.panes, details.request.end);
+    await verifyReopenedDrawings(page, details, journey);
+    assert.deepEqual(errors, []);
+    mkdirSync(dirname(resolve(args.output)), {recursive: true});
+    writeFileSync(resolve(args.output), JSON.stringify({
+      session: details.session_id, source: details.source_kind, source_hashes: details.sources.map(row => row.sha256),
+      bars, api_processes: 2, browser_processes: 2, uncaught_page_errors: errors, ...journey,
+    }, null, 2) + '\n');
+    console.log('Genuine replay drawing journey and two-process reopen passed.');
+  } else {
   const controlled = fixture('prepare');
   const genuine = fixture('genuine-bi5', ['--bi5', resolve(args.bi5)]);
   const exports = fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
@@ -344,6 +377,7 @@ try {
     rewind_bars: rewindCounts, selected_candle: selected, uncaught_page_errors: errors,
   }, null, 2) + '\n');
   console.log('Native archive freeze, two-process restart and all named panes verified.');
+  }
 } finally {
   if (browser) await browser.close();
   await stop(vite);
