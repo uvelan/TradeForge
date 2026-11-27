@@ -63,13 +63,18 @@ def verified_children(lane, visible, *, include_availability_basis=False):
 
 def capture_start(lane):
     coverage = lane["coverage"]
-    return lane["candles"][0]["time"] if coverage["truncated"] and lane["candles"] else coverage["start"]
+    return lane["candles"][0]["time"] if coverage["truncated"] and lane["candles"] else coverage.get("slot_start", coverage["start"])
+
+
+def capture_end(lane):
+    coverage = lane["coverage"]
+    return coverage.get("slot_end", coverage["end"])
 
 
 def capture_horizon(lane):
     arrivals = lane.get("replay_cutoffs")
     final = arrivals[-1] if arrivals else replay_availability(lane["candles"][-1], FRAME_MIN[lane["timeframe"]] * 60)
-    return max(lane["coverage"]["end"], final)
+    return max(capture_end(lane), final)
 
 
 def inspect_hour(session, view, hour_start, cutoff):
@@ -87,7 +92,7 @@ def inspect_hour(session, view, hour_start, cutoff):
     left = capture_start(lane)
     end = hour_start + HOUR
     if (hour_start % HOUR or cutoff < left or hour_start > cutoff
-            or end <= left or hour_start >= lane["coverage"]["end"]):
+            or end <= left or hour_start >= capture_end(lane)):
         raise HTTPException(422, "Requested UTC hour outside the captured pane window at this cutoff")
     schedule = MarketSchedule(kind="forex_weekly")
     receipt = dict(session_id=session["id"], view=view, symbol=lane["symbol"], source=lane["source"],

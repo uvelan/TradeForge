@@ -17,6 +17,10 @@ class WindowTooLarge(ValueError):
     pass
 
 
+class NoCompleteSlot(ValueError):
+    pass
+
+
 @contextmanager
 def replay_catalog():
     """Keep the catalog revision fixed while capturing all requested panes."""
@@ -45,7 +49,13 @@ def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, 
 
     connection, resolver = catalog
     explicit = start is not None
-    end = end if explicit else cutoff // step * step
+    requested_start, requested_end = start, end
+    if explicit:
+        cutoff = min(cutoff, end)
+        start = (start + step - 1) // step * step
+    end = cutoff // step * step
+    if explicit and start >= end:
+        raise NoCompleteSlot(f"No complete {timeframe} candle slot in the requested UTC range at the capture cutoff")
     columns = "rowid AS _snapshot_rowid, *" if resolver else "*"
     params = [provider, symbol, timeframe, utc(end)]
     lower = ""
@@ -145,7 +155,11 @@ def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, 
     candles = [{**records[t], "available_at": replay_availability(records[t], step),
                 "availability_basis": "ARCHIVE_SUPPLIED" if records[t].get("available_at") is not None else "MODELED_NOMINAL_CLOSE",
                 "source_partition_indexes": origins[t]} for t in ordered]
+    coverage = {"start": requested_start if explicit else start, "end": requested_end if explicit else end,
+                "gaps": gaps, "duplicate_bars": duplicates, "truncated": truncated}
+    if explicit and (start, end) != (requested_start, requested_end):
+        # Fragments at the edges and unelapsed slots are outside the gap denominator.
+        coverage.update(slot_start=start, slot_end=end)
     # Clock positions follow arrival, independently of the UTC-open plot order.
     return {"replay_cutoffs": sorted(bar["available_at"] for bar in candles), "price_basis": identity[1], "feed_id": identity[0], "partitions": pins, "candles": candles,
-            "coverage": {"start": start, "end": end, "gaps": gaps, "duplicate_bars": duplicates,
-                         "truncated": truncated}}
+            "coverage": coverage}

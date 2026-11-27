@@ -203,3 +203,37 @@ def test_repeated_native_panes_verify_one_physical_snapshot(client, monkeypatch)
     frozen = response.json()
     assert all(pane == frozen["market"] for pane in frozen["views"].values())
     assert reads == [part["id"]]
+
+
+def test_native_explicit_capture_obeys_requested_clock_and_only_counts_whole_slots(client):
+    partition([bar(i, available_at=START+delay) for i, delay in
+               [(0, 60), (1, 200), (2, 201), (3, 240)]])
+    partition([bar(0, step=3600)], symbol="GBPUSD", frame="H1")
+    response = create(client, start=START+10, end=START+200,
+                      views=[{"view":"2", "symbol":"GBPUSD", "timeframe":"H1"}])
+    assert response.status_code == 201, response.text
+    session = response.json()
+    primary = session["market"]
+    assert [b["time"] for b in primary["candles"]] == [START+60]
+    assert primary["replay_cutoffs"] == [START+200]  # Arrival exactly at the exclusive candle-range end is known.
+    assert primary["coverage"] == {"start": START+10, "end": START+200, "slot_start": START+60,
+                                    "slot_end": START+180, "truncated": False, "duplicate_bars": 0,
+                                    "gaps": [{"start": START+120, "end": START+180}]}
+    assert "No complete H1 candle slot" in session["views"]["2"]["error"]
+    no_hour = create(client, symbol="GBPUSD", timeframe="H1", start=START+600, end=START+2400)
+    assert no_hour.status_code == 422 and "No complete H1 candle slot" in no_hour.json()["detail"]
+
+
+def test_peer_range_slots_and_arrivals_are_bounded_by_the_same_exclusive_end(client):
+    partition([bar(1), bar(2)])
+    partition([bar(1, step=300, available_at=START+601),
+               bar(2, step=300, available_at=START+962),
+               bar(3, step=300, available_at=START+1200)], symbol="GBPUSD", frame="M5")
+    response = create(client, start=START+10, end=START+961,
+                      views=[{"view":"2", "symbol":"GBPUSD", "timeframe":"M5"}])
+    assert response.status_code == 201, response.text
+    peer = response.json()["views"]["2"]
+    assert [(b["time"], b["available_at"]) for b in peer["candles"]] == [(START+300, START+601)]
+    assert peer["coverage"]["start"] == START+10 and peer["coverage"]["end"] == START+961
+    assert (peer["coverage"]["slot_start"],peer["coverage"]["slot_end"]) == (START+300, START+900)
+    assert peer["coverage"]["gaps"] == [{"start":START+600, "end":START+900}]

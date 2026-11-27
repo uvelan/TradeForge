@@ -11,7 +11,7 @@ from .db import one, rows, transaction
 from .indicator_coverage import open_intervals
 from .market import FRAME_MIN
 from .replay_crt import DELIVERY, RULES, continuity, range_detail, summarize
-from .replay_hour import STEP, capture_horizon, capture_start
+from .replay_hour import STEP, capture_end, capture_horizon, capture_start
 from .replay_structure import SCHEDULE, replay_provenance, verified_replay_rows
 from .smt_causal import ALGORITHM_VERSION, LIFECYCLE_VERSION, FrozenFeed, StrictSmtRequest, evaluate_strict_smt
 from .strategy_evidence import EvidenceRegistry, fingerprint
@@ -71,7 +71,7 @@ def read_panes(session, cutoff):
             issues[symbol] = coverage_issue(symbol, "AMBIGUOUS_REQUIRED_PANE")
             continue
         _, rows, children = verified_replay_rows(session, view, cutoff)
-        start, end = capture_start(lane), lane["coverage"]["end"]
+        start, end = capture_start(lane), capture_end(lane)
         meta = dict(**source(lane), partitions=lane["partitions"], start=start, end=end)
         panes[symbol] = dict(lane=lane, rows=rows, children=children, source=meta)
         # Checking the closed prefix also catches a missing trailing child that has

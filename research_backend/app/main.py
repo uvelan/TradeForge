@@ -44,7 +44,7 @@ from .historical_strategy_routes import router as historical_strategy_router
 from .historical_strategy_worker import supervise as supervise_strategy_history
 from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
 from .indicator_coverage import replay_availability
-from .replay_archive import MAX_WINDOW, WindowTooLarge, replay_catalog, saved_replay_window
+from .replay_archive import MAX_WINDOW, NoCompleteSlot, WindowTooLarge, replay_catalog, saved_replay_window
 from .replay_confluence import inspect_confluence, list_pinned_confluence, pin_confluence
 from .replay_crt import inspect_crt
 from .replay_hour import inspect_hour
@@ -565,7 +565,7 @@ def captured_replay(request:ReplayRequest,symbol:str,timeframe:str,cutoff:int,ca
         raise HTTPException(422,"Unsupported replay timeframe")
     step = FRAME_MIN[timeframe]*60
     start,end=request.start,request.end
-    if start is not None:
+    if start is not None and catalog is None:
         start = start//step*step
         end = (end+step-1)//step*step
         end = min(end, cutoff//step*step)
@@ -577,6 +577,8 @@ def captured_replay(request:ReplayRequest,symbol:str,timeframe:str,cutoff:int,ca
                                          start, end, step, request.window_bars, cutoff)
         except WindowTooLarge:
             raise
+        except NoCompleteSlot as error:
+            raise HTTPException(422, str(error)) from error
         except FileNotFoundError as error:
             raise HTTPException(404, str(error)) from error
         except (OSError, RuntimeError, ValueError) as error:
