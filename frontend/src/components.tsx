@@ -25,7 +25,7 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot,savingSnapshot,snapshotStatus,replayCandleTime,onReplayCandleSelect}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,resolvePlacementAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot,savingSnapshot,snapshotStatus,replayCandleTime,onReplayCandleSelect}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
   onAddLevel?:(price:number)=>void;showSnapshot?:boolean;showDataLegend?:boolean;symbol?:string;precision?:number;indicators?:IndicatorResult[]
   timeframe?: string;
@@ -34,10 +34,11 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   replayCandleTime?:number;
   onReplayCandleSelect?:(time:number)=>void;
   link?:ChartLink; linkId?:string;
-  drawings?:Drawing[]; onAnchor?:(points:{bar:Candle;price:number}[])=>void;
+  drawings?:Drawing[]; onAnchor?:(anchors:Anchor[])=>void;
+  resolvePlacementAnchor?:(bar:Candle,price:number)=>Anchor;
   placementDraft?:DrawingLayer['preview']; placementInteraction?:object;
   placementDrag?:PlacementDrag; requirePlacementCandle?:boolean;
-  onPlacementPreview?:(points:{bar:Candle;price:number}[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void;
+  onPlacementPreview?:(anchors:Anchor[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void;
   directEdit?:{selected:string;enabled:boolean;revision?:number;snap:boolean;save:(item:Drawing,anchors:Anchor[])=>void}; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>; savingSnapshot?:boolean; snapshotStatus?:string;
   comparison?: {symbol:string; candles:Candle[]; precision:number; placement:ComparisonPlacement;
     onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]; smtWindowOnly?:boolean}
@@ -47,7 +48,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   const drawingPromptId=useId();
   const keyboardPlacement=drawMode&&Boolean(onAnchor);
   const keyboardInput=useRef<{focus:()=>void;clear:()=>void;key:(event:ReactKeyboardEvent<HTMLDivElement>)=>void}>(undefined);
-  const [keyboardTarget,setKeyboardTarget]=useState<DrawPoint>();
+  const [keyboardTarget,setKeyboardTarget]=useState<Anchor&{x:number;y:number}>();
   const replayGuide=useRef<HTMLDivElement>(null);
   const replayGuideTime=useRef(replayCandleTime);
   replayGuideTime.current=replayCandleTime;
@@ -88,6 +89,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   const didFit=useRef(false);
   const clickHandler=useRef(onAddLevel);
   const anchorHandler=useRef(onAnchor);
+  const resolveAnchor=useRef(resolvePlacementAnchor);
+  resolveAnchor.current=resolvePlacementAnchor;
   const previewHandler=useRef(onPlacementPreview);
   previewHandler.current=onPlacementPreview;
   const draft=useRef(placementDraft);
@@ -174,13 +177,14 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       if(price===null||!Number.isFinite(price)||price<0||((anchorHandler.current||needsCandle.current)&&!bar))return;
       return {x,y,price,time:bar?.time};
     }
-    function candlePoints(points:DrawPoint[]){
-      return points.flatMap(point=>{
-        const bar=point.time===undefined?undefined:linkedBars.current.get(point.time);
-        return bar?[{bar,price:point.price}]:[];
-      });
+    function placementAnchor(point:DrawPoint){
+      const bar=point.time===undefined?undefined:linkedBars.current.get(point.time);
+      return bar&&resolveAnchor.current?.(bar,point.price);
     }
-    let target:DrawPoint|undefined;
+    function placementAnchors(points:DrawPoint[]){
+      return points.flatMap(point=>placementAnchor(point)??[]);
+    }
+    let target:{anchor:Anchor;y:number}|undefined;
     function clearKeyboard(){
       if(!target)return;
       target=undefined;
@@ -189,7 +193,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     }
     function positionKeyboard(key?:string){
       const width=scale.width(),height=chart.paneSize(0).height;
-      const index=target?.time===undefined?scale.coordinateToLogical(width/2):scale.timeToIndex(target.time as UTCTimestamp);
+      const index=target?scale.timeToIndex(target.anchor.time as UTCTimestamp):scale.coordinateToLogical(width/2);
       if(index===null)return;
       const direction=key==='ArrowRight'?1:key==='ArrowLeft'?-1:0;
       const candle=series.dataByIndex(index+direction,direction===-1?MismatchDirection.NearestLeft:MismatchDirection.NearestRight)
@@ -198,10 +202,14 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       const step=key==='ArrowUp'?-8:key==='ArrowDown'?8:0;
       const y=Math.max(4,Math.min(height-4,(target?.y??height/2)+step));
       const point=x===null?undefined:locatePlot(x,y);
-      if(point?.time===undefined)return;
-      target=point;
-      setKeyboardTarget({...point,x:point.x+chart.priceScale('left').width()});
-      toolLayer.showPreview(previewHandler.current?.(candlePoints([point]))??draft.current);
+      const anchor=point&&placementAnchor(point);
+      if(!point||!anchor)return;
+      const row=series.priceToCoordinate(Number(anchor.price));
+      if(row===null)return;
+      // Keep the raw row for arrow travel so a snapped cursor can cross the wick midpoint.
+      target={anchor,y};
+      setKeyboardTarget({...anchor,x:point.x+chart.priceScale('left').width(),y:row});
+      toolLayer.showPreview(previewHandler.current?.([anchor])??draft.current);
     }
     keyboardInput.current={
       focus:()=>positionKeyboard(),
@@ -211,7 +219,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
         if(event.key==='Enter'){
           event.preventDefault();
           if(!target)positionKeyboard();
-          if(target&&!event.repeat)anchorHandler.current?.(candlePoints([target]));
+          if(target&&!event.repeat)anchorHandler.current?.([target.anchor]);
         }else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){
           event.preventDefault();
           positionKeyboard(event.key);
@@ -252,9 +260,9 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
           cancel:()=>toolLayer.showEdit(),
         };
       },
-      preview:points=>toolLayer.showPreview(previewHandler.current?.(candlePoints(points))??draft.current),
+      preview:points=>toolLayer.showPreview(previewHandler.current?.(placementAnchors(points))??draft.current),
       commit:points=>{
-        if(anchorHandler.current)anchorHandler.current(candlePoints(points));
+        if(anchorHandler.current)anchorHandler.current(placementAnchors(points));
         else clickHandler.current?.(points[0].price);
       },
     });
@@ -717,7 +725,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     {drawMode&&<div id={drawingPromptId} className="drawing-prompt">
       {drawingPrompt??'Click the chart to place a horizontal level'}
       {keyboardPlacement&&<span>Tab to the plot. Move with arrow keys and place with Enter.</span>}
-      {keyboardPlacement&&<output aria-live="polite">{keyboardTarget?.time===undefined?'':`${at(keyboardTarget.time)} · ${keyboardTarget.price.toFixed(precision)}`}</output>}
+      {keyboardPlacement&&<output aria-live="polite">{keyboardTarget?.time===undefined?'':`${at(keyboardTarget.time)} · ${keyboardTarget.price}`}</output>}
     </div>}
     {(fullscreen||comparison||showDataLegend)&&<div className="chart-data-legend" aria-label="Chart data">
       <div className="chart-legend-meta">

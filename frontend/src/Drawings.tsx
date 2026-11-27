@@ -106,10 +106,9 @@ function useDrawingBook(document:ReturnType<typeof useDrawingDocument>,snap:bool
     const nearest=snap?(Math.abs(price-bar.high)<Math.abs(price-bar.low)?bar.high:bar.low):price;
     return {time:bar.time,price:nearest.toFixed(Math.min(digits,10))};
   }
-  function anchor(points:{bar:Candle;price:number}[],digits:number) {
-    if(!edit||!current||writing.current||!points.length||points.some(point=>point.price<0))return;
-    const last=points[points.length-1];
-    const next=point(last.bar,last.price,digits);
+  function anchor(additions:Anchor[],digits:number) {
+    if(!edit||!current||writing.current||!additions.length||additions.some(point=>Number(point.price)<0))return;
+    const next=additions[additions.length-1];
     const nearest=Number(next.price);
     if(edit.item&&edit.mode!==undefined){
       const item=edit.item;
@@ -129,7 +128,6 @@ function useDrawingBook(document:ReturnType<typeof useDrawingDocument>,snap:bool
       setEdit(undefined);void save(current.items.map(drawing=>drawing.id===item.id?{...item,anchors,updated_at:now()}:drawing));
       return;
     }
-    const additions=points.map(({bar,price})=>point(bar,price,digits));
     const anchors=[...edit.anchors,...additions];
     if(anchors.length>tools[edit.kind][1]||
       (additions.length>1&&additions[0].time===next.time&&additions[0].price===next.price))return;
@@ -194,9 +192,10 @@ export function drawingChartProps(book:DrawingBook,digits:number,active:boolean)
     onDrawingSelect:(id:string)=>{if(!id||book.current?.items.some(item=>item.visible&&item.id===id))book.setSelected(id);},
     directEdit:{selected:active?book.selected:'',enabled:active&&Boolean(book.current&&!book.saving&&!book.conflict),
       revision:book.current?.revision,snap:book.snap,save:book.saveDirect},
-    onAnchor:draft?(points:{bar:Candle;price:number}[])=>book.anchor(points,digits):undefined,
-    onPlacementPreview:draft?(points:{bar:Candle;price:number}[])=>({kind:draft.kind,
-      anchors:[...draft.anchors,...points.map(({bar,price})=>book.point(bar,price,digits))]}):undefined,
+    resolvePlacementAnchor:draft?(bar:Candle,price:number)=>book.point(bar,price,digits):undefined,
+    onAnchor:draft?(anchors:Anchor[])=>book.anchor(anchors,digits):undefined,
+    onPlacementPreview:draft?(anchors:Anchor[])=>({kind:draft.kind,
+      anchors:[...draft.anchors,...anchors]}):undefined,
     drawingPrompt:draft?`${tools[draft.kind][0]} · select ${draft.mode==='move'?'new origin':typeof draft.mode==='number'?draft.mode+1:draft.anchors.length+1}`:undefined,
   };
 }

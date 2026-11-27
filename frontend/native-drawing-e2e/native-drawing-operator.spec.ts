@@ -1,5 +1,5 @@
 import {expect,test,type Page,type Locator} from '@playwright/test';
-import {readFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
 import {installProbe} from '../e2e/workspace-probe';
 
 type Point={x:number;y:number};
@@ -24,9 +24,9 @@ const scene=async(page:Page,pane:'primary'|'4'='primary'):Promise<Scene>=>{
 const control=(page:Page,name:string)=>page.getByRole('button',{name,exact:true});
 const selected=(page:Page)=>page.getByRole('combobox',{name:/^Select drawing/});
 
-async function openReplay(page:Page){
+async function openReplay(page:Page,url='/'){
   await installProbe(page);
-  await page.goto('/');
+  await page.goto(url);
   await control(page,'Market Terminal').click();
   await page.getByLabel('Market data source').selectOption(fixture.request.source);
   const saved=page.getByLabel('Resume saved replay');
@@ -168,4 +168,77 @@ test('first pointer placement after switching the active archive pane belongs to
   await click(page,fourth,.48,.67);
   await expect.poll(async()=>(await scene(page,'4')).revision,{timeout:4000}).toBe(beforeFourth.revision+1);
   expect(await scene(page)).toEqual(beforePrimary);
+});
+
+test('keyboard target announces the exact persisted archive anchor with wick snap on and off',async({page},info)=>{
+  await openReplay(page,'/?timezone=UTC');
+  const primary=page.getByRole('region',{name:'Primary chart'});
+  const readout=primary.locator('.drawing-prompt output');
+  const snap=page.getByLabel('Snap to wick');
+  const selector='.primary-chart .chart-input';
+  const candles=fixture.panes.primary.candles as {time:number;high:number;low:number}[];
+  const utc=new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',dateStyle:'medium',timeStyle:'short'});
+  const before=await scene(page);
+  await snap.uncheck();
+  await control(page,'Draw').press('Enter');
+  await tabToPlot(page,primary);
+  await expect(readout).toHaveText(/ · /);
+  const startingTime=(await readout.innerText()).split(' · ')[0];
+  const first=candles.findIndex(bar=>utc.format(bar.time*1000)===startingTime);
+  expect(first).toBeGreaterThanOrEqual(0);
+  // Choose an interior grid point from archived OHLC and real chart coordinates.
+  const move=await page.evaluate(({selector,bars})=>{
+    const probe=window.workspaceProbe;
+    const center=probe.drawingPoint(selector,.5,.5);
+    for(const [right,bar] of bars.entries()){
+      const high=probe.candlePoint(selector,bar.time,bar.high).y;
+      const low=probe.candlePoint(selector,bar.time,bar.low).y;
+      const down=Math.round(((high+low)/2-center.y)/8);
+      const y=center.y+down*8;
+      if(high+2<y&&y<low-2)return {right,down};
+    }
+    throw Error('No interior keyboard step in visible archive candles');
+  },{selector,bars:candles.slice(first,first+24)});
+  const bar=candles[first+move.right];
+  const travel=async()=>{
+    for(let i=0;i<move.right;i++)await page.keyboard.press('ArrowRight');
+    for(let i=0;i<Math.abs(move.down);i++)await page.keyboard.press(move.down<0?'ArrowUp':'ArrowDown');
+  };
+  const receipt=[];
+  let id='',freePrice=NaN;
+  for(const [step,wick] of [false,true,false,true].entries()){
+    const create=step===0||step===3;
+    if(step){
+      await snap.setChecked(wick);
+      await control(page,create?'Draw':'Set anchor 1').press('Enter');
+      await tabToPlot(page,primary);
+    }
+    await travel();
+    const [announcedTime,announcedPrice]=(await readout.innerText()).split(' · ');
+    expect(announcedTime).toBe(utc.format(bar.time*1000));
+    if(!step){
+      freePrice=Number(announcedPrice);
+      expect(freePrice).toBeGreaterThan(bar.low);
+      expect(freePrice).toBeLessThan(bar.high);
+    }
+    const nearest=Math.abs(freePrice-bar.high)<Math.abs(freePrice-bar.low)?bar.high:bar.low;
+    const expectedPrice=(wick?nearest:freePrice).toFixed(5);
+    const displayedRow=await primary.locator('.drawing-keyboard-target').evaluate(node=>parseFloat((node as HTMLElement).style.top));
+    const expectedRow=await page.evaluate(({selector,price})=>window.workspaceProbe.priceRow(selector,price),
+      {selector,price:Number(expectedPrice)});
+    await page.keyboard.press('Enter');
+    const revision=before.revision+step+1;
+    await expect.poll(async()=>(await scene(page)).revision).toBe(revision);
+    if(create){
+      await expect(selected(page)).not.toHaveValue(id);
+      id=await selected(page).inputValue();
+    }
+    const saved=(await scene(page)).items.find(item=>item.id===id)!.anchors[0];
+    receipt.push({wick,revision,action:create?'create':'edit',utc:new Date(bar.time*1000).toISOString(),
+      high:bar.high,low:bar.low,freePrice,announcedPrice,saved,displayedRow,expectedRow});
+    writeFileSync(info.outputPath('keyboard-anchors.json'),JSON.stringify(receipt,null,2));
+    expect(saved).toEqual({time:bar.time,price:expectedPrice});
+    expect.soft(announcedPrice).toBe(saved.price);
+    expect.soft(Math.abs(displayedRow-expectedRow)).toBeLessThan(1);
+  }
 });
