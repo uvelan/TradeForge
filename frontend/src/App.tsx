@@ -37,7 +37,7 @@ import {WorkspacePresets} from './WorkspacePresets';
 import {SessionIntelligence} from './SessionIntelligence';
 import {SimulationEvidence} from './SimulationEvidence';
 import {ChartLink} from './ChartLink';
-import {DrawingToolbox,drawingChartProps,usePaneDrawingBooks,useVisibleDrawings,type Drawing} from './Drawings';
+import {DrawingToolbox,drawingChartProps,usePaneDrawingBooks,type Drawing} from './Drawings';
 import {PlanHistory} from './PlanHistory';
 import {StrategyBuilder} from './StrategyBuilder';
 import type {EvidenceChartLocation} from './StrategyEvaluation';
@@ -256,16 +256,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const replayData=replaySession?.market;
   const replayActive=replayIndex!==null&&Boolean(replayData);
   const replayArchive=replayActive&&Boolean(replaySession?.request?.window_bars);
-  const companionScope=(view:'2'|'3'|'4')=>{
-    const pane=replayArchive?replaySession?.views[view]:undefined;
-    return pane&&'candles' in pane?`${source}:${pane.symbol}:${pane.timeframe}`:'';
-  };
-  const drawingBooks=usePaneDrawingBooks(expanded?`${source}:${symbol}:${timeframe}`:'',
-    companionScope('2'),companionScope('3'),companionScope('4'));
-  const drawingBook=drawingBooks.primary;
-  const {interaction,setInteraction}=drawingBook;
-  const picking=interaction.mode==='plan';
-  const picked=picking?interaction.prices:planPrices;
   const invalidateReplayLoad=useCallback(()=>{
     replayLoadSequence.current++;
     replayPending.current=false;
@@ -283,6 +273,33 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [loadedIndicatorScope,setLoadedIndicatorScope]=useState("");
   const refreshCandles=useCallback(()=>setRefreshCount(n=>n+1),[]);
   const live=useBinanceCandles(isBinance,timeframe,refreshCandles);
+  const historical=useMemo(()=>data?.source===source?data.candles:[],[data,source]);
+  const liveRows=live?.candles ?? [];
+  const candles=isBinance&&liveRows.length
+    ? [...new Map([...historical,...liveRows].map(row=>[row.time,row])).values()].sort((a,b)=>a.time-b.time).slice(-600)
+    : historical;
+  const replayLinked=replayArchive||linkReplay==='on';
+  const replayStep=frameMinutes[timeframe]*60;
+  const archiveCutoff=replayArchive&&replayIndex!==null ? replayData?.replay_cutoffs?.[replayIndex] : undefined;
+  const visibleCandles=useMemo(()=> {
+    if (!replayData||replayIndex===null)return candles;
+    return archiveCutoff===undefined ? replayData.candles.slice(0,replayIndex+1)
+      : visibleAt(replayData.candles,archiveCutoff,replayStep);
+  },[replayData,replayIndex,candles,archiveCutoff,replayStep]);
+  const cutoff=archiveCutoff??(replayActive?visibleCandles.reduce((known,bar)=>
+    Math.max(known,bar.time+replayStep,bar.available_at??0),0):undefined);
+  const companionScope=(view:'2'|'3'|'4')=>{
+    const pane=replayArchive?replaySession?.views[view]:undefined;
+    return {scope:pane&&'candles' in pane?`${source}:${pane.symbol}:${pane.timeframe}`:'',
+      candles:pane&&'candles' in pane?pane.candles:undefined,step:pane?frameMinutes[pane.timeframe]*60:replayStep};
+  };
+  const drawingBooks=usePaneDrawingBooks(cutoff,{scope:expanded?`${source}:${symbol}:${timeframe}`:'',
+    candles:replayArchive?replayData?.candles:undefined,step:replayStep},
+    companionScope('2'),companionScope('3'),companionScope('4'));
+  const drawingBook=drawingBooks.primary;
+  const {interaction,setInteraction}=drawingBook;
+  const picking=interaction.mode==='plan';
+  const picked=picking?interaction.prices:planPrices;
   useEffect(()=>{
     if(source!=='MT5')return;
     let active=true;
@@ -376,19 +393,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     const next=levelHistory.redo.at(-1);if(!next)return;
     setLevelHistory({undo:[...levelHistory.undo,levels],redo:levelHistory.redo.slice(0,-1)});writeLevels(next);
   };
-  const historical=useMemo(()=>data?.source===source?data.candles:[],[data,source]);
-  const liveRows=live?.candles ?? [];
-  const candles=isBinance&&liveRows.length
-    ? [...new Map([...historical,...liveRows].map(row=>[row.time,row])).values()].sort((a,b)=>a.time-b.time).slice(-600)
-    : historical;
-  const replayLinked=replayArchive||linkReplay==='on';
-  const replayStep=frameMinutes[timeframe]*60;
-  const archiveCutoff=replayArchive&&replayIndex!==null ? replayData?.replay_cutoffs?.[replayIndex] : undefined;
-  const visibleCandles=useMemo(()=> {
-    if (!replayData||replayIndex===null)return candles;
-    return archiveCutoff===undefined ? replayData.candles.slice(0,replayIndex+1)
-      : visibleAt(replayData.candles,archiveCutoff,replayStep);
-  },[replayData,replayIndex,candles,archiveCutoff,replayStep]);
   const indicatorCandles=!replayActive&&data?.latest_unconfirmed?visibleCandles.slice(0,-1):visibleCandles;
   const last=visibleCandles.at(-1);const first=visibleCandles[0];
   const change=last&&first?(last.close-first.open)/first.open*100:0;
@@ -489,11 +493,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     };
     window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
   },[expanded,activeBook.setInteraction,toggleLevel]);
-  const boundary=last?.time??0;
-  const cutoff=archiveCutoff??(replayActive?visibleCandles.reduce((known,bar)=>
-    Math.max(known,bar.time+replayStep,bar.available_at??0),boundary):undefined);
-  const primaryDrawings=useVisibleDrawings(drawingBook.current?.items,cutoff,replayStep,
-    replayArchive?visibleCandles:undefined,sessionZones);
+  const primaryDrawings=useMemo(()=>[...drawingBook.items,...Object.values(sessionZones)
+    .filter(zone=>drawingBook.eligible(zone.anchors))],[drawingBook.items,drawingBook.eligible,sessionZones]);
   const primaryProps=drawingChartProps(drawingBook,digits,drawingView==='primary');
   const indicatorFeed=replayActive?replayData:data;
   const indicatorCutoff=cutoff??Math.min(Math.floor(Date.now()/1000),Math.max(
