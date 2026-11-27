@@ -10,6 +10,7 @@ import {chromium, expect} from '@playwright/test';
 import {installProbe} from '../e2e/workspace-probe.ts';
 
 const {values: args} = parseArgs({options: {
+  'forex-decisions': {type:'boolean'},
   output: {type: 'string'},
   workspace: {type: 'string'},
   bi5: {type: 'string'},
@@ -288,6 +289,19 @@ try {
   api = startApi();
   await awaitReady(apiOrigin, '/api/health', api);
   const pids = [api.pid];
+  if(args['forex-decisions']){
+    fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
+    vite=startVite();
+    await awaitReady(uiOrigin,'/',vite);
+    const {verifyDecisions}=await import('./forex-decisions.mjs');
+    const receipt=await verifyDecisions(uiOrigin,async()=>{
+      await stop(api);
+      api=startApi();
+      await awaitReady(apiOrigin,'/api/health',api);
+    });
+    mkdirSync(dirname(resolve(args.output)),{recursive:true});
+    writeFileSync(resolve(args.output),JSON.stringify(receipt,null,2));
+  }else{
   const controlled = fixture('prepare');
   const genuine = fixture('genuine-bi5', ['--bi5', resolve(args.bi5)]);
   const exports = fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
@@ -344,6 +358,7 @@ try {
     rewind_bars: rewindCounts, selected_candle: selected, uncaught_page_errors: errors,
   }, null, 2) + '\n');
   console.log('Native archive freeze, two-process restart and all named panes verified.');
+  }
 } finally {
   if (browser) await browser.close();
   await stop(vite);

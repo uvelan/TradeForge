@@ -3,6 +3,7 @@ from base64 import b64decode
 from binascii import Error as Base64Error
 from hashlib import sha256
 from struct import unpack_from
+from typing import Literal
 from zlib import crc32
 
 from fastapi import APIRouter, HTTPException, Query
@@ -68,7 +69,15 @@ def dataset_detail(dataset_id:str):
     return dataset
 
 
+class DecisionReplay(BaseModel):
+    session_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    position: int = Field(ge=0)
+    view: Literal["primary", "comparison", "2", "3", "4"]
+    time: int = Field(ge=0)
+
+
 class ChartSnapshotRequest(BaseModel):
+    decision_replay: DecisionReplay | None = None
     lanes: tuple[ChartLane] | tuple[ChartLane, ChartLane] | None = None
     png: str = Field(min_length=40,max_length=2_000_000)
     symbol: str = Field(min_length=1,max_length=64)
@@ -76,6 +85,33 @@ class ChartSnapshotRequest(BaseModel):
     source: str = Field(min_length=1,max_length=30)
     signal_reference: SignalReference | None = None
     cutoff: int | None = Field(default=None,ge=0)
+
+
+def validate_decision_replay(db, request, ref):
+    row = db.execute("SELECT payload FROM replay_sessions WHERE id=?", (ref.session_id,)).fetchone()
+    if row is None or sha256(row["payload"].encode()).hexdigest() != ref.session_id:
+        raise HTTPException(409, "Decision replay unavailable or changed")
+    session = json.loads(row["payload"])
+    settings, market = session["request"], session["market"]
+    cutoffs = market.get("replay_cutoffs", [])
+    if (any(settings[key] != getattr(request, key) for key in ("symbol", "source", "timeframe"))
+            or ref.position >= len(cutoffs) or cutoffs[ref.position] != request.cutoff):
+        raise HTTPException(409, "Decision cutoff differs from frozen replay")
+    pane = market if ref.view == "primary" else session["views"].get(ref.view, {})
+    frame = pane.get("timeframe", request.timeframe)
+    if not any(bar["time"] == ref.time and max(ref.time + FRAME_MIN[frame] * 60,
+               bar.get("available_at") or 0) <= request.cutoff for bar in pane.get("candles", [])):
+        raise HTTPException(409, "Decision candle unavailable in selected replay pane")
+    if "comparison" in session["views"] and len(request.lanes or ()) != 2:
+        raise HTTPException(409, "Paired decision replay requires both captured lanes")
+    for lane in request.lanes or ():
+        feed = market if lane.role == "primary" else session["views"].get("comparison", {})
+        pins = feed.get("partitions") or [{"id":feed.get("dataset_id"), "sha256":feed.get("sha256")}]
+        visible_times = [bar["time"] for bar in feed.get("candles", [])
+                         if (bar.get("available_at") or bar["time"] + FRAME_MIN[request.timeframe] * 60) <= request.cutoff]
+        if ([bar.time for bar in lane.bars] != visible_times or feed.get("symbol") != lane.symbol or feed.get("feed_id") != lane.feed_id
+                or [(p["id"], p["sha256"]) for p in pins] != [(p.id, p.sha256) for p in lane.partitions]):
+            raise HTTPException(409, "Chart capture differs from frozen replay lane")
 
 
 def validate_chart_png(png:bytes) -> tuple[int,int]:
@@ -111,9 +147,12 @@ def create_snapshot(request:ChartSnapshotRequest):
     except (Base64Error,ValueError) as error:
         raise HTTPException(422,"Malformed PNG encoding") from error
     width,height=validate_chart_png(png)
-    metadata=request.model_dump(mode="json",exclude={"png","lanes"})
+    metadata=request.model_dump(mode="json",exclude={"png","lanes","decision_replay"})
     metadata.update(width=width,height=height,authority="USER_CHART_CAPTURE")
     with transaction() as db:
+        if request.decision_replay is not None:
+            validate_decision_replay(db, request, request.decision_replay)
+            metadata["decision_replay"] = request.decision_replay.model_dump()
         signal=resolve_signal(db,request.signal_reference)
         if signal is not None and (signal["provenance"]["timeframe"]!=request.timeframe
                                    or signal["provenance"]["primary"]["symbol"]!=request.symbol

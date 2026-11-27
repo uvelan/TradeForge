@@ -1,8 +1,9 @@
 import {useEffect, useRef} from 'react';
+import {useTimestampFormat,useTimezone} from './timezone';
 import type {Candle, ReplayPane, ReplayViewId} from './types';
 
 export const archiveViewIds = ['primary', '2', '3', '4'] as const;
-export type ArchiveViewId = (typeof archiveViewIds)[number];
+export type ArchiveViewId = ReplayViewId;
 export type ArchivePane = {view: ArchiveViewId; data: ReplayPane};
 export const replayPaneName = (view: ReplayViewId) =>
   view === 'primary' ? 'Primary chart' : view === 'comparison' ? 'SMT comparison' : 'Chart view ' + view;
@@ -47,6 +48,8 @@ export function ReplayCandleInspector({panes, pane, candles, selectedTime, preci
   panes: ArchivePane[]; pane: ArchivePane; candles: Candle[]; selectedTime?: number;
   precision: number; onView: (view: ArchiveViewId) => void; onCandle: (time: number) => void;
 }) {
+  const format=useTimestampFormat();
+  const {zone}=useTimezone();
   const picker = useRef<HTMLSelectElement>(null);
   useEffect(() => { picker.current?.focus({preventScroll: true}); }, []);
   const index = selectedTime === undefined ? candles.length - 1 : candles.findIndex(bar => bar.time === selectedTime);
@@ -71,7 +74,7 @@ export function ReplayCandleInspector({panes, pane, candles, selectedTime, preci
     </div>
     <section className="archive-replay-readout" aria-label="Selected candle">
       {shown ? <>
-        <time dateTime={utc(shown.time)}>{utc(shown.time)}</time>
+        <time dateTime={utc(shown.time)}>{utc(shown.time)}</time> <span>{format(shown.time*1000)} · {zone}</span>
         <dl aria-label="Selected candle OHLC">
           {(['open', 'high', 'low', 'close'] as const).map(field => <div key={field}>
             <dt>{field}</dt><dd>{shown[field].toFixed(precision)}</dd>

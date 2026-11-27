@@ -35,7 +35,7 @@ function capture(rangeStart = start): ReplaySession {
 async function openArchive(page: Page, preferences: Record<string,string> = {}) {
   await page.addInitScript(preferences => {
     for (const [setting,value] of Object.entries({
-      source:'DUKASCOPY_SAVED', timeframe:'M5','chart-views':'4','link-replay':'off',
+      source:'DUKASCOPY_SAVED', timeframe:'M5','chart-views':'4','chart-comparison':'none','link-replay':'off',
       'view-2-symbol':'GBPUSD','view-3-symbol':'USDJPY','view-4-symbol':'XAUUSD',
       'secondary-timeframe':'M5','view-3-frame':'M5','view-4-frame':'M5',...preferences,
     })) localStorage.setItem('tradeforge.workspace.'+setting,value);
@@ -95,11 +95,11 @@ test('inspects and restores the selected frozen candle without exposing out-of-c
     await freeze.press('Enter');
     await captured.promise;
     await expect(freeze).toBeDisabled();
-    await expect(page.getByText('Freezing selected range…')).toBeVisible();
+    await expect(page.getByText('Freezing selected rangeâ€¦')).toBeVisible();
   } finally { respond.resolve(); }
 
   const coverage=page.getByRole('region',{name:'Frozen replay coverage'});
-  await expect(coverage.getByText('Partial coverage · 1 UTC gap')).toBeVisible();
+  await expect(coverage.getByText('Partial coverage Â· 1 UTC gap')).toBeVisible();
   await expect(coverage.getByText('No verified archive for this pane')).toBeVisible();
   await expect(page.getByRole('region',{name:'Chart view 3'})).toContainText('No verified archive');
   const picker=page.getByRole('combobox',{name:'Inspection pane'});

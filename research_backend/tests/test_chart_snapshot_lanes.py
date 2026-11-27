@@ -118,3 +118,33 @@ def test_frozen_links_check_the_requested_transition_with_or_without_lanes(clien
             assert saved.status_code == 201 and saved.json()["signal_transition_at"] == t
             assert client.post(URL,json={**linked,"cutoff":t}).json() == saved.json()
             assert one("SELECT COUNT(*) AS n FROM chart_snapshots")["n"] == before+1
+
+
+def test_paired_decision_reopens_original_cutoff_and_rejects_other_candles(client):
+    start = 1_577_836_800
+    lanes = []
+    for role, symbol, price in (("primary", "EURUSD", 1.1), ("comparison", "GBPUSD", 1.3)):
+        bars = [dict(time=start+i*300, open=price, high=price, low=price, close=price) for i in range(3)]
+        part = write_partition("DUKASCOPY", "decision-test", symbol, "candles", "M5", "BID", bars)
+        lanes.append(dict(role=role, symbol=symbol, timeframe="M5", price_basis="BID", feed_id="decision-test",
+                          bars=bars[:1], partitions=[{"id":part["id"], "sha256":part["sha256"]}]))
+    context = dict(symbol="EURUSD", timeframe="M5", source="DUKASCOPY_SAVED")
+    request = dict(**context, start=start, end=start+900, window_bars=5000,
+                   views=[dict(view="comparison", symbol="GBPUSD", timeframe="M5")])
+    for alignment in (0, 2):
+        frozen = client.post("/api/replay/sessions", json={**request, "smt_rules":{"alignment_bars":alignment}}).json()
+        assert frozen["request"]["smt_rules"]["alignment_bars"] == alignment
+        ref = dict(session_id=frozen["id"], position=0, view="comparison", time=start)
+        snapshot = dict(**context, cutoff=start+300, png=base64.b64encode(png_bytes()).decode(),
+                        lanes=lanes, decision_replay=ref)
+        saved = client.post(URL, json=snapshot)
+        assert saved.status_code == 201, saved.text
+        ident = saved.json()["id"]
+        for bad in ({"decision_replay":{**ref,"time":start+300}}, {"decision_replay":{**ref,"position":2}},
+                    {"lanes":lanes[:1]}, {"cutoff":start+301}):
+            assert client.post(URL, json={**snapshot, **bad}).status_code == 409
+        session_url = "/api/replay/sessions/" + frozen["id"]
+        assert client.post(session_url+"/checkpoint", json={"position":2,"bookmarks":[]}).is_success
+        assert client.get(session_url).json()["request"]["smt_rules"] == frozen["request"]["smt_rules"]
+        assert client.get(URL+"/"+ident).json() == saved.json()
+    assert one("SELECT COUNT(*) AS n FROM chart_snapshots")["n"] == 2

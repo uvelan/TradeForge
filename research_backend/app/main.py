@@ -42,7 +42,7 @@ from .strategy_routes import router as strategy_router
 from .strategy_evaluation_routes import router as strategy_evaluation_router
 from .historical_strategy_routes import router as historical_strategy_router
 from .historical_strategy_worker import supervise as supervise_strategy_history
-from .indicator_routes import router as indicator_router, run_smt_monitor, signal_candles, signal_revision
+from .indicator_routes import SmtParameters, router as indicator_router, run_smt_monitor, signal_candles, signal_revision
 from .indicator_coverage import replay_availability
 from .replay_archive import MAX_WINDOW, NoCompleteSlot, WindowTooLarge, replay_catalog, saved_replay_window
 from .replay_confluence import inspect_confluence, list_pinned_confluence, pin_confluence
@@ -530,6 +530,7 @@ class ReplayView(BaseModel):
 
 
 class ReplayRequest(BaseModel):
+    smt_rules: SmtParameters | None = None
     symbol: str = Field(min_length=1,max_length=64)
     timeframe: str = Field(min_length=2,max_length=4)
     source: str = Field(max_length=30)
@@ -611,7 +612,7 @@ def create_replay(request:ReplayRequest):
         primary,comparison=provenance["primary"],provenance["comparison"]
         if (request.symbol,request.timeframe,request.source)!=(primary["symbol"],provenance["timeframe"],primary["source"]):
             raise HTTPException(422,"Replay context differs from linked signal")
-        if request.views or request.start is not None:
+        if request.views or request.start is not None or request.smt_rules is not None:
             raise HTTPException(422,"Recorded signal replay uses its original capture boundaries")
         captures=signal_candles(reference.event_key,reference.status)
         def pane(side:dict, bars:list[dict]):
@@ -642,6 +643,8 @@ def create_replay(request:ReplayRequest):
     if not market["candles"]:
         raise HTTPException(422,"No completed replay candles")
     settings = request.model_dump(exclude={"window_bars"} if request.window_bars is None else set())
+    if request.smt_rules is None:
+        settings.pop("smt_rules")
     snapshot = {"schema_version":1,"request":settings,"market":market,"views":panes}
     encoded=json.dumps(snapshot,sort_keys=True,separators=(",",":"),allow_nan=False)
     session_id=sha256(encoded.encode()).hexdigest()
@@ -674,7 +677,13 @@ def replay_session(session_id:str):
         checkpoint["bookmarks"] = json.loads(checkpoint["bookmarks"])
         if selected is not None:
             checkpoint["selected"] = {"view": selected, "time": time}
-    return {"id": session_id, **json.loads(row["payload"]), "checkpoint": checkpoint}
+    session = json.loads(row["payload"])
+    reference = session["request"].get("signal_reference")
+    if reference:
+        revision = signal_revision(reference["event_key"], reference["status"])
+        if revision.get("rules"):
+            session["signal_rules"] = revision["rules"]
+    return {"id": session_id, **session, "checkpoint": checkpoint}
 
 
 

@@ -58,11 +58,14 @@ class SmtFeed(BaseModel):
     partitions: list[dict[str, str]] = Field(default_factory=list, max_length=50)
 
 
-class SmtRules(BaseModel):
+class SmtParameters(BaseModel):
     period: int = Field(default=3, ge=2, le=20)
     alignment_bars: int = Field(default=2, ge=0, le=10)
     tolerance_bps: float = Field(default=0.5, ge=0, le=100, allow_inf_nan=False)
     confirmation_bars: int = Field(default=1, ge=0, le=20)
+
+
+class SmtRules(SmtParameters):
     timeframe: str
 
 

@@ -1,7 +1,7 @@
 import StatementReconciliation from './StatementReconciliation';
 import {JournalPaper} from './PlanPaper';
 import {snapshotLane} from './snapshotLanes';
-import {SnapshotDetails} from './SnapshotDetails';
+import {type DecisionLocation,SnapshotDetails} from './SnapshotDetails';
 import LearningDrill from './LearningDrill';
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import { Crosshair, Eraser,   ListFilter,  Minus,  Activity,Archive,ArrowDownToLine,ArrowRight,ArrowUpRight,BarChart3,BookOpen,BrainCircuit,CalendarClock,CheckCircle2,ChevronRight,Clock3,CloudOff,Database,Download,ExternalLink,FileCheck2,FileText,FlaskConical,FolderOpen,LayoutDashboard,Menu,MoreHorizontal,Plus,Radio,RefreshCw,Settings,ShieldCheck,ShieldAlert,Search,Target,TrendingUp,Upload, X, Zap} from 'lucide-react';
@@ -44,7 +44,7 @@ import type {EvidenceChartLocation} from './StrategyEvaluation';
 import {MonthReplay} from './MonthReplay';
 import {HistoricalResearch} from './HistoricalResearch';
 
-type ChartLocation = Partial<EvidenceChartLocation> & {indicator?:string;sequence:number};
+type ChartLocation = Partial<EvidenceChartLocation> & {indicator?:string;decision?:DecisionLocation['decision'];sequence:number};
 
 type Section='overview'|'terminal'|'signals'|'plans'|'ai'|'lab'|'builder'|'journal'|'data'|'settings';
 const menu:{id:Section;name:string;icon:typeof Activity}[]=[
@@ -144,18 +144,18 @@ function App(){
       {backendError&&<div className="error-banner"><CloudOff size={18}/> API offline: {backendError}. Start the API using start-api.ps1.</div>}
       <div className="page-content" key={section}>
       {section==='overview'&&<Dashboard overview={overview} go={go}/>}
-      {section==='terminal'&&<Terminal expanded onPlan={planFromChart} onSignal={openSignal} onChartLesson={snapshot_id=>journalFrom({snapshot_id})} initialLocation={chartLocation}/>}
+      {section==='terminal'&&<Terminal expanded onLeaveDecision={()=>setChartLocation(undefined)} onPlan={planFromChart} onSignal={openSignal} onChartLesson={snapshot_id=>journalFrom({snapshot_id})} initialLocation={chartLocation}/>}
       {section==='signals'&&<SignalExplorer selected={selectedSignal} onSelect={selectSignal} onOpenPlan={(id,version)=>{setPlanLocation({id,version});go("plans");}} onJournal={(signal,snapshot_id)=>journalFrom({snapshot_id},signal)} onPlan={(signal,snapshot_id)=>{
         const {primary,timeframe}=signal.provenance;
         planFromChart({symbol:primary.symbol as SymbolName,timeframe,strategy:'SMT research',snapshot_id,knowledge_cutoff_utc:snapshot_id?undefined:new Date(signal.transitions.at(-1)!.time*1000).toISOString(),
           context:`${primary.source} · ${primary.feed_id} · ${primary.price_basis}`,
           evidence:signalSummary(signal),signal_reference:{event_key:signal.event_key,status:signal.status}});
       }}/>}
-      {section==='plans'&&<Planner refresh={refresh} openSignal={openSignal} initialLocation={planLocation} onLesson={plan_reference=>journalFrom({plan_reference})} incoming={incomingPlan} onConsume={()=>setIncomingPlan(undefined)} onReview={id=>{setReviewPlan(id);go("ai");}}/>}
+      {section==='plans'&&<Planner refresh={refresh} openSignal={openSignal} initialLocation={planLocation} onPassSaved={()=>go('journal')} onLesson={(plan_reference,snapshot_id)=>journalFrom({plan_reference,snapshot_id})} incoming={incomingPlan} onConsume={()=>setIncomingPlan(undefined)} onReview={id=>{setReviewPlan(id);go("ai");}}/>}
       {section==='ai'&&<AIPage refresh={refresh} initialTrade={reviewPlan}/>}
       {section==='lab'&&<><MonthReplay/><HistoricalResearch openChart={openChart}/><StrategyLab/></>}
       {section==='builder'&&<StrategyBuilder openChart={openChart}/>}
-      {section==='journal'&&<Journal refresh={refresh} initialEntry={journalLocation} incoming={journalSignal} initialContext={journalContext}
+      {section==='journal'&&<Journal onReturn={openChart} refresh={refresh} initialEntry={journalLocation} incoming={journalSignal} initialContext={journalContext}
         clearLink={()=>{setJournalSignal(undefined);setJournalContext(undefined);}}
         openPlan={(id,version)=>{setPlanLocation({id,version});go('plans');}}
         openSignal={openSignal}/>}
@@ -175,7 +175,7 @@ const chartTimeframes:Timeframe[]=['M1','M3','M5','M15','M30','H1','H4','D1'];
 type ChartLevel=import('./components').ChartLevel;
 type ReplayLoadKind='quick'|'archive'|'resume';
 const archiveReplayLimit=5000;
-function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}:{expanded?:boolean;onPlan?:(seed:Partial<Plan>)=>void;
+function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,onLeaveDecision}:{onLeaveDecision?:()=>void;expanded?:boolean;onPlan?:(seed:Partial<Plan>)=>void;
   onSignal?:(reference:import('./types').SignalReference)=>Promise<void>; initialLocation?:ChartLocation;onChartLesson?:(snapshot:string)=>void}){
   const [planPrices,setPlanPrices]=useState<string[]>([]);
   const [captureState,setCaptureState]=useState<{
@@ -235,10 +235,10 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [linkReplay,setLinkReplay]=useWorkspacePreference('link-replay','on',['on','off']);
   link.options={crosshair:linkCrosshair==='on',range:linkRange==='on',zoom:linkZoom==='on'};
 
-  const [comparisonSymbol,setComparisonSymbol]=useWorkspacePreference<string>('chart-comparison','none');
+  const [comparisonSymbol,setComparisonSymbol]=useWorkspacePreference<string>('chart-comparison','GBPUSD');
   const [showSmt,setShowSmt]=useWorkspacePreference('show-smt','on',['on','off']);
   const [smtWidth,setSmtWidth]=useWorkspacePreference<string>('smt-width','3');
-  const [smtAlignment,setSmtAlignment]=useWorkspacePreference<string>('smt-alignment','2');
+  const [smtAlignment,setSmtAlignment]=useWorkspacePreference<string>('smt-alignment','0');
   const [smtTolerance,setSmtTolerance]=useWorkspacePreference<string>('smt-tolerance','0.5');
   const [smtConfirmation,setSmtConfirmation]=useWorkspacePreference<string>('smt-confirmation','1');
   const [placement,setPlacement]=useWorkspacePreference<ComparisonPlacement>('comparison-placement','Overlay',['Overlay','New pane']);
@@ -292,6 +292,16 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     let active=true;
     setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setLoadedReplay(undefined);setReplaySelection(undefined);setPlanPrices([]);
     setInteraction(current=>current.mode==='plan'?{mode:'navigate'}:current);
+    const decision=initialLocation?.decision;
+    if(decision&&symbol===initialLocation.symbol&&source===initialLocation.source&&timeframe===initialLocation.timeframe){
+      api.replay(decision.session_id).then(session=>{
+        if(!active)return;
+        setLoadedReplay({generation:primaryLoadGeneration,session});
+        setReplaySelection({view:decision.view,time:decision.time});
+        setReplayIndex(decision.position);
+      }).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setBusy(false);});
+      return ()=>{active=false;};
+    }
     (exactEvidence?api.get<CandleResponse>(initialLocation!.evidencePath!):
       api.candles(symbol,timeframe,source,expanded?600:200,source==='MT5',range))
       .then(main=>{if(active){setData(main);setLoadedIndicatorScope(indicatorScope);setLoadedPrimaryGeneration(primaryLoadGeneration);}})
@@ -421,7 +431,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
           timeframe:linkTimeframe==='on'?timeframe:frame});
       }
       const session=id?await api.replay(id):await api.startReplay(symbol,timeframe,source,views,range,
-        kind==='archive'?archiveReplayLimit:undefined);
+        kind==='archive'?archiveReplayLimit:undefined,compare&&validRules?rules:undefined);
       if(!isCurrent())return;
       if(!session.market.candles.length)throw new Error('No completed replay candles in this range.');
       if(kind==='archive'&&(session.request?.window_bars!==archiveReplayLimit||!session.market.replay_cutoffs?.length)){
@@ -442,12 +452,12 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   }
   const archivePanes=useMemo<ArchivePane[]>(()=>{
     if(!replayArchive||!replaySession)return [];
-    return archiveViewIds.flatMap(view=>{
+    return ([...archiveViewIds,'comparison'] as const).flatMap(view=>{
       const data=view==='primary'?{...replaySession.market,symbol,timeframe}:replaySession.views[view];
       return data?[{view,data}]:[];
     });
   },[replayArchive,replaySession,symbol,timeframe]);
-  const chartViewCount=replayArchive ? Math.max(1,...archivePanes.map(({view})=>view==='primary'?1:Number(view))) : Number(viewCount);
+  const chartViewCount=replayArchive ? Math.max(1,...archivePanes.map(({view})=>view==='primary'||view==='comparison'?1:Number(view))) : Number(viewCount);
   const inspectedPane=archivePanes.find(({view})=>view===replaySelection?.view)??archivePanes[0];
   const inspectionFeed=inspectedPane&&'candles' in inspectedPane.data ? inspectedPane.data : undefined;
   const inspectedTime=replaySelection&&replaySelection.view===inspectedPane?.view ? replaySelection.time : undefined;
@@ -484,7 +494,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     (indicatorCandles.at(-1)?.time??0)+frameMinutes[timeframe]*60,indicatorCandles.at(-1)?.available_at??0));
   const indicator=useChartIndicator(expanded&&!isBinance&&(replayActive||!busy&&!error&&indicatorScope===loadedIndicatorScope),indicatorCandles,source,timeframe,
     symbol,indicatorCutoff,indicatorFeed??undefined,replayActive,initialLocation);
-  const options=[...new Set([symbol,...(isBinance?[]:source==='MT5'?instruments.map(item=>item.name):watchSymbols)])];
+  const options=[...new Set([symbol,...(isBinance?[]:source==='MT5'?(instruments.length?instruments.map(item=>item.name):watchSymbols):watchSymbols)])];
   const compare=replaySession?replaySession.views.comparison?.symbol??'':
     expanded&&comparisonSymbol!==symbol&&options.includes(comparisonSymbol)?comparisonSymbol:'';
   const frozenComparison=replaySession?.views.comparison;
@@ -492,11 +502,14 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const feedIdentity=(feed:CandleResponse|null|undefined)=>feed&&[
     feed.feed_id,feed.price_basis,feed.dataset_id,feed.partitions?.map(part=>[part.id,part.sha256]),
   ];
+  const decisionTime=inspectedTime===undefined?inspectionCandles.at(-1)?.time:selectedVisibleTime;
+  const decisionReplay=replayArchive&&replaySession&&replayIndex!==null&&inspectedPane&&decisionTime!==undefined?
+    {session_id:replaySession.id,position:replayIndex,view:inspectedPane.view,time:decisionTime}:undefined;
   const captureKey=JSON.stringify([symbol,timeframe,source,range,refreshCount,expanded,
     exactEvidence?initialLocation:undefined,feedIdentity(isBinance?undefined:indicatorFeed),
     compare,feedIdentity(comparison.feed),Boolean(comparison.candles?.length),placement,chartViewCount,
-    replayActive,replaySession?.id,replayIndex,cutoff]);
-  const canSaveCapture=(replayActive||loadedPrimaryGeneration===primaryLoadGeneration&&!busy&&!error)&&!replayBusy&&
+    replayActive,replaySession?.id,replayIndex,cutoff,decisionReplay]);
+  const canSaveCapture=(!replayArchive||Boolean(decisionReplay))&&(replayActive||loadedPrimaryGeneration===primaryLoadGeneration&&!busy&&!error)&&!replayBusy&&
     (!compare||(savedSource?Boolean(comparison.feed&&comparison.candles?.length):Boolean(comparison.feed||comparison.error)));
   const captureGeneration=useMemo(()=>({}),[captureKey,primaryLoadGeneration,canSaveCapture]);
   useLayoutEffect(()=>{
@@ -515,20 +528,21 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
         snapshotLane('primary',symbol,timeframe,indicatorFeed??undefined,visibleCandles),
         ...(compare?[snapshotLane('comparison',compare,timeframe,comparison.feed,comparison.candles??[])]:[]),
       ]:undefined;
-      const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff,undefined,lanes);
+      const saved=await api.saveSnapshot(png,symbol,timeframe,source,cutoff,undefined,lanes,decisionReplay);
       if(isCurrent())setCaptureState({generation:captureGeneration,saving:false,id:saved.id,status:'Chart capture saved'});
     } catch(error) {
       if(isCurrent())setCaptureState({generation:captureGeneration,saving:false,id:chartCapture,
         status:error instanceof Error?error.message:'Chart capture could not be saved'});
     }
   }
-  const rules={period:Number(smtWidth),alignment_bars:Number(smtAlignment),
+  const pinnedRules=replaySession?.request?.smt_rules??replaySession?.signal_rules;
+  const rules=pinnedRules??{period:Number(smtWidth),alignment_bars:Number(smtAlignment),
     tolerance_bps:Number(smtTolerance),confirmation_bars:Number(smtConfirmation)};
   const ruleInputs=[
-    ['Swing width',smtWidth,setSmtWidth,2,20,1],
-    ['UTC match (bars)',smtAlignment,setSmtAlignment,0,10,1],
-    ['Tolerance (bps)',smtTolerance,setSmtTolerance,0,100,0.1],
-    ['Confirmation bars',smtConfirmation,setSmtConfirmation,0,20,1],
+    ['Swing width',String(pinnedRules?.period??smtWidth),setSmtWidth,2,20,1],
+    ['UTC match (bars)',String(pinnedRules?.alignment_bars??smtAlignment),setSmtAlignment,0,10,1],
+    ['Tolerance (bps)',String(pinnedRules?.tolerance_bps??smtTolerance),setSmtTolerance,0,100,0.1],
+    ['Confirmation bars',String(pinnedRules?.confirmation_bars??smtConfirmation),setSmtConfirmation,0,20,1],
   ] as const;
   const validRules=ruleInputs.every(([,value,,min,max,step])=>value!==''&&Number(value)>=min&&
     Number(value)<=max&&(step!==1||Number.isInteger(Number(value))));
@@ -550,6 +564,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
       smtUnaligned ? 'Strict SMT unavailable. Archive boundaries must align with the chart timeframe.' : undefined;
   const smt=useSmt(indicatorCandles,comparison.candles,timeframe,showSmt==='on'&&!legacySmtLimit&&Boolean(compare)&&(replayActive||!busy&&!error)&&validRules&&
     (source==='DEMO'||Boolean(firstFeed&&secondFeed)),rules,firstFeed,secondFeed,replayActive,refreshCount,frameMinutes[timeframe]*60);
+  const peerTimes=useMemo(()=>new Set(comparison.candles?.map(bar=>bar.time)),[comparison.candles]);
+  const missingPeer=showSmt==='on'&&compare&&comparison.candles&&rules.alignment_bars===0&&indicatorCandles.find(bar=>!peerTimes.has(bar.time));
   const precisionFor=(name:string)=>instruments.find(item=>item.name===name)?.digits ?? (name==='BTCUSDT'?2:name==='USDJPY'||name==='XAUUSD'?3:5);
 
   const pairText=symbol==='XAUUSD'?'Gold / US Dollar':`${symbol.slice(0,3)} / ${symbol.slice(3)}`;
@@ -597,7 +613,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   </>;
   const replayControls=replayActive&&replayData&&replaySession&&<ReplayControls key={replaySession.id}
     candles={replayData.candles} cutoffs={replayData.replay_cutoffs} index={replayIndex!} onSeek={setReplayIndex}
-    onExit={()=>{setReplayIndex(null);setLoadedReplay(undefined);setReplaySelection(undefined);}}
+    onExit={()=>{if(initialLocation?.decision)onLeaveDecision?.();setReplayIndex(null);setLoadedReplay(undefined);setReplaySelection(undefined);}}
     onCheckpoint={async(position,bookmarks)=>{
       await api.saveCheckpoint(replaySession.id,position,bookmarks,replayArchive?replaySelection:undefined);
       replayOptions();
@@ -613,7 +629,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     <WorkspacePanels><div className="terminal-layout">
       <section className="terminal-core">
         <div className="terminal-identity"><div className="terminal-pair"><div className="pair-badge">{symbol.slice(0,3)}</div><div><strong>{pairText}</strong><span>{label}</span><small>{latestNotice} {pollError}</small></div></div><div className="terminal-head-price">{last?<><strong>{last.close.toFixed(digits)}</strong><PriceChange value={change}/></>:<span>—</span>}</div></div>
-        <div className="terminal-controls"><div className="timeframe-buttons">{(['M1','M3','M5','M15','M30','H1','H4','D1'] as Timeframe[]).map(t=><button key={t} className={timeframe===t?'on':''} onClick={()=>setTimeframe(t)}>{t}</button>)}</div><div className="terminal-control-right"><Select label="Market data source" value={source} options={chartSources} onChange={s=>setSource(s as ChartSource)}/><Select label="Chart layout" value={String(chartViewCount)} options={['1','2','3','4']} disabled={replayArchive} onChange={value=>setViewCount(value as typeof viewCount)}/><button className="small-tool" onClick={()=>setRefreshCount(n=>n+1)} title="Refresh candles"><RefreshCw size={16}/></button></div>{brokerPicker}</div>
+        <div className="terminal-controls"><div className="timeframe-buttons">{(['M1','M3','M5','M15','M30','H1','H4','D1'] as Timeframe[]).map(t=><button key={t} className={timeframe===t?'on':''} onClick={()=>setTimeframe(t)}>{t}</button>)}</div><div className="terminal-control-right">{expanded&&!replayActive&&<button className="small-tool" onClick={()=>{
+          setSymbol('EURUSD');setTimeframe('M5');setComparisonSymbol('GBPUSD');setSmtAlignment('0');setShowSmt('on');setSource('DUKASCOPY_SAVED');
+        }}>Forex M5 workspace</button>}<Select label="Market data source" value={source} options={chartSources} onChange={s=>setSource(s as ChartSource)}/><Select label="Chart layout" value={String(chartViewCount)} options={['1','2','3','4']} disabled={replayArchive} onChange={value=>setViewCount(value as typeof viewCount)}/><button className="small-tool" onClick={()=>setRefreshCount(n=>n+1)} title="Refresh candles"><RefreshCw size={16}/></button></div>{brokerPicker}</div>
         {savedSource&&!replayArchive&&<SavedRange range={range} onChange={setRange}
           onFreeze={()=>void loadReplay('archive')} freezeBusy={Boolean(replayBusy)} onEdit={invalidateReplayLoad}/>}
         {!replayActive&&savedSource&&(resumeReplay||replayBusy==='archive'||replayBusy==='resume'||
@@ -645,10 +663,11 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             setPlanPrices([]);setInteraction(picking?{mode:'navigate'}:{mode:'plan',prices:[]});
           }}>{picking?'Cancel level selection':'Select plan levels'}</button>
           {picking&&<span role="status">Click primary price for {['entry','stop','target'][picked.length]}</span>}
-          <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>onPlan({
-            symbol:symbol as SymbolName,timeframe,snapshot_id:chartCapture,knowledge_cutoff_utc:cutoff==null?undefined:new Date(cutoff*1000).toISOString(),context:`${source} · ${data?.feed_id??'unverified feed'} · ${data?.price_basis??'unverified basis'}`,
+          <button className="small-tool" disabled={replayArchive&&!chartCapture||!replayActive&&(busy||Boolean(error))} onClick={()=>onPlan({
+            symbol:symbol as SymbolName,timeframe,snapshot_id:chartCapture,knowledge_cutoff_utc:cutoff==null?undefined:new Date(cutoff*1000).toISOString(),context:`${source} · ${indicatorFeed?.feed_id??'unverified feed'} · ${indicatorFeed?.price_basis??'unverified basis'}`,
             entry:picked[0]??'',stop:picked[1]??'',target:picked[2]??'',
           })}>Create trade plan</button>
+          {replayArchive&&!chartCapture&&<small>Save chart evidence to attach this candle to a decision.</small>}
           {chartCapture&&onChartLesson&&<button className="small-tool" onClick={()=>onChartLesson(chartCapture)}>Record chart lesson</button>}
         </div>}
         {levels.length>0||levelHistory.undo.length>0||levelHistory.redo.length>0?<details className="data-trust">
@@ -673,8 +692,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             onChange={event=>setShowSmt(event.target.checked?'on':'off')}/> Mark SMT</label>}
           {compare&&showSmt==='on'&&<details><summary>SMT rules</summary><div className="smt-rules">
             {ruleInputs.map(([label,value,setValue,min,max,step])=><label key={label}>{label}
-              <input type="number" value={value} min={min} max={max} step={step} onChange={event=>setValue(event.target.value)}/>
+              <input type="number" value={value} disabled={Boolean(pinnedRules)} min={min} max={max} step={step} onChange={event=>setValue(event.target.value)}/>
             </label>)}
+            {replayActive&&!pinnedRules&&<small>Legacy replay · workspace rules are shown because this session did not record SMT settings.</small>}
             {!validRules&&<small role="status">Enter values within the displayed limits.</small>}
           </div></details>}
           {compare&&showSmt==='on'&&<button type="button" className="small-tool"
@@ -688,9 +708,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
               ? {primary:replayActive||!busy&&indicatorScope===loadedIndicatorScope ? firstFeed : undefined,
                 comparison:replayActive&&!replaySession?.views.comparison ? undefined : secondFeed,
                 timeframe,cutoff:indicatorCutoff,rules,unavailable:strictSmtLimit} : undefined}/>
-          <small role="status">{legacySmtLimit || smt.error || comparison.error || smtCoverageNotice(smt.coverage) || (smt.authority==='VERIFIED_MT5_CAPTURE'?'SMT · verified MT5 candles':smt.authority==='VERIFIED_SAVED_DATASET'?'SMT · verified archive evidence':smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
-          {smt.alert?.confirmed_at&&<strong role="status">{(smt.pending || smt.error || smtCoverageNotice(smt.coverage)) ? 'Saved SMT_CONFIRMED' : 'SMT_CONFIRMED'} · {smt.alert.direction} · {symbol} / {compare} · {new Date(smt.alert.confirmed_at*1000).toISOString()}</strong>}
-          {smt.alert?.event_key&&onSignal&&<button className="small-tool" onClick={()=>void onSignal({
+          <small role="status">{(missingPeer ? 'Missing peer candle · '+compare+' · '+new Date(missingPeer.time*1000).toISOString() : undefined) || legacySmtLimit || smt.error || comparison.error || smtCoverageNotice(smt.coverage) || (smt.events?.length===0?'No SMT divergence in the paired candles at this cutoff':smt.events?.length?`${smt.events.length} SMT divergence${smt.events.length===1?'':'s'} in paired candles`:undefined) || (smt.authority==='VERIFIED_MT5_CAPTURE'?'SMT · verified MT5 candles':smt.authority==='VERIFIED_SAVED_DATASET'?'SMT · verified archive evidence':smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
+          {!replayActive&&smt.alert?.confirmed_at&&<strong role="status">{(smt.pending || smt.error || smtCoverageNotice(smt.coverage)) ? 'Saved SMT_CONFIRMED' : 'SMT_CONFIRMED'} · {smt.alert.direction} · {symbol} / {compare} · {new Date(smt.alert.confirmed_at*1000).toISOString()}</strong>}
+          {!replayActive&&smt.alert?.event_key&&onSignal&&<button className="small-tool" onClick={()=>void onSignal({
             event_key:smt.alert!.event_key!,status:'SMT_CONFIRMED'
           }).catch(reason=>setPollError(reason.message))}>Inspect alert evidence</button>}
         </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(interaction.mode==='navigate'?'active':'')} title="Crosshair (Esc)" onClick={()=>setInteraction({mode:'navigate'})}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
@@ -786,7 +806,7 @@ function Dashboard({overview,go}:{overview:Overview|null;go:(s:Section)=>void}){
   </>
 }
 
-function Planner({refresh,incoming,onConsume,onReview,initialLocation,onLesson,openSignal}:{openSignal:(reference:import('./types').SignalReference)=>Promise<void>;refresh:()=>void;incoming?:Plan;onConsume:()=>void;onReview:(id:string)=>void;initialLocation?:{id:string;version?:number};onLesson:(reference:import("./types").PlanReference)=>void}){
+function Planner({refresh,incoming,onConsume,onReview,initialLocation,onLesson,onPassSaved,openSignal}:{onPassSaved:()=>void;openSignal:(reference:import('./types').SignalReference)=>Promise<void>;refresh:()=>void;incoming?:Plan;onConsume:()=>void;onReview:(id:string)=>void;initialLocation?:{id:string;version?:number};onLesson:(reference:import("./types").PlanReference,snapshot?:string)=>void}){
   const formatDate=useTimestampFormat();
  const [list,setList]=useState<Trade[]>([]);const [loading,setLoading]=useState(true);const [formOpen,setFormOpen]=useState(()=>Boolean(incoming||loadDraft()));const [plan,setPlan]=useState<Plan>(()=>incoming??loadDraft()??{...initialPlan});const [risk,setRisk]=useState<import('./types').Risk|null>(null);const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');const [error,setError]=useState('');const [closeId,setCloseId]=useState('');const [outcome,setOutcome]=useState({pnl:'0',r:'0',notes:''});
  useEffect(()=>{
@@ -834,19 +854,20 @@ function Planner({refresh,incoming,onConsume,onReview,initialLocation,onLesson,o
      setDeclineId('');setReason('');await load();refresh();}
    catch(failure){setError((failure as Error).message);}finally{setBusy(false);}
  }
+ const [savedContext,setSavedContext]=useState<{reference:import('./types').PlanReference;snapshot:string}>();
  const [savedId,setSavedId]=useState("");
  const load=useCallback(()=>api.trades().then(setList).catch(e=>setError(e.message)).finally(()=>setLoading(false)),[]);useEffect(()=>{void load()},[load]);
  const modify=<K extends keyof Plan>(key:K,value:Plan[K])=>{setPlan(p=>({...p,[key]:value}));setRisk(null)};
  async function calculate(){setBusy(true);setError('');try{setRisk(await api.risk(plan))}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
- async function save(){setBusy(true);setError('');try{const result=revision?await api.revisePlan(revision.id,revision.version,plan):await api.createPlan(plan);setMessage((revision?'Saved revision for ':'Created ')+result.id);targetRevision();setSavedId(result.id);setFormOpen(false);setRisk(null);setPlan({...initialPlan});try{localStorage.removeItem(draftKey)}catch{}await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ async function save(){setBusy(true);setError('');try{const result=revision?await api.revisePlan(revision.id,revision.version,plan):await api.createPlan(plan);setMessage((revision?'Saved revision for ':'Created ')+result.id);setSavedContext(plan.snapshot_id?{reference:{trade_id:result.id,version:result.version??(revision?revision.version+1:1)},snapshot:plan.snapshot_id}:undefined);targetRevision();setSavedId(result.id);setFormOpen(false);setRisk(null);setPlan({...initialPlan});try{localStorage.removeItem(draftKey)}catch{}await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  async function finalize(){if(!closeId)return;setBusy(true);setError('');try{await api.closeTrade(closeId,outcome.pnl,outcome.r,outcome.notes);setCloseId('');await load();refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  return <><PageHeading eyebrow="TRADING / PLANNING" title="Trade planner" subtitle="A trade should exist as a written hypothesis before it exists as a position." action={<button className="btn btn-primary" onClick={()=>{setFormOpen(true);setMessage('');setError('')}}><Plus size={17}/> New Trade Plan</button>}/>
   <div className="pill-guidance"><ShieldCheck size={17}/><div><strong>Evidence-first workflow</strong><span>Context → Observation → Evidence → Hypothesis → Setup → Trigger → Invalidation → Risk → Execution → Review</span></div></div>
-  {message&&<Success>{message}</Success>}{savedId&&<button className="small-tool" onClick={()=>onReview(savedId)}>Review saved plan</button>}{error&&<Notice tone="red">{error}</Notice>}
+  {message&&<Success>{message}</Success>}{savedContext&&<button className="small-tool" onClick={()=>onLesson(savedContext.reference,savedContext.snapshot)}>Journal this plan revision</button>}{savedId&&<button className="small-tool" onClick={()=>onReview(savedId)}>Review saved plan</button>}{error&&<Notice tone="red">{error}</Notice>}
   <Card><SectionTitle eyebrow="PLANNED DECISIONS" title="Your trade log" action={<Badge tone="neutral">{list.length} records</Badge>}/>{loading?<div className="loading-zone"><Spinner/></div>:list.length?<div className="table-scroll"><table><thead><tr><th>DECISION</th><th>SYMBOL</th><th>STRATEGY</th><th>RISK</th><th>STATUS</th><th>CREATED</th><th>ACTION</th></tr></thead><tbody>{list.map(t=><tr key={t.id}><td className="mono">{t.id}</td><td><strong>{t.symbol}</strong> <span className={t.direction==='BUY'?'positive':'negative'}>{t.direction}</span></td><td>{t.plan.strategy}</td><td>{t.plan.risk_percent}%</td><td><Badge tone={t.status==='CLOSED'?'blue':'green'}>{t.status}</Badge></td><td>{formatDate(t.created_at)}</td><td><button className="text-button" onClick={()=>{setHistoryVersion(undefined);setHistory(undefined);void api.trade(t.id).then(setHistory).catch(reason=>setError(reason.message));}}>Versions</button>
   {t.status==='PLANNED'?<><button className="text-button" onClick={()=>setCloseId(t.id)}>Record outcome <ArrowRight size={14}/></button>
     <button className="text-button" onClick={()=>setDeclineId(t.id)}>No trade</button></>:t.outcome?`${t.outcome.result_r} R`:'—'}</td></tr>)}</tbody></table></div>:<Empty icon={<Target/>} title="Your trade log is empty" body="Start with a structured plan. Your decisions will be versioned and preserved here."/>}</Card>
-  {history&&<PlanHistory key={history.id+(history.versions?.[0]?.version??0)} trade={history} onSignal={ref=>void openSignal(ref).catch(e=>setError(e.message))} initialVersion={historyVersion} onRevise={editLatest} onLesson={version=>onLesson({trade_id:history.id,version})} onClose={()=>setHistory(undefined)}/>}
+  {history&&<PlanHistory key={history.id+(history.versions?.[0]?.version??0)} trade={history} onSignal={ref=>void openSignal(ref).catch(e=>setError(e.message))} initialVersion={historyVersion} onRevise={editLatest} onLesson={version=>onLesson({trade_id:history.id,version},history.versions?.find(item=>item.version===version)?.plan.snapshot_id)} onClose={()=>setHistory(undefined)}/>}
   {declineId&&<div className="modal-shade"><section className="small-modal" role="dialog" aria-label="Record no-trade decision">
     <h2>Record no-trade decision</h2><TextArea label="Reason for passing" value={reason} onChange={setReason}/>
     <div className="research-controls"><button className="small-tool" onClick={()=>setDeclineId('')}>Cancel</button>
@@ -864,6 +885,17 @@ function Planner({refresh,incoming,onConsume,onReview,initialLocation,onLesson,o
     <div className="form-grid"><TextField label="Strategy / model" value={plan.strategy} onChange={v=>modify('strategy',v)}/><label className="field"><span>Session</span><Select value={plan.session} onChange={v=>modify('session',v as Plan['session'])} options={['ASIA','LONDON','NEW_YORK','OTHER']}/></label></div>
     {plan.snapshot_id&&<p><a href={`/research/api/chart-snapshots/${plan.snapshot_id}/image`} target="_blank" rel="noreferrer">Open linked chart capture</a>
       <button className="text-button" onClick={()=>modify('snapshot_id',undefined)}>Remove chart capture</button></p>}
+    {plan.snapshot_id&&!revision&&<details><summary>Pass on this setup</summary>
+      <TextArea label="Reason to pass" value={reason} onChange={setReason}/>
+      <button className="small-tool" disabled={busy||reason.trim().length<5} onClick={async()=>{
+        setBusy(true);setError('');
+        try{
+          await api.addJournal('CHART','No trade · '+plan.symbol,reason.trim(),plan.signal_reference,
+            {snapshot_id:plan.snapshot_id,tags:['no-trade']});
+          localStorage.removeItem(draftKey);onPassSaved();
+        }catch(e){setError((e as Error).message);}finally{setBusy(false);}
+      }}>Save pass to journal</button>{error&&<p role="alert">{error}</p>}
+    </details>}
     {plan.snapshot_id&&<SnapshotDetails id={plan.snapshot_id}/>}
     {plan.signal_reference&&<p role="status">Linked SMT revision · {plan.signal_reference.status} · {plan.signal_reference.event_key.slice(0,12)}</p>}
     <div className="form-subtitle">Evidence chain <button className="text-button" onClick={()=>setPlan(p=>({...p,...snippets}))}>Fill example wording (edit before saving)</button></div>
@@ -965,7 +997,7 @@ function StrategyLab(){
  </>
 }
 
-function Journal({refresh,incoming,clearLink,openSignal,initialEntry,initialContext,openPlan}:{
+function Journal({refresh,incoming,clearLink,openSignal,initialEntry,initialContext,openPlan,onReturn}:{onReturn:(location:DecisionLocation)=>void;
   refresh:()=>void;incoming?:SignalRecord;initialEntry?:JournalEntry;initialContext?:JournalContext;clearLink:()=>void;openPlan:(id:string,version:number)=>void;openSignal:(reference:import('./types').SignalReference)=>Promise<void>;
 }){
   const formatDate=useTimestampFormat();
@@ -1006,7 +1038,7 @@ function Journal({refresh,incoming,clearLink,openSignal,initialEntry,initialCont
  {e.plan_reference&&<button className="text-button" onClick={()=>openPlan(e.plan_reference!.trade_id,e.plan_reference!.version)}>
    Open linked plan v{e.plan_reference.version}</button>}
  {e.plan_reference&&<JournalPaper trade={e.plan_reference.trade_id} version={e.plan_reference.version}/>}
- {e.snapshot_id&&<SnapshotDetails id={e.snapshot_id}/>}
+ {e.snapshot_id&&<SnapshotDetails id={e.snapshot_id} onReturn={onReturn}/>}
  {e.snapshot_id&&<a className="text-button" href={`/research/api/chart-snapshots/${e.snapshot_id}/image`} target="_blank" rel="noreferrer">Open chart capture</a>}
  {!entries.some(item=>item.supersedes===e.id)&&<button className="text-button" onClick={()=>{
    setRevisionEntry(e);setKind(e.kind);setTitle(e.title);setContent(e.content);setTags(e.tags?.join(', ')??'');
