@@ -37,7 +37,7 @@ import {WorkspacePresets} from './WorkspacePresets';
 import {SessionIntelligence} from './SessionIntelligence';
 import {SimulationEvidence} from './SimulationEvidence';
 import {ChartLink} from './ChartLink';
-import {DrawingToolbox,tools,useDrawingBook,type Drawing} from './Drawings';
+import {DrawingToolbox,drawingChartProps,usePaneDrawingBooks,useVisibleDrawings,type Drawing} from './Drawings';
 import {PlanHistory} from './PlanHistory';
 import {StrategyBuilder} from './StrategyBuilder';
 import type {EvidenceChartLocation} from './StrategyEvaluation';
@@ -208,11 +208,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [symbolError,setSymbolError]=useState('');
   const [pollError,setPollError]=useState('');
   const symbol=isBinance?'BTCUSDT':source==='MT5'?brokerSymbol:forexSymbol;
-  const drawingBook=useDrawingBook(expanded?`${source}:${symbol}:${timeframe}`:"");
-  const {interaction,setInteraction}=drawingBook;
-  const picking=interaction.mode==='plan';
-  const picked=picking?interaction.prices:planPrices;
-  const placementDraft=useMemo(()=>drawingBook.edit?{kind:drawingBook.edit.kind,anchors:drawingBook.edit.anchors}:undefined,[drawingBook.edit]);
   const [sessionZones,setSessionZones]=useState<Record<string,Drawing>>({});
   const updateZone=useCallback((id:string,drawing?:Drawing)=>{
     setSessionZones(current=>{
@@ -259,6 +254,18 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     [symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence]);
   const replaySession=loadedReplay?.generation===primaryLoadGeneration ? loadedReplay.session : undefined;
   const replayData=replaySession?.market;
+  const replayActive=replayIndex!==null&&Boolean(replayData);
+  const replayArchive=replayActive&&Boolean(replaySession?.request?.window_bars);
+  const companionScope=(view:'2'|'3'|'4')=>{
+    const pane=replayArchive?replaySession?.views[view]:undefined;
+    return pane&&'candles' in pane?`${source}:${pane.symbol}:${pane.timeframe}`:'';
+  };
+  const drawingBooks=usePaneDrawingBooks(expanded?`${source}:${symbol}:${timeframe}`:'',
+    companionScope('2'),companionScope('3'),companionScope('4'));
+  const drawingBook=drawingBooks.primary;
+  const {interaction,setInteraction}=drawingBook;
+  const picking=interaction.mode==='plan';
+  const picked=picking?interaction.prices:planPrices;
   const invalidateReplayLoad=useCallback(()=>{
     replayLoadSequence.current++;
     replayPending.current=false;
@@ -355,9 +362,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     setLevelHistory({undo:[...levelHistory.undo,levels].slice(-25),redo:[]});
     writeLevels(next);
   };
-  const toggleLevel=useCallback(()=>{
-    if(levels.length<50)setInteraction(current=>({mode:current.mode==='level'?'navigate':'level'}));
-  },[levels.length,setInteraction]);
   const addLevel=(price:number)=>{
     if(!Number.isFinite(price)||levels.length>=50)return;
     changeLevels([...levels,{id:crypto.randomUUID(),price:Number(price.toFixed(digits))}]);
@@ -377,8 +381,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const candles=isBinance&&liveRows.length
     ? [...new Map([...historical,...liveRows].map(row=>[row.time,row])).values()].sort((a,b)=>a.time-b.time).slice(-600)
     : historical;
-  const replayActive=replayIndex!==null&&Boolean(replayData);
-  const replayArchive=replayActive&&Boolean(replaySession?.request?.window_bars);
   const replayLinked=replayArchive||linkReplay==='on';
   const replayStep=frameMinutes[timeframe]*60;
   const archiveCutoff=replayArchive&&replayIndex!==null ? replayData?.replay_cutoffs?.[replayIndex] : undefined;
@@ -449,6 +451,11 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   },[replayArchive,replaySession,symbol,timeframe]);
   const chartViewCount=replayArchive ? Math.max(1,...archivePanes.map(({view})=>view==='primary'?1:Number(view))) : Number(viewCount);
   const inspectedPane=archivePanes.find(({view})=>view===replaySelection?.view)??archivePanes[0];
+  const drawingView=inspectedPane?.view??'primary';
+  const activeBook=drawingBooks[drawingView];
+  // Cancel an unfinished gesture when the operator leaves its pane. Committed writes
+  // still resolve against the originating book and chart market.
+  useLayoutEffect(()=>()=>activeBook.setEdit(undefined),[drawingView,activeBook.setEdit]);
   const inspectionFeed=inspectedPane&&'candles' in inspectedPane.data ? inspectedPane.data : undefined;
   const inspectedTime=replaySelection&&replaySelection.view===inspectedPane?.view ? replaySelection.time : undefined;
   const inspectionCandles=useMemo(()=>{
@@ -457,17 +464,22 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     return visibleAt(inspectionFeed.candles,archiveCutoff,frameMinutes[inspectionFeed.timeframe]*60);
   },[inspectedPane,inspectionFeed,archiveCutoff,visibleCandles]);
   const selectedVisibleTime=inspectedTime!==undefined&&inspectionCandles.some(bar=>bar.time===inspectedTime)?inspectedTime:undefined;
-  function selectInspectionPane(view:ArchiveViewId){
+  const selectInspectionPane=useCallback((view:ArchiveViewId)=>{
     const pane=archivePanes.find(item=>item.view===view)?.data;
     if(!pane||'error' in pane||archiveCutoff===undefined)return;
     const bar=visibleAt(pane.candles,archiveCutoff,frameMinutes[pane.timeframe]*60).at(-1)??pane.candles[0];
     if(bar)setReplaySelection({view,time:bar.time});
-  }
+  },[archivePanes,archiveCutoff]);
+  const toggleLevel=useCallback(()=>{
+    if(levels.length>=50)return;
+    if(drawingView!=='primary')selectInspectionPane('primary');
+    setInteraction(current=>({mode:current.mode==='level'?'navigate':'level'}));
+  },[levels.length,drawingView,selectInspectionPane,setInteraction]);
   useEffect(()=>{
     if(!expanded)return;
     const onKey=(e:KeyboardEvent)=>{
       if(e.key==='Escape'){
-        setInteraction(current=>current.mode==='navigate'?current:{mode:'navigate'});
+        activeBook.setInteraction(current=>current.mode==='navigate'?current:{mode:'navigate'});
         return;
       }
       const target=e.target as HTMLElement|null;
@@ -475,10 +487,13 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
       if(e.altKey&&e.key.toLowerCase()==='h'){e.preventDefault();if(!e.repeat)toggleLevel();}
     };
     window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
-  },[expanded,setInteraction,toggleLevel]);
+  },[expanded,activeBook.setInteraction,toggleLevel]);
   const boundary=last?.time??0;
   const cutoff=archiveCutoff??(replayActive?visibleCandles.reduce((known,bar)=>
     Math.max(known,bar.time+replayStep,bar.available_at??0),boundary):undefined);
+  const primaryDrawings=useVisibleDrawings(drawingBook.current?.items,cutoff,replayStep,
+    replayArchive?visibleCandles:undefined,sessionZones);
+  const primaryProps=drawingChartProps(drawingBook,digits,drawingView==='primary');
   const indicatorFeed=replayActive?replayData:data;
   const indicatorCutoff=cutoff??Math.min(Math.floor(Date.now()/1000),Math.max(
     (indicatorCandles.at(-1)?.time??0)+frameMinutes[timeframe]*60,indicatorCandles.at(-1)?.available_at??0));
@@ -642,6 +657,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
         </div>
         {onPlan&&watchSymbols.includes(symbol as SymbolName)&&<div className="research-controls">
           <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>{
+            if(drawingView!=='primary')selectInspectionPane('primary');
             setPlanPrices([]);setInteraction(picking?{mode:'navigate'}:{mode:'plan',prices:[]});
           }}>{picking?'Cancel level selection':'Select plan levels'}</button>
           {picking&&<span role="status">Click primary price for {['entry','stop','target'][picked.length]}</span>}
@@ -658,7 +674,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             {levels.map(level=><button className="small-tool" key={level.id}
               onClick={()=>changeLevels(levels.filter(item=>item.id!==level.id))}>Remove {level.price.toFixed(digits)}</button>)}
           </div></details>:null}
-        <div className="terminal-drawing-tools"><DrawingToolbox book={drawingBook}/></div>
+        <div className="terminal-drawing-tools"><DrawingToolbox key={drawingView} book={activeBook}/></div>
         {chartViewCount>1&&<details className="data-trust"><summary>Chart synchronization</summary>
           <div className="research-controls">{([
             ['Crosshair',linkCrosshair,setLinkCrosshair],['Time range',linkRange,setLinkRange],['Zoom',linkZoom,setLinkZoom],
@@ -693,34 +709,17 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
           {smt.alert?.event_key&&onSignal&&<button className="small-tool" onClick={()=>void onSignal({
             event_key:smt.alert!.event_key!,status:'SMT_CONFIRMED'
           }).catch(reason=>setPollError(reason.message))}>Inspect alert evidence</button>}
-        </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(interaction.mode==='navigate'?'active':'')} title="Crosshair (Esc)" onClick={()=>setInteraction({mode:'navigate'})}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
+        </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(activeBook.interaction.mode==='navigate'?'active':'')} title="Crosshair (Esc)" onClick={()=>activeBook.setEdit(undefined)}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
         <div className={'terminal-chart-columns '+(chartViewCount>1?'multi-chart':'')}>
           <div className="primary-chart" role="region" aria-label="Primary chart" data-inspecting={inspectedPane?.view==='primary'||undefined}><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':exactEvidence?'FROZEN STRATEGY EVIDENCE':'PRICE'}</span></div>{!replayActive&&busy?<div className="chart-loading"><Spinner/> Loading candles</div>:!replayActive&&error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} focus={exactEvidence&&!replayArchive&&initialLocation?.timestamp!==undefined?
             {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={chartViewCount>1?360:510}
             replayCandleTime={inspectedPane?.view==='primary'?selectedVisibleTime:undefined}
-            onReplayCandleSelect={replayArchive?time=>setReplaySelection({view:'primary',time}):undefined} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events,smtWindowOnly:savedSource&&replayActive}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
-              item.anchors.every(anchor=>anchor.time+frameMinutes[timeframe]*60<=cutoff))}
-            drawMode={interaction.mode!=='navigate'} placementInteraction={interaction}
+            onReplayCandleSelect={replayArchive?time=>setReplaySelection({view:'primary',time}):undefined} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events,smtWindowOnly:savedSource&&replayActive}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={primaryDrawings}
+            {...primaryProps} drawingPrompt={picking?`Select ${['entry','stop','target'][picked.length]}`:primaryProps.drawingPrompt}
             onSaveSnapshot={canSaveCapture?saveChartEvidence:undefined} savingSnapshot={currentCapture?.saving??false} snapshotStatus={currentCapture?.status}
             onSmtSelect={!replayActive&&onSignal?event=>{
               if(event.event_key)void onSignal({event_key:event.event_key,status:event.status}).catch(reason=>setPollError(reason.message));
             }:undefined}
-            onDrawingSelect={id=>{if(!id||drawingBook.current?.items.some(item=>item.visible&&item.id===id))drawingBook.setSelected(id);}}
-            directEdit={{selected:drawingBook.selected,enabled:Boolean(drawingBook.current&&!drawingBook.saving&&!drawingBook.conflict),
-              revision:drawingBook.current?.revision,snap:drawingBook.snap,save:drawingBook.saveDirect}}
-            placementDraft={placementDraft}
-            requirePlacementCandle={interaction.mode==='level'}
-            placementDrag={interaction.mode==='level'||
-              (interaction.mode==='place'&&tools[interaction.draft.kind][1]===1)?'release-point':
-              interaction.mode==='place'&&!interaction.draft.anchors.length&&
-              ['trend','rectangle','risk-reward'].includes(interaction.draft.kind)?'two-points':'none'}
-            onAnchor={drawingBook.edit?points=>drawingBook.anchor(points,digits):undefined}
-            onPlacementPreview={drawingBook.edit?points=>{
-              const edit=drawingBook.edit!;
-              return {kind:edit.kind,anchors:[...edit.anchors,...points.map(({bar,price})=>drawingBook.point(bar,price,digits))]};
-            }:undefined}
-            drawingPrompt={drawingBook.edit?`${tools[drawingBook.edit.kind][0]} · select ${drawingBook.edit.mode==='move'?'new origin':typeof drawingBook.edit.mode==='number'?drawingBook.edit.mode+1:drawingBook.edit.anchors.length+1}`:
-              picking?`Select ${['entry','stop','target'][picked.length]}`:undefined}
             onAddLevel={interaction.mode==='plan'?price=>{
               const prices=[...interaction.prices,price.toFixed(digits)];
               if(prices.length===3){setPlanPrices(prices);setInteraction({mode:'navigate'});}
@@ -733,7 +732,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
               frozen={replayActive&&replayLinked?(replaySession?.views[view]??
                 {symbol,timeframe,error:'This pane was not captured in the replay snapshot'}):undefined}
               link={link} linkedFrame={linkTimeframe==='on'?timeframe:undefined} linkedSymbol={linkInstrument==='on'?symbol:undefined}
-              inspecting={inspecting} selectedCandle={inspecting?selectedVisibleTime:undefined}
+              drawingBook={replayArchive?drawingBooks[view]:undefined} inspecting={inspecting} selectedCandle={inspecting?selectedVisibleTime:undefined}
               onCandleSelect={replayArchive?time=>setReplaySelection({view,time}):undefined} onConfigurationChange={invalidateReplayLoad}/>;
           })}
         </div></div>

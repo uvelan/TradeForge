@@ -1,6 +1,7 @@
 import type {ChartLink} from "./ChartLink";
 import { useEffect, useMemo, useState } from "react";
 import { visibleAt } from "./ReplayControls";
+import {drawingChartProps,useVisibleDrawings,type DrawingBook} from './Drawings';
 import { api } from "./api";
 import {useChartIndicator} from "./indicators";
 import { CandleChart, Select } from "./components";
@@ -64,11 +65,11 @@ export function useViewCandles(symbol: string, frame: Timeframe, source: ChartSo
 }
 
 export function ChartView({number, mainSymbol, source, options, refresh, cutoff, precision,range,link,linkedFrame,linkedSymbol,frozen,
-  inspecting, selectedCandle, onCandleSelect, onConfigurationChange}: {
+  drawingBook, inspecting, selectedCandle, onCandleSelect, onConfigurationChange}: {
   number: number; mainSymbol: string; source: ChartSource; options: string[]; refresh: number;
   cutoff?: number; precision: (symbol: string) => number;
   range?:CandleRange; link?:ChartLink; linkedFrame?:Timeframe; linkedSymbol?:string; frozen?:ReplayPane;
-  inspecting?:boolean; selectedCandle?:number; onCandleSelect?:(time:number)=>void; onConfigurationChange?:()=>void;
+  drawingBook?:DrawingBook; inspecting?:boolean; selectedCandle?:number; onCandleSelect?:(time:number)=>void; onConfigurationChange?:()=>void;
 }) {
   const [savedSymbol, setSymbol] = useWorkspacePreference<string>(`view-${number}-symbol`, "");
   const defaultFrame = number === 2 ? "H1" : number === 3 ? "M15" : "H4";
@@ -79,6 +80,7 @@ export function ChartView({number, mainSymbol, source, options, refresh, cutoff,
   const frame=frozen?.timeframe??linkedFrame??savedFrame;
   const symbol = frozen?.symbol ?? linkedSymbol ?? (options.includes(savedSymbol) ? savedSymbol : mainSymbol);
   const {candles, error, feed} = useViewCandles(symbol, frame, source, refresh, cutoff,false,range,frozen);
+  const drawings=useVisibleDrawings(drawingBook?.current?.items,cutoff,frameMinutes[frame]*60,candles);
   const [showIndicators,setShowIndicators]=useState(false);
   const closed = feed?.latest_unconfirmed && !frozen ? candles?.filter(bar=>bar.time!==feed.candles.at(-1)?.time) : candles;
   const last=closed?.at(-1);
@@ -99,6 +101,7 @@ export function ChartView({number, mainSymbol, source, options, refresh, cutoff,
       {showIndicators&&indicators.controls}</details>
     {candles?.length ? <CandleChart key={`${symbol}-${frame}-${source}`} candles={candles} height={360}
       symbol={symbol} timeframe={frame} indicators={indicators.data} precision={precision(symbol)} link={link} linkId={String(number)}
+      {...(drawingBook?drawingChartProps(drawingBook,precision(symbol),Boolean(inspecting)):undefined)} drawings={drawings}
       replayCandleTime={selectedCandle} onReplayCandleSelect={onCandleSelect} showSnapshot showDataLegend/> :
       <div className="chart-loading" role="status">{error ?? (candles ? "No completed candles at this time" : "Loading candles…")}</div>}
   </section>;
