@@ -20,7 +20,7 @@ const {values: args} = parseArgs({options: {
   'ui-port': {type: 'string', default: '4793'},
 }});
 if (!args.output || !args.workspace || (!args.drawings && !args.bi5) || !args.csv) {
-  throw Error('Supply --output, --workspace, --bi5, and --csv paths.');
+  throw Error('Supply --output, --workspace and --csv, plus --bi5 for the full replay suite.');
 }
 for (const port of [args['api-port'], args['ui-port']]) {
   assert(/^\d{1,5}$/.test(port) && Number(port) >= 1 && Number(port) <= 65535);
@@ -282,7 +282,7 @@ async function checkFixture(browser, fixture, pinChange = false) {
 }
 
 let api, vite, browser;
-try {
+async function run() {
   for (const origin of [apiOrigin, uiOrigin]) {
     assert(!await fetch(origin, {signal: AbortSignal.timeout(1000)}).catch(() => undefined),
       'Private service port is already in use: ' + origin);
@@ -299,7 +299,7 @@ try {
     await configure(page, details);
     await freeze(page, details.request, details.session_id);
     const bars = await verifyBars(page, details.panes, details.request.end);
-    const journey = await drawingJourney(page, details);
+    const journey = await drawingJourney(page, details, verifySelection);
     await browser.close();
     browser = undefined;
     await stop(api);
@@ -320,7 +320,8 @@ try {
       bars, api_processes: 2, browser_processes: 2, uncaught_page_errors: errors, ...journey,
     }, null, 2) + '\n');
     console.log('Genuine replay drawing journey and two-process reopen passed.');
-  } else {
+    return;
+  }
   const controlled = fixture('prepare');
   const genuine = fixture('genuine-bi5', ['--bi5', resolve(args.bi5)]);
   const exports = fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
@@ -377,7 +378,9 @@ try {
     rewind_bars: rewindCounts, selected_candle: selected, uncaught_page_errors: errors,
   }, null, 2) + '\n');
   console.log('Native archive freeze, two-process restart and all named panes verified.');
-  }
+}
+try {
+  await run();
 } finally {
   if (browser) await browser.close();
   await stop(vite);

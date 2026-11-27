@@ -9,7 +9,7 @@ const scopeOf = (details, view) => [
 const endpoint = scope => '/research/api/drawings?' + new URLSearchParams({scope});
 const isWrite = res => res.request().method() === 'POST' && new URL(res.url()).pathname.endsWith('/drawings');
 async function scene(page, scope) {
-  const response = await page.request.get(endpoint(scope));
+  const response = await page.request.get(new URL(endpoint(scope), page.url()).href);
   assert.equal(response.status(), 200);
   return response.json();
 }
@@ -33,21 +33,30 @@ async function save(page, scope, act) {
   return saved;
 }
 const anchor = ({time, price}) => ({time, price});
-async function place(page, details, view, kind, fractions) {
+async function place(page, details, view, kind, fractions, sourceBar) {
   const scope = scopeOf(details, view);
   const before = await scene(page, scope);
   await selectPane(page, view);
   await page.getByLabel('Drawing tool', {exact: true}).selectOption(kind);
   await page.getByRole('button', {name:'Draw', exact:true}).click();
   const expected = [];
+  if(sourceBar)await page.getByLabel('Snap to wick').check();
   const after = await save(page, scope, async () => {
     for (const [x,y] of fractions) {
-      const coords = await point(page, view, x, y);
+      let coords;
+      if(sourceBar){
+        const pane=page.locator(selector(view));
+        await pane.scrollIntoViewIfNeeded();
+        const pixel=await pane.evaluate((_,args)=>window.workspaceProbe.candlePoint(...args),
+          [selector(view),sourceBar.time,sourceBar.high]);
+        coords={...pixel,time:sourceBar.time,price:sourceBar.high.toFixed(5)};
+      }else coords=await point(page, view, x, y);
       assert(details.panes[view].candles.some(bar => bar.time === coords.time));
       expected.push(anchor(coords));
       await page.mouse.click(coords.x, coords.y);
     }
   });
+  if(sourceBar)await page.getByLabel('Snap to wick').uncheck();
   assert.equal(after.revision, before.revision + 1);
   assert.deepEqual(after.items.slice(0,-1), before.items);
   const item = after.items.at(-1);
@@ -56,10 +65,10 @@ async function place(page, details, view, kind, fractions) {
   await expect(page.getByLabel('Select drawing')).toHaveValue(item.id);
   return {view,scope,kind,id:item.id,anchors:expected,revision:after.revision};
 }
-export async function drawingJourney(page, details) {
+export async function drawingJourney(page, details, verifySelection) {
   await page.getByText(/^Drawing toolbox/).click();
   const creations = [];
-  creations.push(await place(page, details, 'primary', 'horizontal', [[.40,.46]]));
+  creations.push(await place(page, details, 'primary', 'horizontal', [[.40,.46]], details.panes.primary.candles.at(-10)));
   const view = '2', scope = scopeOf(details, view);
   await selectPane(page, view);
   const start = await point(page, view, .52, .52);
@@ -124,9 +133,16 @@ export async function drawingJourney(page, details) {
     assert.deepEqual(item.anchors,[anchor(at)]);
     await selectPane(page,view);
     await expect(page.getByLabel('Select drawing').locator('option[value="'+trend.id+'"]')).toHaveCount(1);
+    const retainedCandle=details.panes[view].candles.at(-1);
+    const picker=page.getByLabel('Select drawing');
+    await expect(picker).toHaveValue(trend.id);
+    await verifySelection(page,details.panes[view],retainedCandle);
     const applied=page.waitForResponse(isWrite);
     release();
     await applied;
+    await expect(page.getByLabel('Inspection pane')).toHaveValue(view);
+    await expect(picker).toHaveValue(trend.id);
+    await verifySelection(page,details.panes[view],retainedCandle);
     await expect(page.getByLabel('Select drawing').locator('option[value="'+item.id+'"]')).toHaveCount(0);
     assert.deepEqual(await scene(page,scope),undone);
     creations.push({view:lateView,scope:lateScope,kind:item.kind,id:item.id,anchors:item.anchors,revision:late.revision});
@@ -139,7 +155,8 @@ export async function drawingJourney(page, details) {
   assert.deepEqual(scenes[lateView],late);
   return {creations,scenes,view_ranges:{before:start.range,after_pan:afterPan,after_zoom:afterZoom},
     edit:{view,id:trend.id,revision:edited.revision,anchors:edited.items.at(-1).anchors,undo_revision:undone.revision},
-    delayed_save:{origin:lateView,active_at_response:view,revision:late.revision}};
+    delayed_save:{origin:lateView,active_at_response:view,revision:late.revision,selected_id:trend.id,
+      selected_candle:details.panes[view].candles.at(-1),partitions:details.panes[view].candles.at(-1).source_partition_indexes.map(index=>details.panes[view].partitions[index])}};
 }
 
 export async function verifyReopenedDrawings(page,details,journey) {

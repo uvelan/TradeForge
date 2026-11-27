@@ -15,6 +15,13 @@ export async function installProbe(page:Page) {
       priceRow:(selector:string,price:number)=>selected(selector)?.panes()[0].getSeries()[0].priceToCoordinate(price),
       viewRange:(from:number,to:number,selector?:string)=>selected(selector).timeScale().setVisibleRange({from,to}),
       bars:()=>Array.from(live.values(),api=>api.panes()[0].getSeries()[0].data()),
+      candlePoint:(selector:string,time:number,price:number)=>{
+        const el=document.querySelector(selector)!;
+        const chart=live.get(el), rect=el.getBoundingClientRect();
+        const x=chart.timeScale().timeToCoordinate(time), y=chart.panes()[0].getSeries()[0].priceToCoordinate(price);
+        if(x===null||y===null||x<0||x>=chart.timeScale().width())throw Error('Source candle outside plot');
+        return {x:rect.left+chart.priceScale('left').width()+x,y:rect.top+y};
+      },
       drawingPoint:(selector:string, horizontal:number, vertical:number)=>{
         const el=document.querySelector(selector)!;
         const chart=live.get(el), rect=el.getBoundingClientRect(), scale=chart.timeScale();
