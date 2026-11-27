@@ -11,6 +11,7 @@ type Anchor={time:number;price:string};
 type Drawing={id:string;kind:string;anchors:Anchor[];label:string;color:string;visible:boolean;locked:boolean;created_at:number;updated_at:number};
 type Book={schema_version:1;revision:number;items:Drawing[]};
 
+const keys=['primary','2','3','4'];
 const panes=['.primary-chart .chart-input',...['2','3','4'].map(view=>'[aria-label="Chart view '+view+'"] .chart-input')];
 const counts=[[1,0,0,0],[25,0,0,0],[63,63,62,62]];
 const twoFrames=(page:Page)=>page.evaluate(()=>new Promise<void>(done=>requestAnimationFrame(()=>requestAnimationFrame(()=>done()))));
@@ -79,19 +80,19 @@ async function openReplay(page:Page,fixture:Fixture,palette:string[][]){
   return {ms:performance.now()-started,painted};
 }
 
-async function surface(page:Page){
-  const row=page.locator(panes[0]+' tr').first();
+async function surface(page:Page,selector:string){
+  const row=page.locator(selector+' tr').first();
   await row.evaluate(node=>node.scrollIntoView({block:'center',inline:'center'}));
-  const plot=await page.evaluate(selector=>window.drawingCapacity.surface(selector),panes[0]);
-  if(!plot)throw Error('Primary plot unavailable');
+  const plot=await page.evaluate(selector=>window.drawingCapacity.surface(selector),selector);
+  if(!plot)throw Error('Plot unavailable: '+selector);
   expect(plot.top).toBeGreaterThanOrEqual(0);
   return plot;
 }
 
-async function panZoom(page:Page){
-  const plot=await surface(page);
+async function panZoom(page:Page,selector:string){
+  const plot=await surface(page,selector);
   const x=plot.left+plot.width*.45,y=plot.top+plot.height*.49;
-  const before=await page.evaluate(()=>window.workspaceProbe.range());
+  const before=await page.evaluate(selector=>window.workspaceProbe.range(selector),selector);
   await page.mouse.move(x,y);
   await page.evaluate(()=>window.drawingCapacity.frames());
   await page.mouse.down();
@@ -101,19 +102,19 @@ async function panZoom(page:Page){
   await twoFrames(page);
   const frames=await page.evaluate(()=>window.drawingCapacity.stopFrames());
   expect(frames.length).toBeGreaterThan(1);
-  await expect.poll(()=>page.evaluate(()=>window.workspaceProbe.range())).not.toEqual(before);
+  await expect.poll(()=>page.evaluate(selector=>window.workspaceProbe.range(selector),selector)).not.toEqual(before);
   // Let zoom/draw updates settle before taking a fresh selection timing.
-  await page.getByTitle('Show recent candles',{exact:true}).first().click();
+  await page.locator(selector).locator('xpath=..').getByTitle('Show recent candles',{exact:true}).click();
   await twoFrames(page);
   return frames;
 }
 
-async function selectOnChart(page:Page,target:Drawing){
-  const plot=await surface(page);
+async function selectOnChart(page:Page,selector:string,target:Drawing){
+  const plot=await surface(page,selector);
   const line=plot.strokes.find(stroke=>stroke.color===target.color);
   if(!line)throw Error('Edit target not painted');
   await expect(selectDrawing(page)).toHaveValue('');
-  await page.evaluate(selector=>window.drawingCapacity.arm('selection',selector),panes[0]);
+  await page.evaluate(selector=>window.drawingCapacity.arm('selection',selector),selector);
   await page.mouse.click(plot.left+plot.width*.33,plot.top+line.row);
   const selected=await page.waitForFunction(id=>{
     const select=document.querySelector<HTMLSelectElement>('.terminal-drawing-tools select[aria-label="Select drawing"]')
@@ -125,22 +126,22 @@ async function selectOnChart(page:Page,target:Drawing){
   return (await selected.jsonValue()).ms;
 }
 
-async function dragOnChart(page:Page,target:Drawing,path:string,before:Book){
-  const plot=await surface(page);
+async function dragOnChart(page:Page,selector:string,target:Drawing,path:string,before:Book){
+  const plot=await surface(page,selector);
   const base=plot.strokes.find(stroke=>stroke.color===target.color);
   if(!base)throw Error('Selected edit target not painted');
   const x=plot.left+plot.width*.33,y=plot.top+base.row;
   const delta=base.row<plot.height*.52?20:-20;
   await page.mouse.move(x,y);
   await page.mouse.down();
-  await page.evaluate(selector=>window.drawingCapacity.arm('drag',selector),panes[0]);
+  await page.evaluate(selector=>window.drawingCapacity.arm('drag',selector),selector);
   await page.mouse.move(x,y+delta);
   const preview=await page.waitForFunction(({selector,row,y})=>{
     const start=window.drawingCapacity.started();
     const strokes=window.drawingCapacity.surface(selector)?.strokes;
     if(start!==undefined&&strokes?.some(stroke=>stroke.color==='#ffdc86'&&
       Math.abs(stroke.row-row)>4&&Math.abs(stroke.row-y)<4))return {ms:performance.now()-start};
-  },{selector:panes[0],row:base.row,y:base.row+delta},{timeout:6000});
+  },{selector,row:base.row,y:base.row+delta},{timeout:6000});
   const dragMs=(await preview.jsonValue()).ms;
 
   const resourceEntriesBeforeSave=await page.evaluate(selector=>{
@@ -148,7 +149,7 @@ async function dragOnChart(page:Page,target:Drawing,path:string,before:Book){
     performance.clearResourceTimings();
     window.drawingCapacity.arm('save',selector);
     return entries;
-  },panes[0]);
+  },selector);
   const [posted]=await Promise.all([
     page.waitForResponse(r=>r.request().method()==='POST'&&r.url().endsWith(path)),
     page.mouse.up(),
@@ -169,22 +170,22 @@ async function dragOnChart(page:Page,target:Drawing,path:string,before:Book){
   expect(next.items[0].anchors).not.toEqual(target.anchors);
   expect(Number(next.items[0].anchors[0].price)<Number(target.anchors[0].price)).toBe(delta>0);
   expect(await readBook(page,path)).toEqual(next);
-  const finalPaint=await page.waitForFunction(({selector,color,expected})=>{
+  await page.waitForFunction(({selector,color,expected})=>{
     const row=window.drawingCapacity.surface(selector)?.strokes.find(stroke=>stroke.color===color)?.row;
     return row!==undefined&&Math.abs(row-expected)<4?{row}:undefined;
-  },{selector:panes[0],color:target.color,expected:base.row+delta},{timeout:6000});
-  return {dragMs,saveMs,next,resourceEntriesBeforeSave,row:(await finalPaint.jsonValue()).row};
+  },{selector,color:target.color,expected:base.row+delta},{timeout:6000});
+  return {dragMs,saveMs,next,resourceEntriesBeforeSave};
 }
 
 type Trial={trial:number;warmup:boolean;frames:number[];frameP95Ms:number;clickToSelectionMs:number;
   dragToVisibleMs:number;releaseToSaveMs:number;reopenMs:number;rendered:number[];persisted:number[];
-  target:string;before:Anchor;after:Anchor;reopenedRow:number;resourceEntriesBeforeSave:number;unmountedHeapBytes:number;resources:Record<string,number>};
-type Tier={drawings:number;persisted:number[];rendered:number[];scopes:string[];samples:Trial[]};
+  target:string;before:Anchor;after:Anchor;reopenedRow:{actual:number;projected:number};resourceEntriesBeforeSave:number;unmountedHeapBytes:number;resources:Record<string,number>};
+type Tier={drawings:number;interactionPane:string;persisted:number[];rendered:number[];scopes:string[];samples:Trial[]};
 
 test('drawing capacity on a real four-pane saved replay',async({page,browser},info)=>{
   test.setTimeout(900000);
   const fixture:Fixture=JSON.parse(readFileSync(process.env.TRADEFORGE_NATIVE_FIXTURE!,'utf8'));
-  const lanes=['primary','2','3','4'].map(key=>fixture.panes[key]);
+  const lanes=keys.map(key=>fixture.panes[key]);
   expect(lanes.map(lane=>lane.candles.length)).toEqual([5000,5000,5000,5000]);
   expect(new Set(lanes.map(lane=>lane.symbol+'/'+lane.timeframe)).size).toBe(4);
   const scopes=lanes.map(lane=>[fixture.request.source,lane.symbol,lane.timeframe].join(':'));
@@ -244,7 +245,9 @@ test('drawing capacity on a real four-pane saved replay',async({page,browser},in
       }
       const expected=sizes.map((size,index)=>variant==='baseline'&&index!==0?0:size);
       const palette=books.map((book,index)=>book.items.slice(0,expected[index]).map(item=>item.color));
-      const tier:Tier={drawings:itemCount(sizes),persisted:books.map(book=>book.items.length),rendered:[],scopes,samples:[]};
+      const index=variant==="candidate"&&sizes[1]?1:0;
+      const selector=panes[index],interactionPane=keys[index],path=paths[index];
+      const tier:Tier={drawings:itemCount(sizes),interactionPane,persisted:books.map(book=>book.items.length),rendered:[],scopes,samples:[]};
       report.tiers.push(tier);
       await controls(page).click();
       await page.getByLabel('Market data source').selectOption(fixture.request.source);
@@ -255,31 +258,35 @@ test('drawing capacity on a real four-pane saved replay',async({page,browser},in
       publish();
       for(let trial=0;trial<warmups+trials;trial++){
         const stage=(action:string)=>{report.stage=[tier.drawings,trial,action].join(' ');};
+        await page.getByLabel('Inspection pane').selectOption(interactionPane);
         stage('pan and zoom');
-        const frames=await panZoom(page);
-        const target=books[0].items[0];
+        const frames=await panZoom(page,selector);
+        const target=books[index].items[0];
         stage('chart click selects intended drawing');
-        const clickToSelectionMs=await selectOnChart(page,target);
+        const clickToSelectionMs=await selectOnChart(page,selector,target);
         stage('drag preview and save');
-        const {dragMs,saveMs,next,row,resourceEntriesBeforeSave}=await dragOnChart(page,target,paths[0],books[0]);
-        books[0]=next;
+        const {dragMs,saveMs,next,resourceEntriesBeforeSave}=await dragOnChart(page,selector,target,path,books[index]);
+        books[index]=next;
         stage('unmount and inspect retained resources');
         const unmounted=await unmount();
         expect(unmounted.created).toBe(unmounted.disposed);
         const unmountedHeapBytes=await snapshot();
         stage('reopen saved revision and verify canvas');
-        const response=page.waitForResponse(r=>r.request().method()==='GET'&&r.url().endsWith(paths[0]));
+        const response=page.waitForResponse(r=>r.request().method()==='GET'&&r.url().endsWith(path));
         await controls(page).click();
         const reopened=await openReplay(page,fixture,palette);
         const returned:Response=await response;
         expect(await returned.json()).toEqual(next);
-        const reopenedRow=(await surface(page)).strokes.find(stroke=>stroke.color===target.color)?.row;
-        expect(reopenedRow).toBeDefined();
-        expect(Math.abs(reopenedRow!-row)).toBeLessThan(4);
+        const projectedRow=await page.waitForFunction(({selector,color,price})=>{
+          const actual=window.drawingCapacity.surface(selector)?.strokes.find(stroke=>stroke.color===color)?.row;
+          const projected=window.workspaceProbe.priceRow(selector,price);
+          if(actual!==undefined&&projected!=null&&Math.abs(actual-projected)<1)return {actual,projected};
+        },{selector,color:target.color,price:Number(next.items[0].anchors[0].price)},{timeout:6000});
+        const reopenedRow=await projectedRow.jsonValue();
         tier.samples.push({trial,warmup:trial<warmups,frames,frameP95Ms:p95(frames),clickToSelectionMs,
           dragToVisibleMs:dragMs,releaseToSaveMs:saveMs,reopenMs:reopened.ms,rendered:reopened.painted,
           persisted:books.map(book=>book.items.length),target:target.id,before:target.anchors[0],after:next.items[0].anchors[0],
-          reopenedRow:reopenedRow!,resourceEntriesBeforeSave,unmountedHeapBytes,resources:unmounted.remaining});
+          reopenedRow,resourceEntriesBeforeSave,unmountedHeapBytes,resources:unmounted.remaining});
         console.log('Drawing capacity '+variant+' '+tier.drawings+' '+(trial+1)+'/'+(warmups+trials));
         publish();
       }

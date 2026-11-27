@@ -12,6 +12,7 @@ export async function installProbe(page:Page) {
       .map((series:any)=>({title:series.options().title,data:series.data()})))??[],
       series:(selector:string)=>selected(selector)?.panes().map((pane:any)=>pane.getSeries()
         .map((series:any)=>({title:series.options().title,type:series.seriesType(),data:series.data()})))??[],
+      priceRow:(selector:string,price:number)=>selected(selector)?.panes()[0].getSeries()[0].priceToCoordinate(price),
       viewRange:(from:number,to:number,selector?:string)=>selected(selector).timeScale().setVisibleRange({from,to}),
       bars:()=>Array.from(live.values(),api=>api.panes()[0].getSeries()[0].data()),
       drawingPoint:(selector:string, horizontal:number, vertical:number)=>{
@@ -27,7 +28,7 @@ export async function installProbe(page:Page) {
         const el=document.querySelector(selector)!;
         const api=live.get(el), rect=el.getBoundingClientRect();
         return {x:rect.left+api.priceScale('left').width()+api.timeScale().timeToCoordinate(time),y:rect.top+rect.height*.65};
-      },range:()=>primary()?.timeScale().getVisibleLogicalRange(),counts,created:0,disposed:0,retain:false,retained:new Set<Function>(),linkedCursor:0,linkedRange:0,
+      },range:(selector?:string)=>selected(selector)?.timeScale().getVisibleLogicalRange(),counts,created:0,disposed:0,retain:false,retained:new Set<Function>(),linkedCursor:0,linkedRange:0,
       chart:(factory:Function)=>(el:Element,options:unknown)=>{
         const api=factory(el,options);counts.charts++;audit.created++;live.set(el,api);
         function subscription(target:any, suffix:string) {
