@@ -218,3 +218,75 @@ test('reports existing analysis limits without submitting out-of-bounds overlays
   await expect.poll(()=>indicatorLengths).toEqual([1]);
   expect(smtRequests).toBe(0);
 });
+
+
+test('duplicate frozen markets share revisions while selection, undo and late candle visibility stay with the pane',async({page})=>{
+  const session=capture();
+  session.views['2']={...session.market,symbol:'EURUSD',timeframe:'M5'};
+  await page.route('**/research/api/replay/sessions',route=>route.fulfill({status:201,json:session}));
+  const seed={id:'00000000-0000-4000-8000-000000000001',kind:'horizontal',label:'Late source bar',
+    anchors:[{time:start,price:'1.14010'}],color:'#ab639e',visible:true,locked:false,created_at:start,updated_at:start};
+  let scene={schema_version:1,revision:1,items:[seed]};
+  const pending=Promise.withResolvers<void>();
+  const release=Promise.withResolvers<void>();
+  await page.route('**/research/api/drawings?**',async route=>{
+    if(new URL(route.request().url()).searchParams.get('scope')!=='DUKASCOPY_SAVED:EURUSD:M5'){
+      await route.fulfill({json:{schema_version:1,revision:0,items:[]}});return;
+    }
+    if(route.request().method()==='POST'){
+      const update=route.request().postDataJSON();
+      expect(update.revision).toBe(scene.revision);
+      scene={...update,revision:scene.revision+1};
+      if(scene.revision===2){pending.resolve();await release.promise;}
+    }
+    await route.fulfill({json:scene});
+  });
+  await openArchive(page);
+  await openRange(page);
+  await page.getByRole('button',{name:'Freeze range for replay'}).click();
+  const inspected=page.getByLabel('Inspection pane');
+  await expect(inspected).toHaveValue('primary');
+  await page.getByText(/^Drawing toolbox/).click();
+  const picker=page.getByLabel('Select drawing');
+  await picker.selectOption(seed.id);
+  const undo=page.getByRole('button',{name:'Undo drawing edit'});
+  try {
+    await page.getByRole('button',{name:'Duplicate drawing'}).click();
+    await pending.promise;
+    await inspected.selectOption('2');
+    await expect(picker).toHaveValue('');
+    await picker.selectOption(seed.id);
+  }finally{release.resolve();}
+  const copy=scene.items[1].id;
+  await expect(picker.locator('option[value="'+copy+'"]')).toHaveCount(1);
+  await expect(picker).toHaveValue(seed.id);
+  await expect(undo).toBeDisabled();
+  await inspected.selectOption('primary');
+  await expect(picker).toHaveValue(copy);
+  await undo.click();
+  await expect(picker.locator('option[value="'+copy+'"]')).toHaveCount(0);
+  await inspected.selectOption('2');
+  await expect(picker).toHaveValue(seed.id);
+
+  const painted=async (region:string)=>page.getByRole('region',{name:region,exact:true}).locator('canvas').evaluateAll(canvases=>
+    canvases.some(node=>{
+      const canvas=node as HTMLCanvasElement;
+      if(!canvas.width||!canvas.height)return false;
+      const pixels=canvas.getContext('2d')!.getImageData(0,0,canvas.width,canvas.height).data;
+      for(let i=0;i<pixels.length;i+=4)if(pixels[i]===171&&pixels[i+1]===99&&pixels[i+2]===158)return true;
+      return false;
+    }));
+  const controls=page.getByLabel('Historical replay',{exact:true});
+  for(const [action,visible] of [['',true],['Restart',false],['Next candle',true]] as const){
+    if(action)await controls.getByRole('button',{name:action,exact:true}).click();
+    for(const pane of ['Primary chart','Chart view 2'])await expect.poll(()=>painted(pane)).toBe(visible);
+  }
+
+  await page.getByRole('button',{name:'Draw',exact:true}).click();
+  await expect(page.locator('[aria-label="Chart view 2"] .drawing-prompt')).toBeVisible();
+  await page.getByTitle('Place horizontal level (Alt+H)').click();
+  await expect(inspected).toHaveValue('primary');
+  await expect(page.locator('.drawing-prompt')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.drawing-prompt')).toHaveCount(0);
+});
