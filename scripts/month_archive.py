@@ -2,6 +2,7 @@
 import argparse
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
+import errno
 from hashlib import sha256
 import json
 import os
@@ -66,15 +67,61 @@ def publish(target, raw, digest):
         tmp.unlink(missing_ok=True)
 
 
+def _try_lock_receipt(stream):
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            # Lock beyond the receipt data so other processes can still read it.
+            stream.seek(1 << 30)
+            msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError as exc:
+        if exc.errno not in (errno.EACCES, errno.EAGAIN):
+            raise
+        return False
+    return True
+
+
+def _recover_receipt(stream):
+    resume_after = 0
+    stream.seek(0)
+    for line_number, line in enumerate(stream, 1):
+        complete = line.endswith(b"\n")
+        try:
+            event = json.loads(line.decode("utf-8"))
+        except (UnicodeError, json.JSONDecodeError) as exc:
+            if complete:
+                raise ValueError(f"Invalid acquisition receipt at line {line_number}") from exc
+            # A killed process can leave a fragment after the last committed newline.
+            stream.truncate(stream.tell() - len(line))
+            break
+        if not isinstance(event, dict):
+            raise ValueError(f"Invalid acquisition receipt at line {line_number}")
+        resume_after = max(resume_after, event.get("resume_after_epoch", 0))
+        if not complete:
+            # Keep a complete object even if its terminating newline was interrupted.
+            stream.write(b"\n")
+            stream.flush()
+    return resume_after
+
+
 def acquire(pending, receipt):
     receipt.parent.mkdir(parents=True, exist_ok=True)
-    if receipt.exists():
-        for line in reversed(receipt.read_text(encoding="utf-8").splitlines()):
-            last = json.loads(line)
-            if last.get("resume_after_epoch", 0) > datetime.now(UTC).timestamp():
-                return "PROVIDER_COOLDOWN_ACTIVE"
-            if "at" in last:
-                break
+    with receipt.open("a+b") as stream:
+        # Hold the lock through the provider call and receipt flush so a second
+        # command cannot repair an in-flight write or miss a concurrent cooldown.
+        if not _try_lock_receipt(stream):
+            return "ACQUISITION_IN_PROGRESS"
+        if _recover_receipt(stream) > datetime.now(UTC).timestamp():
+            return "PROVIDER_COOLDOWN_ACTIVE"
+        return _acquire(pending, stream)
+
+
+def _acquire(pending, stream):
     failures = 0
     for attempt in range(1, 3):
         if attempt == 2 and pending:
@@ -103,8 +150,8 @@ def acquire(pending, receipt):
                 event["stop"] = "PROVIDER_COOLDOWN"
             elif failures >= 4:
                 event["stop"] = "FOUR_CONSECUTIVE_FAILURES"
-            with receipt.open("a", encoding="utf-8") as stream:
-                stream.write(json.dumps(event) + "\n")
+            stream.write((json.dumps(event) + "\n").encode("utf-8"))
+            stream.flush()
             if "stop" in event:
                 return event["stop"]
             if "sha256" not in result:

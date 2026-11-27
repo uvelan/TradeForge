@@ -27,6 +27,83 @@ def test_pause_and_resume_preserves_http_evidence(tmp_path, monkeypatch):
     assert saved["retry_after_seconds"] == 180 and len(calls) == 1
 
 
+def test_torn_tail_repair_preserves_cooldown_and_allows_later_append(tmp_path, monkeypatch):
+    clock = DAY
+    calls = []
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz):
+            return clock
+
+    def throttled(day, name):
+        calls.append(name)
+        return b"", {"http": 429, "curl_exit": 22, "retry_after_seconds": 180}
+
+    monkeypatch.setattr(archive, "datetime", Clock)
+    monkeypatch.setattr(archive, "download", throttled)
+    pending = [(DAY, tmp_path / "00h_ticks.bi5", None)]
+    receipt = tmp_path / "requests.jsonl"
+
+    assert archive.acquire(pending, receipt) == "PROVIDER_COOLDOWN"
+    committed = receipt.read_bytes().replace(b"\n", b"\r\n")
+    receipt.write_bytes(committed + b'{"validation_error": "\xe2\x82')
+    assert archive.acquire(pending, receipt) == "PROVIDER_COOLDOWN_ACTIVE"
+    assert len(calls) == 1
+    assert receipt.read_bytes() == committed
+
+    clock += timedelta(minutes=4)
+    assert archive.acquire(pending, receipt) == "PROVIDER_COOLDOWN"
+    assert len(calls) == 2
+    appended = receipt.read_bytes()
+    assert appended.startswith(committed)
+    assert len(appended.splitlines()) == 2
+    assert json.loads(appended.splitlines()[1])["at"] == clock.isoformat()
+    assert archive.acquire(pending, receipt) == "PROVIDER_COOLDOWN_ACTIVE"
+    assert len(calls) == 2
+    assert receipt.read_bytes() == appended
+
+
+def test_complete_final_object_without_newline_preserves_cooldown(tmp_path):
+    committed = json.dumps({
+        "at": DAY.isoformat(),
+        "resume_after_epoch": int(datetime.now(UTC).timestamp()) + 180,
+    }).encode("utf-8")
+    receipt = tmp_path / "requests.jsonl"
+    receipt.write_bytes(committed)
+    pending = [(DAY, tmp_path / "00h_ticks.bi5", None)]
+
+    assert archive.acquire(pending, receipt) == "PROVIDER_COOLDOWN_ACTIVE"
+    assert receipt.read_bytes() == committed + b"\n"
+
+
+def test_committed_receipt_corruption_is_visible_and_unchanged(tmp_path, monkeypatch):
+    monkeypatch.setattr(archive, "download", lambda *_: pytest.fail("unexpected download"))
+    data = b'{"bad"\n{"at": "later"}\n{"torn"'
+    receipt = tmp_path / "requests.jsonl"
+    receipt.write_bytes(data)
+    pending = [(DAY, tmp_path / "00h_ticks.bi5", None)]
+
+    with pytest.raises(ValueError, match="Invalid acquisition receipt at line 1"):
+        archive.acquire(pending, receipt)
+    assert receipt.read_bytes() == data
+
+
+def test_concurrent_acquisition_cannot_bypass_inflight_receipt(tmp_path, monkeypatch):
+    receipt = tmp_path / "requests.jsonl"
+    pending = [(DAY, tmp_path / "00h_ticks.bi5", None)]
+
+    def throttled(day, name):
+        with monkeypatch.context() as nested:
+            nested.setattr(archive, "download", lambda *_: pytest.fail("concurrent download"))
+            assert archive.acquire(pending, receipt) == "ACQUISITION_IN_PROGRESS"
+        return b"", {"http": 429, "curl_exit": 22, "retry_after_seconds": 180}
+
+    monkeypatch.setattr(archive, "download", throttled)
+    assert archive.acquire(pending, receipt) == "PROVIDER_COOLDOWN"
+    assert archive.acquire(pending, receipt) == "PROVIDER_COOLDOWN_ACTIVE"
+
+
 def test_timeout_budget_stops_whole_provider(tmp_path, monkeypatch):
     monkeypatch.setattr(archive, "download", lambda *_: (b"", {"http":None,"curl_exit":28,"retry_after_seconds":0}))
     receipt = tmp_path / "requests.jsonl"
