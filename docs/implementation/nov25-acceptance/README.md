@@ -11,6 +11,8 @@ First contradiction: on November 7 the first reported EURUSD tick inside modeled
 
 The [verification and interrupted-acquisition correction](VERIFICATION-AND-RECOVERY.md) records process exit codes, the two independent market verdicts, and recovery after a terminated receipt write.
 
+The [source-selection correction](SOURCE-SELECTION.md) distinguishes an empty archive from a failed scan and a failed terminal query from a successful empty response.
+
 ### Exact missing Dukascopy open intervals
 
 All endpoints below are UTC, start inclusive and end exclusive. The complete inventory separately identifies scheduled closures.

@@ -1,0 +1,504 @@
+{
+  "start": "aff873e8529ce6e96698b37e4f8198ed08a1e2f8",
+  "combined": "551d5fbb27853acc3a319fc3320c76d31f6d9b7b",
+  "genuine_exit": 0,
+  "dukascopy": {
+    "inventory_counts": {
+      "SCHEDULED_CLOSURE": 238,
+      "MISSING_OPEN": 480,
+      "REGISTERED": 2
+    },
+    "available_hours": [
+      {
+        "start": 1763038800,
+        "status": "REGISTERED",
+        "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+      },
+      {
+        "start": 1763042400,
+        "status": "REGISTERED",
+        "source_sha256": "9d40aa3147d93e6daa2218933877adb9471dc02ff08b19fc0d272f1eb781688f"
+      }
+    ],
+    "events": [
+      {
+        "kind": "QUALIFIED",
+        "quote": {
+          "time_ms": 1763038800666,
+          "ordinal": 5,
+          "bid_units": 116239,
+          "ask_units": 116242,
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+        },
+        "anchor": {
+          "time_ms": 1763038800089,
+          "ordinal": 0,
+          "bid_units": 116229,
+          "ask_units": 116231,
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+        }
+      },
+      {
+        "kind": "ENTRY",
+        "quote": {
+          "time_ms": 1763038800771,
+          "ordinal": 6,
+          "bid_units": 116239,
+          "ask_units": 116243,
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+        },
+        "side": "ASK",
+        "price_units": 116243,
+        "remaining": 1
+      },
+      {
+        "kind": "STOP",
+        "quote": {
+          "time_ms": 1763040698103,
+          "ordinal": 1564,
+          "bid_units": 116143,
+          "ask_units": 116144,
+          "source_sha256": "2f47bcb14e0a2c4dcd6d65eb819b85f1b5168b656d1f5f67c3dcd2240569f014"
+        },
+        "side": "BID",
+        "price_units": 116143,
+        "remaining": 0
+      }
+    ],
+    "quote_count": 8636,
+    "coverage_sha256": "62eddd2eee8e5852bd2eda627a91553047bf317c92b7380105e1928a8e3fcc4f",
+    "coverage_gap_counts": {
+      "MISSING_OPEN": 2880,
+      "OBSERVED": 1
+    },
+    "full_month_coverage": false
+  },
+  "variants": {
+    "baseline": {
+      "parity": {
+        "passed": true,
+        "first_divergence": null,
+        "verified_quote_rows": 8636,
+        "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+        "expected_gap_intervals": 2881,
+        "reopened_gap_intervals": 2881,
+        "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be"
+      },
+      "commit": "aff873e8529ce6e96698b37e4f8198ed08a1e2f8",
+      "trials": [
+        {
+          "mode": "cold",
+          "timed_reads": {
+            "bi5_decodes": 12,
+            "bi5_logical_bytes": 240846,
+            "parquet_verifications": 12,
+            "parquet_logical_bytes": 601758
+          },
+          "parity_ledger_match": true
+        },
+        {
+          "mode": "warm",
+          "timed_reads": {
+            "bi5_decodes": 12,
+            "bi5_logical_bytes": 240846,
+            "parquet_verifications": 12,
+            "parquet_logical_bytes": 601758
+          },
+          "parity_ledger_match": true
+        }
+      ]
+    },
+    "candidate": {
+      "parity": {
+        "passed": true,
+        "first_divergence": null,
+        "verified_quote_rows": 8636,
+        "policy": "EURUSD_FIRST_BID_RISE_10_POINTS_PER_UTC_DAY_V2",
+        "expected_gap_intervals": 2881,
+        "reopened_gap_intervals": 2881,
+        "ledger_sha256": "c1522e073b8e1118ea97547626155422f3eb58c3def6f8342cb87877423087be"
+      },
+      "commit": "551d5fbb27853acc3a319fc3320c76d31f6d9b7b",
+      "trials": [
+        {
+          "mode": "cold",
+          "timed_reads": {
+            "bi5_decodes": 12,
+            "bi5_logical_bytes": 240846,
+            "parquet_verifications": 12,
+            "parquet_logical_bytes": 601758
+          },
+          "parity_ledger_match": true
+        },
+        {
+          "mode": "warm",
+          "timed_reads": {
+            "bi5_decodes": 12,
+            "bi5_logical_bytes": 240846,
+            "parquet_verifications": 12,
+            "parquet_logical_bytes": 601758
+          },
+          "parity_ledger_match": true
+        }
+      ]
+    }
+  },
+  "ledger_sha256": "7a6795c12f0e0585e2f7ab85fdac682d8839f53f36a221dcd9140ba8d3c98254",
+  "archive": {
+    "same_sha256_inputs_as_control": true,
+    "registered": 2,
+    "control_files": 2,
+    "archive_files": 2,
+    "unique_inputs": 2
+  },
+  "mt5": {
+    "capture_sha256": "5431d15fa8a24b63b5f5b1f62241caa52110049ab8c87c8d1f7f5783d84d606c",
+    "source_rows": 1121792,
+    "counts": {
+      "SCHEDULED_CLOSURE": 230,
+      "MISSING_OPEN": 10,
+      "OBSERVED_OPEN": 472,
+      "CLOSED_WITH_OBSERVATIONS": 8
+    },
+    "closed_rows": 12071,
+    "reasons": [
+      "RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR",
+      "OPEN_SESSION_COVERAGE_INCOMPLETE"
+    ],
+    "failed_days": [],
+    "product_preflight": {
+      "commit": "551d5fbb27853acc3a319fc3320c76d31f6d9b7b",
+      "status": "REJECTED",
+      "reasons": [
+        "RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR",
+        "OPEN_SESSION_COVERAGE_INCOMPLETE"
+      ],
+      "first_divergence": null,
+      "parity_passed": true,
+      "hourly_receipts_sha256": "31943d30975d5218d2be7364f4b3f4b77042827e1acb3574196d9c047d4b238f"
+    }
+  },
+  "mt5_open_gap_count": 45,
+  "mt5_successful_days": 30,
+  "latency": {
+    "seconds": {
+      "reviewed": [
+        2.134482299999945,
+        2.1066261000005397,
+        2.027675299999828
+      ],
+      "candidate": [
+        1.9439861000000747,
+        1.891527099999621,
+        1.9017689000002065
+      ]
+    },
+    "median_s": {
+      "reviewed": 2.1066261000005397,
+      "candidate": 1.9017689000002065
+    },
+    "days": 30,
+    "day_file_bytes": 67315200,
+    "manifest_bytes": 9614,
+    "scope": "Total CLI wall time including subprocess, unchecked OS file cache, alternating order"
+  },
+  "before": {
+    "missing": {
+      "code": 0,
+      "saved": true,
+      "difference": null,
+      "archive": {
+        "same_sha256_inputs_as_control": true,
+        "registered": 2
+      },
+      "product": null
+    },
+    "file": {
+      "code": 0,
+      "saved": true,
+      "difference": null,
+      "archive": {
+        "same_sha256_inputs_as_control": true,
+        "registered": 2
+      },
+      "product": null
+    },
+    "empty": {
+      "code": 0,
+      "saved": true,
+      "difference": null,
+      "archive": {
+        "same_sha256_inputs_as_control": true,
+        "registered": 2
+      },
+      "product": null
+    },
+    "partial": {
+      "code": 1,
+      "saved": false,
+      "difference": {
+        "source": "mt5",
+        "stage": "source_validation",
+        "diagnostic": "KeyError: 1762128000"
+      },
+      "archive": {},
+      "product": null
+    },
+    "genuine-mt5": {
+      "code": 0,
+      "saved": true,
+      "difference": null,
+      "archive": {},
+      "product": {
+        "commit": "aff873e8529ce6e96698b37e4f8198ed08a1e2f8",
+        "status": "REJECTED",
+        "reasons": [
+          "RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR",
+          "OPEN_SESSION_COVERAGE_INCOMPLETE"
+        ],
+        "first_divergence": null,
+        "parity_passed": true,
+        "hourly_receipts_sha256": "31943d30975d5218d2be7364f4b3f4b77042827e1acb3574196d9c047d4b238f"
+      }
+    },
+    "failed-saturday": {
+      "code": 1,
+      "difference": {
+        "source": "mt5",
+        "stage": "source_validation",
+        "diagnostic": "KeyError: 'sha256'"
+      },
+      "product": null,
+      "counts": null,
+      "failed_days": null
+    },
+    "missing-success": {
+      "code": 1,
+      "difference": {
+        "source": "mt5",
+        "stage": "source_validation",
+        "diagnostic": "KeyError: 1761955200"
+      },
+      "product": null,
+      "counts": null,
+      "failed_days": null
+    },
+    "bad-checksum": {
+      "code": 1,
+      "difference": {
+        "source": "mt5",
+        "stage": "source_validation",
+        "diagnostic": "ValueError: ('MT5 manifest differs from original day bytes', '2025-11-01')"
+      },
+      "product": null,
+      "counts": null,
+      "failed_days": null
+    },
+    "plus-one": {
+      "passed": true,
+      "first_divergence": null,
+      "selection": {},
+      "quote_count": 8637
+    },
+    "conflict": {
+      "passed": false,
+      "first_divergence": {
+        "source": "dukascopy_archive",
+        "stage": "source_validation",
+        "diagnostic": "ValueError: Conflicting input files at 1763038800"
+      },
+      "selection": {},
+      "quote_count": null
+    }
+  },
+  "after": {
+    "missing": {
+      "code": 1,
+      "saved": false,
+      "difference": {
+        "source": "dukascopy_archive",
+        "stage": "source_validation",
+        "diagnostic": "FileNotFoundError"
+      },
+      "archive": {
+        "first_divergence": {
+          "stage": "source_validation",
+          "diagnostic": "FileNotFoundError"
+        }
+      },
+      "product": null
+    },
+    "file": {
+      "code": 1,
+      "saved": false,
+      "difference": {
+        "source": "dukascopy_archive",
+        "stage": "source_validation",
+        "diagnostic": "NotADirectoryError"
+      },
+      "archive": {
+        "first_divergence": {
+          "stage": "source_validation",
+          "diagnostic": "NotADirectoryError"
+        }
+      },
+      "product": null
+    },
+    "empty": {
+      "code": 0,
+      "saved": true,
+      "difference": null,
+      "archive": {
+        "same_sha256_inputs_as_control": true,
+        "registered": 2,
+        "control_files": 2,
+        "archive_files": 0,
+        "unique_inputs": 2
+      },
+      "product": null
+    },
+    "partial": {
+      "code": 0,
+      "saved": true,
+      "difference": null,
+      "archive": {},
+      "product": {
+        "commit": "551d5fbb27853acc3a319fc3320c76d31f6d9b7b",
+        "status": "REJECTED",
+        "reasons": [
+          "RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR",
+          "INCOMPLETE_TERMINAL_QUERIES",
+          "OPEN_SESSION_COVERAGE_INCOMPLETE"
+        ],
+        "first_divergence": null,
+        "parity_passed": true,
+        "hourly_receipts_sha256": "554fa2403e623d52312b843a55b25485640635478f6fd246fa981bf43b7fbfa0"
+      }
+    },
+    "genuine-mt5": {
+      "code": 0,
+      "saved": true,
+      "difference": null,
+      "archive": {},
+      "product": {
+        "commit": "551d5fbb27853acc3a319fc3320c76d31f6d9b7b",
+        "status": "REJECTED",
+        "reasons": [
+          "RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR",
+          "OPEN_SESSION_COVERAGE_INCOMPLETE"
+        ],
+        "first_divergence": null,
+        "parity_passed": true,
+        "hourly_receipts_sha256": "31943d30975d5218d2be7364f4b3f4b77042827e1acb3574196d9c047d4b238f"
+      }
+    },
+    "failed-saturday": {
+      "code": 0,
+      "difference": null,
+      "product": {
+        "commit": "551d5fbb27853acc3a319fc3320c76d31f6d9b7b",
+        "status": "REJECTED",
+        "reasons": [
+          "RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR",
+          "INCOMPLETE_TERMINAL_QUERIES",
+          "OPEN_SESSION_COVERAGE_INCOMPLETE"
+        ],
+        "first_divergence": null,
+        "parity_passed": true,
+        "hourly_receipts_sha256": "7f648c6389199cc1a925c254c99ceb68914df2154c3359926048b9ebc2231800"
+      },
+      "counts": {
+        "CLOSED_QUERY_FAILED": 24,
+        "SCHEDULED_CLOSURE": 206,
+        "MISSING_OPEN": 10,
+        "OBSERVED_OPEN": 472,
+        "CLOSED_WITH_OBSERVATIONS": 8
+      },
+      "failed_days": [
+        {
+          "day": "2025-11-01",
+          "start": 1761955200,
+          "end": 1762041600,
+          "attempts": [
+            {
+              "code": -10005,
+              "response_rows": null
+            }
+          ]
+        }
+      ]
+    },
+    "missing-success": {
+      "code": 1,
+      "difference": {
+        "source": "mt5",
+        "stage": "source_validation",
+        "diagnostic": "ValueError: Missing 2025-11-01.npy for successful MT5 query"
+      },
+      "product": null,
+      "counts": null,
+      "failed_days": null
+    },
+    "bad-checksum": {
+      "code": 1,
+      "difference": {
+        "source": "mt5",
+        "stage": "source_validation",
+        "diagnostic": "ValueError: Invalid retained MT5 data for 2025-11-01: MT5 daily file SHA-256 mismatch for 2025-11-01: expected 0000000000000000000000000000000000000000000000000000000000000000, got 2162656c341bff872c73b18252e26c00f5876e370714c0717addc986dfcf5c9b"
+      },
+      "product": null,
+      "counts": null,
+      "failed_days": null
+    },
+    "plus-one": {
+      "passed": true,
+      "first_divergence": null,
+      "selection": {
+        "control_files": 2,
+        "archive_files": 3,
+        "unique_inputs": 3
+      },
+      "quote_count": 8637
+    },
+    "conflict": {
+      "passed": false,
+      "first_divergence": {
+        "source": "dukascopy_archive",
+        "stage": "source_validation",
+        "diagnostic": "ValueError: Conflicting input files at 1763038800"
+      },
+      "selection": {},
+      "quote_count": null
+    }
+  },
+  "controlled_partial": {
+    "capture_sha256": "580145162e1eeab72adb40dfe646c382bc1c0f4df4aede07eb8f69c15e6eeae6",
+    "counts": {
+      "SCHEDULED_CLOSURE": 230,
+      "MISSING_OPEN": 10,
+      "OPEN_QUERY_FAILED": 24,
+      "OBSERVED_OPEN": 448,
+      "CLOSED_WITH_OBSERVATIONS": 8
+    },
+    "failed_days": [
+      {
+        "day": "2025-11-03",
+        "start": 1762128000,
+        "end": 1762214400,
+        "attempts": [
+          {
+            "code": -10005,
+            "response_rows": null
+          }
+        ]
+      }
+    ],
+    "reasons": [
+      "RECORDED_CLOCK_CONTRADICTS_REPLAY_CALENDAR",
+      "INCOMPLETE_TERMINAL_QUERIES",
+      "OPEN_SESSION_COVERAGE_INCOMPLETE"
+    ],
+    "source_rows": 1069692,
+    "fixture": "Disposable copy of genuine capture; replaced November 3 success by code -10005 and omitted its payload."
+  }
+}
