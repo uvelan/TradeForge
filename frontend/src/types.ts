@@ -3,11 +3,12 @@ export type Timeframe='M1'|'M3'|'M5'|'M15'|'M30'|'H1'|'H4'|'D1';
 export type SourceName='DEMO'|'MT5'|'MT5_SAVED'|'DUKASCOPY_SAVED';
 export type ChartSource=SourceName|'BINANCE_SPOT';
 export type ChartSymbol=SymbolName|'BTCUSDT';
-export interface Candle {time:number;available_at?:number;open:number;high:number;low:number;close:number;volume?:number}
+export interface Candle {time:number;available_at?:number;open:number;high:number;low:number;close:number;volume?:number;
+  availability_basis?:'ARCHIVE_SUPPLIED'|'MODELED_NOMINAL_CLOSE';source_partition_indexes?:number[]}
 export type CandleRange = {start:number;end:number};
 export interface CandleCoverage extends CandleRange {gaps:CandleRange[];duplicate_bars:number;truncated:boolean}
 export interface ArchiveOrigin {file_observations?:string;source_completeness:string;reconstruction:string;source_sha256?:string;start?:number;end?:number;checked_bars?:number;missing_slots?:number[]}
-export interface CandleResponse {source_completeness?:"UNVERIFIED";origin?:ArchiveOrigin;source:ChartSource;synthetic:boolean;price_basis:string;candles:Candle[];dataset_id?:string;feed_id?:string;latest_unconfirmed?:boolean;coverage?:CandleCoverage;partitions?:{id:string;sha256:string}[]}
+export interface CandleResponse {source_completeness?:"UNVERIFIED";origin?:ArchiveOrigin;source:ChartSource;synthetic:boolean;price_basis:string;candles:Candle[];replay_cutoffs?:number[];dataset_id?:string;feed_id?:string;latest_unconfirmed?:boolean;coverage?:CandleCoverage;partitions?:{id:string;sha256:string}[]}
 export interface BrokerSymbol {name:string;description:string;digits:number}
 export type SignalReference={event_key:string;status:import("./SignalExplorer").SignalStatus};
 export interface Plan {
@@ -32,8 +33,11 @@ export interface BacktestRun {id:string;created_at:string;schema_version:1;engin
 export interface BacktestRunSummary {id:string;created_at:string;count:number;expectancy_r:number|null;source:string;timeframe:string;symbol:string;synthetic:boolean;model:'TICK'|'OHLC'}
 
 export type ReplayPane = {symbol:string;timeframe:Timeframe} & (CandleResponse | {error:string});
+export type ReplayViewId = 'primary' | 'comparison' | '2' | '3' | '4';
+export type ReplaySelection = {view: ReplayViewId; time: number};
 export interface ReplaySession {id:string;market:CandleResponse;views:Record<string,ReplayPane>;
- checkpoint:{position:number;bookmarks:number[]}|null}
+ request?:{start?:number|null;end?:number|null;window_bars?:number|null};
+ checkpoint:{position:number;bookmarks:number[];selected?:ReplaySelection|null}|null}
 export interface ReplayViewRequest {view:string;symbol:string;timeframe:Timeframe}
 
 export type PlanReference={trade_id:string;version:number};

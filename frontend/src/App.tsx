@@ -7,7 +7,7 @@ import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'rea
 import { Crosshair, Eraser,   ListFilter,  Minus,  Activity,Archive,ArrowDownToLine,ArrowRight,ArrowUpRight,BarChart3,BookOpen,BrainCircuit,CalendarClock,CheckCircle2,ChevronRight,Clock3,CloudOff,Database,Download,ExternalLink,FileCheck2,FileText,FlaskConical,FolderOpen,LayoutDashboard,Menu,MoreHorizontal,Plus,Radio,RefreshCw,Settings,ShieldCheck,ShieldAlert,Search,Target,TrendingUp,Upload, X, Zap} from 'lucide-react';
 import {api} from './api';
 import {type ComparisonPlacement,Badge,CandleChart,Card,Empty,Metric,Notice,PriceChange,SectionTitle,Select,Spinner,Success,TextArea,TextField} from './components';
-import type {BacktestResult,BacktestRun,BacktestRunSummary,ReplaySession,ReplayViewRequest,BrokerSymbol,CandleRange,CandleResponse,ChartSource,Dataset,JournalEntry,JournalContext,Overview,Package,Plan,Review,SourceName,SymbolName,Timeframe,Trade} from './types';
+import type {BacktestResult,BacktestRun,BacktestRunSummary,ReplaySelection,ReplaySession,ReplayViewRequest,BrokerSymbol,CandleRange,CandleResponse,ChartSource,Dataset,JournalEntry,JournalContext,Overview,Package,Plan,Review,SourceName,SymbolName,Timeframe,Trade} from './types';
 import {SavedRange} from './SavedRange';
 import {useBinanceCandles} from './useBinanceCandles';
 import './style.css';
@@ -27,7 +27,8 @@ import {ReplayCrtEvidence} from './ReplayCrtEvidence';
 import {ReplayConfluenceEvidence} from './ReplayConfluenceEvidence';
 import {ArchiveSmtWatch} from './ArchiveSmtWatch';
 import {ArrivalPanel} from './ArrivalPanel';
-import {closedCandles, ReplayControls} from './ReplayControls';
+import {ReplayControls, visibleAt} from './ReplayControls';
+import {archiveViewIds, FrozenReplayCoverage, ReplayCandleInspector, type ArchivePane, type ArchiveViewId} from './ArchiveReplay';
 import {SignalExplorer,signalSummary,type SignalRecord} from './SignalExplorer';
 import {DataTrust} from './DataTrust';
 import {CommandPalette,CommandSettings,type CommandTarget} from './CommandPalette';
@@ -172,6 +173,8 @@ const watchSymbols:SymbolName[]=['EURUSD','GBPUSD','USDJPY','XAUUSD'];
 const chartSources:ChartSource[]=['MT5','MT5_SAVED','DUKASCOPY_SAVED','BINANCE_SPOT','DEMO'];
 const chartTimeframes:Timeframe[]=['M1','M3','M5','M15','M30','H1','H4','D1'];
 type ChartLevel=import('./components').ChartLevel;
+type ReplayLoadKind='quick'|'archive'|'resume';
+const archiveReplayLimit=5000;
 function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}:{expanded?:boolean;onPlan?:(seed:Partial<Plan>)=>void;
   onSignal?:(reference:import('./types').SignalReference)=>Promise<void>; initialLocation?:ChartLocation;onChartLesson?:(snapshot:string)=>void}){
   const [planPrices,setPlanPrices]=useState<string[]>([]);
@@ -242,18 +245,33 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [levels,setLevels]=useState<ChartLevel[]>([]);
   const [levelHistory,setLevelHistory]=useState<{undo:ChartLevel[][];redo:ChartLevel[][]}>({undo:[],redo:[]});
   const [replayIndex,setReplayIndex]=useState<number|null>(null);
-  const [replayData,setReplayData]=useState<CandleResponse>();
-  const [replaySession,setReplaySession]=useState<ReplaySession>();
-  const [replayBusy,setReplayBusy]=useState(false);
-  const [replayError,setReplayError]=useState('');
+  const [loadedReplay,setLoadedReplay]=useState<{generation:object;session:ReplaySession}>();
+  const [replaySelection,setReplaySelection]=useState<ReplaySelection>();
+  const [replayBusy,setReplayBusy]=useState<ReplayLoadKind>();
+  const [replayError,setReplayError]=useState<{kind:ReplayLoadKind;message:string}>();
+  const replayLoadSequence=useRef(0);
+  const replayPending=useRef(false);
   const [savedReplays,setSavedReplays]=useState<{id:string;position:number;updated_at:string}[]>([]);
-  const replayScope=JSON.stringify([symbol,timeframe,source,range,refreshCount]);
-  const replayScopeRef=useRef(replayScope);
-  replayScopeRef.current=replayScope;
+  const replayListSequence=useRef(0);
   const [quotes,setQuotes]=useState<Record<string,number|null>>({});
   const indicatorScope=JSON.stringify([source,symbol,timeframe,range]);
   const primaryLoadGeneration=useMemo(()=>({}),
     [symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence]);
+  const replaySession=loadedReplay?.generation===primaryLoadGeneration ? loadedReplay.session : undefined;
+  const replayData=replaySession?.market;
+  const invalidateReplayLoad=useCallback(()=>{
+    replayLoadSequence.current++;
+    replayPending.current=false;
+    setReplayBusy(undefined);
+    setReplayError(undefined);
+  },[]);
+  useLayoutEffect(()=>{
+    invalidateReplayLoad();
+    return ()=>{
+      replayLoadSequence.current++;
+      replayPending.current=false;
+    };
+  },[primaryLoadGeneration,viewCount,comparisonSymbol,linkReplay,linkInstrument,linkTimeframe,invalidateReplayLoad]);
   const [loadedPrimaryGeneration,setLoadedPrimaryGeneration]=useState<object>();
   const [loadedIndicatorScope,setLoadedIndicatorScope]=useState("");
   const refreshCandles=useCallback(()=>setRefreshCount(n=>n+1),[]);
@@ -272,7 +290,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   },[source,refreshCount]);
   useEffect(()=>{
     let active=true;
-    setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);setReplayBusy(false);setReplayError('');setPlanPrices([]);
+    setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setLoadedReplay(undefined);setReplaySelection(undefined);setPlanPrices([]);
     setInteraction(current=>current.mode==='plan'?{mode:'navigate'}:current);
     (exactEvidence?api.get<CandleResponse>(initialLocation!.evidencePath!):
       api.candles(symbol,timeframe,source,expanded?600:200,source==='MT5',range))
@@ -354,34 +372,47 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     const next=levelHistory.redo.at(-1);if(!next)return;
     setLevelHistory({undo:[...levelHistory.undo,levels],redo:levelHistory.redo.slice(0,-1)});writeLevels(next);
   };
-  const historical=data?.source===source?data.candles:[];
+  const historical=useMemo(()=>data?.source===source?data.candles:[],[data,source]);
   const liveRows=live?.candles ?? [];
   const candles=isBinance&&liveRows.length
     ? [...new Map([...historical,...liveRows].map(row=>[row.time,row])).values()].sort((a,b)=>a.time-b.time).slice(-600)
     : historical;
   const replayActive=replayIndex!==null&&Boolean(replayData);
-  const visibleCandles=useMemo(()=>replayActive?replayData!.candles.slice(0,replayIndex!+1):candles,
-    [replayActive,replayData,replayIndex,candles]);
+  const replayArchive=replayActive&&Boolean(replaySession?.request?.window_bars);
+  const replayLinked=replayArchive||linkReplay==='on';
+  const replayStep=frameMinutes[timeframe]*60;
+  const archiveCutoff=replayArchive&&replayIndex!==null ? replayData?.replay_cutoffs?.[replayIndex] : undefined;
+  const visibleCandles=useMemo(()=> {
+    if (!replayData||replayIndex===null)return candles;
+    return archiveCutoff===undefined ? replayData.candles.slice(0,replayIndex+1)
+      : visibleAt(replayData.candles,archiveCutoff,replayStep);
+  },[replayData,replayIndex,candles,archiveCutoff,replayStep]);
   const indicatorCandles=!replayActive&&data?.latest_unconfirmed?visibleCandles.slice(0,-1):visibleCandles;
   const last=visibleCandles.at(-1);const first=visibleCandles[0];
   const change=last&&first?(last.close-first.open)/first.open*100:0;
-  const canReplay=expanded&&!isBinance&&!busy&&!error&&Boolean(data&&closedCandles(data).length>0);
+  const canReplay=expanded&&!isBinance&&!busy&&!error&&Boolean(data&&data.candles.length>(data.latest_unconfirmed?1:0));
   const replayOptions=useCallback(()=>{
     if(!expanded||isBinance)return;
-    const scope=replayScope;
+    const sequence=++replayListSequence.current;
     api.replays(symbol,timeframe,source).then(value=>{
-      if(replayScopeRef.current===scope)setSavedReplays(value);
-    }).catch(()=>{if(replayScopeRef.current===scope)setSavedReplays([]);});
-  },[replayScope,symbol,timeframe,source,expanded,isBinance]);
-  useEffect(()=>{setSavedReplays([]);replayOptions();},[replayOptions]);
-  async function loadReplay(id?:string){
-    if(replayBusy)return;
-    const scope=replayScope;
-    setReplayBusy(true);setReplayError('');
+      if(replayListSequence.current===sequence)setSavedReplays(value);
+    }).catch(()=>{if(replayListSequence.current===sequence)setSavedReplays([]);});
+  },[symbol,timeframe,source,expanded,isBinance]);
+  useLayoutEffect(()=>{
+    setSavedReplays([]);
+    replayOptions();
+    return ()=>{replayListSequence.current++;};
+  },[replayOptions]);
+  async function loadReplay(kind:ReplayLoadKind,id?:string){
+    if(replayPending.current)return;
+    const sequence=++replayLoadSequence.current;
+    const isCurrent=()=>replayLoadSequence.current===sequence;
+    replayPending.current=true;
+    setReplayBusy(kind);setReplayError(undefined);
     try{
       const views:ReplayViewRequest[]=[];
       if(compare)views.push({view:'comparison',symbol:compare,timeframe});
-      if(linkReplay==='on')for(let number=2;number<=Number(viewCount);number++){
+      if(kind==='archive'||linkReplay==='on')for(let number=2;number<=Number(viewCount);number++){
         const preference=(key:string)=>{try{return localStorage.getItem('tradeforge.workspace.'+key);}catch{return null;}};
         const saved=preference(`view-${number}-symbol`)??'';
         const selectedFrame=preference(number===2?'secondary-timeframe':`view-${number}-frame`) as Timeframe|null;
@@ -389,14 +420,48 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
         views.push({view:String(number),symbol:linkInstrument==='on'||!options.includes(saved)?symbol:saved,
           timeframe:linkTimeframe==='on'?timeframe:frame});
       }
-      const session=id?await api.replay(id):await api.startReplay(symbol,timeframe,source,views,range);
-      if(replayScopeRef.current!==scope)return;
-      setReplaySession(session);
-      setReplayData(session.market);
-      setReplayIndex(session.checkpoint?.position??Math.floor((session.market.candles.length-1)*.6));
+      const session=id?await api.replay(id):await api.startReplay(symbol,timeframe,source,views,range,
+        kind==='archive'?archiveReplayLimit:undefined);
+      if(!isCurrent())return;
+      if(!session.market.candles.length)throw new Error('No completed replay candles in this range.');
+      if(kind==='archive'&&(session.request?.window_bars!==archiveReplayLimit||!session.market.replay_cutoffs?.length)){
+        throw new Error('The API did not return the archive replay window. Restart the API and try again.');
+      }
+      const lastIndex=(session.market.replay_cutoffs?.length??session.market.candles.length)-1;
+      setLoadedReplay({generation:primaryLoadGeneration,session});
+      setReplaySelection(session.checkpoint?.selected??undefined);
+      setReplayIndex(session.checkpoint?.position??(session.request?.window_bars ? lastIndex : Math.floor(lastIndex*.6)));
     }catch(failure){
-      if(replayScopeRef.current===scope)setReplayError((failure as Error).message);
-    }finally{if(replayScopeRef.current===scope)setReplayBusy(false);}
+      if(isCurrent())setReplayError({kind,message:(failure as Error).message});
+    }finally{
+      if(isCurrent()){
+        replayPending.current=false;
+        setReplayBusy(undefined);
+      }
+    }
+  }
+  const archivePanes=useMemo<ArchivePane[]>(()=>{
+    if(!replayArchive||!replaySession)return [];
+    return archiveViewIds.flatMap(view=>{
+      const data=view==='primary'?{...replaySession.market,symbol,timeframe}:replaySession.views[view];
+      return data?[{view,data}]:[];
+    });
+  },[replayArchive,replaySession,symbol,timeframe]);
+  const chartViewCount=replayArchive ? Math.max(1,...archivePanes.map(({view})=>view==='primary'?1:Number(view))) : Number(viewCount);
+  const inspectedPane=archivePanes.find(({view})=>view===replaySelection?.view)??archivePanes[0];
+  const inspectionFeed=inspectedPane&&'candles' in inspectedPane.data ? inspectedPane.data : undefined;
+  const inspectedTime=replaySelection&&replaySelection.view===inspectedPane?.view ? replaySelection.time : undefined;
+  const inspectionCandles=useMemo(()=>{
+    if(!inspectedPane||!inspectionFeed||archiveCutoff===undefined)return [];
+    if(inspectedPane.view==='primary')return visibleCandles;
+    return visibleAt(inspectionFeed.candles,archiveCutoff,frameMinutes[inspectionFeed.timeframe]*60);
+  },[inspectedPane,inspectionFeed,archiveCutoff,visibleCandles]);
+  const selectedVisibleTime=inspectedTime!==undefined&&inspectionCandles.some(bar=>bar.time===inspectedTime)?inspectedTime:undefined;
+  function selectInspectionPane(view:ArchiveViewId){
+    const pane=archivePanes.find(item=>item.view===view)?.data;
+    if(!pane||'error' in pane||archiveCutoff===undefined)return;
+    const bar=visibleAt(pane.candles,archiveCutoff,frameMinutes[pane.timeframe]*60).at(-1)??pane.candles[0];
+    if(bar)setReplaySelection({view,time:bar.time});
   }
   useEffect(()=>{
     if(!expanded)return;
@@ -412,12 +477,12 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
   },[expanded,setInteraction,toggleLevel]);
   const boundary=last?.time??0;
-  const cutoff=replayActive?visibleCandles.reduce((known,bar)=>
-    Math.max(known,bar.time+frameMinutes[timeframe]*60,bar.available_at??0),boundary):undefined;
+  const cutoff=archiveCutoff??(replayActive?visibleCandles.reduce((known,bar)=>
+    Math.max(known,bar.time+replayStep,bar.available_at??0),boundary):undefined);
   const indicatorFeed=replayActive?replayData:data;
   const indicatorCutoff=cutoff??Math.min(Math.floor(Date.now()/1000),Math.max(
     (indicatorCandles.at(-1)?.time??0)+frameMinutes[timeframe]*60,indicatorCandles.at(-1)?.available_at??0));
-  const indicator=useChartIndicator(expanded&&!isBinance&&!busy&&!error&&indicatorScope===loadedIndicatorScope,indicatorCandles,source,timeframe,
+  const indicator=useChartIndicator(expanded&&!isBinance&&(replayActive||!busy&&!error&&indicatorScope===loadedIndicatorScope),indicatorCandles,source,timeframe,
     symbol,indicatorCutoff,indicatorFeed??undefined,replayActive,initialLocation);
   const options=[...new Set([symbol,...(isBinance?[]:source==='MT5'?instruments.map(item=>item.name):watchSymbols)])];
   const compare=replaySession?replaySession.views.comparison?.symbol??'':
@@ -428,9 +493,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   ];
   const captureKey=JSON.stringify([symbol,timeframe,source,range,refreshCount,expanded,
     exactEvidence?initialLocation:undefined,feedIdentity(isBinance?undefined:indicatorFeed),
-    compare,feedIdentity(comparison.feed),Boolean(comparison.candles?.length),placement,viewCount,
+    compare,feedIdentity(comparison.feed),Boolean(comparison.candles?.length),placement,chartViewCount,
     replayActive,replaySession?.id,replayIndex,cutoff]);
-  const canSaveCapture=loadedPrimaryGeneration===primaryLoadGeneration&&!busy&&!error&&!replayBusy&&
+  const canSaveCapture=(replayActive||loadedPrimaryGeneration===primaryLoadGeneration&&!busy&&!error)&&!replayBusy&&
     (!compare||(savedSource?Boolean(comparison.feed&&comparison.candles?.length):Boolean(comparison.feed||comparison.error)));
   const captureGeneration=useMemo(()=>({}),[captureKey,primaryLoadGeneration,canSaveCapture]);
   useLayoutEffect(()=>{
@@ -469,7 +534,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const firstFeed=smtFeed(symbol,replayData??(data?.source===source?data:undefined));
   const secondFeed=smtFeed(compare,comparison.feed);
   const missingSmtFeed=source!=='DEMO'&&Boolean(compare)&&Boolean(data&&comparison.feed)&&(!firstFeed||!secondFeed);
-  const smt=useSmt(indicatorCandles,comparison.candles,timeframe,showSmt==='on'&&Boolean(compare)&&!busy&&!error&&validRules&&
+  const smt=useSmt(indicatorCandles,comparison.candles,timeframe,showSmt==='on'&&Boolean(compare)&&(replayActive||!busy&&!error)&&validRules&&
     (source==='DEMO'||Boolean(firstFeed&&secondFeed)),rules,firstFeed,secondFeed,replayActive,refreshCount,frameMinutes[timeframe]*60);
   const precisionFor=(name:string)=>instruments.find(item=>item.name===name)?.digits ?? (name==='BTCUSDT'?2:name==='USDJPY'||name==='XAUUSD'?3:5);
 
@@ -506,6 +571,23 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     </small>}
   </div>;
   const latestNotice=!replayActive&&data?.latest_unconfirmed?'Latest MT5 bar · close unconfirmed':'';
+  const resumeReplay=savedReplays.length>0&&<label>Resume saved replay <select value="" disabled={Boolean(replayBusy)}
+    onChange={event=>{if(event.target.value)void loadReplay('resume',event.target.value);}}>
+    <option value="">Choose checkpoint</option>{savedReplays.map(item=><option key={item.id} value={item.id}>
+      {new Date(item.updated_at).toLocaleString()} · candle {item.position+1}
+    </option>)}
+  </select></label>;
+  const resumeFeedback=<>
+    {replayBusy==='resume'&&<span role="status">Loading saved replay…</span>}
+    {replayError?.kind==='resume'&&<span role="alert">{replayError.message}</span>}
+  </>;
+  const replayControls=replayActive&&replayData&&replaySession&&<ReplayControls key={replaySession.id}
+    candles={replayData.candles} cutoffs={replayData.replay_cutoffs} index={replayIndex!} onSeek={setReplayIndex}
+    onExit={()=>{setReplayIndex(null);setLoadedReplay(undefined);setReplaySelection(undefined);}}
+    onCheckpoint={async(position,bookmarks)=>{
+      await api.saveCheckpoint(replaySession.id,position,bookmarks,replayArchive?replaySelection:undefined);
+      replayOptions();
+    }} initialBookmarks={replaySession.checkpoint?.bookmarks} step={replayStep}/>;
   if(!expanded)return <Card className="market-card">
     <div className="market-header"><div className="market-title"><div className="pair-icon"><Activity size={19}/></div><div><div className="market-pair-row"><h3>{pairText}</h3><Badge tone={source==='DEMO'?'amber':'blue'}>{source==='DEMO'?'SIMULATED':source}</Badge></div><p>Market context · research environment</p></div></div><div className="price-head">{last?<><strong>{last.close.toFixed(digits)}</strong><PriceChange value={change}/></>:<strong>—</strong>}</div></div>
     <div className="chart-toolbar"><div className="timeframe-buttons">{(['M1','M3','M5','M15','M30','H1','H4','D1'] as Timeframe[]).map(t=><button key={t} className={timeframe===t?'on':''} onClick={()=>setTimeframe(t)}>{t}</button>)}</div><div className="chart-actions">{!isBinance&&source!=='MT5'&&<Select value={forexSymbol} options={watchSymbols} onChange={s=>setSymbol(s as SymbolName)}/>}<Select label="Market data source" value={source} options={chartSources} onChange={s=>setSource(s as ChartSource)}/></div>{brokerPicker}</div>
@@ -517,14 +599,33 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
     <WorkspacePanels><div className="terminal-layout">
       <section className="terminal-core">
         <div className="terminal-identity"><div className="terminal-pair"><div className="pair-badge">{symbol.slice(0,3)}</div><div><strong>{pairText}</strong><span>{label}</span><small>{latestNotice} {pollError}</small></div></div><div className="terminal-head-price">{last?<><strong>{last.close.toFixed(digits)}</strong><PriceChange value={change}/></>:<span>—</span>}</div></div>
-        <div className="terminal-controls"><div className="timeframe-buttons">{(['M1','M3','M5','M15','M30','H1','H4','D1'] as Timeframe[]).map(t=><button key={t} className={timeframe===t?'on':''} onClick={()=>setTimeframe(t)}>{t}</button>)}</div><div className="terminal-control-right"><Select label="Market data source" value={source} options={chartSources} onChange={s=>setSource(s as ChartSource)}/><Select label="Chart layout" value={viewCount} options={['1','2','3','4']} onChange={value=>setViewCount(value as typeof viewCount)}/><button className="small-tool" onClick={()=>setRefreshCount(n=>n+1)} title="Refresh candles"><RefreshCw size={16}/></button></div>{brokerPicker}</div>
-        {savedSource&&<SavedRange range={range} onChange={setRange}/>}
-        {data?.coverage&&<div className="indicator-controls" role="status">
+        <div className="terminal-controls"><div className="timeframe-buttons">{(['M1','M3','M5','M15','M30','H1','H4','D1'] as Timeframe[]).map(t=><button key={t} className={timeframe===t?'on':''} onClick={()=>setTimeframe(t)}>{t}</button>)}</div><div className="terminal-control-right"><Select label="Market data source" value={source} options={chartSources} onChange={s=>setSource(s as ChartSource)}/><Select label="Chart layout" value={String(chartViewCount)} options={['1','2','3','4']} disabled={replayArchive} onChange={value=>setViewCount(value as typeof viewCount)}/><button className="small-tool" onClick={()=>setRefreshCount(n=>n+1)} title="Refresh candles"><RefreshCw size={16}/></button></div>{brokerPicker}</div>
+        {savedSource&&!replayArchive&&<SavedRange range={range} onChange={setRange}
+          onFreeze={()=>void loadReplay('archive')} freezeBusy={Boolean(replayBusy)} onEdit={invalidateReplayLoad}/>}
+        {!replayActive&&savedSource&&(resumeReplay||replayBusy==='archive'||replayBusy==='resume'||
+          replayError?.kind==='archive'||replayError?.kind==='resume')&&<div className="research-controls archive-replay-status">
+          {resumeReplay}
+          {resumeFeedback}
+          {replayBusy==='archive'&&<span role="status">Freezing selected range…</span>}
+          {replayError?.kind==='archive'&&<span role="alert">{replayError.message}</span>}
+        </div>}
+        {!replayArchive&&data?.coverage&&<div className="indicator-controls" role="status">
           {data.coverage.gaps.length} UTC coverage gaps · {data.coverage.duplicate_bars} duplicate bars · {data.coverage.truncated?'Showing latest 600 candles':'Requested range loaded'}
         </div>}
+        {replayArchive&&<FrozenReplayCoverage panes={archivePanes} start={replaySession?.request?.start} end={replaySession?.request?.end}/>}
+        {inspectedPane&&<ReplayCandleInspector panes={archivePanes} pane={inspectedPane} candles={inspectionCandles}
+          selectedTime={inspectedTime} precision={precisionFor(inspectedPane.data.symbol)} onView={selectInspectionPane}
+          onCandle={time=>setReplaySelection({view:inspectedPane.view,time})}/>}
+        {replayArchive&&<div className="archive-replay-transport">{replayControls}</div>}
         {last&&<SessionIntelligence rows={indicatorCandles} step={frameMinutes[timeframe]*60}
           cutoff={cutoff??Math.min(Date.now()/1000,(indicatorCandles.at(-1)?.time??last.time)+frameMinutes[timeframe]*60)} digits={digits} onZone={updateZone}/>}
-        <div className="terminal-inspector" role="region" aria-label="Evidence Inspector"><DataTrust data={replayData?{...replayData,candles:visibleCandles,coverage:undefined}:data} symbol={symbol} timeframe={timeframe} error={error||pollError}/></div>
+        <div className="terminal-inspector" role="region" aria-label="Evidence Inspector">
+          <DataTrust key={inspectedPane?.view??'primary'}
+            data={inspectedPane?inspectionFeed&&{...inspectionFeed,candles:inspectionCandles}:
+              replayData?{...replayData,candles:visibleCandles,coverage:undefined}:data}
+            symbol={inspectedPane?.data.symbol??symbol} timeframe={inspectedPane?.data.timeframe??timeframe}
+            error={replayActive?undefined:error||pollError}/>
+        </div>
         {onPlan&&watchSymbols.includes(symbol as SymbolName)&&<div className="research-controls">
           <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>{
             setPlanPrices([]);setInteraction(picking?{mode:'navigate'}:{mode:'plan',prices:[]});
@@ -544,12 +645,12 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
               onClick={()=>changeLevels(levels.filter(item=>item.id!==level.id))}>Remove {level.price.toFixed(digits)}</button>)}
           </div></details>:null}
         <div className="terminal-drawing-tools"><DrawingToolbox book={drawingBook}/></div>
-        {viewCount!=='1'&&<details className="data-trust"><summary>Chart synchronization</summary>
+        {chartViewCount>1&&<details className="data-trust"><summary>Chart synchronization</summary>
           <div className="research-controls">{([
             ['Crosshair',linkCrosshair,setLinkCrosshair],['Time range',linkRange,setLinkRange],['Zoom',linkZoom,setLinkZoom],
             ['Instrument',linkInstrument,setLinkInstrument],['Timeframe',linkTimeframe,setLinkTimeframe],
             ['Replay',linkReplay,setLinkReplay],
-          ] as const).map(([name,value,update])=><label key={name}><input type="checkbox" checked={value==='on'}
+          ] as const).map(([name,value,update])=><label key={name}><input type="checkbox" checked={name==='Replay'?replayLinked:value==='on'}
             disabled={name==='Replay'&&replayActive} onChange={event=>update(event.target.checked?'on':'off')}/>{name}</label>)}</div>
         </details>}
         {indicator.controls}<div className="indicator-controls comparison-controls"><label>SMT comparison
@@ -579,9 +680,11 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
             event_key:smt.alert!.event_key!,status:'SMT_CONFIRMED'
           }).catch(reason=>setPollError(reason.message))}>Inspect alert evidence</button>}
         </div><div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+(interaction.mode==='navigate'?'active':'')} title="Crosshair (Esc)" onClick={()=>setInteraction({mode:'navigate'})}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
-        <div className={'terminal-chart-columns '+(viewCount!=='1'?'multi-chart':'')}>
-          <div className="primary-chart"><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':exactEvidence?'FROZEN STRATEGY EVIDENCE':'PRICE'}</span></div>{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} focus={exactEvidence&&initialLocation?.timestamp!==undefined?
-            {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={viewCount!=='1'?360:510} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events,smtWindowOnly:savedSource&&replayActive}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
+        <div className={'terminal-chart-columns '+(chartViewCount>1?'multi-chart':'')}>
+          <div className="primary-chart" role="region" aria-label="Primary chart" data-inspecting={inspectedPane?.view==='primary'||undefined}><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':exactEvidence?'FROZEN STRATEGY EVIDENCE':'PRICE'}</span></div>{!replayActive&&busy?<div className="chart-loading"><Spinner/> Loading candles</div>:!replayActive&&error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} focus={exactEvidence&&!replayArchive&&initialLocation?.timestamp!==undefined?
+            {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={chartViewCount>1?360:510}
+            replayCandleTime={inspectedPane?.view==='primary'?selectedVisibleTime:undefined}
+            onReplayCandleSelect={replayArchive?time=>setReplaySelection({view:'primary',time}):undefined} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events,smtWindowOnly:savedSource&&replayActive}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
               item.anchors.every(anchor=>anchor.time+frameMinutes[timeframe]*60<=cutoff))}
             drawMode={interaction.mode!=='navigate'} placementInteraction={interaction}
             onSaveSnapshot={canSaveCapture?saveChartEvidence:undefined} savingSnapshot={currentCapture?.saving??false} snapshotStatus={currentCapture?.status}
@@ -609,32 +712,30 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
               if(prices.length===3){setPlanPrices(prices);setInteraction({mode:'navigate'});}
               else setInteraction({mode:'plan',prices});
             }:interaction.mode==='level'?addLevel:undefined} showSnapshot showDataLegend/>:<Empty title="Market data unavailable" body="Connect MetaTrader 5 or import saved MT5 / Dukascopy candles."/>}</div>
-          {Array.from({length:Number(viewCount)-1},(_,index)=><ChartView key={index+2} number={index+2}
-            mainSymbol={symbol} source={source} options={options} refresh={refreshCount} cutoff={linkReplay==='on'?cutoff:undefined} precision={precisionFor} range={range}
-            frozen={replayActive&&linkReplay==='on'?(replaySession?.views[String(index+2)]??
-              {symbol,timeframe,error:'This pane was not captured in the replay snapshot'}):undefined}
-            link={link} linkedFrame={linkTimeframe==='on'?timeframe:undefined} linkedSymbol={linkInstrument==='on'?symbol:undefined}/>)}
+          {archiveViewIds.slice(1,chartViewCount).map(view=>{
+            const inspecting=inspectedPane?.view===view;
+            return <ChartView key={view} number={Number(view)}
+              mainSymbol={symbol} source={source} options={options} refresh={refreshCount} cutoff={replayLinked?cutoff:undefined} precision={precisionFor} range={range}
+              frozen={replayActive&&replayLinked?(replaySession?.views[view]??
+                {symbol,timeframe,error:'This pane was not captured in the replay snapshot'}):undefined}
+              link={link} linkedFrame={linkTimeframe==='on'?timeframe:undefined} linkedSymbol={linkInstrument==='on'?symbol:undefined}
+              inspecting={inspecting} selectedCandle={inspecting?selectedVisibleTime:undefined}
+              onCandleSelect={replayArchive?time=>setReplaySelection({view,time}):undefined} onConfigurationChange={invalidateReplayLoad}/>;
+          })}
         </div></div>
         <div className="terminal-replay">
-          {replayActive&&replayData ? <ReplayControls key={replaySession?.id??replayScope} candles={replayData.candles} index={replayIndex!}
-            onSeek={setReplayIndex} onExit={()=>{setReplayIndex(null);setReplayData(undefined);setReplaySession(undefined);}}
-            onCheckpoint={replaySession?async(position,bookmarks)=>{
-              await api.saveCheckpoint(replaySession.id,position,bookmarks);replayOptions();
-            }:undefined} initialBookmarks={replaySession?.checkpoint?.bookmarks} step={frameMinutes[timeframe]*60}/>
-            : <div className="research-controls">
-              <button className="small-tool" onClick={()=>void loadReplay()} disabled={!canReplay||replayBusy}><Clock3 size={17}/> Bar replay</button>
-              {savedReplays.length>0&&<label>Resume saved replay <select value="" disabled={replayBusy}
-                onChange={event=>{if(event.target.value)void loadReplay(event.target.value);}}>
-                <option value="">Choose checkpoint</option>{savedReplays.map(item=><option key={item.id} value={item.id}>
-                  {new Date(item.updated_at).toLocaleString()} · candle {item.position+1}
-                </option>)}
-              </select></label>}
-              {replayError&&<span role="alert">{replayError}</span>}
-            </div>}
-          <div className="terminal-footer-info">{zone} · {visibleCandles.length} bars · {data?.price_basis||'unverified'}</div>
+          {!replayArchive&&(replayActive?replayControls:<div className="research-controls">
+            <button className="small-tool" onClick={()=>void loadReplay('quick')} disabled={!canReplay||Boolean(replayBusy)}
+              title={savedSource&&range?'Quick replay uses at most 600 candles':undefined}><Clock3 size={17}/> Bar replay</button>
+            {!savedSource&&resumeReplay}
+            {!savedSource&&resumeFeedback}
+            {replayBusy==='quick'&&<span role="status">Loading bar replay…</span>}
+            {replayError?.kind==='quick'&&<span role="alert">{replayError.message}</span>}
+          </div>)}
+          <div className="terminal-footer-info">{zone} · {visibleCandles.length} bars · {(replayData??data)?.price_basis||'unverified'}</div>
         </div>
         {source === 'DUKASCOPY_SAVED' && cutoff != null && replaySession?.market.source === source &&
-          loadedPrimaryGeneration === primaryLoadGeneration &&
+          (replayArchive||loadedPrimaryGeneration === primaryLoadGeneration) &&
           <>
             <ReplayH1Evidence key={replaySession.id} session={replaySession} cutoff={cutoff} symbol={symbol} timeframe={timeframe}
               linkedViews={linkReplay === 'on' ? Number(viewCount) : 1}/>
