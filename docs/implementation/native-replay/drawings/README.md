@@ -20,7 +20,7 @@ A drawing book belongs to its source, symbol and timeframe. Reopening a saved ch
 3. Select a supported drawing on the plot or choose it in the toolbox. Drag an editable handle, or choose **Set anchor** and place it again. **Undo drawing edit** writes another revision. The API acknowledges each completed edit automatically. Use **Save replay position** to persist the chart cutoff and selected candle.
 4. Resume the saved replay after restarting the API and browser. Select the original pane to inspect the drawing again. Two panes with the same source, instrument and timeframe share persisted drawing versions. Each pane owns its selection and edit history. Another edit to the same book invalidates an older undo stack.
 
-In native replay, the canvas draws a shape when its anchor times are present among that pane’s available candles. The toolbox lists the user-authored market book across cutoffs. Its annotations are separate from historical strategy decisions, fills and source candles.
+In native replay, a drawing becomes available on the canvas and in the toolbox when every anchor candle is available in the selected pane. Rewinding changes what the operator can inspect. The full market book remains in storage. [Cutoff and keyboard verification](corrections.md)
 
 ## Acceptance
 
