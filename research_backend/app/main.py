@@ -36,7 +36,7 @@ from .ai_review_decisions import router as review_decision_router
 from .workspace_routes import router as workspace_router
 from .learning import router as learning_router
 from .historical_packages import HistoricalReview, import_historical, router as historical_package_router
-from .forex_coverage import router as forex_coverage_router
+from .forex_coverage import CoverageSelection, pinned_pane, router as forex_coverage_router
 from .month_replay import router as month_router
 from .decision_reviews import router as decision_review_router
 from .strategy_routes import router as strategy_router
@@ -539,6 +539,7 @@ class ReplayRequest(BaseModel):
     end: int | None = Field(None,ge=0)
     window_bars: int | None = Field(default=None, strict=True, ge=1, le=MAX_WINDOW)
     views: list[ReplayView] = Field(default_factory=list,max_length=4)
+    coverage_selection: CoverageSelection | None = None
     signal_reference: SignalReference | None = None
     @model_validator(mode="after")
     def paired_range(self):
@@ -548,6 +549,13 @@ class ReplayRequest(BaseModel):
             raise ValueError("Native replay windows require a saved candle source")
         if len({view.view for view in self.views}) != len(self.views):
             raise ValueError("Duplicate replay view")
+        if self.coverage_selection and (
+            self.source!="DUKASCOPY_SAVED" or self.symbol!="EURUSD" or self.timeframe!="M5"
+            or self.window_bars is None or self.start is None or self.end-self.start>3600
+            or self.start%300 or self.end%300 or self.end>datetime.now(timezone.utc).timestamp()
+            or not any(v.view=="comparison" and v.symbol=="GBPUSD" and v.timeframe=="M5" for v in self.views)
+        ):
+            raise ValueError("Coverage replay requires the inspected EURUSD/GBPUSD M5 interval and comparison pane")
         return self
 
 
@@ -574,6 +582,9 @@ def captured_replay(request:ReplayRequest,symbol:str,timeframe:str,cutoff:int,ca
         if end <= start:
             raise HTTPException(422,"No completed window for this replay timeframe")
     if catalog is not None:
+        selection = request.coverage_selection
+        if selection and symbol in ("EURUSD","GBPUSD") and timeframe=="M5":
+            return pinned_pane(catalog,symbol,start,end,selection.feed_id,getattr(selection,symbol),request.window_bars)
         try:
             result = saved_replay_window(catalog, request.source.removesuffix("_SAVED"), symbol, timeframe,
                                          start, end, step, request.window_bars, cutoff)
@@ -634,7 +645,7 @@ def create_replay(request:ReplayRequest):
                     try:
                         panes[view.view] = capture(view.symbol, view.timeframe)
                     except HTTPException as error:
-                        if error.status_code not in (404,409,422,503):
+                        if (request.coverage_selection and view.view=="comparison") or error.status_code not in (404,409,422,503):
                             raise
                         panes[view.view] = {"symbol":view.symbol,"timeframe":view.timeframe,"error":str(error.detail)}
         except WindowTooLarge as error:
@@ -644,6 +655,8 @@ def create_replay(request:ReplayRequest):
     if not market["candles"]:
         raise HTTPException(422,"No completed replay candles")
     settings = request.model_dump(exclude={"window_bars"} if request.window_bars is None else set())
+    if request.coverage_selection is None:
+        settings.pop("coverage_selection")
     snapshot = {"schema_version":1,"request":settings,"market":market,"views":panes}
     encoded=json.dumps(snapshot,sort_keys=True,separators=(",",":"),allow_nan=False)
     session_id=sha256(encoded.encode()).hexdigest()

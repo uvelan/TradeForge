@@ -16,6 +16,10 @@ export const api={
   overview:()=>request<import('./types').Overview>('/overview'),
   brokerSymbols:()=>request<BrokerSymbol[]>('/market/mt5/symbols'),
   candles:(symbol:string,timeframe:Timeframe,source:ChartSource,limit=240,includeLatest=false,range?:CandleRange)=>
+    range?.coverage_selection && source==='DUKASCOPY_SAVED' && timeframe==='M5' && (symbol==='EURUSD'||symbol==='GBPUSD') ?
+    request<import('./types').CandleResponse>('/forex/chart?'+new URLSearchParams({
+      symbol,start:String(range.start),end:String(range.end),feed_id:range.coverage_selection.feed_id,pin:range.coverage_selection[symbol],
+    })) :
     request<import('./types').CandleResponse>('/market/candles?'+new URLSearchParams({
       symbol,timeframe,source,limit:String(limit),include_latest:String(includeLatest),
       ...(range?{start:String(range.start),end:String(range.end)}:{}),
@@ -52,7 +56,7 @@ export const api={
   backtestRun:(id:string)=>request<import('./types').BacktestRun>('/backtest/runs/'+encodeURIComponent(id)),
   startReplay:(symbol:string,timeframe:Timeframe,source:ChartSource,views:import('./types').ReplayViewRequest[],range?:CandleRange,windowBars?:number)=>
     post<import('./types').ReplaySession>('/replay/sessions',{symbol,timeframe,source,views,...range,
-      ...(windowBars===undefined ? {} : {window_bars:windowBars})}),
+      ...(windowBars===undefined && !range?.coverage_selection ? {} : {window_bars:windowBars??12})}),
   replays:(symbol:string,timeframe:Timeframe,source:ChartSource)=>
     request<{id:string;position:number;updated_at:string}[]>('/replay/sessions?'+new URLSearchParams({symbol,timeframe,source})),
   replay:(id:string)=>request<import('./types').ReplaySession>('/replay/sessions/'+encodeURIComponent(id)),

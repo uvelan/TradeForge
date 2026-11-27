@@ -51,7 +51,7 @@ def partition_stamp(part, field):
         raise ValueError(f"INVALID_UTC_TIMESTAMP: {field} (research, {part['id']})") from error
 
 
-def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, limit, cutoff, *, observed_by=None):
+def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, limit, cutoff, *, observed_by=None, feed_id=None):
     import pyarrow.parquet as pq
 
     cursor, resolver = catalog
@@ -69,6 +69,9 @@ def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, 
     if explicit:
         lower = "AND last_time >= ?"
         params.append(utc(start))
+    if feed_id is not None:
+        lower += " AND feed_id=?"
+        params.append(feed_id)
     # The first unopened partition's maximum timestamp certifies when the recent tail is complete.
     cursor.execute(f"""SELECT {columns} FROM datasets WHERE kind='candles'
         AND provider=? AND symbol=? AND timeframe=? AND (provider<>'DUKASCOPY' OR price_basis='BID')

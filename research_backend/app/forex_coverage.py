@@ -2,11 +2,14 @@
 from datetime import UTC, date, datetime, time
 from hashlib import sha256
 from typing import Literal
+import json
+
+from pydantic import BaseModel, Field
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from . import config
-from .historical_csv import CSV_MAX_BYTES, import_csv
+from .historical_csv import CSV_FEED, CSV_MAX_BYTES, import_csv
 from .historical_import import FEED, import_bi5
 from .indicator_coverage import open_intervals
 from .month_replay import CALENDAR
@@ -32,12 +35,48 @@ def runs(stamps, step):
     return result
 
 
-def candle_lane(catalog, symbol, start, opened, observed_by):
-    end = start + 3600
-    result = dict(feed=None, pins=[], count=0, missing=[], error=None)
-    parts = catalog[0].execute("""SELECT * FROM datasets WHERE provider='DUKASCOPY' AND
+def candle_parts(catalog, symbol, start, end):
+    return catalog[0].execute("""SELECT * FROM datasets WHERE provider='DUKASCOPY' AND
         symbol=? AND timeframe='M5' AND kind='candles' AND price_basis='BID'
         AND first_time<? AND last_time>=? ORDER BY id""", (symbol, utc(end), utc(start))).fetchall()
+
+
+class CoverageSelection(BaseModel):
+    feed_id: str = Field(min_length=1,max_length=200)
+    EURUSD: str = Field(pattern=r"^[0-9a-f]{64}$")
+    GBPUSD: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+def pin_digest(feed, symbol, start, end, pins):
+    identity = [feed,symbol,start,end,sorted((pin["id"],pin["sha256"]) for pin in pins)]
+    return sha256(json.dumps(identity,separators=(",",":")).encode()).hexdigest()
+
+
+def pinned_pane(catalog, symbol, start, end, feed, expected, limit):
+    try:
+        pane = saved_replay_window(catalog,"DUKASCOPY",symbol,"M5",start,end,300,limit,end,feed_id=feed)
+        if pin_digest(feed,symbol,start,end,pane["partitions"]) != expected:
+            raise ValueError("Partition identities differ from the inspected range")
+        for pin in pane["partitions"]:
+            row = catalog[0].execute("SELECT * FROM datasets WHERE id=?",(pin["id"],)).fetchone()
+            candle_import_claim(catalog[0].connection,row)
+    except (OSError,RuntimeError,ValueError) as exc:
+        raise HTTPException(409,f"{symbol} chart evidence changed or is unavailable. Inspect coverage again. {exc}") from exc
+    return dict(**pane,symbol=symbol,timeframe="M5",source="DUKASCOPY_SAVED",source_completeness="UNVERIFIED",
+                synthetic=False,latest_unconfirmed=False)
+
+
+@router.get("/chart")
+def preview(symbol: Literal["EURUSD","GBPUSD"], start: int, end: int, feed_id: str, pin: str):
+    if not 0<=start<end<=datetime.now(UTC).timestamp() or end-start>3600 or start%300 or end%300:
+        raise HTTPException(422,"Select a completed M5 interval of at most one hour")
+    with replay_catalog() as catalog:
+        return pinned_pane(catalog,symbol,start,end,feed_id,pin,12)
+
+
+def candle_lane(catalog, symbol, start, opened, observed_by, feed, parts):
+    end = start + 3600
+    result = dict(feed=feed, pins=[], count=0, missing=[], error=None)
     seen = {}
     try:
         for part in parts:
@@ -46,7 +85,7 @@ def candle_lane(catalog, symbol, start, opened, observed_by):
             if claim:
                 result["pins"][-1]["source_sha256"] = claim[0]["source_sha256"]
         if parts:
-            pane = saved_replay_window(catalog, "DUKASCOPY", symbol, "M5", start, end, 300, 12, end, observed_by=observed_by)
+            pane = saved_replay_window(catalog, "DUKASCOPY", symbol, "M5", start, end, 300, 12, end, observed_by=observed_by,feed_id=feed)
             seen = {bar["time"]: bar["available_at"] for bar in pane["candles"]}
             result.update(feed=pane["feed_id"], count=len(seen))
             if seen.keys() - opened:
@@ -133,6 +172,43 @@ def quote_inventory(db, start, end):
     return hours
 
 
+def chart_sources(catalog,t,opened,right):
+    parts = {symbol:candle_parts(catalog,symbol,t,t+3600) for symbol in ("EURUSD","GBPUSD")}
+    sources = {}
+    for symbol, rows in parts.items():
+        sources[symbol] = {feed:candle_lane(catalog,symbol,t,opened,right,feed,
+                             [row for row in rows if row["feed_id"]==feed])
+                           for feed in sorted({row["feed_id"] for row in rows})}
+    shared = sources["EURUSD"].keys() & sources["GBPUSD"].keys()
+    def rank(feed):
+        primary,peer = sources["EURUSD"][feed][1],sources["GBPUSD"][feed][1]
+        shared_opens = primary.keys() & peer.keys()
+        duration = sum(end-start for start,end in replay_ranges(shared_opens,primary,peer))
+        return -duration,-len(shared_opens),feed!=CSV_FEED["BID"],feed
+
+    feed = min(shared,key=rank,default=None)
+    def selected(symbol):
+        options = sources[symbol]
+        chosen = feed or min(options,key=lambda f:(-options[f][0]["count"],f),default=None)
+        lane, times = options[chosen] if chosen else candle_lane(catalog,symbol,t,opened,right,None,[])
+        lane["alternatives"] = [value[0] for key,value in options.items() if key!=chosen]
+        return lane,times
+    eur,primary = selected("EURUSD")
+    gbp,peer = selected("GBPUSD")
+    both = primary.keys() & peer.keys()
+    error = "No common M5 BID candle feed for this pair" if all(sources.values()) and not shared else None
+    ranges = replay_ranges(both,primary,peer) if feed else []
+    selections = []
+    for start_time,end_time in ranges:
+        binding = {"feed_id":feed}
+        for symbol,rows in parts.items():
+            scoped = [row for row in rows if row["feed_id"]==feed and row["first_time"]<utc(end_time)
+                      and row["last_time"]>=utc(start_time)]
+            binding[symbol] = pin_digest(feed,symbol,start_time,end_time,scoped)
+        selections.append(binding)
+    return eur,gbp,both if feed else set(),ranges,selections,error
+
+
 @router.get("/coverage")
 def coverage(start: date, end: date):
     left,right = midnight(start),midnight(end)
@@ -144,13 +220,7 @@ def coverage(start: date, end: date):
         quotes = quote_inventory(catalog[0].connection,left,right)
         for t,q in quotes.items():
             opened = {v for v in range(t,t+3600,300) if any(a<=v<b for a,b in sessions)}
-            eur,primary = candle_lane(catalog,"EURUSD",t,opened,right)
-            gbp,peer = candle_lane(catalog,"GBPUSD",t,opened,right)
-            both = primary.keys() & peer.keys()
-            error = None
-            if both and eur["feed"] != gbp["feed"]:
-                error = "Different candle feeds cannot establish same-feed paired coverage"
-
+            eur,gbp,both,ranges,selections,error = chart_sources(catalog,t,opened,right)
             if not opened:
                 q["gaps"] = []
                 if q["count"]:
@@ -161,12 +231,12 @@ def coverage(start: date, end: date):
                 status = "Scheduled closure"
             elif both==opened and not q["gaps"]:
                 status = "Healthy"
-            elif primary or peer or q["count"]:
+            elif eur["count"] or gbp["count"] or q["count"]:
                 status = "Partial"
             else:
                 status = "Missing open time"
             result.append(dict(start=t,end=t+3600,status=status,expected=len(opened),eur=eur,gbp=gbp,
-                               paired=len(both),paired_ranges=[] if error else replay_ranges(both,primary,peer),
+                               paired=len(both),paired_ranges=ranges,chart_selections=selections,
                                pair_error=error,quotes=q))
     return dict(start=left,end=right,provider="DUKASCOPY",max_gap_ms=MAX_GAP_MS,hours=result)
 

@@ -5,7 +5,8 @@ export type ChartSource=SourceName|'BINANCE_SPOT';
 export type ChartSymbol=SymbolName|'BTCUSDT';
 export interface Candle {time:number;available_at?:number;open:number;high:number;low:number;close:number;volume?:number;
   availability_basis?:'ARCHIVE_SUPPLIED'|'MODELED_NOMINAL_CLOSE';source_partition_indexes?:number[]}
-export type CandleRange = {start:number;end:number};
+export type CoverageSelection = {feed_id:string;EURUSD:string;GBPUSD:string};
+export type CandleRange = {start:number;end:number;coverage_selection?:CoverageSelection};
 export interface CandleCoverage extends CandleRange {gaps:CandleRange[];duplicate_bars:number;truncated:boolean;
   slot_start?:number;slot_end?:number}
 export interface ArchiveOrigin {file_observations?:string;source_completeness:string;reconstruction:string;source_sha256?:string;start?:number;end?:number;checked_bars?:number;missing_slots?:number[]}

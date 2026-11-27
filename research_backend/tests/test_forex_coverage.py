@@ -54,7 +54,7 @@ def test_different_feeds_and_late_final_child(client):
     candles("EURUSD",[START+3600],feed="second")
     candles("GBPUSD",[START+3600])
     different = window(client)[1]
-    assert different["paired"]==1 and different["pair_error"] and different["paired_ranges"]==[]
+    assert different["paired"]==0 and different["pair_error"] and different["paired_ranges"]==[]
 
 
 def test_recorded_gaps_asymmetric_and_closure(client):
@@ -121,3 +121,31 @@ def test_manual_hour_binding_and_healthy_hour(client,monkeypatch):
     candles("GBPUSD",range(START,START+3600,300))
     hour=window(client)[0]
     assert hour["status"]=="Healthy" and hour["paired"]==12 and hour["quotes"]["gaps"]==[]
+
+
+def test_coverage_freeze_checks_the_inspected_feed_and_both_pin_sets(client):
+    original = {symbol:candles(symbol,[START,START+300]) for symbol in ("EURUSD","GBPUSD")}
+    hour = window(client)[0]
+    binding, = hour["chart_selections"]
+    request = dict(start=START,end=START+600,source="DUKASCOPY_SAVED",symbol="EURUSD",timeframe="M5",
+                   views=[dict(view="comparison",symbol="GBPUSD",timeframe="M5")],window_bars=12)
+    candles("EURUSD",[START,START+300],feed="independent-alternative",price=1.47)
+    # A generic chart still rejects mixing the two sources.
+    assert client.post("/api/replay/sessions",json=request).status_code==409
+    request["coverage_selection"]=binding
+    session = client.post("/api/replay/sessions",json=request)
+    assert session.status_code==201,session.text
+    record = session.json()
+    for symbol,pane in (("EURUSD",record["market"]),("GBPUSD",record["views"]["comparison"])):
+        expected = [{k:original[symbol][k] for k in ("id","sha256")}]
+        preview = client.get("/api/forex/chart",params=dict(symbol=symbol,start=START,end=START+600,
+                            feed_id=FEED,pin=binding[symbol]))
+        assert preview.status_code==200
+        assert pane["partitions"]==preview.json()["partitions"]==expected
+        assert [bar["close"] for bar in pane["candles"]]==[1.2,1.2]
+    # Same price, same feed, additional provenance on the comparison lane.
+    candles("GBPUSD",[START])
+    stale = client.post("/api/replay/sessions",json=request)
+    assert stale.status_code==409 and "GBPUSD chart evidence changed" in stale.text
+    assert len(db.rows("SELECT id FROM replay_sessions"))==1
+    assert client.get("/api/replay/sessions/"+record["id"]).json()==record

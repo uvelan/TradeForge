@@ -29,7 +29,8 @@
       ],
       "count": 12,
       "missing": [],
-      "error": null
+      "error": null,
+      "alternatives": []
     },
     "gbp": {
       "feed": "dukascopy-web-m1-v1",
@@ -43,7 +44,8 @@
       ],
       "count": 12,
       "missing": [],
-      "error": null
+      "error": null,
+      "alternatives": []
     },
     "paired": 12,
     "paired_ranges": [
@@ -51,6 +53,13 @@
         1794574800,
         1794578400
       ]
+    ],
+    "chart_selections": [
+      {
+        "feed_id": "dukascopy-web-m1-v1",
+        "EURUSD": "d9d9daee9d6ff0bb3a17768560e965f8dd65d7448d16854bbcb4d00e488fb3b3",
+        "GBPUSD": "26c32352884cf46bb3e29c6b1b5009b34ac75ed4a7b057f188ed34ed2ebb8c77"
+      }
     ],
     "pair_error": null,
     "quotes": {
@@ -67,6 +76,6 @@
     }
   },
   "identical_imports": 2,
-  "session": "355c521c1345b7f042fde7f97102aff17adf62ea5d8f1c59c97d7cc72646e0f7",
+  "session": "c5f4e81384c340caab8661155cfb0f6839767c780bfa2c53755863446eafa6da",
   "browser_errors": []
 }

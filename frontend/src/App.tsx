@@ -190,7 +190,15 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [source,setSource]=useWorkspacePreference<ChartSource>('source','MT5',chartSources);
   const [selectedRange,setRange]=useState<CandleRange|undefined>(initialLocation?.range);
   const savedSource=source==='MT5_SAVED'||source==='DUKASCOPY_SAVED';
-  const range=savedSource?selectedRange:undefined;
+  const [comparisonSymbol,setComparisonSymbol]=useWorkspacePreference<string>('chart-comparison','none');
+  const range=useMemo(()=>{
+    if(!savedSource)return undefined;
+    if(selectedRange?.coverage_selection && (source!=='DUKASCOPY_SAVED'||forexSymbol!=='EURUSD'||
+        timeframe!=='M5'||comparisonSymbol!=='GBPUSD')){
+      return {start:selectedRange.start,end:selectedRange.end};
+    }
+    return selectedRange;
+  },[savedSource,selectedRange,source,forexSymbol,timeframe,comparisonSymbol]);
   const exactEvidence=Boolean(initialLocation?.evidencePath&&initialLocation.symbol===forexSymbol&&
     initialLocation.timeframe===timeframe&&initialLocation.source===source&&initialLocation.range===range);
   const isBinance=source==='BINANCE_SPOT';
@@ -237,7 +245,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const [linkReplay,setLinkReplay]=useWorkspacePreference('link-replay','on',['on','off']);
   link.options={crosshair:linkCrosshair==='on',range:linkRange==='on',zoom:linkZoom==='on'};
 
-  const [comparisonSymbol,setComparisonSymbol]=useWorkspacePreference<string>('chart-comparison','none');
   const [showSmt,setShowSmt]=useWorkspacePreference('show-smt','on',['on','off']);
   const [smtWidth,setSmtWidth]=useWorkspacePreference<string>('smt-width','3');
   const [smtAlignment,setSmtAlignment]=useWorkspacePreference<string>('smt-alignment','2');
@@ -616,7 +623,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
       <section className="terminal-core">
         <div className="terminal-identity"><div className="terminal-pair"><div className="pair-badge">{symbol.slice(0,3)}</div><div><strong>{pairText}</strong><span>{label}</span><small>{latestNotice} {pollError}</small></div></div><div className="terminal-head-price">{last?<><strong>{last.close.toFixed(digits)}</strong><PriceChange value={change}/></>:<span>—</span>}</div></div>
         <div className="terminal-controls"><div className="timeframe-buttons">{(['M1','M3','M5','M15','M30','H1','H4','D1'] as Timeframe[]).map(t=><button key={t} className={timeframe===t?'on':''} onClick={()=>setTimeframe(t)}>{t}</button>)}</div><div className="terminal-control-right"><Select label="Market data source" value={source} options={chartSources} onChange={s=>setSource(s as ChartSource)}/><Select label="Chart layout" value={String(chartViewCount)} options={['1','2','3','4']} disabled={replayArchive} onChange={value=>setViewCount(value as typeof viewCount)}/><button className="small-tool" onClick={()=>setRefreshCount(n=>n+1)} title="Refresh candles"><RefreshCw size={16}/></button></div>{brokerPicker}</div>
-        {savedSource&&!replayArchive&&<SavedRange range={range} onChange={setRange}
+        {!replayArchive&&range?.coverage_selection&&<p>Coverage chart feed · {range.coverage_selection.feed_id}</p>}
+        {savedSource&&!replayArchive&&<SavedRange range={range} onChange={next=>setRange(next && next.start===range?.start && next.end===range?.end ? range : next)}
           onFreeze={()=>void loadReplay('archive')} freezeBusy={Boolean(replayBusy)} onEdit={invalidateReplayLoad}/>}
         {!replayActive&&savedSource&&(resumeReplay||replayBusy==='archive'||replayBusy==='resume'||
           replayError?.kind==='archive'||replayError?.kind==='resume')&&<div className="research-controls archive-replay-status">

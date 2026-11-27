@@ -1,13 +1,13 @@
 import {useState} from 'react';
 import {api} from './api';
 import {Card, SectionTitle} from './components';
-import type {CandleRange} from './types';
+import type {CandleRange,CoverageSelection} from './types';
 
 type Interval = [number,number];
 type Pin = {id:string;sha256:string;feed:string;source_sha256?:string};
-type Lane = {count:number;missing:Interval[];pins:Pin[];error:string|null};
+type Lane = {feed:string|null;alternatives?:Lane[];count:number;missing:Interval[];pins:Pin[];error:string|null};
 type Hour = {start:number;end:number;status:string;expected:number;eur:Lane;gbp:Lane;paired:number;
-  paired_ranges:Interval[];pair_error:string|null;quotes:{count:number;pins:Pin[];registered:boolean;gaps:Interval[];error:string|null}};
+  paired_ranges:Interval[];chart_selections:CoverageSelection[];pair_error:string|null;quotes:{count:number;pins:Pin[];registered:boolean;gaps:Interval[];error:string|null}};
 type Report = {hours:Hour[];start:number;end:number;max_gap_ms:number};
 const iso = (seconds:number)=>new Date(seconds*1000).toISOString();
 const dateOf = (seconds:number)=>iso(seconds).slice(0,10);
@@ -82,12 +82,13 @@ export function ForexCoverage({openReplay,imported}:{openReplay:(range:CandleRan
     {selected&&<section aria-label="Selected hour evidence"><h3>{iso(selected.start).slice(0,16).replace('T',' ')} UTC · {selected.status}</h3>
       {selected.pair_error&&<p>{selected.pair_error}</p>}
       {([['EURUSD',selected.eur],['GBPUSD',selected.gbp]] as const).map(([s,l])=><details key={s}><summary>{s} M5 BID · {l.count} candles · {l.missing.length} missing intervals</summary>
-        {l.error&&<p>{l.error}</p>}<ul>{intervals(l.missing)}{pins(l.pins)}</ul></details>)}
+        {l.feed&&<p>Chart feed · {l.feed}</p>}{l.error&&<p>{l.error}</p>}<ul>{intervals(l.missing)}{pins(l.pins)}</ul>
+        {l.alternatives?.map(alt=><div key={alt.feed}><p>Alternative · {alt.feed} · {alt.count} candles</p>{alt.error&&<p>{alt.error}</p>}<ul>{pins(alt.pins)}</ul></div>)}</details>)}
       <details><summary>EURUSD bid/ask · {selected.quotes.count} observations · {selected.quotes.gaps.length} unresolved intervals</summary>
         <p>Verified BI5 ticks, modeled zero delivery delay. Intervals use actual timestamp runs, including isolated observations. A fill still requires an eligible order and supporting quotes. Recorded session replay needs bracketing quotes at most {report!.max_gap_ms/1000} seconds apart. Source-scoped entry checks also require the original import and its winning quote. Candle exports supply no executable quote sequence. Intervals below exclude their end.</p>
         {selected.quotes.error&&<p>{selected.quotes.error}</p>}<ul>{intervals(selected.quotes.gaps,true)}{pins(selected.quotes.pins)}</ul></details>
       {selected.paired>0&&!selected.pair_error&&!selected.paired_ranges.length&&<p>Paired candles arrived after this replay interval closed.</p>}
-      {selected.paired_ranges.map(([a,b])=><button className="btn btn-secondary" key={a} onClick={()=>openReplay({start:a,end:b})}>Open paired replay · {utcClock(a)}–{utcClock(b)} UTC</button>)}
+      {selected.paired_ranges.map(([a,b],index)=><button className="btn btn-secondary" key={a} onClick={()=>openReplay({start:a,end:b,coverage_selection:selected.chart_selections[index]})}>Open paired replay · {utcClock(a)}–{utcClock(b)} UTC</button>)}
       {selected.expected>0&&<fieldset className="coverage-fields" disabled={busy}><legend>Recover this interval</legend>
         <label>Import instrument<select value={symbol} onChange={e=>setSymbol(e.target.value as typeof symbol)}><option>EURUSD</option><option>GBPUSD</option></select></label>
         <p>For an hourly BI5 file, verify the instrument and UTC date against your download. Its filename identifies only the hour.</p>
