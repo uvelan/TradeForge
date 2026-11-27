@@ -235,7 +235,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   const [linkReplay,setLinkReplay]=useWorkspacePreference('link-replay','on',['on','off']);
   link.options={crosshair:linkCrosshair==='on',range:linkRange==='on',zoom:linkZoom==='on'};
 
-  const [comparisonSymbol,setComparisonSymbol]=useWorkspacePreference<string>('chart-comparison','GBPUSD');
+  const [comparisonPreference,setComparisonSymbol]=useWorkspacePreference<string>('chart-comparison','auto');
+  const comparisonSymbol=comparisonPreference==='auto'?
+    (symbol==='EURUSD'&&timeframe==='M5'&&(savedSource||source==='MT5')?'GBPUSD':'none'):comparisonPreference;
   const [showSmt,setShowSmt]=useWorkspacePreference('show-smt','on',['on','off']);
   const [smtWidth,setSmtWidth]=useWorkspacePreference<string>('smt-width','3');
   const [smtAlignment,setSmtAlignment]=useWorkspacePreference<string>('smt-alignment','0');
@@ -495,16 +497,20 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   const indicator=useChartIndicator(expanded&&!isBinance&&(replayActive||!busy&&!error&&indicatorScope===loadedIndicatorScope),indicatorCandles,source,timeframe,
     symbol,indicatorCutoff,indicatorFeed??undefined,replayActive,initialLocation);
   const options=[...new Set([symbol,...(isBinance?[]:source==='MT5'?(instruments.length?instruments.map(item=>item.name):watchSymbols):watchSymbols)])];
+  const returningToDecision=initialLocation?.decision&&initialLocation.symbol===symbol&&initialLocation.source===source&&initialLocation.timeframe===timeframe;
   const compare=replaySession?replaySession.views.comparison?.symbol??'':
-    expanded&&comparisonSymbol!==symbol&&options.includes(comparisonSymbol)?comparisonSymbol:'';
+    !returningToDecision&&expanded&&comparisonSymbol!==symbol&&options.includes(comparisonSymbol)?comparisonSymbol:'';
   const frozenComparison=replaySession?.views.comparison;
   const comparison=useViewCandles(compare,timeframe,source,refreshCount,cutoff,true,range,frozenComparison);
   const feedIdentity=(feed:CandleResponse|null|undefined)=>feed&&[
     feed.feed_id,feed.price_basis,feed.dataset_id,feed.partitions?.map(part=>[part.id,part.sha256]),
   ];
+  const frozenPlacement=replaySession&&initialLocation?.decision?.session_id===replaySession.id?
+    initialLocation.decision.comparison_placement:undefined;
+  const displayedPlacement=frozenPlacement??placement;
   const decisionTime=inspectedTime===undefined?inspectionCandles.at(-1)?.time:selectedVisibleTime;
   const decisionReplay=replayArchive&&replaySession&&replayIndex!==null&&inspectedPane&&decisionTime!==undefined?
-    {session_id:replaySession.id,position:replayIndex,view:inspectedPane.view,time:decisionTime}:undefined;
+    {session_id:replaySession.id,position:replayIndex,view:inspectedPane.view,time:decisionTime,...(compare?{comparison_placement:displayedPlacement}:{})}:undefined;
   const captureKey=JSON.stringify([symbol,timeframe,source,range,refreshCount,expanded,
     exactEvidence?initialLocation:undefined,feedIdentity(isBinance?undefined:indicatorFeed),
     compare,feedIdentity(comparison.feed),Boolean(comparison.candles?.length),placement,chartViewCount,
@@ -708,7 +714,11 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
               ? {primary:replayActive||!busy&&indicatorScope===loadedIndicatorScope ? firstFeed : undefined,
                 comparison:replayActive&&!replaySession?.views.comparison ? undefined : secondFeed,
                 timeframe,cutoff:indicatorCutoff,rules,unavailable:strictSmtLimit} : undefined}/>
-          <small role="status">{(missingPeer ? 'Missing peer candle · '+compare+' · '+new Date(missingPeer.time*1000).toISOString() : undefined) || legacySmtLimit || smt.error || comparison.error || smtCoverageNotice(smt.coverage) || (smt.events?.length===0?'No SMT divergence in the paired candles at this cutoff':smt.events?.length?`${smt.events.length} SMT divergence${smt.events.length===1?'':'s'} in paired candles`:undefined) || (smt.authority==='VERIFIED_MT5_CAPTURE'?'SMT · verified MT5 candles':smt.authority==='VERIFIED_SAVED_DATASET'?'SMT · verified archive evidence':smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
+          <small role="status">{legacySmtLimit || smt.error || comparison.error || smtCoverageNotice(smt.coverage) || (smt.authority==='VERIFIED_MT5_CAPTURE'?'SMT · verified MT5 candles':smt.authority==='VERIFIED_SAVED_DATASET'?'SMT · verified archive evidence':smt.authority==='CLIENT_SUPPLIED_UNVERIFIED'?'SMT preview · unverified candle input':undefined) || (missingSmtFeed ? 'SMT requires an identified feed and price basis for both instruments' : compare ? busy ? 'Refreshing chart data…' : smt.pending ? 'Recalculating SMT…' : comparison.candles?.length ? `${compare} · closed candles` : 'Waiting for comparison candles' : 'Compare instruments on the same chart')}</small>
+          {missingPeer?<small role="status">Missing peer candle · {compare} · {new Date(missingPeer.time*1000).toISOString()}</small>:
+            smt.events&&!smtCoverageNotice(smt.coverage)&&<small role="status">{smt.events.length?
+              `${smt.events.length} SMT divergence${smt.events.length===1?'':'s'} in paired candles`:
+              'No SMT divergence in the paired candles at this cutoff'}</small>}
           {!replayActive&&smt.alert?.confirmed_at&&<strong role="status">{(smt.pending || smt.error || smtCoverageNotice(smt.coverage)) ? 'Saved SMT_CONFIRMED' : 'SMT_CONFIRMED'} · {smt.alert.direction} · {symbol} / {compare} · {new Date(smt.alert.confirmed_at*1000).toISOString()}</strong>}
           {!replayActive&&smt.alert?.event_key&&onSignal&&<button className="small-tool" onClick={()=>void onSignal({
             event_key:smt.alert!.event_key!,status:'SMT_CONFIRMED'
@@ -717,8 +727,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
         <div className={'terminal-chart-columns '+(chartViewCount>1?'multi-chart':'')}>
           <div className="primary-chart" role="region" aria-label="Primary chart" data-inspecting={inspectedPane?.view==='primary'||undefined}><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':exactEvidence?'FROZEN STRATEGY EVIDENCE':'PRICE'}</span></div>{!replayActive&&busy?<div className="chart-loading"><Spinner/> Loading candles</div>:!replayActive&&error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} focus={exactEvidence&&!replayArchive&&initialLocation?.timestamp!==undefined?
             {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={chartViewCount>1?360:510}
-            replayCandleTime={inspectedPane?.view==='primary'?selectedVisibleTime:undefined}
-            onReplayCandleSelect={replayArchive?time=>setReplaySelection({view:'primary',time}):undefined} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement,onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events,smtWindowOnly:savedSource&&replayActive}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
+            replayCandleTime={inspectedPane?.view==='primary'||inspectedPane?.view==='comparison'?selectedVisibleTime:undefined}
+            onReplayCandleSelect={replayArchive?time=>setReplaySelection({view:'primary',time}):undefined} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement:displayedPlacement,fixedPlacement:Boolean(frozenPlacement),onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events,smtWindowOnly:savedSource&&replayActive}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={[...(drawingBook.current?.items??[]),...Object.values(sessionZones)].filter(item=>cutoff===undefined||
               item.anchors.every(anchor=>anchor.time+frameMinutes[timeframe]*60<=cutoff))}
             drawMode={interaction.mode!=='navigate'} placementInteraction={interaction}
             onSaveSnapshot={canSaveCapture?saveChartEvidence:undefined} savingSnapshot={currentCapture?.saving??false} snapshotStatus={currentCapture?.status}

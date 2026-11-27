@@ -70,6 +70,7 @@ def dataset_detail(dataset_id:str):
 
 
 class DecisionReplay(BaseModel):
+    comparison_placement: Literal["Overlay", "New pane"] | None = None
     session_id: str = Field(pattern=r"^[0-9a-f]{64}$")
     position: int = Field(ge=0)
     view: Literal["primary", "comparison", "2", "3", "4"]
@@ -152,7 +153,7 @@ def create_snapshot(request:ChartSnapshotRequest):
     with transaction() as db:
         if request.decision_replay is not None:
             validate_decision_replay(db, request, request.decision_replay)
-            metadata["decision_replay"] = request.decision_replay.model_dump()
+            metadata["decision_replay"] = request.decision_replay.model_dump(exclude_none=True)
         signal=resolve_signal(db,request.signal_reference)
         if signal is not None and (signal["provenance"]["timeframe"]!=request.timeframe
                                    or signal["provenance"]["primary"]["symbol"]!=request.symbol

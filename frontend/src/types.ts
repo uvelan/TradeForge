@@ -36,7 +36,7 @@ export interface BacktestRunSummary {id:string;created_at:string;count:number;ex
 export type ReplayPane = {symbol:string;timeframe:Timeframe} & (CandleResponse | {error:string});
 export type ReplayViewId = 'primary' | 'comparison' | '2' | '3' | '4';
 export type ReplaySelection = {view: ReplayViewId; time: number};
-export type DecisionReplay = ReplaySelection & {session_id:string;position:number};
+export type DecisionReplay = ReplaySelection & {session_id:string;position:number;comparison_placement?:'Overlay'|'New pane'};
 export interface ReplaySession {signal_rules?:import('./smt').SmtRules;id:string;market:CandleResponse;views:Record<string,ReplayPane>;
  request?:{smt_rules?:import('./smt').SmtRules;start?:number|null;end?:number|null;window_bars?:number|null};
  checkpoint:{position:number;bookmarks:number[];selected?:ReplaySelection|null}|null}

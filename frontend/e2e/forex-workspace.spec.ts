@@ -18,8 +18,10 @@ test('Forex workspace compares UTC M5 pivot opens and reports missing peer evide
   });
   await page.goto('/');
   await page.getByRole('button',{name:'Market Terminal',exact:true}).click();
-  await page.getByLabel('Market data source').selectOption('DEMO');
+  await page.getByLabel('Market data source').selectOption('DUKASCOPY_SAVED');
   await expect(page.getByLabel('SMT comparison',{exact:true})).toHaveValue('GBPUSD');
+  await page.getByLabel('Market data source').selectOption('DEMO');
+  await page.getByLabel('SMT comparison',{exact:true}).selectOption('GBPUSD');
   await page.getByText('SMT rules',{exact:true}).click();
   await expect(page.getByLabel('UTC match (bars)')).toHaveValue('0');
   await page.getByLabel('Swing width').fill('2');

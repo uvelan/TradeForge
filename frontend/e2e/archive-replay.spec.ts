@@ -95,11 +95,11 @@ test('inspects and restores the selected frozen candle without exposing out-of-c
     await freeze.press('Enter');
     await captured.promise;
     await expect(freeze).toBeDisabled();
-    await expect(page.getByText('Freezing selected rangeâ€¦')).toBeVisible();
+    await expect(page.getByText('Freezing selected range…')).toBeVisible();
   } finally { respond.resolve(); }
 
   const coverage=page.getByRole('region',{name:'Frozen replay coverage'});
-  await expect(coverage.getByText('Partial coverage Â· 1 UTC gap')).toBeVisible();
+  await expect(coverage.getByText('Partial coverage · 1 UTC gap')).toBeVisible();
   await expect(coverage.getByText('No verified archive for this pane')).toBeVisible();
   await expect(page.getByRole('region',{name:'Chart view 3'})).toContainText('No verified archive');
   const picker=page.getByRole('combobox',{name:'Inspection pane'});

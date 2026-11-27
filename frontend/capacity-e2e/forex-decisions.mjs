@@ -34,6 +34,7 @@ export async function verifyDecisions(origin,restart){
     await click('Market Terminal');
     await click('Forex M5 workspace');
     for(const [index,kind] of ['trade','pass'].entries()){
+      if(index)await page.getByLabel('Comparison placement').selectOption('New pane');
       const session=await freeze();
       assert.equal(session.request.smt_rules.alignment_bars,0);
       const timeline=page.getByLabel('Replay timeline');
@@ -43,6 +44,7 @@ export async function verifyDecisions(origin,restart){
       const shot=await posted('/api/chart-snapshots',()=>click('Save chart evidence'));
       const ref=shot.decision_replay;
       assert.equal(ref.session_id,session.id);
+      assert.equal(ref.comparison_placement,index?'New pane':'Overlay');
       assert.equal(ref.view,index?'primary':'comparison');
       assert.equal(ref.time,Date.parse('2026-11-13T13:20:00Z')/1000);
       assert.equal(shot.cutoff,session.market.replay_cutoffs[12+index]);
@@ -82,6 +84,8 @@ export async function verifyDecisions(origin,restart){
     await restart();
     browser=await chromium.launch();page=await createPage();
     await page.goto(origin);
+    await click('Market Terminal');
+    await page.getByLabel('Chart layout',{exact:true}).selectOption('4');
     for(const [index,item] of journal.entries()){
       await click('Learning Journal');
       const row=page.locator('.journal-item').filter({hasText:item.entry});
@@ -92,7 +96,9 @@ export async function verifyDecisions(origin,restart){
       await page.keyboard.press('Enter');
       await expect(page.getByLabel('Inspection pane')).toBeFocused();
       const {ref,id,cutoff,pins}=captured[index];
+      await expect(page.getByLabel('Chart layout',{exact:true})).toHaveValue('1');
       await expect(page.getByLabel('Inspection pane')).toHaveValue(ref.view);
+      await expect(page.locator('.primary-chart .chart-replay-guide')).toHaveAttribute('data-replay-candle',String(ref.time));
       await expect(page.getByLabel('Replay timeline')).toHaveValue(String(ref.position));
       await expect(page.getByLabel('Selected candle',{exact:true}).locator('time').first()).toHaveAttribute('datetime',new Date(ref.time*1000).toISOString());
       const saved=await (await page.request.get(origin+'/research/api/chart-snapshots/'+id)).json();
