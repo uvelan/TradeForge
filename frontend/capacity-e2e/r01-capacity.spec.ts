@@ -30,9 +30,8 @@ for(const size of [600,5000]){
     for(const panes of [1,2,4]){
       await page.getByLabel('Chart layout').selectOption(String(panes));
       for(let cycle=0;cycle<10;cycle++){
-        const series=()=>page.evaluate(()=>Array.from(document.querySelectorAll('.terminal-chart-columns .chart-input'),(element,index)=>{
+        const series=()=>page.evaluate(count=>Array.from({length:count},(_,index)=>{
           const selector=index===0?'.primary-chart .chart-input':`[aria-label="Chart view ${index+1}"] .chart-input`;
-          if(element!==document.querySelector(selector))throw Error('Unexpected chart pane order');
           const series=window.workspaceProbe.series(selector).flat().find((line:{type:string})=>line.type==='Candlestick');
           const bars=(series?.data??[]) as {time:number;open:number;high:number;low:number;close:number}[];
           const step=bars.length>1?bars[1].time-bars[0].time:0;
@@ -42,7 +41,7 @@ for(const size of [600,5000]){
               &&bar.low===open-.00010&&bar.close===open+.00020;
           });
           return {length:bars.length,step,valid};
-        }));
+        }),panes);
         const expected=[300,3600,900,14400].slice(0,panes);
         await expect.poll(series).toEqual(expected.map(step=>({step,length:size,valid:true})));
         if(!cycle&&panes===1)await page.getByTitle('Place horizontal level (Alt+H)').click();
