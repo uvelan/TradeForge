@@ -59,6 +59,7 @@ export function ReplayControls({candles,cutoffs,index,onSeek,onExit,step,initial
     <label>Speed <select value={speed} onChange={event=>setSpeed(Number(event.target.value))}>{[0.5,1,2,5,10].map(rate=><option key={rate}>{rate}</option>)}</select></label>
     <label className="replay-seek">Replay timeline <input type="range" min={0} max={last} value={index} onChange={event=>seek(Number(event.target.value))}/></label>
     <output>{index+1} / {count} {cutoff!==undefined&&new Date(cutoff*1000).toISOString()}</output>
+    {cutoffs && index===last && count>candles.length && <span>End of the requested range</span>}
     <label>Jump to UTC <input type="datetime-local" value={jump} onChange={event=>{setJump(event.target.value);setJumpError('');}}/></label>
     <button className="small-tool" disabled={!jump} onClick={()=>{
       const upto=Date.parse(jump+'Z')/1000;

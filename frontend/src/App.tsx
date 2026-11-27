@@ -588,7 +588,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson}
   const resumeReplay=savedReplays.length>0&&<label>Resume saved replay <select value="" disabled={Boolean(replayBusy)}
     onChange={event=>{if(event.target.value)void loadReplay('resume',event.target.value);}}>
     <option value="">Choose checkpoint</option>{savedReplays.map(item=><option key={item.id} value={item.id}>
-      {new Date(item.updated_at).toLocaleString()} · candle {item.position+1}
+      {new Date(item.updated_at).toLocaleString()} · replay step {item.position+1}
     </option>)}
   </select></label>;
   const resumeFeedback=<>
