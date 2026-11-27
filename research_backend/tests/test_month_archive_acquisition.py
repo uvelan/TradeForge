@@ -1,6 +1,12 @@
 import json
 import lzma
+import os
+from pathlib import Path
+import signal
 import struct
+import subprocess
+import sys
+from time import monotonic, sleep
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 
@@ -25,6 +31,67 @@ def test_pause_and_resume_preserves_http_evidence(tmp_path, monkeypatch):
     saved = json.loads(receipt.read_text())
     assert saved["start"] == int(DAY.timestamp()) and saved["http"] == 429
     assert saved["retry_after_seconds"] == 180 and len(calls) == 1
+
+
+def test_archive_command_restarts_after_terminated_receipt_write(tmp_path):
+    receipt = tmp_path / "requests.jsonl"
+    pid_path = receipt.with_suffix(".interrupt.pid")
+    marker = receipt.with_suffix(".ready")
+    calls = receipt.with_suffix(".calls")
+    cwd = Path(__file__).resolve().parents[2]
+    env = {
+        **os.environ,
+        "TRADEFORGE_STORAGE": str(tmp_path / "storage"),
+        "TRADEFORGE_DATA_DIR": str(tmp_path / "storage" / "research"),
+    }
+
+    def command(mode):
+        return [
+            sys.executable, "-m", "research_backend.tests.month_archive_interruption", mode,
+            "2025-11", "--source", str(tmp_path / "raw"), "--fetch", "--receipt", str(receipt),
+        ]
+
+    with subprocess.Popen(
+        command("interrupt"), cwd=cwd, env=env,
+        stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True,
+    ) as child:
+        try:
+            deadline = monotonic() + 30
+            while not marker.is_file() and child.poll() is None and monotonic() < deadline:
+                sleep(0.02)
+            reached_write = marker.is_file()
+        finally:
+            if child.poll() is None:
+                # The Windows venv launcher may be a separate process from the writer.
+                pid = pid_path.read_text(encoding="ascii") if pid_path.is_file() else ""
+                if pid:
+                    os.kill(int(pid), signal.SIGTERM)
+                else:
+                    child.kill()
+            _, stderr = child.communicate(timeout=10)
+    assert reached_write, stderr
+    assert child.returncode != 0
+    prefix, fragment = receipt.read_bytes().rsplit(b"\n", 1)
+    committed = prefix + b"\n"
+    assert [json.loads(line)["http"] for line in committed.splitlines()] == [503, 503]
+    assert len(fragment) == 31
+    assert len(calls.read_bytes().splitlines()) == 3
+
+    resumed = subprocess.run(command("resume"), cwd=cwd, env=env, capture_output=True, text=True, timeout=30)
+    assert resumed.returncode == 0, resumed.stderr
+    assert "PROVIDER_COOLDOWN" in resumed.stderr
+    assert sum(bool(hour["pin"]) for hour in json.loads(resumed.stdout)["hours"]) == 1
+    appended = receipt.read_bytes()
+    assert appended.startswith(committed)
+    assert appended.endswith(b"\n")
+    assert [json.loads(line)["http"] for line in appended.splitlines()] == [503, 503, 200, 429]
+    assert len(calls.read_bytes().splitlines()) == 5
+
+    restarted = subprocess.run(command("cooldown"), cwd=cwd, env=env, capture_output=True, text=True, timeout=30)
+    assert restarted.returncode == 0, restarted.stderr
+    assert "PROVIDER_COOLDOWN_ACTIVE" in restarted.stderr
+    assert receipt.read_bytes() == appended
+    assert len(calls.read_bytes().splitlines()) == 5
 
 
 def test_torn_tail_repair_preserves_cooldown_and_allows_later_append(tmp_path, monkeypatch):
