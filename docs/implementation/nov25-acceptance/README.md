@@ -9,6 +9,8 @@
 
 First contradiction: on November 7 the first reported EURUSD tick inside modeled closure was 22:00:00.062 UTC as rendered from the raw epoch, daily ordinal 47,623. Quote BID 1.15597, ASK 1.15599. A trading outcome for this feed cannot be established under the selected calendar. Both readers checked the raw day files using capture-manifest SHA-256 `5431d15fa8a24b63b5f5b1f62241caa52110049ab8c87c8d1f7f5783d84d606c`. [Daily pins](archive/mt5-capture.json) Â· [Feed inventories and exact gap ranges](archive/coverage.json) Â· [Observed acquisition failures](archive/acquisition.json)
 
+The [verification and interrupted-acquisition correction](VERIFICATION-AND-RECOVERY.md) records process exit codes, the two independent market verdicts, and recovery after a terminated receipt write.
+
 ### Exact missing Dukascopy open intervals
 
 All endpoints below are UTC, start inclusive and end exclusive. The complete inventory separately identifies scheduled closures.
