@@ -18,7 +18,7 @@ export async function installProbe(page:Page) {
         const el=document.querySelector(selector)!;
         const api=live.get(el), rect=el.getBoundingClientRect();
         return {x:rect.left+api.priceScale('left').width()+api.timeScale().timeToCoordinate(time),y:rect.top+rect.height*.65};
-      },range:()=>Array.from(live.values())[0]?.timeScale().getVisibleLogicalRange(),counts,created:0,disposed:0,retain:false,retained:new Set<Function>(),linkedCursor:0,linkedRange:0,
+      },range:()=>primary()?.timeScale().getVisibleLogicalRange(),counts,created:0,disposed:0,retain:false,retained:new Set<Function>(),linkedCursor:0,linkedRange:0,
       chart:(factory:Function)=>(el:Element,options:unknown)=>{
         const api=factory(el,options);counts.charts++;audit.created++;live.set(el,api);
         function subscription(target:any, suffix:string) {
