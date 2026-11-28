@@ -73,3 +73,18 @@ node frontend/capacity-e2e/verify-native-replay-browser.mjs --forex-decisions --
 ```
 
 Rollback by reverting the review correction and rebuilding the frontend. The correction uses the existing journal, plan and snapshot schemas.
+
+## Plan levels on an inspected peer
+
+Both browser walks started with a saved snapshot. On reviewed head `ff3e808`, clicking **Select plan levels** changed the pane immediately, before any price had been picked. The replay clock stayed fixed.
+
+| Input and decision (UTC) | After click on reviewed head | Corrected result |
+| --- | --- | --- |
+| Dukascopy, 13 Nov 2026. GBPUSD comparison M5 at 13:20, cutoff 14:05 | EURUSD primary M5 at 14:00 | Remained on the 13:20 comparison candle, position 12. Snapshot `a67aaf4eee66f121ab3858c20ae2413b39c2729f34ad25ba8b1b51d51f7687a5` reopened after restart. Manual entry/stop/target were 1.32289 / 1.32189 / 1.32489. |
+| Controlled Parquet, 3 Mar 2020. GBPUSD pane 2 H1 at 12:00, cutoff 14:00 | EURUSD primary M5 at 13:55 | Remained on the 12:00 H1 open, position 23. Repeating on the 13:00 open also retained its capture. The H1 plan kept the latter bookmark and `controlled-peer-h1 · BID`, with 1.30000 / 1.29900 / 1.30200. |
+
+The prototype walk closed and reopened the decision drawer with an attached capture. Systematic debugging traced the first divergence to the picker's forced primary selection. The frontend design change disables graphical picking on peers and associates the manual-entry explanation with the keyboard-accessible **Create trade plan** button. A pointer attempt preserved the draft, candle and cutoff and issued zero writes. Tab skipped the disabled picker. Both runs produced one intended plan and zero paper events in their own databases.
+
+The primary Chromium control explicitly selected EURUSD, cancelled a partially picked set with zero writes, then compared all three picked prices against independent chart coordinates and the single submitted plan. Frozen primary candles remained usable when the separate recent-range preview was unavailable.
+
+To reproduce, run the two Windows archive commands above and `npm.cmd --prefix frontend run e2e -- e2e/archive-replay.spec.ts`. The numbered pane uses controlled inputs. The paired M5 run uses the pinned **November 2026** exports.

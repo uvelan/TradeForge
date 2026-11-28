@@ -1,3 +1,4 @@
+import {keepManualDecision} from './plan-pane.mjs';
 import {mkdirSync} from 'node:fs';
 import {join} from 'node:path';
 import assert from 'node:assert/strict';
@@ -141,13 +142,20 @@ export async function verifyDecisions(origin,restart){
       assert.equal(shot.cutoff,session.market.replay_cutoffs[12+index]);
       assert.deepEqual(shot.lanes.map(l=>l.symbol),['EURUSD','GBPUSD']);
       captured.push({id:shot.id,ref,cutoff:shot.cutoff,pins:shot.lanes.map(l=>l.partitions)});
+      if(modern&&kind==='trade')await keepManualDecision(page,shot);
       if(kind==='trade'||!modern)await click('Create trade plan');
       if(kind==='trade'){
-        await click('Fill example wording (edit before saving)');
-        for(const [label,value] of [['Entry','1.10500'],['Stop','1.10400'],['Target','1.10700']]){
+        for(const field of ['Observation','Evidence','Hypothesis','Setup','Trigger','Invalidation','Management plan'])
+          await page.getByRole('textbox',{name:new RegExp(field+'$')}).fill('GBPUSD paired replay '+field);
+        for(const [label,value] of [['Entry','1.32289'],['Stop','1.32189'],['Target','1.32489']]){
           await page.getByLabel(label,{exact:true}).fill(value);
         }
         const plan=await posted('/trades',()=>click('Save plan'));
+        const version=(await (await page.request.get(origin+'/research/api/trades/'+plan.id)).json()).versions[0].plan;
+        assert.deepEqual([version.symbol,version.timeframe,version.snapshot_id,version.knowledge_cutoff_utc],
+          ['GBPUSD','M5',shot.id,new Date(shot.cutoff*1000).toISOString()]);
+        assert.ok(version.context.includes(shot.lanes[1].feed_id));assert.ok(version.context.includes(shot.lanes[1].price_basis));
+        assert.deepEqual([version.entry,version.stop,version.target].map(Number),[1.32289,1.32189,1.32489]);
         await click('Journal this plan revision');
         await page.getByLabel('Title',{exact:true}).fill('Paired replay trade');
         await page.getByLabel('Observation / explanation').fill('Wait for a confirmed paired divergence.');

@@ -1,3 +1,4 @@
+import {keepManualDecision} from './plan-pane.mjs';
 import assert from 'node:assert/strict';
 import {chromium,expect} from '@playwright/test';
 
@@ -36,6 +37,7 @@ export async function verifyDecisionReview(origin,{start,pins},counts){
       assert.equal(shot.cutoff,start+7200);shots.push(shot.id);return shot;
     }
     const a=await capture(0);
+    await keepManualDecision(page,a);
     const release=Promise.withResolvers(),committed=Promise.withResolvers();
     await page.route('**/research/api/journal',async route=>{
       if(route.request().method()!=='POST')return route.continue();
@@ -53,7 +55,8 @@ export async function verifyDecisionReview(origin,{start,pins},counts){
     await expect(drawer).not.toContainText('Pass saved');assert.equal(counts().journal_entries,1);
     await post('/journal',()=>click('Save pass to journal'));
     await expect(drawer).toContainText('GBPUSD · H1');
-    await click('Create trade plan');
+    await keepManualDecision(page,b);
+    await page.keyboard.press('Enter');
     const context='DUKASCOPY_SAVED · controlled-peer-h1 · BID';
     await expect(page.getByLabel(/01 · Context/)).toHaveValue(context);
     for(const field of ['Observation','Evidence','Hypothesis','Setup','Trigger','Invalidation','Management plan']){
@@ -70,6 +73,7 @@ export async function verifyDecisionReview(origin,{start,pins},counts){
     const trade=await (await page.request.get('/research/api/trades/'+saved.id)).json();
     const plan=trade.versions[0].plan;
     assert.deepEqual([plan.symbol,plan.timeframe,plan.context,plan.snapshot_id],['GBPUSD','H1',context,b.id]);
+    assert.deepEqual([plan.entry,plan.stop,plan.target].map(Number),[1.3,1.299,1.302]);
     const rows=await (await page.request.get('/research/api/journal')).json();
     assert.deepEqual(rows.map(r=>r.snapshot_id).sort(),[...shots].sort());
     const reopened=[];

@@ -679,6 +679,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
     <div className="chart-footer"><span>{label} {latestNotice} {pollError}</span><span>{candles.length} candles · {zone}</span></div>
   </Card>;
   const decisionSymbol=inspectedPane?.data.symbol??symbol;
+  const primaryDecision=drawingView==='primary';
   const decisionFrame=inspectedPane?.data.timeframe??timeframe;
   const decisionFeed=inspectedPane?inspectionFeed:indicatorFeed;
   const openTime=decisionTime;
@@ -882,12 +883,14 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
         {!chartCapture&&<button disabled={!canSaveCapture||!visibleCandles.length||currentCapture?.saving} onClick={()=>captureButton.current?.click()}>Attach chart capture</button>}
         {surface==='decision'&&currentCapture?.status&&<p role="status">{currentCapture.status}</p>}
         {onPlan&&watchSymbols.includes(decisionSymbol as SymbolName)&&<div className="research-controls">
-          <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>{
-            closeSurface();if(drawingView!=='primary')selectInspectionPane('primary');
+          <button className="small-tool" disabled={!primaryDecision||!visibleCandles.length||!replayActive&&(busy||Boolean(error))} onClick={()=>{
+            if(!primaryDecision)return;
+            closeSurface();
             setPlanPrices([]);setInteraction(picking?{mode:'navigate'}:{mode:'plan',prices:[]});
           }}>{picking?'Cancel level selection':'Select plan levels'}</button>
-          {picking&&<span role="status">Click primary price for {['entry','stop','target'][picked.length]}</span>}
-          <button className="small-tool" disabled={replayArchive&&!chartCapture||!replayActive&&(busy||Boolean(error))} onClick={()=>{closeSurface();onPlan({
+          {!primaryDecision&&<small id="manual-plan-levels">Enter {decisionSymbol} levels in the trade plan. Chart picking is available on the primary pane.</small>}
+          {primaryDecision&&picking&&<span role="status">Click primary price for {['entry','stop','target'][picked.length]}</span>}
+          <button className="small-tool" aria-describedby={primaryDecision?undefined:'manual-plan-levels'} disabled={replayArchive&&!chartCapture||!replayActive&&(busy||Boolean(error))} onClick={()=>{closeSurface();onPlan({
             symbol:decisionSymbol as SymbolName,timeframe:decisionFrame,snapshot_id:chartCapture,knowledge_cutoff_utc:cutoff==null?undefined:new Date(cutoff*1000).toISOString(),context:`${decisionFeed?.source??source} · ${decisionFeed?.feed_id??'unverified feed'} · ${decisionFeed?.price_basis??'unverified basis'}`,
             entry:inspectedPane&&inspectedPane.view!=='primary'?'':picked[0]??'',stop:inspectedPane&&inspectedPane.view!=='primary'?'':picked[1]??'',target:inspectedPane&&inspectedPane.view!=='primary'?'':picked[2]??'',
           });}}>Create trade plan</button>

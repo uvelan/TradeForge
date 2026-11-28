@@ -420,7 +420,9 @@ test('numbered H1 decision keeps its own feed and basis',async({page})=>{
   const snapshot=page.waitForRequest(r=>r.url().endsWith('/chart-snapshots')&&r.method()==='POST');
   const drawer=await attachDecision(page);
   expect((await snapshot).postDataJSON()).toMatchObject({symbol:'EURUSD',timeframe:'M5',decision_replay:{view:'2',time:start-3600}});
-  await expect.soft(drawer).toContainText('GBPUSD · H1');
+  await expect(drawer).toContainText('GBPUSD · H1');
+  await expect(drawer.getByRole('button',{name:'Select plan levels'})).toBeDisabled();
+  await expect(drawer.getByRole('button',{name:'Create trade plan'})).toHaveAccessibleDescription(/GBPUSD/);
   await drawer.getByText('Create trade plan',{exact:true}).click();
   await expect(page.getByLabel(/01 · Context/)).toHaveValue(/peer-hour-export · ASK/);
 });
@@ -486,3 +488,38 @@ for(const width of [390,1280]){
     await page.screenshot({path:info.outputPath('phone.png')});
   });
 }
+
+test('primary decision levels cancel without writes and seed all three graphical prices',async({page})=>{
+  await installProbe(page);await reviewReplay(page);
+  const pane=page.getByLabel('Inspection pane');
+  await pane.selectOption('2');await pane.selectOption('primary');
+  const shot=page.waitForRequest(r=>r.url().endsWith('/chart-snapshots')&&r.method()==='POST');
+  await attachDecision(page);
+  const ref=(await shot).postDataJSON().decision_replay;
+  const writes:string[]=[];
+  page.on('request',r=>{if(r.method()==='POST')writes.push(new URL(r.url()).pathname);});
+  const action=(name:string)=>page.getByRole('button',{name,exact:true});
+  const plot='.primary-chart .chart-input';
+  async function pick(fraction:number){
+    await page.locator(plot).scrollIntoViewIfNeeded();
+    const point=await page.evaluate(({plot,fraction})=>window.workspaceProbe.drawingPoint(plot,.6,fraction),{plot,fraction});
+    await page.mouse.click(point.x,point.y);return point.price;
+  }
+  await action('Select plan levels').click();await pick(.55);
+  await action('Record decision').click();await action('Cancel level selection').click();
+  expect(writes).toEqual([]);
+  await action('Record decision').click();await action('Select plan levels').press('Enter');
+  const prices=[];
+  for(const fraction of [.55,.72,.27])prices.push(await pick(fraction));
+  await action('Record decision').click();await action('Create trade plan').click();
+  for(const [i,label] of ['Entry','Stop','Target'].entries())
+    await expect(page.getByLabel(label,{exact:true})).toHaveValue(prices[i]);
+  for(const field of ['Observation','Evidence','Hypothesis','Setup','Trigger','Invalidation','Management plan'])
+    await page.getByRole('textbox',{name:new RegExp(field+'$')}).fill('Primary replay '+field);
+  await page.route('**/research/api/trades',r=>r.fulfill({status:201,json:{id:'primary-plan'}}));
+  const post=page.waitForRequest(r=>r.url().endsWith('/trades')&&r.method()==='POST');
+  await action('Save plan').click();
+  expect((await post).postDataJSON()).toMatchObject({symbol:'EURUSD',timeframe:'M5',snapshot_id:'capture-'+ref.time,
+    entry:prices[0],stop:prices[1],target:prices[2]});
+  expect(writes).toEqual(['/research/api/trades']);
+});
