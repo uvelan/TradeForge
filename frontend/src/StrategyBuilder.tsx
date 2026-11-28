@@ -195,7 +195,7 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
         })}>{item.name}</button>
         <span>v{item.version} · <Badge tone={item.status==='READY_FOR_EVALUATION'?'green':item.status==='ARCHIVED'?'neutral':'amber'}>{item.status}</Badge> · {purposeLabel(item.purpose)} · {format(item.created_at)}</span>
       </li>)}</ul>:libraryLoadFailed?<div>
-        <Notice tone="red">Could not load the strategy library.</Notice>
+        <div className="notice notice-amber" role="status"><span>Could not load the strategy library.</span></div>
         <button className="small-tool" type="button" disabled={busy}
           onClick={()=>void run(()=>page(0))}>Retry strategy library</button>
       </div>:<p className="muted">No saved strategies on this page.</p>}

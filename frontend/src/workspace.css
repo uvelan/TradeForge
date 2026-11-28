@@ -326,6 +326,10 @@
     left: 8px;
     max-width: calc(100% - 16px);
   }
+  .candle-color-settings input {
+    min-height: var(--tf-touch-min);
+    width: 48px;
+  }
 }
 
 @media (max-width: 1100px) {
