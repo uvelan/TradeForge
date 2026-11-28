@@ -15,6 +15,8 @@ import {cutoffJourney, installCutoffClock, createBoundedSession, checkServerSess
 const {values: args} = parseArgs({options: {
   cutoff: {type: 'boolean'},
   drawings: {type: 'boolean'},
+  'forex-decisions': {type:'boolean'},
+  'decision-boundaries': {type:'boolean'},
   output: {type: 'string'},
   workspace: {type: 'string'},
   bi5: {type: 'string'},
@@ -23,8 +25,8 @@ const {values: args} = parseArgs({options: {
   'ui-port': {type: 'string', default: '4793'},
 }});
 if(args.cutoff&&!args.drawings)throw Error('--cutoff requires --drawings');
-if (!args.output || !args.workspace || (!args.drawings && !args.bi5) || !args.csv) {
-  throw Error('Supply --output, --workspace and --csv, plus --bi5 for the full replay suite.');
+if (!args.output || !args.workspace || (!args['decision-boundaries'] && (!args.csv || (!args.drawings && !args.bi5)))) {
+  throw Error('Supply --output and --workspace, plus source paths for the selected replay journey.');
 }
 for (const port of [args['api-port'], args['ui-port']]) {
   assert(/^\d{1,5}$/.test(port) && Number(port) >= 1 && Number(port) <= 65535);
@@ -340,6 +342,28 @@ async function run() {
     console.log('Genuine replay drawing journey and two-process reopen passed.');
     return;
   }
+  if(args['forex-decisions'] || args['decision-boundaries']){
+    if(!args['decision-boundaries'])fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
+    vite=startVite();
+    await awaitReady(uiOrigin,'/',vite);
+    const restart=async()=>{
+      await stop(api);
+      api=startApi();
+      await awaitReady(apiOrigin,'/api/health',api);
+    };
+    let receipt;
+    if(args['decision-boundaries']){
+      const fixtureData=(...args)=>JSON.parse(execFileSync(python,['-m','scripts.decision_boundary_fixture',...args],
+        {env,cwd:root,encoding:'utf8',windowsHide:true}));
+      const {verifyDecisionBoundaries}=await import('./decision-boundaries.mjs');
+      receipt=await verifyDecisionBoundaries(uiOrigin,fixtureData(),restart,()=>fixtureData('counts'));
+    }else{
+      const {verifyDecisions}=await import('./forex-decisions.mjs');
+      receipt=await verifyDecisions(uiOrigin,restart);
+    }
+    mkdirSync(dirname(resolve(args.output)),{recursive:true});
+    writeFileSync(resolve(args.output),JSON.stringify(receipt,null,2));
+  }else{
   const controlled = fixture('prepare');
   const genuine = fixture('genuine-bi5', ['--bi5', resolve(args.bi5)]);
   const exports = fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
@@ -396,6 +420,7 @@ async function run() {
     rewind_bars: rewindCounts, selected_candle: selected, uncaught_page_errors: errors,
   }, null, 2) + '\n');
   console.log('Native archive freeze, two-process restart and all named panes verified.');
+  }
 }
 try {
   await run();

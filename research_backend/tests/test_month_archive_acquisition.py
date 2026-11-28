@@ -18,6 +18,11 @@ from scripts import month_archive as archive
 DAY = datetime(2025,11,3,tzinfo=UTC)
 
 
+@pytest.fixture(autouse=True)
+def isolated_provider_profile(tmp_path, monkeypatch):
+    monkeypatch.setattr(archive.config,"STORAGE_ROOT",tmp_path/"storage")
+
+
 def test_pause_and_resume_preserves_http_evidence(tmp_path, monkeypatch):
     calls = []
     def throttled(day, name):

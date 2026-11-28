@@ -3,6 +3,7 @@ from base64 import b64decode
 from binascii import Error as Base64Error
 from hashlib import sha256
 from struct import unpack_from
+from typing import Literal
 from zlib import crc32
 
 from fastapi import APIRouter, HTTPException, Query
@@ -10,7 +11,8 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from .db import one, rows, transaction, utc_now
-from .chart_snapshot_lanes import ChartLane, verified_lanes
+from .chart_snapshot_lanes import ChartLane, FrozenChartLane, verified_lanes
+from .indicator_coverage import replay_availability
 from .domain import journal_detail, resolve_signal, resolve_snapshot
 from .market import FRAME_MIN
 from .schemas import SignalReference
@@ -68,7 +70,17 @@ def dataset_detail(dataset_id:str):
     return dataset
 
 
+class DecisionReplay(BaseModel):
+    comparison_placement: Literal["Overlay", "New pane"] | None = None
+    session_id: str = Field(pattern=r"^[0-9a-f]{64}$")
+    position: int = Field(ge=0)
+    view: Literal["primary", "comparison", "2", "3", "4"]
+    time: int = Field(ge=0)
+
+
 class ChartSnapshotRequest(BaseModel):
+    replay_lanes: tuple[Literal["primary"]] | tuple[Literal["primary"], Literal["comparison"]] | None = None
+    decision_replay: DecisionReplay | None = None
     lanes: tuple[ChartLane] | tuple[ChartLane, ChartLane] | None = None
     png: str = Field(min_length=40,max_length=2_000_000)
     symbol: str = Field(min_length=1,max_length=64)
@@ -76,6 +88,58 @@ class ChartSnapshotRequest(BaseModel):
     source: str = Field(min_length=1,max_length=30)
     signal_reference: SignalReference | None = None
     cutoff: int | None = Field(default=None,ge=0)
+
+
+def validate_decision_replay(db, request, ref):
+    row = db.execute("SELECT payload FROM replay_sessions WHERE id=?", (ref.session_id,)).fetchone()
+    if row is None or sha256(row["payload"].encode()).hexdigest() != ref.session_id:
+        raise HTTPException(409, "Decision replay unavailable or changed")
+    session = json.loads(row["payload"])
+    settings, market = session["request"], session["market"]
+    cutoffs = market.get("replay_cutoffs", [])
+    if (any(settings[key] != getattr(request, key) for key in ("symbol", "source", "timeframe"))
+            or ref.position >= len(cutoffs) or cutoffs[ref.position] != request.cutoff):
+        raise HTTPException(409, "Decision cutoff differs from frozen replay")
+    pane = market if ref.view == "primary" else session["views"].get(ref.view, {})
+    frame = pane.get("timeframe", request.timeframe)
+    if not any(bar["time"] == ref.time and max(ref.time + FRAME_MIN[frame] * 60,
+               bar.get("available_at") or 0) <= request.cutoff for bar in pane.get("candles", [])):
+        raise HTTPException(409, "Decision candle unavailable in selected replay pane")
+    feeds = {"primary": market}
+    if "comparison" in session["views"]:
+        feeds["comparison"] = session["views"]["comparison"]
+    for feed in feeds.values():
+        feed.setdefault("timeframe", request.timeframe)
+        if not feed.get("partitions") and feed.get("dataset_id") and feed.get("sha256"):
+            feed["partitions"] = [{"id": feed["dataset_id"], "sha256": feed["sha256"]}]
+    visible = {role: [bar for bar in feed.get("candles", [])
+                      if replay_availability(bar, FRAME_MIN[feed["timeframe"]] * 60) <= request.cutoff]
+               for role, feed in feeds.items()}
+    declared = request.replay_lanes or tuple(lane.role for lane in request.lanes or ())
+    expected = tuple(role for role in feeds if visible[role])
+    if declared or "comparison" in feeds:
+        if declared != expected or "primary" not in declared:
+            raise HTTPException(409, "Captured lanes differ from available replay evidence")
+    gap = None
+    if "comparison" in feeds and not visible["comparison"]:
+        peer = feeds["comparison"]
+        gap = {"symbol": peer["symbol"], "timeframe": peer["timeframe"], "status": "NO_VISIBLE_OBSERVATIONS"}
+        if "error" in peer:
+            gap.update(status="SOURCE_ERROR", error=peer["error"])
+    if request.replay_lanes is not None:
+        lanes = tuple(
+            FrozenChartLane(role=role, bars=visible[role], **feeds[role])
+            for role in declared
+        )
+        request = request.model_copy(update={"lanes":lanes})
+    else:
+        for lane in request.lanes or ():
+            feed = feeds[lane.role]
+            if ([bar.time for bar in lane.bars] != [bar["time"] for bar in visible[lane.role]]
+                    or feed["symbol"] != lane.symbol or feed["feed_id"] != lane.feed_id
+                    or feed["partitions"] != [pin.model_dump() for pin in lane.partitions]):
+                raise HTTPException(409, "Chart capture differs from frozen replay lane")
+    return request, gap
 
 
 def validate_chart_png(png:bytes) -> tuple[int,int]:
@@ -111,9 +175,16 @@ def create_snapshot(request:ChartSnapshotRequest):
     except (Base64Error,ValueError) as error:
         raise HTTPException(422,"Malformed PNG encoding") from error
     width,height=validate_chart_png(png)
-    metadata=request.model_dump(mode="json",exclude={"png","lanes"})
+    metadata=request.model_dump(mode="json",exclude={"png","lanes","decision_replay","replay_lanes"})
     metadata.update(width=width,height=height,authority="USER_CHART_CAPTURE")
     with transaction() as db:
+        if request.replay_lanes is not None and (request.decision_replay is None or request.lanes is not None):
+            raise HTTPException(422, "Replay lane references require a bookmark and cannot be mixed with uploaded bars")
+        if request.decision_replay is not None:
+            request, gap = validate_decision_replay(db, request, request.decision_replay)
+            if gap:
+                metadata["comparison_gap"] = gap
+            metadata["decision_replay"] = request.decision_replay.model_dump(exclude_none=True)
         signal=resolve_signal(db,request.signal_reference)
         if signal is not None and (signal["provenance"]["timeframe"]!=request.timeframe
                                    or signal["provenance"]["primary"]["symbol"]!=request.symbol

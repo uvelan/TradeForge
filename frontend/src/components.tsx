@@ -124,7 +124,9 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const x=scale.timeToCoordinate(time as UTCTimestamp);
     guide.hidden=x===null||x<0||x>=scale.width();
     if(x!==null){
-      guide.style.left=`${x+chart.priceScale('left').width()}px`;
+      // The comparison's left axis is mounted asynchronously. The primary right axis
+      // and time scale already define the plot's right edge during viewport updates.
+      guide.style.right=`${chart.priceScale('right').width()+scale.width()-x}px`;
       guide.style.bottom=`${scale.height()}px`;
     }
   }

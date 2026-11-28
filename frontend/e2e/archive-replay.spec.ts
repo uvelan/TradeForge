@@ -35,7 +35,7 @@ function capture(rangeStart = start): ReplaySession {
 async function openArchive(page: Page, preferences: Record<string,string> = {}) {
   await page.addInitScript(preferences => {
     for (const [setting,value] of Object.entries({
-      source:'DUKASCOPY_SAVED', timeframe:'M5','chart-views':'4','link-replay':'off',
+      source:'DUKASCOPY_SAVED', timeframe:'M5','chart-views':'4','chart-comparison':'none','link-replay':'off',
       'view-2-symbol':'GBPUSD','view-3-symbol':'USDJPY','view-4-symbol':'XAUUSD',
       'secondary-timeframe':'M5','view-3-frame':'M5','view-4-frame':'M5',...preferences,
     })) localStorage.setItem('tradeforge.workspace.'+setting,value);
@@ -289,4 +289,20 @@ test('duplicate frozen markets share revisions while selection, undo and late ca
   await expect(page.locator('.drawing-prompt')).toHaveCount(1);
   await page.keyboard.press('Escape');
   await expect(page.locator('.drawing-prompt')).toHaveCount(0);
+});
+
+test('inspects the comparison candle without targeting another pane’s drawing book',async({page})=>{
+  const session=capture();
+  session.views.comparison=session.views['2'];
+  await page.route('**/research/api/replay/sessions',route=>route.fulfill({status:201,json:session}));
+  await openArchive(page,{'chart-comparison':'GBPUSD'});
+  await openRange(page);
+  await page.getByRole('button',{name:'Freeze range for replay'}).click();
+  const pane=page.getByLabel('Inspection pane',{exact:true});
+  await pane.selectOption('comparison');
+  await expect(pane).toHaveValue('comparison');
+  await expect(page.getByLabel('Selected candle',{exact:true})).toBeVisible();
+  await expect(page.getByText(/^Drawing toolbox/)).toHaveCount(0);
+  await pane.selectOption('primary');
+  await expect(page.getByText(/^Drawing toolbox/)).toBeVisible();
 });

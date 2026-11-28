@@ -1,0 +1,91 @@
+{
+  "source": "CONTROLLED_CSV_AND_HOURLY_BI5",
+  "reviewed_head": "e1f3a522f73c04ac5afa99b5367e2bc54ab43dad",
+  "baseline_counts_after_bi5": [
+    0,
+    12,
+    0,
+    60
+  ],
+  "baseline_error": "Replay contains incompatible feeds or price bases",
+  "corrected": {
+    "source": "CONTROLLED_CSV_AND_HOURLY_BI5",
+    "date": "2026-10-08",
+    "start": 1791464400,
+    "original": [
+      12,
+      12,
+      12,
+      0
+    ],
+    "mixed": [
+      12,
+      12,
+      12,
+      60
+    ],
+    "original_pins": [
+      {
+        "id": "ea338b8c3810c4b5db4c7219bb66807b8f72c4a49b18940cb14564761c37af2c",
+        "sha256": "465cff7e54dab2446e1860849b860a7c987ce0bde7afe5b3fc30abb1b2519261"
+      },
+      {
+        "id": "4d3b87f57036fe1d1c14d80990fb39299bb6e14f62d206e436fd33f38a491f12",
+        "sha256": "e8499b797292d1e6149404522eb340064353f1b15b161b5c1957ec63e11c30dc"
+      }
+    ],
+    "alternative_pin": {
+      "id": "a9623e537e30b156fb7ae1c5c3b7d8f371cfbf964bd09484a4ade6f305c1e711",
+      "sha256": "01630020c29f4bf5ff53acaa40c3bf2a90a0ff1234bde5ff1f97e8d03e7c4bec"
+    },
+    "quote_pin": {
+      "id": "26f9e1d2dfcbd1ff7d37c4e86940710103eb27d40c81079f46cd06371f274304",
+      "sha256": "071d3000313aab9638fce6c7a6590f7cc21ec74f09dd090a9d917a7d9a04bfe8"
+    },
+    "issue": null,
+    "gaps": [
+      [
+        1791466140001,
+        1791466200001
+      ],
+      [
+        1791467940001,
+        1791468000000
+      ]
+    ],
+    "frozen": {
+      "id": "344fb2e80ab2196084a4f4a5d536de98df6ade1e94af6778896b5ce666d71da3",
+      "pins": [
+        {
+          "id": "ea338b8c3810c4b5db4c7219bb66807b8f72c4a49b18940cb14564761c37af2c",
+          "sha256": "465cff7e54dab2446e1860849b860a7c987ce0bde7afe5b3fc30abb1b2519261"
+        },
+        {
+          "id": "4d3b87f57036fe1d1c14d80990fb39299bb6e14f62d206e436fd33f38a491f12",
+          "sha256": "e8499b797292d1e6149404522eb340064353f1b15b161b5c1957ec63e11c30dc"
+        }
+      ],
+      "prices": [
+        1.12,
+        1.27
+      ]
+    },
+    "changed_view": {
+      "selection_released": true,
+      "status": 409,
+      "detail": "Replay contains incompatible feeds or price bases"
+    }
+  },
+  "changed_evidence": {
+    "controlled_added_gbp_partition": {
+      "id": "59606d75b40b53c671327c9c695c4b272022e70a140ce011d3086315d721efff",
+      "sha256": "7f726cc6af3b92b6d427171d86e1f70a494b0abac045961bd8af976f132a591b"
+    },
+    "freeze_status": 409,
+    "diagnostic": "GBPUSD chart evidence changed or is unavailable. Inspect coverage again. Partition identities differ from the inspected range",
+    "session_count_before": 1,
+    "session_count_after": 1,
+    "saved_session_after": "344fb2e80ab2196084a4f4a5d536de98df6ade1e94af6778896b5ce666d71da3"
+  },
+  "reopened_fresh_api": "344fb2e80ab2196084a4f4a5d536de98df6ade1e94af6778896b5ce666d71da3"
+}

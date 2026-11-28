@@ -4,6 +4,8 @@ for (const scenario of ['timeframe', 'same-key return', 'source', 'comparison er
   test(`chart evidence ignores a pending response after a ${scenario} change`, async ({page}) => {
     const firstSave = Promise.withResolvers<{timeframe:string;source:string;cutoff?:number}>();
     const release = Promise.withResolvers<void>();
+    // This race starts on a single chart, then explicitly adds the peer.
+    if(scenario==='comparison error')await page.addInitScript(()=>localStorage.setItem('tradeforge.workspace.chart-comparison','none'));
     let posted = 0;
     await page.route('**/research/api/chart-snapshots', async route => {
       if (++posted !== 1) return route.continue();

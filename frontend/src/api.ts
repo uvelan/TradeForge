@@ -16,6 +16,10 @@ export const api={
   overview:()=>request<import('./types').Overview>('/overview'),
   brokerSymbols:()=>request<BrokerSymbol[]>('/market/mt5/symbols'),
   candles:(symbol:string,timeframe:Timeframe,source:ChartSource,limit=240,includeLatest=false,range?:CandleRange)=>
+    range?.coverage_selection && source==='DUKASCOPY_SAVED' && timeframe==='M5' && (symbol==='EURUSD'||symbol==='GBPUSD') ?
+    request<import('./types').CandleResponse>('/forex/chart?'+new URLSearchParams({
+      symbol,start:String(range.start),end:String(range.end),feed_id:range.coverage_selection.feed_id,pin:range.coverage_selection[symbol],
+    })) :
     request<import('./types').CandleResponse>('/market/candles?'+new URLSearchParams({
       symbol,timeframe,source,limit:String(limit),include_latest:String(includeLatest),
       ...(range?{start:String(range.start),end:String(range.end)}:{}),
@@ -50,17 +54,25 @@ export const api={
     }),
   backtestRuns:()=>request<import('./types').BacktestRunSummary[]>('/backtest/runs'),
   backtestRun:(id:string)=>request<import('./types').BacktestRun>('/backtest/runs/'+encodeURIComponent(id)),
-  startReplay:(symbol:string,timeframe:Timeframe,source:ChartSource,views:import('./types').ReplayViewRequest[],range?:CandleRange,windowBars?:number)=>
-    post<import('./types').ReplaySession>('/replay/sessions',{symbol,timeframe,source,views,...range,
-      ...(windowBars===undefined ? {} : {window_bars:windowBars})}),
+  startReplay:(symbol:string,timeframe:Timeframe,source:ChartSource,views:import('./types').ReplayViewRequest[],range?:CandleRange,windowBars?:number,smt_rules?:import('./smt').SmtRules)=>
+    post<import('./types').ReplaySession>('/replay/sessions',{symbol,timeframe,source,views,smt_rules,...range,
+      ...(windowBars===undefined && !range?.coverage_selection ? {} : {window_bars:windowBars??12})}),
   replays:(symbol:string,timeframe:Timeframe,source:ChartSource)=>
     request<{id:string;position:number;updated_at:string}[]>('/replay/sessions?'+new URLSearchParams({symbol,timeframe,source})),
   replay:(id:string)=>request<import('./types').ReplaySession>('/replay/sessions/'+encodeURIComponent(id)),
   saveCheckpoint:(id:string,position:number,bookmarks:number[],selected?:import('./types').ReplaySelection)=>
     post('/replay/sessions/'+encodeURIComponent(id)+'/checkpoint',{position,bookmarks,...(selected ? {selected} : {})}),
   saveSnapshot:(png:string,symbol:string,timeframe:Timeframe,source:string,cutoff?:number,
-    signal_reference?:import('./types').SignalReference,lanes?:import('./snapshotLanes').SnapshotLane[])=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference,lanes}),
+    signal_reference?:import('./types').SignalReference,lanes?:import('./snapshotLanes').SnapshotLane[],decision_replay?:import('./types').DecisionReplay,replay_lanes?:('primary'|'comparison')[])=>post<{id:string}>('/chart-snapshots',{png,symbol,timeframe,source,cutoff,signal_reference,lanes,decision_replay,replay_lanes}),
   importMt5:(symbol:SymbolName,timeframe:Timeframe,limit:number)=>post('/market/import/mt5',{symbol,timeframe,limit}),
+  importCoverageHour:(symbol:string,hour:number,file:File)=>{
+    const body=new FormData();body.append('file',file);
+    return request<{tick_dataset:{rows:number}}>('/forex/bi5?'+new URLSearchParams({symbol,hour:String(hour)}),{method:'POST',body});
+  },
+  importCoverageCsv:(symbol:string,day:string,file:File)=>{
+    const body=new FormData();body.append('file',file);
+    return request('/forex/candles?'+new URLSearchParams({symbol,day}),{method:'POST',body});
+  },
   importReviewed:(file:File)=>{
     const body=new FormData();body.append('file',file);
     return request<{source_sha256:string;partitions:{id:string}[]}>('/market/import/reviewed',{method:'POST',body});

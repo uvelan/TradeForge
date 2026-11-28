@@ -51,7 +51,7 @@ def partition_stamp(part, field):
         raise ValueError(f"INVALID_UTC_TIMESTAMP: {field} (research, {part['id']})") from error
 
 
-def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, limit, cutoff):
+def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, limit, cutoff, *, observed_by=None, feed_id=None):
     import pyarrow.parquet as pq
 
     cursor, resolver = catalog
@@ -69,6 +69,9 @@ def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, 
     if explicit:
         lower = "AND last_time >= ?"
         params.append(utc(start))
+    if feed_id is not None:
+        lower += " AND feed_id=?"
+        params.append(feed_id)
     # The first unopened partition's maximum timestamp certifies when the recent tail is complete.
     cursor.execute(f"""SELECT {columns} FROM datasets WHERE kind='candles'
         AND provider=? AND symbol=? AND timeframe=? AND (provider<>'DUKASCOPY' OR price_basis='BID')
@@ -141,7 +144,7 @@ def saved_replay_window(catalog, provider, symbol, timeframe, start, end, step, 
                     available = replay_availability(bar, step)
                     if type(available) is not int or available < timestamp + step:
                         raise ValueError("Replay availability precedes candle close or has an invalid timestamp")
-                    if available <= cutoff and bar.get("closed", True):
+                    if available <= (cutoff if observed_by is None else observed_by) and bar.get("closed", True):
                         visible.add(timestamp)
                         if explicit and len(visible) > limit:
                             raise WindowTooLarge(f"Choose a replay range of at most {limit} closed candles per pane")
