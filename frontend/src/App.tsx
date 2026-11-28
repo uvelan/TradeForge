@@ -897,7 +897,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
           {replayArchive&&!chartCapture&&<small>Save chart evidence to attach this candle to a decision.</small>}
           {chartCapture&&onChartLesson&&<button className="small-tool" onClick={()=>onChartLesson(chartCapture)}>Record chart lesson</button>}
         </div>}
-        {chartCapture&&<form onSubmit={async event=>{
+        {surface==='decision'&&chartCapture&&<form onSubmit={async event=>{
           event.preventDefault();if(postingPass||passReason.trim().length<5)return;
           setPostingPass(true);
           try{await api.addJournal('CHART','No trade · '+(inspectedPane?.data.symbol??symbol),passReason.trim(),undefined,{snapshot_id:chartCapture,tags:['no-trade']});
