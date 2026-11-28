@@ -129,7 +129,12 @@ export async function verifyDecisions(origin,restart){
     await click('Market Terminal');
     await page.getByLabel('Chart layout',{exact:true}).selectOption('4');
     for(const [index,item] of journal.entries()){
-      await click('Learning Journal');
+      const [history]=await Promise.all([
+        page.waitForResponse(r=>r.url().endsWith('/api/journal')&&r.request().method()==='GET'),
+        click('Learning Journal'),
+      ]);
+      assert.ok(history.ok(),await history.text());
+      assert.ok((await history.json()).some(entry=>entry.id===item.entry),'Restarted API lost the journal entry');
       const row=page.locator('.journal-item').filter({hasText:item.entry});
       if(item.trade)await expect(row.getByRole('button',{name:'Open linked plan v1'})).toBeVisible();
       else await expect(row).toContainText('No confirmed paired divergence at the cutoff.');

@@ -38,3 +38,5 @@ node frontend/capacity-e2e/verify-native-replay-browser.mjs --forex-decisions --
 ```
 
 The genuine journey exercises one linked plan, one direct pass, a layout change and a fresh browser and API. The standard archive replay tests use controlled responses for delayed observations, absent panes and failed captures. Candle evidence alone does not establish an executable bid or ask.
+
+The [baseline operator checks](baseline-actions.json) used both desktop sizes. At each size the operator selected GBPUSD, enabled SMA, toggled a session overlay and recorded a pass. The [controlled restart checks](controlled-restart.json) cover a delayed peer, a frozen source error and a 5,000-bar window. These three passes created three journal entries and zero trades or paper events.

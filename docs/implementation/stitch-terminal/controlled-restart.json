@@ -1,0 +1,101 @@
+{
+  "source": "CONTROLLED_M5_BID",
+  "new_api_and_browser": true,
+  "samples": [
+    {
+      "fixture": {
+        "scenario": "delayed",
+        "start": 1578268800,
+        "count": 3,
+        "pins": {
+          "EURUSD": {
+            "id": "2819bcea0a40dadecea3cd7856cfb30b5e286520ab459f79f83b68319c112fe5",
+            "sha256": "066075990b7cdcc0173e0cc8bbcc4a6ba5d386fffac117323081ef12b013db20"
+          },
+          "GBPUSD": {
+            "id": "a9573bfa74c6954325e44251adb20699d1660763cb2a4c9bbc212b7c0f95918e",
+            "sha256": "fdaa8e29beaca9449f20b2b621521aab9a84179317e57c87a2d2e68215aceb7a"
+          }
+        }
+      },
+      "ref": {
+        "comparison_placement": "Overlay",
+        "session_id": "8d4b9aa523c66a4130392139000826eec1d50a5d86256cdcd0dbbbccf8379b19",
+        "position": 0,
+        "view": "primary",
+        "time": 1578268800
+      },
+      "cutoff": 1578269100,
+      "journal": "CHART-00001",
+      "snapshot": "042abfa7e71ba7a29ef54d82a19384450c38f31cd658f0aecca5f97c73f6bb6a",
+      "gap": {
+        "symbol": "GBPUSD",
+        "timeframe": "M5",
+        "status": "NO_VISIBLE_OBSERVATIONS"
+      }
+    },
+    {
+      "fixture": {
+        "scenario": "source-error",
+        "start": 1580688000,
+        "count": 3,
+        "pins": {
+          "EURUSD": {
+            "id": "5e5736540146e7b8ea744b254810facf94d447dc421b4ca634bbc04fa82af146",
+            "sha256": "63c2580c02909a44627dc5b773fb2f8851ed5c090b8141542e04b146a2e29096"
+          }
+        }
+      },
+      "ref": {
+        "comparison_placement": "Overlay",
+        "session_id": "06b4c245af261fc4f5c93df73bec1f961caf775ef41983f53d41b73cbcd4c246",
+        "position": 0,
+        "view": "primary",
+        "time": 1580688000
+      },
+      "cutoff": 1580688300,
+      "journal": "CHART-00002",
+      "snapshot": "fa712703a1638a42f736401f5a36c892279c669bc5414938afc149345e45f05a",
+      "gap": {
+        "symbol": "GBPUSD",
+        "timeframe": "M5",
+        "status": "SOURCE_ERROR",
+        "error": "No saved candle partitions for this replay window"
+      }
+    },
+    {
+      "fixture": {
+        "scenario": "long",
+        "start": 1583107200,
+        "count": 5000,
+        "pins": {
+          "EURUSD": {
+            "id": "1a4928391523e2bd61120f2822523c4d9587317ba74b687ae7a08dd9fd8f42eb",
+            "sha256": "bd17f984f0f21beee64331d5c3f0be718b7d6bda5bb60204845610559c564234"
+          },
+          "GBPUSD": {
+            "id": "86ac8721bce3225aee359b935d0993fee2419e98194c3a83da20f2072a8faff3",
+            "sha256": "291f39749d624f631d969db704849a1f8792d177f91c7eb8d928b308abe31353"
+          }
+        }
+      },
+      "ref": {
+        "comparison_placement": "Overlay",
+        "session_id": "c2b2273bd33c05ec05561cc865a4636c59429b0bb79f5585185f24bbd8ee2577",
+        "position": 4999,
+        "view": "primary",
+        "time": 1583109300
+      },
+      "cutoff": 1584607200,
+      "journal": "CHART-00003",
+      "snapshot": "d61ca22e548ce392fa8eabcfa844538dfb66de88419163d4e080484443c5f872"
+    }
+  ],
+  "counts": {
+    "journal_entries": 3,
+    "chart_snapshots": 3,
+    "trades": 0,
+    "plan_paper_events": 0
+  },
+  "errors": []
+}
