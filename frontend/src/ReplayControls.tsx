@@ -106,7 +106,7 @@ export function ReplayControls({candles,cutoffs,index,onSeek,onExit,step,initial
   useEffect(()=>{
     function shortcut(event:KeyboardEvent) {
       if (event.repeat || event.defaultPrevented || (event.target instanceof Element &&
-        event.target.closest('input,textarea,select,button,[contenteditable],dialog,[role="dialog"]'))) return;
+        event.target.closest('input,textarea,select,button,[contenteditable],dialog,[role="dialog"],[role="separator"]'))) return;
       if (event.code==='Space' && index<last) {event.preventDefault();setPlaying(value=>!value);}
       if (event.shiftKey && ['ArrowRight','ArrowLeft'].includes(event.key)) {
         event.preventDefault();

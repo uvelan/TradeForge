@@ -36,7 +36,7 @@ import {archiveViewIds, FrozenReplayCoverage, ReplayCandleInspector, replayPaneN
 import {SignalExplorer,signalSummary,type SignalRecord} from './SignalExplorer';
 import {DataTrust} from './DataTrust';
 import {CommandPalette,CommandSettings,type CommandTarget} from './CommandPalette';
-import {WorkspacePanels} from './WorkspacePanels';
+import {WorkspacePanels,WorkspaceSplitter} from './WorkspacePanels';
 import {WorkspacePresets} from './WorkspacePresets';
 import {SessionIntelligence} from './SessionIntelligence';
 import {SimulationEvidence} from './SimulationEvidence';
@@ -854,6 +854,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
           cutoff={cutoff??Math.min(Date.now()/1000,(indicatorCandles.at(-1)?.time??last.time)+frameMinutes[timeframe]*60)} digits={digits} onZone={updateZone} strip={strip}/>}
         </TerminalSurface>
       </section>
+      <WorkspaceSplitter />
       <TerminalSurface title="Inspector" active={surface==='inspector'} close={closeSurface} inline>
         <aside className="terminal-dock" aria-label="Chart workspace inspector">
           <nav aria-label="Inspector views">{['Evidence','Watchlist','Provenance','Journal'].map(name=><button key={name}
