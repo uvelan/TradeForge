@@ -76,7 +76,7 @@ export function WorkspacePresets() {
     <h2>Workspace presets</h2>
     <div className="research-controls">
       <label>Preset name<input value={name} maxLength={60} onChange={e=>setName(e.target.value)}/></label>
-      <button className="small-tool" disabled={!name.trim()} onClick={()=>attempt(capture)}>Save current workspace</button>
+      <button className="btn btn-primary" disabled={!name.trim()} onClick={()=>attempt(capture)}>Save current workspace</button>
       <label>Import preset JSON<input type="file" accept=".json,application/json" onChange={async event=>{
         const file=event.target.files?.[0];event.target.value='';
         if(!file)return;

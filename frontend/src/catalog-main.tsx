@@ -7,9 +7,36 @@ import { chartTimeOptions, TimezoneProvider, useTimezone } from "./timezone";
 import { CandleColorsProvider, useCandleColors } from "./candleColors";
 
 const theme = createTheme({
-  palette: { mode: "dark", background: { default: "#101419", paper: "#171d24" }, primary: { main: "#72ddbf" } },
-  typography: { fontFamily: 'Inter, "Segoe UI", sans-serif' },
+  palette: {
+    mode: "dark",
+    background: { default: "#080f18", paper: "#111c2b" },
+    primary: { main: "#36d6ad", contrastText: "#042920" },
+    secondary: { main: "#60a5fa" },
+    text: { primary: "#eef5fc", secondary: "#b2c5d8" },
+    divider: "#1c2c3d",
+  },
+  typography: {
+    fontFamily: '"DM Sans", system-ui, -apple-system, sans-serif',
+    h4: { fontFamily: '"Space Grotesk", system-ui, sans-serif', letterSpacing: "-0.03em" },
+    h6: { fontFamily: '"Space Grotesk", system-ui, sans-serif', letterSpacing: "-0.02em" },
+  },
   shape: { borderRadius: 8 },
+  components: {
+    MuiPaper: {
+      styleOverrides: {
+        outlined: {
+          backgroundColor: "#111c2b",
+          borderColor: "#1c2c3d",
+          borderRadius: 12,
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: { minHeight: 44, textTransform: "none", fontWeight: 700 },
+      },
+    },
+  },
 });
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, options);
@@ -29,9 +56,10 @@ function Chart({ series }: { series: Series }) {
     const format = chartTimeOptions(zone);
     const chart = createChart(container.current, {
       autoSize: true,
-      layout: { background: { type: ColorType.Solid, color: "#171d24" }, textColor: "#aebac7", attributionLogo: true },
-      grid: { vertLines: { color: "#232c35" }, horzLines: { color: "#232c35" } },
-      timeScale: { timeVisible: true, tickMarkFormatter: format.tick },
+      layout: { background: { type: ColorType.Solid, color: "#080f18" }, textColor: "#849bb2", fontFamily: '"DM Sans", sans-serif', attributionLogo: true },
+      grid: { vertLines: { color: "#162231" }, horzLines: { color: "#162231" } },
+      rightPriceScale: { borderColor: "#1c2c3d" },
+      timeScale: { borderColor: "#1c2c3d", timeVisible: true, tickMarkFormatter: format.tick },
       localization: { timeFormatter: format.crosshair },
     });
     const scale = series.dataset.price_scale;
@@ -42,7 +70,7 @@ function Chart({ series }: { series: Series }) {
     chart.timeScale().fitContent();
     return () => chart.remove();
   }, [series, zone, up, down]);
-  return <Box ref={container} role="img" aria-label={`${series.dataset.symbol} ${series.dataset.timeframe} candlestick chart`} sx={{ height: "clamp(320px, 60vh, 640px)" }} />;
+  return <Box ref={container} role="img" aria-label={`${series.dataset.symbol} ${series.dataset.timeframe} candlestick chart`} sx={{ height: "clamp(320px, 60vh, 640px)", borderRadius: 1, overflow: "hidden", border: "1px solid #1c2c3d" }} />;
 }
 
 function Terminal() {
@@ -86,11 +114,19 @@ function Terminal() {
   }
 
   return <Box component="main" sx={{ maxWidth: 1440, mx: "auto", p: { xs: 2, md: 4 } }}>
-    <Stack direction="row" sx={{ mb: 4, justifyContent: "space-between", alignItems: "center" }}>
-      <Typography sx={{ fontWeight: 800, letterSpacing: ".04em" }}>TRADEFORGE</Typography>
-      <Chip label={`MT5 ${status}`} color={status === "CONNECTED" ? "success" : "default"} variant="outlined" />
+    <Stack direction={{ xs: "column", sm: "row" }} sx={{ mb: 3, pb: 2, borderBottom: "1px solid #1c2c3d", justifyContent: "space-between", alignItems: { xs: "flex-start", sm: "center" }, gap: 2 }}>
+      <Stack direction="row" sx={{ alignItems: "center", gap: 2, flexWrap: "wrap" }}>
+        <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em" }}>
+          Trade<Box component="span" sx={{ color: "#36d6ad" }}>Forge</Box>
+        </Typography>
+        <Typography sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: "#849bb2" }}>FIXED-POINT CATALOG</Typography>
+        <Button href="/" size="small" variant="text" sx={{ minHeight: 36, color: "#36d6ad" }}>← Return to Terminal</Button>
+      </Stack>
+      <Chip label={`MT5 ${status}`} color={status === "CONNECTED" ? "success" : "default"} variant="outlined" sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11 }} />
     </Stack>
-    <Typography variant="h4" component="h1" sx={{ mb: 2, fontWeight: 700 }}>Market terminal</Typography>
+    <Typography sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#36d6ad", mb: 0.75 }}>FIXED-POINT STORAGE / CATALOG</Typography>
+    <Typography variant="h4" component="h1" sx={{ mb: 1, fontWeight: 700 }}>Market terminal</Typography>
+    <Typography color="text.secondary" sx={{ mb: 3, fontSize: 14 }}>Generate persisted synthetic EURUSD fixtures or import bounded MT5 history into fixed-point datasets.</Typography>
     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
     <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
       <Stack direction={{ xs: "column", sm: "row" }} sx={{ mb: 3, gap: 2 }}>
@@ -122,7 +158,7 @@ function Terminal() {
       </Stack>
       {series ? <>
         <Typography variant="h6" component="h2">{series.dataset.symbol} · {series.dataset.timeframe}</Typography>
-        <Typography color="text.secondary" sx={{ mb: 2 }}>{series.dataset.provider} / {series.dataset.feed} · {series.dataset.row_count} candles · {zone}</Typography>
+        <Typography color="text.secondary" sx={{ mb: 2, fontFamily: '"JetBrains Mono", monospace', fontSize: 12 }}>{series.dataset.provider} / {series.dataset.feed} · {series.dataset.row_count} candles · {zone}</Typography>
         {series.dataset.validation_status === "VERIFIED_WITH_GAPS" && <Alert severity="info" sx={{ mb: 2 }}>
           Some requested intervals have no broker candles. The dataset may include market closures or missing history.
         </Alert>}

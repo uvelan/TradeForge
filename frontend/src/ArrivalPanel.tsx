@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState} from 'react';
 import {api} from './api';
-import {Card, SectionTitle} from './components';
+import {Badge, Card, Notice, SectionTitle} from './components';
 import type {CandleResponse, Dataset} from './types';
 
 const endpoint = '/market/arrival';
@@ -150,7 +150,7 @@ export function ArrivalPanel({datasets}:{datasets:Dataset[]}) {
   const running = capture && !['STOPPED','FAILED'].includes(capture.state);
   const validDelay = [delay,secondDelay].every(value=>value!=='' && Number.isInteger(Number(value)) && Number(value)>=0 && Number(value)<=86400);
   return <Card>
-    <SectionTitle title="Recorded candle capture and readiness"/>
+    <SectionTitle eyebrow="ARRIVAL & READINESS" title="Recorded candle capture and readiness" action={<Badge tone={running?'green':'neutral'}>{capture?.state??'UNAVAILABLE'}</Badge>}/>
     <small role="status">{capture?.state??'Capture status unavailable'}</small>
     {capture?.clock_policy && <p>Local clock guard {capture.clock_policy}
       {capture.warning && <span> · {capture.warning}</span>}</p>}
@@ -236,6 +236,6 @@ export function ArrivalPanel({datasets}:{datasets:Dataset[]}) {
           <pre>{JSON.stringify(analysis,null,2)}</pre></details>}
       </div>
     </div>
-    {error && <small role="alert">{error}</small>}
+    {error && <Notice tone="red">{error}</Notice>}
   </Card>;
 }

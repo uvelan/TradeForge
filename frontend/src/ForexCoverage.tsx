@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import {api} from './api';
-import {Card, SectionTitle} from './components';
+import {Badge, Card, Notice, SectionTitle, Spinner} from './components';
 import type {CandleRange,CoverageSelection} from './types';
 
 type Interval = [number,number];
@@ -65,20 +65,25 @@ export function ForexCoverage({openReplay,imported}:{openReplay:(range:CandleRan
   const totals=report?.hours.reduce((a,h)=>[a[0]+h.eur.count,a[1]+h.gbp.count,a[2]+h.paired,a[3]+h.quotes.count],[0,0,0,0]);
   const update=()=>{setReport(undefined);setHour(undefined);setError('');setReceipt('');};
   return <Card><section className="forex-coverage" aria-label="Forex history">
-    <SectionTitle title="Forex history"/>
-    <p>Dukascopy · M5 BID chart candles and recorded EURUSD bid/ask ticks. Select up to 31 completed UTC days.</p>
+    <SectionTitle eyebrow="DUKASCOPY COVERAGE" title="Forex history"/>
+    <p className="muted">Dukascopy · M5 BID chart candles and recorded EURUSD bid/ask ticks. Select up to 31 completed UTC days.</p>
     <form onSubmit={e=>{e.preventDefault();void act(()=>load(true));}}><fieldset disabled={busy} className="coverage-fields">
       <label>Start date (UTC)<input type="date" required value={start} onChange={e=>{setStart(e.target.value);update();}}/></label>
       <label>Exclusive end date (UTC)<input type="date" required value={end} max={dateOf(today)} onChange={e=>{setEnd(e.target.value);update();}}/></label>
       <button className="btn btn-primary">Inspect coverage</button></fieldset></form>
-    {busy&&<p role="status">Checking archive evidence…</p>}{error&&<p role="alert">{error}</p>}{receipt&&<p role="status">{receipt}</p>}
-    {report&&totals&&<><p>{start} 00:00 to {end} 00:00 UTC, end exclusive (05:30 IST on each date).</p>
-      <p>{totals[0]} EURUSD candles · {totals[1]} GBPUSD candles · {totals[2]} paired UTC opens · {totals[3]} EURUSD quotes</p>
-      <label>UTC day <select value={day} disabled={busy} onChange={e=>{setDay(e.target.value);setHour(undefined);setReceipt('');}}>{days.map(d=><option key={d}>{d}</option>)}</select></label>
+    {busy&&<div className="loading-zone" role="status"><Spinner/><span>Checking archive evidence…</span></div>}{error&&<Notice tone="red">{error}</Notice>}{receipt&&<p className="success-row" role="status">{receipt}</p>}
+    {report&&totals&&<><p className="muted small">{start} 00:00 to {end} 00:00 UTC, end exclusive (05:30 IST on each date).</p>
+      <div className="evidence-grid">
+        <div><dt>EURUSD candles</dt><dd className="mono">{totals[0]}</dd></div>
+        <div><dt>GBPUSD candles</dt><dd className="mono">{totals[1]}</dd></div>
+        <div><dt>Paired UTC opens</dt><dd className="mono">{totals[2]}</dd></div>
+        <div><dt>EURUSD quotes</dt><dd className="mono">{totals[3]}</dd></div>
+      </div>
+      <div className="research-controls"><label>UTC day <select value={day} disabled={busy} onChange={e=>{setDay(e.target.value);setHour(undefined);setReceipt('');}}>{days.map(d=><option key={d}>{d}</option>)}</select></label></div>
       <div className="table-scroll"><table><thead><tr><th>Hour</th><th>IST start</th><th>Open slots</th><th>EURUSD</th><th>GBPUSD</th><th>Paired</th><th>Bid/ask ticks</th><th>Coverage</th></tr></thead>
-        <tbody>{report.hours.filter(h=>dateOf(h.start)===day).map(h=><tr key={h.start}><td><button type="button" className="btn btn-secondary" aria-expanded={h.start===hour} disabled={busy}
+        <tbody>{report.hours.filter(h=>dateOf(h.start)===day).map(h=><tr key={h.start}><td><button type="button" className="small-tool" aria-expanded={h.start===hour} disabled={busy}
           onClick={()=>{setHour(h.start);setFile(undefined);setReceipt('');setError('');}}>{utcClock(h.start)} UTC</button></td>
-          <td>{istClock(h.start)}{dateOf(h.start+19800)!==day?' (+1d)':''}</td><td>{h.expected}</td><td>{h.eur.count}</td><td>{h.gbp.count}</td><td>{h.paired}</td><td>{h.quotes.count}</td><td>{h.status}</td></tr>)}</tbody></table></div></>}
+          <td>{istClock(h.start)}{dateOf(h.start+19800)!==day?' (+1d)':''}</td><td>{h.expected}</td><td>{h.eur.count}</td><td>{h.gbp.count}</td><td>{h.paired}</td><td>{h.quotes.count}</td><td><Badge tone={h.status==='COMPLETE'?'green':'amber'}>{h.status}</Badge></td></tr>)}</tbody></table></div></>}
     {selected&&<section aria-label="Selected hour evidence"><h3>{iso(selected.start).slice(0,16).replace('T',' ')} UTC · {selected.status}</h3>
       {selected.pair_error&&<p>{selected.pair_error}</p>}
       {([['EURUSD',selected.eur],['GBPUSD',selected.gbp]] as const).map(([s,l])=><details key={s}><summary>{s} M5 BID · {l.count} candles · {l.missing.length} missing intervals</summary>
