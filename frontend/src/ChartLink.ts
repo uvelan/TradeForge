@@ -1,13 +1,14 @@
 import type {IChartApi, ISeriesApi, UTCTimestamp} from 'lightweight-charts';
-import type {Candle} from './types';
+import type {Candle, Timeframe} from './types';
 
 export type LinkOptions = {crosshair:boolean;range:boolean;zoom:boolean};
-type Member = {chart:IChartApi;series:ISeriesApi<'Candlestick'>;bars:()=>Map<number,Candle>;missing:(time?:number)=>void;linkedTime?:(time?:number)=>void};
+type Member = {chart:IChartApi;series:ISeriesApi<'Candlestick'>;bars:()=>Map<number,Candle>;missing:(time?:number)=>void;linkedTime?:(time?:number)=>void;fit?:()=>void;setTimeframe?:(tf:Timeframe)=>void};
 
 export class ChartLink {
   options:LinkOptions={crosshair:false,range:false,zoom:false};
   private members=new Map<string,Member>();
   private driver?:string;
+  private activeId?:string;
   private frame=0;
   private pointer?:{source:string; member:Member; time?:number};
   private cancelPointer(){
@@ -25,6 +26,7 @@ export class ChartLink {
     this.members.delete(id);
     if(this.driver!==id&&this.pointer?.member!==member)return;
     if(this.driver===id)this.driver=undefined;
+    if(this.activeId===id)this.activeId=undefined;
     const pending=this.pointer?.member===member;
     if(pending)this.cancelPointer();
     if(pending||this.options.crosshair)this.clearPeers(id);
@@ -42,6 +44,27 @@ export class ChartLink {
       this.clearPeers(id);
     }
     this.driver=id;
+    this.activeId=id;
+  }
+  focused(fallback='primary'){
+    if(this.activeId&&this.members.has(this.activeId))return this.activeId;
+    return this.members.has(fallback)?fallback:this.members.keys().next().value;
+  }
+  fitFocused(fallback='primary'){
+    const id=this.focused(fallback);
+    if(!id)return false;
+    const member=this.members.get(id);
+    if(!member)return false;
+    if(member.fit)member.fit();
+    else member.chart.timeScale().fitContent();
+    return true;
+  }
+  setFocusedTimeframe(timeframe:Timeframe, fallback='primary'){
+    const id=this.focused(fallback);
+    const member=id?this.members.get(id):undefined;
+    if(!member?.setTimeframe)return false;
+    member.setTimeframe(timeframe);
+    return true;
   }
   cursor(source:string,time?:number){
     const member=this.members.get(source);

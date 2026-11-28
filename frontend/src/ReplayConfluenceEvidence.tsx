@@ -1,6 +1,6 @@
-import {useEffect, useRef, useState, type ReactNode} from 'react';
+import {useEffect, useState, type ReactNode} from 'react';
 import {api} from './api';
-import {EvidenceDisclosure, ReplaySourcePins, ReplaySourceTable, evidenceWords as words, replayUtc as utc} from './ReplayEvidenceSources';
+import {EvidenceDisclosure, ReplayReceiptFields, ReplaySourcePins, ReplaySourceTable, evidenceWords as words, replayUtc as utc, useReplayEndpoint} from './ReplayEvidenceSources';
 import {replayEvidenceLanes, type ReplayEvidenceProps} from './replayEvidenceLanes';
 import {confluenceProfile, type ConfluenceCandle, type ConfluenceComponent, type ConfluencePin,
   type ConfluenceReceipt} from './replayConfluenceTypes';
@@ -16,9 +16,7 @@ const timeValue = (stamp: number | null) =>
 const idValue = (value: string | null) => value == null ? 'Unavailable' : <code className="evidence-id">{value}</code>;
 
 function Fields({label, entries}: {label: string; entries: [string, ReactNode][]}) {
-  return <dl className="evidence-grid" aria-label={label}>
-    {entries.map(([term, value]) => <div key={term}><dt>{term}</dt><dd>{value}</dd></div>)}
-  </dl>;
+  return <ReplayReceiptFields label={label} fields={entries}/>;
 }
 
 function isPin(item: unknown): item is ConfluencePin {
@@ -55,30 +53,13 @@ function verifyReceipt(value: ConfluenceReceipt, sessionId: string, cutoff: numb
 }
 
 function useReceipt(sessionId: string, cutoff: number | null, pin?: ConfluencePin) {
-  const [result, setResult] = useState<{url: string; value?: ConfluenceReceipt; error?: string}>();
-  const request = useRef<{url: string; promise: Promise<ConfluenceReceipt>}>(undefined);
   const url = cutoff == null ? null : receiptPath(sessionId, cutoff, pin);
   const pinnedId = pin?.receipt_id;
   const version = pin?.rule_version;
-
-  useEffect(() => {
-    if (!url || cutoff == null) {
-      request.current = undefined;
-      setResult(undefined);
-      return;
-    }
-    let current = true;
-    const promise = request.current?.url === url ? request.current.promise : api.get<ConfluenceReceipt>(url);
-    request.current = {url, promise};
-    promise.then(value => {
-      verifyReceipt(value, sessionId, cutoff, version, pinnedId);
-      if (current) setResult({url, value});
-    }).catch(reason => {
-      if (current) setResult({url, error: reason instanceof Error ? reason.message : String(reason)});
-    });
-    return () => {current = false;};
-  }, [url, sessionId, cutoff, pinnedId, version]);
-  return result?.url === url ? result : undefined;
+  const {resolved, error} = useReplayEndpoint<ConfluenceReceipt>(url, value => {
+    if (cutoff != null) verifyReceipt(value, sessionId, cutoff, version, pinnedId);
+  });
+  return url && (resolved !== undefined || error !== undefined) ? {url, value: resolved, error} : undefined;
 }
 
 function ConfluenceInspector({sessionId, chartCutoff, start}: {sessionId: string; chartCutoff: number; start: number}) {

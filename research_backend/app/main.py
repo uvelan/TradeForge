@@ -10,13 +10,14 @@ import asyncio
 import json
 import uuid
 from fastapi import APIRouter, FastAPI, HTTPException, Query, UploadFile, File, Request, Response
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel,Field, model_validator
 import httpx
 from . import binance
 from .db import initialize, rows, one, transaction, utc_now
 from .market import mt5_connection, mt5_rates, mt5_recent_deals,mt5_quote,mt5_symbols,demo_candles,BASE,FRAME_MIN
+from .mt5_stream import mt5_stream_hub
 from .storage import write_partition, read_partition
 from .historical_import import import_bi5
 from .reviewed_archives import import_reviewed, candle_origin
@@ -161,6 +162,36 @@ def broker_symbols():
         return mt5_symbols()
     except RuntimeError as error:
         raise HTTPException(503, str(error)) from error
+
+
+@app.get('/api/market/mt5/stream')
+async def stream_mt5_market(
+    request: Request,
+    symbol: str = 'EURUSD',
+    timeframe: str = 'M5',
+    limit: int = Query(10, ge=2, le=1000),
+    include_latest: bool = True,
+    quote_symbols: str = '',
+):
+    symbols = tuple(dict.fromkeys(s.strip() for s in quote_symbols.split(',') if s.strip()))[:16]
+    try:
+        chunks = await mt5_stream_hub.open_stream(
+            symbol=symbol,
+            timeframe=timeframe,
+            limit=limit,
+            include_latest=include_latest,
+            quote_symbols=symbols,
+            is_disconnected=request.is_disconnected,
+        )
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    except RuntimeError as error:
+        raise HTTPException(503, str(error)) from error
+    return StreamingResponse(
+        chunks,
+        media_type='text/event-stream',
+        headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no', 'Connection': 'keep-alive'},
+    )
 
 
 @app.get('/api/trades')

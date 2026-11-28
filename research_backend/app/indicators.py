@@ -246,30 +246,37 @@ class Definition:
     period: int
     warmup: Callable[[int], int]
     calculate: Callable[[list[Bar], int], dict[str, Values]]
+    required_fields: tuple[str, ...] = ("close",)
+    unit: str = "price"
+    min_period: int = 2
+    max_period: int = 200
 
 
 def window_bars(period: int) -> int:
     return period
 
 
+OHLC_HLC = ("high", "low", "close")
+OHLC_HL = ("high", "low")
+
 REGISTRY = {
     "sma": Definition("Simple moving average", "overlay", 20, window_bars, moving("SMA")),
     "ema": Definition("Exponential moving average", "overlay", 20, window_bars, moving("EMA")),
     "wma": Definition("Weighted moving average", "overlay", 20, window_bars, moving("WMA")),
     "bollinger": Definition("Bollinger Bands", "overlay", 20, window_bars, bands),
-    "donchian": Definition("Donchian Channels", "overlay", 20, window_bars, donchian),
-    "rsi": Definition("Relative Strength Index", "pane", 14, lambda p: p + 1, rsi),
-    "atr": Definition("Average True Range", "pane", 14, window_bars, atr),
+    "donchian": Definition("Donchian Channels", "overlay", 20, window_bars, donchian, required_fields=OHLC_HL),
+    "rsi": Definition("Relative Strength Index", "pane", 14, lambda p: p + 1, rsi, unit="percent"),
+    "atr": Definition("Average True Range", "pane", 14, window_bars, atr, required_fields=OHLC_HLC),
     "macd": Definition("MACD", "pane", 26, lambda p: p + 8, macd),
-    "swings": Definition("Confirmed swing levels", "markers", 3, lambda p: 2 * p + 1, swing_points),
-    "roc": Definition("Rate of change", "pane", 12, lambda p: p + 1, rate_of_change),
-    "natr": Definition("Normalized ATR", "pane", 14, window_bars, normalized_atr),
-    "adx": Definition("ADX / Directional Movement", "pane", 14, lambda p: 2 * p, directional_movement),
-    "stochastic": Definition("Stochastic", "pane", 14, lambda p: p + 2, stochastic),
-    "stochrsi": Definition("Stochastic RSI", "pane", 14, lambda p: 2 * p + 2, stochastic_rsi),
-    "cci": Definition("Commodity Channel Index", "pane", 20, window_bars, commodity_channel),
-    "keltner": Definition("Keltner Channels", "overlay", 20, window_bars, keltner),
-    "supertrend": Definition("SuperTrend", "overlay", 10, window_bars, supertrend),
+    "swings": Definition("Confirmed swing levels", "markers", 3, lambda p: 2 * p + 1, swing_points, required_fields=OHLC_HL),
+    "roc": Definition("Rate of change", "pane", 12, lambda p: p + 1, rate_of_change, unit="percent"),
+    "natr": Definition("Normalized ATR", "pane", 14, window_bars, normalized_atr, required_fields=OHLC_HLC, unit="percent"),
+    "adx": Definition("ADX / Directional Movement", "pane", 14, lambda p: 2 * p, directional_movement, required_fields=OHLC_HLC, unit="percent"),
+    "stochastic": Definition("Stochastic", "pane", 14, lambda p: p + 2, stochastic, required_fields=OHLC_HLC, unit="percent"),
+    "stochrsi": Definition("Stochastic RSI", "pane", 14, lambda p: 2 * p + 2, stochastic_rsi, unit="percent"),
+    "cci": Definition("Commodity Channel Index", "pane", 20, window_bars, commodity_channel, required_fields=OHLC_HLC, unit="index"),
+    "keltner": Definition("Keltner Channels", "overlay", 20, window_bars, keltner, required_fields=OHLC_HLC),
+    "supertrend": Definition("SuperTrend", "overlay", 10, window_bars, supertrend, required_fields=OHLC_HLC),
 }
 
 

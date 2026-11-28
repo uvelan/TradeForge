@@ -1,5 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {api} from './api';
+import {TERMINAL_SHORTCUT_GUIDE} from './terminalKeyboard';
 import {listPresets,restorePreset} from './WorkspacePresets';
 import {useWorkspacePreference} from './useWorkspacePreference';
 
@@ -17,8 +18,7 @@ export function CommandSettings(){
       setValue(event.target.value as Shortcut);
     }}>{shortcuts.map(shortcut=><option key={shortcut}>{shortcut}</option>)}</select></label>
     <dl className="evidence-grid">
-      <div><dt>Replay</dt><dd>Space to play/pause · Shift+Left/Right to step</dd></div>
-      <div><dt>Drawings</dt><dd>Alt+H for horizontal line · Escape to cancel</dd></div>
+      {TERMINAL_SHORTCUT_GUIDE.map(([binding, action])=><div key={binding}><dt>{binding}</dt><dd>{action}</dd></div>)}
     </dl>
   </section>;
 }

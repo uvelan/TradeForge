@@ -4,7 +4,7 @@ import {snapshotLane} from './snapshotLanes';
 import {type DecisionLocation,SnapshotDetails} from './SnapshotDetails';
 import LearningDrill from './LearningDrill';
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
-import { Crosshair, Eraser,   ListFilter,  Minus,  Activity,Archive,ArrowDownToLine,ArrowRight,ArrowUpRight,BarChart3,BookOpen,BrainCircuit,CalendarClock,CheckCircle2,ChevronRight,Clock3,CloudOff,Database,Download,ExternalLink,FileCheck2,FileText,FlaskConical,FolderOpen,LayoutDashboard,Menu,MoreHorizontal,Plus,Radio,RefreshCw,Settings,ShieldCheck,ShieldAlert,Search,Target,TrendingUp,Upload, X, Zap} from 'lucide-react';
+import { Crosshair, Eraser,   ListFilter,  Minus,  Activity,Archive,ArrowDownToLine,ArrowRight,ArrowUpRight,BarChart3,BookOpen,BrainCircuit,CalendarClock,CheckCircle2,ChevronRight,Clock3,CloudOff,Database,Download,ExternalLink,FileCheck2,FileText,FlaskConical,FolderOpen,LayoutDashboard,Menu,MoreHorizontal,MoveUpRight,Percent,Plus,Radio,RefreshCw,Settings,ShieldCheck,ShieldAlert,Search,Square,Target,TrendingUp,Upload, X, Zap} from 'lucide-react';
 import {api} from './api';
 import {type ComparisonPlacement,Badge,CandleChart,Card,Empty,Metric,Notice,PriceChange,SectionTitle,Select,Spinner,Success,TextArea,TextField} from './components';
 import type {BacktestResult,BacktestRun,BacktestRunSummary,ReplaySelection,ReplaySession,ReplayViewRequest,BrokerSymbol,CandleRange,CandleResponse,ChartSource,Dataset,JournalEntry,JournalContext,Overview,Package,Plan,Review,SourceName,SymbolName,Timeframe,Trade} from './types';
@@ -14,6 +14,9 @@ import './style.css';
 import './workspace.css';
 import './terminalWorkspace.css';
 import {TerminalSurface, ChartJournal, ChartPassEditor} from './TerminalSurface';
+import {markNormalizedCandles,useStableCandles} from './candleSeriesSync';
+import {TERMINAL_DRAWING_SHORTCUTS,TERMINAL_SHORTCUT_GUIDE,isEditableOrModalElement,resolveTerminalShortcut} from './terminalKeyboard';
+import {mergeMt5Candles,subscribeMt5Live,type Mt5TransportMode} from './mt5Stream';
 import {TimezonePicker,useTimestampFormat,useTimezone} from './timezone';
 import {CandleColorSettings} from './candleColors';
 import {useWorkspacePreference} from './useWorkspacePreference';
@@ -22,11 +25,7 @@ import {useChartIndicator} from './indicators';
 import {smtCoverageNotice,smtFeed,useSmt} from './smt';
 import {SmtMonitor} from './SmtMonitor';
 import {FrozenSmtReceipt} from './FrozenSmtReceipt';
-import {ReplayH1Evidence} from './ReplayH1Evidence';
-import {ReplayStructureEvidence} from './ReplayStructureEvidence';
-import {ReplayZoneEvidence} from './ReplayZoneEvidence';
-import {ReplayCrtEvidence} from './ReplayCrtEvidence';
-import {ReplayConfluenceEvidence} from './ReplayConfluenceEvidence';
+import {ReplayEvidencePanels} from './ReplayEvidencePanels';
 import {ArchiveSmtWatch} from './ArchiveSmtWatch';
 import {ArrivalPanel} from './ArrivalPanel';
 import {ReplayControls, visibleAt} from './ReplayControls';
@@ -34,7 +33,7 @@ import {archiveViewIds, FrozenReplayCoverage, ReplayCandleInspector, replayPaneN
 import {SignalExplorer,signalSummary,type SignalRecord} from './SignalExplorer';
 import {DataTrust} from './DataTrust';
 import {CommandPalette,CommandSettings,type CommandTarget} from './CommandPalette';
-import {WorkspacePanels} from './WorkspacePanels';
+import {WorkspacePanels,WorkspaceSplitter} from './WorkspacePanels';
 import {WorkspacePresets} from './WorkspacePresets';
 import {SessionIntelligence} from './SessionIntelligence';
 import {SimulationEvidence} from './SimulationEvidence';
@@ -184,6 +183,20 @@ const chartTimeframes:Timeframe[]=['M1','M3','M5','M15','M30','H1','H4','D1'];
 type ChartLevel=import('./components').ChartLevel;
 type ReplayLoadKind='quick'|'archive'|'resume';
 const archiveReplayLimit=5000;
+const evidenceBookmarksKey='tradeforge.workspace.evidence-bookmarks.v1';
+type EvidenceBookmark={
+  id:string; session_id:string; source:ChartSource; symbol:string; timeframe:Timeframe;
+  position:number; view:ArchiveViewId; instrument:string; candle_timeframe:Timeframe;
+  time:number; cutoff:number; created_at:string;
+};
+function loadEvidenceBookmarks():EvidenceBookmark[]{
+  try{
+    const parsed:unknown=JSON.parse(localStorage.getItem(evidenceBookmarksKey)??'[]');
+    if(Array.isArray(parsed))return parsed.filter((item):item is EvidenceBookmark=>
+      Boolean(item&&typeof item.id==='string'&&typeof item.session_id==='string'&&typeof item.time==='number'&&typeof item.cutoff==='number')).slice(0,25);
+  }catch{}
+  return [];
+}
 function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,onLeaveDecision,onJournalReturn}:{onJournalReturn?:(location:DecisionLocation)=>void;onLeaveDecision?:()=>void;expanded?:boolean;onPlan?:(seed:Partial<Plan>)=>void;
   onSignal?:(reference:import('./types').SignalReference)=>Promise<void>; initialLocation?:ChartLocation;onChartLesson?:(snapshot:string)=>void}){
   const [strip,setStrip]=useState<HTMLDivElement|null>(null);
@@ -268,6 +281,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   const [replayIndex,setReplayIndex]=useState<number|null>(null);
   const [loadedReplay,setLoadedReplay]=useState<{generation:object;session:ReplaySession}>();
   const [replaySelection,setReplaySelection]=useState<ReplaySelection>();
+  const [evidenceBookmarks,setEvidenceBookmarks]=useState<EvidenceBookmark[]>(loadEvidenceBookmarks);
+  const [bookmarkStatus,setBookmarkStatus]=useState('');
+  const [pendingRestore,setPendingRestore]=useState<EvidenceBookmark>();
   const [replayBusy,setReplayBusy]=useState<ReplayLoadKind>();
   const [replayError,setReplayError]=useState<{kind:ReplayLoadKind;message:string}>();
   const replayLoadSequence=useRef(0);
@@ -275,9 +291,11 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   const [savedReplays,setSavedReplays]=useState<{id:string;position:number;updated_at:string}[]>([]);
   const replayListSequence=useRef(0);
   const [quotes,setQuotes]=useState<Record<string,number|null>>({});
+  const [mt5Transport,setMt5Transport]=useState<Mt5TransportMode>('idle');
+  const replayActiveRef=useRef(false);
   const indicatorScope=JSON.stringify([source,symbol,timeframe,range]);
   const primaryLoadGeneration=useMemo(()=>({}),
-    [symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence]);
+    [symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence,pendingRestore]);
   const replaySession=loadedReplay?.generation===primaryLoadGeneration ? loadedReplay.session : undefined;
   const replayData=replaySession?.market;
   const replayActive=replayIndex!==null&&Boolean(replayData);
@@ -307,11 +325,12 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   const replayLinked=replayArchive||linkReplay==='on';
   const replayStep=frameMinutes[timeframe]*60;
   const archiveCutoff=replayArchive&&replayIndex!==null ? replayData?.replay_cutoffs?.[replayIndex] : undefined;
-  const visibleCandles=useMemo(()=> {
+  const rawVisibleCandles=useMemo(()=> {
     if (!replayData||replayIndex===null)return candles;
-    return archiveCutoff===undefined ? replayData.candles.slice(0,replayIndex+1)
+    return archiveCutoff===undefined ? markNormalizedCandles(replayData.candles.slice(0,replayIndex+1))
       : visibleAt(replayData.candles,archiveCutoff,replayStep);
   },[replayData,replayIndex,candles,archiveCutoff,replayStep]);
+  const visibleCandles=useStableCandles(rawVisibleCandles);
   const cutoff=archiveCutoff??(replayActive?visibleCandles.reduce((known,bar)=>
     Math.max(known,bar.time+replayStep,bar.available_at??0),0):undefined);
   const companionScope=(view:'2'|'3'|'4')=>{
@@ -342,13 +361,16 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
     let active=true;
     setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setLoadedReplay(undefined);setReplaySelection(undefined);setPlanPrices([]);
     setInteraction(current=>current.mode==='plan'?{mode:'navigate'}:current);
-    const decision=initialLocation?.decision;
-    if(decision&&symbol===initialLocation.symbol&&source===initialLocation.source&&timeframe===initialLocation.timeframe){
+    const decision=pendingRestore && pendingRestore.symbol===symbol && pendingRestore.source===source && pendingRestore.timeframe===timeframe
+      ? {session_id:pendingRestore.session_id,position:pendingRestore.position,view:pendingRestore.view,time:pendingRestore.time}
+      : initialLocation?.decision;
+    if(decision&&(pendingRestore||(initialLocation&&symbol===initialLocation.symbol&&source===initialLocation.source&&timeframe===initialLocation.timeframe))){
       api.replay(decision.session_id).then(session=>{
         if(!active)return;
         setLoadedReplay({generation:primaryLoadGeneration,session});
         setReplaySelection({view:decision.view,time:decision.time});
         setReplayIndex(decision.position);
+        if(pendingRestore)setPendingRestore(undefined);
       }).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setBusy(false);});
       return ()=>{active=false;};
     }
@@ -360,43 +382,52 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
     return()=>{active=false};
   },[symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence,primaryLoadGeneration]);
   useEffect(()=>{
-    if(source!=='MT5'||busy||error||replayIndex!==null)return;
+    replayActiveRef.current=replayIndex!==null;
+  },[replayIndex]);
+  useEffect(()=>{
+    if(source!=='MT5'||busy||error||replayIndex!==null){
+      setMt5Transport('idle');
+      return;
+    }
     let active=true;
-    let pending=false;
-    const timer=window.setInterval(async()=>{
-      if(pending||document.hidden)return;
-      pending=true;
-      try{
-        const update=await api.candles(symbol,timeframe,'MT5',10,true);
-        if(active){
-          setPollError('');
-          setData(current=>{
-            if(!current||!update.candles.length)return current;
-            if(current.feed_id!==update.feed_id||current.price_basis!==update.price_basis)return update;
-            const first=update.candles[0].time;
-            const last=current.candles.at(-1)?.time ?? 0;
-            if(update.candles.at(-1)!.time<last)return current;
-            return {...update,candles:[...current.candles.filter(row=>row.time<first),...update.candles].slice(-(expanded?600:200))};
-          });
-        }
-      }catch{
-        if(active)setPollError('MT5 update unavailable · showing last received bars');
-      }finally{pending=false}
-    },5000);
-    return()=>{active=false;window.clearInterval(timer)};
+    const stop=subscribeMt5Live({
+      symbol,
+      timeframe,
+      limit:10,
+      includeLatest:true,
+      quoteSymbols:expanded?watchSymbols:[],
+      onCandles:update=>{
+        if(!active||replayActiveRef.current)return;
+        setPollError('');
+        setData(current=>{
+          const next=mergeMt5Candles(current,update,expanded?600:200);
+          return next===undefined?current:next;
+        });
+      },
+      onQuotes:next=>{
+        if(!active||replayActiveRef.current)return;
+        setQuotes(next);
+      },
+      onError:message=>{
+        if(!active||replayActiveRef.current)return;
+        setPollError(message);
+      },
+      onTransportChange:mode=>{
+        if(active)setMt5Transport(mode);
+      },
+    });
+    return()=>{active=false;stop();};
   },[source,symbol,timeframe,busy,error,replayIndex,expanded]);
   useEffect(()=>{
-    if(!expanded)return;
+    if(!expanded){setQuotes({});return;}
+    if(source!=='DEMO'){if(source!=='MT5')setQuotes({});return;}
     setQuotes({});
-    if(source!=='MT5' && source!=='DEMO')return;
     let active=true;
-    const update=()=>Promise.all(watchSymbols.map(async s=>{
-      try{const q=await api.quote(s,source==='MT5'?'MT5':'DEMO');return [s,q.bid] as const}
+    void Promise.all(watchSymbols.map(async s=>{
+      try{const q=await api.quote(s,'DEMO');return [s,q.bid] as const}
       catch{return [s,null] as const}
     })).then(entries=>{if(active)setQuotes(Object.fromEntries(entries))});
-    void update();
-    const timer=window.setInterval(()=>{if(source==='MT5')void update()},10000);
-    return()=>{active=false;window.clearInterval(timer)};
+    return()=>{active=false};
   },[expanded,source]);
   useEffect(()=>{
     if(!expanded)return;
@@ -519,20 +550,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
     if(drawingView!=='primary')selectInspectionPane('primary');
     setInteraction(current=>({mode:current.mode==='level'?'navigate':'level'}));
   },[levels.length,drawingView,selectInspectionPane,setInteraction]);
-  useEffect(()=>{
-    if(!expanded)return;
-    const onKey=(e:KeyboardEvent)=>{
-      if((e.target as HTMLElement|null)?.closest('dialog:modal'))return;
-      if(e.key==='Escape'){
-        activeBook?.setInteraction(current=>current.mode==='navigate'?current:{mode:'navigate'});
-        return;
-      }
-      const target=e.target as HTMLElement|null;
-      if(target?.closest('input,textarea,select,[contenteditable="true"]'))return;
-      if(e.altKey&&e.key.toLowerCase()==='h'){e.preventDefault();if(!e.repeat)toggleLevel();}
-    };
-    window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
-  },[expanded,activeBook?.setInteraction,toggleLevel]);
   const primaryDrawings=useMemo(()=>[...drawingBook.items,...Object.values(sessionZones)
     .filter(zone=>drawingBook.eligible(zone.anchors))],[drawingBook.items,drawingBook.eligible,sessionZones]);
   const primaryProps=drawingChartProps(drawingBook,digits,drawingView==='primary');
@@ -589,6 +606,62 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
         status:error instanceof Error?error.message:'Chart capture could not be saved'});
     }
   }
+  const bookmarkEvidence=useCallback(()=>{
+    if(!replayActive||!replaySession||replayIndex===null)return;
+    const targetView=inspectedPane?.view??'primary';
+    const targetInstrument=inspectedPane?.data.symbol??symbol;
+    const targetFrame=inspectedPane?.data.timeframe??timeframe;
+    const targetTime=decisionTime??visibleCandles.at(-1)?.time;
+    const targetCutoff=cutoff??(targetTime!==undefined?targetTime+frameMinutes[targetFrame]*60:undefined);
+    if(targetTime===undefined||targetCutoff===undefined)return;
+    const nextSelection=replaySelection??{view:targetView,time:targetTime};
+    const mergedBookmarks=[...new Set([...(replaySession.checkpoint?.bookmarks??[]),replayIndex])].sort((a,b)=>a-b);
+    const entry:EvidenceBookmark={
+      id:`${replaySession.id}:${replayIndex}:${targetView}:${targetTime}`,
+      session_id:replaySession.id,source,symbol,timeframe,position:replayIndex,
+      view:targetView,instrument:targetInstrument,candle_timeframe:targetFrame,
+      time:targetTime,cutoff:targetCutoff,created_at:new Date().toISOString(),
+    };
+    setEvidenceBookmarks(prev=>{
+      const updated=[entry,...prev.filter(item=>item.id!==entry.id)].slice(0,25);
+      try{localStorage.setItem(evidenceBookmarksKey,JSON.stringify(updated));}catch{}
+      return updated;
+    });
+    setBookmarkStatus(`Bookmarked ${targetInstrument} ${targetFrame} (${replayPaneName(targetView)}) · candle ${terminalClock(targetTime*1000)} · cutoff ${terminalClock(targetCutoff*1000)}`);
+    void api.saveCheckpoint(replaySession.id,replayIndex,mergedBookmarks,nextSelection)
+      .then(()=>replayOptions())
+      .catch(reason=>setBookmarkStatus(reason instanceof Error?reason.message:'Bookmark could not be saved'));
+    if(canSaveCapture&&!chartCapture)captureButton.current?.click();
+  },[replayActive,replaySession,replayIndex,inspectedPane,symbol,timeframe,decisionTime,visibleCandles,cutoff,replaySelection,source,terminalClock,replayOptions,canSaveCapture,chartCapture]);
+  useEffect(()=>{
+    if(!expanded)return;
+    const onKey=(e:KeyboardEvent)=>{
+      const {insideModal,insideEditable,hasOpenModalDialog}=isEditableOrModalElement(e.target);
+      const focusedView=link.focused(drawingView)??'primary';
+      const focusedPaneFrozen=replayActive||(focusedView!=='primary'&&linkTimeframe==='on');
+      const canDraw=Boolean(activeBook&&!activeBook.saving&&!activeBook.conflict&&activeBook.current&&activeBook.current.items.length<100);
+      const action=resolveTerminalShortcut({
+        defaultPrevented:e.defaultPrevented,repeat:e.repeat,key:e.key,
+        altKey:e.altKey,ctrlKey:e.ctrlKey,metaKey:e.metaKey,shiftKey:e.shiftKey,
+        insideModal,insideEditable,hasOpenModalDialog,replayActive,focusedPaneFrozen,canDraw,
+      });
+      if(!action)return;
+      if(action.type==='escape'){
+        activeBook?.setInteraction(current=>current.mode==='navigate'?current:{mode:'navigate'});
+        return;
+      }
+      e.preventDefault();
+      if(action.type==='level')toggleLevel();
+      else if(action.type==='fit')link.fitFocused(drawingView);
+      else if(action.type==='bookmark')bookmarkEvidence();
+      else if(action.type==='tool')activeBook?.begin(action.tool);
+      else if(action.type==='timeframe'){
+        if(focusedView==='primary')setTimeframe(action.timeframe);
+        else link.setFocusedTimeframe(action.timeframe,focusedView);
+      }
+    };
+    window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
+  },[expanded,activeBook,drawingView,link,linkTimeframe,replayActive,toggleLevel,bookmarkEvidence,setTimeframe]);
   const pinnedRules=replaySession?.request?.smt_rules??replaySession?.signal_rules;
   const rules=pinnedRules??{period:Number(smtWidth),alignment_bars:Number(smtAlignment),
     tolerance_bps:Number(smtTolerance),confirmation_bars:Number(smtConfirmation)};
@@ -654,7 +727,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
       {symbolError||(matchedSymbols.length===0?'No matching instruments':`${matchedSymbols.length.toLocaleString()} matches${matchedSymbols.length>100?' · showing first 100':''}`)}
     </small>}
   </div>;
-  const latestNotice=!replayActive&&data?.latest_unconfirmed?'Latest MT5 bar · close unconfirmed':'';
+  const latestNotice=!replayActive&&data?.latest_unconfirmed?(mt5Transport==='sse'?'Latest MT5 bar · close unconfirmed · live stream':mt5Transport==='polling'?'Latest MT5 bar · close unconfirmed · polling fallback':'Latest MT5 bar · close unconfirmed'):'';
   const resumeReplay=savedReplays.length>0&&<label>Resume saved replay <select value="" disabled={Boolean(replayBusy)}
     onChange={event=>{if(event.target.value)void loadReplay('resume',event.target.value);}}>
     <option value="">Choose checkpoint</option>{savedReplays.map(item=><option key={item.id} value={item.id}>
@@ -709,10 +782,14 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
           <button className="decision-trigger" onClick={()=>setSurface('decision')}>Record decision</button>
         </div>
         {activeBook&&<div className="terminal-drawing-tools"><DrawingToolbox key={drawingView} book={activeBook} destination={drawingDestination}/></div>}
-        <div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+((!activeBook||activeBook.interaction.mode==='navigate')?'active':'')} title="Crosshair (Esc)" onClick={()=>activeBook?.setEdit(undefined)}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
+        <div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+((!activeBook||activeBook.interaction.mode==='navigate')?'active':'')} title="Crosshair (Esc)" onClick={()=>activeBook?.setEdit(undefined)}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/>{([['trend','Draw Trendline','t',TrendingUp],['ray','Draw Ray','r',MoveUpRight],['fib','Draw Fibonacci retracement','g',Percent],['rectangle','Draw Rectangle','b',Square],['risk-reward','Draw Risk/reward','p',Target]] as const).map(([kind,title,shortcut,Icon])=>{
+          const armed=activeBook?.interaction.mode==='place'&&activeBook.interaction.draft.kind===kind;
+          const disabled=!activeBook||activeBook.saving||activeBook.conflict||!activeBook.current||activeBook.current.items.length>=100;
+          return <button key={kind} type="button" className={'rail-tool '+(armed?'active':'')} aria-label={title} aria-keyshortcuts={shortcut} aria-pressed={armed} title={`${title} (${shortcut.toUpperCase()})`} disabled={disabled} onClick={()=>activeBook?.begin(kind)}><Icon size={17}/></button>;
+        })}<div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
         <div className={'terminal-chart-columns '+(chartViewCount>1?'multi-chart':'')}>
           <div className="primary-chart" role="region" aria-label="Primary chart" data-inspecting={inspectedPane?.view==='primary'||undefined}><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':exactEvidence?'FROZEN STRATEGY EVIDENCE':'PRICE'}</span></div>{!replayActive&&busy?<div className="chart-loading"><Spinner/> Loading candles</div>:!replayActive&&error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} focus={exactEvidence&&!replayArchive&&initialLocation?.timestamp!==undefined?
-            {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={chartViewCount>1?360:510}
+            {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={chartViewCount>1?360:510} onSetTimeframe={replayActive?undefined:setTimeframe}
             replayCandleTime={inspectedPane?.view==='primary'||inspectedPane?.view==='comparison'?selectedVisibleTime:undefined}
             onReplayCandleSelect={replayArchive?time=>setReplaySelection({view:'primary',time}):undefined} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement:displayedPlacement,fixedPlacement:Boolean(frozenPlacement),onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events,smtWindowOnly:savedSource&&replayActive}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={primaryDrawings}
             {...primaryProps} drawingPrompt={picking?`Select ${['entry','stop','target'][picked.length]}`:primaryProps.drawingPrompt}
@@ -785,11 +862,15 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
           cutoff={cutoff??Math.min(Date.now()/1000,(indicatorCandles.at(-1)?.time??last.time)+frameMinutes[timeframe]*60)} digits={digits} onZone={updateZone} strip={strip}/>}
         </TerminalSurface>
       </section>
+      <WorkspaceSplitter />
       <TerminalSurface title="Inspector" active={surface==='inspector'} close={closeSurface} inline>
         <aside className="terminal-dock" aria-label="Chart workspace inspector">
           <nav aria-label="Inspector views">{['Evidence','Watchlist','Provenance','Journal'].map(name=><button key={name}
             onClick={()=>inspectSection('terminal-'+name.toLowerCase())}>{name}</button>)}</nav>
           <section id="terminal-evidence" tabIndex={-1}><h2>Evidence</h2>
+          {replayActive&&<div className="evidence-bookmark-bar"><button type="button" className="small-tool" onClick={bookmarkEvidence}>Bookmark candle (E)</button>{bookmarkStatus&&<small role="status">{bookmarkStatus}</small>}</div>}
+          {!replayActive&&bookmarkStatus&&<small role="status">{bookmarkStatus}</small>}
+          {evidenceBookmarks.length>0&&<details className="data-trust"><summary>Evidence bookmarks ({evidenceBookmarks.length})</summary>{evidenceBookmarks.map(item=><div key={item.id} className="evidence-bookmark-row"><span><strong>{item.instrument} {item.candle_timeframe}</strong> · {replayPaneName(item.view)} · {terminalClock(item.time*1000)}</span><button type="button" className="small-tool" onClick={()=>{setSource(item.source as ChartSource);setSymbol(item.symbol as SymbolName);setTimeframe(item.timeframe as Timeframe);setPendingRestore(item);}}>Open</button></div>)}</details>}
           {cutoff!=null&&<p className="cutoff-readout">Replay cutoff <time dateTime={new Date(cutoff*1000).toISOString()}>{terminalClock(cutoff*1000)} · {zone}</time></p>}
         {inspectedPane&&<ReplayCandleInspector panes={archivePanes} pane={inspectedPane} candles={inspectionCandles}
           selectedTime={inspectedTime} precision={precisionFor(inspectedPane.data.symbol)} onView={selectInspectionPane}
@@ -841,24 +922,14 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
         </div>
         {source === 'DUKASCOPY_SAVED' && cutoff != null && replaySession?.market.source === source &&
           (replayArchive||loadedPrimaryGeneration === primaryLoadGeneration) &&
-          <>
-            <ReplayH1Evidence key={replaySession.id} session={replaySession} cutoff={cutoff} symbol={symbol} timeframe={timeframe}
-              linkedViews={replayLinked ? chartViewCount : 1}/>
-            <ReplayStructureEvidence key={'events:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
-            <ReplayZoneEvidence key={'zones:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
-            <ReplayCrtEvidence key={'crt:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
-            <ReplayConfluenceEvidence key={'confluence:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
-          </>}
+          <ReplayEvidencePanels session={replaySession} cutoff={cutoff} symbol={symbol} timeframe={timeframe}
+            linkedViews={replayLinked ? chartViewCount : 1}/>}
         {savedSource&&cutoff!=null&&firstFeed&&(!compare||secondFeed)&&
           <FrozenSmtReceipt cutoff={cutoff} timeframe={timeframe} primary={firstFeed} comparison={compare?secondFeed:undefined}/>}
           </section>
           <section id="terminal-watchlist" tabIndex={-1}>      <aside className="market-watchlist"><div className="watch-head"><div><span className="eyebrow">INSTRUMENTS</span><h3>Watchlist</h3></div><ListFilter size={17}/></div><div className="watch-columns"><span>PAIR</span><span>{replayActive?'CLOSE':isBinance?'LAST':'BID'}</span></div>{isBinance&&<div className='watch-row current'><strong>BTCUSDT</strong><span>{last?.close.toFixed(2)??'—'}</span></div>}{(isBinance?[]:watchSymbols).map(w=><button key={w} className={'watch-row '+((source==='MT5'?symbol===w||symbol.toUpperCase().includes(w):symbol===w)?'current':'')} onClick={()=>source==='MT5'?setBrokerSymbol(instruments.find(item=>item.name.toUpperCase().includes(w))?.name ?? w):setSymbol(w)}><span className="watch-symbol"><strong>{w}</strong><small>{w==='XAUUSD'?'Spot gold':w.slice(0,3)+' / '+w.slice(3)}</small></span><span className="watch-price">{(replayActive?(w===symbol?visibleCandles.at(-1)?.close:w===compare?comparison.candles?.at(-1)?.close:undefined):quotes[w])?.toFixed(precisionFor(w))??'—'}</span></button>)}
         <div className="watch-detail"><span className="eyebrow">ACTIVE WORKSPACE</span><div><span>Feed</span><strong>{source}</strong></div><div><span>Instrument</span><strong>{symbol}</strong></div><div><span>Session clock</span><strong>{zone}</strong></div><p>{source==='DEMO'?'All displayed demo quotes are synthetic and are not suitable for market decisions.':'Broker/data availability is not guaranteed. Confirm quote freshness before use.'}</p></div>
-        <div className="watch-shortcuts"><strong>Keyboard</strong><span>Alt + H <em>Horizontal level</em></span><span>Space <em>Play / pause replay</em></span><span>Shift + → <em>Next bar</em></span></div>
+        <div className="watch-shortcuts"><strong>Keyboard</strong>{TERMINAL_SHORTCUT_GUIDE.map(([binding,action])=><span key={binding}>{binding} <em>{action}</em></span>)}</div>
       </aside>
           </section>
           <section id="terminal-provenance" tabIndex={-1}><h2>Provenance</h2>
