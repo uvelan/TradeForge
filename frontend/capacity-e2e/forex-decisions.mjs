@@ -1,3 +1,5 @@
+import {mkdirSync} from 'node:fs';
+import {join} from 'node:path';
 import assert from 'node:assert/strict';
 import {chromium,expect} from '@playwright/test';
 
@@ -41,7 +43,40 @@ export async function verifyDecisions(origin,restart){
       await timeline.fill(String(12+index));
       await page.getByLabel('Inspection pane').selectOption(index?'primary':'comparison');
       await page.getByLabel('Inspect candle',{exact:true}).fill('4');
-      const shot=await posted('/api/chart-snapshots',()=>click('Save chart evidence'));
+      if(process.env.TF_TERMINAL_SHOTS && !index){
+        const dir=process.env.TF_TERMINAL_SHOTS;
+        mkdirSync(dir,{recursive:true});
+        for(const [width,height] of [[1440,900],[1280,800],[390,844]]){
+          await page.setViewportSize({width,height});
+          await page.locator('.terminal-suite-header').scrollIntoViewIfNeeded();
+          await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+          await page.screenshot({animations:'disabled',path:join(dir,`terminal-${width}.png`)});
+
+        }
+        await page.setViewportSize({width:1536,height:960});
+      }
+      const modern=await button('Record decision').count()>0;
+      if(modern){
+        if(!index){
+          for(const [name,title,file] of [['Indicators & layers','Indicators & layers','layers'],['Sessions','Session settings','sessions']]){
+            await button(name).focus();await page.keyboard.press('Enter');
+            const dialog=page.getByRole('dialog',{name:title,exact:true});
+            await expect(dialog).toBeVisible();
+            if(file==='sessions'){
+              const overlay=dialog.getByLabel('Show kill zone').first();
+              const initial=await overlay.isChecked();await overlay.setChecked(!initial);await overlay.setChecked(initial);
+            }else{
+              const indicator=dialog.getByLabel('Indicator',{exact:true});
+              const initial=await indicator.inputValue();await indicator.selectOption({index:1});await indicator.selectOption(initial);
+            }
+            if(process.env.TF_TERMINAL_SHOTS)await page.screenshot({path:join(process.env.TF_TERMINAL_SHOTS,file+'.png')});
+            await page.keyboard.press('Escape');await expect(button(name)).toBeFocused();await expect(timeline).toHaveValue(String(12+index));
+          }
+        }
+        await click('Record decision');
+      }
+      const shot=await posted('/api/chart-snapshots',()=>click(modern?'Attach chart capture':'Save chart evidence'));
+      if(modern&&process.env.TF_TERMINAL_SHOTS&&!index)await page.screenshot({path:join(process.env.TF_TERMINAL_SHOTS,'decision.png')});
       const ref=shot.decision_replay;
       assert.equal(ref.session_id,session.id);
       assert.equal(ref.comparison_placement,index?'New pane':'Overlay');
@@ -50,7 +85,7 @@ export async function verifyDecisions(origin,restart){
       assert.equal(shot.cutoff,session.market.replay_cutoffs[12+index]);
       assert.deepEqual(shot.lanes.map(l=>l.symbol),['EURUSD','GBPUSD']);
       captured.push({id:shot.id,ref,cutoff:shot.cutoff,pins:shot.lanes.map(l=>l.partitions)});
-      await click('Create trade plan');
+      if(kind==='trade'||!modern)await click('Create trade plan');
       if(kind==='trade'){
         await click('Fill example wording (edit before saving)');
         for(const [label,value] of [['Entry','1.10500'],['Stop','1.10400'],['Target','1.10700']]){
@@ -63,10 +98,17 @@ export async function verifyDecisions(origin,restart){
         const entry=await posted('/journal',()=>click('Append to journal'));
         journal.push({entry:entry.id,trade:plan.id});
       }else{
-        await page.getByText('Pass on this setup',{exact:true}).click();
+        if(!modern)await page.getByText('Pass on this setup',{exact:true}).click();
         await page.getByLabel('Reason to pass').fill('No confirmed paired divergence at the cutoff.');
         const entry=await posted('/journal',()=>click('Save pass to journal'));
         journal.push({entry:entry.id});
+        if(modern){
+          await page.keyboard.press('Escape');
+          await page.getByRole('navigation',{name:'Inspector views'}).getByRole('button',{name:'Journal',exact:true}).click();
+          const receipt=page.locator('#terminal-journal li').filter({hasText:'No trade'});
+          await receipt.locator('summary').click();await receipt.getByRole('button',{name:'Return to decision candle'}).click();
+          await expect(timeline).toHaveValue(String(12+index));await click('Learning Journal');
+        }
       }
       const row=page.locator('.journal-item').filter({hasText:journal[index].entry});
       await row.locator('summary').filter({hasText:'Chart capture details'}).click();

@@ -9,11 +9,12 @@ export function visibleAt(candles: Candle[], cutoff: number, step: number): Cand
   return candles.filter(bar => (bar.available_at ?? bar.time + step) <= cutoff);
 }
 
-export function ReplayControls({candles,cutoffs,index,onSeek,onExit,step,initialBookmarks,onCheckpoint,jumps=[]}: {
-  candles:Candle[]; cutoffs?:number[]; index:number; onSeek:(index:number)=>void; onExit?:()=>void; step:number; initialBookmarks?:number[]; onCheckpoint?:(index:number,bookmarks:number[])=>Promise<void>;
+export function ReplayControls({candles,cutoffs,index,onSeek,onExit,step,initialBookmarks,onCheckpoint,jumps=[],pauseRequested=false}: {
+  pauseRequested?:boolean; candles:Candle[]; cutoffs?:number[]; index:number; onSeek:(index:number)=>void; onExit?:()=>void; step:number; initialBookmarks?:number[]; onCheckpoint?:(index:number,bookmarks:number[])=>Promise<void>;
   jumps?:{label:string;time:number}[];
 }) {
   const [playing,setPlaying] = useState(false);
+  useEffect(()=>{if(pauseRequested)setPlaying(false);},[pauseRequested]);
   const [speed,setSpeed] = useState(1);
   const [jump,setJump] = useState('');
   const [jumpError,setJumpError] = useState('');

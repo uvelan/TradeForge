@@ -25,7 +25,7 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,resolvePlacementAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot,savingSnapshot,snapshotStatus,replayCandleTime,onReplayCandleSelect}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,resolvePlacementAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,captureButtonRef,onSaveSnapshot,savingSnapshot,snapshotStatus,replayCandleTime,onReplayCandleSelect}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
   onAddLevel?:(price:number)=>void;showSnapshot?:boolean;showDataLegend?:boolean;symbol?:string;precision?:number;indicators?:IndicatorResult[]
   timeframe?: string;
@@ -39,7 +39,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   placementDraft?:DrawingLayer['preview']; placementInteraction?:object;
   placementDrag?:PlacementDrag; requirePlacementCandle?:boolean;
   onPlacementPreview?:(anchors:Anchor[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void;
-  directEdit?:{selected:string;enabled:boolean;revision?:number;snap:boolean;save:(item:Drawing,anchors:Anchor[])=>void}; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>; savingSnapshot?:boolean; snapshotStatus?:string;
+  directEdit?:{selected:string;enabled:boolean;revision?:number;snap:boolean;save:(item:Drawing,anchors:Anchor[])=>void}; onSmtSelect?:(event:SmtEvent)=>void; captureButtonRef?:React.Ref<HTMLButtonElement>; onSaveSnapshot?:(png:string)=>Promise<void>; savingSnapshot?:boolean; snapshotStatus?:string;
   comparison?: {symbol:string; candles:Candle[]; precision:number; placement:ComparisonPlacement;
     onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]; smtWindowOnly?:boolean}
 }){
@@ -342,6 +342,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     if(!chart||!comparisonSymbol||comparisonPrecision===undefined)return;
     const overlay=placement==='Overlay';
     const pane=overlay?0:chart.addPane().paneIndex();
+    if(!overlay)chart.panes()[0].setStretchFactor(2);
     if(overlay)chart.applyOptions({leftPriceScale:{visible:true,borderColor:'#263343'}});
     const series=chart.addSeries(CandlestickSeries,{
       priceScaleId:overlay?'left':'right',title:comparisonSymbol,priceLineVisible:false,
@@ -355,6 +356,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       comparisonRef.current=null;
       if(chartRef.current===chart){
         chart.removeSeries(series);
+        if(!overlay)chart.panes()[0].setStretchFactor(1);
         if(overlay)chart.applyOptions({leftPriceScale:{visible:false}});
       }
     };
@@ -748,8 +750,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
         {event.status} · {event.direction} · {event.leader==="primary"?symbol:comparisonSymbol} broke its prior {event.direction==="bearish"?"high":"low"}
         <span>Pivot {at(event.primary.current.time)}</span>
         <span>{event.confirmed_at===null?"Awaiting confirmation":`Confirmed ${at(event.confirmed_at)}`}</span>
-        <span>{symbol} {event.primary.previous.price.toFixed(precision)} → {event.primary.current.price.toFixed(precision)}</span>
-        <span>{comparisonSymbol} {event.comparison.previous.price.toFixed(comparisonPrecision)} → {event.comparison.current.price.toFixed(comparisonPrecision)}</span>
+        <span>{symbol} {event.primary.previous.price.toFixed(precision)} â†’ {event.primary.current.price.toFixed(precision)}</span>
+        <span>{comparisonSymbol} {event.comparison.previous.price.toFixed(comparisonPrecision)} â†’ {event.comparison.current.price.toFixed(comparisonPrecision)}</span>
         {event.timing&&<span>Both pairs’ pivots confirmed {at(event.timing.all_pivots_confirmed_at)} · UTC match window closed {at(event.timing.matching_closed_at)} · {event.timing.required_shared_confirmation_bars} additional shared bars required</span>}
         {event.transitions.filter(entry=>entry.status==="SMT_INVALIDATED").map(entry=><span key={entry.status}>Invalidated {at(entry.time)}</span>)}
       </div>)}
@@ -758,7 +760,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       <button type="button" className="snapshot-btn" aria-label="Show recent candles" title="Show recent candles"
         onClick={()=>showRecentCandles(candles)}><SkipForward size={15}/></button>
       {showSnapshot&&<button type="button" className="snapshot-btn" title="Download chart PNG" onClick={snapshot}><Camera size={15}/> Snapshot</button>}
-      {onSaveSnapshot&&<button type="button" className="snapshot-btn" disabled={savingSnapshot??localSavingSnapshot} onClick={()=>{
+      {onSaveSnapshot&&<button ref={captureButtonRef} type="button" className="snapshot-btn" disabled={savingSnapshot??localSavingSnapshot} onClick={()=>{
         const canvas=chartRef.current?.takeScreenshot();
         if(!canvas)return;
         const png=canvas.toDataURL('image/png').split(',')[1];
