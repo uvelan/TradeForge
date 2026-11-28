@@ -298,10 +298,11 @@ test('inspects the comparison candle without targeting another pane’s drawing 
   await openArchive(page,{'chart-comparison':'GBPUSD'});
   await openRange(page);
   await page.getByRole('button',{name:'Freeze range for replay'}).click();
-  const pane=page.getByLabel('Inspection pane',{exact:true});
+  const pane=page.getByRole('combobox',{name:'Inspection pane'});
   await pane.selectOption('comparison');
   await expect(pane).toHaveValue('comparison');
-  await expect(page.getByLabel('Selected candle',{exact:true})).toBeVisible();
+  const selected=page.getByRole('region',{name:'Selected candle',exact:true});
+  await expect(selected.getByLabel('Selected candle OHLC')).toContainText(/1\.3[01]000/);
   await expect(page.getByText(/^Drawing toolbox/)).toHaveCount(0);
   await pane.selectOption('primary');
   await expect(page.getByText(/^Drawing toolbox/)).toBeVisible();
