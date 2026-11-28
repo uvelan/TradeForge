@@ -49,7 +49,7 @@ export default function DecisionReview(){
     catch(e){setError((e as Error).message)} finally{setBusy(false)}
   }
   return <div className="main">
-    <header className="topbar">
+    <header className="topbar decision-topbar">
       <div className="topbar-start">
         <a href="/" className="brand" style={{padding:0,border:0,minHeight:'auto'}}>
           <span className="brand-mark"><TrendingUp size={18} strokeWidth={2.5}/></span>

@@ -1,4 +1,5 @@
 import {describe,expect,it} from 'vitest';
+import {hourlyCoverageTone} from './ForexCoverage';
 import {closedCandles,visibleAt} from './ReplayControls';
 import {sessionBounds} from './SessionIntelligence';
 import {parsePreset} from './WorkspacePresets';
@@ -30,5 +31,13 @@ describe('research workspace',()=>{
     expect(parsePreset({version:1,name:'SMT',preferences:{source:'MT5',timezone:'Asia/Kolkata'}}).name).toBe('SMT');
     expect(()=>parsePreset({version:1,name:'Invalid',preferences:{'tradeforge.planner.draft.v1':'unsafe'}})).toThrow();
     expect(()=>parsePreset({version:3,name:'Future',preferences:{source:'DEMO'}})).toThrow();
+  });
+  it('maps every hourly Forex coverage API status to its expected badge tone',()=>{
+    expect(hourlyCoverageTone('Healthy')).toBe('green');
+    expect(hourlyCoverageTone('Conflicting evidence')).toBe('red');
+    expect(hourlyCoverageTone('Scheduled closure')).toBe('neutral');
+    expect(hourlyCoverageTone('Partial')).toBe('amber');
+    expect(hourlyCoverageTone('Missing open time')).toBe('amber');
+    expect(hourlyCoverageTone('Unexpected status')).toBe('amber');
   });
 });

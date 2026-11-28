@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Alert, Box, Button, Chip, CssBaseline, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, ThemeProvider, Typography, createTheme } from "@mui/material";
+import { ArrowLeft } from "lucide-react";
 import { CandlestickSeries, ColorType, createChart } from "lightweight-charts";
 import { chartPoints, timeframes, type Dataset, type Series, type Timeframe } from "./series";
 import { chartTimeOptions, TimezoneProvider, useTimezone } from "./timezone";
@@ -120,7 +121,7 @@ function Terminal() {
           Trade<Box component="span" sx={{ color: "#36d6ad" }}>Forge</Box>
         </Typography>
         <Typography sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: "#849bb2" }}>FIXED-POINT CATALOG</Typography>
-        <Button href="/" size="small" variant="text" sx={{ minHeight: 36, color: "#36d6ad" }}>← Return to Terminal</Button>
+        <Button href="/" size="small" variant="text" startIcon={<ArrowLeft size={16} aria-hidden="true" />} sx={{ minHeight: 44, color: "#36d6ad" }}>Return to workspace</Button>
       </Stack>
       <Chip label={`MT5 ${status}`} color={status === "CONNECTED" ? "success" : "default"} variant="outlined" sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11 }} />
     </Stack>
