@@ -12,7 +12,7 @@ from .market import FRAME_MIN
 
 router = APIRouter(prefix="/api/drawings")
 Scope = Annotated[str, Query(pattern=r"^(MT5|MT5_SAVED|DUKASCOPY_SAVED|BINANCE_SPOT|DEMO):[a-zA-Z0-9._#+!-]{1,64}:[A-Z0-9]{2,4}$")]
-Tool = Literal["horizontal", "vertical", "trend", "ray", "rectangle", "price-range", "time-range",
+Tool = Literal["horizontal", "vertical", "trend", "ray", "fib", "rectangle", "price-range", "time-range",
                "risk-reward", "entry", "stop", "target", "text", "session", "liquidity", "fvg", "smt", "measure"]
 POINTS = {kind: 1 for kind in ("horizontal", "vertical", "entry", "stop", "target", "text")}
 
@@ -42,6 +42,10 @@ class Drawing(BaseModel):
             entry, stop, target = (Decimal(point.price) for point in self.anchors)
             if not (stop < entry < target or target < entry < stop):
                 raise ValueError("Stop and target must bracket entry")
+        if self.kind == "fib" and Decimal(self.anchors[0].price) == Decimal(self.anchors[1].price):
+            raise ValueError("Fibonacci anchors must differ in price")
+        if self.kind == "ray" and self.anchors[0].time == self.anchors[1].time and Decimal(self.anchors[0].price) == Decimal(self.anchors[1].price):
+            raise ValueError("Ray anchors must differ in time or price")
         if self.updated_at < self.created_at:
             raise ValueError("Drawing update precedes creation")
         return self

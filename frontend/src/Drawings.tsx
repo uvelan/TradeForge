@@ -2,16 +2,16 @@ import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'rea
 import type {IChartApi,IPrimitivePaneRenderer,PrimitiveHoveredItem,ISeriesApi,ISeriesPrimitive,Time,UTCTimestamp} from 'lightweight-charts';
 import {useWorkspacePreference} from './useWorkspacePreference';
 import {api,ApiError} from './api';
-import {bodyDistance,handlesFor,sameAnchors,type DrawingHandle} from './drawingGeometry';
+import {FIBONACCI_LEVELS,bodyDistance,fibonacciPercentLabel,fibonacciPrice,handlesFor,sameAnchors,type DrawingHandle} from './drawingGeometry';
 import type {Candle} from './types';
 
 export const tools={
   horizontal:['Horizontal line',1],vertical:['Vertical line',1],trend:['Trendline',2],ray:['Ray',2],
-  rectangle:['Rectangle',2],'price-range':['Price range',2],'time-range':['Time range',2],
+  fib:['Fibonacci retracement',2],rectangle:['Rectangle',2],'price-range':['Price range',2],'time-range':['Time range',2],
   'risk-reward':['Risk/reward',3],entry:['Entry line',1],stop:['Stop line',1],target:['Target line',1],text:['Text',1],
   session:['Session high/low',2],liquidity:['Liquidity zone',2],fvg:['Manual FVG zone',2],smt:['Manual SMT connector',2],measure:['Measurement',2],
 } as const;
-type DrawingTool=keyof typeof tools;
+export type DrawingTool=keyof typeof tools;
 export type Anchor={time:number;price:string};
 export type Drawing={
   id:string;kind:DrawingTool;anchors:Anchor[];label:string;color:string;visible:boolean;locked:boolean;created_at:number;updated_at:number;
@@ -162,6 +162,14 @@ function useDrawingBook(document:ReturnType<typeof useDrawingDocument>,snap:bool
         setError('Stop and target must bracket entry. Select the anchor again.');
         return;
       }
+      if(item.kind==='fib'&&Number(anchors[0].price)===Number(anchors[1].price)){
+        setError('Fibonacci swing anchors must have different prices.');
+        return;
+      }
+      if(item.kind==='ray'&&anchors[0].time===anchors[1].time&&Number(anchors[0].price)===Number(anchors[1].price)){
+        setError('Ray anchors must differ in time or price.');
+        return;
+      }
       setEdit(undefined);void save(current.items.map(drawing=>drawing.id===item.id?{...item,anchors,updated_at:now()}:drawing));
       return;
     }
@@ -171,6 +179,14 @@ function useDrawingBook(document:ReturnType<typeof useDrawingDocument>,snap:bool
     if(anchors.length<tools[edit.kind][1]){setEdit({...edit,anchors});return;}
     if(edit.kind==='risk-reward'&&!bracketsEntry(anchors)){
       setError('Target and stop must be on opposite sides of entry. Select the target again.');
+      return;
+    }
+    if(edit.kind==='fib'&&Number(anchors[0].price)===Number(anchors[1].price)){
+      setError('Fibonacci swing anchors must have different prices. Select anchor 2 again.');
+      return;
+    }
+    if(edit.kind==='ray'&&anchors[0].time===anchors[1].time&&Number(anchors[0].price)===Number(anchors[1].price)){
+      setError('Ray anchors must differ in time or price. Select anchor 2 again.');
       return;
     }
     const item:Drawing={id:crypto.randomUUID(),kind:edit.kind,anchors,label:edit.kind==='text'?'Annotation':'',
@@ -211,7 +227,7 @@ export function drawingChartProps(book:DrawingBook,digits:number,active:boolean)
   const {edit,interaction}=book;
   const draft=active?edit:undefined;
   const drag=interaction.mode==='level'||(interaction.mode==='place'&&tools[interaction.draft.kind][1]===1)?'release-point':
-    interaction.mode==='place'&&!interaction.draft.anchors.length&&['trend','rectangle','risk-reward'].includes(interaction.draft.kind)?'two-points':'none';
+    interaction.mode==='place'&&!interaction.draft.anchors.length&&['trend','ray','fib','rectangle','risk-reward'].includes(interaction.draft.kind)?'two-points':'none';
   return {
     drawMode:active&&interaction.mode!=='navigate',placementInteraction:interaction,
     placementDrag:drag as 'release-point'|'two-points'|'none',requirePlacementCandle:interaction.mode==='level',
@@ -223,7 +239,9 @@ export function drawingChartProps(book:DrawingBook,digits:number,active:boolean)
     onAnchor:draft?(anchors:Anchor[])=>book.anchor(anchors,digits):undefined,
     onPlacementPreview:draft?(anchors:Anchor[])=>({kind:draft.kind,
       anchors:[...draft.anchors,...anchors]}):undefined,
-    drawingPrompt:draft?`${tools[draft.kind][0]} · select ${draft.mode==='move'?'new origin':typeof draft.mode==='number'?draft.mode+1:draft.anchors.length+1}`:undefined,
+    drawingPrompt:draft?(draft.kind==='fib'&&!draft.mode?
+      `Fibonacci retracement · select ${draft.anchors.length===0?'100% swing origin (anchor 1)':'0% swing end (anchor 2)'}`:
+      `${tools[draft.kind][0]} · select ${draft.mode==='move'?'new origin':typeof draft.mode==='number'?draft.mode+1:draft.anchors.length+1}`):undefined,
   };
 }
 
@@ -301,7 +319,7 @@ export class DrawingLayer implements ISeriesPrimitive<Time> {
   detached(){this.repaint=undefined;}
   update(items:Drawing[]){this.items=items;this.repaint?.();}
   private geometry(item:Drawing){
-    if(!item.visible||!['horizontal','trend','rectangle','risk-reward'].includes(item.kind))return;
+    if(!item.visible||!['horizontal','trend','ray','fib','rectangle','risk-reward'].includes(item.kind))return;
     const scale=this.chart.timeScale();
     const points=item.anchors.flatMap(anchor=>{
       const y=this.series.priceToCoordinate(Number(anchor.price));
@@ -365,6 +383,26 @@ export class DrawingLayer implements ISeriesPrimitive<Time> {
         else if(item.kind==='ray'){
           if(xx===x)line(x,y,x,yy<y?0:height);
           else{const end=xx>x?width:0;line(x,y,end,y+(yy-y)*(end-x)/(xx-x));}
+        }else if(item.kind==='fib'){
+          const left=Math.min(x,xx),right=Math.max(Math.max(x,xx),left+96);
+          const p100=Number(a.price),p0=Number(b.price);
+          const decimals=Math.max(a.price.split('.')[1]?.length??0,b.price.split('.')[1]?.length??0);
+          ctx.save();
+          ctx.setLineDash([4,4]);
+          ctx.globalAlpha=0.55;
+          line(x,y,xx,yy);
+          ctx.restore();
+          const y382=yy+0.382*(y-yy),y618=yy+0.618*(y-yy);
+          ctx.fillStyle=item.color+'1a';
+          ctx.fillRect(left,Math.min(y382,y618),right-left,Math.abs(y618-y382));
+          ctx.fillStyle=item.color;
+          for(const ratio of FIBONACCI_LEVELS){
+            const yr=yy+ratio*(y-yy);
+            line(left,yr,right,yr);
+            const levelPrice=fibonacciPrice(p100,p0,ratio).toFixed(decimals);
+            const textY=Math.min(height-3,Math.max(12,yr-3));
+            ctx.fillText(`${fibonacciPercentLabel(ratio)} (${levelPrice})`,Math.max(4,left+4),textY);
+          }
         }else if(item.kind==='time-range')box(x,0,xx,height,item.color+'1f');
         else if(item.kind==='risk-reward'&&c){
           const xc=timeScale.timeToCoordinate(c.time as UTCTimestamp),yc=this.series.priceToCoordinate(Number(c.price));

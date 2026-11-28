@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import type {Drawing} from './Drawings';
-import {handlesFor,sameAnchors,transformDrawing} from './drawingGeometry';
+import {FIBONACCI_LEVELS,bodyDistance,fibonacciPercentLabel,fibonacciPrice,handlesFor,sameAnchors,transformDrawing} from './drawingGeometry';
 
 const drawing=(kind:Drawing['kind'],points:[number,string][]):Drawing=>({
   id:'fixture',kind,anchors:points.map(([time,price])=>({time,price})),
@@ -40,5 +40,37 @@ describe('direct drawing geometry',()=>{
     expect(transformDrawing(source,handle,at(180,10),at(300,10.24),2,()=>false))
       .toEqual([{time:180,price:'10.24'}]);
     expect(transformDrawing(source,handle,at(180,10),at(300,-0.5),2,()=>true)).toBeUndefined();
+  });
+  it('computes Fibonacci ascending/descending retracement levels, hit testing, and anchor transforms',()=>{
+    // Anchor 1 = 100% (origin), Anchor 2 = 0% (swing extreme)
+    const levels = FIBONACCI_LEVELS.map(r=>fibonacciPercentLabel(r));
+    expect(levels).toEqual(['0%','23.6%','38.2%','50%','61.8%','78.6%','100%']);
+
+    // Ascending swing: 1.08000 (100% origin) -> 1.09000 (0% swing high)
+    const ascPrices = FIBONACCI_LEVELS.map(r=>Number(fibonacciPrice(1.08,1.09,r).toFixed(5)));
+    expect(ascPrices).toEqual([1.09,1.08764,1.08618,1.085,1.08382,1.08214,1.08]);
+
+    // Descending swing: 1.10000 (100% origin) -> 1.08000 (0% swing low)
+    const descPrices = FIBONACCI_LEVELS.map(r=>Number(fibonacciPrice(1.10,1.08,r).toFixed(5)));
+    expect(descPrices).toEqual([1.08,1.08472,1.08764,1.09,1.09236,1.09572,1.10]);
+
+    const fib=drawing('fib',[[180,'1.08000'],[360,'1.09000']]);
+    expect(handlesFor('fib',[{x:10,y:100},{x:90,y:20}])).toHaveLength(2);
+    // Hit test on the 50% horizontal line (y = 60 at x = 50)
+    expect(bodyDistance('fib',{x:50,y:60},[{x:10,y:100},{x:90,y:20}])).toBeLessThan(1);
+    // Reject zero-height Fibonacci edit
+    expect(transformDrawing(fib,{timeIndex:1,priceIndex:1},at(360,1.09),at(360,1.08),5,()=>true)).toBeUndefined();
+    expect(transformDrawing(fib,undefined,at(240,1.085),at(300,1.086),5,t=>[240,420].includes(t))).toEqual([
+      {time:240,price:'1.08100'},{time:420,price:'1.09100'},
+    ]);
+  });
+  it('supports semi-infinite ray hit testing, handles, and non-degenerate validation',()=>{
+    const ray=drawing('ray',[[180,'1.08000'],[360,'1.09000']]);
+    expect(handlesFor('ray',[{x:10,y:50},{x:30,y:50}])).toHaveLength(2);
+    // Point further along the extended ray beyond anchor 2 (x = 120, y = 50) is still distance 0
+    expect(bodyDistance('ray',{x:120,y:50},[{x:10,y:50},{x:30,y:50}])).toBe(0);
+    // Point behind anchor 1 (x = 0, y = 50) has distance 10
+    expect(bodyDistance('ray',{x:0,y:50},[{x:10,y:50},{x:30,y:50}])).toBe(10);
+    expect(transformDrawing(ray,{timeIndex:1,priceIndex:1},at(360,1.09),at(180,1.08),5,()=>true)).toBeUndefined();
   });
 });

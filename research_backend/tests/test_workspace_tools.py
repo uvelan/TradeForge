@@ -19,6 +19,20 @@ def test_saved_drawings_are_scoped_versioned_and_conflict_checked(client):
     assert client.get(path,params={"scope":"DUKASCOPY_SAVED:GBPUSD:M5"}).json()["items"]==[]
     assert client.post(path,params=params,json={**written.json(),"items":[drawing,drawing]}).status_code==422
 
+    # Persistent Fibonacci retracement, Ray, and existing books remain valid; degenerate anchors rejected.
+    fib={"id":"2"*36,"kind":"fib","anchors":[{"time":300,"price":"1.08000"},{"time":600,"price":"1.09000"}],
+         "label":"Fib","color":"#55d9b5","created_at":10,"updated_at":10}
+    ray={"id":"3"*36,"kind":"ray","anchors":[{"time":300,"price":"1.08500"},{"time":600,"price":"1.08600"}],
+         "label":"Ray","color":"#55d9b5","created_at":10,"updated_at":10}
+    saved_v2=client.post(path,params=params,json={**written.json(),"items":[drawing,fib,ray]})
+    assert saved_v2.status_code==200,saved_v2.text
+    assert [item["kind"] for item in client.get(path,params=params).json()["items"]]==["trend","fib","ray"]
+
+    bad_fib={**fib,"anchors":[{"time":300,"price":"1.08000"},{"time":600,"price":"1.08000"}]}
+    assert client.post(path,params=params,json={**saved_v2.json(),"items":[bad_fib]}).status_code==422
+    bad_ray={**ray,"anchors":[{"time":300,"price":"1.08500"},{"time":300,"price":"1.08500"}]}
+    assert client.post(path,params=params,json={**saved_v2.json(),"items":[bad_ray]}).status_code==422
+
 
 def test_replay_manifest_keeps_completed_peer_and_checkpoints(client,monkeypatch):
     from research_backend.app import main
