@@ -1,12 +1,86 @@
 import {useEffect, useState} from 'react';
+import {markNormalizedCandles, normalizeCandles} from './candleSeriesSync';
 import type {Candle, CandleResponse} from './types';
 
 export function closedCandles(data: CandleResponse): Candle[] {
   return data.latest_unconfirmed ? data.candles.slice(0, -1) : data.candles.slice();
 }
 
+type VisibilityIndex = {
+  normalized: Candle[];
+  times: number[];
+  monotonic: boolean;
+  maxStep: number;
+  strictPrefixByStep: Map<number, { cutoffs: number[] }>;
+};
+
+const visibilityIndexCache = new WeakMap<readonly Candle[], VisibilityIndex>();
+
+function getVisibilityIndex(candles: readonly Candle[]): VisibilityIndex {
+  let cached = visibilityIndexCache.get(candles);
+  if (cached) return cached;
+  const normalized = normalizeCandles(candles);
+  const times = normalized.map(bar => bar.time);
+  let hasExplicitAvailable = false;
+  let maxAvailable = -Infinity;
+  let availableMonotonic = true;
+  for (const bar of normalized) {
+    if (bar.available_at !== undefined) {
+      hasExplicitAvailable = true;
+      if (bar.available_at < maxAvailable) {
+        availableMonotonic = false;
+        break;
+      }
+      maxAvailable = bar.available_at;
+    }
+  }
+  cached = {
+    normalized,
+    times,
+    monotonic: !hasExplicitAvailable || availableMonotonic,
+    maxStep: 0,
+    strictPrefixByStep: new Map(),
+  };
+  visibilityIndexCache.set(candles, cached);
+  return cached;
+}
+
+function stepCutoffs(index: VisibilityIndex, step: number): number[] | undefined {
+  if (!index.monotonic) return undefined;
+  const cached = index.strictPrefixByStep.get(step);
+  if (cached) return cached.cutoffs;
+  const cutoffs = new Array<number>(index.normalized.length);
+  let prev = -Infinity;
+  for (let i = 0; i < index.normalized.length; i++) {
+    const bar = index.normalized[i];
+    const cutoff = bar.available_at ?? bar.time + step;
+    if (cutoff < prev) {
+      index.strictPrefixByStep.set(step, { cutoffs: [] });
+      return undefined;
+    }
+    prev = cutoff;
+    cutoffs[i] = cutoff;
+  }
+  index.strictPrefixByStep.set(step, { cutoffs });
+  return cutoffs;
+}
+
 export function visibleAt(candles: Candle[], cutoff: number, step: number): Candle[] {
-  return candles.filter(bar => (bar.available_at ?? bar.time + step) <= cutoff);
+  if (!candles.length) return candles;
+  const index = getVisibilityIndex(candles);
+  const cutoffs = stepCutoffs(index, step);
+  if (cutoffs && cutoffs.length === index.normalized.length) {
+    let lo = 0;
+    let hi = cutoffs.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (cutoffs[mid] <= cutoff) lo = mid + 1;
+      else hi = mid;
+    }
+    const sliced = lo === index.normalized.length ? index.normalized : index.normalized.slice(0, lo);
+    return markNormalizedCandles(sliced);
+  }
+  return markNormalizedCandles(index.normalized.filter(bar => (bar.available_at ?? bar.time + step) <= cutoff));
 }
 
 export function ReplayControls({candles,cutoffs,index,onSeek,onExit,step,initialBookmarks,onCheckpoint,jumps=[],pauseRequested=false}: {

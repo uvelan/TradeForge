@@ -1,5 +1,6 @@
 import type {ChartLink} from "./ChartLink";
 import { useEffect, useMemo, useState } from "react";
+import { useStableCandles } from "./candleSeriesSync";
 import { visibleAt } from "./ReplayControls";
 import {drawingChartProps,type DrawingBook} from './Drawings';
 import { api } from "./api";
@@ -55,8 +56,9 @@ export function useViewCandles(symbol: string, frame: Timeframe, source: ChartSo
   const current = frozen ? ('error' in frozen ? {error:frozen.error,data:undefined} : {data:frozen,error:undefined}) :
     result?.generation === generation ? result : undefined;
   const bars = current?.data?.candles;
-  const candles = useMemo(()=>cutoff === undefined ? bars : bars && visibleAt(bars, cutoff, frameMinutes[frame] * 60),
+  const rawCandles = useMemo(()=>cutoff === undefined ? bars : bars && visibleAt(bars, cutoff, frameMinutes[frame] * 60),
     [bars,cutoff,frame]);
+  const candles = useStableCandles(rawCandles);
   return {
     candles,
     error: current?.error,

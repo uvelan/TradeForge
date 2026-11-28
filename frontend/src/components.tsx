@@ -6,6 +6,7 @@ import type { SmtEvent } from './smt';
 import {useCandleColors} from './candleColors';
 import {chartTimeOptions,useTimezone} from './timezone';
 import {ArrowDownRight,ArrowUpRight,Camera,Check,ChevronDown,LoaderCircle,Maximize,Minimize,SkipForward,TriangleAlert} from 'lucide-react';
+import {normalizeCandles,syncCandleMap,syncCandlestickSeries} from './candleSeriesSync';
 import type {Candle} from './types';
 import type {ChartLink} from './ChartLink';
 import {DrawingLayer,type Anchor,type Drawing} from './Drawings';
@@ -85,6 +86,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   const chartRef=useRef<IChartApi|null>(null);
   const seriesRef=useRef<ISeriesApi<'Candlestick'>|null>(null);
   const comparisonRef=useRef<ISeriesApi<'Candlestick'>|null>(null);
+  const committedPrimary=useRef<Candle[]>([]);
+  const committedComparison=useRef<Candle[]>([]);
   const linesRef=useRef<IPriceLine[]>([]);
   const didFit=useRef(false);
   const clickHandler=useRef(onAddLevel);
@@ -321,7 +324,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       release?.();
       paintLayer.current=null;
       fvgLayer.current=null;
-      linesRef.current=[];seriesRef.current=null;chartRef.current=null;didFit.current=false;chart.remove();
+      linesRef.current=[];committedPrimary.current=[];committedComparison.current=[];linkedBars.current.clear();seriesRef.current=null;chartRef.current=null;didFit.current=false;chart.remove();
     };
   },[symbol,precision,link,linkId]);
   useLayoutEffect(()=>{placementReset.current?.();},[drawMode,placementInteraction,symbol,precision]);
@@ -354,6 +357,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     comparisonRef.current=series;
     return ()=>{
       comparisonRef.current=null;
+      committedComparison.current=[];
       if(chartRef.current===chart){
         chart.removeSeries(series);
         if(!overlay)chart.panes()[0].setStretchFactor(1);
@@ -369,16 +373,21 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       wickUpColor:comparisonUp,wickDownColor:comparisonDown,
     });
   },[up,down,comparisonUp,comparisonDown,comparisonSymbol,comparisonPrecision,placement,symbol,precision]);
+  const comparisonCandles=comparison?.candles;
   useEffect(()=>{
-    comparisonRef.current?.setData((comparison?.candles ?? []).map(bar=>({...bar,time:bar.time as UTCTimestamp})));
-  },[comparison,placement,symbol,precision]);
+    const series=comparisonRef.current;
+    if(!series)return;
+    const result=syncCandlestickSeries(series,committedComparison.current,comparisonCandles??[]);
+    committedComparison.current=result.candles;
+  },[comparisonCandles,comparisonSymbol,comparisonPrecision,placement,symbol,precision]);
   useEffect(()=>{
     const series=seriesRef.current;
     if(!series)return;
-    const sorted=[...candles].sort((a,b)=>a.time-b.time).filter((c,i,arr)=>i===0||arr[i-1].time!==c.time);
-    linkedBars.current=new Map(sorted.map(bar=>[bar.time,bar]));
-    series.setData(sorted.map(c=>({time:c.time as UTCTimestamp,open:c.open,high:c.high,low:c.low,close:c.close})));
-    if(!didFit.current&&sorted.length){showRecentCandles(sorted);didFit.current=true}
+    const prev=committedPrimary.current;
+    const result=syncCandlestickSeries(series,prev,candles);
+    committedPrimary.current=result.candles;
+    syncCandleMap(linkedBars.current,prev,result.candles,result.mode);
+    if(!didFit.current&&result.candles.length){showRecentCandles(result.candles);didFit.current=true;}
     updateReplayGuide();
   },[candles,symbol,precision]);
   useEffect(()=>{
@@ -679,10 +688,15 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     anchor.download=`tradeforge-${symbol}-${new Date().toISOString().replace(/[:.]/g,'-')}.png`;
     anchor.click();
   };
-  const comparisonBars=useMemo(()=>new Map(comparison?.candles.map(bar=>[bar.time,bar])),[comparison?.candles]);
-  const commonBar=comparison?candles.slice().reverse().find(bar=>comparisonBars.has(bar.time)):undefined;
+  const comparisonBars=useMemo(()=>new Map((comparison?.candles??[]).map(bar=>[bar.time,bar])),[comparison?.candles]);
+  let commonBar:Candle|undefined;
+  if(comparison){
+    for(let i=candles.length-1;i>=0;i--){
+      if(comparisonBars.has(candles[i].time)){commonBar=candles[i];break;}
+    }
+  }
   const displayTime=cursorTime ?? replayCandleTime ?? commonBar?.time ?? candles.at(-1)?.time;
-  const primaryBar=candles.find(bar=>bar.time===displayTime);
+  const primaryBar=displayTime===undefined?undefined:linkedBars.current.get(displayTime)??candles.find(bar=>bar.time===displayTime);
   const comparisonBar=displayTime===undefined?undefined:comparisonBars.get(displayTime);
   const hoveredSmt=smtEvents?.filter(event=>
     event.confirmation_bar_time===cursorTime||
@@ -758,7 +772,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     </div>}
     <div className="chart-viewport-actions">
       <button type="button" className="snapshot-btn" aria-label="Show recent candles" title="Show recent candles"
-        onClick={()=>showRecentCandles(candles)}><SkipForward size={15}/></button>
+        onClick={()=>showRecentCandles(normalizeCandles(candles))}><SkipForward size={15}/></button>
       {showSnapshot&&<button type="button" className="snapshot-btn" title="Download chart PNG" onClick={snapshot}><Camera size={15}/> Snapshot</button>}
       {onSaveSnapshot&&<button ref={captureButtonRef} type="button" className="snapshot-btn" disabled={savingSnapshot??localSavingSnapshot} onClick={()=>{
         const canvas=chartRef.current?.takeScreenshot();

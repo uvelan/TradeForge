@@ -14,6 +14,7 @@ import './style.css';
 import './workspace.css';
 import './terminalWorkspace.css';
 import {TerminalSurface, ChartJournal, ChartPassEditor} from './TerminalSurface';
+import {markNormalizedCandles,useStableCandles} from './candleSeriesSync';
 import {TimezonePicker,useTimestampFormat,useTimezone} from './timezone';
 import {CandleColorSettings} from './candleColors';
 import {useWorkspacePreference} from './useWorkspacePreference';
@@ -307,11 +308,12 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   const replayLinked=replayArchive||linkReplay==='on';
   const replayStep=frameMinutes[timeframe]*60;
   const archiveCutoff=replayArchive&&replayIndex!==null ? replayData?.replay_cutoffs?.[replayIndex] : undefined;
-  const visibleCandles=useMemo(()=> {
+  const rawVisibleCandles=useMemo(()=> {
     if (!replayData||replayIndex===null)return candles;
-    return archiveCutoff===undefined ? replayData.candles.slice(0,replayIndex+1)
+    return archiveCutoff===undefined ? markNormalizedCandles(replayData.candles.slice(0,replayIndex+1))
       : visibleAt(replayData.candles,archiveCutoff,replayStep);
   },[replayData,replayIndex,candles,archiveCutoff,replayStep]);
+  const visibleCandles=useStableCandles(rawVisibleCandles);
   const cutoff=archiveCutoff??(replayActive?visibleCandles.reduce((known,bar)=>
     Math.max(known,bar.time+replayStep,bar.available_at??0),0):undefined);
   const companionScope=(view:'2'|'3'|'4')=>{
