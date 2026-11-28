@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "tertiary-container": "#f1b617", "on-secondary-fixed": "#001c39", "on-secondary-container": "#d6e5ff", "surface-container-highest": "#2e353f", "on-tertiary-fixed": "#261a00", "primary": "#5cf3c8", "background": "#0d141d", "on-secondary": "#00315d", "on-primary-fixed": "#002118", "tertiary-fixed-dim": "#f9bd22", "tertiary": "#ffd57f", "on-surface": "#dce3f0", "inverse-primary": "#006b54", "outline": "#85948d", "surface-tint": "#42deb4", "surface-container-lowest": "#080f18", "on-surface-variant": "#bbcac2", "secondary": "#a4c9ff", "on-primary-container": "#005845", "tertiary-fixed": "#ffdf9f", "error-container": "#93000a", "inverse-surface": "#dce3f0", "on-background": "#dce3f0", "surface-container-high": "#242a34", "primary-fixed-dim": "#42deb4", "primary-fixed": "#66fbd0", "on-error-container": "#ffdad6", "on-primary": "#00382b", "error": "#ffb4ab", "surface-bright": "#333a44", "secondary-fixed": "#d4e3ff", "surface": "#0d141d", "on-primary-fixed-variant": "#00513f", "surface-variant": "#2e353f", "on-tertiary-container": "#644900", "outline-variant": "#3c4a44", "surface-dim": "#0d141d", "secondary-container": "#0267b8", "surface-container": "#19202a", "on-tertiary-fixed-variant": "#5c4300", "on-secondary-fixed-variant": "#004883", "secondary-fixed-dim": "#a4c9ff", "surface-container-low": "#151c25", "on-error": "#690005", "on-tertiary": "#402d00", "primary-container": "#36d6ad", "inverse-on-surface": "#2a313b" }, borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, spacing: { "margin": "1.5rem", "space-xs": "0.25rem", "space-md": "0.75rem", "space-xl": "1.75rem", "space-sm": "0.5rem", "gutter": "1rem", "space-lg": "1.25rem" }, fontFamily: { "body-sm": ["DM Sans"], "headline-lg": ["Space Grotesk"], "headline-sm": ["Space Grotesk"], "body-lg": ["DM Sans"], "label-sm": ["JetBrains Mono"], "body-md": ["DM Sans"], "label-md": ["JetBrains Mono"], "headline-lg-mobile": ["Space Grotesk"], "label-lg": ["JetBrains Mono"], "headline-md": ["Space Grotesk"] }, fontSize: { "body-sm": ["12px", { lineHeight: "18px", fontWeight: "400" }], "headline-lg": ["30px", { lineHeight: "38px", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-sm": ["10px", { lineHeight: "14px", fontWeight: "500" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "label-md": ["12px", { lineHeight: "16px", fontWeight: "500" }], "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }], "label-lg": ["13px", { lineHeight: "18px", fontWeight: "500" }], "headline-md": ["22px", { lineHeight: "28px", fontWeight: "600" }] } } } }</script><style>@layer base { html, body { width: 100vw; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-container-lowest text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-low/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-14 px-margin flex items-center justify-between gap-space-xs"><div class="flex items-center gap-space-sm"><button aria-label="Open Menu" class="w-11 h-11 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface active:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[22px]">menu</span></button><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate max-w-[130px]">Market Terminal</span></div><div class="flex items-center gap-space-xs"><button aria-label="Command Search" class="w-11 h-11 flex items-center justify-center rounded text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">terminal</span></button><div class="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-container-highest/60"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span><span class="font-label-sm text-label-sm text-primary uppercase tracking-wider hidden sm:inline">LOCAL</span></div><button aria-label="Account Profile" class="w-11 h-11 flex items-center justify-center"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></button></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-20 bg-surface-container-lowest"><div class="flex flex-col w-full pb-6 space-y-4 px-3 sm:px-4">
+<!-- 1. Stacked Page Heading -->
+<section class="flex flex-col space-y-3 pt-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(92,243,200,0.6)]"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">SMT RESEARCH / EVIDENCE LIFECYCLE</span>
+</div>
+<div class="flex flex-col space-y-1">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">Signal Explorer</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+        Recorded institutional SMT divergence events, causal tick validations, and replay state matrices.
+      </p>
+</div>
+<!-- Quick Actions Row -->
+<div class="flex items-center gap-2 pt-1">
+<button class="h-11 flex-1 flex items-center justify-center gap-1.5 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high active:bg-surface-container-highest text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary">tune</span>
+<span class="font-label-md text-label-md font-medium">Panel Settings</span>
+</button>
+<button class="h-11 flex-1 flex items-center justify-center gap-1.5 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high active:bg-surface-container-highest text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">download</span>
+<span class="font-label-md text-label-md font-medium">Export JSON</span>
+</button>
+</div>
+</section>
+<!-- 2. Collapsible Filter Drawer / Card -->
+<section class="bg-surface-container-low rounded-xl p-3.5 space-y-3">
+<!-- Filter Header with Toggle -->
+<div class="flex items-center justify-between cursor-pointer select-none" id="filter-header" onclick="document.getElementById('filter-body').classList.toggle('hidden'); document.getElementById('filter-chevron').classList.toggle('rotate-180');">
+<div class="flex flex-wrap items-center gap-1.5 pr-2">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">filter_alt</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Filter Criteria</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">EUR/GBP</span>
+<span class="px-2 py-0.5 rounded bg-error-container text-error font-label-sm text-label-sm font-semibold">Bear</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm">M5</span>
+</div>
+<button aria-label="Toggle Filters" class="w-11 h-11 flex items-center justify-center text-on-surface-variant hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[20px] transition-transform duration-200" id="filter-chevron">expand_more</span>
+</button>
+</div>
+<!-- Filter Body Form -->
+<div class="space-y-3 pt-1" id="filter-body">
+<!-- Search Input -->
+<div class="flex flex-col space-y-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Search ID / Hash</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-[18px] text-outline">search</span>
+<input class="w-full h-11 pl-9 pr-3 rounded-lg bg-surface-container font-label-md text-label-md text-on-surface placeholder:text-outline outline-none focus:bg-surface-container-high transition-colors" type="text" value="SIG-2024-8841-FX"/>
+</div>
+</div>
+<!-- Pair Cluster -->
+<div class="flex flex-col space-y-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Pair Cluster</label>
+<div class="relative flex items-center">
+<select class="w-full h-11 px-3 appearance-none rounded-lg bg-surface-container font-label-md text-label-md text-on-surface outline-none focus:bg-surface-container-high transition-colors">
+<option selected="">EUR/USD vs GBP/USD (Correlated FX)</option>
+<option>EUR/USD vs DXY (Inverted Basket)</option>
+<option>GBP/USD vs EUR/USD (Lead Flip)</option>
+<option>NQ1! vs ES1! (Equities Divergence)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 pointer-events-none text-[18px] text-outline">unfold_more</span>
+</div>
+</div>
+<!-- 3-Way Divergence Direction Group -->
+<div class="flex flex-col space-y-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Divergence Direction</label>
+<div class="grid grid-cols-3 gap-1.5 bg-surface-container-lowest p-1 rounded-lg">
+<button class="h-11 flex items-center justify-center rounded font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" type="button">
+            All
+          </button>
+<button class="h-11 flex items-center justify-center rounded font-label-md text-label-md text-primary hover:bg-surface-container transition-colors" type="button">
+            Bull (Sweep Low)
+          </button>
+<button class="h-11 flex items-center justify-center rounded bg-error-container text-error font-label-md text-label-md font-bold shadow-sm" type="button">
+            Bear (Sweep High)
+          </button>
+</div>
+</div>
+<!-- Selects Row: Lifecycle & Timeframe -->
+<div class="grid grid-cols-2 gap-2">
+<div class="flex flex-col space-y-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">State</label>
+<div class="relative flex items-center">
+<select class="w-full h-11 px-2.5 appearance-none rounded-lg bg-surface-container font-label-md text-label-md text-primary font-medium outline-none">
+<option selected="">Confirmed</option>
+<option>Candidate</option>
+<option>Invalidated</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-[16px] text-outline">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col space-y-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Timeframe</label>
+<div class="relative flex items-center">
+<select class="w-full h-11 px-2.5 appearance-none rounded-lg bg-surface-container font-label-md text-label-md text-on-surface outline-none">
+<option>M1</option>
+<option selected="">M5 (Tick Sync)</option>
+<option>M15</option>
+<option>H1</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-[16px] text-outline">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Archive Engine & Window UTC Range -->
+<div class="flex flex-col space-y-2">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Archive Engine</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Dukascopy Tick (100%)</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container px-3 h-11 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">sync_alt</span>
+<span class="font-label-sm text-label-sm text-on-surface">2024.10.21 - 2024.10.25</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-primary/10 text-primary font-label-sm text-label-sm">Replay Synced</span>
+</div>
+</div>
+<!-- Search Submit Button -->
+<button class="w-full h-11 rounded-lg bg-primary hover:bg-primary-fixed active:bg-primary-fixed-dim text-on-primary font-headline-sm text-headline-sm flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(92,243,200,0.3)] transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+<span>Search Signals</span>
+</button>
+</div>
+</section>
+<!-- 3. Recorded Signals Feed -->
+<section class="flex flex-col space-y-2.5">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">Signals Feed</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant">18 total · 3 active</span>
+</div>
+<button class="h-11 px-3 flex items-center gap-1 rounded bg-surface-container text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">swap_vert</span>
+<span>Latest</span>
+</button>
+</div>
+<!-- Active Card (EUR/USD vs GBP/USD) -->
+<div class="relative rounded-xl bg-surface-container p-3.5 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] bg-gradient-to-br from-primary/10 via-surface-container to-surface-container">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></div>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">EUR/USD vs GBP/USD</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-secondary font-label-sm text-label-sm">M5</span>
+<span class="px-2 py-0.5 rounded bg-error-container text-error font-label-sm text-label-sm font-semibold">Bearish SMT</span>
+</div>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant leading-relaxed">
+        EUR Higher High (<span class="text-error font-bold">1.08465</span>) vs GBP Lower High (<span class="text-primary font-bold">1.29840</span>) at 14:15 UTC.
+      </p>
+<div class="flex items-center justify-between pt-1">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface">
+<span class="text-outline">Cand 14:10</span>
+<span class="material-symbols-outlined text-[14px] text-primary">arrow_forward</span>
+<span class="text-primary font-bold">Conf 14:15</span>
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<button class="h-11 px-3 flex items-center gap-1 rounded bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-sm text-label-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary">visibility</span>
+<span>Watch Pub #892</span>
+</button>
+</div>
+</div>
+<!-- Second Card: EUR/USD vs DXY -->
+<div class="rounded-xl bg-surface-container-low p-3.5 space-y-2 hover:bg-surface-container transition-colors">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary/60"></span>
+<span class="font-body-lg text-body-lg text-on-surface font-semibold">EUR/USD vs DXY</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-2 py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm">M15</span>
+<span class="px-2 py-0.5 rounded bg-primary/20 text-primary font-label-sm text-label-sm font-semibold">Bullish SMT</span>
+</div>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">
+        EUR Lower Low (1.08110) vs DXY Lower High (104.22) failure to expand at session open.
+      </p>
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm pt-1">
+<span>SIG-2024-8839-DXY</span>
+<span class="text-on-surface">Confirmed 09:30 UTC</span>
+</div>
+</div>
+<!-- Third Card: GBP/USD vs EUR/USD -->
+<div class="rounded-xl bg-surface-container-low p-3.5 space-y-2 hover:bg-surface-container transition-colors">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span class="font-body-lg text-body-lg text-on-surface font-semibold">GBP/USD vs EUR/USD</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-2 py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm">M5</span>
+<span class="px-2 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-label-sm text-label-sm font-semibold">Candidate</span>
+</div>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">
+        Cable testing London high pivot while Euro stalls in consolidation.
+      </p>
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm pt-1">
+<span>SIG-2024-8842-FX</span>
+<span class="text-tertiary font-medium">Awaiting Close (14:35)</span>
+</div>
+</div>
+<!-- Compact Touch Pagination Controls -->
+<div class="flex items-center justify-between pt-1">
+<button class="h-11 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-md text-label-md flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+<span>Prev</span>
+</button>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Page 1 of 4</span>
+<button class="h-11 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface hover:text-primary font-label-md text-label-md flex items-center gap-1 transition-colors" type="button">
+<span>Next</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- 4. Stacked Evidence Inspector Card (Detailed View) -->
+<section class="rounded-xl bg-surface-container-low p-3.5 space-y-4 shadow-xl">
+<!-- Badge Header -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-label-sm text-label-sm font-bold tracking-wide uppercase">CONFIRMED EVIDENCE</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">Frozen @ bar #4,120</span>
+</div>
+<div class="space-y-1">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold leading-snug">
+        Bearish Institutional SMT Divergence Detected at Session High
+      </h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">
+        Cryptographic Proof Hash: <span class="text-primary font-mono font-medium">0x8f3c...b79e</span>
+</p>
+</div>
+<!-- Touch-Friendly 44px Action Bar Grid -->
+<div class="grid grid-cols-2 gap-2">
+<button class="h-11 rounded-lg bg-primary hover:bg-primary-fixed text-on-primary font-label-md text-label-md font-bold flex items-center justify-center gap-1.5 shadow-md" type="button">
+<span class="material-symbols-outlined text-[18px]">show_chart</span>
+<span>Open chart</span>
+</button>
+<button class="h-11 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-medium flex items-center justify-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">assignment_add</span>
+<span>Plan draft</span>
+</button>
+<button class="h-11 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-medium flex items-center justify-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-tertiary">history_edu</span>
+<span>Record lesson</span>
+</button>
+<button class="h-11 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-medium flex items-center justify-center gap-1.5 transition-colors" onclick="navigator.clipboard?.writeText('SIG-2024-8841-FX'); alert('Reference Copied');" type="button">
+<span class="material-symbols-outlined text-[18px] text-outline">content_copy</span>
+<span>Copy Ref</span>
+</button>
+</div>
+<!-- 2-Column Metadata Grid -->
+<div class="bg-surface-container rounded-lg p-3 grid grid-cols-2 gap-x-3 gap-y-2.5">
+<div>
+<div class="font-label-sm text-label-sm text-outline">Signal ID</div>
+<div class="font-label-sm text-label-sm text-on-surface font-semibold">SIG-2024-8841-FX</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-outline">Confirmed UTC</div>
+<div class="font-label-sm text-label-sm text-primary font-semibold">10.25 14:15:00</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-outline">Replay Cutoff</div>
+<div class="font-label-sm text-label-sm text-on-surface">10.25 14:30:00</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-outline">Leading Instrument</div>
+<div class="font-label-sm text-label-sm text-secondary font-semibold">EUR/USD (Initiator)</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-outline">Window State</div>
+<div class="font-label-sm text-label-sm text-on-surface">Synchronous Pivot</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-outline">Engine</div>
+<div class="font-label-sm text-label-sm text-on-surface">ICT-SMT v1.2 Dukas</div>
+</div>
+</div>
+<!-- Comparison Leg Cards (Stacked) -->
+<div class="space-y-2.5">
+<div class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Divergence Comparison Legs</div>
+<!-- Card 1: EUR/USD Primary (Initiated Sweep) -->
+<div class="rounded-lg bg-surface-container p-3 space-y-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-label-md text-label-md text-on-surface font-bold">Primary: EUR/USD (M5)</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-error-container text-error font-label-sm text-label-sm font-bold">Initiated Sweep</span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm bg-surface-container-lowest/80 p-2 rounded">
+<div>
+<span class="text-outline">Prev High:</span> <span class="text-on-surface">1.08380</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-error">trending_up</span>
+<div>
+<span class="text-outline">Curr High:</span> <span class="text-error font-bold">1.08465</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span class="text-error font-bold">HIGHER HIGH (+8.5 pips)</span>
+<span>Tick Vol: <strong class="text-on-surface">+14.2%</strong></span>
+</div>
+<div class="flex items-center justify-between pt-1 text-outline font-label-sm text-label-sm">
+<span>State: Clean Pivot Run</span>
+<span class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+            SHA-256 Validated
+          </span>
+</div>
+</div>
+<!-- Card 2: GBP/USD Comparison (Failure Leg) -->
+<div class="rounded-lg bg-surface-container p-3 space-y-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md text-on-surface font-bold">Leg 2: GBP/USD (M5)</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary-container/40 text-secondary font-label-sm text-label-sm font-bold">Failure Leg</span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm bg-surface-container-lowest/80 p-2 rounded">
+<div>
+<span class="text-outline">Prev High:</span> <span class="text-on-surface">1.29910</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-secondary">trending_down</span>
+<div>
+<span class="text-outline">Curr High:</span> <span class="text-secondary font-bold">1.29840</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span class="text-secondary font-bold">LOWER HIGH (-7.0 pips)</span>
+<span>Order Flow: <strong class="text-on-surface">Heavy Absorption</strong></span>
+</div>
+<div class="flex items-center justify-between pt-1 text-outline font-label-sm text-label-sm">
+<span>State: Institutional Reluctance</span>
+<span class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+            SHA-256 Validated
+          </span>
+</div>
+</div>
+</div>
+<!-- Synchronized Divergence Replay Candlestick Chart (Mobile adapted inline SVG) -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">candlestick_chart</span>
+          Synchronized Replay Matrix
+        </span>
+<span class="font-label-sm text-label-sm text-error bg-error-container/40 px-2 py-0.5 rounded">SMT Divergence Detected</span>
+</div>
+<!-- Chart Display Area -->
+<div class="relative w-full h-56 bg-surface-container-lowest rounded-lg p-2 overflow-hidden flex flex-col justify-between">
+<!-- SVG Candlesticks & Divergent Overlay -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 320 180">
+<!-- Grid lines -->
+<line stroke="#1f3042" stroke-dasharray="3,3" stroke-width="0.75" x1="0" x2="320" y1="45" y2="45"></line>
+<line stroke="#1f3042" stroke-dasharray="3,3" stroke-width="0.75" x1="0" x2="320" y1="90" y2="90"></line>
+<line stroke="#1f3042" stroke-dasharray="3,3" stroke-width="0.75" x1="0" x2="320" y1="135" y2="135"></line>
+<line opacity="0.6" stroke="#5cf3c8" stroke-dasharray="2,2" stroke-width="1" x1="220" x2="220" y1="0" y2="180"></line>
+<!-- EUR/USD Upper Candlesticks (Mint/Red) -->
+<!-- Bar 1 -->
+<line stroke="#5cf3c8" stroke-width="1.5" x1="40" x2="40" y1="35" y2="70"></line>
+<rect fill="#5cf3c8" height="20" rx="1" width="8" x="36" y="42"></rect>
+<!-- Bar 2 (EUR Prev High: 1.08380) -->
+<line stroke="#5cf3c8" stroke-width="1.5" x1="100" x2="100" y1="25" y2="65"></line>
+<rect fill="#5cf3c8" height="22" rx="1" width="8" x="96" y="30"></rect>
+<!-- Bar 3 Consolidation -->
+<line stroke="#ffb4ab" stroke-width="1.5" x1="160" x2="160" y1="32" y2="68"></line>
+<rect fill="#ffb4ab" height="24" rx="1" width="8" x="156" y="36"></rect>
+<!-- Bar 4 EUR SWEEP HIGHER HIGH (1.08465) -->
+<line stroke="#ffb4ab" stroke-width="2" x1="220" x2="220" y1="12" y2="60"></line>
+<rect fill="#ffb4ab" height="34" rx="1" width="10" x="215" y="20"></rect>
+<!-- EUR Subsequent Bear Expansion -->
+<line stroke="#ffb4ab" stroke-width="1.5" x1="280" x2="280" y1="40" y2="82"></line>
+<rect fill="#ffb4ab" height="30" rx="1" width="8" x="276" y="45"></rect>
+<!-- EUR Divergence Line (Upward Slope) -->
+<line stroke="#ffb4ab" stroke-dasharray="4,2" stroke-width="2" x1="100" x2="220" y1="25" y2="12"></line>
+<circle cx="100" cy="25" fill="#5cf3c8" r="3"></circle>
+<circle cx="220" cy="12" fill="#ffb4ab" r="4"></circle>
+<!-- GBP/USD Lower Candlesticks (Blue/Secondary) -->
+<!-- Bar 1 -->
+<line stroke="#a4c9ff" stroke-width="1.5" x1="40" x2="40" y1="120" y2="155"></line>
+<rect fill="#a4c9ff" height="20" rx="1" width="8" x="36" y="125"></rect>
+<!-- Bar 2 (GBP Prev High: 1.29910) -->
+<line stroke="#a4c9ff" stroke-width="1.5" x1="100" x2="100" y1="105" y2="148"></line>
+<rect fill="#a4c9ff" height="24" rx="1" width="8" x="96" y="112"></rect>
+<!-- Bar 3 Pullback -->
+<line stroke="#ffb4ab" stroke-width="1.5" x1="160" x2="160" y1="118" y2="158"></line>
+<rect fill="#ffb4ab" height="26" rx="1" width="8" x="156" y="122"></rect>
+<!-- Bar 4 GBP LOWER HIGH (1.29840) SMT FAILURE -->
+<line stroke="#ffb4ab" stroke-width="2" x1="220" x2="220" y1="118" y2="162"></line>
+<rect fill="#ffb4ab" height="30" rx="1" width="10" x="215" y="124"></rect>
+<!-- GBP Lower Expansion -->
+<line stroke="#ffb4ab" stroke-width="1.5" x1="280" x2="280" y1="135" y2="175"></line>
+<rect fill="#ffb4ab" height="28" rx="1" width="8" x="276" y="140"></rect>
+<!-- GBP Divergence Line (Downward Slope) -->
+<line stroke="#a4c9ff" stroke-dasharray="4,2" stroke-width="2" x1="100" x2="220" y1="105" y2="118"></line>
+<circle cx="100" cy="105" fill="#a4c9ff" r="3"></circle>
+<circle cx="220" cy="118" fill="#a4c9ff" r="4"></circle>
+</svg>
+<!-- Overlay Text Labels in Chart -->
+<div class="absolute top-2 left-3 flex flex-col font-label-sm text-label-sm">
+<span class="text-primary font-bold">EUR/USD M5: Higher High 1.08465</span>
+<span class="text-secondary font-bold">GBP/USD M5: Lower High 1.29840</span>
+</div>
+<div class="absolute bottom-2 right-3 font-label-sm text-label-sm bg-surface-container-high/90 px-2 py-0.5 rounded text-primary">
+          14:15:00 UTC Trigger Point
+        </div>
+</div>
+<!-- Replay Scrubber Bar & Controls -->
+<div class="bg-surface-container rounded-lg p-2.5 space-y-2">
+<!-- Scrubbing Slider -->
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-outline">14:00</span>
+<input class="w-full h-2 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary" max="100" min="0" type="range" value="65"/>
+<span class="font-label-sm text-label-sm text-primary font-bold">14:30</span>
+</div>
+<!-- Playback Row with Touch Targets -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<button aria-label="Play Replay" class="w-11 h-11 rounded-lg bg-surface-container-high hover:bg-surface-bright active:bg-primary active:text-on-primary text-primary flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button aria-label="Step Back" class="w-11 h-11 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface-variant flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">skip_previous</span>
+</button>
+<button aria-label="Step Forward" class="w-11 h-11 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface-variant flex items-center justify-center transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">skip_next</span>
+</button>
+</div>
+<!-- Speed pills -->
+<div class="flex items-center gap-1 bg-surface-container-highest p-1 rounded-lg">
+<button class="px-2.5 h-9 rounded font-label-sm text-label-sm bg-primary text-on-primary font-bold" type="button">1x</button>
+<button class="px-2.5 h-9 rounded font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" type="button">3x</button>
+<button class="px-2.5 h-9 rounded font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" type="button">Max</button>
+</div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-0.5">
+<span>Cursor Timestamp:</span>
+<span class="text-primary font-bold">2024.10.25 14:15:00.200 UTC</span>
+</div>
+</div>
+</div>
+<!-- Hardware Attestation & Linked Plan Footer Pill -->
+<div class="flex flex-col space-y-2 pt-1 border-t-0">
+<div class="flex items-center justify-between bg-surface-container p-2.5 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-tertiary">folder_special</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">TF-2024-089</span>
+<span class="font-body-sm text-body-sm text-outline">EUR/USD Short Judas Swing</span>
+</div>
+</div>
+<button class="h-11 px-3 rounded bg-surface-container-high text-primary font-label-sm text-label-sm flex items-center gap-1" type="button">
+<span>Linked</span>
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</button>
+</div>
+<div class="flex items-center justify-center gap-2 py-1 px-3 rounded bg-surface-container-lowest text-outline font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Secure Enclave Validated (TEE Attestation #8841-A2)</span>
+</div>
+</div>
+</section>
+</div></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-low/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary font-bold"><div class="flex items-center justify-around h-16 px-gutter"><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-label-sm text-label-sm tracking-tight mt-0.5">Overview</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-colors" data-path="market-terminal" href="#"><span class="material-symbols-outlined text-[20px]">candlestick_chart</span><span class="font-label-sm text-label-sm tracking-tight mt-0.5">Terminal</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-colors" data-path="positions" href="#"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span><span class="font-label-sm text-label-sm tracking-tight mt-0.5">Positions</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-colors" data-path="logs-evidence" href="#"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span class="font-label-sm text-label-sm tracking-tight mt-0.5">Logs</span></a></div></nav></body></html>

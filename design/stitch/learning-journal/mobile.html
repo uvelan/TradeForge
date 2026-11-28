@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;background-color:#0d141d;color:#dce3f0;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "inverse-primary": "#006b54", "on-secondary-fixed-variant": "#004883", "surface-bright": "#333a44", "tertiary-fixed-dim": "#f9bd22", "surface-container": "#19202a", "error-container": "#93000a", "surface-container-lowest": "#080f18", "surface-container-high": "#242a34", "on-surface-variant": "#bbcac2", "on-tertiary-container": "#644900", "on-tertiary": "#402d00", "error": "#ffb4ab", "outline-variant": "#3c4a44", "tertiary": "#ffd57f", "secondary": "#a4c9ff", "on-primary-fixed-variant": "#00513f", "on-tertiary-fixed": "#261a00", "surface": "#0d141d", "on-error": "#690005", "surface-variant": "#2e353f", "on-surface": "#dce3f0", "on-background": "#dce3f0", "inverse-on-surface": "#2a313b", "surface-container-low": "#151c25", "tertiary-fixed": "#ffdf9f", "tertiary-container": "#f1b617", "surface-container-highest": "#2e353f", "secondary-fixed": "#d4e3ff", "secondary-container": "#0267b8", "surface-dim": "#0d141d", "primary": "#5cf3c8", "on-primary": "#00382b", "on-secondary-container": "#d6e5ff", "on-secondary-fixed": "#001c39", "on-tertiary-fixed-variant": "#5c4300", "outline": "#85948d", "primary-container": "#36d6ad", "secondary-fixed-dim": "#a4c9ff", "on-error-container": "#ffdad6", "surface-tint": "#42deb4", "primary-fixed-dim": "#42deb4", "on-primary-fixed": "#002118", "on-secondary": "#00315d", "background": "#0d141d", "on-primary-container": "#005845", "primary-fixed": "#66fbd0", "inverse-surface": "#dce3f0" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin": "1.5rem", "space-lg": "1.25rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-md": "0.75rem", "gutter": "1rem", "space-xl": "1.75rem" }, "fontFamily": { "label-lg": ["JetBrains Mono"], "body-lg": ["DM Sans"], "headline-lg": ["Space Grotesk"], "label-md": ["JetBrains Mono"], "body-md": ["DM Sans"], "label-sm": ["JetBrains Mono"], "headline-md": ["Space Grotesk"], "body-sm": ["DM Sans"], "headline-sm": ["Space Grotesk"], "headline-lg-mobile": ["Space Grotesk"] }, "fontSize": { "label-lg": ["13px", { "lineHeight": "18px", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "headline-lg": ["30px", { "lineHeight": "38px", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-sm": ["10px", { "lineHeight": "14px", "fontWeight": "500" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-14 px-space-xs flex items-center justify-between gap-space-xs"><div class="flex items-center gap-space-xs"><button aria-label="Navigation menu" class="w-11 h-11 flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">menu</span></button><div class="flex flex-col justify-center"><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight whitespace-nowrap">Journal</h1></div></div><div class="flex items-center gap-space-xs"><div class="inline-flex items-center gap-1.5 px-space-sm py-1 bg-surface-container rounded-full"><span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span><span class="font-label-sm text-label-sm text-primary-container tracking-wider uppercase font-semibold">LOCAL MODE</span></div><button aria-label="Command palette" class="w-11 h-11 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">terminal</span></button><div class="w-11 h-11 flex items-center justify-center"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-20 bg-surface"><div class="flex flex-col w-full px-space-xs py-space-sm gap-space-lg select-none">
+<!-- 1. STACKED PAGE HEADING -->
+<header class="flex flex-col gap-space-xs px-space-xs">
+<div class="inline-flex items-center gap-1.5 self-start px-space-sm py-1 bg-surface-container rounded-full shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-primary-container tracking-wider uppercase">ACADEMY / REFLECTION</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight mt-1">
+      Master Learning Journal
+    </h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+      One cumulative history of questions, chart challenges, mistakes, and corrected reasoning.
+    </p>
+<div class="flex flex-col gap-space-xs mt-space-xs">
+<button class="w-full min-h-[44px] px-space-md py-space-sm bg-surface-container hover:bg-surface-container-high active:bg-surface-bright text-on-surface font-body-md text-body-md rounded-xl flex items-center justify-center gap-2 shadow-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary">history_edu</span>
+<span>Review a historical decision</span>
+</button>
+<button class="w-full min-h-[44px] px-space-md py-space-sm bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-on-surface font-body-md text-body-md rounded-xl flex items-center justify-center gap-2 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Export Markdown</span>
+</button>
+</div>
+</header>
+<!-- 2. BLIND SMT DRILL CARD -->
+<section class="flex flex-col bg-surface-container-low rounded-xl p-space-md gap-space-md shadow-md">
+<!-- Card Header -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between gap-space-xs">
+<span class="inline-flex items-center px-space-sm py-0.5 bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm rounded-full">
+          LEARN · SYNTHETIC ONLY
+        </span>
+<span class="font-label-sm text-label-sm text-primary tracking-wider font-semibold">
+          DRILL-ID: SMT-M5-094
+        </span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Blind SMT Drill</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        Inspect the synthetic M5 candle highs across correlated majors (EURUSD / GBPUSD) during London-NY overlap. Identify whether Smart Money Technique (SMT) divergence is present before revealing the quantitative verdict.
+      </p>
+</div>
+<!-- Metadata Pill Row -->
+<div class="grid grid-cols-2 gap-space-xs bg-surface-container-lowest p-space-sm rounded-xl">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Session Window</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">13:30 - 13:55 UTC</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Correlation (20p)</span>
+<span class="font-label-md text-label-md text-primary font-semibold">+0.914</span>
+</div>
+</div>
+<!-- Synthetic Table (Touch Scrollable) -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">High Liquidity Sweeps</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">swipe</span> Drag
+        </span>
+</div>
+<div class="w-full overflow-x-auto rounded-xl bg-surface-container-lowest pb-1">
+<table class="w-full text-left font-label-md text-label-md border-collapse min-w-[280px]">
+<thead>
+<tr class="bg-surface-container">
+<th class="py-2.5 px-3 text-on-surface-variant font-label-sm text-label-sm">OPEN UTC</th>
+<th class="py-2.5 px-3 text-right text-on-surface-variant font-label-sm text-label-sm">EURUSD</th>
+<th class="py-2.5 px-3 text-right text-on-surface-variant font-label-sm text-label-sm">GBPUSD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="hover:bg-surface-container/50">
+<td class="py-2 px-3 text-on-surface-variant font-label-md">13:30</td>
+<td class="py-2 px-3 text-right text-on-surface font-label-md">1.08412</td>
+<td class="py-2 px-3 text-right text-on-surface font-label-md">1.26840</td>
+</tr>
+<tr class="bg-surface-container-low/40">
+<td class="py-2 px-3 text-on-surface-variant font-label-md">13:35</td>
+<td class="py-2 px-3 text-right text-on-surface font-label-md">1.08468</td>
+<td class="py-2 px-3 text-right font-label-md bg-primary-container/20 text-primary-container rounded-sm font-semibold">1.26955</td>
+</tr>
+<tr class="hover:bg-surface-container/50">
+<td class="py-2 px-3 text-on-surface-variant font-label-md">13:40</td>
+<td class="py-2 px-3 text-right text-on-surface font-label-md">1.08445</td>
+<td class="py-2 px-3 text-right text-on-surface font-label-md">1.26910</td>
+</tr>
+<tr class="bg-surface-container-low/40">
+<td class="py-2 px-3 text-on-surface-variant font-label-md">13:45</td>
+<td class="py-2 px-3 text-right font-label-md bg-primary-container/20 text-primary-container rounded-sm font-semibold">1.08504</td>
+<td class="py-2 px-3 text-right text-on-surface font-label-md">1.26922</td>
+</tr>
+<tr class="hover:bg-surface-container/50">
+<td class="py-2 px-3 text-on-surface-variant font-label-md">13:50</td>
+<td class="py-2 px-3 text-right text-on-surface font-label-md">1.08430</td>
+<td class="py-2 px-3 text-right text-on-surface font-label-md">1.26815</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Mini Trajectory Chart visual preview (Inline SVG Sparklines) -->
+<div class="flex flex-col gap-1 bg-surface-container-lowest p-space-sm rounded-xl">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm mb-1">
+<span class="flex items-center gap-1.5 text-primary">
+<span class="w-2 h-0.5 bg-primary rounded-full"></span> EURUSD Highs
+        </span>
+<span class="flex items-center gap-1.5 text-secondary">
+<span class="w-2 h-0.5 bg-secondary rounded-full"></span> GBPUSD Highs
+        </span>
+</div>
+<div class="relative w-full h-16 flex items-center">
+<svg class="w-full h-full overflow-visible" fill="none" preserveaspectratio="none" viewbox="0 0 300 64">
+<!-- Guide lines -->
+<line class="text-surface-container-high" stroke="currentColor" stroke-dasharray="2 3" stroke-width="1" x1="0" x2="300" y1="16" y2="16"></line>
+<line class="text-surface-container-high" stroke="currentColor" stroke-dasharray="2 3" stroke-width="1" x1="0" x2="300" y1="48" y2="48"></line>
+<!-- EURUSD Line (New High at 13:45) -->
+<path d="M 10 45 L 75 25 L 145 35 L 215 10 L 285 40" stroke="#36d6ad" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+<circle class="fill-primary animate-ping" cx="215" cy="10" opacity="0.75" r="3.5"></circle>
+<circle class="fill-primary" cx="215" cy="10" r="3"></circle>
+<!-- GBPUSD Line (Peak at 13:35, Lower High at 13:45) -->
+<path d="M 10 40 L 75 12 L 145 22 L 215 20 L 285 50" stroke="#a4c9ff" stroke-dasharray="4 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<circle class="fill-secondary" cx="75" cy="12" r="3"></circle>
+<circle class="fill-secondary opacity-75" cx="215" cy="20" r="2.5"></circle>
+</svg>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>13:30</span>
+<span>13:35</span>
+<span>13:40</span>
+<span class="text-primary font-bold">13:45</span>
+<span>13:50</span>
+</div>
+</div>
+<!-- Select Hypothesis Radio Choice Cards -->
+<fieldset class="flex flex-col gap-space-xs mt-1">
+<legend class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Formulate Hypothesis</legend>
+<!-- Option 1: Selected -->
+<label class="flex items-start gap-3 p-space-sm min-h-[48px] bg-surface-container hover:bg-surface-container-high rounded-xl cursor-pointer shadow-sm transition-all">
+<input checked="" class="mt-1 w-4 h-4 accent-primary" name="smt-hypothesis" type="radio" value="bearish"/>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Bearish SMT Divergence</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+            EURUSD sweeps 13:35 high; GBPUSD prints lower high.
+          </span>
+</div>
+</label>
+<!-- Option 2 -->
+<label class="flex items-start gap-3 p-space-sm min-h-[48px] bg-surface-container-lowest hover:bg-surface-container rounded-xl cursor-pointer transition-all">
+<input class="mt-1 w-4 h-4 accent-primary" name="smt-hypothesis" type="radio" value="bullish"/>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Bullish SMT Divergence</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+            Accumulation signature at session lows.
+          </span>
+</div>
+</label>
+<!-- Option 3 -->
+<label class="flex items-start gap-3 p-space-sm min-h-[48px] bg-surface-container-lowest hover:bg-surface-container rounded-xl cursor-pointer transition-all">
+<input class="mt-1 w-4 h-4 accent-primary" name="smt-hypothesis" type="radio" value="aligned"/>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">No Divergence / Aligned</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+            Correlated highs remain structurally aligned.
+          </span>
+</div>
+</label>
+</fieldset>
+<!-- Reasoning Textarea -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" for="drill-reasoning">
+          Reasoning &amp; Structural Justification
+        </label>
+<span class="font-label-sm text-label-sm text-on-surface-variant" id="char-counter">0 / 1,000</span>
+</div>
+<textarea class="w-full min-h-[80px] p-space-sm bg-surface-container-lowest rounded-xl font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-1 focus:ring-primary shadow-inner" id="drill-reasoning" placeholder="Document which pair swept liquidity, which pair failed to confirm, and the expected displacement direction..." rows="3"></textarea>
+</div>
+<!-- CTA Button -->
+<button class="w-full min-h-[48px] px-space-md py-space-sm bg-primary-container hover:bg-primary active:bg-surface-tint text-on-primary-container font-headline-sm text-headline-sm rounded-xl flex items-center justify-center gap-2 shadow-md transition-transform active:scale-[0.99]" type="button">
+<span class="material-symbols-outlined text-[20px]">verified</span>
+<span>Submit hypothesis and reveal</span>
+</button>
+</section>
+<!-- 3. STACKED NEW JOURNAL ENTRY CARD -->
+<section class="flex flex-col bg-surface-container-low rounded-xl p-space-md gap-space-md shadow-md">
+<div class="flex flex-col gap-0.5">
+<span class="font-label-sm text-label-sm text-primary tracking-wider uppercase font-semibold">CAPTURE KNOWLEDGE</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">New journal entry</h2>
+</div>
+<form class="flex flex-col gap-space-md" onsubmit="event.preventDefault();">
+<!-- Category & Plan -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="entry-category">Category</label>
+<div class="relative w-full">
+<select class="w-full min-h-[44px] px-space-sm pr-9 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-xl appearance-none focus:outline-none focus:ring-1 focus:ring-primary" id="entry-category">
+<option value="T">T - Thesis</option>
+<option value="M">M - Mistake</option>
+<option value="RM">RM - Risk Management</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[20px]">expand_more</span>
+</div>
+</div>
+<!-- Linked Plan Pill -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Linked Execution</span>
+<div class="inline-flex items-center justify-between min-h-[44px] px-space-sm bg-surface-container rounded-xl">
+<div class="flex items-center gap-2 font-label-md text-label-md text-secondary">
+<span class="material-symbols-outlined text-[16px]">link</span>
+<span>TF-2024-089 · EUR/USD</span>
+</div>
+<button aria-label="Remove linked plan" class="h-8 px-2 flex items-center justify-center text-error hover:bg-error-container/20 rounded-lg transition-colors font-label-sm text-label-sm" type="button">
+            Remove
+          </button>
+</div>
+</div>
+<!-- Title Input -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="entry-title">Entry Title</label>
+<input class="w-full min-h-[44px] px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-xl placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary" id="entry-title" placeholder="e.g., Premature entry ahead of NYO liquidity sweep" type="text"/>
+</div>
+<!-- Tags Input -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="entry-tags">Tags (comma-separated)</label>
+<input class="w-full min-h-[44px] px-space-sm bg-surface-container-lowest text-on-surface font-label-md text-label-md rounded-xl focus:outline-none focus:ring-1 focus:ring-primary" id="entry-tags" type="text" value="smt-divergence, eurusd, london-ny"/>
+</div>
+<!-- Observation Textarea -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="entry-body">Observation / Structural Thesis</label>
+<textarea class="w-full min-h-[88px] p-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded-xl placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary" id="entry-body" placeholder="Record objective market context, execution error, or structural thesis..." rows="3"></textarea>
+</div>
+<!-- Submit CTA -->
+<button class="w-full min-h-[48px] px-space-md py-space-sm bg-primary-container hover:bg-primary active:bg-surface-tint text-on-primary-container font-headline-sm text-headline-sm rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99]" type="submit">
+<span class="material-symbols-outlined text-[20px]">post_add</span>
+<span>Append to journal</span>
+</button>
+</form>
+</section>
+<!-- 4. CUMULATIVE TIMELINE CARD -->
+<section class="flex flex-col bg-surface-container-low rounded-xl p-space-md gap-space-md shadow-md">
+<!-- Header -->
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">CUMULATIVE TIMELINE</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Learning history</h2>
+</div>
+<span class="px-space-sm py-1 bg-surface-container text-on-surface font-label-sm text-label-sm rounded-full font-semibold">
+        42 entries
+      </span>
+</div>
+<!-- Search & Filter Bar -->
+<div class="flex flex-col gap-space-xs">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full min-h-[44px] pl-10 pr-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded-xl placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Search journal entries, IDs, or tags..." type="text"/>
+</div>
+<div class="relative w-full">
+<select class="w-full min-h-[44px] px-space-sm pr-9 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-xl appearance-none focus:outline-none focus:ring-1 focus:ring-primary">
+<option>All Categories</option>
+<option>M · Mistakes</option>
+<option>T · Theses</option>
+<option>RM · Risk Management</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[20px]">expand_more</span>
+</div>
+</div>
+<!-- Vertical Timeline Feed -->
+<div class="relative flex flex-col gap-space-md mt-2 pl-3">
+<!-- Continuous vertical timeline mint track -->
+<div class="absolute left-[7px] top-2 bottom-4 w-0.5 bg-surface-container-highest"></div>
+<!-- ENTRY 1 -->
+<article class="relative flex flex-col bg-surface-container p-space-sm rounded-xl gap-2 shadow-sm">
+<span class="absolute -left-[17px] top-3 w-2.5 h-2.5 rounded-full bg-error ring-4 ring-surface-container-low"></span>
+<div class="flex items-center justify-between gap-1 flex-wrap">
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">JRN-042</span>
+<span class="px-1.5 py-0.5 bg-error-container/30 text-error font-label-sm text-label-sm rounded font-semibold">M · MISTAKE</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">2025-02-24 14:12 UTC</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface leading-tight">
+          Premature short on EURUSD ahead of 13:30 UTC liquidity sweep
+        </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Entered 0.5R short before M5 candle close confirmed displacement. Price swept Asian high by 4.2 pips before reversing. Rule reinforced: wait for structural break + FVG.
+        </p>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-2 py-0.5 bg-surface-container-lowest font-label-sm text-label-sm text-secondary rounded">#eurusd</span>
+<span class="px-2 py-0.5 bg-surface-container-lowest font-label-sm text-label-sm text-secondary rounded">#liquidity-sweep</span>
+<span class="px-2 py-0.5 bg-surface-container-lowest font-label-sm text-label-sm text-secondary rounded">#discipline</span>
+</div>
+<div class="flex items-center justify-between pt-1 mt-1 bg-surface-container-low/50 -mx-space-sm -mb-space-sm px-space-sm py-2 rounded-b-xl">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">link</span> TF-2024-089
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">image</span> Capture
+            </span>
+</div>
+<button class="min-h-[44px] px-3 flex items-center gap-1 text-on-surface hover:text-primary font-label-md text-label-md transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+<span>Revise</span>
+</button>
+</div>
+</article>
+<!-- ENTRY 2 -->
+<article class="relative flex flex-col bg-surface-container p-space-sm rounded-xl gap-2 shadow-sm">
+<span class="absolute -left-[17px] top-3 w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-surface-container-low"></span>
+<div class="flex items-center justify-between gap-1 flex-wrap">
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">JRN-041</span>
+<span class="px-1.5 py-0.5 bg-primary-container/20 text-primary-container font-label-sm text-label-sm rounded font-semibold">T · THESIS</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">2025-02-23 09:45 UTC</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface leading-tight">
+          US10Y-JP10Y spread compression favors USDJPY mean reversion
+        </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          When 20-day rolling correlation between US10Y yields and USDJPY drops below +0.65 while spread compresses &gt;8bps, London-NY overlap fade setups show 1.84R expectancy.
+        </p>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-2 py-0.5 bg-surface-container-lowest font-label-sm text-label-sm text-secondary rounded">#usdjpy</span>
+<span class="px-2 py-0.5 bg-surface-container-lowest font-label-sm text-label-sm text-secondary rounded">#macro-rates</span>
+</div>
+<div class="flex items-center justify-between pt-1 mt-1 bg-surface-container-low/50 -mx-space-sm -mb-space-sm px-space-sm py-2 rounded-b-xl">
+<span class="font-label-sm text-label-sm text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">cell_tower</span> SIG-118
+          </span>
+<button class="min-h-[44px] px-3 flex items-center gap-1 text-on-surface hover:text-primary font-label-md text-label-md transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+<span>Revise</span>
+</button>
+</div>
+</article>
+<!-- ENTRY 3 -->
+<article class="relative flex flex-col bg-surface-container p-space-sm rounded-xl gap-2 shadow-sm">
+<span class="absolute -left-[17px] top-3 w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-surface-container-low"></span>
+<div class="flex items-center justify-between gap-1 flex-wrap">
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">JRN-040</span>
+<span class="px-1.5 py-0.5 bg-secondary-container/30 text-secondary font-label-sm text-label-sm rounded font-semibold">RM · RISK MANAGEMENT</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">2025-02-21 16:20 UTC</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface leading-tight">
+          Cap intraday correlated exposure at 1.25R across EURUSD &amp; GBPUSD
+        </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Post-mortem on Wednesday drawdown: simultaneous 1R positions on EURUSD and GBPUSD effectively doubled USD beta. Implementing hard portfolio heat cap.
+        </p>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-2 py-0.5 bg-surface-container-lowest font-label-sm text-label-sm text-secondary rounded">#portfolio-heat</span>
+<span class="px-2 py-0.5 bg-surface-container-lowest font-label-sm text-label-sm text-secondary rounded">#correlation</span>
+</div>
+<div class="flex items-center justify-end pt-1 mt-1 bg-surface-container-low/50 -mx-space-sm -mb-space-sm px-space-sm py-2 rounded-b-xl">
+<button class="min-h-[44px] px-3 flex items-center gap-1 text-on-surface hover:text-primary font-label-md text-label-md transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+<span>Revise</span>
+</button>
+</div>
+</article>
+</div>
+</section>
+</div>
+<script>
+  (function() {
+    const area = document.getElementById('drill-reasoning');
+    const counter = document.getElementById('char-counter');
+    if (area && counter) {
+      area.addEventListener('input', function() {
+        const len = this.value.length;
+        counter.textContent = len + ' / 1,000' + (len < 10 ? ' (min 10)' : '');
+        if (len < 10 && len > 0) {
+          counter.classList.add('text-tertiary');
+          counter.classList.remove('text-on-surface-variant');
+        } else {
+          counter.classList.remove('text-tertiary');
+          counter.classList.add('text-on-surface-variant');
+        }
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary-container font-semibold"><div class="flex justify-around items-center h-16 px-space-xs"><a class="flex flex-col items-center justify-center min-w-[56px] h-11 text-on-surface-variant transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">dashboard</span><span class="font-label-sm text-label-sm mt-0.5">Overview</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-11 text-on-surface-variant transition-colors" data-path="terminal" href="#"><span class="material-symbols-outlined text-[20px]">candlestick_chart</span><span class="font-label-sm text-label-sm mt-0.5">Terminal</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-11 text-on-surface-variant transition-colors" data-path="planner" href="#"><span class="material-symbols-outlined text-[20px]">checklist</span><span class="font-label-sm text-label-sm mt-0.5">Planner</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] h-11 transition-colors text-primary-container font-semibold" data-path="journal" href="#"><span class="material-symbols-outlined text-[20px]">menu_book</span><span class="font-label-sm text-label-sm mt-0.5">Journal</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-11 text-on-surface-variant transition-colors" data-path="review" href="#"><span class="material-symbols-outlined text-[20px]">smart_toy</span><span class="font-label-sm text-label-sm mt-0.5">Review</span></a></div></nav></body></html>

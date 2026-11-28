@@ -15,7 +15,7 @@ import {sameAnchors,transformDrawing} from './drawingGeometry';
 export function Badge({children,tone='neutral'}:{children:React.ReactNode;tone?:'neutral'|'green'|'red'|'amber'|'blue'}) {return <span className={`badge badge-${tone}`}>{children}</span>}
 export function SectionTitle({eyebrow,title,action}:{eyebrow?:string;title:string;action?:React.ReactNode}){return <div className="section-title"><div>{eyebrow&&<span className="eyebrow">{eyebrow}</span>}<h2>{title}</h2></div>{action}</div>}
 export function Card({children,className=''}:{children:React.ReactNode;className?:string}){return <div className={'card '+className}>{children}</div>}
-export function Metric({title,value,change,icon}:{title:string;value:string;change?:string;icon?:React.ReactNode}) {return <div className="metric card"><div className="metric-top"><span>{title}</span><div className="metric-icon">{icon}</div></div><div className="metric-number">{value}</div><div className="metric-bottom">{change?<span className="subtle">{change}</span>:<span className="muted">Real records only · no estimates</span>}</div></div>}
+export function Metric({title,value,change,icon}:{title:string;value:string;change?:string;icon?:React.ReactNode}) {return <div className="metric card"><div className="metric-top"><span>{title}</span>{icon&&<div className="metric-icon">{icon}</div>}</div><div className="metric-number">{value}</div><div className="metric-bottom">{change?<span className="subtle">{change}</span>:<span className="muted">Real records only · no estimates</span>}</div></div>}
 export function Empty({icon,title,body}:{icon?:React.ReactNode;title:string;body:string}){return <div className="empty-state">{icon&&<div className="empty-icon">{icon}</div>}<strong>{title}</strong><p>{body}</p></div>}
 export function Spinner(){return <LoaderCircle className="spinning" size={19}/>}
 export function Notice({children,tone='amber'}:{children:React.ReactNode;tone?:'amber'|'blue'|'red'}){return <div className={`notice notice-${tone}`}><TriangleAlert size={17}/><span>{children}</span></div>}
@@ -141,12 +141,12 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   useEffect(()=>{
     if(!element.current)return;
     const chart=createChart(element.current,{autoSize:true,
-      layout:{background:{type:ColorType.Solid,color:'#0c131e'},textColor:'#8395ad',fontFamily:'Inter, system-ui, sans-serif',fontSize:11,attributionLogo:true},
-      grid:{vertLines:{color:'#182434'},horzLines:{color:'#182434'}},
-      crosshair:{mode:CrosshairMode.Normal,vertLine:{visible:false,labelBackgroundColor:'#27384a'},
-        horzLine:{color:'#5a7594',labelBackgroundColor:'#27384a'}},
-      rightPriceScale:{borderColor:'#263343',scaleMargins:{top:.10,bottom:.12}},
-      timeScale:{borderColor:'#263343',timeVisible:true,secondsVisible:false,rightOffset:3,lockVisibleTimeRangeOnResize:true},
+      layout:{background:{type:ColorType.Solid,color:'#080f18'},textColor:'#849bb2',fontFamily:'DM Sans, system-ui, sans-serif',fontSize:11,attributionLogo:true},
+      grid:{vertLines:{color:'#162231'},horzLines:{color:'#162231'}},
+      crosshair:{mode:CrosshairMode.Normal,vertLine:{visible:false,labelBackgroundColor:'#172536'},
+        horzLine:{color:'#3b5774',labelBackgroundColor:'#172536'}},
+      rightPriceScale:{borderColor:'#1c2c3d',scaleMargins:{top:.10,bottom:.12}},
+      timeScale:{borderColor:'#1c2c3d',timeVisible:true,secondsVisible:false,rightOffset:3,lockVisibleTimeRangeOnResize:true},
       handleScale:{mouseWheel:true,pinch:true,axisPressedMouseMove:true},
       handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:true}});
     chartRef.current=chart;

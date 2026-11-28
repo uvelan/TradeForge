@@ -1,9 +1,10 @@
 import {SnapshotDetails} from './SnapshotDetails';
 import {snapshotLane} from './snapshotLanes';
 import {useEffect,useRef,useState} from 'react';
+import {ListFilter} from 'lucide-react';
 import {WorkspacePanels} from './WorkspacePanels';
 import {api} from './api';
-import {CandleChart,Notice} from './components';
+import {Badge, CandleChart, Empty, Notice, SectionTitle, Spinner} from './components';
 import {frameMinutes} from './chartViews';
 import {ReplayControls,visibleAt} from './ReplayControls';
 import {type SmtEvent,type SmtRules,useSmt} from './smt';
@@ -24,6 +25,10 @@ type Capture = {primary:Candle[]; comparison:Candle[]};
 const labels:Record<SignalStatus,string> = {
   SMT_CANDIDATE:'Candidate', SMT_CONFIRMED:'Confirmed', SMT_INVALIDATED:'Invalidated',
   SMT_SOURCE_CORRECTED:'Source corrected',
+};
+const statusTone:Record<SignalStatus,'amber'|'green'|'red'|'blue'> = {
+  SMT_CANDIDATE:'amber', SMT_CONFIRMED:'green', SMT_INVALIDATED:'red',
+  SMT_SOURCE_CORRECTED:'blue',
 };
 export function signalSummary(signal:SignalRecord) {
   const {primary,comparison,timeframe}=signal.provenance;
@@ -60,15 +65,15 @@ export function SignalExplorer({selected,onSelect,onPlan,onJournal,onOpenPlan}: 
     </select></label>;
   }
   return <section className="signal-page">
-    <header><h1>Signal Explorer</h1><p className="muted">Recorded SMT evidence and its latest lifecycle state.</p></header>
-    <form className="research-controls" onSubmit={event=>{
+    <div className="page-heading"><div><span className="eyebrow">SMT RESEARCH / EVIDENCE</span><h1>Signal Explorer</h1><p>Recorded SMT evidence and its latest lifecycle state.</p></div></div>
+    <form className="card signal-filter-card research-controls signal-filter-grid" onSubmit={event=>{
       event.preventDefault();
       const params=new URLSearchParams();
       for(const [key,value] of Object.entries(draft))if(value.trim())params.set(key,key==='start'||key==='end'?datetime(value):value.trim());
       setPrevious([]);setCursor('');setQuery(params.toString());setReload(value=>value+1);
     }}>
-      <label>Signal, dataset or trade ID<input value={draft.q} maxLength={128} onChange={e=>setDraft({...draft,q:e.target.value})}/></label>
-      <label>Instrument<input value={draft.instrument} maxLength={64} onChange={e=>setDraft({...draft,instrument:e.target.value})}/></label>
+      <label>Signal, dataset or trade ID<input value={draft.q} maxLength={128} placeholder="e.g. SIG-2024 or EURUSD" onChange={e=>setDraft({...draft,q:e.target.value})}/></label>
+      <label>Instrument<input value={draft.instrument} maxLength={64} placeholder="EURUSD" onChange={e=>setDraft({...draft,instrument:e.target.value})}/></label>
       {selectFilter('direction','Direction',[['bullish','Bullish'],['bearish','Bearish']])}
       {selectFilter('status','Current state',Object.entries(labels))}
       {selectFilter('timeframe','Timeframe',Object.keys(frameMinutes).map(value=>[value,value]))}
@@ -79,27 +84,31 @@ export function SignalExplorer({selected,onSelect,onPlan,onJournal,onOpenPlan}: 
     </form>
     <WorkspacePanels inspectorOnly><div className="signal-layout">
       <div className="card signal-results">
-        {error?<Notice tone="red">{error}</Notice>:!result?<p role="status">Loading signals…</p>:
-          result.items.length===0?<p role="status">No recorded signals match these filters.</p>:
+        <SectionTitle eyebrow="LIFECYCLE LOG" title="Recorded signals" action={result&&<Badge tone="neutral">{result.items.length} shown</Badge>}/>
+        {error?<Notice tone="red">{error}</Notice>:!result?<div className="loading-zone" role="status"><Spinner/><span>Loading signals…</span></div>:
+          result.items.length===0?<Empty icon={<ListFilter size={20}/>} title="No recorded signals match these filters" body="Adjust timeframe, source, or UTC window filters to inspect historical SMT events."/>:
           <ul>{result.items.map(record=><li key={record.event_key}>
             <button className="signal-row" aria-pressed={selected?.event_key===record.event_key} onClick={()=>{selectionRequest.current++;onSelect(record);}}>
-              <strong>{record.provenance.primary.symbol} / {record.provenance.comparison.symbol}</strong>
+              <div className="signal-row-head"><strong>{record.provenance.primary.symbol} / {record.provenance.comparison.symbol}</strong><Badge tone={statusTone[record.status]}>{labels[record.status]}</Badge></div>
               <span>{record.provenance.timeframe} · {record.direction} · {labels[record.status]}</span>
-              <small>{format(record.transitions.at(-1)!.time*1000)}</small>
+              <small className="mono">{format(record.transitions.at(-1)!.time*1000)}</small>
             </button>
-            {record.watch_published_at!=null&&record.transitions.map(t=><button className="text-button" key={t.status}
+            {record.watch_published_at!=null&&<div className="signal-transitions">{record.transitions.map(t=><button className="text-button" key={t.status}
               onClick={()=>{const token=++selectionRequest.current;
                 api.get<SignalRecord>('/indicators/signals/'+record.event_key+'?status='+t.status)
                   .then(item=>{if(selectionRequest.current===token)onSelect(item);})
                   .catch(e=>{if(selectionRequest.current===token)setError(e.message);});}}>
-              {labels[t.status]} · {format(t.time*1000)}</button>)}
+              {labels[t.status]} · {format(t.time*1000)}</button>)}</div>}
           </li>)}</ul>}
         <div className="research-controls">
           <button className="small-tool" disabled={!previous.length} onClick={()=>{setCursor(previous.at(-1)??'');setPrevious(previous.slice(0,-1));}}>Previous page</button>
           <button className="small-tool" disabled={!result?.next_cursor} onClick={()=>{if(result?.next_cursor){setPrevious([...previous,cursor]);setCursor(result.next_cursor);}}}>Next page</button>
         </div>
       </div>
-      {selected&&<EvidenceInspector key={selected.event_key+selected.status} signal={selected} onPlan={onPlan} onJournal={onJournal} onOpenPlan={onOpenPlan}/>}
+      {selected?<EvidenceInspector key={selected.event_key+selected.status} signal={selected} onPlan={onPlan} onJournal={onJournal} onOpenPlan={onOpenPlan}/>:
+        <aside className="card signal-evidence" aria-label="Evidence Inspector">
+          <Empty icon={<ListFilter size={20}/>} title="Select a signal record" body="Choose an SMT event on the left to inspect its causal cutoff, paired pivot highs/lows, and dataset checksums."/>
+        </aside>}
     </div></WorkspacePanels>
   </section>;
 }
@@ -181,9 +190,10 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
   const moveLabel=(epoch:number)=>capture?<button className="text-button" onClick={()=>move(epoch)}>{at(epoch)}</button>:at(epoch);
   const eligible=['EURUSD','GBPUSD','USDJPY','XAUUSD'].includes(primary.symbol);
   return <aside className="card signal-evidence" aria-label="Evidence Inspector">
-    <header><h2>Evidence Inspector</h2><p>{replay?`${primary.symbol} / ${comparison.symbol} ${timeframe}`:signalSummary(signal).split(' | ').slice(0,3).join(' · ')}</p></header>
+    <SectionTitle eyebrow="CAUSAL PROVENANCE" title="Evidence Inspector" action={<Badge tone={statusTone[signal.status]}>{labels[signal.status]}</Badge>}/>
+    <p className="muted">{replay?`${primary.symbol} / ${comparison.symbol} ${timeframe}`:signalSummary(signal).split(' | ').slice(0,3).join(' · ')}</p>
     <div className="research-controls">
-      <button className="small-tool" disabled={loading||Boolean(capture)} onClick={()=>void open()}>{loading?'Loading chart…':capture?'Recorded chart loaded':'Open recorded chart'}</button>
+      <button className="small-tool active" disabled={loading||Boolean(capture)} onClick={()=>void open()}>{loading?'Loading chart…':capture?'Recorded chart loaded':'Open recorded chart'}</button>
       {!replay&&<button className="small-tool" onClick={()=>onJournal(signal,snapshot)}>Record lesson</button>}
       {eligible&&!replay&&<button className="small-tool" onClick={()=>onPlan(signal,snapshot)}>Create plan draft</button>}
       {!replay&&<button className="small-tool" onClick={()=>void navigator.clipboard.writeText(
@@ -208,21 +218,21 @@ export function EvidenceInspector({signal,onPlan,onJournal,onOpenPlan}: {signal:
       const market=signal.provenance[side];const pivots=signal[side];
       const relationship=(pivots.current.price>pivots.previous.price?'Higher ':'Lower ')+(signal.direction==='bearish'?'high':'low');
       return <section key={side}><h3>{market.symbol} · {relationship}</h3>
-        <p>{market.source} · {market.feed_id} · {market.price_basis}</p>
+        <p className="muted small">{market.source} · {market.feed_id} · {market.price_basis}</p>
         {(['previous','current'] as const).map(point=><p key={point}>
-          {point==='previous'?'Previous':'Current'} {pivots[point].price} · {moveLabel(pivots[point].time)} · pivot confirmed {at(pivots[point].confirmed_at)}
+          {point==='previous'?'Previous':'Current'} <span className="mono">{pivots[point].price}</span> · {moveLabel(pivots[point].time)} · pivot confirmed {at(pivots[point].confirmed_at)}
         </p>)}
         {(market.partitions??(market.dataset_id?[{id:market.dataset_id,sha256:market.sha256}]:[])).map(part=><details key={part.id}><summary>Dataset {part.id.slice(0,12)}</summary><p className="evidence-id">{part.id}<br/>{part.sha256}</p></details>)}
       </section>;
     })}</div></>}
     {!replay&&signal.source_correction&&<details><summary>Changed source observations</summary>
       <pre>{JSON.stringify(signal.source_correction.changes,null,2)}</pre></details>}
-    {!replay&&captures.length>0&&<label className="field">Chart capture evidence<select value={snapshot??''}
+    {!replay&&captures.length>0&&<label className="field"><span>Chart capture evidence</span><div className="select-wrap"><select value={snapshot??''}
       onChange={event=>setSnapshot(event.target.value||undefined)}>
       <option value="">Choose a capture to attach</option>
       {captures.map(item=><option key={item.id} value={item.id}>{format(item.created_at)} · {item.id.slice(0,12)}</option>)}
-    </select></label>}
-    {!replay&&snapshot&&<><p><a href={`/research/api/chart-snapshots/${snapshot}/image`} target="_blank" rel="noreferrer">Open saved chart capture</a></p><SnapshotDetails id={snapshot}/></>}
+    </select></div></label>}
+    {!replay&&snapshot&&<><p><a className="text-button" href={`/research/api/chart-snapshots/${snapshot}/image`} target="_blank" rel="noreferrer">Open saved chart capture</a></p><SnapshotDetails id={snapshot}/></>}
     {!replay&&<details onToggle={event=>{if(event.currentTarget.open)openRelated();}}>
       <summary>Related plans</summary>
       {relatedError?<p role="alert">{relatedError}</p>:!related?<p>Loading plan links</p>:!related.length?<p>No plans are linked to this record.</p>:

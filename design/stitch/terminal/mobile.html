@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "tertiary-container": "#f1b617", "on-secondary-fixed": "#001c39", "on-secondary-container": "#d6e5ff", "surface-container-highest": "#2e353f", "on-tertiary-fixed": "#261a00", "primary": "#5cf3c8", "background": "#0d141d", "on-secondary": "#00315d", "on-primary-fixed": "#002118", "tertiary-fixed-dim": "#f9bd22", "tertiary": "#ffd57f", "on-surface": "#dce3f0", "inverse-primary": "#006b54", "outline": "#85948d", "surface-tint": "#42deb4", "surface-container-lowest": "#080f18", "on-surface-variant": "#bbcac2", "secondary": "#a4c9ff", "on-primary-container": "#005845", "tertiary-fixed": "#ffdf9f", "error-container": "#93000a", "inverse-surface": "#dce3f0", "on-background": "#dce3f0", "surface-container-high": "#242a34", "primary-fixed-dim": "#42deb4", "primary-fixed": "#66fbd0", "on-error-container": "#ffdad6", "on-primary": "#00382b", "error": "#ffb4ab", "surface-bright": "#333a44", "secondary-fixed": "#d4e3ff", "surface": "#0d141d", "on-primary-fixed-variant": "#00513f", "surface-variant": "#2e353f", "on-tertiary-container": "#644900", "outline-variant": "#3c4a44", "surface-dim": "#0d141d", "secondary-container": "#0267b8", "surface-container": "#19202a", "on-tertiary-fixed-variant": "#5c4300", "on-secondary-fixed-variant": "#004883", "secondary-fixed-dim": "#a4c9ff", "surface-container-low": "#151c25", "on-error": "#690005", "on-tertiary": "#402d00", "primary-container": "#36d6ad", "inverse-on-surface": "#2a313b" }, borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, spacing: { "margin": "1.5rem", "space-xs": "0.25rem", "space-md": "0.75rem", "space-xl": "1.75rem", "space-sm": "0.5rem", "gutter": "1rem", "space-lg": "1.25rem" }, fontFamily: { "body-sm": ["DM Sans"], "headline-lg": ["Space Grotesk"], "headline-sm": ["Space Grotesk"], "body-lg": ["DM Sans"], "label-sm": ["JetBrains Mono"], "body-md": ["DM Sans"], "label-md": ["JetBrains Mono"], "headline-lg-mobile": ["Space Grotesk"], "label-lg": ["JetBrains Mono"], "headline-md": ["Space Grotesk"] }, fontSize: { "body-sm": ["12px", { lineHeight: "18px", fontWeight: "400" }], "headline-lg": ["30px", { lineHeight: "38px", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-sm": ["10px", { lineHeight: "14px", fontWeight: "500" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "label-md": ["12px", { lineHeight: "16px", fontWeight: "500" }], "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }], "label-lg": ["13px", { lineHeight: "18px", fontWeight: "500" }], "headline-md": ["22px", { lineHeight: "28px", fontWeight: "600" }] } } } }</script><style>@layer base { html, body { width: 100vw; margin: 0; padding: 0; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-container-lowest text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-low/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-14 px-margin flex items-center justify-between gap-space-xs"><div class="flex items-center gap-space-sm"><button aria-label="Open Menu" class="w-11 h-11 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface active:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[22px]">menu</span></button><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate max-w-[130px]">Market Terminal</span></div><div class="flex items-center gap-space-xs"><button aria-label="Command Search" class="w-11 h-11 flex items-center justify-center rounded text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">terminal</span></button><div class="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-container-highest/60"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span><span class="font-label-sm text-label-sm text-primary uppercase tracking-wider hidden sm:inline">LOCAL</span></div><button aria-label="Account Profile" class="w-11 h-11 flex items-center justify-center"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></button></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-20 bg-surface-container-lowest"><div class="flex flex-col w-full text-on-surface select-none pb-6">
+<!-- 1. COMPACT PAIR IDENTITY BAR -->
+<section class="px-gutter pt-3 pb-2.5 bg-surface-container-low shadow-sm">
+<div class="flex items-center justify-between gap-space-sm mb-1.5">
+<div class="flex items-center gap-space-sm min-w-0">
+<h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight font-bold shrink-0">EUR / USD</h1>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-label-sm text-label-sm uppercase tracking-wider shrink-0">SPOT FX</span>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary font-label-sm text-label-sm shrink-0">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="truncate">DUKASCOPY</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">LIVE</span>
+</div>
+</div>
+<!-- Live Quote & Session Telemetry Row -->
+<div class="flex items-baseline justify-between gap-2">
+<div class="flex items-baseline gap-2.5">
+<span class="font-label-lg text-[22px] leading-tight font-bold tracking-tight text-on-surface">1.0842<span class="text-primary text-[17px]">0</span></span>
+<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-primary/15 text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[12px]">arrow_drop_up</span>
+          +0.18% (+19.4)
+        </span>
+</div>
+<div class="flex items-center gap-2 text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Spr: <span class="text-on-surface font-semibold">0.4</span></span>
+<span class="h-2.5 w-px bg-surface-container-highest"></span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container text-tertiary font-medium">LDN / NY</span>
+</div>
+</div>
+</section>
+<!-- 2. TIMEFRAME & CHART CONTROLS STRIP -->
+<section class="flex items-center gap-1.5 px-gutter py-2 bg-surface-container-lowest overflow-x-auto no-scrollbar shadow-inner">
+<button aria-label="Chart Settings M5" class="min-h-[44px] h-11 px-3 flex items-center gap-1.5 rounded bg-surface-container-high text-on-surface active:bg-surface-bright shrink-0 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-primary">tune</span>
+<span class="font-label-md text-label-md font-semibold tracking-tight">M5 Config</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
+</button>
+<div class="h-6 w-px bg-surface-container-high shrink-0 mx-0.5"></div>
+<div aria-label="Timeframe selector" class="flex items-center gap-1 shrink-0" role="tablist">
+<button class="min-h-[44px] min-w-[44px] h-11 px-2.5 flex items-center justify-center rounded bg-surface-container-low text-on-surface-variant active:text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">M1</button>
+<button class="min-h-[44px] min-w-[44px] h-11 px-2.5 flex items-center justify-center rounded bg-surface-container-low text-on-surface-variant active:text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">M3</button>
+<button aria-selected="true" class="min-h-[44px] min-w-[44px] h-11 px-3 flex items-center justify-center rounded bg-primary text-on-primary font-label-md text-label-md font-bold shadow-md shadow-primary/20">M5</button>
+<button class="min-h-[44px] min-w-[44px] h-11 px-2.5 flex items-center justify-center rounded bg-surface-container-low text-on-surface-variant active:text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">M15</button>
+<button class="min-h-[44px] min-w-[44px] h-11 px-2.5 flex items-center justify-center rounded bg-surface-container-low text-on-surface-variant active:text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">M30</button>
+<button class="min-h-[44px] min-w-[44px] h-11 px-2.5 flex items-center justify-center rounded bg-surface-container-low text-on-surface-variant active:text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">H1</button>
+<button class="min-h-[44px] min-w-[44px] h-11 px-2.5 flex items-center justify-center rounded bg-surface-container-low text-on-surface-variant active:text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">H4</button>
+<button class="min-h-[44px] min-w-[44px] h-11 px-2.5 flex items-center justify-center rounded bg-surface-container-low text-on-surface-variant active:text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">D1</button>
+</div>
+</section>
+<!-- 3. ACTION STRIP -->
+<section class="flex items-center gap-2 px-gutter py-2 bg-surface-container-low overflow-x-auto no-scrollbar shadow-sm">
+<button class="min-h-[44px] h-11 px-3.5 flex items-center gap-2 rounded bg-surface-container text-on-surface active:bg-surface-bright shrink-0 shadow-sm transition-colors">
+<span class="material-symbols-outlined text-[18px] text-secondary">layers</span>
+<span class="font-body-md text-body-md font-medium">Layers</span>
+<span class="w-5 h-5 rounded-full bg-surface-container-highest flex items-center justify-center font-label-sm text-label-sm text-primary font-bold">3</span>
+</button>
+<button class="min-h-[44px] h-11 px-3 flex items-center gap-1.5 rounded bg-surface-container text-on-surface active:bg-surface-bright shrink-0 shadow-sm transition-colors">
+<span class="material-symbols-outlined text-[18px] text-tertiary">schedule</span>
+<span class="font-body-md text-body-md font-medium whitespace-nowrap">Killzones</span>
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+</button>
+<button class="min-h-[44px] h-11 px-3 flex items-center gap-2 rounded bg-surface-container text-on-surface active:bg-surface-bright shrink-0 shadow-sm transition-colors relative" id="evidence-trigger-btn">
+<span class="material-symbols-outlined text-[18px] text-error">policy</span>
+<span class="font-body-md text-body-md font-medium whitespace-nowrap">Evidence</span>
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+</button>
+<button class="min-h-[44px] h-11 px-4 flex items-center gap-2 rounded bg-primary text-on-primary font-headline-sm text-[13px] tracking-tight font-bold active:opacity-90 shrink-0 shadow-md shadow-primary/20 transition-all">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span class="whitespace-nowrap">Record Decision</span>
+<span class="font-label-sm text-[10px] opacity-75 hidden xs:inline">[↵]</span>
+</button>
+</section>
+<!-- 4. DRAWING TOOLBAR & CANDLESTICK CHART VIEWPORT -->
+<section class="flex flex-col w-full mt-1 bg-surface-container-lowest">
+<!-- Compact Drawing Tool Strip -->
+<div class="flex items-center justify-between px-gutter py-1 bg-surface-container-high/60 overflow-x-auto no-scrollbar">
+<div class="flex items-center gap-1">
+<button aria-label="Crosshair Tool" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded text-primary bg-surface-container-highest shadow-inner" title="Crosshair">
+<span class="material-symbols-outlined text-[20px]">adjust</span>
+</button>
+<button aria-label="Trendline Tool" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface active:bg-surface-container-highest" title="Trendline">
+<span class="material-symbols-outlined text-[20px]">show_chart</span>
+</button>
+<button aria-label="Fib Retracement" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface active:bg-surface-container-highest" title="Fibonacci Retracement">
+<span class="material-symbols-outlined text-[20px]">stacked_line_chart</span>
+</button>
+<button aria-label="Horizontal Ray" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface active:bg-surface-container-highest" title="Horizontal Ray">
+<span class="material-symbols-outlined text-[20px]">straighten</span>
+</button>
+<button aria-label="Invalidation Box Tool" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface active:bg-surface-container-highest" title="Invalidation Box">
+<span class="material-symbols-outlined text-[20px]">crop_square</span>
+</button>
+<button aria-label="SMT Ruler" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface active:bg-surface-container-highest" title="SMT Divergence Ruler">
+<span class="material-symbols-outlined text-[20px]">compare_arrows</span>
+</button>
+</div>
+<div class="flex items-center gap-1 pl-2">
+<button aria-label="Snapshot Chart" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface" title="Snapshot">
+<span class="material-symbols-outlined text-[20px]">photo_camera</span>
+</button>
+<button aria-label="Fullscreen Chart" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface" title="Fullscreen">
+<span class="material-symbols-outlined text-[20px]">fullscreen</span>
+</button>
+</div>
+</div>
+<!-- Candlestick Chart Viewport Container -->
+<div class="relative w-full h-[320px] bg-surface-container-lowest overflow-hidden flex flex-col justify-between shadow-2xl">
+<!-- Grid Background Visual -->
+<div class="absolute inset-0 opacity-15 pointer-events-none" style="background-image: linear-gradient(to right, #242a34 1px, transparent 1px), linear-gradient(to bottom, #242a34 1px, transparent 1px); background-size: 40px 32px;"></div>
+<!-- Floating Non-overlapping OHLC Telemetry Header -->
+<div class="relative z-10 flex items-center justify-between px-3 pt-2 bg-gradient-to-b from-surface-container-lowest via-surface-container-lowest/80 to-transparent">
+<div class="flex items-center gap-2 flex-wrap font-label-sm text-label-sm text-on-surface-variant">
+<span>O: <strong class="text-on-surface font-semibold">1.08380</strong></span>
+<span>H: <strong class="text-primary font-semibold">1.08465</strong></span>
+<span>L: <strong class="text-error font-semibold">1.08350</strong></span>
+<span>C: <strong class="text-primary font-semibold">1.08420</strong></span>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-tertiary">
+<span class="material-symbols-outlined text-[13px]">alarm</span>
+<span>03:42</span>
+</div>
+</div>
+<!-- SVG Chart Canvas: Price action, SMT vector, FVG, Invalidation line -->
+<div class="relative w-full flex-1 min-h-0">
+<svg class="w-full h-full" fill="none" preserveaspectratio="none" viewbox="0 0 375 240" xmlns="http://www.w3.org/2000/svg">
+<!-- Price Grid Coordinates (Horizontal guidelines) -->
+<line stroke="#19202a" stroke-dasharray="2 3" stroke-width="1" x1="0" x2="330" y1="45" y2="45"></line>
+<line stroke="#19202a" stroke-dasharray="2 3" stroke-width="1" x1="0" x2="330" y1="110" y2="110"></line>
+<line stroke="#19202a" stroke-dasharray="2 3" stroke-width="1" x1="0" x2="330" y1="175" y2="175"></line>
+<!-- Fair Value Gap (FVG) Shaded Zone [1.08350 - 1.08390] -->
+<rect fill="#5cf3c8" fill-opacity="0.08" height="42" rx="2" width="200" x="70" y="115"></rect>
+<line opacity="0.4" stroke="#5cf3c8" stroke-dasharray="3 3" stroke-width="0.8" x1="70" x2="270" y1="115" y2="115"></line>
+<line opacity="0.4" stroke="#5cf3c8" stroke-dasharray="3 3" stroke-width="0.8" x1="70" x2="270" y1="157" y2="157"></line>
+<text fill="#5cf3c8" font-family="JetBrains Mono" font-size="8" font-weight="600" opacity="0.75" x="76" y="128">M5 BULL FVG</text>
+<!-- Invalidation Stop Line at 1.08490 -->
+<line opacity="0.85" stroke="#ffb4ab" stroke-dasharray="4 3" stroke-width="1.2" x1="120" x2="328" y1="34" y2="34"></line>
+<rect fill="#93000a" height="15" rx="2" width="75" x="250" y="26"></rect>
+<text fill="#ffb4ab" font-family="JetBrains Mono" font-size="8" font-weight="600" x="254" y="37">INV 1.08490</text>
+<!-- Candlesticks Series (Width: 10px, Gaps: 8px) -->
+<!-- C1: Bearish -->
+<line stroke="#ffb4ab" stroke-width="1.2" x1="24" x2="24" y1="140" y2="185"></line>
+<rect fill="#ffb4ab" height="25" rx="1" width="10" x="19" y="150"></rect>
+<!-- C2: Bullish Reversal -->
+<line stroke="#5cf3c8" stroke-width="1.2" x1="42" x2="42" y1="130" y2="175"></line>
+<rect fill="#5cf3c8" height="30" rx="1" width="10" x="37" y="138"></rect>
+<!-- C3: Bullish Displacement -->
+<line stroke="#5cf3c8" stroke-width="1.2" x1="60" x2="60" y1="100" y2="148"></line>
+<rect fill="#5cf3c8" height="36" rx="1" width="10" x="55" y="105"></rect>
+<!-- C4: Retest into FVG (Bearish pullback) -->
+<line stroke="#ffb4ab" stroke-width="1.2" x1="78" x2="78" y1="105" y2="145"></line>
+<rect fill="#ffb4ab" height="20" rx="1" width="10" x="73" y="112"></rect>
+<!-- C5: Consolidate Inside FVG -->
+<line stroke="#5cf3c8" stroke-width="1.2" x1="96" x2="96" y1="112" y2="152"></line>
+<rect fill="#5cf3c8" height="18" rx="1" width="10" x="91" y="120"></rect>
+<!-- C6: Expansion Leg Up -->
+<line stroke="#5cf3c8" stroke-width="1.2" x1="114" x2="114" y1="75" y2="128"></line>
+<rect fill="#5cf3c8" height="42" rx="1" width="10" x="109" y="82"></rect>
+<!-- C7: High Sweep 1 -->
+<line stroke="#ffb4ab" stroke-width="1.2" x1="132" x2="132" y1="62" y2="108"></line>
+<rect fill="#ffb4ab" height="24" rx="1" width="10" x="127" y="70"></rect>
+<!-- C8: Internal Pause -->
+<line stroke="#5cf3c8" stroke-width="1.2" x1="150" x2="150" y1="68" y2="98"></line>
+<rect fill="#5cf3c8" height="15" rx="1" width="10" x="145" y="74"></rect>
+<!-- C9: Strong Bull Candle -->
+<line stroke="#5cf3c8" stroke-width="1.2" x1="168" x2="168" y1="52" y2="88"></line>
+<rect fill="#5cf3c8" height="24" rx="1" width="10" x="163" y="58"></rect>
+<!-- C10: HIGHER HIGH PIVOT (1.08465) SMT ANCHOR -->
+<line stroke="#5cf3c8" stroke-width="1.5" x1="186" x2="186" y1="38" y2="78"></line>
+<rect fill="#5cf3c8" height="26" rx="1" width="10" x="181" y="46"></rect>
+<!-- High Point Marker Circle -->
+<circle cx="186" cy="38" fill="#ffd57f" r="3.5" stroke="#080f18" stroke-width="1.5"></circle>
+<!-- C11: Shooting Star / Exhaustion -->
+<line stroke="#ffb4ab" stroke-width="1.2" x1="204" x2="204" y1="41" y2="82"></line>
+<rect fill="#ffb4ab" height="22" rx="1" width="10" x="199" y="54"></rect>
+<!-- C12: Bearish Reaction Down -->
+<line stroke="#ffb4ab" stroke-width="1.2" x1="222" x2="222" y1="65" y2="114"></line>
+<rect fill="#ffb4ab" height="34" rx="1" width="10" x="217" y="72"></rect>
+<!-- C13: Inside Rebound -->
+<line stroke="#5cf3c8" stroke-width="1.2" x1="240" x2="240" y1="78" y2="112"></line>
+<rect fill="#5cf3c8" height="19" rx="1" width="10" x="235" y="85"></rect>
+<!-- C14: CURRENT LIVE CANDLE [1.08420] -->
+<line stroke="#5cf3c8" stroke-width="1.5" x1="258" x2="258" y1="70" y2="108"></line>
+<rect fill="#5cf3c8" height="20" rx="1" width="10" x="253" y="75"></rect>
+<!-- SMT Divergence Vector Annotation -->
+<path d="M 186 38 Q 230 20 285 24" stroke="#ffd57f" stroke-dasharray="3 3" stroke-width="1.5"></path>
+<circle cx="285" cy="24" fill="#ffd57f" r="2.5"></circle>
+<!-- SMT Callout Badge -->
+<g transform="translate(170, 6)">
+<rect fill="#242a34" fill-opacity="0.95" height="20" rx="4" width="148" x="0" y="0"></rect>
+<text fill="#ffd57f" font-family="JetBrains Mono" font-size="8.5" font-weight="600" x="6" y="14">SMT: EUR HH vs GBP LH [14:15]</text>
+</g>
+<!-- Current Price Pulse Horizontal Axis Line -->
+<line opacity="0.75" stroke="#5cf3c8" stroke-dasharray="2 2" stroke-width="1" x1="0" x2="330" y1="85" y2="85"></line>
+<!-- Right Price Axis Sidebar Strip -->
+<rect fill="#0d141d" height="240" width="45" x="330" y="0"></rect>
+<text fill="#ffb4ab" font-family="JetBrains Mono" font-size="8" x="334" y="38">1.08490</text>
+<text fill="#85948d" font-family="JetBrains Mono" font-size="8" x="334" y="49">1.08465</text>
+<!-- Current price badge on axis -->
+<rect fill="#36d6ad" height="16" rx="1" width="45" x="330" y="77"></rect>
+<text fill="#00382b" font-family="JetBrains Mono" font-size="8.5" font-weight="700" x="334" y="89">1.08420</text>
+<text fill="#85948d" font-family="JetBrains Mono" font-size="8" x="334" y="120">1.08380</text>
+<text fill="#85948d" font-family="JetBrains Mono" font-size="8" x="334" y="157">1.08350</text>
+<text fill="#85948d" font-family="JetBrains Mono" font-size="8" x="334" y="195">1.08310</text>
+</svg>
+</div>
+<!-- Floating Docked Chart HUD Utility Bar -->
+<div class="relative z-10 flex items-center justify-between px-3 py-1.5 bg-surface-container-low/90 backdrop-blur-md">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">UTC 14:32:18</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            Sync: 18ms
+          </span>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Auto Scroll" class="min-h-[44px] px-2.5 flex items-center gap-1 rounded bg-surface-container-highest/70 text-on-surface active:bg-surface-bright transition-colors" title="Lock to latest">
+<span class="material-symbols-outlined text-[16px] text-primary">fast_forward</span>
+<span class="font-label-sm text-label-sm">Auto-scroll</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. EVIDENCE BANNER & QUICK THESIS PREVIEW CARD -->
+<section class="px-gutter mt-2.5">
+<div class="relative overflow-hidden rounded-xl bg-surface-container p-3.5 shadow-md">
+<!-- Glow Accent -->
+<div class="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-tertiary-container/10 blur-xl pointer-events-none"></div>
+<div class="flex items-start justify-between gap-2 mb-2">
+<div class="flex items-center gap-2 min-w-0">
+<div class="w-7 h-7 rounded-lg bg-tertiary/15 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[17px] text-tertiary">warning</span>
+</div>
+<div class="min-w-0">
+<span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-semibold">Correlated Signal</span>
+<h2 class="font-headline-sm text-[15px] leading-tight text-on-surface truncate">Bearish SMT Divergence Confirmed</h2>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-error-container/40 text-error font-label-sm text-label-sm font-semibold shrink-0">HIGH CONF</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-3">
+        EUR/USD pushed a new local high (<strong class="text-on-surface font-label-sm">1.08465</strong>) while GBP/USD failed to clear its peak and made a Lower High (<strong class="text-on-surface font-label-sm">1.29840</strong>) at 14:15 UTC killzone.
+      </p>
+<button class="w-full min-h-[44px] h-11 px-3 flex items-center justify-between rounded bg-surface-container-high text-on-surface active:bg-surface-bright transition-colors shadow-sm" id="open-evidence-sheet">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">science</span>
+<span class="font-label-md text-label-md font-medium text-primary">Open Evidence Inspector (5 Artifacts)</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- 6. BAR REPLAY TRANSPORT BAR -->
+<section class="px-gutter mt-2.5">
+<div class="rounded-xl bg-surface-container-low p-3 shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold tracking-wide uppercase">Replay Engine</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-label-sm text-label-sm font-medium">
+          Frozen #4,120
+        </span>
+</div>
+<!-- Scrubber Track -->
+<div class="relative flex items-center h-8 my-1 px-1">
+<div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden relative">
+<div class="h-full bg-primary w-[72%] rounded-full"></div>
+</div>
+<!-- Scrubber Thumb with touch target -->
+<div class="absolute left-[70%] -translate-x-1/2 w-6 h-6 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-lg cursor-pointer">
+<div class="w-3.5 h-3.5 rounded-full bg-primary"></div>
+</div>
+</div>
+<!-- Timeline Label & Transport Controls Row -->
+<div class="flex items-center justify-between pt-1">
+<div class="flex items-center gap-1">
+<!-- Play / Pause -->
+<button aria-label="Play/Pause Replay" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded bg-surface-container text-on-surface active:bg-surface-bright shadow-sm transition-colors" id="replay-play-btn">
+<span class="material-symbols-outlined text-[22px] text-primary">play_arrow</span>
+</button>
+<!-- Step Forward 1 Bar -->
+<button aria-label="Step 1 Bar Forward" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded bg-surface-container text-on-surface active:bg-surface-bright shadow-sm transition-colors">
+<span class="material-symbols-outlined text-[20px]">skip_next</span>
+</button>
+<!-- Reset / Jump -->
+<button aria-label="Restart Replay" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded bg-surface-container text-on-surface-variant active:text-on-surface shadow-sm transition-colors">
+<span class="material-symbols-outlined text-[18px]">replay</span>
+</button>
+</div>
+<!-- Speed Selector Controls -->
+<div class="flex items-center gap-1 bg-surface-container-high p-1 rounded-lg">
+<button class="min-h-[38px] px-2.5 flex items-center justify-center rounded bg-primary text-on-primary font-label-sm text-label-sm font-bold shadow-sm">1x</button>
+<button class="min-h-[38px] px-2.5 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface active:bg-surface-container font-label-sm text-label-sm">3x</button>
+<button class="min-h-[38px] px-2.5 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface active:bg-surface-container font-label-sm text-label-sm">5x</button>
+</div>
+</div>
+<!-- Timestamp of current frozen bar -->
+<div class="flex items-center justify-between mt-2 pt-1 font-label-sm text-label-sm text-on-surface-variant">
+<span>Bar time: <span class="text-on-surface font-semibold">2024.10.25 14:30:00</span></span>
+<span class="text-primary font-medium">Tick Buffer: 100%</span>
+</div>
+</div>
+</section>
+<!-- 7. WATCHLIST QUICK-SWITCH 2-COLUMN GRID -->
+<section class="px-gutter mt-3">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary">monitoring</span>
+<span class="font-headline-sm text-[15px] font-semibold text-on-surface">Execution Watchlist</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">4 Active Feeds</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<!-- Pair 1: EUR/USD (Active) -->
+<button class="flex flex-col text-left p-3 rounded-xl bg-surface-container-high shadow-md transition-all active:scale-[0.98] w-full min-h-[58px]">
+<div class="flex items-center justify-between w-full mb-1">
+<span class="font-headline-sm text-[14px] font-bold text-on-surface">EUR/USD</span>
+<span class="w-2 h-2 rounded-full bg-primary shadow-sm shadow-primary/50"></span>
+</div>
+<div class="flex items-baseline justify-between w-full">
+<span class="font-label-md text-label-md font-semibold text-on-surface">1.08420</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">+0.18%</span>
+</div>
+<div class="flex items-center justify-between mt-1 text-on-surface-variant font-label-sm text-label-sm">
+<span>M5 Chart</span>
+<span class="px-1 rounded bg-surface-container-lowest text-primary text-[9px] uppercase font-bold">ACTIVE</span>
+</div>
+</button>
+<!-- Pair 2: GBP/USD (Divergent Alert) -->
+<button class="flex flex-col text-left p-3 rounded-xl bg-surface-container shadow-md transition-all active:scale-[0.98] hover:bg-surface-container-high w-full min-h-[58px]">
+<div class="flex items-center justify-between w-full mb-1">
+<span class="font-headline-sm text-[14px] font-bold text-on-surface">GBP/USD</span>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+</div>
+<div class="flex items-baseline justify-between w-full">
+<span class="font-label-md text-label-md font-semibold text-on-surface">1.29840</span>
+<span class="font-label-sm text-label-sm text-error font-bold">-0.08%</span>
+</div>
+<div class="flex items-center justify-between mt-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="text-tertiary font-semibold truncate">SMT Divergence</span>
+<span class="material-symbols-outlined text-[13px] text-tertiary">priority_high</span>
+</div>
+</button>
+<!-- Pair 3: USD/JPY (Flat) -->
+<button class="flex flex-col text-left p-3 rounded-xl bg-surface-container shadow-md transition-all active:scale-[0.98] hover:bg-surface-container-high w-full min-h-[58px]">
+<div class="flex items-center justify-between w-full mb-1">
+<span class="font-headline-sm text-[14px] font-bold text-on-surface">USD/JPY</span>
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+</div>
+<div class="flex items-baseline justify-between w-full">
+<span class="font-label-md text-label-md font-semibold text-on-surface">152.120</span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">+0.32%</span>
+</div>
+<div class="flex items-center justify-between mt-1 text-on-surface-variant font-label-sm text-label-sm">
+<span>Range: 42 pips</span>
+<span class="text-on-surface-variant font-medium text-[10px]">Tokyo Off</span>
+</div>
+</button>
+<!-- Pair 4: XAU/USD (Strong Bullish) -->
+<button class="flex flex-col text-left p-3 rounded-xl bg-surface-container shadow-md transition-all active:scale-[0.98] hover:bg-surface-container-high w-full min-h-[58px]">
+<div class="flex items-center justify-between w-full mb-1">
+<span class="font-headline-sm text-[14px] font-bold text-on-surface">XAU/USD</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</div>
+<div class="flex items-baseline justify-between w-full">
+<span class="font-label-md text-label-md font-semibold text-on-surface">2,735.40</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">+0.65%</span>
+</div>
+<div class="flex items-center justify-between mt-1 text-on-surface-variant font-label-sm text-label-sm">
+<span>Trend: ATH</span>
+<span class="text-primary font-medium text-[10px]">Expansion</span>
+</div>
+</button>
+</div>
+</section>
+<!-- MODAL / BOTTOM SHEET: EVIDENCE & AUDIT TRAIL INSPECTOR -->
+<div class="fixed inset-0 z-50 pointer-events-none opacity-0 transition-opacity duration-300 flex flex-col justify-end bg-black/60 backdrop-blur-sm" id="evidence-drawer">
+<div class="w-full bg-surface-container-low rounded-t-2xl shadow-2xl p-4 flex flex-col max-h-[724px] overflow-y-auto transform translate-y-full transition-transform duration-300 pointer-events-auto" id="drawer-panel">
+<!-- Drawer Handle Bar -->
+<div class="w-12 h-1.5 bg-surface-container-highest rounded-full mx-auto mb-3 shrink-0"></div>
+<div class="flex items-center justify-between mb-3 shrink-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[22px] text-tertiary">verified_user</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">SMT Forensic Evidence</span>
+</div>
+<button aria-label="Close Evidence Inspector" class="min-h-[44px] min-w-[44px] h-11 w-11 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface active:bg-surface-bright" id="close-evidence-sheet">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-2.5">
+<!-- Evidence Log 1 -->
+<div class="p-3 rounded-lg bg-surface-container">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-tertiary font-bold">CORRELATION ASYMMETRY</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">14:15:02 UTC</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+            EUR/USD prints New High at <span class="font-label-sm font-semibold text-primary">1.08465</span>. GBP/USD creates lower swing peak at <span class="font-label-sm font-semibold text-error">1.29840</span> (-16 ticks below high).
+          </p>
+</div>
+<!-- Evidence Log 2 -->
+<div class="p-3 rounded-lg bg-surface-container">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-secondary font-bold">LIQUIDITY SWEEP AUDIT</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">14:15:45 UTC</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+            Buy-side liquidity (BSL) swept across London open highs. Immediate rejection confirmed via 5-second tick velocity metric (-420 ticks/sec).
+          </p>
+</div>
+<!-- Evidence Log 3 -->
+<div class="p-3 rounded-lg bg-surface-container">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-primary font-bold">FAIR VALUE GAP DYNAMICS</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">14:20:10 UTC</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+            Price respected 1.08350 - 1.08390 displacement range. Premium zone sell orders executed: 4.8M aggregate volume.
+          </p>
+</div>
+<!-- Invalidation Protocol Box -->
+<div class="p-3 rounded-lg bg-error-container/20 text-on-surface">
+<div class="flex items-center gap-1.5 mb-1 text-error">
+<span class="material-symbols-outlined text-[16px]">gavel</span>
+<span class="font-label-sm text-label-sm font-bold uppercase">Automated Invalidation Rule</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            If M5 candle closes cleanly above <span class="font-label-sm font-bold text-on-surface">1.08490</span>, active Bearish SMT setup is automatically canceled with execution lock engaged.
+          </p>
+</div>
+</div>
+<button class="mt-4 min-h-[44px] h-11 w-full flex items-center justify-center rounded bg-primary text-on-primary font-headline-sm text-[14px] font-bold shadow-md shadow-primary/20 active:opacity-90">
+        Export Audit Snapshot (.CSV)
+      </button>
+</div>
+</div>
+</div>
+<script>
+  (function initMarketTerminal() {
+    const evidenceTrigger = document.getElementById('evidence-trigger-btn');
+    const openSheetBtn = document.getElementById('open-evidence-sheet');
+    const closeSheetBtn = document.getElementById('close-evidence-sheet');
+    const drawer = document.getElementById('evidence-drawer');
+    const drawerPanel = document.getElementById('drawer-panel');
+    const playBtn = document.getElementById('replay-play-btn');
+
+    function openEvidence() {
+      if (!drawer || !drawerPanel) return;
+      drawer.classList.remove('pointer-events-none', 'opacity-0');
+      drawer.classList.add('opacity-100');
+      drawerPanel.classList.remove('translate-y-full');
+      drawerPanel.classList.add('translate-y-0');
+    }
+
+    function closeEvidence() {
+      if (!drawer || !drawerPanel) return;
+      drawer.classList.add('opacity-0');
+      drawerPanel.classList.remove('translate-y-0');
+      drawerPanel.classList.add('translate-y-full');
+      setTimeout(() => {
+        drawer.classList.add('pointer-events-none');
+      }, 300);
+    }
+
+    if (evidenceTrigger) evidenceTrigger.addEventListener('click', openEvidence);
+    if (openSheetBtn) openSheetBtn.addEventListener('click', openEvidence);
+    if (closeSheetBtn) closeSheetBtn.addEventListener('click', closeEvidence);
+
+    if (drawer) {
+      drawer.addEventListener('click', (e) => {
+        if (e.target === drawer) closeEvidence();
+      });
+    }
+
+    // Interactive Replay Toggle State
+    let isPlaying = false;
+    if (playBtn) {
+      playBtn.addEventListener('click', () => {
+        isPlaying = !isPlaying;
+        const icon = playBtn.querySelector('.material-symbols-outlined');
+        if (icon) {
+          icon.textContent = isPlaying ? 'pause' : 'play_arrow';
+          icon.style.color = isPlaying ? '#ffd57f' : '#5cf3c8';
+        }
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-low/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary font-bold"><div class="flex items-center justify-around h-16 px-gutter"><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-label-sm text-label-sm tracking-tight mt-0.5">Overview</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] h-12 transition-colors text-primary font-bold" data-path="market-terminal" href="#"><span class="material-symbols-outlined text-[20px]">candlestick_chart</span><span class="font-label-sm text-label-sm tracking-tight mt-0.5">Terminal</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-colors" data-path="positions" href="#"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span><span class="font-label-sm text-label-sm tracking-tight mt-0.5">Positions</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-colors" data-path="logs-evidence" href="#"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span class="font-label-sm text-label-sm tracking-tight mt-0.5">Logs</span></a></div></nav></body></html>

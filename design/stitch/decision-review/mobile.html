@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary": "#00382b", "on-background": "#dce3f0", "surface-dim": "#0d141d", "surface-container-low": "#151c25", "surface-container": "#19202a", "secondary": "#a4c9ff", "primary-fixed": "#66fbd0", "outline-variant": "#3c4a44", "secondary-fixed": "#d4e3ff", "primary-fixed-dim": "#42deb4", "on-secondary": "#00315d", "tertiary-fixed-dim": "#f9bd22", "tertiary-container": "#f1b617", "on-tertiary-fixed-variant": "#5c4300", "surface-container-highest": "#2e353f", "background": "#0d141d", "surface-variant": "#2e353f", "on-secondary-fixed-variant": "#004883", "inverse-surface": "#dce3f0", "surface-container-high": "#242a34", "on-surface-variant": "#bbcac2", "surface-tint": "#42deb4", "surface-bright": "#333a44", "error-container": "#93000a", "on-tertiary-fixed": "#261a00", "on-secondary-fixed": "#001c39", "outline": "#85948d", "on-error-container": "#ffdad6", "on-surface": "#dce3f0", "inverse-on-surface": "#2a313b", "on-tertiary-container": "#644900", "on-primary-fixed": "#002118", "on-tertiary": "#402d00", "secondary-fixed-dim": "#a4c9ff", "primary-container": "#36d6ad", "surface": "#0d141d", "surface-container-lowest": "#080f18", "on-primary-fixed-variant": "#00513f", "on-primary-container": "#005845", "tertiary-fixed": "#ffdf9f", "on-secondary-container": "#d6e5ff", "primary": "#5cf3c8", "on-error": "#690005", "secondary-container": "#0267b8", "error": "#ffb4ab", "tertiary": "#ffd57f", "inverse-primary": "#006b54" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-xs": "0.25rem", "space-sm": "0.5rem", "space-md": "0.75rem", "gutter": "1rem", "space-xl": "1.75rem", "margin": "1.5rem", "space-lg": "1.25rem" }, "fontFamily": { "headline-lg": ["Space Grotesk"], "label-lg": ["JetBrains Mono"], "body-lg": ["DM Sans"], "label-sm": ["JetBrains Mono"], "body-md": ["DM Sans"], "headline-md": ["Space Grotesk"], "headline-sm": ["Space Grotesk"], "label-md": ["JetBrains Mono"], "body-sm": ["DM Sans"], "headline-lg-mobile": ["Space Grotesk"] }, "fontSize": { "headline-lg": ["30px", { "lineHeight": "38px", "fontWeight": "600" }], "label-lg": ["13px", { "lineHeight": "18px", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "label-sm": ["10px", { "lineHeight": "14px", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col antialiased selection:bg-primary selection:text-on-primary"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.25)]"><div class="h-14 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="Back to Workspace" class="h-11 px-space-xs flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors focus:outline-none" onclick="history.back()"><span class="material-symbols-outlined text-[18px]">arrow_back</span><span class="font-label-md text-label-md tracking-wider uppercase hidden sm:inline">Workspace</span></button><span class="font-headline-sm text-headline-sm font-semibold tracking-tight text-primary flex items-center gap-1.5 shrink-0"><span class="material-symbols-outlined text-[20px] text-primary">candlestick_chart</span><span class="hidden xs:inline">TF</span></span></div><div class="flex items-center gap-space-sm shrink-0"><div class="h-7 px-space-sm rounded-full bg-surface-container-high flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span><span class="font-label-sm text-label-sm uppercase tracking-widest text-tertiary">Blind Review</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-14 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Interactive Blind State Script (Vanilla UX logic) -->
+<script>
+    function toggleOutcomeReveal() {
+      const outcomeCard = document.getElementById('outcome-audit-card');
+      const maskZone = document.getElementById('chart-masked-zone');
+      const revealBtn = document.getElementById('btn-reveal-outcome');
+      const isRevealed = outcomeCard.getAttribute('data-revealed') === 'true';
+
+      if (!isRevealed) {
+        outcomeCard.setAttribute('data-revealed', 'true');
+        outcomeCard.classList.remove('opacity-40', 'pointer-events-none', 'blur-[2px]');
+        outcomeCard.classList.add('opacity-100', 'pointer-events-auto');
+        if (maskZone) {
+          maskZone.classList.add('opacity-15');
+          const unmaskedPath = document.getElementById('outcome-trajectory-path');
+          if (unmaskedPath) unmaskedPath.classList.remove('hidden');
+        }
+        if (revealBtn) {
+          revealBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] text-primary">visibility_off</span><span class="font-label-md text-label-md">Conceal Outcome</span>';
+        }
+      } else {
+        outcomeCard.setAttribute('data-revealed', 'false');
+        outcomeCard.classList.add('opacity-40', 'pointer-events-none', 'blur-[2px]');
+        outcomeCard.classList.remove('opacity-100', 'pointer-events-auto');
+        if (maskZone) {
+          maskZone.classList.remove('opacity-15');
+          const unmaskedPath = document.getElementById('outcome-trajectory-path');
+          if (unmaskedPath) unmaskedPath.classList.add('hidden');
+        }
+        if (revealBtn) {
+          revealBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">lock_open</span><span class="font-label-md text-label-md">Reveal Original Outcome</span>';
+        }
+      }
+    }
+
+    function togglePlanChain() {
+      const el = document.getElementById('causal-chain-content');
+      const icon = document.getElementById('chain-toggle-icon');
+      if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        icon.innerText = 'keyboard_arrow_up';
+      } else {
+        el.classList.add('hidden');
+        icon.innerText = 'keyboard_arrow_down';
+      }
+    }
+  </script>
+<!-- Content Stream (Mobile 375px optimized layout, single column) -->
+<div class="w-full px-gutter flex flex-col gap-space-lg pb-space-xl">
+<!-- 1. HEADER / BREADCRUMBS & PAGE HEADING -->
+<section class="flex flex-col gap-space-sm pt-space-md">
+<!-- Breadcrumb + Hash + Frozen Tag -->
+<div class="flex items-center justify-between gap-space-xs flex-wrap">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant truncate">PRACTICE / BLIND DECISION REVIEW</span>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container-high px-1.5 py-0.5 rounded shrink-0">#9f20...44d9</span>
+</div>
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/40 text-secondary">
+<span class="material-symbols-outlined text-[13px]">lock_clock</span>
+<span class="font-label-sm text-label-sm font-semibold tracking-wider uppercase">FROZEN PRE-EXECUTION</span>
+</div>
+</div>
+<!-- H1 -->
+<div class="flex flex-col gap-1">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile tracking-tight text-on-surface">
+          Review TF-2024-087 · v2
+        </h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Assess the frozen historical plan and multi-pair divergence chart before revealing the recorded outcome. Train causal trade discipline without hindsight bias.
+        </p>
+</div>
+<!-- Quick Action Bar (44px min tap targets) -->
+<div class="grid grid-cols-2 gap-space-sm mt-space-xs">
+<button class="h-11 px-space-md rounded bg-surface-container-high active:bg-surface-bright text-on-surface flex items-center justify-center gap-2 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary">download</span>
+<span class="font-label-md text-label-md uppercase tracking-wider font-semibold">Export Packet</span>
+</button>
+<button class="h-11 px-space-md rounded bg-surface-container-high active:bg-surface-bright text-on-surface flex items-center justify-center gap-2 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">tune</span>
+<span class="font-label-md text-label-md uppercase tracking-wider font-semibold">Drill Presets</span>
+</button>
+</div>
+</section>
+<!-- 2. AVAILABLE PRACTICE DECISIONS SWITCHER -->
+<section class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-0.5">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant">Switch Practice Drill</span>
+<span class="font-label-sm text-label-sm text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">verified_user</span>
+          Strict Lookahead Protection Enforced
+        </span>
+</div>
+<!-- Horizontal Pill Scroll -->
+<div class="flex items-center gap-space-sm overflow-x-auto no-scrollbar py-1 -mx-gutter px-gutter">
+<!-- Active Pill -->
+<button class="h-11 shrink-0 px-3.5 rounded bg-primary text-on-primary flex items-center gap-2 shadow-sm focus:outline-none" type="button">
+<span class="w-2 h-2 rounded-full bg-on-primary animate-ping"></span>
+<span class="font-label-md text-label-md font-semibold whitespace-nowrap">EUR/USD BUY TF-2024-087 (London SMT)</span>
+<span class="text-[10px] px-1 py-0.5 rounded bg-on-primary/20 font-label-sm uppercase font-bold tracking-tight">Active</span>
+</button>
+<!-- Other Pills -->
+<button class="h-11 shrink-0 px-3.5 rounded bg-surface-container active:bg-surface-container-high text-on-surface flex items-center gap-2 transition-colors" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span class="font-label-md text-label-md whitespace-nowrap">GBP/JPY SELL TF-2024-088</span>
+</button>
+<button class="h-11 shrink-0 px-3.5 rounded bg-surface-container active:bg-surface-container-high text-on-surface flex items-center gap-2 transition-colors" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md whitespace-nowrap">USD/CHF BUY TF-2024-089</span>
+</button>
+<button class="h-11 shrink-0 px-3.5 rounded bg-surface-container-low text-on-surface-variant flex items-center gap-2 opacity-75" type="button">
+<span class="material-symbols-outlined text-[14px] text-tertiary">check_circle</span>
+<span class="font-label-md text-label-md whitespace-nowrap">XAU/USD SELL TF-2024-085 (Completed)</span>
+</button>
+</div>
+</section>
+<!-- 3. ORIGINAL PLAN KEY-VALUE CARD (FROZEN METADATA) -->
+<div class="rounded-lg bg-surface-container p-space-md shadow-md flex flex-col gap-space-sm">
+<!-- Card Title & Badge -->
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">assignment_turned_in</span>
+<span class="font-headline-sm text-headline-sm tracking-tight text-on-surface">ORIGINAL PLAN</span>
+</div>
+<div class="px-2 py-0.5 rounded bg-surface-container-highest text-primary font-label-sm text-label-sm tracking-wider uppercase font-semibold">
+          READ-ONLY AUDIT
+        </div>
+</div>
+<!-- Key-Value Grid -->
+<div class="grid grid-cols-2 gap-space-sm bg-surface-container-lowest p-space-sm rounded">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Instrument</span>
+<span class="font-label-md text-label-md font-semibold text-on-surface mt-0.5">EUR / USD SPOT</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Direction / Bias</span>
+<span class="font-label-md text-label-md font-bold text-primary mt-0.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+            BUY (LONG)
+          </span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Timeframe</span>
+<span class="font-label-md text-label-md text-on-surface mt-0.5">M5 (H1 Context)</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Session / Risk</span>
+<span class="font-label-md text-label-md text-on-surface mt-0.5">LDN 0.5% ($500)</span>
+</div>
+<div class="col-span-2 flex flex-col pt-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Model Framework</span>
+<span class="font-label-md text-label-md text-secondary mt-0.5">TF-MOD-089 (SMT Structure Sweep)</span>
+</div>
+</div>
+<!-- Collapsible Causal Execution Chain -->
+<div class="flex flex-col rounded bg-surface-container-low overflow-hidden">
+<button class="h-11 px-space-sm flex items-center justify-between text-on-surface active:bg-surface-container transition-colors focus:outline-none" onclick="togglePlanChain()" type="button">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[18px]">account_tree</span>
+<span class="font-label-md text-label-md font-semibold uppercase tracking-wider">Causal Execution Chain (4 Steps)</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant" id="chain-toggle-icon">keyboard_arrow_down</span>
+</button>
+<div class="px-space-sm pb-space-sm flex flex-col gap-2 pt-1" id="causal-chain-content">
+<!-- Step 1 -->
+<div class="flex items-center justify-between p-2 rounded bg-surface-container text-on-surface">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-label-sm text-label-sm font-bold">1</span>
+<span class="font-body-sm text-body-sm text-on-surface">Entry Limit Order</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">1.08145</span>
+</div>
+<!-- Step 2 -->
+<div class="flex items-center justify-between p-2 rounded bg-surface-container text-on-surface">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-container-highest text-error flex items-center justify-center font-label-sm text-label-sm font-bold">2</span>
+<span class="font-body-sm text-body-sm text-on-surface">Invalidation Stop</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-error">1.08082 (-6.3p)</span>
+</div>
+<!-- Step 3 -->
+<div class="flex items-center justify-between p-2 rounded bg-surface-container text-on-surface">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-label-sm text-label-sm font-bold">3</span>
+<span class="font-body-sm text-body-sm text-on-surface">Take Profit Objective</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">1.08334 (+18.9p)</span>
+</div>
+<!-- Step 4 -->
+<div class="flex items-center justify-between p-2 rounded bg-surface-container text-on-surface">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-container-highest text-tertiary flex items-center justify-center font-label-sm text-label-sm font-bold">4</span>
+<span class="font-body-sm text-body-sm text-on-surface">Target Risk-to-Reward</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-tertiary">1 : 3.0 R</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 4. CHART AT DECISION CARD (EVIDENCE CUTOFF & CANDLESTICK PREVIEW) -->
+<div class="rounded-lg bg-surface-container p-space-md shadow-md flex flex-col gap-space-sm">
+<!-- Header -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">candlestick_chart</span>
+<span class="font-headline-sm text-headline-sm tracking-tight text-on-surface">CHART AT DECISION</span>
+</div>
+<div class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm uppercase font-semibold">
+          Bar #4,118
+        </div>
+</div>
+<!-- Cutoff Readout & Pair toggles -->
+<div class="flex items-center justify-between flex-wrap gap-2 py-1 bg-surface-container-lowest px-space-sm rounded">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-tertiary">history_toggle_off</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Evidence Cutoff:</span>
+<span class="font-label-sm text-label-sm font-semibold text-tertiary">2024-10-24 11:20:00Z</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="h-7 px-2 rounded bg-primary text-on-primary font-label-sm text-label-sm font-semibold flex items-center gap-1" type="button">
+<span>EUR/USD (M5)</span>
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary"></span>
+</button>
+<button class="h-7 px-2 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm hover:text-on-surface" type="button">
+            GBP/USD SMT REF
+          </button>
+</div>
+</div>
+<!-- Visual Candlestick Simulation SVG (High Contrast M5 + Blind Concealed Zone) -->
+<div class="relative w-full h-64 rounded bg-surface-container-lowest overflow-hidden flex flex-col justify-end p-2 select-none">
+<!-- Subtle Horizontal Price Grid -->
+<div class="absolute inset-0 flex flex-col justify-between p-2 pointer-events-none opacity-20">
+<div class="w-full h-px bg-on-surface-variant flex justify-end"><span class="font-label-sm text-[9px] -mt-3 text-on-surface">1.08350 (TP Zone)</span></div>
+<div class="w-full h-px bg-on-surface-variant flex justify-end"><span class="font-label-sm text-[9px] -mt-3 text-on-surface">1.08250</span></div>
+<div class="w-full h-px bg-on-surface-variant flex justify-end"><span class="font-label-sm text-[9px] -mt-3 text-on-surface">1.08150 (Entry Level)</span></div>
+<div class="w-full h-px bg-on-surface-variant flex justify-end"><span class="font-label-sm text-[9px] -mt-3 text-on-surface">1.08050 (Stop Invalidation)</span></div>
+</div>
+<!-- Planned Price Markers (Horizontal Target & Invalidation Overlays) -->
+<div class="absolute left-0 right-0 top-[26px] h-px bg-primary/60 flex items-center justify-between px-2 pointer-events-none">
+<span class="font-label-sm text-[9px] bg-primary text-on-primary px-1 rounded font-bold">TP: 1.08334</span>
+<span class="font-label-sm text-[9px] text-primary font-mono">+18.9 pips</span>
+</div>
+<div class="absolute left-0 right-0 top-[148px] h-px bg-secondary flex items-center justify-between px-2 pointer-events-none">
+<span class="font-label-sm text-[9px] bg-secondary text-on-secondary px-1 rounded font-bold">LIMIT ENTRY: 1.08145</span>
+<span class="font-label-sm text-[9px] text-secondary font-mono">Pending Fill</span>
+</div>
+<div class="absolute left-0 right-0 top-[204px] h-px bg-error flex items-center justify-between px-2 pointer-events-none">
+<span class="font-label-sm text-[9px] bg-error text-on-error px-1 rounded font-bold">STOP: 1.08082</span>
+<span class="font-label-sm text-[9px] text-error font-mono">-6.3 pips</span>
+</div>
+<!-- Inline SVG Candlesticks -->
+<svg class="w-full h-full" fill="none" viewbox="0 0 340 220" xmlns="http://www.w3.org/2000/svg">
+<!-- Asian Low SMT Sweep Marker -->
+<rect fill="#242a34" fill-opacity="0.8" height="18" rx="2" width="80" x="72" y="180"></rect>
+<text fill="#ffd57f" font-family="JetBrains Mono" font-size="8" font-weight="600" x="76" y="192">ASIAN LOW SWEEP</text>
+<line stroke="#ffd57f" stroke-dasharray="2 2" stroke-width="1" x1="110" x2="110" y1="178" y2="158"></line>
+<!-- Candle 1 (Bull) -->
+<line stroke="#5cf3c8" stroke-width="1.5" x1="20" x2="20" y1="80" y2="150"></line>
+<rect fill="#5cf3c8" height="35" rx="1" width="8" x="16" y="100"></rect>
+<!-- Candle 2 (Bearish Pullback) -->
+<line stroke="#ffb4ab" stroke-width="1.5" x1="38" x2="38" y1="95" y2="165"></line>
+<rect fill="#ffb4ab" height="40" rx="1" width="8" x="34" y="115"></rect>
+<!-- Candle 3 (Consolidation) -->
+<line stroke="#ffb4ab" stroke-width="1.5" x1="56" x2="56" y1="120" y2="170"></line>
+<rect fill="#ffb4ab" height="25" rx="1" width="8" x="52" y="135"></rect>
+<!-- Candle 4 (Sweep Wick Low) -->
+<line stroke="#ffb4ab" stroke-width="1.5" x1="74" x2="74" y1="125" y2="195"></line>
+<rect fill="#ffb4ab" height="35" rx="1" width="8" x="70" y="130"></rect>
+<!-- Candle 5 (Bullish Rejection off Sweep) -->
+<line stroke="#5cf3c8" stroke-width="1.5" x1="92" x2="92" y1="110" y2="185"></line>
+<rect fill="#5cf3c8" height="42" rx="1" width="8" x="88" y="125"></rect>
+<!-- Candle 6 (Bullish expansion) -->
+<line stroke="#5cf3c8" stroke-width="1.5" x1="110" x2="110" y1="100" y2="160"></line>
+<rect fill="#5cf3c8" height="40" rx="1" width="8" x="106" y="108"></rect>
+<!-- Candle 7 (Pullback to Entry Order) -->
+<line stroke="#ffb4ab" stroke-width="1.5" x1="128" x2="128" y1="105" y2="162"></line>
+<rect fill="#ffb4ab" height="32" rx="1" width="8" x="124" y="118"></rect>
+<!-- Candle 8 (Final Frozen Pre-Execution Bar #4,118) -->
+<line stroke="#ffd57f" stroke-width="2" x1="146" x2="146" y1="128" y2="152"></line>
+<rect fill="#ffd57f" height="14" rx="1" width="8" x="142" y="134"></rect>
+<!-- Cutoff Dashed Vertical Line -->
+<line stroke="#36d6ad" stroke-dasharray="3 3" stroke-width="1.5" x1="154" x2="154" y1="10" y2="215"></line>
+<text fill="#5cf3c8" font-family="JetBrains Mono" font-size="8" font-weight="600" x="158" y="22">CUTOFF: BAR #4,118</text>
+<!-- Hidden Outcome Trajectory (Revealed on click) -->
+<path class="hidden" d="M146 148 L170 144 L190 120 L220 90 L250 50 L280 28" id="outcome-trajectory-path" stroke="#5cf3c8" stroke-dasharray="4 3" stroke-linecap="round" stroke-width="2.5"></path>
+</svg>
+<!-- Blind Masked Zone (Conceals Outcome) -->
+<div class="absolute right-0 top-0 bottom-0 w-[53%] bg-surface-container-high/95 backdrop-blur-[6px] flex flex-col items-center justify-center p-3 text-center transition-all duration-300" id="chart-masked-zone">
+<div class="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center mb-1 text-tertiary shadow-sm">
+<span class="material-symbols-outlined text-[20px]">visibility_off</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wide">BLIND MASKED ZONE</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant leading-tight mt-1">
+            Forward bars obscured to enforce strict causal drill discipline.
+          </span>
+</div>
+</div>
+<!-- Scrub Bar & Player Controls -->
+<div class="flex flex-col gap-1.5 pt-1">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>Bar #4,090 (London Open)</span>
+<span class="text-tertiary font-bold">Pin: Bar #4,118</span>
+</div>
+<!-- Timeline Slider Bar -->
+<div class="w-full h-2 rounded-full bg-surface-container-lowest relative overflow-hidden flex items-center">
+<div class="h-full bg-primary rounded-full w-[46%]"></div>
+<div class="w-3 h-3 rounded-full bg-primary-fixed shadow-sm absolute left-[45%]"></div>
+</div>
+<!-- Controls (Min 44px hit-box buttons) -->
+<div class="flex items-center justify-between mt-1">
+<div class="flex items-center gap-1">
+<button class="h-11 w-11 rounded bg-surface-container-high active:bg-surface-bright text-on-surface flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[20px]">replay_10</span>
+</button>
+<button class="h-11 w-11 rounded bg-primary text-on-primary flex items-center justify-center active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[22px]">play_arrow</span>
+</button>
+<button class="h-11 w-11 rounded bg-surface-container-high active:bg-surface-bright text-on-surface flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[20px]">skip_next</span>
+</button>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">1.0x Speed</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Step: M5</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 5. INDEPENDENT ASSESSMENT CARD (OPERATOR DRILL) -->
+<div class="rounded-lg bg-surface-container p-space-md shadow-md flex flex-col gap-space-md">
+<!-- Title & Drill Badge -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">psychology</span>
+<span class="font-headline-sm text-headline-sm tracking-tight text-on-surface">INDEPENDENT ASSESSMENT</span>
+</div>
+<div class="px-2 py-0.5 rounded bg-surface-container-highest text-secondary font-label-sm text-label-sm uppercase font-semibold">
+          OPERATOR DRILL
+        </div>
+</div>
+<!-- Question Prompt -->
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md uppercase tracking-wide font-bold text-tertiary" for="operator-reasoning-input">
+          WHAT WOULD YOU DO, AND WHY? (CAUSAL REASONING MANDATORY)
+        </label>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+          Commit your decision and causal justification prior to revealing the historical execution.
+        </span>
+</div>
+<!-- Textarea with Operator Reasoning -->
+<textarea class="w-full p-space-sm rounded bg-surface-container-lowest text-on-surface font-label-md text-label-md focus:outline-none focus:ring-0 resize-none leading-relaxed" id="operator-reasoning-input" placeholder="Type your causal thesis here..." rows="4">I would execute the planned Limit Order at 1.08145. 
+
+Reasoning:
+1. EUR/USD swept Asian low cleanly while GBP/USD posted higher low (SMT divergence verified across Dukascopy tick stream).
+2. Institutional order flow remains net long above 1.08050 structure level.
+3. Invalidation is well-defined at 1.08082 (-6.3 pips). Target at 1.08334 represents clean unmitigated liquidity.</textarea>
+<!-- Decision Selection Radio/Cards (Minimum 44px tap height) -->
+<div class="flex flex-col gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Select Your Decision</span>
+<!-- Option 1 (Selected) -->
+<label class="h-11 px-space-sm rounded bg-surface-container-high flex items-center justify-between cursor-pointer active:bg-surface-bright">
+<div class="flex items-center gap-2.5">
+<input checked="" class="w-4 h-4 accent-primary text-primary focus:ring-0" name="drill-decision" type="radio"/>
+<span class="font-label-md text-label-md font-semibold text-primary">EXECUTE PLAN AS SPECIFIED (1.08145 LIMIT)</span>
+</div>
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+</label>
+<!-- Option 2 -->
+<label class="h-11 px-space-sm rounded bg-surface-container-low flex items-center justify-between cursor-pointer active:bg-surface-container">
+<div class="flex items-center gap-2.5">
+<input class="w-4 h-4 accent-primary text-primary focus:ring-0" name="drill-decision" type="radio"/>
+<span class="font-label-md text-label-md text-on-surface">PASS (NO TRADE) - Skip Setup</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Neutral</span>
+</label>
+<!-- Option 3 -->
+<label class="h-11 px-space-sm rounded bg-surface-container-low flex items-center justify-between cursor-pointer active:bg-surface-container">
+<div class="flex items-center gap-2.5">
+<input class="w-4 h-4 accent-primary text-primary focus:ring-0" name="drill-decision" type="radio"/>
+<span class="font-label-md text-label-md text-on-surface">ADJUST STOP / TARGET RATIO - Modify</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Custom</span>
+</label>
+</div>
+<!-- Conviction Level Selector -->
+<div class="flex flex-col gap-1.5">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Conviction Level</span>
+<div class="grid grid-cols-3 gap-2">
+<button class="h-11 rounded bg-surface-container-low text-on-surface-variant font-label-md text-label-md active:bg-surface-container flex items-center justify-center" type="button">
+            Low (0.5R)
+          </button>
+<button class="h-11 rounded bg-surface-container-low text-on-surface-variant font-label-md text-label-md active:bg-surface-container flex items-center justify-center" type="button">
+            Standard (1.0R)
+          </button>
+<button class="h-11 rounded bg-primary text-on-primary font-label-md text-label-md font-bold flex items-center justify-center shadow-sm" type="button">
+            High (A+ Setup)
+          </button>
+</div>
+</div>
+<!-- CTAs: Save & Reveal -->
+<div class="flex flex-col gap-space-sm pt-2">
+<button class="h-11 w-full rounded bg-primary active:bg-primary-container text-on-primary font-label-md text-label-md font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md" type="button">
+<span class="material-symbols-outlined text-[18px]">save</span>
+<span>Save Assessment</span>
+</button>
+<button class="h-11 w-full rounded bg-surface-container-high active:bg-surface-bright text-on-surface font-label-md text-label-md font-semibold tracking-wider flex items-center justify-center gap-2 transition-all" id="btn-reveal-outcome" onclick="toggleOutcomeReveal()" type="button">
+<span class="material-symbols-outlined text-[18px]">lock_open</span>
+<span>Reveal Original Outcome</span>
+</button>
+</div>
+</div>
+<!-- 6. ORIGINAL OUTCOME & SCHEDULE DRILL CARD -->
+<div class="rounded-lg bg-surface-container p-space-md shadow-md flex flex-col gap-space-md opacity-40 pointer-events-none blur-[2px] transition-all duration-300" data-revealed="false" id="outcome-audit-card">
+<!-- Card Header -->
+<div class="flex items-center justify-between pb-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">fact_check</span>
+<span class="font-headline-sm text-headline-sm tracking-tight text-on-surface">RECORDED OUTCOME AUDIT</span>
+</div>
+<div class="px-2.5 py-1 rounded bg-primary text-on-primary font-label-sm text-label-sm uppercase font-bold tracking-wider">
+          HISTORICAL WIN (+3.00 R)
+        </div>
+</div>
+<!-- Post-Mortem Metric Cards -->
+<div class="grid grid-cols-2 gap-space-sm bg-surface-container-lowest p-space-sm rounded">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Realized PnL</span>
+<span class="font-headline-md text-headline-md text-primary font-mono mt-0.5">+$1,500.00</span>
+<span class="font-label-sm text-label-sm text-primary font-mono">+3.00 R Multiple</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Execution Path</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold mt-0.5">1.08145 → 1.08335</span>
+<span class="font-label-sm text-label-sm text-secondary font-mono">+19.0 pips captured</span>
+</div>
+<div class="flex flex-col pt-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Max Adverse Exc (MAE)</span>
+<span class="font-label-md text-label-md text-on-surface font-mono mt-0.5">-1.8 pips</span>
+</div>
+<div class="flex flex-col pt-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Invalidation Integrity</span>
+<span class="font-label-md text-label-md text-primary font-semibold mt-0.5">Clean Run (Intact)</span>
+</div>
+</div>
+<!-- Post-Mortem Analysis Note -->
+<div class="p-space-sm rounded bg-surface-container-low text-on-surface font-body-sm text-body-sm leading-relaxed">
+<span class="font-label-sm text-label-sm text-tertiary font-bold uppercase tracking-wider block mb-1">Algorithmic Auditor Note</span>
+        Divergence between EUR and GBP was authoritative. The Asian liquidity pool was reclaimed within 3 bars following trigger. Entry order was filled with zero slippage on the institutional core book.
+      </div>
+<!-- Schedule Reinforcement Drill Section -->
+<div class="flex flex-col gap-space-sm pt-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[18px]">event_repeat</span>
+<span class="font-label-md text-label-md font-bold uppercase tracking-wider text-on-surface">Schedule Reinforcement Drill</span>
+</div>
+<!-- Assessment Validation Select -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm uppercase text-on-surface-variant" for="validation-select">Process Assessment Validation</label>
+<div class="h-11 px-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<select class="bg-transparent text-on-surface font-label-md text-label-md w-full focus:outline-none pr-2" id="validation-select">
+<option class="bg-surface-container text-on-surface">Rule followed · Clean causal execution</option>
+<option class="bg-surface-container text-on-surface">Hesitation drill · Late entry trigger</option>
+<option class="bg-surface-container text-on-surface">Invalidation miscalculated · Overleveraged</option>
+</select>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Practice Objective Input -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm uppercase text-on-surface-variant" for="practice-objective-input">Practice Objective / Next Action</label>
+<input class="h-11 px-space-sm rounded bg-surface-container-lowest text-on-surface font-label-md text-label-md focus:outline-none" id="practice-objective-input" type="text" value="Drill 10 blind London SMT setups where EUR sweeps low while DXY fails to sweep high"/>
+</div>
+<!-- UTC Target Date Picker -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm uppercase text-on-surface-variant" for="followup-date-input">Follow-up UTC Target Date</label>
+<div class="h-11 px-space-sm rounded bg-surface-container-lowest flex items-center justify-between">
+<input class="bg-transparent text-on-surface font-label-md text-label-md w-full focus:outline-none" id="followup-date-input" type="text" value="2024-11-01 (Next LDN Session Review)"/>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">calendar_today</span>
+</div>
+</div>
+<!-- Action CTAs -->
+<div class="grid grid-cols-2 gap-space-sm mt-1">
+<button class="h-11 px-space-sm rounded bg-surface-container-high active:bg-surface-bright text-on-surface font-label-md text-label-md font-semibold tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">add_task</span>
+<span>Schedule Drill</span>
+</button>
+<button class="h-11 px-space-sm rounded bg-primary active:bg-primary-container text-on-primary font-label-md text-label-md font-bold tracking-wider uppercase flex items-center justify-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">task_alt</span>
+<span>Mark Completed</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 7. FOOTER ATTESTATION & TEE PROOF BADGE -->
+<div class="rounded-lg bg-surface-container-low p-space-sm flex flex-col gap-1 text-center">
+<div class="flex items-center justify-center gap-1.5 text-primary">
+<span class="material-symbols-outlined text-[15px]">security</span>
+<span class="font-label-sm text-label-sm font-bold tracking-wider uppercase">TEE ATTESTATION #8841-A2 · NODE: LOCAL_SEC_L3</span>
+</div>
+<div class="font-label-sm text-[10px] text-on-surface-variant font-mono truncate">
+        SHA-256: d94a1b02875f2c4e5e8964cc9110...c0b7 · Zero Network Egress Guaranteed
+      </div>
+</div>
+</div>
+</div></main></body></html>

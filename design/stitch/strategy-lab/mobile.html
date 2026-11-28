@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary-fixed-variant": "#5c4300", "surface-container-high": "#242a34", "surface": "#0d141d", "secondary-container": "#0267b8", "primary": "#5cf3c8", "on-tertiary": "#402d00", "outline-variant": "#3c4a44", "secondary-fixed": "#d4e3ff", "on-tertiary-container": "#644900", "inverse-primary": "#006b54", "on-secondary-fixed": "#001c39", "tertiary-container": "#f1b617", "error": "#ffb4ab", "on-primary-fixed": "#002118", "background": "#0d141d", "outline": "#85948d", "on-error-container": "#ffdad6", "surface-bright": "#333a44", "on-primary": "#00382b", "error-container": "#93000a", "secondary": "#a4c9ff", "surface-dim": "#0d141d", "primary-fixed": "#66fbd0", "primary-container": "#36d6ad", "on-secondary-fixed-variant": "#004883", "on-primary-container": "#005845", "tertiary-fixed": "#ffdf9f", "primary-fixed-dim": "#42deb4", "inverse-surface": "#dce3f0", "on-tertiary-fixed": "#261a00", "secondary-fixed-dim": "#a4c9ff", "surface-container": "#19202a", "on-secondary": "#00315d", "on-surface": "#dce3f0", "tertiary": "#ffd57f", "on-background": "#dce3f0", "surface-container-lowest": "#080f18", "on-error": "#690005", "surface-tint": "#42deb4", "surface-container-low": "#151c25", "surface-container-highest": "#2e353f", "tertiary-fixed-dim": "#f9bd22", "on-surface-variant": "#bbcac2", "surface-variant": "#2e353f", "inverse-on-surface": "#2a313b", "on-secondary-container": "#d6e5ff", "on-primary-fixed-variant": "#00513f" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin": "1.5rem", "space-xl": "1.75rem", "space-sm": "0.5rem", "gutter": "1rem", "space-lg": "1.25rem", "space-md": "0.75rem", "space-xs": "0.25rem" }, "fontFamily": { "headline-sm": ["Space Grotesk"], "label-sm": ["JetBrains Mono"], "headline-lg-mobile": ["Space Grotesk"], "headline-md": ["Space Grotesk"], "label-md": ["JetBrains Mono"], "body-lg": ["DM Sans"], "headline-lg": ["Space Grotesk"], "body-sm": ["DM Sans"], "label-lg": ["JetBrains Mono"], "body-md": ["DM Sans"] }, "fontSize": { "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "label-sm": ["10px", { "lineHeight": "14px", "fontWeight": "500" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "headline-lg": ["30px", { "lineHeight": "38px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "label-lg": ["13px", { "lineHeight": "18px", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }] } } } }</script><style>@layer base{html,body{width:100%;margin:0;padding:0;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface antialiased flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-14 px-gutter flex items-center justify-between gap-space-xs"><div class="flex items-center gap-space-xs"><button aria-label="Navigation Menu" class="w-11 h-11 flex items-center justify-center rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors active:scale-95" type="button"><span class="material-symbols-outlined text-[22px]">menu</span></button><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface uppercase select-none truncate max-w-[120px]">Strategy Lab</span><div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-high"><span class="w-1.5 h-1.5 rounded-full bg-primary-container shadow-[0_0_6px_#36d6ad]"></span><span class="font-label-sm text-label-sm text-primary tracking-wider font-semibold">LOCAL</span></div></div></div><div class="flex items-center gap-space-xs"><button aria-label="Open Command Palette" class="w-11 h-11 flex items-center justify-center rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors active:scale-95" type="button"><span class="material-symbols-outlined text-[20px]">terminal</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-20 bg-surface"><div class="flex flex-col w-full px-space-md py-space-md space-y-space-lg select-none">
+<!-- Section 1: Page Heading & Actions -->
+<section class="flex flex-col space-y-space-sm pt-space-xs">
+<div class="flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_#5cf3c8]"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">Quant Research / Lab</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full tracking-mono">TICK v2.4</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">Strategy laboratory</h1>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+      Reproducible historical evaluation, monthly tick replay, and mechanical baseline testing without lookahead bias.
+    </p>
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<button class="h-11 min-h-[44px] flex items-center justify-center gap-1.5 bg-primary-container text-on-primary-container rounded-xl font-label-md text-label-md font-semibold tracking-wide shadow-md active:scale-[0.98] transition-transform" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>+ New Hypothesis</span>
+</button>
+<button class="h-11 min-h-[44px] flex items-center justify-center gap-1.5 bg-surface-container text-on-surface rounded-xl font-label-md text-label-md font-medium shadow-sm hover:bg-surface-container-high active:scale-[0.98] transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">file_download</span>
+<span>Export Bundle</span>
+</button>
+</div>
+</section>
+<!-- Section 2: Monthly EURUSD Replay Card -->
+<section class="flex flex-col bg-surface-container-low rounded-xl p-space-md shadow-md space-y-space-md">
+<div class="flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">history_toggle_off</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">MONTHLY EURUSD REPLAY</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="font-label-sm text-label-sm text-primary tracking-tight">SYNCED</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+<span class="font-label-sm text-label-sm tracking-mono">100% TICK FIDELITY • DUKASCOPY CH-GENEVA</span>
+</div>
+<!-- Archive & Session Pickers -->
+<div class="space-y-space-sm">
+<div class="flex flex-col space-y-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="archive-selector">Archive Month UTC Range</label>
+<div class="relative">
+<select class="w-full h-11 min-h-[44px] bg-surface-container text-on-surface font-label-md text-label-md rounded-lg px-space-sm appearance-none outline-none focus:bg-surface-container-high transition-colors" id="archive-selector">
+<option>2024-10 (October 2024) [Dukascopy Raw Tick]</option>
+<option>2024-09 (September 2024) [Dukascopy Raw Tick]</option>
+<option>2024-08 (August 2024) [Dukascopy Raw Tick]</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-on-surface-variant text-[20px]">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Execution Window Filter</span>
+<div class="flex gap-1.5 overflow-x-auto pb-0.5" style="scrollbar-width: none;">
+<button class="h-11 min-h-[44px] px-3 shrink-0 rounded-lg bg-surface-container-high text-primary font-label-sm text-label-sm flex items-center gap-1 font-semibold" type="button">
+<span class="material-symbols-outlined text-[16px]">radio_button_checked</span>
+<span>London Core 07:00-11:00 UTC</span>
+</button>
+<button class="h-11 min-h-[44px] px-3 shrink-0 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">radio_button_unchecked</span>
+<span>Asia Range</span>
+</button>
+<button class="h-11 min-h-[44px] px-3 shrink-0 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">radio_button_unchecked</span>
+<span>NY Overlap</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Integrity Hash Check -->
+<button class="w-full h-11 min-h-[44px] flex items-center justify-between px-space-md bg-surface-container hover:bg-surface-container-high rounded-xl text-on-surface font-label-sm text-label-sm active:scale-[0.99] transition-all" type="button">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
+<span>Inspect monthly coverage (SHA-256)</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">b8f3..89a1</span>
+</button>
+<!-- 3 Compact Coverage Badges -->
+<div class="grid grid-cols-3 gap-1.5">
+<div class="bg-surface-container rounded-lg p-2 flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Registered</span>
+<span class="font-label-md text-label-md text-on-surface font-bold mt-1">528h/528h</span>
+<span class="font-label-sm text-label-sm text-primary">100% Full</span>
+</div>
+<div class="bg-surface-container rounded-lg p-2 flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Missing</span>
+<span class="font-label-md text-label-md text-primary font-bold mt-1">0h</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Clean Feed</span>
+</div>
+<div class="bg-surface-container rounded-lg p-2 flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Attested</span>
+<span class="font-label-md text-label-md text-on-surface font-bold mt-1">8.41M</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ticks</span>
+</div>
+</div>
+<!-- Replay Progress Scrubber -->
+<div class="bg-surface-container p-3 rounded-lg space-y-2">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-surface-variant">Replay Session Cursor</span>
+<span class="text-primary font-semibold">18 / 22 Sessions (81.8%)</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full w-[81.8%] rounded-full shadow-[0_0_8px_#36d6ad]"></div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>Cursor: <span class="text-on-surface">2024-10-25 14:15:00 UTC</span></span>
+<span class="text-primary">Synced</span>
+</div>
+</div>
+<!-- Primary Action Button -->
+<button class="w-full h-11 min-h-[44px] flex items-center justify-center gap-2 bg-primary-container text-on-primary-container rounded-xl font-label-md text-label-md font-bold tracking-wide shadow-md active:scale-[0.98] transition-transform" type="button">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Run Monthly Strategy Replay</span>
+</button>
+<!-- Collapsible Receipt Event Ledger -->
+<div class="space-y-1.5 pt-1">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pb-1">
+<span>VERIFIED EVENT LEDGER</span>
+<span class="text-primary">3 Events Recorded</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container p-2.5 rounded-lg text-body-sm">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm text-primary font-bold">#ev-8841-fx</span>
+<span class="font-label-sm text-label-sm text-on-surface">EUR/USD 1.08241</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">London Breaker Expansion</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-primary font-bold">+10.4 pts</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Target Met
+          </span>
+</div>
+</div>
+<div class="flex items-center justify-between bg-surface-container p-2.5 rounded-lg text-body-sm">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm text-primary font-bold">#ev-8839-fx</span>
+<span class="font-label-sm text-label-sm text-on-surface">EUR/USD 1.08412</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Asia Liquidity Sweep</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-error font-bold">-4.2 pts</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> Stop Incurred
+          </span>
+</div>
+</div>
+<div class="flex items-center justify-between bg-surface-container p-2.5 rounded-lg text-body-sm">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm text-primary font-bold">#ev-8835-fx</span>
+<span class="font-label-sm text-label-sm text-on-surface">EUR/USD 1.07980</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">NY Morning FVG Tap</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-primary font-bold">+18.2 pts</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Target Met
+          </span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Historical Strategy Evaluation Card -->
+<section class="flex flex-col bg-surface-container-low rounded-xl p-space-md shadow-md space-y-space-md">
+<div class="flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">analytics</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">HISTORICAL EVALUATION</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container px-2 py-0.5 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+<span class="font-label-sm text-label-sm text-tertiary font-semibold">Enclave Guard Active</span>
+</div>
+</div>
+<!-- Parameter Selects -->
+<div class="space-y-space-sm">
+<div class="flex flex-col space-y-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="logic-model">Strategy Logic Model</label>
+<div class="relative">
+<select class="w-full h-11 min-h-[44px] bg-surface-container text-on-surface font-label-md text-label-md rounded-lg px-space-sm appearance-none outline-none" id="logic-model">
+<option>Judas SMT Reversal v2.4 (Current)</option>
+<option>Turtle Soup Trend Continuum v1.8</option>
+<option>Equilibrium Mean Drift v3.1</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-on-surface-variant text-[20px]">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col space-y-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="feed-source">Frozen Source Feed</label>
+<div class="relative">
+<select class="w-full h-11 min-h-[44px] bg-surface-container text-on-surface font-label-md text-label-md rounded-lg px-space-sm appearance-none outline-none" id="feed-source">
+<option>Dukascopy True Tick L2 + M5</option>
+<option>CME Currenex Primary Book Aggregation</option>
+<option>LMAX Interbank Discrete Orders</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-on-surface-variant text-[20px]">expand_more</span>
+</div>
+</div>
+<!-- Date Inputs UTC Window -->
+<div class="grid grid-cols-2 gap-2">
+<div class="flex flex-col space-y-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">UTC From</label>
+<div class="h-11 min-h-[44px] bg-surface-container px-3 rounded-lg flex items-center justify-between text-on-surface font-label-sm text-label-sm">
+<span>2024-10-01 00:00</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">calendar_month</span>
+</div>
+</div>
+<div class="flex flex-col space-y-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">UTC To</label>
+<div class="h-11 min-h-[44px] bg-surface-container px-3 rounded-lg flex items-center justify-between text-on-surface font-label-sm text-label-sm">
+<span>2024-10-25 16:00</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">calendar_month</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="grid grid-cols-2 gap-space-sm">
+<button class="h-11 min-h-[44px] flex items-center justify-center gap-1.5 bg-surface-container text-on-surface rounded-xl font-label-md text-label-md font-medium active:scale-[0.98] transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">rule</span>
+<span>Validate Inputs</span>
+</button>
+<button class="h-11 min-h-[44px] flex items-center justify-center gap-1.5 bg-primary-container text-on-primary-container rounded-xl font-label-md text-label-md font-bold active:scale-[0.98] transition-transform shadow-md" type="button">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span>Queue Evaluation</span>
+</button>
+</div>
+<!-- Active Run State Summary Banner -->
+<div class="bg-surface-container rounded-lg p-3 space-y-2">
+<div class="flex items-center justify-between border-b border-surface-container-high pb-2">
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md text-primary font-bold">RUN-2024-10-25-A</span>
+<span class="font-label-sm text-label-sm bg-surface-container-high text-primary px-1.5 py-0.5 rounded">Active</span>
+</div>
+<span class="font-label-md text-label-md text-primary font-bold">+3.42 R</span>
+</div>
+<div class="grid grid-cols-3 gap-2 text-center pt-1">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Raw</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">42</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Accepted</span>
+<span class="font-label-md text-label-md text-primary font-semibold">14</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Cutoffs</span>
+<span class="font-label-md text-label-md text-tertiary font-semibold">28</span>
+</div>
+</div>
+<!-- Raw Log Terminal Box -->
+<div class="bg-surface-container-lowest rounded p-2.5 space-y-1 font-label-sm text-label-sm text-on-surface-variant">
+<div class="flex items-center justify-between text-primary">
+<span>&gt; INGESTION_PIPELINE_OK</span>
+<span>SHA: 4e9c70</span>
+</div>
+<div class="truncate">[14:15:02] PARSED 8,410,248 DUKASCOPY TICKS</div>
+<div class="truncate text-on-surface">[14:15:03] LOOKAHEAD CHECK: ZERO DISCREPANCY DETECTED</div>
+<div class="truncate">[14:15:04] SLIPPAGE APPLIED: +1.2 PIP RANDOMIZED WORST-CASE</div>
+</div>
+</div>
+</section>
+<!-- Section 4: Mechanical Baseline Simulator Card -->
+<section class="flex flex-col bg-surface-container-low rounded-xl p-space-md shadow-md space-y-space-md">
+<div class="flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">tune</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">MECHANICAL BASELINE TESTING</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container text-on-surface-variant px-2 py-0.5 rounded-full font-mono">Zero Discretion</span>
+</div>
+<!-- Warning / Cost Model Callout -->
+<div class="bg-surface-container rounded-lg p-3 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-tertiary-container text-[20px] shrink-0 mt-0.5">warning</span>
+<div class="space-y-0.5">
+<span class="font-label-sm text-label-sm text-tertiary font-bold uppercase tracking-wider block">Institutional Friction Model</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Includes 0.4 pip synthetic spread + $3.50/lot commission + 1.2 pip slippage penalty on market orders.
+        </p>
+</div>
+</div>
+<!-- Parameters Selection -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="flex flex-col space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Target Pair</span>
+<div class="h-11 min-h-[44px] bg-surface-container px-3 rounded-lg flex items-center justify-between text-on-surface font-label-sm text-label-sm">
+<span>EUR/USD (Spot FX)</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">lock</span>
+</div>
+</div>
+<div class="flex flex-col space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Resolution</span>
+<div class="h-11 min-h-[44px] bg-surface-container px-3 rounded-lg flex items-center justify-between text-on-surface font-label-sm text-label-sm">
+<span>M5 (H1 Bias)</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">tune</span>
+</div>
+</div>
+</div>
+<!-- Simulation Button CTA -->
+<button class="w-full h-11 min-h-[44px] flex items-center justify-center gap-2 bg-primary-container text-on-primary-container rounded-xl font-label-md text-label-md font-bold tracking-wide shadow-md active:scale-[0.98] transition-transform" type="button">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+<span>Run Historical Simulation</span>
+</button>
+<!-- 2x2 KPI Metric Grid -->
+<div class="grid grid-cols-2 gap-2">
+<div class="bg-surface-container rounded-lg p-3 space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Eligible Signals</span>
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-md text-headline-md text-on-surface font-bold">118</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">signals</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">Avg 4.9 / trading week</span>
+</div>
+<div class="bg-surface-container rounded-lg p-3 space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Win Rate</span>
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-md text-headline-md text-primary font-bold">64.4%</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">76 Wins / 42 Losses</span>
+</div>
+<div class="bg-surface-container rounded-lg p-3 space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Expectancy / Signal</span>
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-md text-headline-md text-primary font-bold">+0.88 R</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">Profit Factor 2.14</span>
+</div>
+<div class="bg-surface-container rounded-lg p-3 space-y-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Ambiguous Exits</span>
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-md text-headline-md text-on-surface font-bold">0</span>
+<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">Deterministic Resolution</span>
+</div>
+</div>
+<!-- Inline SVG Equity Curve -->
+<div class="bg-surface-container rounded-lg p-3 space-y-2">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span class="flex items-center gap-1.5">
+<span class="w-2 h-0.5 bg-primary"></span> Cumulative Equity Curve (R-Multiple)
+        </span>
+<span class="text-primary font-bold">+35.2 R Peak</span>
+</div>
+<div class="relative w-full h-32 pt-1">
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 320 100">
+<defs>
+<lineargradient id="equityGlow" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#36d6ad" stop-opacity="0.25"></stop>
+<stop offset="100%" stop-color="#36d6ad" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- Dashed Benchmark Zero Line -->
+<line stroke="#333a44" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="320" y1="80" y2="80"></line>
+<!-- Area Gradient Fill -->
+<polygon fill="url(#equityGlow)" points="0,80 18,78 35,74 55,76 75,68 100,64 125,58 150,62 175,50 205,42 230,44 260,32 290,26 320,16 320,80 0,80"></polygon>
+<!-- Line Curve -->
+<polyline fill="none" points="0,80 18,78 35,74 55,76 75,68 100,64 125,58 150,62 175,50 205,42 230,44 260,32 290,26 320,16" stroke="#5cf3c8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></polyline>
+<!-- Current Endpoint Marker -->
+<circle class="animate-pulse" cx="320" cy="16" fill="#5cf3c8" r="3.5"></circle>
+</svg>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant pt-1">
+<span>Oct 01 (0.0 R)</span>
+<span>Mid-Month (+16.4 R)</span>
+<span class="text-on-surface">Oct 25 (+35.2 R)</span>
+</div>
+</div>
+<!-- Recorded Sample Trades Table -->
+<div class="space-y-1.5">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>SAMPLE TRADES (RECENT EXECUTIONS)</span>
+<span class="text-primary">M5 Resolution</span>
+</div>
+<div class="overflow-x-auto rounded-lg" style="scrollbar-width: none;">
+<div class="min-w-[420px] bg-surface-container rounded-lg divide-y divide-surface-container-high">
+<!-- Table Header -->
+<div class="grid grid-cols-6 px-3 py-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+<span>Timestamp</span>
+<span>Session</span>
+<span>Side</span>
+<span>Entry</span>
+<span>Exit</span>
+<span class="text-right">R-Net</span>
+</div>
+<!-- Table Row 1 -->
+<div class="grid grid-cols-6 px-3 py-2.5 items-center font-label-sm text-label-sm text-on-surface">
+<span class="font-mono text-on-surface-variant">10-25 08:35</span>
+<span>LDN</span>
+<div><span class="px-1.5 py-0.5 rounded bg-primary-container/20 text-primary font-bold">LONG</span></div>
+<span class="font-mono">1.08120</span>
+<span class="font-mono">1.08324</span>
+<span class="font-mono text-right text-primary font-bold">+2.04 R</span>
+</div>
+<!-- Table Row 2 -->
+<div class="grid grid-cols-6 px-3 py-2.5 items-center font-label-sm text-label-sm text-on-surface">
+<span class="font-mono text-on-surface-variant">10-24 13:40</span>
+<span>NY</span>
+<div><span class="px-1.5 py-0.5 rounded bg-error-container/30 text-error font-bold">SHORT</span></div>
+<span class="font-mono">1.08450</span>
+<span class="font-mono">1.08552</span>
+<span class="font-mono text-right text-error font-bold">-1.00 R</span>
+</div>
+<!-- Table Row 3 -->
+<div class="grid grid-cols-6 px-3 py-2.5 items-center font-label-sm text-label-sm text-on-surface">
+<span class="font-mono text-on-surface-variant">10-24 07:15</span>
+<span>LDN</span>
+<div><span class="px-1.5 py-0.5 rounded bg-primary-container/20 text-primary font-bold">LONG</span></div>
+<span class="font-mono">1.07910</span>
+<span class="font-mono">1.08250</span>
+<span class="font-mono text-right text-primary font-bold">+3.40 R</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary-container drop-shadow-[0_0_8px_rgba(54,214,173,0.45)]"><div class="flex items-center justify-around h-16 px-space-xs"><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-all select-none" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">query_stats</span><span class="font-label-sm text-label-sm mt-0.5 tracking-tight">Overview</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-all select-none" data-path="terminal" href="#"><span class="material-symbols-outlined text-[20px]">candlestick_chart</span><span class="font-label-sm text-label-sm mt-0.5 tracking-tight">Terminal</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-all select-none" data-path="positions" href="#"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span><span class="font-label-sm text-label-sm mt-0.5 tracking-tight">Positions</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] h-12 transition-all select-none text-primary-container drop-shadow-[0_0_8px_rgba(54,214,173,0.45)]" data-path="strategy-lab" href="#"><span class="material-symbols-outlined text-[20px]">science</span><span class="font-label-sm text-label-sm mt-0.5 tracking-tight">Lab</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-all select-none" data-path="ai-review" href="#"><span class="material-symbols-outlined text-[20px]">psychology</span><span class="font-label-sm text-label-sm mt-0.5 tracking-tight">AI Review</span></a></div></nav></body></html>

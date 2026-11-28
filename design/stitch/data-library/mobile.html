@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>TradeForge - Data Library</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #0d141d;
+        color: #dce3f0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        overscroll-behavior-y: none;
+      }
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#0d141d",
+            "on-primary-container": "#005845",
+            "on-surface": "#dce3f0",
+            "surface-tint": "#42deb4",
+            "inverse-surface": "#dce3f0",
+            "on-error": "#690005",
+            "on-tertiary-container": "#644900",
+            "on-secondary-fixed": "#001c39",
+            "primary-fixed": "#66fbd0",
+            "inverse-primary": "#006b54",
+            "background": "#0d141d",
+            "on-primary-fixed-variant": "#00513f",
+            "tertiary-fixed": "#ffdf9f",
+            "on-background": "#dce3f0",
+            "tertiary-container": "#f1b617",
+            "secondary": "#a4c9ff",
+            "secondary-fixed": "#d4e3ff",
+            "outline-variant": "#3c4a44",
+            "primary-fixed-dim": "#42deb4",
+            "secondary-fixed-dim": "#a4c9ff",
+            "surface-dim": "#0d141d",
+            "outline": "#85948d",
+            "tertiary": "#ffd57f",
+            "surface-variant": "#2e353f",
+            "on-secondary-fixed-variant": "#004883",
+            "surface-bright": "#333a44",
+            "primary": "#5cf3c8",
+            "on-tertiary-fixed": "#261a00",
+            "surface-container": "#19202a",
+            "on-surface-variant": "#bbcac2",
+            "primary-container": "#36d6ad",
+            "on-primary-fixed": "#002118",
+            "surface-container-high": "#242a34",
+            "error-container": "#93000a",
+            "on-tertiary": "#402d00",
+            "secondary-container": "#0267b8",
+            "error": "#ffb4ab",
+            "inverse-on-surface": "#2a313b",
+            "on-primary": "#00382b",
+            "surface-container-lowest": "#080f18",
+            "surface-container-highest": "#2e353f",
+            "on-tertiary-fixed-variant": "#5c4300",
+            "on-error-container": "#ffdad6",
+            "tertiary-fixed-dim": "#f9bd22",
+            "on-secondary": "#00315d",
+            "on-secondary-container": "#d6e5ff",
+            "surface-container-low": "#151c25"
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          fontFamily: {
+            "body-md": ["DM Sans", "sans-serif"],
+            "body-sm": ["DM Sans", "sans-serif"],
+            "body-lg": ["DM Sans", "sans-serif"],
+            "label-lg": ["JetBrains Mono", "monospace"],
+            "label-md": ["JetBrains Mono", "monospace"],
+            "label-sm": ["JetBrains Mono", "monospace"],
+            "headline-lg": ["Space Grotesk", "sans-serif"],
+            "headline-md": ["Space Grotesk", "sans-serif"],
+            "headline-sm": ["Space Grotesk", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased min-h-screen pb-20 select-none">
+<!-- 1. COMPACT 56px MOBILE HEADER -->
+<header class="fixed top-0 left-0 right-0 h-14 bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 z-50 px-4 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded bg-primary-container flex items-center justify-center text-on-primary-container font-headline-sm font-bold shadow-sm">
+<span class="material-symbols-outlined text-[17px]">terminal</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-base font-bold tracking-tight text-on-surface">TradeForge</span>
+<span class="font-label-sm text-[10px] bg-surface-container-high text-primary px-1.5 py-0.5 rounded border border-primary/20 tracking-wider uppercase font-semibold">FX-Q</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<!-- Status Badge -->
+<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-container-low border border-outline-variant/30 text-on-surface">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-sm text-[11px] text-primary font-mono font-medium">100% OK</span>
+</div>
+<!-- Quick Action / Menu -->
+<button aria-label="Quick Actions" class="w-10 h-10 rounded-lg flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant/30 transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</button>
+</div>
+</header>
+<!-- MAIN SCROLLABLE CONTENT (375px Single-Column Flow) -->
+<main class="pt-14 px-4 flex flex-col gap-4 max-w-[420px] mx-auto">
+<!-- 1. TITLE & PROVENANCE STRIP -->
+<div class="pt-3 flex flex-col gap-2">
+<div class="flex flex-wrap items-center gap-1.5">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary font-label-sm text-[10px] uppercase tracking-wider font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          Storage Architecture
+        </span>
+<span class="font-label-sm text-[10px] text-on-surface-variant/80 bg-surface-container-high px-1.5 py-0.5 rounded font-mono">
+          v4.18-CORE
+        </span>
+<span class="inline-flex items-center gap-1 font-label-sm text-[10px] text-secondary bg-surface-container px-1.5 py-0.5 rounded font-mono">
+<span class="material-symbols-outlined text-[11px]">lock_clock</span>
+          Zero-Drift
+        </span>
+</div>
+<div>
+<h1 class="font-headline-sm text-xl font-bold tracking-tight text-on-surface">Market data library</h1>
+<p class="font-body-sm text-xs text-on-surface-variant mt-1 leading-relaxed">
+          Cryptographically checksummed datasets for deterministic tick-accurate research, SMT divergence, and tick replay.
+        </p>
+</div>
+<!-- Quick Action Touch Buttons -->
+<div class="flex flex-col gap-2 mt-1">
+<a class="min-h-[44px] w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-xs font-medium border border-outline-variant/30 transition-colors shadow-sm" href="#">
+<span class="material-symbols-outlined text-[18px] text-secondary">dataset</span>
+<span>Open fixed-point catalog</span>
+</a>
+<button class="min-h-[44px] w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-on-primary font-label-md text-xs font-bold hover:bg-primary-fixed transition-colors shadow-md" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Export SHA-256 Manifest</span>
+</button>
+</div>
+</div>
+<!-- 2. FOREX HISTORY & DETERMINISTIC COVERAGE CARD -->
+<div class="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 shadow-md border border-outline-variant/20">
+<div class="flex items-start gap-2.5">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-primary shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">timeline</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1 flex-wrap">
+<span class="font-headline-sm text-sm font-bold text-on-surface truncate">Forex Coverage &amp; History</span>
+<span class="font-label-sm text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono uppercase">DuckDB</span>
+</div>
+<p class="font-body-sm text-[11px] text-on-surface-variant mt-0.5">
+            Dukascopy FX ECN (Discrete ticks to M5 OHLC)
+          </p>
+</div>
+</div>
+<!-- Engine Badges -->
+<div class="grid grid-cols-2 gap-1.5 font-mono text-[10px]">
+<div class="p-1.5 rounded bg-surface-container text-on-surface-variant flex items-center justify-between">
+<span>ENGINE:</span>
+<span class="text-primary font-bold">ARROW_ZERO</span>
+</div>
+<div class="p-1.5 rounded bg-surface-container text-on-surface-variant flex items-center justify-between">
+<span>PARTITIONS:</span>
+<span class="text-secondary font-bold">120/120</span>
+</div>
+</div>
+<!-- Controls Form -->
+<div class="p-3 rounded-lg bg-surface-container flex flex-col gap-2.5">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-[10px] uppercase text-on-surface-variant/80 font-medium">Start UTC</label>
+<div class="min-h-[44px] flex items-center gap-2 px-3 py-2 rounded bg-surface-container-lowest text-on-surface font-label-md text-xs border border-outline-variant/20">
+<span class="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
+<input class="bg-transparent text-on-surface font-label-md text-xs focus:outline-none w-full" type="text" value="2024-10-21 00:00:00"/>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-[10px] uppercase text-on-surface-variant/80 font-medium">Exclusive End UTC</label>
+<div class="min-h-[44px] flex items-center gap-2 px-3 py-2 rounded bg-surface-container-lowest text-on-surface font-label-md text-xs border border-outline-variant/20">
+<span class="material-symbols-outlined text-[16px] text-primary">event</span>
+<input class="bg-transparent text-on-surface font-label-md text-xs focus:outline-none w-full" type="text" value="2024-10-26 00:00:00"/>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-[10px] uppercase text-on-surface-variant/80 font-medium">Capped Bar Timeframe</label>
+<div class="min-h-[44px] flex items-center gap-2 px-3 py-2 rounded bg-surface-container-lowest text-on-surface font-label-md text-xs border border-outline-variant/20">
+<span class="material-symbols-outlined text-[16px] text-secondary">candlestick_chart</span>
+<select class="bg-transparent text-on-surface font-label-md text-xs focus:outline-none w-full">
+<option selected="">M5 BID + Full L2 Ticks</option>
+<option>M1 BID/ASK Discrete</option>
+<option>H1 Synthetic Composite</option>
+</select>
+</div>
+</div>
+<button class="min-h-[44px] w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded bg-primary text-on-primary font-label-md text-xs font-bold hover:bg-primary-fixed transition-colors mt-1" type="button">
+<span class="material-symbols-outlined text-[18px]">radar</span>
+<span>Inspect coverage</span>
+</button>
+</div>
+<!-- 2-Column Mobile Stats Grid -->
+<div class="grid grid-cols-2 gap-2">
+<div class="p-2.5 rounded-lg bg-surface-container flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-[10px] text-on-surface-variant">EURUSD</span>
+<span class="font-label-sm text-[9px] text-primary font-mono font-bold">100% OK</span>
+</div>
+<div class="font-headline-sm text-sm text-on-surface font-mono font-bold">5,280 <span class="text-[10px] text-on-surface-variant font-normal">bars</span></div>
+<div class="w-full bg-surface-container-lowest h-1 rounded overflow-hidden mt-0.5">
+<div class="bg-primary h-full w-full"></div>
+</div>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-[10px] text-on-surface-variant">GBPUSD</span>
+<span class="font-label-sm text-[9px] text-primary font-mono font-bold">100% OK</span>
+</div>
+<div class="font-headline-sm text-sm text-on-surface font-mono font-bold">5,280 <span class="text-[10px] text-on-surface-variant font-normal">bars</span></div>
+<div class="w-full bg-surface-container-lowest h-1 rounded overflow-hidden mt-0.5">
+<div class="bg-primary h-full w-full"></div>
+</div>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-[10px] text-on-surface-variant">Paired Opens</span>
+<span class="font-label-sm text-[9px] text-primary font-mono font-bold">SMT SYNC</span>
+</div>
+<div class="font-headline-sm text-xs text-primary font-mono font-bold truncate">5,280 / 5,280</div>
+<div class="font-label-sm text-[9px] text-secondary font-mono">Δ 0.0000ms</div>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-[10px] text-on-surface-variant">L2 Quotes</span>
+<span class="font-label-sm text-[9px] text-secondary font-mono font-bold">VERIFIED</span>
+</div>
+<div class="font-headline-sm text-xs text-on-surface font-mono font-bold">8,410,248</div>
+<div class="font-label-sm text-[9px] text-on-surface-variant">48.2 ticks/s</div>
+</div>
+</div>
+<!-- Active Window Days Scrollable Strip -->
+<div class="flex flex-col gap-1.5 pt-0.5">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-[10px] text-on-surface-variant uppercase font-semibold">Active Window:</span>
+<span class="font-label-sm text-[9px] text-primary font-mono">5/5 days complete</span>
+</div>
+<div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+<button class="min-h-[36px] px-2.5 py-1.5 rounded bg-surface-container-high text-primary font-label-sm text-[11px] font-mono font-semibold shrink-0 flex items-center gap-1.5 border border-primary/30" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Mon Oct 21
+          </button>
+<button class="min-h-[36px] px-2.5 py-1.5 rounded bg-surface-container text-on-surface font-label-sm text-[11px] font-mono shrink-0 flex items-center gap-1.5 border border-outline-variant/30" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Tue Oct 22
+          </button>
+<button class="min-h-[36px] px-2.5 py-1.5 rounded bg-surface-container text-on-surface font-label-sm text-[11px] font-mono shrink-0 flex items-center gap-1.5 border border-outline-variant/30" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Wed Oct 23
+          </button>
+<button class="min-h-[36px] px-2.5 py-1.5 rounded bg-surface-container text-on-surface font-label-sm text-[11px] font-mono shrink-0 flex items-center gap-1.5 border border-outline-variant/30" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Thu Oct 24
+          </button>
+<button class="min-h-[36px] px-2.5 py-1.5 rounded bg-surface-container text-on-surface font-label-sm text-[11px] font-mono shrink-0 flex items-center gap-1.5 border border-outline-variant/30" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Fri Oct 25
+          </button>
+</div>
+</div>
+<!-- Horizontally Scrollable Coverage Breakdown Table -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-[10px] px-0.5">
+<span class="uppercase font-semibold">Hourly Phase Slicing</span>
+<span class="text-secondary flex items-center gap-0.5 font-mono">Swipe ➔</span>
+</div>
+<div class="overflow-x-auto rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+<table class="w-full text-left font-body-sm text-xs min-w-[520px]">
+<thead>
+<tr class="bg-surface-container-high text-on-surface-variant font-label-sm text-[10px] uppercase tracking-wider">
+<th class="py-2 px-3">Hour UTC</th>
+<th class="py-2 px-3">Session Phase</th>
+<th class="py-2 px-2 text-center">Dual Sync</th>
+<th class="py-2 px-3 text-right">Ticks</th>
+<th class="py-2 px-3 text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-mono text-on-surface text-[11px]">
+<tr class="hover:bg-surface-container-low">
+<td class="py-2 px-3 text-primary font-bold">07:00-08:00</td>
+<td class="py-2 px-3 font-sans text-xs">London Pre-Market Probe</td>
+<td class="py-2 px-2 text-center"><span class="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px]">Δ 0ms</span></td>
+<td class="py-2 px-3 text-right text-on-surface-variant">384k</td>
+<td class="py-2 px-3 text-right text-primary font-semibold">100% OK</td>
+</tr>
+<tr class="bg-surface-container/20 hover:bg-surface-container-low">
+<td class="py-2 px-3 text-primary font-bold">08:00-09:00</td>
+<td class="py-2 px-3 font-sans text-xs">London Open Expansion</td>
+<td class="py-2 px-2 text-center"><span class="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px]">Δ 0ms</span></td>
+<td class="py-2 px-3 text-right text-on-surface-variant">592k</td>
+<td class="py-2 px-3 text-right text-primary font-semibold">100% OK</td>
+</tr>
+<tr class="hover:bg-surface-container-low">
+<td class="py-2 px-3 text-primary font-bold">12:00-13:00</td>
+<td class="py-2 px-3 font-sans text-xs">NY Pre-Session Inflow</td>
+<td class="py-2 px-2 text-center"><span class="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px]">Δ 0ms</span></td>
+<td class="py-2 px-3 text-right text-on-surface-variant">449k</td>
+<td class="py-2 px-3 text-right text-primary font-semibold">100% OK</td>
+</tr>
+<tr class="bg-secondary/10 hover:bg-surface-container-low">
+<td class="py-2 px-3 text-secondary font-bold">14:00-15:00</td>
+<td class="py-2 px-3 font-sans text-xs text-secondary font-medium">ICT SMT Key Divergence</td>
+<td class="py-2 px-2 text-center"><span class="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px]">Δ 0ms</span></td>
+<td class="py-2 px-3 text-right text-secondary">688k</td>
+<td class="py-2 px-3 text-right text-primary font-semibold">Verified</td>
+</tr>
+<tr class="hover:bg-surface-container-low">
+<td class="py-2 px-3 text-primary font-bold">15:00-16:00</td>
+<td class="py-2 px-3 font-sans text-xs">London Fix Inflow</td>
+<td class="py-2 px-2 text-center"><span class="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px]">Δ 0ms</span></td>
+<td class="py-2 px-3 text-right text-on-surface-variant">520k</td>
+<td class="py-2 px-3 text-right text-primary font-semibold">100% OK</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- 3. HISTORICAL SMT WATCH & READINESS CARD -->
+<div class="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 shadow-md border border-outline-variant/20">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">hub</span>
+<h2 class="font-headline-sm text-sm font-bold text-on-surface">Historical SMT Watch</h2>
+</div>
+<span class="font-label-sm text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase font-mono font-bold">
+          Dual Feed Active
+        </span>
+</div>
+<p class="font-body-sm text-xs text-on-surface-variant -mt-1 leading-relaxed">
+        Cross-asset price divergence scanner running across deterministic M5 candle sync.
+      </p>
+<!-- Reference Tags Grid -->
+<div class="grid grid-cols-3 gap-1.5 p-2 rounded bg-surface-container text-center">
+<div>
+<span class="font-label-sm text-[9px] text-on-surface-variant uppercase">Ref Pair</span>
+<div class="font-label-md text-[11px] text-primary font-mono font-semibold">EURUSD</div>
+</div>
+<div>
+<span class="font-label-sm text-[9px] text-on-surface-variant uppercase">Correlated</span>
+<div class="font-label-md text-[11px] text-secondary font-mono font-semibold">GBPUSD</div>
+</div>
+<div>
+<span class="font-label-sm text-[9px] text-on-surface-variant uppercase">Window</span>
+<div class="font-label-md text-[11px] text-on-surface font-mono font-semibold">13:00-15:00</div>
+</div>
+</div>
+<!-- SMT Divergence Visualization -->
+<div class="p-2.5 rounded-lg bg-surface-container-lowest flex flex-col gap-1.5 border border-outline-variant/20">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-[9px] font-mono">
+<span>SMT SPREAD DELTA</span>
+<span class="text-tertiary font-bold">BEARISH SMT @ 13:45</span>
+</div>
+<div class="h-20 w-full">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 500 100">
+<line stroke="#1f3042" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="500" y1="50" y2="50"></line>
+<line stroke="#1f3042" stroke-dasharray="2 2" stroke-width="0.5" x1="0" x2="500" y1="20" y2="20"></line>
+<rect fill="#36d6ad" height="8" rx="1" width="12" x="20" y="42"></rect>
+<rect fill="#36d6ad" height="12" rx="1" width="12" x="50" y="38"></rect>
+<rect fill="#36d6ad" height="20" rx="1" width="12" x="110" y="30"></rect>
+<rect fill="#36d6ad" height="26" rx="1" width="12" x="140" y="24"></rect>
+<rect fill="#ffd57f" height="42" rx="1" width="16" x="200" y="8"></rect>
+<text fill="#ffd57f" font-family="JetBrains Mono" font-size="9" text-anchor="middle" x="208" y="6">SMT +3.2σ</text>
+<rect fill="#36d6ad" height="25" rx="1" width="12" x="235" y="25"></rect>
+<rect fill="#a4c9ff" height="18" rx="1" width="12" x="385" y="50"></rect>
+<rect fill="#a4c9ff" height="10" rx="1" width="12" x="415" y="50"></rect>
+<path d="M26 42 Q 116 26, 208 12 T 331 62 T 451 54" fill="none" stroke="#5cf3c8" stroke-width="1.5"></path>
+</svg>
+</div>
+<div class="flex items-center justify-between font-label-sm text-[9px] text-on-surface-variant font-mono">
+<span>13:00 UTC</span>
+<span class="text-tertiary">EUR HH / GBP LH</span>
+<span>15:00 UTC</span>
+</div>
+</div>
+<!-- Telemetry Pills (2-col grid on mobile) -->
+<div class="grid grid-cols-2 gap-1.5 font-mono text-[10px]">
+<div class="p-2 rounded bg-surface-container flex items-center justify-between">
+<span class="text-on-surface-variant">L2 Gateway</span>
+<span class="text-primary font-bold">ONLINE</span>
+</div>
+<div class="p-2 rounded bg-surface-container flex items-center justify-between">
+<span class="text-on-surface-variant">Ring Buffer</span>
+<span class="text-on-surface font-bold">0 Dropped</span>
+</div>
+<div class="p-2 rounded bg-surface-container flex items-center justify-between">
+<span class="text-on-surface-variant">MT5 IPC</span>
+<span class="text-primary font-bold">READY #841</span>
+</div>
+<div class="p-2 rounded bg-surface-container flex items-center justify-between">
+<span class="text-on-surface-variant">SHM Pipe</span>
+<span class="text-secondary font-bold">1,024 MB</span>
+</div>
+</div>
+</div>
+<!-- 4. REGISTER A REVIEWED LOCAL ARCHIVE (DRAG/DROP & INGESTION) -->
+<div class="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 shadow-md border border-outline-variant/20">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">archive</span>
+<h2 class="font-headline-sm text-sm font-bold text-on-surface">Local Archive Registration</h2>
+</div>
+<span class="font-label-sm text-[9px] px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant uppercase font-mono">
+          Zero-Copy
+        </span>
+</div>
+<p class="font-body-sm text-xs text-on-surface-variant -mt-1 leading-relaxed">
+        Accepts verified raw Dukascopy ticks (.bi5), DuckDB partitions, or Apache Parquet files.
+      </p>
+<!-- Drag & Drop Box (Mobile Tap Target) -->
+<div class="min-h-[100px] rounded-lg bg-surface-container-lowest p-3 flex flex-col items-center justify-center text-center cursor-pointer border border-dashed border-outline-variant/50 hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary text-[26px] mb-1">upload_file</span>
+<span class="font-headline-sm text-xs font-semibold text-on-surface">Tap to browse tick archive</span>
+<span class="font-label-sm text-[10px] text-on-surface-variant font-mono mt-0.5">.bi5 or .parquet (Max 4.0 GB)</span>
+</div>
+<!-- File Active State Pill -->
+<div class="p-2.5 rounded bg-surface-container flex flex-col gap-1.5">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 truncate">
+<span class="material-symbols-outlined text-[16px] text-secondary shrink-0">database</span>
+<span class="font-label-md text-xs text-on-surface font-mono truncate">eurusd_tick_2024_10.parquet</span>
+</div>
+<span class="font-label-sm text-[11px] text-primary font-mono font-bold shrink-0">412.8 MB</span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-[10px] text-on-surface-variant font-mono">
+<span>SHA: 7f4a08c...</span>
+<span class="text-primary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">check_circle</span>
+            Attested
+          </span>
+</div>
+</div>
+<!-- Full-Width Touch Action Button -->
+<button class="min-h-[44px] w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-on-primary font-label-md text-xs font-bold hover:bg-primary-fixed transition-colors shadow" type="button">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span>Register or resume file</span>
+</button>
+</div>
+<!-- 5. IMPORT SOURCES (ACCORDION / STACKED CARDS) -->
+<!-- MT5 Import Card -->
+<div class="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 shadow-md border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[17px]">currency_exchange</span>
+</div>
+<h2 class="font-headline-sm text-sm font-bold text-on-surface">Import from MT5</h2>
+</div>
+<span class="font-label-sm text-[10px] px-1.5 py-0.5 rounded bg-surface-container text-primary font-mono">LIVE IPC</span>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-[10px] uppercase text-on-surface-variant/80 font-medium">Instrument</label>
+<div class="min-h-[44px] px-3 py-2 rounded bg-surface-container-lowest text-on-surface font-label-md text-xs flex items-center border border-outline-variant/20">
+<select class="bg-transparent text-on-surface font-mono w-full focus:outline-none">
+<option>EURUSD (Raw ECN)</option>
+<option>GBPUSD (Raw ECN)</option>
+<option>USDJPY (Raw ECN)</option>
+<option>XAUUSD (Spot Gold)</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-[10px] uppercase text-on-surface-variant/80 font-medium">Timeframe</label>
+<div class="min-h-[44px] px-2.5 py-2 rounded bg-surface-container-lowest text-on-surface font-label-md text-xs flex items-center border border-outline-variant/20">
+<select class="bg-transparent text-on-surface font-mono w-full focus:outline-none">
+<option selected="">M5 (5m)</option>
+<option>M1 (1m)</option>
+<option>H1 (1h)</option>
+</select>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-[10px] uppercase text-on-surface-variant/80 font-medium">Max Limit</label>
+<div class="min-h-[44px] px-2.5 py-2 rounded bg-surface-container-lowest text-on-surface font-label-md text-xs flex items-center border border-outline-variant/20">
+<input class="bg-transparent text-on-surface font-mono w-full focus:outline-none" type="text" value="500 bars"/>
+</div>
+</div>
+</div>
+<button class="min-h-[44px] w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-on-primary font-label-md text-xs font-bold hover:bg-primary-fixed transition-colors shadow mt-1" type="button">
+<span class="material-symbols-outlined text-[18px]">cloud_sync</span>
+<span>Import last 500 completed bars</span>
+</button>
+</div>
+</div>
+<!-- Dukascopy .bi5 Import Card -->
+<div class="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 shadow-md border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[17px]">compress</span>
+</div>
+<h2 class="font-headline-sm text-sm font-bold text-on-surface">Import Dukascopy .bi5</h2>
+</div>
+<span class="font-label-sm text-[10px] px-1.5 py-0.5 rounded bg-surface-container text-secondary font-mono">LZMA ECN</span>
+</div>
+<div class="flex flex-col gap-2">
+<div class="grid grid-cols-2 gap-2">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-[10px] uppercase text-on-surface-variant/80 font-medium">Date (UTC)</label>
+<div class="min-h-[44px] px-2.5 py-2 rounded bg-surface-container-lowest text-on-surface font-label-md text-xs flex items-center border border-outline-variant/20">
+<input class="bg-transparent text-on-surface font-mono w-full focus:outline-none" type="text" value="2024-10-25"/>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-[10px] uppercase text-on-surface-variant/80 font-medium">Slot</label>
+<div class="min-h-[44px] px-2.5 py-2 rounded bg-surface-container-lowest text-on-surface font-label-md text-xs flex items-center border border-outline-variant/20">
+<select class="bg-transparent text-on-surface font-mono w-full focus:outline-none">
+<option>14:00 UTC</option>
+<option>All 24h</option>
+</select>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-[10px] uppercase text-on-surface-variant/80 font-medium">Archive Path</label>
+<div class="min-h-[44px] flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-surface-container-lowest text-on-surface font-label-md text-xs border border-outline-variant/20 truncate">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant shrink-0">folder_open</span>
+<span class="font-mono text-[11px] text-on-surface-variant truncate">/mnt/storage/fx_raw/EURUSD/...</span>
+</div>
+</div>
+<label class="flex items-center gap-2 cursor-pointer select-none py-1">
+<input checked="" class="w-4 h-4 rounded bg-surface-container border-0 accent-primary focus:ring-0" type="checkbox"/>
+<span class="font-body-sm text-xs text-on-surface">Enforce LZMA integrity ordering</span>
+</label>
+<button class="min-h-[44px] w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md text-xs font-semibold transition-colors shadow border border-outline-variant/30" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">unarchive</span>
+<span>Validate &amp; import file</span>
+</button>
+</div>
+</div>
+<!-- 6. VERIFIED DATASET CATALOG (SCROLLABLE TABLE) -->
+<div class="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 shadow-md border border-outline-variant/20">
+<div class="flex items-start justify-between gap-2">
+<div>
+<div class="flex items-center gap-1.5">
+<h2 class="font-headline-sm text-sm font-bold text-on-surface">Verified Dataset Catalog</h2>
+<span class="font-label-sm text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono font-semibold">5 Mounts</span>
+</div>
+<p class="font-body-sm text-[11px] text-on-surface-variant mt-0.5">
+            Attested in-memory quant partitions
+          </p>
+</div>
+<span class="text-secondary flex items-center gap-0.5 font-mono text-[10px]">Swipe ➔</span>
+</div>
+<!-- Filter Bar -->
+<div class="flex items-center gap-2">
+<div class="flex-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-surface-container-lowest text-on-surface font-label-sm text-xs border border-outline-variant/20">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">search</span>
+<input class="bg-transparent text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none w-full text-xs font-mono" placeholder="Filter instrument or SHA..." type="text"/>
+</div>
+</div>
+<!-- Horizontally Scrollable Catalog -->
+<div class="overflow-x-auto rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+<table class="w-full text-left font-body-sm text-xs min-w-[500px]">
+<thead>
+<tr class="bg-surface-container-high text-on-surface-variant font-label-sm text-[10px] uppercase tracking-wider">
+<th class="py-2 px-3">Instrument</th>
+<th class="py-2 px-3">Source</th>
+<th class="py-2 px-2">Type</th>
+<th class="py-2 px-3 text-right">Bars/Ticks</th>
+<th class="py-2 px-3 text-right">Size</th>
+<th class="py-2 px-3 text-center">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-mono text-on-surface text-[11px]">
+<tr class="hover:bg-surface-container-low">
+<td class="py-2.5 px-3 font-bold text-primary">EURUSD</td>
+<td class="py-2.5 px-3 text-on-surface-variant">Dukascopy</td>
+<td class="py-2.5 px-2"><span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px]">L2 Ticks</span></td>
+<td class="py-2.5 px-3 text-right font-bold">8,410,248</td>
+<td class="py-2.5 px-3 text-right text-on-surface-variant">412.8M</td>
+<td class="py-2.5 px-3 text-center">
+<button aria-label="Inspect" class="min-h-[32px] w-8 h-8 inline-flex items-center justify-center rounded bg-surface-container hover:bg-surface-container-high text-primary" type="button">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low">
+<td class="py-2.5 px-3 font-bold text-primary">EURUSD</td>
+<td class="py-2.5 px-3 text-on-surface-variant">Dukascopy</td>
+<td class="py-2.5 px-2"><span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px]">M5 Fixed</span></td>
+<td class="py-2.5 px-3 text-right font-bold">5,280</td>
+<td class="py-2.5 px-3 text-right text-on-surface-variant">1.4 MB</td>
+<td class="py-2.5 px-3 text-center">
+<button aria-label="Inspect" class="min-h-[32px] w-8 h-8 inline-flex items-center justify-center rounded bg-surface-container hover:bg-surface-container-high text-primary" type="button">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low">
+<td class="py-2.5 px-3 font-bold text-primary">GBPUSD</td>
+<td class="py-2.5 px-3 text-on-surface-variant">Dukascopy</td>
+<td class="py-2.5 px-2"><span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px]">M5 Fixed</span></td>
+<td class="py-2.5 px-3 text-right font-bold">5,280</td>
+<td class="py-2.5 px-3 text-right text-on-surface-variant">1.4 MB</td>
+<td class="py-2.5 px-3 text-center">
+<button aria-label="Inspect" class="min-h-[32px] w-8 h-8 inline-flex items-center justify-center rounded bg-surface-container hover:bg-surface-container-high text-primary" type="button">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low">
+<td class="py-2.5 px-3 font-bold text-secondary">EURUSD</td>
+<td class="py-2.5 px-3 text-on-surface-variant">MetaTrader 5</td>
+<td class="py-2.5 px-2"><span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px]">M5 OHLC</span></td>
+<td class="py-2.5 px-3 text-right font-bold">500</td>
+<td class="py-2.5 px-3 text-right text-on-surface-variant">128 KB</td>
+<td class="py-2.5 px-3 text-center">
+<button aria-label="Inspect" class="min-h-[32px] w-8 h-8 inline-flex items-center justify-center rounded bg-surface-container hover:bg-surface-container-high text-secondary" type="button">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low">
+<td class="py-2.5 px-3 font-bold text-secondary">GBPUSD</td>
+<td class="py-2.5 px-3 text-on-surface-variant">MetaTrader 5</td>
+<td class="py-2.5 px-2"><span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px]">M5 OHLC</span></td>
+<td class="py-2.5 px-3 text-right font-bold">500</td>
+<td class="py-2.5 px-3 text-right text-on-surface-variant">128 KB</td>
+<td class="py-2.5 px-3 text-center">
+<button aria-label="Inspect" class="min-h-[32px] w-8 h-8 inline-flex items-center justify-center rounded bg-surface-container hover:bg-surface-container-high text-secondary" type="button">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- 7. BROKER STATEMENT RECONCILIATION CARD -->
+<div class="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 shadow-md border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[17px]">fact_check</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-sm font-bold text-on-surface">Broker Reconciliation</h2>
+<span class="font-label-sm text-[9px] text-primary font-mono uppercase font-bold">Ledger Audit</span>
+</div>
+</div>
+<span class="font-label-sm text-[10px] text-primary font-mono font-bold">100% MATCH</span>
+</div>
+<div class="flex flex-col gap-2">
+<select class="min-h-[44px] px-3 py-2 rounded bg-surface-container text-on-surface font-label-md text-xs font-mono focus:outline-none border border-outline-variant/30 w-full">
+<option>IC Markets Raw ECN (#88491 - Oct 2024)</option>
+<option>Pepperstone Razor ECN (#11902)</option>
+</select>
+<button class="min-h-[44px] w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-on-primary font-label-md text-xs font-bold hover:bg-primary-fixed transition-colors shadow" type="button">
+<span class="material-symbols-outlined text-[16px]">upload_file</span>
+<span>Import statement file</span>
+</button>
+</div>
+<!-- Reconciliation Metric Stack -->
+<div class="grid grid-cols-2 gap-2 font-mono">
+<div class="p-2 rounded bg-surface-container flex flex-col">
+<span class="font-label-sm text-[9px] text-on-surface-variant font-sans uppercase">Starting Bal</span>
+<span class="font-headline-sm text-xs text-on-surface font-bold">$100,000.00</span>
+<span class="text-[9px] text-on-surface-variant/70">Oct 21, 00:00</span>
+</div>
+<div class="p-2 rounded bg-surface-container flex flex-col">
+<span class="font-label-sm text-[9px] text-on-surface-variant font-sans uppercase">Closed Net PnL</span>
+<span class="font-headline-sm text-xs text-primary font-bold">+$3,420.00</span>
+<span class="text-[9px] text-primary font-bold">+3.42 R Attained</span>
+</div>
+<div class="p-2 rounded bg-surface-container flex flex-col">
+<span class="font-label-sm text-[9px] text-on-surface-variant font-sans uppercase">Reconciled</span>
+<span class="font-headline-sm text-xs text-on-surface font-bold">$103,347.50</span>
+<span class="text-[9px] text-secondary">Verified Exact</span>
+</div>
+<div class="p-2 rounded bg-surface-container flex flex-col">
+<span class="font-label-sm text-[9px] text-on-surface-variant font-sans uppercase">Variance Drift</span>
+<span class="font-headline-sm text-xs text-primary font-bold">$0.00</span>
+<span class="text-[9px] text-primary font-bold">0.000% Drift</span>
+</div>
+</div>
+<!-- Reconciled Trade Audit Table (Scrollable) -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-[10px] px-0.5">
+<span class="uppercase font-semibold">Ledger Execution Audit</span>
+<span class="text-secondary flex items-center gap-0.5 font-mono">Swipe ➔</span>
+</div>
+<div class="overflow-x-auto rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+<table class="w-full text-left font-body-sm text-xs min-w-[500px]">
+<thead>
+<tr class="bg-surface-container-high text-on-surface-variant font-label-sm text-[10px] uppercase tracking-wider">
+<th class="py-2 px-3">Ticket</th>
+<th class="py-2 px-2">Pair</th>
+<th class="py-2 px-2">Side</th>
+<th class="py-2 px-3 text-right">Broker Price</th>
+<th class="py-2 px-3 text-right">Replay Price</th>
+<th class="py-2 px-2 text-center">Slippage</th>
+<th class="py-2 px-3 text-right">Audit</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-mono text-on-surface text-[11px]">
+<tr class="hover:bg-surface-container-low">
+<td class="py-2 px-3 text-primary font-bold">#940182</td>
+<td class="py-2 px-2">EURUSD</td>
+<td class="py-2 px-2"><span class="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold">BUY 5.0</span></td>
+<td class="py-2 px-3 text-right font-bold">1.08240</td>
+<td class="py-2 px-3 text-right text-on-surface">1.08239</td>
+<td class="py-2 px-2 text-center text-primary font-semibold">+0.1p</td>
+<td class="py-2 px-3 text-right text-primary font-bold text-[10px]">VERIFIED</td>
+</tr>
+<tr class="hover:bg-surface-container-low">
+<td class="py-2 px-3 text-primary font-bold">#940215</td>
+<td class="py-2 px-2">GBPUSD</td>
+<td class="py-2 px-2"><span class="px-1 py-0.5 rounded bg-error/10 text-error text-[10px] font-bold">SELL 4.5</span></td>
+<td class="py-2 px-3 text-right font-bold">1.29815</td>
+<td class="py-2 px-3 text-right text-on-surface">1.29815</td>
+<td class="py-2 px-2 text-center text-on-surface-variant font-semibold">0.0p</td>
+<td class="py-2 px-3 text-right text-primary font-bold text-[10px]">VERIFIED</td>
+</tr>
+<tr class="hover:bg-surface-container-low">
+<td class="py-2 px-3 text-primary font-bold">#940388</td>
+<td class="py-2 px-2">EURUSD</td>
+<td class="py-2 px-2"><span class="px-1 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold">BUY 6.0</span></td>
+<td class="py-2 px-3 text-right font-bold">1.08052</td>
+<td class="py-2 px-3 text-right text-on-surface">1.08051</td>
+<td class="py-2 px-2 text-center text-primary font-semibold">+0.1p</td>
+<td class="py-2 px-3 text-right text-primary font-bold text-[10px]">VERIFIED</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<!-- 7. FIXED BOTTOM MOBILE NAVIGATION BAR -->
+<nav class="fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-lg border-t border-outline-variant/30 z-50 px-2 flex items-center justify-around">
+<a class="flex flex-col items-center justify-center gap-1 w-14 h-full text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="font-body-sm text-[10px]">Overview</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 w-14 h-full text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">query_stats</span>
+<span class="font-body-sm text-[10px]">Terminal</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 w-14 h-full text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">conversion_path</span>
+<span class="font-body-sm text-[10px]">Positions</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 w-14 h-full text-primary font-bold transition-colors" href="#">
+<div class="relative">
+<span class="material-symbols-outlined text-[20px]">database</span>
+<span class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+</div>
+<span class="font-body-sm text-[10px]">Data</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 w-14 h-full text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">history_edu</span>
+<span class="font-body-sm text-[10px]">Logs</span>
+</a>
+</nav>
+</body></html>
