@@ -12,13 +12,30 @@ export async function installProbe(page:Page) {
       .map((series:any)=>({title:series.options().title,data:series.data()})))??[],
       series:(selector:string)=>selected(selector)?.panes().map((pane:any)=>pane.getSeries()
         .map((series:any)=>({title:series.options().title,type:series.seriesType(),data:series.data()})))??[],
+      priceRow:(selector:string,price:number)=>selected(selector)?.panes()[0].getSeries()[0].priceToCoordinate(price),
       viewRange:(from:number,to:number,selector?:string)=>selected(selector).timeScale().setVisibleRange({from,to}),
       bars:()=>Array.from(live.values(),api=>api.panes()[0].getSeries()[0].data()),
+      candlePoint:(selector:string,time:number,price:number)=>{
+        const el=document.querySelector(selector)!;
+        const chart=live.get(el), rect=el.getBoundingClientRect();
+        const x=chart.timeScale().timeToCoordinate(time), y=chart.panes()[0].getSeries()[0].priceToCoordinate(price);
+        if(x===null||y===null||x<0||x>=chart.timeScale().width())throw Error('Source candle outside plot');
+        return {x:rect.left+chart.priceScale('left').width()+x,y:rect.top+y};
+      },
+      drawingPoint:(selector:string, horizontal:number, vertical:number)=>{
+        const el=document.querySelector(selector)!;
+        const chart=live.get(el), rect=el.getBoundingClientRect(), scale=chart.timeScale();
+        const series=chart.panes()[0].getSeries()[0];
+        const x=Math.round(rect.left+chart.priceScale('left').width()+scale.width()*horizontal);
+        const y=Math.round(rect.top+chart.paneSize(0).height*vertical);
+        return {x,y,time:scale.coordinateToTime(x-rect.left-chart.priceScale('left').width()),
+          price:series.coordinateToPrice(y-rect.top).toFixed(5),range:scale.getVisibleLogicalRange()};
+      },
       point:(time:number,selector='.primary-chart .chart-input')=>{
         const el=document.querySelector(selector)!;
         const api=live.get(el), rect=el.getBoundingClientRect();
         return {x:rect.left+api.priceScale('left').width()+api.timeScale().timeToCoordinate(time),y:rect.top+rect.height*.65};
-      },range:()=>primary()?.timeScale().getVisibleLogicalRange(),counts,created:0,disposed:0,retain:false,retained:new Set<Function>(),linkedCursor:0,linkedRange:0,
+      },range:(selector?:string)=>selected(selector)?.timeScale().getVisibleLogicalRange(),counts,created:0,disposed:0,retain:false,retained:new Set<Function>(),linkedCursor:0,linkedRange:0,
       chart:(factory:Function)=>(el:Element,options:unknown)=>{
         const api=factory(el,options);counts.charts++;audit.created++;live.set(el,api);
         function subscription(target:any, suffix:string) {
@@ -45,7 +62,7 @@ export async function installProbe(page:Page) {
     Object.assign(window,{workspaceProbe:audit});
     // Only direct application resource acquisitions. Ignore Playwright, React delegation
     // and library-private internals, except observers actually attached to a chart surface.
-    const owned=(stack:string|undefined)=>/\/src\/(App|components|drawingPlacement|ChartLink|chartViews|indicators|ReplayControls)\.[tj]sx?/.test(stack?.split('\n')[2]??'');
+    const owned=(stack:string|undefined)=>/\/src\/(App|components|Drawings|drawingPlacement|ChartLink|chartViews|indicators|ReplayControls)\.[tj]sx?/.test(stack?.split('\n')[2]??'');
     const originalAdd=EventTarget.prototype.addEventListener, originalRemove=EventTarget.prototype.removeEventListener;
     const registrations=new WeakMap<EventTarget, Map<string,Set<unknown>>>();
     const key=(type:string,opt?:boolean|EventListenerOptions)=>type+':'+Boolean(typeof opt==='boolean'?opt:opt?.capture);

@@ -8,7 +8,8 @@ from pydantic import BaseModel, Field, FiniteFloat
 
 from .indicator_engine import Partition
 from .market import FRAME_MIN
-from .storage import read_partition
+from .replay_archive import MAX_FILES, MAX_ROWS, MAX_WINDOW
+from .storage import iter_complete_partition, read_partition
 
 
 class ChartBar(BaseModel):
@@ -27,6 +28,12 @@ class ChartLane(BaseModel):
     price_basis: str = Field(min_length=1, max_length=64)
     partitions: list[Partition] = Field(min_length=1, max_length=50)
     bars: list[ChartBar] = Field(min_length=1, max_length=2000)
+
+
+class FrozenChartLane(ChartLane):
+    """Only constructed from a checksum-verified native replay, never from an upload."""
+    partitions: list[Partition] = Field(min_length=1, max_length=MAX_FILES)
+    bars: list[ChartBar] = Field(min_length=1, max_length=MAX_WINDOW)
 
 
 def verified_lanes(db, request, signal=None):
@@ -62,23 +69,26 @@ def verified_lanes(db, request, signal=None):
             if row is None or any(row[key] != value for key, value in expected.items()):
                 raise HTTPException(409, f"{lane.role} archive pin conflicts with catalog: {part.id}")
             try:
-                rows = read_partition(dict(row))
+                # Native sessions already bounded all contributing partitions at capture.
+                # An early decision can fall entirely before the ordinary chart reader's tail.
+                rows = (iter_complete_partition(dict(row), max_rows=MAX_ROWS)
+                        if request.decision_replay else read_partition(dict(row)))
+                for bar in rows:
+                    t = bar["time"]
+                    if t not in wanted:
+                        continue
+                    available = bar.get("available_at")
+                    if available is None:
+                        available = t + FRAME_MIN[lane.timeframe] * 60
+                    latest_availability = available if latest_availability is None else max(latest_availability, available)
+                    if request.cutoff is not None and available > request.cutoff:
+                        raise HTTPException(409, "Plotted archive bar unavailable at cutoff")
+                    values = {key:bar[key] for key in ChartBar.model_fields}
+                    if t in observed and observed[t] != values:
+                        raise HTTPException(409, "Conflicting plotted archive bars")
+                    observed[t] = values
             except (OSError, ValueError, RuntimeError) as exc:
                 raise HTTPException(409, f"{lane.role} partition {part.id}: {exc}") from exc
-            for bar in rows:
-                t = bar["time"]
-                if t not in wanted:
-                    continue
-                available = bar.get("available_at")
-                if available is None:
-                    available = t + FRAME_MIN[lane.timeframe] * 60
-                latest_availability = available if latest_availability is None else max(latest_availability, available)
-                if request.cutoff is not None and available > request.cutoff:
-                    raise HTTPException(409, "Plotted archive bar unavailable at cutoff")
-                values = {key:bar[key] for key in ChartBar.model_fields}
-                if t in observed and observed[t] != values:
-                    raise HTTPException(409, "Conflicting plotted archive bars")
-                observed[t] = values
         plotted = [bar.model_dump() for bar in lane.bars]
         if any(observed.get(bar["time"]) != bar for bar in plotted):
             raise HTTPException(409, f"{lane.role} plotted OHLC differs from pinned archive")

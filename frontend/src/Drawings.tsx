@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import type {IChartApi,IPrimitivePaneRenderer,PrimitiveHoveredItem,ISeriesApi,ISeriesPrimitive,Time,UTCTimestamp} from 'lightweight-charts';
 import {useWorkspacePreference} from './useWorkspacePreference';
 import {api,ApiError} from './api';
@@ -19,7 +19,8 @@ export type Drawing={
 type Version={schema_version:1;revision:number;items:Drawing[]};
 type Edit={kind:DrawingTool;anchors:Anchor[];item?:Drawing;mode?:'move'|number};
 type ChartInteraction=
-  | {mode:'navigate'|'level'}
+  | {mode:'navigate';notice?:string}
+  | {mode:'level'}
   | {mode:'plan';prices:string[]}
   | {mode:'place'|'edit';draft:Edit};
 const now=()=>Math.floor(Date.now()/1000);
@@ -29,23 +30,13 @@ function bracketsEntry(anchors:Anchor[]){
   return (stop<entry&&entry<target)||(target<entry&&entry<stop);
 }
 
-export function useDrawingBook(scope:string) {
+function useDrawingDocument(scope:string) {
   const endpoint='/drawings?'+new URLSearchParams({scope});
   const [loaded,setLoaded]=useState<{scope:string;version:Version}>();
   const [error,setError]=useState('');
   const [refresh,setRefresh]=useState(0);
   const [saving,setSaving]=useState(false);
   const [conflict,setConflict]=useState(false);
-  const [selected,setSelected]=useState('');
-  const [interaction,setInteraction]=useState<ChartInteraction>({mode:'navigate'});
-  const edit='draft' in interaction?interaction.draft:undefined;
-  const setEdit=useCallback((draft?:Edit)=>setInteraction(
-    draft?{mode:draft.item?'edit':'place',draft}:{mode:'navigate'},
-  ),[]);
-  const [snapValue,saveSnap]=useWorkspacePreference('drawing-snap','off',['on','off']);
-  const snap=snapValue==='on';
-  const setSnap=(value:boolean)=>saveSnap(value?'on':'off');
-  const [history,setHistory]=useState<{undo:Drawing[][];redo:Drawing[][]}>({undo:[],redo:[]});
   const current=loaded?.scope===scope?loaded.version:undefined;
   const active=useRef<symbol|undefined>(undefined);
   const writing=useRef(false);
@@ -53,13 +44,12 @@ export function useDrawingBook(scope:string) {
     if(!scope)return;
     const key=Symbol(scope);
     active.current=key;
-    setLoaded(undefined);setError('');setEdit(undefined);setSelected('');setSaving(false);setConflict(false);writing.current=false;
-    setHistory({undo:[],redo:[]});
+    setLoaded(undefined);setError('');setSaving(false);setConflict(false);writing.current=false;
     api.get<Version>(endpoint).then(version=>{if(active.current===key)setLoaded({scope,version});})
       .catch(reason=>{if(active.current===key)setError(reason.message);});
     return ()=>{if(active.current===key)active.current=undefined;};
   },[scope,endpoint,refresh]);
-  async function save(items:Drawing[],mode:'edit'|'undo'|'redo'='edit',selectAfter?:string){
+  async function write(items:Drawing[]){
     if(!current||writing.current||conflict)return;
     const key=active.current;
     writing.current=true;
@@ -68,11 +58,7 @@ export function useDrawingBook(scope:string) {
       const version=await api.post<Version>(endpoint,{...current,items});
       if(active.current!==key)return;
       setLoaded({scope,version});
-      if(selectAfter&&version.items.some(item=>item.id===selectAfter))setSelected(selectAfter);
-      const next=mode==='undo'?{undo:history.undo.slice(0,-1),redo:[...history.redo,current.items]}:
-        mode==='redo'?{undo:[...history.undo,current.items],redo:history.redo.slice(0,-1)}:
-        {undo:[...history.undo,current.items].slice(-25),redo:[]};
-      setHistory(next);
+      return version;
     }catch(reason){
       if(active.current===key){
         setError((reason as Error).message);
@@ -81,6 +67,70 @@ export function useDrawingBook(scope:string) {
     }
     finally{if(active.current===key){writing.current=false;setSaving(false);}}
   }
+  return {scope,current,error,setError,saving,conflict,write,writing,refresh,reload:()=>setRefresh(value=>value+1)};
+}
+
+type History={undo:Drawing[][];redo:Drawing[][]};
+const emptyHistory:History={undo:[],redo:[]};
+
+type DrawingPane={scope:string;step:number;candles?:Candle[]};
+const noDrawings:Drawing[]=[];
+
+function useDrawingBook(document:ReturnType<typeof useDrawingDocument>,snap:boolean,setSnap:(value:boolean)=>void,
+  pane:DrawingPane,cutoff?:number) {
+  const {scope,current,setError,writing,conflict,refresh}=document;
+  const releases=useMemo(()=>pane.candles&&new Map(pane.candles.map(bar=>
+    [bar.time,bar.available_at??bar.time+pane.step])),[pane.candles,pane.step]);
+  const eligible=useCallback((anchors:Anchor[])=>cutoff===undefined||anchors.every(({time})=>
+    (releases?(releases.get(time)??Infinity):time+pane.step)<=cutoff),[cutoff,releases,pane.step]);
+  const items=useMemo(()=>cutoff===undefined?(current?.items??noDrawings):
+    current?.items.filter(item=>eligible(item.anchors))??noDrawings,[current,cutoff,eligible]);
+  const [selectedId,setSelected]=useState('');
+  const selected=items.some(item=>item.id===selectedId)?selectedId:'';
+  useLayoutEffect(()=>{if(selectedId&&!selected)setSelected('');},[selectedId,selected]);
+  const [storedInteraction,setInteraction]=useState<ChartInteraction>({mode:'navigate'});
+  const draft='draft' in storedInteraction?storedInteraction.draft:undefined;
+  const original=draft?.item;
+  const latest=original&&current?.items.find(item=>item.id===original.id);
+  // A book write decodes fresh objects even when it only changes a different drawing.
+  const superseded=Boolean(original&&(!latest||latest.locked||
+    (latest!==original&&JSON.stringify(latest)!==JSON.stringify(original))));
+  const canceled=draft&&(superseded||!eligible(draft.anchors)||(original&&!eligible(original.anchors)));
+  const interaction:ChartInteraction=canceled?{mode:'navigate'}:storedInteraction;
+  const edit=canceled?undefined:draft;
+  useLayoutEffect(()=>{
+    if(canceled)setInteraction({mode:'navigate',notice:superseded?'Drawing edit canceled because the saved drawing changed.':undefined});
+  },[canceled,superseded]);
+  const setEdit=useCallback((draft?:Edit)=>setInteraction(
+    draft?{mode:draft.item?'edit':'place',draft}:{mode:'navigate'},
+  ),[]);
+  const [historyAt,setHistory]=useState<{revision:number;entries:History}>();
+  const history=current&&historyAt?.revision===current.revision?historyAt.entries:emptyHistory;
+  const owner=useRef<symbol|undefined>(undefined);
+  useLayoutEffect(()=>{
+    owner.current=Symbol(scope);
+    setEdit(undefined);setSelected('');setHistory(undefined);
+    return ()=>{owner.current=undefined;};
+  },[scope,refresh,setEdit]);
+  // History contains whole revision snapshots. Replaying one is safe only if its
+  // unavailable items are identical to the current persisted document.
+  function preservesHidden(next:Drawing[]){
+    if(cutoff===undefined)return true;
+    const hidden=(list:Drawing[])=>list.filter(item=>!eligible(item.anchors));
+    return JSON.stringify(hidden(next))===JSON.stringify(hidden(current?.items??[]));
+  }
+  const undo=history.undo.at(-1),redo=history.redo.at(-1);
+  async function save(items:Drawing[],mode:'edit'|'undo'|'redo'='edit',selectAfter?:string){
+    if(!current||!preservesHidden(items))return;
+    const key=owner.current;
+    const version=await document.write(items);
+    if(!version||key!==owner.current)return;
+    if(selectAfter&&version.items.some(item=>item.id===selectAfter))setSelected(selectAfter);
+    const next=mode==='undo'?{undo:history.undo.slice(0,-1),redo:[...history.redo,current.items]}:
+      mode==='redo'?{undo:[...history.undo,current.items],redo:history.redo.slice(0,-1)}:
+      {undo:[...history.undo,current.items].slice(-25),redo:[]};
+    setHistory({revision:version.revision,entries:next});
+  }
   function begin(kind:DrawingTool){
     if(current&&current.items.length<100&&!writing.current&&!conflict)setEdit({kind,anchors:[]});
   }
@@ -88,13 +138,13 @@ export function useDrawingBook(scope:string) {
     const nearest=snap?(Math.abs(price-bar.high)<Math.abs(price-bar.low)?bar.high:bar.low):price;
     return {time:bar.time,price:nearest.toFixed(Math.min(digits,10))};
   }
-  function anchor(points:{bar:Candle;price:number}[],digits:number) {
-    if(!edit||!current||writing.current||!points.length||points.some(point=>point.price<0))return;
-    const last=points[points.length-1];
-    const next=point(last.bar,last.price,digits);
+  function anchor(additions:Anchor[],digits:number) {
+    if(!edit||!current||writing.current||!additions.length||additions.some(point=>Number(point.price)<0))return;
+    const next=additions[additions.length-1];
     const nearest=Number(next.price);
     if(edit.item&&edit.mode!==undefined){
-      const item=edit.item;
+      if(!latest||latest.locked||superseded)return;
+      const item=latest;
       const anchors=item.anchors.map((point,index)=>{
         if(edit.mode===index)return next;
         if(edit.mode==='move'){
@@ -104,6 +154,10 @@ export function useDrawingBook(scope:string) {
         return point;
       });
       if(anchors.some(point=>point.time<0||Number(point.price)<0)){setError('Move would leave the supported time or price range');return;}
+      if(edit.mode==='move'&&!eligible(anchors)){
+        setError('A moved anchor falls outside the available replay candles. Choose another origin.');
+        return;
+      }
       if(item.kind==='risk-reward'&&!bracketsEntry(anchors)){
         setError('Stop and target must bracket entry. Select the anchor again.');
         return;
@@ -111,7 +165,6 @@ export function useDrawingBook(scope:string) {
       setEdit(undefined);void save(current.items.map(drawing=>drawing.id===item.id?{...item,anchors,updated_at:now()}:drawing));
       return;
     }
-    const additions=points.map(({bar,price})=>point(bar,price,digits));
     const anchors=[...edit.anchors,...additions];
     if(anchors.length>tools[edit.kind][1]||
       (additions.length>1&&additions[0].time===next.time&&additions[0].price===next.price))return;
@@ -130,14 +183,54 @@ export function useDrawingBook(scope:string) {
       original.locked||!original.visible||!current.items.includes(original)||sameAnchors(anchors,original.anchors))return;
     void save(current.items.map(item=>item===original?{...item,anchors,updated_at:now()}:item));
   }
-  return {current,error,saving,conflict,saveDirect,selected,setSelected,interaction,setInteraction,edit,setEdit,snap,setSnap,history,save,begin,anchor,point,
-    reload:()=>setRefresh(value=>value+1)};
+  return {current,items,eligible,canUndo:Boolean(undo&&preservesHidden(undo)),canRedo:Boolean(redo&&preservesHidden(redo)),error:document.error,saving:document.saving,conflict,saveDirect,selected,setSelected,interaction,setInteraction,edit,setEdit,snap,setSnap,history,save,begin,anchor,point,reload:document.reload};
 }
 
-export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>}) {
+export type DrawingBook=ReturnType<typeof useDrawingBook>;
+
+export function usePaneDrawingBooks(cutoff:number|undefined,primary:DrawingPane,second:DrawingPane,third:DrawingPane,fourth:DrawingPane) {
+  const scopes=[primary.scope,second.scope,third.scope,fourth.scope];
+  // Identical chart markets share one document and write lock. Gestures, selection and
+  // undo belong to an individual chart and cannot follow a delayed response into another.
+  const first=useDrawingDocument(primary.scope);
+  const two=useDrawingDocument(scopes.indexOf(second.scope)===1?second.scope:'');
+  const three=useDrawingDocument(scopes.indexOf(third.scope)===2?third.scope:'');
+  const four=useDrawingDocument(scopes.indexOf(fourth.scope)===3?fourth.scope:'');
+  const documents=[first,two,three,four];
+  const [snapValue,saveSnap]=useWorkspacePreference('drawing-snap','off',['on','off']);
+  const snap=snapValue==='on';
+  const setSnap=(value:boolean)=>saveSnap(value?'on':'off');
+  const primaryBook=useDrawingBook(first,snap,setSnap,primary,cutoff);
+  const secondBook=useDrawingBook(documents[scopes.indexOf(second.scope)],snap,setSnap,second,cutoff);
+  const thirdBook=useDrawingBook(documents[scopes.indexOf(third.scope)],snap,setSnap,third,cutoff);
+  const fourthBook=useDrawingBook(documents[scopes.indexOf(fourth.scope)],snap,setSnap,fourth,cutoff);
+  return {primary:primaryBook,'2':secondBook,'3':thirdBook,'4':fourthBook};
+}
+
+export function drawingChartProps(book:DrawingBook,digits:number,active:boolean) {
+  const {edit,interaction}=book;
+  const draft=active?edit:undefined;
+  const drag=interaction.mode==='level'||(interaction.mode==='place'&&tools[interaction.draft.kind][1]===1)?'release-point':
+    interaction.mode==='place'&&!interaction.draft.anchors.length&&['trend','rectangle','risk-reward'].includes(interaction.draft.kind)?'two-points':'none';
+  return {
+    drawMode:active&&interaction.mode!=='navigate',placementInteraction:interaction,
+    placementDrag:drag as 'release-point'|'two-points'|'none',requirePlacementCandle:interaction.mode==='level',
+    placementDraft:draft&&{kind:draft.kind,anchors:draft.anchors},
+    onDrawingSelect:(id:string)=>{if(!id||book.items.some(item=>item.visible&&item.id===id))book.setSelected(id);},
+    directEdit:{selected:active?book.selected:'',enabled:active&&Boolean(book.current&&!book.saving&&!book.conflict),
+      revision:book.current?.revision,snap:book.snap,save:book.saveDirect},
+    resolvePlacementAnchor:draft?(bar:Candle,price:number)=>book.point(bar,price,digits):undefined,
+    onAnchor:draft?(anchors:Anchor[])=>book.anchor(anchors,digits):undefined,
+    onPlacementPreview:draft?(anchors:Anchor[])=>({kind:draft.kind,
+      anchors:[...draft.anchors,...anchors]}):undefined,
+    drawingPrompt:draft?`${tools[draft.kind][0]} · select ${draft.mode==='move'?'new origin':typeof draft.mode==='number'?draft.mode+1:draft.anchors.length+1}`:undefined,
+  };
+}
+
+export function DrawingToolbox({book,destination}: {book:DrawingBook;destination?:string}) {
   const [tool,setTool]=useWorkspacePreference<DrawingTool>('drawing-tool','trend',Object.keys(tools) as DrawingTool[]);
   const [expanded,setExpanded]=useWorkspacePreference("drawing-toolbox","closed",["open","closed"]);
-  const item=book.current?.items.find(drawing=>drawing.id===book.selected);
+  const item=book.items.find(drawing=>drawing.id===book.selected);
   const [draft,setDraft]=useState<{id:string;label:string;color:string}>();
   const options=draft?.id===item?.id?draft:undefined;
   const blocked=book.saving||book.conflict||!book.current;
@@ -145,8 +238,9 @@ export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>})
     if(item&&book.current)void book.save(book.current.items.map(drawing=>drawing.id===item.id?
       {...drawing,...changes,updated_at:now()}:drawing));
   };
-  return <details className="data-trust" open={expanded==="open"} onToggle={e=>setExpanded(e.currentTarget.open?"open":"closed")}><summary>Drawing toolbox {book.current?`(${book.current.items.length})`:''}</summary>
+  return <details className="data-trust" open={expanded==="open"} onToggle={e=>setExpanded(e.currentTarget.open?"open":"closed")}><summary>Drawing toolbox {book.current?`(${book.items.length})`:''}{destination&&<small className="muted"> · {destination}</small>}</summary>
     {book.error&&<p role="alert">{book.error} <button className="small-tool" disabled={book.saving} onClick={book.reload}>Reload drawings</button></p>}
+    {book.interaction.mode==='navigate'&&book.interaction.notice&&<p role="status">{book.interaction.notice}</p>}
     {!book.current&&!book.error&&<p role="status">Loading drawings</p>}
     <div className="research-controls">
       <label>Drawing tool<select aria-label="Drawing tool" value={tool} onChange={event=>setTool(event.target.value as DrawingTool)}>
@@ -155,17 +249,17 @@ export function DrawingToolbox({book}: {book:ReturnType<typeof useDrawingBook>})
       <button className="small-tool" disabled={blocked||book.current?.items.length===100} onClick={()=>book.begin(tool)}>Draw</button>
       <label><input type="checkbox" checked={book.snap} onChange={event=>book.setSnap(event.target.checked)}/> Snap to wick</label>
       {book.edit&&<button className="small-tool" onClick={()=>book.setEdit(undefined)}>Cancel drawing</button>}
-      <button className="small-tool" disabled={blocked||!book.history.undo.length}
+      <button className="small-tool" disabled={blocked||!book.canUndo}
         onClick={()=>void book.save(book.history.undo.at(-1)!,'undo')}>Undo drawing edit</button>
-      <button className="small-tool" disabled={blocked||!book.history.redo.length}
+      <button className="small-tool" disabled={blocked||!book.canRedo}
         onClick={()=>void book.save(book.history.redo.at(-1)!,'redo')}>Redo drawing edit</button>
-      <button className="small-tool" disabled={blocked||!book.current?.items.some(drawing=>!drawing.locked)} onClick={()=>{
-        if(book.current&&window.confirm('Remove all unlocked drawings?'))void book.save(book.current.items.filter(drawing=>drawing.locked));
+      <button className="small-tool" disabled={blocked||!book.items.some(drawing=>!drawing.locked)} onClick={()=>{
+        if(book.current&&window.confirm('Remove all available unlocked drawings?'))void book.save(book.current.items.filter(drawing=>drawing.locked||!book.eligible(drawing.anchors)));
       }}>Clear drawings</button>
     </div>
-    {Boolean(book.current?.items.length)&&<label className="field">Select drawing<select value={book.selected}
+    {Boolean(book.items.length)&&<label className="field">Select drawing<select value={book.selected}
       onChange={event=>{book.setSelected(event.target.value);setDraft(undefined);}}>
-      <option value="">Choose drawing</option>{book.current?.items.map(drawing=>
+      <option value="">Choose drawing</option>{book.items.map(drawing=>
         <option key={drawing.id} value={drawing.id}>{drawing.label||tools[drawing.kind][0]} · {drawing.anchors[0].price}{drawing.locked?' · locked':''}</option>)}
     </select></label>}
     {item&&<div className="research-controls">

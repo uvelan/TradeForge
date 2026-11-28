@@ -1,0 +1,2167 @@
+{
+  "source": "GENUINE_DUKASCOPY_WEB_CSV",
+  "original_session": "b14f327cde82936e3775049f349d8183e2e9d683613d7cc0c1e35459566513be",
+  "tested_scope": "DUKASCOPY_SAVED:EURUSD:M5",
+  "source_files": [
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-09",
+      "sha256": "0560cf18711672c26fc4747018cc566fca095d1abf5a6b64efd82c65dfaae3dc",
+      "m1": 1437,
+      "complete_m5": 286
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-10",
+      "sha256": "4db5776c7d7dd309daac2d01783c6dad69d34a06c5f5127a1693f602c6afe969",
+      "m1": 1433,
+      "complete_m5": 282
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-11",
+      "sha256": "a07849dcdb4585f782859f9878b7a6c93c34b6f2959ceffa150102c7e4627e9a",
+      "m1": 1438,
+      "complete_m5": 286
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-12",
+      "sha256": "4c1c30716245d43f68f1ad415c72d3f64d542aa129f93fda43917df53c67239e",
+      "m1": 1436,
+      "complete_m5": 285
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-13",
+      "sha256": "4c1e415ee7bb1c8a7cfe473364afb5d00f82d11ea9e3b48d8960b476f53f0a6d",
+      "m1": 1320,
+      "complete_m5": 264
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-16",
+      "sha256": "28d7be87a1a5642741ac9c526f13caf49fbfb5aae8c5ab8aec076ee7d31190b7",
+      "m1": 1439,
+      "complete_m5": 287
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-17",
+      "sha256": "b10f5f39e04815bb22a3aae14015002af8d4d55013f7b250913b8330c0d07a7d",
+      "m1": 1440,
+      "complete_m5": 288
+    },
+    {
+      "symbol": "EURUSD",
+      "day": "2026-11-18",
+      "sha256": "b672895c5866519b68dc25ea5dc55c0ab2fbaec7de240af4c4087dd981f46dba",
+      "m1": 1440,
+      "complete_m5": 288
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-09",
+      "sha256": "bfd85b96494e39080026e1406939dfbb3e2866eae1c3cb10b8414d6211dd1356",
+      "m1": 1435,
+      "complete_m5": 284
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-10",
+      "sha256": "ab0ef93bd47aa36b1238873e08efe3b2410d9cbdd0fe898b599a98c17a7b78f4",
+      "m1": 1435,
+      "complete_m5": 285
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-11",
+      "sha256": "14003bf93e64aecd14a7c0898e1abbaa53cb7cd8fce9fc20123c09db3a91a804",
+      "m1": 1435,
+      "complete_m5": 285
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-12",
+      "sha256": "3bbcd8915b623a30fb9b85ea722063a081bec4601791e93b05a9d75e9be77da1",
+      "m1": 1436,
+      "complete_m5": 286
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-13",
+      "sha256": "25b5f24e0973f993b721fa06bc3e1cff1870d1eef4d943db0fa97604ea4f0e75",
+      "m1": 1320,
+      "complete_m5": 264
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-16",
+      "sha256": "425cb8d421ea51b1d4ca1dc97217532da3f3ab83f7be1ca5983d409eb484e715",
+      "m1": 1439,
+      "complete_m5": 287
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-17",
+      "sha256": "656a8302fee4dd40b32d410a4d452a4384b0f8fa5f408feba71a30a72fd77f85",
+      "m1": 1437,
+      "complete_m5": 286
+    },
+    {
+      "symbol": "GBPUSD",
+      "day": "2026-11-18",
+      "sha256": "dfbf707b636434d35c2dcf35e9974c13d971f8e05a42207e289feb94ff5bc7b6",
+      "m1": 1435,
+      "complete_m5": 285
+    }
+  ],
+  "runs": {
+    "baseline": {
+      "revision": "fc49b11ba94b5ee4cf7ed55b5f6f6a5143a76a54",
+      "cases": [
+        {
+          "action": "restyle companion anchor",
+          "drawing_id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+          "observations": {
+            "initial": {
+              "revision": 12,
+              "selected": {
+                "id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951000,
+                    "price": "1.10010"
+                  }
+                ],
+                "label": "",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795781550,
+                "updated_at": 1795781550
+              }
+            },
+            "changed": {
+              "revision": 13,
+              "selected": {
+                "id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951000,
+                    "price": "1.10010"
+                  }
+                ],
+                "label": "Saved companion label",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795781550,
+                "updated_at": 1795781551
+              }
+            },
+            "after": {
+              "revision": 14,
+              "selected": {
+                "id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951300,
+                    "price": "1.10008"
+                  }
+                ],
+                "label": "",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795781550,
+                "updated_at": 1795781551
+              }
+            }
+          },
+          "post_bodies": [
+            {
+              "schema_version": 1,
+              "revision": 12,
+              "items": [
+                {
+                  "id": "85c51330-a028-44a8-9a26-b8360278a867",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794951900,
+                      "price": "1.10023"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "ab960705-7a97-4a8f-a26c-aa86eeaa6ef4",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794952500,
+                      "price": "1.09997"
+                    }
+                  ],
+                  "label": "Release primary 1.09997",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "07acd046-df5c-4a3e-ae3b-e0274952e354",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781473,
+                  "updated_at": 1795781474
+                },
+                {
+                  "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781545,
+                  "updated_at": 1795781546
+                },
+                {
+                  "id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951000,
+                      "price": "1.10010"
+                    }
+                  ],
+                  "label": "Saved companion label",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781550,
+                  "updated_at": 1795781551
+                }
+              ]
+            },
+            {
+              "schema_version": 1,
+              "revision": 13,
+              "items": [
+                {
+                  "id": "85c51330-a028-44a8-9a26-b8360278a867",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794951900,
+                      "price": "1.10023"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "ab960705-7a97-4a8f-a26c-aa86eeaa6ef4",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794952500,
+                      "price": "1.09997"
+                    }
+                  ],
+                  "label": "Release primary 1.09997",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "07acd046-df5c-4a3e-ae3b-e0274952e354",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781473,
+                  "updated_at": 1795781474
+                },
+                {
+                  "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781545,
+                  "updated_at": 1795781546
+                },
+                {
+                  "id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781550,
+                  "updated_at": 1795781551
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "action": "lock move",
+          "drawing_id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+          "observations": {
+            "initial": {
+              "revision": 9,
+              "selected": {
+                "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951000,
+                    "price": "1.10010"
+                  }
+                ],
+                "label": "",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795781545,
+                "updated_at": 1795781545
+              }
+            },
+            "changed": {
+              "revision": 10,
+              "selected": {
+                "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951000,
+                    "price": "1.10010"
+                  }
+                ],
+                "label": "",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": true,
+                "created_at": 1795781545,
+                "updated_at": 1795781546
+              }
+            },
+            "after": {
+              "revision": 11,
+              "selected": {
+                "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794951300,
+                    "price": "1.10008"
+                  },
+                  {
+                    "time": 1794951600,
+                    "price": "1.10004"
+                  }
+                ],
+                "label": "",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795781545,
+                "updated_at": 1795781546
+              }
+            }
+          },
+          "post_bodies": [
+            {
+              "schema_version": 1,
+              "revision": 9,
+              "items": [
+                {
+                  "id": "85c51330-a028-44a8-9a26-b8360278a867",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794951900,
+                      "price": "1.10023"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "ab960705-7a97-4a8f-a26c-aa86eeaa6ef4",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794952500,
+                      "price": "1.09997"
+                    }
+                  ],
+                  "label": "Release primary 1.09997",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "07acd046-df5c-4a3e-ae3b-e0274952e354",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781473,
+                  "updated_at": 1795781474
+                },
+                {
+                  "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951000,
+                      "price": "1.10010"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": true,
+                  "created_at": 1795781545,
+                  "updated_at": 1795781546
+                }
+              ]
+            },
+            {
+              "schema_version": 1,
+              "revision": 10,
+              "items": [
+                {
+                  "id": "85c51330-a028-44a8-9a26-b8360278a867",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794951900,
+                      "price": "1.10023"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "ab960705-7a97-4a8f-a26c-aa86eeaa6ef4",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794952500,
+                      "price": "1.09997"
+                    }
+                  ],
+                  "label": "Release primary 1.09997",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "07acd046-df5c-4a3e-ae3b-e0274952e354",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781473,
+                  "updated_at": 1795781474
+                },
+                {
+                  "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781545,
+                  "updated_at": 1795781546
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "corrected": {
+      "revision": "b1b2ffe3c19f6eb27dcdff30dc93a1bfcaf3c273",
+      "cases": [
+        {
+          "action": "restyle companion anchor",
+          "drawing_id": "8adfba26-b40f-43f9-8428-7d4c5101e6bd",
+          "post_bodies": [
+            {
+              "schema_version": 1,
+              "revision": 39,
+              "items": [
+                {
+                  "id": "85c51330-a028-44a8-9a26-b8360278a867",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794951900,
+                      "price": "1.10023"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "ab960705-7a97-4a8f-a26c-aa86eeaa6ef4",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794952500,
+                      "price": "1.09997"
+                    }
+                  ],
+                  "label": "Release primary 1.09997",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "07acd046-df5c-4a3e-ae3b-e0274952e354",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781473,
+                  "updated_at": 1795781474
+                },
+                {
+                  "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781545,
+                  "updated_at": 1795781546
+                },
+                {
+                  "id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781550,
+                  "updated_at": 1795781551
+                },
+                {
+                  "id": "a9b1df17-6461-44f3-92bc-c515bff62f5e",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781599,
+                  "updated_at": 1795781605
+                },
+                {
+                  "id": "566b82e2-2390-41e7-9326-79e0b3806d72",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "Saved companion label",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781609,
+                  "updated_at": 1795781614
+                },
+                {
+                  "id": "056750fc-2269-4aca-b9ab-be4f8d777ba9",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10066"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782010,
+                  "updated_at": 1795782010
+                },
+                {
+                  "id": "65a13f57-b857-478b-9a6b-8d4e6298a9b3",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943500,
+                      "price": "1.10110"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782034,
+                  "updated_at": 1795782034
+                },
+                {
+                  "id": "ea767d89-093c-4a49-9bce-cd3a861f23a0",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10110"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782053,
+                  "updated_at": 1795782057
+                },
+                {
+                  "id": "9979de8f-1246-4b19-b391-caf64d2d1645",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10119"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782059,
+                  "updated_at": 1795782059
+                },
+                {
+                  "id": "adacb7c8-604b-4944-855a-b4613ad805b6",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10102"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782069,
+                  "updated_at": 1795782069
+                },
+                {
+                  "id": "b1e6347b-9a10-47d9-bdef-979084d813da",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782076,
+                  "updated_at": 1795782077
+                },
+                {
+                  "id": "c154b9de-4e1d-412e-a7e0-629ebfe3a118",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782083,
+                  "updated_at": 1795782092
+                },
+                {
+                  "id": "8adfba26-b40f-43f9-8428-7d4c5101e6bd",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951000,
+                      "price": "1.10010"
+                    }
+                  ],
+                  "label": "Saved companion label",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782099,
+                  "updated_at": 1795782101
+                }
+              ]
+            },
+            {
+              "schema_version": 1,
+              "revision": 40,
+              "items": [
+                {
+                  "id": "85c51330-a028-44a8-9a26-b8360278a867",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794951900,
+                      "price": "1.10023"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "ab960705-7a97-4a8f-a26c-aa86eeaa6ef4",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794952500,
+                      "price": "1.09997"
+                    }
+                  ],
+                  "label": "Release primary 1.09997",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "07acd046-df5c-4a3e-ae3b-e0274952e354",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781473,
+                  "updated_at": 1795781474
+                },
+                {
+                  "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781545,
+                  "updated_at": 1795781546
+                },
+                {
+                  "id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781550,
+                  "updated_at": 1795781551
+                },
+                {
+                  "id": "a9b1df17-6461-44f3-92bc-c515bff62f5e",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781599,
+                  "updated_at": 1795781605
+                },
+                {
+                  "id": "566b82e2-2390-41e7-9326-79e0b3806d72",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "Saved companion label",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781609,
+                  "updated_at": 1795781614
+                },
+                {
+                  "id": "056750fc-2269-4aca-b9ab-be4f8d777ba9",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10066"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782010,
+                  "updated_at": 1795782010
+                },
+                {
+                  "id": "65a13f57-b857-478b-9a6b-8d4e6298a9b3",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943500,
+                      "price": "1.10110"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782034,
+                  "updated_at": 1795782034
+                },
+                {
+                  "id": "ea767d89-093c-4a49-9bce-cd3a861f23a0",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10110"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782053,
+                  "updated_at": 1795782057
+                },
+                {
+                  "id": "9979de8f-1246-4b19-b391-caf64d2d1645",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10119"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782059,
+                  "updated_at": 1795782059
+                },
+                {
+                  "id": "adacb7c8-604b-4944-855a-b4613ad805b6",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10102"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782069,
+                  "updated_at": 1795782069
+                },
+                {
+                  "id": "b1e6347b-9a10-47d9-bdef-979084d813da",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782076,
+                  "updated_at": 1795782077
+                },
+                {
+                  "id": "c154b9de-4e1d-412e-a7e0-629ebfe3a118",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782083,
+                  "updated_at": 1795782092
+                },
+                {
+                  "id": "8adfba26-b40f-43f9-8428-7d4c5101e6bd",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "Saved companion label",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782099,
+                  "updated_at": 1795782107
+                }
+              ]
+            }
+          ],
+          "observations": {
+            "initial": {
+              "revision": 39,
+              "selected": {
+                "id": "8adfba26-b40f-43f9-8428-7d4c5101e6bd",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951000,
+                    "price": "1.10010"
+                  }
+                ],
+                "label": "",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795782099,
+                "updated_at": 1795782099
+              }
+            },
+            "changed": {
+              "revision": 40,
+              "selected": {
+                "id": "8adfba26-b40f-43f9-8428-7d4c5101e6bd",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951000,
+                    "price": "1.10010"
+                  }
+                ],
+                "label": "Saved companion label",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795782099,
+                "updated_at": 1795782101
+              }
+            },
+            "after": {
+              "revision": 40,
+              "selected": {
+                "id": "8adfba26-b40f-43f9-8428-7d4c5101e6bd",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951000,
+                    "price": "1.10010"
+                  }
+                ],
+                "label": "Saved companion label",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795782099,
+                "updated_at": 1795782101
+              }
+            },
+            "final": {
+              "revision": 41,
+              "selected": {
+                "id": "8adfba26-b40f-43f9-8428-7d4c5101e6bd",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794951300,
+                    "price": "1.10008"
+                  },
+                  {
+                    "time": 1794951600,
+                    "price": "1.10004"
+                  }
+                ],
+                "label": "Saved companion label",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795782099,
+                "updated_at": 1795782107
+              }
+            }
+          }
+        },
+        {
+          "action": "lock move",
+          "drawing_id": "c154b9de-4e1d-412e-a7e0-629ebfe3a118",
+          "post_bodies": [
+            {
+              "schema_version": 1,
+              "revision": 35,
+              "items": [
+                {
+                  "id": "85c51330-a028-44a8-9a26-b8360278a867",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794951900,
+                      "price": "1.10023"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "ab960705-7a97-4a8f-a26c-aa86eeaa6ef4",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794952500,
+                      "price": "1.09997"
+                    }
+                  ],
+                  "label": "Release primary 1.09997",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "07acd046-df5c-4a3e-ae3b-e0274952e354",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781473,
+                  "updated_at": 1795781474
+                },
+                {
+                  "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781545,
+                  "updated_at": 1795781546
+                },
+                {
+                  "id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781550,
+                  "updated_at": 1795781551
+                },
+                {
+                  "id": "a9b1df17-6461-44f3-92bc-c515bff62f5e",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781599,
+                  "updated_at": 1795781605
+                },
+                {
+                  "id": "566b82e2-2390-41e7-9326-79e0b3806d72",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "Saved companion label",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781609,
+                  "updated_at": 1795781614
+                },
+                {
+                  "id": "056750fc-2269-4aca-b9ab-be4f8d777ba9",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10066"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782010,
+                  "updated_at": 1795782010
+                },
+                {
+                  "id": "65a13f57-b857-478b-9a6b-8d4e6298a9b3",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943500,
+                      "price": "1.10110"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782034,
+                  "updated_at": 1795782034
+                },
+                {
+                  "id": "ea767d89-093c-4a49-9bce-cd3a861f23a0",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10110"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782053,
+                  "updated_at": 1795782057
+                },
+                {
+                  "id": "9979de8f-1246-4b19-b391-caf64d2d1645",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10119"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782059,
+                  "updated_at": 1795782059
+                },
+                {
+                  "id": "adacb7c8-604b-4944-855a-b4613ad805b6",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10102"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782069,
+                  "updated_at": 1795782069
+                },
+                {
+                  "id": "b1e6347b-9a10-47d9-bdef-979084d813da",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782076,
+                  "updated_at": 1795782077
+                },
+                {
+                  "id": "c154b9de-4e1d-412e-a7e0-629ebfe3a118",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951000,
+                      "price": "1.10010"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": true,
+                  "created_at": 1795782083,
+                  "updated_at": 1795782084
+                }
+              ]
+            },
+            {
+              "schema_version": 1,
+              "revision": 36,
+              "items": [
+                {
+                  "id": "85c51330-a028-44a8-9a26-b8360278a867",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794951900,
+                      "price": "1.10023"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "ab960705-7a97-4a8f-a26c-aa86eeaa6ef4",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794952500,
+                      "price": "1.09997"
+                    }
+                  ],
+                  "label": "Release primary 1.09997",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "07acd046-df5c-4a3e-ae3b-e0274952e354",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781473,
+                  "updated_at": 1795781474
+                },
+                {
+                  "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781545,
+                  "updated_at": 1795781546
+                },
+                {
+                  "id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781550,
+                  "updated_at": 1795781551
+                },
+                {
+                  "id": "a9b1df17-6461-44f3-92bc-c515bff62f5e",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781599,
+                  "updated_at": 1795781605
+                },
+                {
+                  "id": "566b82e2-2390-41e7-9326-79e0b3806d72",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "Saved companion label",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781609,
+                  "updated_at": 1795781614
+                },
+                {
+                  "id": "056750fc-2269-4aca-b9ab-be4f8d777ba9",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10066"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782010,
+                  "updated_at": 1795782010
+                },
+                {
+                  "id": "65a13f57-b857-478b-9a6b-8d4e6298a9b3",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943500,
+                      "price": "1.10110"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782034,
+                  "updated_at": 1795782034
+                },
+                {
+                  "id": "ea767d89-093c-4a49-9bce-cd3a861f23a0",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10110"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782053,
+                  "updated_at": 1795782057
+                },
+                {
+                  "id": "9979de8f-1246-4b19-b391-caf64d2d1645",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10119"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782059,
+                  "updated_at": 1795782059
+                },
+                {
+                  "id": "adacb7c8-604b-4944-855a-b4613ad805b6",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10102"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782069,
+                  "updated_at": 1795782069
+                },
+                {
+                  "id": "b1e6347b-9a10-47d9-bdef-979084d813da",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782076,
+                  "updated_at": 1795782077
+                },
+                {
+                  "id": "c154b9de-4e1d-412e-a7e0-629ebfe3a118",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951000,
+                      "price": "1.10010"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782083,
+                  "updated_at": 1795782090
+                }
+              ]
+            },
+            {
+              "schema_version": 1,
+              "revision": 37,
+              "items": [
+                {
+                  "id": "85c51330-a028-44a8-9a26-b8360278a867",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794951900,
+                      "price": "1.10023"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "ab960705-7a97-4a8f-a26c-aa86eeaa6ef4",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794952500,
+                      "price": "1.09997"
+                    }
+                  ],
+                  "label": "Release primary 1.09997",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795779673,
+                  "updated_at": 1795779673
+                },
+                {
+                  "id": "07acd046-df5c-4a3e-ae3b-e0274952e354",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781473,
+                  "updated_at": 1795781474
+                },
+                {
+                  "id": "92ae1f6c-857a-40de-a0db-bf9cdcc9c5ae",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781545,
+                  "updated_at": 1795781546
+                },
+                {
+                  "id": "1d0ac6fe-321e-4513-9c4c-047b7296b3ac",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794950700,
+                      "price": "1.10014"
+                    },
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781550,
+                  "updated_at": 1795781551
+                },
+                {
+                  "id": "a9b1df17-6461-44f3-92bc-c515bff62f5e",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781599,
+                  "updated_at": 1795781605
+                },
+                {
+                  "id": "566b82e2-2390-41e7-9326-79e0b3806d72",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "Saved companion label",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795781609,
+                  "updated_at": 1795781614
+                },
+                {
+                  "id": "056750fc-2269-4aca-b9ab-be4f8d777ba9",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10066"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782010,
+                  "updated_at": 1795782010
+                },
+                {
+                  "id": "65a13f57-b857-478b-9a6b-8d4e6298a9b3",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943500,
+                      "price": "1.10110"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782034,
+                  "updated_at": 1795782034
+                },
+                {
+                  "id": "ea767d89-093c-4a49-9bce-cd3a861f23a0",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10110"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782053,
+                  "updated_at": 1795782057
+                },
+                {
+                  "id": "9979de8f-1246-4b19-b391-caf64d2d1645",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10119"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782059,
+                  "updated_at": 1795782059
+                },
+                {
+                  "id": "adacb7c8-604b-4944-855a-b4613ad805b6",
+                  "kind": "horizontal",
+                  "anchors": [
+                    {
+                      "time": 1794943200,
+                      "price": "1.10102"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782069,
+                  "updated_at": 1795782069
+                },
+                {
+                  "id": "b1e6347b-9a10-47d9-bdef-979084d813da",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782076,
+                  "updated_at": 1795782077
+                },
+                {
+                  "id": "c154b9de-4e1d-412e-a7e0-629ebfe3a118",
+                  "kind": "trend",
+                  "anchors": [
+                    {
+                      "time": 1794951300,
+                      "price": "1.10008"
+                    },
+                    {
+                      "time": 1794951600,
+                      "price": "1.10004"
+                    }
+                  ],
+                  "label": "",
+                  "color": "#55d9b5",
+                  "visible": true,
+                  "locked": false,
+                  "created_at": 1795782083,
+                  "updated_at": 1795782092
+                }
+              ]
+            }
+          ],
+          "observations": {
+            "initial": {
+              "revision": 35,
+              "selected": {
+                "id": "c154b9de-4e1d-412e-a7e0-629ebfe3a118",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951000,
+                    "price": "1.10010"
+                  }
+                ],
+                "label": "",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795782083,
+                "updated_at": 1795782083
+              }
+            },
+            "changed": {
+              "revision": 36,
+              "selected": {
+                "id": "c154b9de-4e1d-412e-a7e0-629ebfe3a118",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951000,
+                    "price": "1.10010"
+                  }
+                ],
+                "label": "",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": true,
+                "created_at": 1795782083,
+                "updated_at": 1795782084
+              }
+            },
+            "after": {
+              "revision": 36,
+              "selected": {
+                "id": "c154b9de-4e1d-412e-a7e0-629ebfe3a118",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794950700,
+                    "price": "1.10014"
+                  },
+                  {
+                    "time": 1794951000,
+                    "price": "1.10010"
+                  }
+                ],
+                "label": "",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": true,
+                "created_at": 1795782083,
+                "updated_at": 1795782084
+              }
+            },
+            "final": {
+              "revision": 38,
+              "selected": {
+                "id": "c154b9de-4e1d-412e-a7e0-629ebfe3a118",
+                "kind": "trend",
+                "anchors": [
+                  {
+                    "time": 1794951300,
+                    "price": "1.10008"
+                  },
+                  {
+                    "time": 1794951600,
+                    "price": "1.10004"
+                  }
+                ],
+                "label": "",
+                "color": "#55d9b5",
+                "visible": true,
+                "locked": false,
+                "created_at": 1795782083,
+                "updated_at": 1795782092
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

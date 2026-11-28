@@ -1,0 +1,38 @@
+{
+  "replay_id": "b14f327cde82936e3775049f349d8183e2e9d683613d7cc0c1e35459566513be",
+  "versions": [
+    [
+      "DUKASCOPY_SAVED:EURUSD:M1",
+      1
+    ],
+    [
+      "DUKASCOPY_SAVED:EURUSD:M5",
+      1
+    ],
+    [
+      "DUKASCOPY_SAVED:GBPUSD:M1",
+      1
+    ],
+    [
+      "DUKASCOPY_SAVED:GBPUSD:M1",
+      2
+    ],
+    [
+      "DUKASCOPY_SAVED:GBPUSD:M1",
+      3
+    ],
+    [
+      "DUKASCOPY_SAVED:GBPUSD:M5",
+      1
+    ]
+  ],
+  "counts": {
+    "books": 4,
+    "versions": 6
+  },
+  "matched": {
+    "created": 4,
+    "edited": 1,
+    "undone": 1
+  }
+}

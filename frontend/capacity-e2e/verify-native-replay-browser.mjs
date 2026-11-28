@@ -7,9 +7,16 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
 import {chromium, expect} from '@playwright/test';
+import {drawingJourney, verifyReopenedDrawings} from './native-drawing-journey.mjs';
 import {installProbe} from '../e2e/workspace-probe.ts';
 
+import {cutoffJourney, installCutoffClock, createBoundedSession, checkServerSessions} from './native-drawing-cutoff.mjs';
+
 const {values: args} = parseArgs({options: {
+  cutoff: {type: 'boolean'},
+  drawings: {type: 'boolean'},
+  'forex-decisions': {type:'boolean'},
+  'decision-boundaries': {type:'boolean'},
   output: {type: 'string'},
   workspace: {type: 'string'},
   bi5: {type: 'string'},
@@ -17,8 +24,9 @@ const {values: args} = parseArgs({options: {
   'api-port': {type: 'string', default: '8793'},
   'ui-port': {type: 'string', default: '4793'},
 }});
-if (!args.output || !args.workspace || !args.bi5 || !args.csv) {
-  throw Error('Supply --output, --workspace, --bi5, and --csv paths.');
+if(args.cutoff&&!args.drawings)throw Error('--cutoff requires --drawings');
+if (!args.output || !args.workspace || (!args['decision-boundaries'] && (!args.csv || (!args.drawings && !args.bi5)))) {
+  throw Error('Supply --output and --workspace, plus source paths for the selected replay journey.');
 }
 for (const port of [args['api-port'], args['ui-port']]) {
   assert(/^\d{1,5}$/.test(port) && Number(port) >= 1 && Number(port) <= 65535);
@@ -280,7 +288,7 @@ async function checkFixture(browser, fixture, pinChange = false) {
 }
 
 let api, vite, browser;
-try {
+async function run() {
   for (const origin of [apiOrigin, uiOrigin]) {
     assert(!await fetch(origin, {signal: AbortSignal.timeout(1000)}).catch(() => undefined),
       'Private service port is already in use: ' + origin);
@@ -288,6 +296,74 @@ try {
   api = startApi();
   await awaitReady(apiOrigin, '/api/health', api);
   const pids = [api.pid];
+  if (args.drawings) {
+    const {details, output} = fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
+    vite = startVite();
+    await awaitReady(uiOrigin, '/', vite);
+    browser = await chromium.launch();
+    let page = await browser.newPage({viewport: {width: 1536, height: 900}});
+    await configure(page, details);
+    if(args.cutoff)await installCutoffClock(page,details);
+    await freeze(page, details.request, details.session_id);
+    const bars = await verifyBars(page, details.panes, details.request.end);
+    const journey = args.cutoff ? await cutoffJourney(page,details,verifyBars) : await drawingJourney(page, details, verifySelection);
+    const boundedId=args.cutoff?await createBoundedSession(page,details):undefined;
+    await browser.close();
+    browser = undefined;
+    await stop(api);
+    api = startApi();
+    await awaitReady(apiOrigin, '/api/health', api);
+    assert.notEqual(api.pid, pids[0]);
+    fixture('reopen', ['--fixture', output]);
+    browser = await chromium.launch();
+    page = await browser.newPage({viewport: {width: 1536, height: 900}});
+    await configure(page, details, true);
+    if(args.cutoff)await installCutoffClock(page,details);
+    await resume(page, details.session_id);
+    await verifyBars(page, details.panes, details.request.end);
+    if(args.cutoff)journey.reopened=await cutoffJourney(page,details,verifyBars,journey.entries);
+    if(boundedId){
+      await page.close();
+      page=await browser.newPage({viewport:{width:1536,height:900}});
+      await configure(page,details,true);
+      journey.server_sessions=await checkServerSessions(page,details,boundedId,journey.entries,resume);
+    }
+    else await verifyReopenedDrawings(page, details, journey);
+    assert.deepEqual(errors, []);
+    mkdirSync(dirname(resolve(args.output)), {recursive: true});
+    writeFileSync(resolve(args.output), JSON.stringify({
+      session: details.session_id, source: details.source_kind, source_hashes: details.sources.map(row => row.sha256),
+      bars, ...(args.cutoff?{chromium:browser.version(),elapsed_seconds:performance.now()/1000,
+        clock:'Same-session rewind replaces the preceding clock slot with T-1. Server-session checks use unmodified replay responses.'}:{}),
+      api_processes: 2, browser_processes: 2, uncaught_page_errors: errors, ...journey,
+    }, null, 2) + '\n');
+    if(args.cutoff)assert.deepEqual([...journey.leaks,...journey.reopened.leaks,
+      ...journey.server_sessions.filter(sample=>sample.leaked)],[], 'Future drawings exposed');
+    console.log('Genuine replay drawing journey and two-process reopen passed.');
+    return;
+  }
+  if(args['forex-decisions'] || args['decision-boundaries']){
+    if(!args['decision-boundaries'])fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
+    vite=startVite();
+    await awaitReady(uiOrigin,'/',vite);
+    const restart=async()=>{
+      await stop(api);
+      api=startApi();
+      await awaitReady(apiOrigin,'/api/health',api);
+    };
+    let receipt;
+    if(args['decision-boundaries']){
+      const fixtureData=(...args)=>JSON.parse(execFileSync(python,['-m','scripts.decision_boundary_fixture',...args],
+        {env,cwd:root,encoding:'utf8',windowsHide:true}));
+      const {verifyDecisionBoundaries}=await import('./decision-boundaries.mjs');
+      receipt=await verifyDecisionBoundaries(uiOrigin,fixtureData(),restart,()=>fixtureData('counts'));
+    }else{
+      const {verifyDecisions}=await import('./forex-decisions.mjs');
+      receipt=await verifyDecisions(uiOrigin,restart);
+    }
+    mkdirSync(dirname(resolve(args.output)),{recursive:true});
+    writeFileSync(resolve(args.output),JSON.stringify(receipt,null,2));
+  }else{
   const controlled = fixture('prepare');
   const genuine = fixture('genuine-bi5', ['--bi5', resolve(args.bi5)]);
   const exports = fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
@@ -344,6 +420,10 @@ try {
     rewind_bars: rewindCounts, selected_candle: selected, uncaught_page_errors: errors,
   }, null, 2) + '\n');
   console.log('Native archive freeze, two-process restart and all named panes verified.');
+  }
+}
+try {
+  await run();
 } finally {
   if (browser) await browser.close();
   await stop(vite);

@@ -5,7 +5,8 @@ export type ChartSource=SourceName|'BINANCE_SPOT';
 export type ChartSymbol=SymbolName|'BTCUSDT';
 export interface Candle {time:number;available_at?:number;open:number;high:number;low:number;close:number;volume?:number;
   availability_basis?:'ARCHIVE_SUPPLIED'|'MODELED_NOMINAL_CLOSE';source_partition_indexes?:number[]}
-export type CandleRange = {start:number;end:number};
+export type CoverageSelection = {feed_id:string;EURUSD:string;GBPUSD:string};
+export type CandleRange = {start:number;end:number;coverage_selection?:CoverageSelection};
 export interface CandleCoverage extends CandleRange {gaps:CandleRange[];duplicate_bars:number;truncated:boolean;
   slot_start?:number;slot_end?:number}
 export interface ArchiveOrigin {file_observations?:string;source_completeness:string;reconstruction:string;source_sha256?:string;start?:number;end?:number;checked_bars?:number;missing_slots?:number[]}
@@ -36,8 +37,9 @@ export interface BacktestRunSummary {id:string;created_at:string;count:number;ex
 export type ReplayPane = {symbol:string;timeframe:Timeframe} & (CandleResponse | {error:string});
 export type ReplayViewId = 'primary' | 'comparison' | '2' | '3' | '4';
 export type ReplaySelection = {view: ReplayViewId; time: number};
-export interface ReplaySession {id:string;market:CandleResponse;views:Record<string,ReplayPane>;
- request?:{start?:number|null;end?:number|null;window_bars?:number|null};
+export type DecisionReplay = ReplaySelection & {session_id:string;position:number;comparison_placement?:'Overlay'|'New pane'};
+export interface ReplaySession {signal_rules?:import('./smt').SmtRules;id:string;market:CandleResponse;views:Record<string,ReplayPane>;
+ request?:{smt_rules?:import('./smt').SmtRules;start?:number|null;end?:number|null;window_bars?:number|null};
  checkpoint:{position:number;bookmarks:number[];selected?:ReplaySelection|null}|null}
 export interface ReplayViewRequest {view:string;symbol:string;timeframe:Timeframe}
 

@@ -1,0 +1,81 @@
+{
+  "month2025": {
+    "hours": 720,
+    "closed": 238,
+    "missing": 480,
+    "quotes": 8636
+  },
+  "period2026": {
+    "hours": 240,
+    "eur": 2266,
+    "gbp": 2262,
+    "paired": 2251,
+    "quotes": 0
+  },
+  "selected": {
+    "start": 1794574800,
+    "end": 1794578400,
+    "status": "Partial",
+    "expected": 12,
+    "eur": {
+      "feed": "dukascopy-web-m1-v1",
+      "pins": [
+        {
+          "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+          "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d",
+          "feed": "dukascopy-web-m1-v1",
+          "source_sha256": "4c1e415ee7bb1c8a7cfe473364afb5d00f82d11ea9e3b48d8960b476f53f0a6d"
+        }
+      ],
+      "count": 12,
+      "missing": [],
+      "error": null,
+      "alternatives": []
+    },
+    "gbp": {
+      "feed": "dukascopy-web-m1-v1",
+      "pins": [
+        {
+          "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+          "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02",
+          "feed": "dukascopy-web-m1-v1",
+          "source_sha256": "25b5f24e0973f993b721fa06bc3e1cff1870d1eef4d943db0fa97604ea4f0e75"
+        }
+      ],
+      "count": 12,
+      "missing": [],
+      "error": null,
+      "alternatives": []
+    },
+    "paired": 12,
+    "paired_ranges": [
+      [
+        1794574800,
+        1794578400
+      ]
+    ],
+    "chart_selections": [
+      {
+        "feed_id": "dukascopy-web-m1-v1",
+        "EURUSD": "d9d9daee9d6ff0bb3a17768560e965f8dd65d7448d16854bbcb4d00e488fb3b3",
+        "GBPUSD": "26c32352884cf46bb3e29c6b1b5009b34ac75ed4a7b057f188ed34ed2ebb8c77"
+      }
+    ],
+    "pair_error": null,
+    "quotes": {
+      "count": 0,
+      "pins": [],
+      "gaps": [
+        [
+          1794574800000,
+          1794578400000
+        ]
+      ],
+      "error": null,
+      "registered": false
+    }
+  },
+  "identical_imports": 2,
+  "session": "c5f4e81384c340caab8661155cfb0f6839767c780bfa2c53755863446eafa6da",
+  "browser_errors": []
+}

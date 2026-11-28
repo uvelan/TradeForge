@@ -12,6 +12,7 @@ import sys
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from time import sleep
 
+from research_backend.app import config
 from research_backend.app.db import initialize, transaction
 from research_backend.app.historical_import import import_bi5
 from research_backend.app.month_replay import inventory
@@ -109,19 +110,47 @@ def _recover_receipt(stream):
     return resume_after
 
 
-def acquire(pending, receipt):
+def acquire(pending, receipt, *, observations=None):
+    # One local provider lock covers the check, network request and durable
+    # cooldown. Month-specific receipts still contain full diagnostic history.
+    directory = config.STORAGE_ROOT / "t06-input"
+    directory.mkdir(parents=True, exist_ok=True)
     receipt.parent.mkdir(parents=True, exist_ok=True)
-    with receipt.open("a+b") as stream:
-        # Hold the lock through the provider call and receipt flush so a second
-        # command cannot repair an in-flight write or miss a concurrent cooldown.
-        if not _try_lock_receipt(stream):
+    guard = directory / "dukascopy-provider.jsonl"
+    if guard.resolve() == receipt.resolve():
+        raise ValueError("Use a separate diagnostic receipt for acquisition")
+    with guard.open("a+b") as provider:
+        if not _try_lock_receipt(provider):
             return "ACQUISITION_IN_PROGRESS"
-        if _recover_receipt(stream) > datetime.now(UTC).timestamp():
-            return "PROVIDER_COOLDOWN_ACTIVE"
-        return _acquire(pending, stream)
+        deadline = _recover_receipt(provider)
+        # Honor an outstanding pre-upgrade cooldown even on the first request
+        # for a different month. Only the original month writers use these names.
+        if provider.tell() == 0:
+            for folder in {directory, receipt.parent}:
+                for path in folder.glob("????-??-downloads.jsonl"):
+                    with path.open("a+b") as previous:
+                        if not _try_lock_receipt(previous):
+                            return "ACQUISITION_IN_PROGRESS"
+                        deadline = max(deadline, _recover_receipt(previous))
+            store_cooldown(provider, deadline)
+        with receipt.open("a+b") as stream:
+            if not _try_lock_receipt(stream):
+                return "ACQUISITION_IN_PROGRESS"
+            local = _recover_receipt(stream)
+            if local > deadline:
+                store_cooldown(provider, local)
+            if max(deadline,local) > datetime.now(UTC).timestamp():
+                return "PROVIDER_COOLDOWN_ACTIVE"
+            return _acquire(pending, stream, observations, provider)
 
 
-def _acquire(pending, stream):
+def store_cooldown(stream, deadline):
+    stream.write((json.dumps({"resume_after_epoch":deadline}) + "\n").encode("ascii"))
+    stream.flush()
+    os.fsync(stream.fileno())
+
+
+def _acquire(pending, stream, observations, provider):
     failures = 0
     for attempt in range(1, 3):
         if attempt == 2 and pending:
@@ -147,11 +176,14 @@ def _acquire(pending, stream):
             pause = result["retry_after_seconds"] or (60 if result["http"] == 429 else 0)
             if pause:
                 event["resume_after_epoch"] = int(observed.timestamp()) + pause + 1
+                store_cooldown(provider, event["resume_after_epoch"])
                 event["stop"] = "PROVIDER_COOLDOWN"
             elif failures >= 4:
                 event["stop"] = "FOUR_CONSECUTIVE_FAILURES"
             stream.write((json.dumps(event) + "\n").encode("utf-8"))
             stream.flush()
+            if observations is not None:
+                observations.append(event)
             if "stop" in event:
                 return event["stop"]
             if "sha256" not in result:

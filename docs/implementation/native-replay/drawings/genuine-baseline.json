@@ -1,0 +1,21 @@
+{
+  "production_sha": "7153f40f22d7f50529ef7c019921aa003a7ae6e7",
+  "source": "GENUINE_DUKASCOPY_WEB_CSV",
+  "session": "b14f327cde82936e3775049f349d8183e2e9d683613d7cc0c1e35459566513be",
+  "bars": {
+    "primary": 997,
+    "2": 5000,
+    "3": 998,
+    "4": 5000
+  },
+  "actions": [
+    "Open genuine saved four-pane range",
+    "Place horizontal on primary",
+    "Inspect GBPUSD M1 in chart 2",
+    "Pan and zoom chart 2",
+    "Arm trendline and click two plotted candles in chart 2"
+  ],
+  "completed_primary_posts": 1,
+  "completed_chart_2_posts": 0,
+  "failure": "Timed out after 8000 ms waiting for a drawing POST from chart 2."
+}

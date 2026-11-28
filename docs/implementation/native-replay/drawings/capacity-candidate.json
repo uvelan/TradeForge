@@ -1,0 +1,2056 @@
+{
+  "variant": "candidate",
+  "session": "780c62b874899b7db576c9921e073af8db1ece40184c50beaeda322667e0a753",
+  "bars": [
+    5000,
+    5000,
+    5000,
+    5000
+  ],
+  "warmups": 3,
+  "trials": 7,
+  "browser": "159.0.8154.6",
+  "error": "",
+  "stage": "250 9 reopen saved revision and verify canvas",
+  "device": {
+    "width": 1536,
+    "height": 900,
+    "dpr": 1,
+    "created": 264,
+    "disposed": 264,
+    "remaining": {
+      "charts": 0,
+      "subscriptions": 0,
+      "observers": 0,
+      "listeners": 0,
+      "timers": 0,
+      "frames": 0
+    },
+    "errors": [],
+    "completed": true
+  },
+  "exploratory": [
+    {
+      "scope": "DUKASCOPY_SAVED:EURUSD:M5",
+      "attempted": 250,
+      "status": 422,
+      "persistedBefore": 63,
+      "persistedAfter": 63,
+      "revisionUnchanged": true,
+      "detail": [
+        {
+          "type": "too_long",
+          "msg": "List should have at most 100 items after validation, not 250",
+          "ctx": {
+            "field_type": "List",
+            "max_length": 100,
+            "actual_length": 250
+          }
+        }
+      ]
+    },
+    {
+      "scope": "DUKASCOPY_SAVED:GBPUSD:M1",
+      "attempted": 250,
+      "status": 422,
+      "persistedBefore": 63,
+      "persistedAfter": 63,
+      "revisionUnchanged": true,
+      "detail": [
+        {
+          "type": "too_long",
+          "msg": "List should have at most 100 items after validation, not 250",
+          "ctx": {
+            "field_type": "List",
+            "max_length": 100,
+            "actual_length": 250
+          }
+        }
+      ]
+    },
+    {
+      "scope": "DUKASCOPY_SAVED:USDJPY:M5",
+      "attempted": 250,
+      "status": 422,
+      "persistedBefore": 62,
+      "persistedAfter": 62,
+      "revisionUnchanged": true,
+      "detail": [
+        {
+          "type": "too_long",
+          "msg": "List should have at most 100 items after validation, not 250",
+          "ctx": {
+            "field_type": "List",
+            "max_length": 100,
+            "actual_length": 250
+          }
+        }
+      ]
+    },
+    {
+      "scope": "DUKASCOPY_SAVED:XAUUSD:M1",
+      "attempted": 250,
+      "status": 422,
+      "persistedBefore": 62,
+      "persistedAfter": 62,
+      "revisionUnchanged": true,
+      "detail": [
+        {
+          "type": "too_long",
+          "msg": "List should have at most 100 items after validation, not 250",
+          "ctx": {
+            "field_type": "List",
+            "max_length": 100,
+            "actual_length": 250
+          }
+        }
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "drawings": 1,
+      "interactionPane": "primary",
+      "persisted": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "rendered": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "scopes": [
+        "DUKASCOPY_SAVED:EURUSD:M5",
+        "DUKASCOPY_SAVED:GBPUSD:M1",
+        "DUKASCOPY_SAVED:USDJPY:M5",
+        "DUKASCOPY_SAVED:XAUUSD:M1"
+      ],
+      "samples": [
+        {
+          "trial": 0,
+          "warmup": true,
+          "frames": [
+            16.699999999999818,
+            16.699999999999818,
+            16.600000000000364,
+            16.699999999999818,
+            16.699999999999818,
+            16.600000000000364,
+            16.699999999999818,
+            16.699999999999818,
+            16.600000000000364,
+            16.699999999999818,
+            16.600000000000364,
+            16.699999999999818,
+            16.699999999999818,
+            16.699999999999818,
+            16.600000000000364,
+            16.699999999999818,
+            16.600000000000364,
+            16.699999999999818
+          ],
+          "frameP95Ms": 16.699999999999818,
+          "clickToSelectionMs": 161.90000000223517,
+          "dragToVisibleMs": 1.5999999977648258,
+          "releaseToSaveMs": 1005.3999999985099,
+          "reopenMs": 1442.3208000000013,
+          "rendered": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "reopenedRow": {
+            "actual": 184.6113043478288,
+            "projected": 184.6113043478288
+          },
+          "resourceEntriesBeforeSave": 113,
+          "unmountedHeapBytes": 17997380,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 1,
+          "warmup": true,
+          "frames": [
+            16.667999999999665,
+            16.600000000000364,
+            16.700000000000728,
+            16.599999999998545,
+            16.80000000000109,
+            16.600000000000364,
+            16.69999999999891,
+            16.600000000000364,
+            16.700000000000728,
+            16.599999999998545,
+            16.80000000000109,
+            16.600000000000364,
+            16.69999999999891,
+            16.600000000000364,
+            16.700000000000728,
+            16.69999999999891
+          ],
+          "frameP95Ms": 16.80000000000109,
+          "clickToSelectionMs": 179.60000000149012,
+          "dragToVisibleMs": 1.8999999985098839,
+          "releaseToSaveMs": 74.89999999850988,
+          "reopenMs": 1342.3590999999997,
+          "rendered": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "reopenedRow": {
+            "actual": 164.0492753623104,
+            "projected": 164.0492753623104
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 18291620,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 2,
+          "warmup": true,
+          "frames": [
+            16.70800000000054,
+            16.600000000000364,
+            16.69999999999891,
+            16.600000000000364,
+            16.700000000000728,
+            16.69999999999891,
+            16.700000000000728,
+            16.600000000000364,
+            16.69999999999891,
+            16.700000000000728,
+            16.600000000000364,
+            16.600000000000364,
+            16.69999999999891,
+            16.700000000000728,
+            16.600000000000364,
+            16.69999999999891,
+            16.700000000000728
+          ],
+          "frameP95Ms": 16.70800000000054,
+          "clickToSelectionMs": 157.70000000298023,
+          "dragToVisibleMs": 1.2000000029802322,
+          "releaseToSaveMs": 65.09999999776483,
+          "reopenMs": 1476.6376999999993,
+          "rendered": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "reopenedRow": {
+            "actual": 184.6113043478288,
+            "projected": 184.6113043478288
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 18309900,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 3,
+          "warmup": false,
+          "frames": [
+            16.60200000000077,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.600000000000364,
+            16.69999999999891,
+            16.700000000000728,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.600000000000364,
+            16.69999999999891,
+            16.700000000000728,
+            16.700000000000728,
+            16.69999999999891
+          ],
+          "frameP95Ms": 16.700000000000728,
+          "clickToSelectionMs": 179.10000000149012,
+          "dragToVisibleMs": 1.2000000029802322,
+          "releaseToSaveMs": 67.89999999850988,
+          "reopenMs": 1513.8209000000006,
+          "rendered": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "reopenedRow": {
+            "actual": 164.0492753623104,
+            "projected": 164.0492753623104
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 18466424,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 4,
+          "warmup": false,
+          "frames": [
+            16.700000000000728,
+            16.600000000002183,
+            16.69999999999709,
+            16.600000000002183,
+            16.599999999998545,
+            16.700000000000728,
+            16.799999999999272,
+            16.600000000002183,
+            16.69999999999709,
+            16.600000000002183,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.700000000000728,
+            16.700000000000728
+          ],
+          "frameP95Ms": 16.799999999999272,
+          "clickToSelectionMs": 168.69999999925494,
+          "dragToVisibleMs": 1.800000000745058,
+          "releaseToSaveMs": 336.20000000298023,
+          "reopenMs": 1521.465500000002,
+          "rendered": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "reopenedRow": {
+            "actual": 184.6113043478288,
+            "projected": 184.6113043478288
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 18629692,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 5,
+          "warmup": false,
+          "frames": [
+            16.599999999998545,
+            16.700000000000728,
+            16.700000000000728,
+            16.599999999998545,
+            16.600000000002183,
+            16.799999999999272,
+            16.599999999998545,
+            16.600000000002183,
+            16.799999999999272,
+            16.599999999998545,
+            16.700000000000728,
+            16.600000000002183,
+            16.69999999999709,
+            16.700000000000728,
+            16.700000000000728,
+            16.5,
+            16.700000000000728
+          ],
+          "frameP95Ms": 16.799999999999272,
+          "clickToSelectionMs": 160.5,
+          "dragToVisibleMs": 1.5,
+          "releaseToSaveMs": 70.60000000149012,
+          "reopenMs": 1288.079099999999,
+          "rendered": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "reopenedRow": {
+            "actual": 164.0492753623104,
+            "projected": 164.0492753623104
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 18786196,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 6,
+          "warmup": false,
+          "frames": [
+            16.700000000000728,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.599999999998545,
+            16.80000000000291,
+            16.599999999998545,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.599999999998545
+          ],
+          "frameP95Ms": 16.80000000000291,
+          "clickToSelectionMs": 168.39999999850988,
+          "dragToVisibleMs": 1.5,
+          "releaseToSaveMs": 90.60000000149012,
+          "reopenMs": 1352.3126999999986,
+          "rendered": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "reopenedRow": {
+            "actual": 184.6113043478288,
+            "projected": 184.6113043478288
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 18734352,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 7,
+          "warmup": false,
+          "frames": [
+            16.700000000000728,
+            16.599999999998545,
+            16.799999999999272,
+            16.600000000002183,
+            16.599999999998545,
+            16.700000000000728,
+            16.700000000000728,
+            16.69999999999709,
+            16.600000000002183,
+            16.700000000000728,
+            16.69999999999709,
+            16.600000000002183,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728
+          ],
+          "frameP95Ms": 16.799999999999272,
+          "clickToSelectionMs": 154.80000000074506,
+          "dragToVisibleMs": 0.6999999992549419,
+          "releaseToSaveMs": 810.1999999992549,
+          "reopenMs": 1476.9378000000033,
+          "rendered": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "reopenedRow": {
+            "actual": 164.0492753623104,
+            "projected": 164.0492753623104
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 18945832,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 8,
+          "warmup": false,
+          "frames": [
+            16.700000000000728,
+            16.600000000002183,
+            16.69999999999709,
+            16.700000000000728,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.600000000002183,
+            16.599999999998545,
+            16.700000000000728,
+            16.799999999999272,
+            16.599999999998545,
+            16.600000000002183,
+            16.700000000000728,
+            16.599999999998545,
+            16.799999999999272,
+            16.600000000002183,
+            16.69999999999709
+          ],
+          "frameP95Ms": 16.799999999999272,
+          "clickToSelectionMs": 166.80000000074506,
+          "dragToVisibleMs": 1.1000000014901161,
+          "releaseToSaveMs": 65,
+          "reopenMs": 1385.419600000001,
+          "rendered": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "reopenedRow": {
+            "actual": 184.6113043478288,
+            "projected": 184.6113043478288
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 18973420,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 9,
+          "warmup": false,
+          "frames": [
+            16.700000000000728,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.700000000000728,
+            16.700000000000728,
+            16.599999999998545,
+            16.599999999998545,
+            16.700000000000728,
+            16.700000000000728,
+            16.700000000000728,
+            16.599999999998545,
+            16.700000000000728,
+            16.700000000000728,
+            16.599999999998545
+          ],
+          "frameP95Ms": 16.700000000000728,
+          "clickToSelectionMs": 164.30000000074506,
+          "dragToVisibleMs": 1.4000000022351742,
+          "releaseToSaveMs": 948,
+          "reopenMs": 1392.4752000000008,
+          "rendered": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "reopenedRow": {
+            "actual": 164.0492753623104,
+            "projected": 164.0492753623104
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19298520,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        }
+      ]
+    },
+    {
+      "drawings": 25,
+      "interactionPane": "primary",
+      "persisted": [
+        25,
+        0,
+        0,
+        0
+      ],
+      "rendered": [
+        25,
+        0,
+        0,
+        0
+      ],
+      "scopes": [
+        "DUKASCOPY_SAVED:EURUSD:M5",
+        "DUKASCOPY_SAVED:GBPUSD:M1",
+        "DUKASCOPY_SAVED:USDJPY:M5",
+        "DUKASCOPY_SAVED:XAUUSD:M1"
+      ],
+      "samples": [
+        {
+          "trial": 0,
+          "warmup": true,
+          "frames": [
+            16.599999999998545,
+            16.69999999999709,
+            16.700000000004366,
+            16.599999999998545,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.69999999999709,
+            16.700000000004366,
+            16.599999999998545,
+            16.69999999999709,
+            16.700000000004366,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.599999999998545
+          ],
+          "frameP95Ms": 16.700000000004366,
+          "clickToSelectionMs": 40.599999997764826,
+          "dragToVisibleMs": 0.8000000007450581,
+          "releaseToSaveMs": 74.60000000149012,
+          "reopenMs": 1426.2585999999937,
+          "rendered": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "reopenedRow": {
+            "actual": 184.6113043478288,
+            "projected": 184.6113043478288
+          },
+          "resourceEntriesBeforeSave": 51,
+          "unmountedHeapBytes": 19238564,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 1,
+          "warmup": true,
+          "frames": [
+            16.599999999998545,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366
+          ],
+          "frameP95Ms": 16.700000000004366,
+          "clickToSelectionMs": 159.09999999776483,
+          "dragToVisibleMs": 1.1000000014901161,
+          "releaseToSaveMs": 68.79999999701977,
+          "reopenMs": 1377.342700000001,
+          "rendered": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "reopenedRow": {
+            "actual": 164.0492753623104,
+            "projected": 164.0492753623104
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19147792,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 2,
+          "warmup": true,
+          "frames": [
+            16.633999999998196,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.599999999998545,
+            16.69999999999709,
+            16.700000000004366,
+            16.69999999999709,
+            16.700000000004366,
+            16.599999999998545,
+            16.599999999998545,
+            16.69999999999709
+          ],
+          "frameP95Ms": 16.700000000004366,
+          "clickToSelectionMs": 151.30000000074506,
+          "dragToVisibleMs": 2.300000000745058,
+          "releaseToSaveMs": 72.39999999850988,
+          "reopenMs": 1340.729800000001,
+          "rendered": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "reopenedRow": {
+            "actual": 184.6113043478288,
+            "projected": 184.6113043478288
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 18994068,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 3,
+          "warmup": false,
+          "frames": [
+            16.60000000000582,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.599999999998545,
+            16.799999999995634,
+            16.60000000000582,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366
+          ],
+          "frameP95Ms": 16.799999999995634,
+          "clickToSelectionMs": 156.30000000074506,
+          "dragToVisibleMs": 1,
+          "releaseToSaveMs": 65,
+          "reopenMs": 1331.0751999999993,
+          "rendered": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "reopenedRow": {
+            "actual": 164.0492753623104,
+            "projected": 164.0492753623104
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19026612,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 4,
+          "warmup": false,
+          "frames": [
+            16.5679999999993,
+            16.69999999999709,
+            16.69999999999709,
+            16.700000000004366,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.599999999998545,
+            16.69999999999709,
+            16.60000000000582,
+            16.799999999995634,
+            16.599999999998545,
+            16.700000000004366,
+            16.69999999999709,
+            16.599999999998545,
+            16.60000000000582,
+            16.69999999999709
+          ],
+          "frameP95Ms": 16.799999999995634,
+          "clickToSelectionMs": 144.10000000149012,
+          "dragToVisibleMs": 1,
+          "releaseToSaveMs": 803.9000000022352,
+          "reopenMs": 1367.0368999999992,
+          "rendered": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "reopenedRow": {
+            "actual": 184.6113043478288,
+            "projected": 184.6113043478288
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19203764,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 5,
+          "warmup": false,
+          "frames": [
+            16.633999999998196,
+            16.599999999998545,
+            16.700000000004366,
+            16.599999999998545,
+            16.80000000000291,
+            16.599999999998545,
+            16.69999999999709,
+            16.700000000004366,
+            16.599999999998545,
+            16.69999999999709,
+            16.700000000004366,
+            16.599999999998545,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.69999999999709
+          ],
+          "frameP95Ms": 16.80000000000291,
+          "clickToSelectionMs": 161.69999999925494,
+          "dragToVisibleMs": 1,
+          "releaseToSaveMs": 68.09999999776483,
+          "reopenMs": 1334.8104000000021,
+          "rendered": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "reopenedRow": {
+            "actual": 164.0492753623104,
+            "projected": 164.0492753623104
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19186720,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 6,
+          "warmup": false,
+          "frames": [
+            16.602000000006228,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366
+          ],
+          "frameP95Ms": 16.700000000004366,
+          "clickToSelectionMs": 151.30000000074506,
+          "dragToVisibleMs": 0.8999999985098839,
+          "releaseToSaveMs": 77.90000000223517,
+          "reopenMs": 1351.7355000000025,
+          "rendered": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "reopenedRow": {
+            "actual": 184.6113043478288,
+            "projected": 184.6113043478288
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19085644,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 7,
+          "warmup": false,
+          "frames": [
+            16.700000000004366,
+            16.599999999998545,
+            16.69999999999709,
+            16.700000000004366,
+            16.599999999998545,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.700000000004366
+          ],
+          "frameP95Ms": 16.700000000004366,
+          "clickToSelectionMs": 154.80000000074506,
+          "dragToVisibleMs": 0.8999999985098839,
+          "releaseToSaveMs": 69.40000000223517,
+          "reopenMs": 1350.6462000000029,
+          "rendered": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "reopenedRow": {
+            "actual": 164.0492753623104,
+            "projected": 164.0492753623104
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19126220,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 8,
+          "warmup": false,
+          "frames": [
+            16.5679999999993,
+            16.700000000004366,
+            16.69999999999709,
+            16.599999999998545,
+            16.80000000000291,
+            16.599999999998545,
+            16.599999999998545,
+            16.80000000000291,
+            16.599999999998545,
+            16.599999999998545,
+            16.700000000004366,
+            16.69999999999709,
+            16.700000000004366,
+            16.69999999999709,
+            16.599999999998545,
+            16.599999999998545
+          ],
+          "frameP95Ms": 16.80000000000291,
+          "clickToSelectionMs": 151.39999999850988,
+          "dragToVisibleMs": 0.8000000007450581,
+          "releaseToSaveMs": 68.19999999925494,
+          "reopenMs": 1304.4853000000003,
+          "rendered": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "reopenedRow": {
+            "actual": 184.6113043478288,
+            "projected": 184.6113043478288
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19123368,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 9,
+          "warmup": false,
+          "frames": [
+            16.599999999998545,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.700000000004366,
+            16.69999999999709,
+            16.5,
+            16.700000000004366,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582
+          ],
+          "frameP95Ms": 16.700000000004366,
+          "clickToSelectionMs": 148.70000000298023,
+          "dragToVisibleMs": 0.8000000007450581,
+          "releaseToSaveMs": 70.69999999925494,
+          "reopenMs": 1474.8229999999967,
+          "rendered": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "persisted": [
+            25,
+            0,
+            0,
+            0
+          ],
+          "target": "00000000-0000-4000-8000-000000000000",
+          "before": {
+            "time": 1713426600,
+            "price": "1.08317"
+          },
+          "after": {
+            "time": 1713426600,
+            "price": "1.08328"
+          },
+          "reopenedRow": {
+            "actual": 164.0492753623104,
+            "projected": 164.0492753623104
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19162140,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        }
+      ]
+    },
+    {
+      "drawings": 250,
+      "interactionPane": "2",
+      "persisted": [
+        63,
+        63,
+        62,
+        62
+      ],
+      "rendered": [
+        63,
+        63,
+        62,
+        62
+      ],
+      "scopes": [
+        "DUKASCOPY_SAVED:EURUSD:M5",
+        "DUKASCOPY_SAVED:GBPUSD:M1",
+        "DUKASCOPY_SAVED:USDJPY:M5",
+        "DUKASCOPY_SAVED:XAUUSD:M1"
+      ],
+      "samples": [
+        {
+          "trial": 0,
+          "warmup": true,
+          "frames": [
+            16.599999999998545,
+            16.799999999995634,
+            16.60000000000582,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.599999999998545,
+            16.69999999999709,
+            16.700000000004366,
+            16.599999999998545,
+            16.799999999995634,
+            16.60000000000582,
+            16.69999999999709,
+            16.599999999998545,
+            16.700000000004366,
+            16.69999999999709,
+            16.599999999998545
+          ],
+          "frameP95Ms": 16.799999999995634,
+          "clickToSelectionMs": 414.3999999985099,
+          "dragToVisibleMs": 1.1000000014901161,
+          "releaseToSaveMs": 70.30000000074506,
+          "reopenMs": 1351.329500000007,
+          "rendered": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "persisted": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "target": "00000000-0000-4000-8000-000000000250",
+          "before": {
+            "time": 1713426840,
+            "price": "1.26328"
+          },
+          "after": {
+            "time": 1713426840,
+            "price": "1.26317"
+          },
+          "reopenedRow": {
+            "actual": 185.3778417266264,
+            "projected": 185.3778417266264
+          },
+          "resourceEntriesBeforeSave": 51,
+          "unmountedHeapBytes": 19270476,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 1,
+          "warmup": true,
+          "frames": [
+            16.669999999998254,
+            16.60000000000582,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582
+          ],
+          "frameP95Ms": 16.70000000001164,
+          "clickToSelectionMs": 442.6000000014901,
+          "dragToVisibleMs": 1.1000000014901161,
+          "releaseToSaveMs": 79,
+          "reopenMs": 1372.535200000013,
+          "rendered": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "persisted": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "target": "00000000-0000-4000-8000-000000000250",
+          "before": {
+            "time": 1713426840,
+            "price": "1.26317"
+          },
+          "after": {
+            "time": 1713426840,
+            "price": "1.26328"
+          },
+          "reopenedRow": {
+            "actual": 164.96374100719186,
+            "projected": 164.96374100719186
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19175068,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 2,
+          "warmup": true,
+          "frames": [
+            16.635999999998603,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.59999999999127,
+            16.80000000000291,
+            16.60000000000582,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.80000000000291
+          ],
+          "frameP95Ms": 16.80000000000291,
+          "clickToSelectionMs": 421.6000000014901,
+          "dragToVisibleMs": 1.2999999970197678,
+          "releaseToSaveMs": 1114.2999999970198,
+          "reopenMs": 1476.7342999999964,
+          "rendered": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "persisted": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "target": "00000000-0000-4000-8000-000000000250",
+          "before": {
+            "time": 1713426840,
+            "price": "1.26328"
+          },
+          "after": {
+            "time": 1713426840,
+            "price": "1.26317"
+          },
+          "reopenedRow": {
+            "actual": 185.3778417266264,
+            "projected": 185.3778417266264
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19463164,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 3,
+          "warmup": false,
+          "frames": [
+            16.63400000000547,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582
+          ],
+          "frameP95Ms": 16.70000000001164,
+          "clickToSelectionMs": 420.9000000022352,
+          "dragToVisibleMs": 1.300000000745058,
+          "releaseToSaveMs": 75.60000000149012,
+          "reopenMs": 1373.9321000000054,
+          "rendered": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "persisted": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "target": "00000000-0000-4000-8000-000000000250",
+          "before": {
+            "time": 1713426840,
+            "price": "1.26317"
+          },
+          "after": {
+            "time": 1713426840,
+            "price": "1.26328"
+          },
+          "reopenedRow": {
+            "actual": 164.96374100719186,
+            "projected": 164.96374100719186
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19347104,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 4,
+          "warmup": false,
+          "frames": [
+            16.668000000005122,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.59999999999127,
+            16.69999999999709,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582
+          ],
+          "frameP95Ms": 16.70000000001164,
+          "clickToSelectionMs": 422.19999999925494,
+          "dragToVisibleMs": 1,
+          "releaseToSaveMs": 71.5,
+          "reopenMs": 1440.8669000000082,
+          "rendered": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "persisted": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "target": "00000000-0000-4000-8000-000000000250",
+          "before": {
+            "time": 1713426840,
+            "price": "1.26328"
+          },
+          "after": {
+            "time": 1713426840,
+            "price": "1.26317"
+          },
+          "reopenedRow": {
+            "actual": 185.3778417266264,
+            "projected": 185.3778417266264
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19348864,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 5,
+          "warmup": false,
+          "frames": [
+            16.53399999999965,
+            16.70000000001164,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582
+          ],
+          "frameP95Ms": 16.70000000001164,
+          "clickToSelectionMs": 445.4000000022352,
+          "dragToVisibleMs": 1.3999999985098839,
+          "releaseToSaveMs": 77,
+          "reopenMs": 1507.9660000000003,
+          "rendered": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "persisted": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "target": "00000000-0000-4000-8000-000000000250",
+          "before": {
+            "time": 1713426840,
+            "price": "1.26317"
+          },
+          "after": {
+            "time": 1713426840,
+            "price": "1.26328"
+          },
+          "reopenedRow": {
+            "actual": 164.96374100719186,
+            "projected": 164.96374100719186
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19288176,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 6,
+          "warmup": false,
+          "frames": [
+            16.668000000005122,
+            16.59999999999127,
+            16.69999999999709,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.59999999999127,
+            16.69999999999709,
+            16.60000000000582
+          ],
+          "frameP95Ms": 16.70000000001164,
+          "clickToSelectionMs": 452.5,
+          "dragToVisibleMs": 1,
+          "releaseToSaveMs": 73.60000000149012,
+          "reopenMs": 1577.1036999999924,
+          "rendered": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "persisted": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "target": "00000000-0000-4000-8000-000000000250",
+          "before": {
+            "time": 1713426840,
+            "price": "1.26328"
+          },
+          "after": {
+            "time": 1713426840,
+            "price": "1.26317"
+          },
+          "reopenedRow": {
+            "actual": 185.3778417266264,
+            "projected": 185.3778417266264
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19404064,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 7,
+          "warmup": false,
+          "frames": [
+            16.63399999999092,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.59999999999127,
+            16.80000000000291,
+            16.60000000000582,
+            16.59999999999127,
+            16.80000000000291,
+            16.60000000000582,
+            16.69999999999709,
+            16.59999999999127,
+            16.70000000001164,
+            16.69999999999709
+          ],
+          "frameP95Ms": 16.80000000000291,
+          "clickToSelectionMs": 446.30000000074506,
+          "dragToVisibleMs": 1.7000000029802322,
+          "releaseToSaveMs": 1187.699999999255,
+          "reopenMs": 1368.300900000002,
+          "rendered": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "persisted": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "target": "00000000-0000-4000-8000-000000000250",
+          "before": {
+            "time": 1713426840,
+            "price": "1.26317"
+          },
+          "after": {
+            "time": 1713426840,
+            "price": "1.26328"
+          },
+          "reopenedRow": {
+            "actual": 164.96374100719186,
+            "projected": 164.96374100719186
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19420092,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 8,
+          "warmup": false,
+          "frames": [
+            16.53399999999965,
+            16.69999999999709,
+            16.80000000000291,
+            16.59999999999127,
+            16.70000000001164,
+            16.59999999999127,
+            16.69999999999709,
+            16.70000000001164,
+            16.59999999999127,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.60000000000582,
+            16.80000000000291,
+            16.59999999999127,
+            16.69999999999709,
+            16.70000000001164
+          ],
+          "frameP95Ms": 16.80000000000291,
+          "clickToSelectionMs": 465.19999999925494,
+          "dragToVisibleMs": 1,
+          "releaseToSaveMs": 548,
+          "reopenMs": 1389.380799999999,
+          "rendered": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "persisted": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "target": "00000000-0000-4000-8000-000000000250",
+          "before": {
+            "time": 1713426840,
+            "price": "1.26328"
+          },
+          "after": {
+            "time": 1713426840,
+            "price": "1.26317"
+          },
+          "reopenedRow": {
+            "actual": 185.3778417266264,
+            "projected": 185.3778417266264
+          },
+          "resourceEntriesBeforeSave": 27,
+          "unmountedHeapBytes": 19475148,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        },
+        {
+          "trial": 9,
+          "warmup": false,
+          "frames": [
+            16.635999999998603,
+            16.59999999999127,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.60000000000582,
+            16.69999999999709,
+            16.69999999999709,
+            16.70000000001164,
+            16.59999999999127,
+            16.60000000000582
+          ],
+          "frameP95Ms": 16.70000000001164,
+          "clickToSelectionMs": 433.5,
+          "dragToVisibleMs": 1.199999999254942,
+          "releaseToSaveMs": 200.09999999776483,
+          "reopenMs": 1426.3929999999964,
+          "rendered": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "persisted": [
+            63,
+            63,
+            62,
+            62
+          ],
+          "target": "00000000-0000-4000-8000-000000000250",
+          "before": {
+            "time": 1713426840,
+            "price": "1.26317"
+          },
+          "after": {
+            "time": 1713426840,
+            "price": "1.26328"
+          },
+          "reopenedRow": {
+            "actual": 164.96374100719186,
+            "projected": 164.96374100719186
+          },
+          "resourceEntriesBeforeSave": 26,
+          "unmountedHeapBytes": 19438972,
+          "resources": {
+            "charts": 0,
+            "subscriptions": 0,
+            "observers": 0,
+            "listeners": 0,
+            "timers": 0,
+            "frames": 0
+          }
+        }
+      ]
+    }
+  ]
+}

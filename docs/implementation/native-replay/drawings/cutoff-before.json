@@ -1,0 +1,272 @@
+{
+  "session": "b14f327cde82936e3775049f349d8183e2e9d683613d7cc0c1e35459566513be",
+  "source": "GENUINE_DUKASCOPY_WEB_CSV",
+  "source_hashes": [
+    "0560cf18711672c26fc4747018cc566fca095d1abf5a6b64efd82c65dfaae3dc",
+    "4db5776c7d7dd309daac2d01783c6dad69d34a06c5f5127a1693f602c6afe969",
+    "a07849dcdb4585f782859f9878b7a6c93c34b6f2959ceffa150102c7e4627e9a",
+    "4c1c30716245d43f68f1ad415c72d3f64d542aa129f93fda43917df53c67239e",
+    "4c1e415ee7bb1c8a7cfe473364afb5d00f82d11ea9e3b48d8960b476f53f0a6d",
+    "28d7be87a1a5642741ac9c526f13caf49fbfb5aae8c5ab8aec076ee7d31190b7",
+    "b10f5f39e04815bb22a3aae14015002af8d4d55013f7b250913b8330c0d07a7d",
+    "b672895c5866519b68dc25ea5dc55c0ab2fbaec7de240af4c4087dd981f46dba",
+    "bfd85b96494e39080026e1406939dfbb3e2866eae1c3cb10b8414d6211dd1356",
+    "ab0ef93bd47aa36b1238873e08efe3b2410d9cbdd0fe898b599a98c17a7b78f4",
+    "14003bf93e64aecd14a7c0898e1abbaa53cb7cd8fce9fc20123c09db3a91a804",
+    "3bbcd8915b623a30fb9b85ea722063a081bec4601791e93b05a9d75e9be77da1",
+    "25b5f24e0973f993b721fa06bc3e1cff1870d1eef4d943db0fa97604ea4f0e75",
+    "425cb8d421ea51b1d4ca1dc97217532da3f3ab83f7be1ca5983d409eb484e715",
+    "656a8302fee4dd40b32d410a4d452a4384b0f8fa5f408feba71a30a72fd77f85",
+    "dfbf707b636434d35c2dcf35e9974c13d971f8e05a42207e289feb94ff5bc7b6"
+  ],
+  "bars": {
+    "2": 5000,
+    "3": 998,
+    "4": 5000,
+    "primary": 997
+  },
+  "chromium": "159.0.8154.6",
+  "elapsed_seconds": 47.704809999999995,
+  "api_processes": 2,
+  "browser_processes": 2,
+  "uncaught_page_errors": [],
+  "entries": [
+    {
+      "view": "primary",
+      "older": "ae3f39d7-bf7b-447d-a35a-f44c4363c8c4",
+      "scope": "DUKASCOPY_SAVED:EURUSD:M5",
+      "item": {
+        "id": "219e65f9-fa06-43bb-af66-46bee1de4f0e",
+        "kind": "horizontal",
+        "anchors": [
+          {
+            "time": 1794952500,
+            "price": "1.09997"
+          }
+        ],
+        "label": "Release primary 1.09997",
+        "color": "#55d9b5",
+        "visible": true,
+        "locked": false,
+        "created_at": 1795776071,
+        "updated_at": 1795776072
+      },
+      "sources": [
+        {
+          "bar": {
+            "time": 1794952500,
+            "available_at": 1794952800,
+            "open": 1.09994,
+            "high": 1.09997,
+            "low": 1.09977,
+            "close": 1.09977,
+            "availability_basis": "MODELED_NOMINAL_CLOSE",
+            "source_partition_indexes": [
+              3
+            ]
+          },
+          "partitions": [
+            {
+              "id": "ed2c6ccdce7de1355a21e10d0bd715f6673e454b2899b46d7c69e117cffbc951",
+              "sha256": "7f42f6d0d43fd87066aabc4470d52e6fe70a6c6cac14b3032eb9a1e25e0477f7"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "view": "2",
+      "older": "619a729b-ed55-4a50-891a-2cb110b5c1d5",
+      "scope": "DUKASCOPY_SAVED:GBPUSD:M1",
+      "item": {
+        "id": "45ec92e7-aba9-4a2f-bc85-2f66d5a2dcd7",
+        "kind": "trend",
+        "anchors": [
+          {
+            "time": 1794952620,
+            "price": "1.32083"
+          },
+          {
+            "time": 1794952740,
+            "price": "1.32077"
+          }
+        ],
+        "label": "Release 2 1.32077",
+        "color": "#55d9b5",
+        "visible": true,
+        "locked": false,
+        "created_at": 1795776073,
+        "updated_at": 1795776074
+      },
+      "sources": [
+        {
+          "bar": {
+            "time": 1794952620,
+            "available_at": 1794952680,
+            "open": 1.32069,
+            "high": 1.32083,
+            "low": 1.32056,
+            "close": 1.32082,
+            "availability_basis": "MODELED_NOMINAL_CLOSE",
+            "source_partition_indexes": [
+              3
+            ]
+          },
+          "partitions": [
+            {
+              "id": "3e207fbfef644290646375603d76552368b69778a1d0b19aeca7de721057bdd3",
+              "sha256": "c1d0413ff15f450bafec237dafd6e1008203462efe0a842abb7d763e09a0b727"
+            }
+          ]
+        },
+        {
+          "bar": {
+            "time": 1794952740,
+            "available_at": 1794952800,
+            "open": 1.32071,
+            "high": 1.32077,
+            "low": 1.32069,
+            "close": 1.32076,
+            "availability_basis": "MODELED_NOMINAL_CLOSE",
+            "source_partition_indexes": [
+              3
+            ]
+          },
+          "partitions": [
+            {
+              "id": "3e207fbfef644290646375603d76552368b69778a1d0b19aeca7de721057bdd3",
+              "sha256": "c1d0413ff15f450bafec237dafd6e1008203462efe0a842abb7d763e09a0b727"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "leaks": [
+    {
+      "view": "primary",
+      "options": [
+        "Choose drawing",
+        "Horizontal line \u00c2\u00b7 1.10023",
+        "Release primary 1.09997 \u00c2\u00b7 1.09997"
+      ],
+      "selected": "219e65f9-fa06-43bb-af66-46bee1de4f0e",
+      "editActions": 1,
+      "undo": true
+    },
+    {
+      "view": "2",
+      "options": [
+        "Choose drawing",
+        "Horizontal line \u00c2\u00b7 1.32083",
+        "Release 2 1.32077 \u00c2\u00b7 1.32083"
+      ],
+      "selected": "45ec92e7-aba9-4a2f-bc85-2f66d5a2dcd7",
+      "editActions": 1,
+      "undo": true
+    }
+  ],
+  "observations": [
+    {
+      "view": "primary",
+      "counts": {
+        "2": 4999,
+        "3": 997,
+        "4": 4999,
+        "primary": 996
+      },
+      "options": [
+        "Choose drawing",
+        "Horizontal line \u00c2\u00b7 1.10023",
+        "Release primary 1.09997 \u00c2\u00b7 1.09997"
+      ],
+      "selected": "219e65f9-fa06-43bb-af66-46bee1de4f0e",
+      "editActions": 1,
+      "undo": true
+    },
+    {
+      "view": "2",
+      "counts": {
+        "2": 4999,
+        "3": 997,
+        "4": 4999,
+        "primary": 996
+      },
+      "options": [
+        "Choose drawing",
+        "Horizontal line \u00c2\u00b7 1.32083",
+        "Release 2 1.32077 \u00c2\u00b7 1.32083"
+      ],
+      "selected": "45ec92e7-aba9-4a2f-bc85-2f66d5a2dcd7",
+      "editActions": 1,
+      "undo": true
+    }
+  ],
+  "before": 1794952799,
+  "at": 1794952800,
+  "reopened": {
+    "leaks": [
+      {
+        "view": "primary",
+        "options": [
+          "Choose drawing",
+          "Horizontal line \u00c2\u00b7 1.10023",
+          "Release primary 1.09997 \u00c2\u00b7 1.09997"
+        ],
+        "selected": "219e65f9-fa06-43bb-af66-46bee1de4f0e",
+        "editActions": 1,
+        "undo": false
+      },
+      {
+        "view": "2",
+        "options": [
+          "Choose drawing",
+          "Horizontal line \u00c2\u00b7 1.32083",
+          "Release 2 1.32077 \u00c2\u00b7 1.32083"
+        ],
+        "selected": "45ec92e7-aba9-4a2f-bc85-2f66d5a2dcd7",
+        "editActions": 1,
+        "undo": false
+      }
+    ],
+    "observations": [
+      {
+        "view": "primary",
+        "counts": {
+          "2": 4999,
+          "3": 997,
+          "4": 4999,
+          "primary": 996
+        },
+        "options": [
+          "Choose drawing",
+          "Horizontal line \u00c2\u00b7 1.10023",
+          "Release primary 1.09997 \u00c2\u00b7 1.09997"
+        ],
+        "selected": "219e65f9-fa06-43bb-af66-46bee1de4f0e",
+        "editActions": 1,
+        "undo": false
+      },
+      {
+        "view": "2",
+        "counts": {
+          "2": 4999,
+          "3": 997,
+          "4": 4999,
+          "primary": 996
+        },
+        "options": [
+          "Choose drawing",
+          "Horizontal line \u00c2\u00b7 1.32083",
+          "Release 2 1.32077 \u00c2\u00b7 1.32083"
+        ],
+        "selected": "45ec92e7-aba9-4a2f-bc85-2f66d5a2dcd7",
+        "editActions": 1,
+        "undo": false
+      }
+    ],
+    "before": 1794952799,
+    "at": 1794952800
+  },
+  "clock": "Same-session rewind replaces the preceding clock slot with T-1."
+}

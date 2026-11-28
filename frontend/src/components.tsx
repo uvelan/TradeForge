@@ -1,6 +1,6 @@
 import {FvgLayer} from './FvgLayer';
-import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
-import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType, type MouseEventParams, type IChartApi, type ISeriesApi, type IPriceLine, type SeriesMarker, type UTCTimestamp} from 'lightweight-charts';
+import {useEffect,useId,useLayoutEffect,useMemo,useRef,useState,type KeyboardEvent as ReactKeyboardEvent} from 'react';
+import {CandlestickSeries,LineSeries,createChart,createSeriesMarkers,ColorType,CrosshairMode,LineStyle,LineType,MismatchDirection, type MouseEventParams, type IChartApi, type ISeriesApi, type IPriceLine, type SeriesMarker, type UTCTimestamp} from 'lightweight-charts';
 import type { IndicatorResult } from './indicators';
 import type { SmtEvent } from './smt';
 import {useCandleColors} from './candleColors';
@@ -25,7 +25,7 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot,savingSnapshot,snapshotStatus,replayCandleTime,onReplayCandleSelect}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,resolvePlacementAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,onSaveSnapshot,savingSnapshot,snapshotStatus,replayCandleTime,onReplayCandleSelect}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
   onAddLevel?:(price:number)=>void;showSnapshot?:boolean;showDataLegend?:boolean;symbol?:string;precision?:number;indicators?:IndicatorResult[]
   timeframe?: string;
@@ -34,16 +34,21 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   replayCandleTime?:number;
   onReplayCandleSelect?:(time:number)=>void;
   link?:ChartLink; linkId?:string;
-  drawings?:Drawing[]; onAnchor?:(points:{bar:Candle;price:number}[])=>void;
+  drawings?:Drawing[]; onAnchor?:(anchors:Anchor[])=>void;
+  resolvePlacementAnchor?:(bar:Candle,price:number)=>Anchor;
   placementDraft?:DrawingLayer['preview']; placementInteraction?:object;
   placementDrag?:PlacementDrag; requirePlacementCandle?:boolean;
-  onPlacementPreview?:(points:{bar:Candle;price:number}[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void;
+  onPlacementPreview?:(anchors:Anchor[])=>DrawingLayer['preview']; onDrawingSelect?:(id:string)=>void;
   directEdit?:{selected:string;enabled:boolean;revision?:number;snap:boolean;save:(item:Drawing,anchors:Anchor[])=>void}; onSmtSelect?:(event:SmtEvent)=>void; onSaveSnapshot?:(png:string)=>Promise<void>; savingSnapshot?:boolean; snapshotStatus?:string;
   comparison?: {symbol:string; candles:Candle[]; precision:number; placement:ComparisonPlacement;
     onPlacementChange:(placement:ComparisonPlacement)=>void; fixedPlacement?:boolean; smt?:SmtEvent[]; smtWindowOnly?:boolean}
 }){
   const element=useRef<HTMLDivElement>(null);
   const pointerGuide=useRef<HTMLDivElement>(null);
+  const drawingPromptId=useId();
+  const keyboardPlacement=drawMode&&Boolean(onAnchor);
+  const keyboardInput=useRef<{focus:()=>void;clear:()=>void;key:(event:ReactKeyboardEvent<HTMLDivElement>)=>void}>(undefined);
+  const [keyboardTarget,setKeyboardTarget]=useState<Anchor&{x:number;y:number}>();
   const replayGuide=useRef<HTMLDivElement>(null);
   const replayGuideTime=useRef(replayCandleTime);
   replayGuideTime.current=replayCandleTime;
@@ -84,6 +89,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   const didFit=useRef(false);
   const clickHandler=useRef(onAddLevel);
   const anchorHandler=useRef(onAnchor);
+  const resolveAnchor=useRef(resolvePlacementAnchor);
+  resolveAnchor.current=resolvePlacementAnchor;
   const previewHandler=useRef(onPlacementPreview);
   previewHandler.current=onPlacementPreview;
   const draft=useRef(placementDraft);
@@ -117,7 +124,9 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const x=scale.timeToCoordinate(time as UTCTimestamp);
     guide.hidden=x===null||x<0||x>=scale.width();
     if(x!==null){
-      guide.style.left=`${x+chart.priceScale('left').width()}px`;
+      // The comparison's left axis is mounted asynchronously. The primary right axis
+      // and time scale already define the plot's right edge during viewport updates.
+      guide.style.right=`${chart.priceScale('right').width()+scale.width()-x}px`;
       guide.style.bottom=`${scale.height()}px`;
     }
   }
@@ -154,14 +163,15 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime,
       linkedTime:setCursorTime}):undefined;
     const scale=chart.timeScale();
-    const viewport=()=>{editReset.current?.();updateReplayGuide();if(linkId)link?.viewport(linkId);};
+    const viewport=()=>{editReset.current?.();clearKeyboard();updateReplayGuide();if(linkId)link?.viewport(linkId);};
     const activate=()=>{if(linkId)link?.activate(linkId);setMissingLinkedTime(undefined);};
     const leave=()=>{if(linkId)link?.clearCursor(linkId);};
     const container=element.current;
     function located(event:PointerEvent):DrawPoint|undefined{
       const bounds=container.getBoundingClientRect();
-      const x=event.clientX-bounds.left-chart.priceScale('left').width();
-      const y=event.clientY-bounds.top;
+      return locatePlot(event.clientX-bounds.left-chart.priceScale('left').width(),event.clientY-bounds.top);
+    }
+    function locatePlot(x:number,y:number):DrawPoint|undefined{
       if(x<0||x>=scale.width()||y<0||y>=chart.paneSize(0).height)return;
       const time=scale.coordinateToTime(x);
       const bar=typeof time==='number'?linkedBars.current.get(time):undefined;
@@ -169,12 +179,57 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       if(price===null||!Number.isFinite(price)||price<0||((anchorHandler.current||needsCandle.current)&&!bar))return;
       return {x,y,price,time:bar?.time};
     }
-    function candlePoints(points:DrawPoint[]){
-      return points.flatMap(point=>{
-        const bar=point.time===undefined?undefined:linkedBars.current.get(point.time);
-        return bar?[{bar,price:point.price}]:[];
-      });
+    function placementAnchor(point:DrawPoint){
+      const bar=point.time===undefined?undefined:linkedBars.current.get(point.time);
+      return bar&&resolveAnchor.current?.(bar,point.price);
     }
+    function placementAnchors(points:DrawPoint[]){
+      return points.flatMap(point=>placementAnchor(point)??[]);
+    }
+    let target:{anchor:Anchor;y:number}|undefined;
+    function clearKeyboard(){
+      if(!target)return;
+      target=undefined;
+      setKeyboardTarget(undefined);
+      toolLayer.showPreview(draft.current);
+    }
+    function positionKeyboard(key?:string){
+      const width=scale.width(),height=chart.paneSize(0).height;
+      const index=target?scale.timeToIndex(target.anchor.time as UTCTimestamp):scale.coordinateToLogical(width/2);
+      if(index===null)return;
+      const direction=key==='ArrowRight'?1:key==='ArrowLeft'?-1:0;
+      const candle=series.dataByIndex(index+direction,direction===-1?MismatchDirection.NearestLeft:MismatchDirection.NearestRight)
+        ??(!direction?series.dataByIndex(index,MismatchDirection.NearestLeft):undefined);
+      const x=candle?scale.timeToCoordinate(candle.time):null;
+      const step=key==='ArrowUp'?-8:key==='ArrowDown'?8:0;
+      const y=Math.max(4,Math.min(height-4,(target?.y??height/2)+step));
+      const point=x===null?undefined:locatePlot(x,y);
+      const anchor=point&&placementAnchor(point);
+      if(!point||!anchor)return;
+      const row=series.priceToCoordinate(Number(anchor.price));
+      if(row===null)return;
+      // Keep the raw row for arrow travel so a snapped cursor can cross the wick midpoint.
+      target={anchor,y};
+      setKeyboardTarget({...anchor,x:point.x+chart.priceScale('left').width(),y:row});
+      toolLayer.showPreview(previewHandler.current?.([anchor])??draft.current);
+    }
+    keyboardInput.current={
+      focus:()=>positionKeyboard(),
+      clear:clearKeyboard,
+      key:event=>{
+        if(event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
+        if(event.key==='Enter'){
+          event.preventDefault();
+          if(event.repeat)return;
+          if(!target){positionKeyboard();return;}
+          if(!linkedBars.current.has(target.anchor.time)){clearKeyboard();return;}
+          anchorHandler.current?.([target.anchor]);
+        }else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){
+          event.preventDefault();
+          positionKeyboard(event.key);
+        }
+      },
+    };
     const input=installPlacement(container,{
       armed:()=>drawing.current,
       drag:()=>drag.current??'none',
@@ -209,9 +264,9 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
           cancel:()=>toolLayer.showEdit(),
         };
       },
-      preview:points=>toolLayer.showPreview(previewHandler.current?.(candlePoints(points))??draft.current),
+      preview:points=>toolLayer.showPreview(previewHandler.current?.(placementAnchors(points))??draft.current),
       commit:points=>{
-        if(anchorHandler.current)anchorHandler.current(candlePoints(points));
+        if(anchorHandler.current)anchorHandler.current(placementAnchors(points));
         else clickHandler.current?.(points[0].price);
       },
     });
@@ -222,7 +277,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     let dimensions=size();
     const resize=new ResizeObserver(()=>{
       const next=size();
-      if(next[0]!==dimensions[0]||next[1]!==dimensions[1])input.cancelEdit();
+      if(next[0]!==dimensions[0]||next[1]!==dimensions[1]){input.cancelEdit();clearKeyboard();}
       dimensions=next;
       updateReplayGuide();
     });
@@ -256,6 +311,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       chart.unsubscribeClick(onClick);
       chart.unsubscribeCrosshairMove(onCrosshair);
       input.dispose();placementReset.current=undefined;editReset.current=undefined;
+      keyboardInput.current=undefined;
       resize.disconnect();
       document.removeEventListener('fullscreenchange',input.cancelEdit);
       window.removeEventListener('keydown',cancelOnEscape);
@@ -269,6 +325,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     };
   },[symbol,precision,link,linkId]);
   useLayoutEffect(()=>{placementReset.current?.();},[drawMode,placementInteraction,symbol,precision]);
+  useLayoutEffect(()=>{keyboardInput.current?.clear();},[keyboardPlacement,symbol,precision]);
   useLayoutEffect(()=>{paintLayer.current?.showPreview(drawMode?placementDraft:undefined);},
     [drawMode,placementInteraction,placementDraft,symbol,precision]);
   useLayoutEffect(()=>{
@@ -642,6 +699,12 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   }
   return <div ref={surface} className={'chart-container chart-surface '+(drawMode?'drawing-enabled':'')} style={{height}}>
     <div ref={element} className="chart-input" style={{height:'100%',width:'100%'}} aria-label="Interactive market candlestick chart"
+      role={keyboardPlacement?'group':undefined} tabIndex={keyboardPlacement?0:undefined}
+      aria-describedby={keyboardPlacement?drawingPromptId:undefined}
+      onFocus={keyboardPlacement?()=>keyboardInput.current?.focus():undefined}
+      onBlur={keyboardPlacement?()=>keyboardInput.current?.clear():undefined}
+      onKeyDown={keyboardPlacement?event=>keyboardInput.current?.key(event):undefined}
+      onPointerDownCapture={keyboardPlacement?()=>keyboardInput.current?.clear():undefined}
       onPointerMove={event=>{
         const chart=chartRef.current;
         const guide=pointerGuide.current;
@@ -661,7 +724,13 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     <div ref={pointerGuide} className="chart-pointer-guide" aria-hidden="true" hidden/>
     {replayCandleTime!==undefined&&<div ref={replayGuide} className="chart-replay-guide"
       data-replay-candle={replayCandleTime} aria-hidden="true" hidden/>}
-    {drawMode&&<div className="drawing-prompt">{drawingPrompt??'Click the chart to place a horizontal level'}</div>}
+    {keyboardPlacement&&keyboardTarget&&<div className="drawing-keyboard-target" aria-hidden="true"
+      style={{left:keyboardTarget.x,top:keyboardTarget.y}}/>}
+    {drawMode&&<div id={drawingPromptId} className="drawing-prompt">
+      {drawingPrompt??'Click the chart to place a horizontal level'}
+      {keyboardPlacement&&<span>Tab to the plot. Move with arrow keys and place with Enter.</span>}
+      {keyboardPlacement&&<output aria-live="polite">{keyboardTarget?.time===undefined?'':`${at(keyboardTarget.time)} · ${keyboardTarget.price}`}</output>}
+    </div>}
     {(fullscreen||comparison||showDataLegend)&&<div className="chart-data-legend" aria-label="Chart data">
       <div className="chart-legend-meta">
         {timeframe&&<strong>{timeframe}</strong>}
