@@ -1,3 +1,4 @@
+import {createPortal} from 'react-dom';
 import {useEffect,useMemo,useState} from 'react';
 import {useTimestampFormat,useTimezone} from './timezone';
 import {useWorkspacePreference} from './useWorkspacePreference';
@@ -49,9 +50,9 @@ function rangeText(rows:Candle[],digits:number){
   return `${high.toFixed(digits)} / ${low.toFixed(digits)} · ${rows.length} bars`;
 }
 
-function SessionRow({session,rows,step,cutoff,digits,onZone}: {
+function SessionRow({session,rows,step,cutoff,digits,onZone,strip}: {
   session:typeof sessions[number];rows:Candle[];step:number;cutoff:number;digits:number;
-  onZone:(id:string,drawing?:Drawing)=>void;
+  onZone:(id:string,drawing?:Drawing)=>void; strip?:HTMLElement|null;
 }) {
   const [hours,save]=useWorkspacePreference('session-v1-'+session.id,session.hours);
   const [kill,saveKill]=useWorkspacePreference('kill-v1-'+session.id,session.kill);
@@ -79,7 +80,8 @@ function SessionRow({session,rows,step,cutoff,digits,onZone}: {
   },[overlay,overlayFirst,overlayLast,onZone,session]);
   const until=bounds?(cutoff<bounds[0]?bounds[0]-cutoff:cutoff<bounds[1]?bounds[1]-cutoff:0):0;
   const duration=until?`${Math.floor(until/3600)}h ${Math.floor(until%3600/60)}m to ${cutoff<bounds![0]?'open':'close'}`:'Window ended';
-  return <section><h3>{session.name}</h3>
+  const active=Boolean(bounds&&cutoff>=bounds[0]&&cutoff<bounds[1]);
+  return <section>{strip&&createPortal(<span data-active={active}>{session.name} <b>{!bounds?'Invalid hours':active?'In session':cutoff<bounds[0]?'Upcoming':'Ended'}</b></span>,strip)}<h3>{session.name}</h3>
     <label>{session.zone} hours <input value={hours} maxLength={11} onChange={event=>save(event.target.value)}/></label>
     <p>{bounds?`${format(bounds[0]*1000)} to ${format(bounds[1]*1000)} · ${duration}`:'Use same-day HH:MM-HH:MM hours outside DST ambiguity.'}</p>
     <p>Observed high / low · {rangeText(observed,digits)}</p>
@@ -89,8 +91,8 @@ function SessionRow({session,rows,step,cutoff,digits,onZone}: {
   </section>;
 }
 
-export function SessionIntelligence({rows,step,cutoff,digits,onZone}: {
-  rows:Candle[];step:number;cutoff:number;digits:number;onZone:(id:string,drawing?:Drawing)=>void;
+export function SessionIntelligence({rows,step,cutoff,digits,onZone,strip}: {
+  rows:Candle[];step:number;cutoff:number;digits:number;onZone:(id:string,drawing?:Drawing)=>void; strip?:HTMLElement|null;
 }) {
   const {zone}=useTimezone();
   const bounds=useMemo(()=>{
@@ -105,6 +107,6 @@ export function SessionIntelligence({rows,step,cutoff,digits,onZone}: {
     <summary>Sessions · {zone}</summary>
     {opened&&<p>00:00 UTC open {daily?.open.toFixed(digits)??'Unavailable'} · Monday UTC open {weekly?.open.toFixed(digits)??'Unavailable'}</p>}
     <div className="evidence-pairs">{sessions.map(session=><SessionRow key={session.id} session={session}
-      rows={rows} step={step} cutoff={cutoff} digits={digits} onZone={onZone}/>)}</div>
+      rows={rows} step={step} cutoff={cutoff} digits={digits} onZone={onZone} strip={strip}/>)}</div>
   </details>;
 }

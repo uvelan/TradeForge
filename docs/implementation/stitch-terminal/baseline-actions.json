@@ -1,0 +1,32 @@
+[
+  {
+    "width": 1440,
+    "height": 900,
+    "indicator": "sma",
+    "session_overlay_changed": true,
+    "pass": "CHART-00001",
+    "bookmark": {
+      "comparison_placement": "Overlay",
+      "session_id": "6f823762d2a8b1b7352f8ed482bb095be2f1a5246454fd4a35ff61559d552a57",
+      "position": 12,
+      "view": "comparison",
+      "time": 1794576000
+    },
+    "cutoff": 1794578700
+  },
+  {
+    "width": 1280,
+    "height": 800,
+    "indicator": "sma",
+    "session_overlay_changed": true,
+    "pass": "CHART-00002",
+    "bookmark": {
+      "comparison_placement": "Overlay",
+      "session_id": "6f823762d2a8b1b7352f8ed482bb095be2f1a5246454fd4a35ff61559d552a57",
+      "position": 12,
+      "view": "comparison",
+      "time": 1794576000
+    },
+    "cutoff": 1794578700
+  }
+]

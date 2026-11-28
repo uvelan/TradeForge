@@ -15,6 +15,7 @@ import {cutoffJourney, installCutoffClock, createBoundedSession, checkServerSess
 const {values: args} = parseArgs({options: {
   cutoff: {type: 'boolean'},
   drawings: {type: 'boolean'},
+  'decision-review': {type:'boolean'},
   'forex-decisions': {type:'boolean'},
   'decision-boundaries': {type:'boolean'},
   output: {type: 'string'},
@@ -25,7 +26,7 @@ const {values: args} = parseArgs({options: {
   'ui-port': {type: 'string', default: '4793'},
 }});
 if(args.cutoff&&!args.drawings)throw Error('--cutoff requires --drawings');
-if (!args.output || !args.workspace || (!args['decision-boundaries'] && (!args.csv || (!args.drawings && !args.bi5)))) {
+if (!args.output || !args.workspace || (!args['decision-review'] && !args['decision-boundaries'] && (!args.csv || (!args.drawings && !args.bi5)))) {
   throw Error('Supply --output and --workspace, plus source paths for the selected replay journey.');
 }
 for (const port of [args['api-port'], args['ui-port']]) {
@@ -59,7 +60,12 @@ function start(executable, parameters, cwd, log) {
   }
 }
 function startApi() {
-  return start(python, ['-m', 'uvicorn', 'tradeforge.api:app', '--host', '127.0.0.1',
+  // The archived decision journeys are independent of the optional live Windows terminal.
+  // Exercise the application's normal missing-MT5 path in this disposable API process.
+  const runner=args['decision-review']||args['forex-decisions']
+    ? ['-c',"import sys; sys.modules['MetaTrader5'] = None; import uvicorn; uvicorn.main()"]
+    : ['-m','uvicorn'];
+  return start(python, [...runner, 'tradeforge.api:app', '--host', '127.0.0.1',
     '--port', args['api-port']], root, 'api.log');
 }
 function startVite() {
@@ -342,8 +348,8 @@ async function run() {
     console.log('Genuine replay drawing journey and two-process reopen passed.');
     return;
   }
-  if(args['forex-decisions'] || args['decision-boundaries']){
-    if(!args['decision-boundaries'])fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
+  if(args['forex-decisions'] || args['decision-boundaries'] || args['decision-review']){
+    if(args['forex-decisions'])fixture('genuine-csv', ['--csv', resolve(args.csv), '--storage', storage]);
     vite=startVite();
     await awaitReady(uiOrigin,'/',vite);
     const restart=async()=>{
@@ -352,11 +358,16 @@ async function run() {
       await awaitReady(apiOrigin,'/api/health',api);
     };
     let receipt;
-    if(args['decision-boundaries']){
+    if(args['decision-boundaries']||args['decision-review']){
       const fixtureData=(...args)=>JSON.parse(execFileSync(python,['-m','scripts.decision_boundary_fixture',...args],
         {env,cwd:root,encoding:'utf8',windowsHide:true}));
-      const {verifyDecisionBoundaries}=await import('./decision-boundaries.mjs');
-      receipt=await verifyDecisionBoundaries(uiOrigin,fixtureData(),restart,()=>fixtureData('counts'));
+      if(args['decision-review']){
+        const {verifyDecisionReview}=await import('./decision-review.mjs');
+        receipt=await verifyDecisionReview(uiOrigin,fixtureData('numbered'),()=>fixtureData('counts'));
+      }else{
+        const {verifyDecisionBoundaries}=await import('./decision-boundaries.mjs');
+        receipt=await verifyDecisionBoundaries(uiOrigin,fixtureData(),restart,()=>fixtureData('counts'));
+      }
     }else{
       const {verifyDecisions}=await import('./forex-decisions.mjs');
       receipt=await verifyDecisions(uiOrigin,restart);
