@@ -36,7 +36,17 @@ try {
       a[2]+h.paired,a[3]+h.quotes.count],[0,0,0,0]);
     assert.deepEqual(totals,expected);
     const [eur,gbp,paired,quotes]=totals;
-    await expect(panel.getByText(`${eur} EURUSD candles · ${gbp} GBPUSD candles · ${paired} paired UTC opens · ${quotes} EURUSD quotes`)).toBeVisible();
+    for (const [label, value] of [
+      ['EURUSD candles', eur],
+      ['GBPUSD candles', gbp],
+      ['Paired UTC opens', paired],
+      ['EURUSD quotes', quotes],
+    ]) {
+      const card = panel.locator('.evidence-grid > div', { has: page.locator('dt', { hasText: label }) });
+      await expect(card).toHaveCount(1);
+      await expect(card.locator('dt')).toHaveText(label);
+      await expect(card.locator('dd')).toHaveText(String(value));
+    }
     return report;
   }
   const month = await inspect('2025-11-01','2025-12-01',[24,0,0,8636]);

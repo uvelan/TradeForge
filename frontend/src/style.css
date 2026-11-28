@@ -2679,6 +2679,26 @@ details pre {
   .topbar-end kbd {
     display: none;
   }
+  .topbar.decision-topbar {
+    height: auto;
+    min-height: 58px;
+    flex-wrap: wrap;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .topbar.decision-topbar .topbar-start {
+    display: contents;
+  }
+  .topbar.decision-topbar .breadcrumb {
+    display: flex;
+    flex-basis: 100%;
+    order: 3;
+    flex-wrap: wrap;
+    white-space: normal;
+    gap: 2px 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--tf-border-subtle);
+  }
   .topbar-mode {
     padding: 4px 8px;
     font-size: 10px;

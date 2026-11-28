@@ -9,6 +9,23 @@ type Lane = {feed:string|null;alternatives?:Lane[];count:number;missing:Interval
 type Hour = {start:number;end:number;status:string;expected:number;eur:Lane;gbp:Lane;paired:number;
   paired_ranges:Interval[];chart_selections:CoverageSelection[];pair_error:string|null;quotes:{count:number;pins:Pin[];registered:boolean;gaps:Interval[];error:string|null}};
 type Report = {hours:Hour[];start:number;end:number;max_gap_ms:number};
+
+export const HOURLY_COVERAGE_TONES = {
+  'Healthy': 'green',
+  'Conflicting evidence': 'red',
+  'Scheduled closure': 'neutral',
+  'Partial': 'amber',
+  'Missing open time': 'amber',
+} as const;
+export type HourlyCoverageStatus = keyof typeof HOURLY_COVERAGE_TONES;
+type CoverageTone = (typeof HOURLY_COVERAGE_TONES)[HourlyCoverageStatus];
+
+export function hourlyCoverageTone(status: string): CoverageTone {
+  if (Object.hasOwn(HOURLY_COVERAGE_TONES, status)) {
+    return HOURLY_COVERAGE_TONES[status as HourlyCoverageStatus];
+  }
+  return 'amber';
+}
 const iso = (seconds:number)=>new Date(seconds*1000).toISOString();
 const dateOf = (seconds:number)=>iso(seconds).slice(0,10);
 const utcClock = (seconds:number)=>iso(seconds).slice(11,16);
@@ -73,17 +90,17 @@ export function ForexCoverage({openReplay,imported}:{openReplay:(range:CandleRan
       <button className="btn btn-primary">Inspect coverage</button></fieldset></form>
     {busy&&<div className="loading-zone" role="status"><Spinner/><span>Checking archive evidence…</span></div>}{error&&<Notice tone="red">{error}</Notice>}{receipt&&<p className="success-row" role="status">{receipt}</p>}
     {report&&totals&&<><p className="muted small">{start} 00:00 to {end} 00:00 UTC, end exclusive (05:30 IST on each date).</p>
-      <div className="evidence-grid">
+      <dl className="evidence-grid">
         <div><dt>EURUSD candles</dt><dd className="mono">{totals[0]}</dd></div>
         <div><dt>GBPUSD candles</dt><dd className="mono">{totals[1]}</dd></div>
         <div><dt>Paired UTC opens</dt><dd className="mono">{totals[2]}</dd></div>
         <div><dt>EURUSD quotes</dt><dd className="mono">{totals[3]}</dd></div>
-      </div>
+      </dl>
       <div className="research-controls"><label>UTC day <select value={day} disabled={busy} onChange={e=>{setDay(e.target.value);setHour(undefined);setReceipt('');}}>{days.map(d=><option key={d}>{d}</option>)}</select></label></div>
       <div className="table-scroll"><table><thead><tr><th>Hour</th><th>IST start</th><th>Open slots</th><th>EURUSD</th><th>GBPUSD</th><th>Paired</th><th>Bid/ask ticks</th><th>Coverage</th></tr></thead>
         <tbody>{report.hours.filter(h=>dateOf(h.start)===day).map(h=><tr key={h.start}><td><button type="button" className="small-tool" aria-expanded={h.start===hour} disabled={busy}
           onClick={()=>{setHour(h.start);setFile(undefined);setReceipt('');setError('');}}>{utcClock(h.start)} UTC</button></td>
-          <td>{istClock(h.start)}{dateOf(h.start+19800)!==day?' (+1d)':''}</td><td>{h.expected}</td><td>{h.eur.count}</td><td>{h.gbp.count}</td><td>{h.paired}</td><td>{h.quotes.count}</td><td><Badge tone={h.status==='COMPLETE'?'green':'amber'}>{h.status}</Badge></td></tr>)}</tbody></table></div></>}
+          <td>{istClock(h.start)}{dateOf(h.start+19800)!==day?' (+1d)':''}</td><td>{h.expected}</td><td>{h.eur.count}</td><td>{h.gbp.count}</td><td>{h.paired}</td><td>{h.quotes.count}</td><td><Badge tone={hourlyCoverageTone(h.status)}>{h.status}</Badge></td></tr>)}</tbody></table></div></>}
     {selected&&<section aria-label="Selected hour evidence"><h3>{iso(selected.start).slice(0,16).replace('T',' ')} UTC · {selected.status}</h3>
       {selected.pair_error&&<p>{selected.pair_error}</p>}
       {([['EURUSD',selected.eur],['GBPUSD',selected.gbp]] as const).map(([s,l])=><details key={s}><summary>{s} M5 BID · {l.count} candles · {l.missing.length} missing intervals</summary>
