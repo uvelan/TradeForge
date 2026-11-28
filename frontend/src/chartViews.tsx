@@ -1,6 +1,7 @@
 import type {ChartLink} from "./ChartLink";
 import { useEffect, useMemo, useState } from "react";
 import { useStableCandles } from "./candleSeriesSync";
+import { mergeMt5Candles, subscribeMt5Live } from "./mt5Stream";
 import { visibleAt } from "./ReplayControls";
 import {drawingChartProps,type DrawingBook} from './Drawings';
 import { api } from "./api";
@@ -30,28 +31,21 @@ export function useViewCandles(symbol: string, frame: Timeframe, source: ChartSo
   useEffect(() => {
     if (!follow || !symbol || source !== "MT5" || replay) return;
     let active = true;
-    let pending = false;
-    const timer = window.setInterval(async () => {
-      if (document.hidden || pending) return;
-      pending = true;
-      try {
-        const update = await api.candles(symbol, frame, source, 10);
-        if (!active || !update.candles.length) return;
+    const stop = subscribeMt5Live({
+      symbol,
+      timeframe: frame,
+      limit: 10,
+      includeLatest: false,
+      onCandles: update => {
+        if (!active) return;
         setResult(current => {
           if (current?.generation !== generation || !current.data) return current;
-          if (current.data.feed_id !== update.feed_id || current.data.price_basis !== update.price_basis) {
-            return {generation, data:update};
-          }
-          const first = update.candles[0].time;
-          if (update.candles.at(-1)!.time < (current.data.candles.at(-1)?.time ?? 0)) return current;
-          const candles = [...current.data.candles.filter(bar => bar.time < first), ...update.candles].slice(-600);
-          return {generation, data: {...update, candles}};
+          const next = mergeMt5Candles(current.data, update, 600);
+          return next ? { generation, data: next } : current;
         });
-      } catch {
-        // Retain the last confirmed comparison history during a transient disconnection.
-      } finally { pending = false; }
-    }, 5000);
-    return () => { active = false; window.clearInterval(timer); };
+      },
+    });
+    return () => { active = false; stop(); };
   }, [generation, symbol, frame, source, follow, replay]);
   const current = frozen ? ('error' in frozen ? {error:frozen.error,data:undefined} : {data:frozen,error:undefined}) :
     result?.generation === generation ? result : undefined;

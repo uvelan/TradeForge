@@ -16,6 +16,7 @@ import './terminalWorkspace.css';
 import {TerminalSurface, ChartJournal, ChartPassEditor} from './TerminalSurface';
 import {markNormalizedCandles,useStableCandles} from './candleSeriesSync';
 import {TERMINAL_DRAWING_SHORTCUTS,TERMINAL_SHORTCUT_GUIDE,isEditableOrModalElement,resolveTerminalShortcut} from './terminalKeyboard';
+import {mergeMt5Candles,subscribeMt5Live,type Mt5TransportMode} from './mt5Stream';
 import {TimezonePicker,useTimestampFormat,useTimezone} from './timezone';
 import {CandleColorSettings} from './candleColors';
 import {useWorkspacePreference} from './useWorkspacePreference';
@@ -294,6 +295,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   const [savedReplays,setSavedReplays]=useState<{id:string;position:number;updated_at:string}[]>([]);
   const replayListSequence=useRef(0);
   const [quotes,setQuotes]=useState<Record<string,number|null>>({});
+  const [mt5Transport,setMt5Transport]=useState<Mt5TransportMode>('idle');
+  const replayActiveRef=useRef(false);
   const indicatorScope=JSON.stringify([source,symbol,timeframe,range]);
   const primaryLoadGeneration=useMemo(()=>({}),
     [symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence,pendingRestore]);
@@ -383,43 +386,52 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
     return()=>{active=false};
   },[symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence,primaryLoadGeneration]);
   useEffect(()=>{
-    if(source!=='MT5'||busy||error||replayIndex!==null)return;
+    replayActiveRef.current=replayIndex!==null;
+  },[replayIndex]);
+  useEffect(()=>{
+    if(source!=='MT5'||busy||error||replayIndex!==null){
+      setMt5Transport('idle');
+      return;
+    }
     let active=true;
-    let pending=false;
-    const timer=window.setInterval(async()=>{
-      if(pending||document.hidden)return;
-      pending=true;
-      try{
-        const update=await api.candles(symbol,timeframe,'MT5',10,true);
-        if(active){
-          setPollError('');
-          setData(current=>{
-            if(!current||!update.candles.length)return current;
-            if(current.feed_id!==update.feed_id||current.price_basis!==update.price_basis)return update;
-            const first=update.candles[0].time;
-            const last=current.candles.at(-1)?.time ?? 0;
-            if(update.candles.at(-1)!.time<last)return current;
-            return {...update,candles:[...current.candles.filter(row=>row.time<first),...update.candles].slice(-(expanded?600:200))};
-          });
-        }
-      }catch{
-        if(active)setPollError('MT5 update unavailable · showing last received bars');
-      }finally{pending=false}
-    },5000);
-    return()=>{active=false;window.clearInterval(timer)};
+    const stop=subscribeMt5Live({
+      symbol,
+      timeframe,
+      limit:10,
+      includeLatest:true,
+      quoteSymbols:expanded?watchSymbols:[],
+      onCandles:update=>{
+        if(!active||replayActiveRef.current)return;
+        setPollError('');
+        setData(current=>{
+          const next=mergeMt5Candles(current,update,expanded?600:200);
+          return next===undefined?current:next;
+        });
+      },
+      onQuotes:next=>{
+        if(!active||replayActiveRef.current)return;
+        setQuotes(next);
+      },
+      onError:message=>{
+        if(!active||replayActiveRef.current)return;
+        setPollError(message);
+      },
+      onTransportChange:mode=>{
+        if(active)setMt5Transport(mode);
+      },
+    });
+    return()=>{active=false;stop();};
   },[source,symbol,timeframe,busy,error,replayIndex,expanded]);
   useEffect(()=>{
-    if(!expanded)return;
+    if(!expanded){setQuotes({});return;}
+    if(source!=='DEMO'){if(source!=='MT5')setQuotes({});return;}
     setQuotes({});
-    if(source!=='MT5' && source!=='DEMO')return;
     let active=true;
-    const update=()=>Promise.all(watchSymbols.map(async s=>{
-      try{const q=await api.quote(s,source==='MT5'?'MT5':'DEMO');return [s,q.bid] as const}
+    void Promise.all(watchSymbols.map(async s=>{
+      try{const q=await api.quote(s,'DEMO');return [s,q.bid] as const}
       catch{return [s,null] as const}
     })).then(entries=>{if(active)setQuotes(Object.fromEntries(entries))});
-    void update();
-    const timer=window.setInterval(()=>{if(source==='MT5')void update()},10000);
-    return()=>{active=false;window.clearInterval(timer)};
+    return()=>{active=false};
   },[expanded,source]);
   useEffect(()=>{
     if(!expanded)return;
@@ -719,7 +731,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
       {symbolError||(matchedSymbols.length===0?'No matching instruments':`${matchedSymbols.length.toLocaleString()} matches${matchedSymbols.length>100?' · showing first 100':''}`)}
     </small>}
   </div>;
-  const latestNotice=!replayActive&&data?.latest_unconfirmed?'Latest MT5 bar · close unconfirmed':'';
+  const latestNotice=!replayActive&&data?.latest_unconfirmed?(mt5Transport==='sse'?'Latest MT5 bar · close unconfirmed · live stream':mt5Transport==='polling'?'Latest MT5 bar · close unconfirmed · polling fallback':'Latest MT5 bar · close unconfirmed'):'';
   const resumeReplay=savedReplays.length>0&&<label>Resume saved replay <select value="" disabled={Boolean(replayBusy)}
     onChange={event=>{if(event.target.value)void loadReplay('resume',event.target.value);}}>
     <option value="">Choose checkpoint</option>{savedReplays.map(item=><option key={item.id} value={item.id}>
