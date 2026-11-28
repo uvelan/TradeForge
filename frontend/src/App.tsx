@@ -15,6 +15,7 @@ import './workspace.css';
 import './terminalWorkspace.css';
 import {TerminalSurface, ChartJournal, ChartPassEditor} from './TerminalSurface';
 import {markNormalizedCandles,useStableCandles} from './candleSeriesSync';
+import {TERMINAL_DRAWING_SHORTCUTS,TERMINAL_SHORTCUT_GUIDE,isEditableOrModalElement,resolveTerminalShortcut} from './terminalKeyboard';
 import {TimezonePicker,useTimestampFormat,useTimezone} from './timezone';
 import {CandleColorSettings} from './candleColors';
 import {useWorkspacePreference} from './useWorkspacePreference';
@@ -185,6 +186,20 @@ const chartTimeframes:Timeframe[]=['M1','M3','M5','M15','M30','H1','H4','D1'];
 type ChartLevel=import('./components').ChartLevel;
 type ReplayLoadKind='quick'|'archive'|'resume';
 const archiveReplayLimit=5000;
+const evidenceBookmarksKey='tradeforge.workspace.evidence-bookmarks.v1';
+type EvidenceBookmark={
+  id:string; session_id:string; source:ChartSource; symbol:string; timeframe:Timeframe;
+  position:number; view:ArchiveViewId; instrument:string; candle_timeframe:Timeframe;
+  time:number; cutoff:number; created_at:string;
+};
+function loadEvidenceBookmarks():EvidenceBookmark[]{
+  try{
+    const parsed:unknown=JSON.parse(localStorage.getItem(evidenceBookmarksKey)??'[]');
+    if(Array.isArray(parsed))return parsed.filter((item):item is EvidenceBookmark=>
+      Boolean(item&&typeof item.id==='string'&&typeof item.session_id==='string'&&typeof item.time==='number'&&typeof item.cutoff==='number')).slice(0,25);
+  }catch{}
+  return [];
+}
 function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,onLeaveDecision,onJournalReturn}:{onJournalReturn?:(location:DecisionLocation)=>void;onLeaveDecision?:()=>void;expanded?:boolean;onPlan?:(seed:Partial<Plan>)=>void;
   onSignal?:(reference:import('./types').SignalReference)=>Promise<void>; initialLocation?:ChartLocation;onChartLesson?:(snapshot:string)=>void}){
   const [strip,setStrip]=useState<HTMLDivElement|null>(null);
@@ -269,6 +284,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   const [replayIndex,setReplayIndex]=useState<number|null>(null);
   const [loadedReplay,setLoadedReplay]=useState<{generation:object;session:ReplaySession}>();
   const [replaySelection,setReplaySelection]=useState<ReplaySelection>();
+  const [evidenceBookmarks,setEvidenceBookmarks]=useState<EvidenceBookmark[]>(loadEvidenceBookmarks);
+  const [bookmarkStatus,setBookmarkStatus]=useState('');
+  const [pendingRestore,setPendingRestore]=useState<EvidenceBookmark>();
   const [replayBusy,setReplayBusy]=useState<ReplayLoadKind>();
   const [replayError,setReplayError]=useState<{kind:ReplayLoadKind;message:string}>();
   const replayLoadSequence=useRef(0);
@@ -278,7 +296,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   const [quotes,setQuotes]=useState<Record<string,number|null>>({});
   const indicatorScope=JSON.stringify([source,symbol,timeframe,range]);
   const primaryLoadGeneration=useMemo(()=>({}),
-    [symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence]);
+    [symbol,timeframe,source,expanded,refreshCount,range,initialLocation,exactEvidence,pendingRestore]);
   const replaySession=loadedReplay?.generation===primaryLoadGeneration ? loadedReplay.session : undefined;
   const replayData=replaySession?.market;
   const replayActive=replayIndex!==null&&Boolean(replayData);
@@ -344,13 +362,16 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
     let active=true;
     setBusy(true);setError('');setPollError('');setData(null);setReplayIndex(null);setLoadedReplay(undefined);setReplaySelection(undefined);setPlanPrices([]);
     setInteraction(current=>current.mode==='plan'?{mode:'navigate'}:current);
-    const decision=initialLocation?.decision;
-    if(decision&&symbol===initialLocation.symbol&&source===initialLocation.source&&timeframe===initialLocation.timeframe){
+    const decision=pendingRestore && pendingRestore.symbol===symbol && pendingRestore.source===source && pendingRestore.timeframe===timeframe
+      ? {session_id:pendingRestore.session_id,position:pendingRestore.position,view:pendingRestore.view,time:pendingRestore.time}
+      : initialLocation?.decision;
+    if(decision&&(pendingRestore||(initialLocation&&symbol===initialLocation.symbol&&source===initialLocation.source&&timeframe===initialLocation.timeframe))){
       api.replay(decision.session_id).then(session=>{
         if(!active)return;
         setLoadedReplay({generation:primaryLoadGeneration,session});
         setReplaySelection({view:decision.view,time:decision.time});
         setReplayIndex(decision.position);
+        if(pendingRestore)setPendingRestore(undefined);
       }).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setBusy(false);});
       return ()=>{active=false;};
     }
@@ -521,20 +542,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
     if(drawingView!=='primary')selectInspectionPane('primary');
     setInteraction(current=>({mode:current.mode==='level'?'navigate':'level'}));
   },[levels.length,drawingView,selectInspectionPane,setInteraction]);
-  useEffect(()=>{
-    if(!expanded)return;
-    const onKey=(e:KeyboardEvent)=>{
-      if((e.target as HTMLElement|null)?.closest('dialog:modal'))return;
-      if(e.key==='Escape'){
-        activeBook?.setInteraction(current=>current.mode==='navigate'?current:{mode:'navigate'});
-        return;
-      }
-      const target=e.target as HTMLElement|null;
-      if(target?.closest('input,textarea,select,[contenteditable="true"]'))return;
-      if(e.altKey&&e.key.toLowerCase()==='h'){e.preventDefault();if(!e.repeat)toggleLevel();}
-    };
-    window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
-  },[expanded,activeBook?.setInteraction,toggleLevel]);
   const primaryDrawings=useMemo(()=>[...drawingBook.items,...Object.values(sessionZones)
     .filter(zone=>drawingBook.eligible(zone.anchors))],[drawingBook.items,drawingBook.eligible,sessionZones]);
   const primaryProps=drawingChartProps(drawingBook,digits,drawingView==='primary');
@@ -591,6 +598,62 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
         status:error instanceof Error?error.message:'Chart capture could not be saved'});
     }
   }
+  const bookmarkEvidence=useCallback(()=>{
+    if(!replayActive||!replaySession||replayIndex===null)return;
+    const targetView=inspectedPane?.view??'primary';
+    const targetInstrument=inspectedPane?.data.symbol??symbol;
+    const targetFrame=inspectedPane?.data.timeframe??timeframe;
+    const targetTime=decisionTime??visibleCandles.at(-1)?.time;
+    const targetCutoff=cutoff??(targetTime!==undefined?targetTime+frameMinutes[targetFrame]*60:undefined);
+    if(targetTime===undefined||targetCutoff===undefined)return;
+    const nextSelection=replaySelection??{view:targetView,time:targetTime};
+    const mergedBookmarks=[...new Set([...(replaySession.checkpoint?.bookmarks??[]),replayIndex])].sort((a,b)=>a-b);
+    const entry:EvidenceBookmark={
+      id:`${replaySession.id}:${replayIndex}:${targetView}:${targetTime}`,
+      session_id:replaySession.id,source,symbol,timeframe,position:replayIndex,
+      view:targetView,instrument:targetInstrument,candle_timeframe:targetFrame,
+      time:targetTime,cutoff:targetCutoff,created_at:new Date().toISOString(),
+    };
+    setEvidenceBookmarks(prev=>{
+      const updated=[entry,...prev.filter(item=>item.id!==entry.id)].slice(0,25);
+      try{localStorage.setItem(evidenceBookmarksKey,JSON.stringify(updated));}catch{}
+      return updated;
+    });
+    setBookmarkStatus(`Bookmarked ${targetInstrument} ${targetFrame} (${replayPaneName(targetView)}) · candle ${terminalClock(targetTime*1000)} · cutoff ${terminalClock(targetCutoff*1000)}`);
+    void api.saveCheckpoint(replaySession.id,replayIndex,mergedBookmarks,nextSelection)
+      .then(()=>replayOptions())
+      .catch(reason=>setBookmarkStatus(reason instanceof Error?reason.message:'Bookmark could not be saved'));
+    if(canSaveCapture&&!chartCapture)captureButton.current?.click();
+  },[replayActive,replaySession,replayIndex,inspectedPane,symbol,timeframe,decisionTime,visibleCandles,cutoff,replaySelection,source,terminalClock,replayOptions,canSaveCapture,chartCapture]);
+  useEffect(()=>{
+    if(!expanded)return;
+    const onKey=(e:KeyboardEvent)=>{
+      const {insideModal,insideEditable,hasOpenModalDialog}=isEditableOrModalElement(e.target);
+      const focusedView=link.focused(drawingView)??'primary';
+      const focusedPaneFrozen=replayActive||(focusedView!=='primary'&&linkTimeframe==='on');
+      const canDraw=Boolean(activeBook&&!activeBook.saving&&!activeBook.conflict&&activeBook.current&&activeBook.current.items.length<100);
+      const action=resolveTerminalShortcut({
+        defaultPrevented:e.defaultPrevented,repeat:e.repeat,key:e.key,
+        altKey:e.altKey,ctrlKey:e.ctrlKey,metaKey:e.metaKey,shiftKey:e.shiftKey,
+        insideModal,insideEditable,hasOpenModalDialog,replayActive,focusedPaneFrozen,canDraw,
+      });
+      if(!action)return;
+      if(action.type==='escape'){
+        activeBook?.setInteraction(current=>current.mode==='navigate'?current:{mode:'navigate'});
+        return;
+      }
+      e.preventDefault();
+      if(action.type==='level')toggleLevel();
+      else if(action.type==='fit')link.fitFocused(drawingView);
+      else if(action.type==='bookmark')bookmarkEvidence();
+      else if(action.type==='tool')activeBook?.begin(action.tool);
+      else if(action.type==='timeframe'){
+        if(focusedView==='primary')setTimeframe(action.timeframe);
+        else link.setFocusedTimeframe(action.timeframe,focusedView);
+      }
+    };
+    window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
+  },[expanded,activeBook,drawingView,link,linkTimeframe,replayActive,toggleLevel,bookmarkEvidence,setTimeframe]);
   const pinnedRules=replaySession?.request?.smt_rules??replaySession?.signal_rules;
   const rules=pinnedRules??{period:Number(smtWidth),alignment_bars:Number(smtAlignment),
     tolerance_bps:Number(smtTolerance),confirmation_bars:Number(smtConfirmation)};
@@ -711,14 +774,14 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
           <button className="decision-trigger" onClick={()=>setSurface('decision')}>Record decision</button>
         </div>
         {activeBook&&<div className="terminal-drawing-tools"><DrawingToolbox key={drawingView} book={activeBook} destination={drawingDestination}/></div>}
-        <div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+((!activeBook||activeBook.interaction.mode==='navigate')?'active':'')} title="Crosshair (Esc)" onClick={()=>activeBook?.setEdit(undefined)}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/>{([['trend','Draw Trendline',TrendingUp],['ray','Draw Ray',MoveUpRight],['fib','Draw Fibonacci retracement',Percent],['rectangle','Draw Rectangle',Square],['risk-reward','Draw Risk/reward',Target]] as const).map(([kind,title,Icon])=>{
+        <div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+((!activeBook||activeBook.interaction.mode==='navigate')?'active':'')} title="Crosshair (Esc)" onClick={()=>activeBook?.setEdit(undefined)}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/>{([['trend','Draw Trendline','t',TrendingUp],['ray','Draw Ray','r',MoveUpRight],['fib','Draw Fibonacci retracement','g',Percent],['rectangle','Draw Rectangle','b',Square],['risk-reward','Draw Risk/reward','p',Target]] as const).map(([kind,title,shortcut,Icon])=>{
           const armed=activeBook?.interaction.mode==='place'&&activeBook.interaction.draft.kind===kind;
           const disabled=!activeBook||activeBook.saving||activeBook.conflict||!activeBook.current||activeBook.current.items.length>=100;
-          return <button key={kind} type="button" className={'rail-tool '+(armed?'active':'')} aria-label={title} aria-pressed={armed} title={title} disabled={disabled} onClick={()=>activeBook?.begin(kind)}><Icon size={17}/></button>;
+          return <button key={kind} type="button" className={'rail-tool '+(armed?'active':'')} aria-label={title} aria-keyshortcuts={shortcut} aria-pressed={armed} title={`${title} (${shortcut.toUpperCase()})`} disabled={disabled} onClick={()=>activeBook?.begin(kind)}><Icon size={17}/></button>;
         })}<div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
         <div className={'terminal-chart-columns '+(chartViewCount>1?'multi-chart':'')}>
           <div className="primary-chart" role="region" aria-label="Primary chart" data-inspecting={inspectedPane?.view==='primary'||undefined}><div className="pane-label"><span className="dot green"/>{symbol} · {timeframe} <span className="muted">{replayActive?'REPLAY':exactEvidence?'FROZEN STRATEGY EVIDENCE':'PRICE'}</span></div>{!replayActive&&busy?<div className="chart-loading"><Spinner/> Loading candles</div>:!replayActive&&error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:visibleCandles.length?<CandleChart key={`${symbol}-${timeframe}-${source}`} candles={visibleCandles} focus={exactEvidence&&!replayArchive&&initialLocation?.timestamp!==undefined?
-            {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={chartViewCount>1?360:510}
+            {epoch:initialLocation.timestamp,sequence:initialLocation.sequence}:undefined} link={link} linkId="primary" height={chartViewCount>1?360:510} onSetTimeframe={replayActive?undefined:setTimeframe}
             replayCandleTime={inspectedPane?.view==='primary'||inspectedPane?.view==='comparison'?selectedVisibleTime:undefined}
             onReplayCandleSelect={replayArchive?time=>setReplaySelection({view:'primary',time}):undefined} timeframe={timeframe} comparison={compare&&comparison.candles?.length?{symbol:compare,candles:comparison.candles,precision:precisionFor(compare),placement:displayedPlacement,fixedPlacement:Boolean(frozenPlacement),onPlacementChange:setPlacement,smt:replayActive?smt.events?.filter(event=>event.confirmed_at!==null):smt.events,smtWindowOnly:savedSource&&replayActive}:undefined} symbol={symbol} precision={digits} indicators={indicator.data} levels={levels} drawings={primaryDrawings}
             {...primaryProps} drawingPrompt={picking?`Select ${['entry','stop','target'][picked.length]}`:primaryProps.drawingPrompt}
@@ -796,6 +859,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
           <nav aria-label="Inspector views">{['Evidence','Watchlist','Provenance','Journal'].map(name=><button key={name}
             onClick={()=>inspectSection('terminal-'+name.toLowerCase())}>{name}</button>)}</nav>
           <section id="terminal-evidence" tabIndex={-1}><h2>Evidence</h2>
+          {replayActive&&<div className="evidence-bookmark-bar"><button type="button" className="small-tool" onClick={bookmarkEvidence}>Bookmark candle (E)</button>{bookmarkStatus&&<small role="status">{bookmarkStatus}</small>}</div>}
+          {!replayActive&&bookmarkStatus&&<small role="status">{bookmarkStatus}</small>}
+          {evidenceBookmarks.length>0&&<details className="data-trust"><summary>Evidence bookmarks ({evidenceBookmarks.length})</summary>{evidenceBookmarks.map(item=><div key={item.id} className="evidence-bookmark-row"><span><strong>{item.instrument} {item.candle_timeframe}</strong> · {replayPaneName(item.view)} · {terminalClock(item.time*1000)}</span><button type="button" className="small-tool" onClick={()=>{setSource(item.source as ChartSource);setSymbol(item.symbol as SymbolName);setTimeframe(item.timeframe as Timeframe);setPendingRestore(item);}}>Open</button></div>)}</details>}
           {cutoff!=null&&<p className="cutoff-readout">Replay cutoff <time dateTime={new Date(cutoff*1000).toISOString()}>{terminalClock(cutoff*1000)} · {zone}</time></p>}
         {inspectedPane&&<ReplayCandleInspector panes={archivePanes} pane={inspectedPane} candles={inspectionCandles}
           selectedTime={inspectedTime} precision={precisionFor(inspectedPane.data.symbol)} onView={selectInspectionPane}
@@ -864,7 +930,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
           </section>
           <section id="terminal-watchlist" tabIndex={-1}>      <aside className="market-watchlist"><div className="watch-head"><div><span className="eyebrow">INSTRUMENTS</span><h3>Watchlist</h3></div><ListFilter size={17}/></div><div className="watch-columns"><span>PAIR</span><span>{replayActive?'CLOSE':isBinance?'LAST':'BID'}</span></div>{isBinance&&<div className='watch-row current'><strong>BTCUSDT</strong><span>{last?.close.toFixed(2)??'—'}</span></div>}{(isBinance?[]:watchSymbols).map(w=><button key={w} className={'watch-row '+((source==='MT5'?symbol===w||symbol.toUpperCase().includes(w):symbol===w)?'current':'')} onClick={()=>source==='MT5'?setBrokerSymbol(instruments.find(item=>item.name.toUpperCase().includes(w))?.name ?? w):setSymbol(w)}><span className="watch-symbol"><strong>{w}</strong><small>{w==='XAUUSD'?'Spot gold':w.slice(0,3)+' / '+w.slice(3)}</small></span><span className="watch-price">{(replayActive?(w===symbol?visibleCandles.at(-1)?.close:w===compare?comparison.candles?.at(-1)?.close:undefined):quotes[w])?.toFixed(precisionFor(w))??'—'}</span></button>)}
         <div className="watch-detail"><span className="eyebrow">ACTIVE WORKSPACE</span><div><span>Feed</span><strong>{source}</strong></div><div><span>Instrument</span><strong>{symbol}</strong></div><div><span>Session clock</span><strong>{zone}</strong></div><p>{source==='DEMO'?'All displayed demo quotes are synthetic and are not suitable for market decisions.':'Broker/data availability is not guaranteed. Confirm quote freshness before use.'}</p></div>
-        <div className="watch-shortcuts"><strong>Keyboard</strong><span>Alt + H <em>Horizontal level</em></span><span>Space <em>Play / pause replay</em></span><span>Shift + → <em>Next bar</em></span></div>
+        <div className="watch-shortcuts"><strong>Keyboard</strong>{TERMINAL_SHORTCUT_GUIDE.map(([binding,action])=><span key={binding}>{binding} <em>{action}</em></span>)}</div>
       </aside>
           </section>
           <section id="terminal-provenance" tabIndex={-1}><h2>Provenance</h2>

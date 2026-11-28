@@ -102,6 +102,7 @@ export function ChartView({number, mainSymbol, source, options, refresh, cutoff,
       {showIndicators&&indicators.controls}</details>
     {candles?.length ? <CandleChart key={`${symbol}-${frame}-${source}`} candles={candles} height={360}
       symbol={symbol} timeframe={frame} indicators={indicators.data} precision={precision(symbol)} link={link} linkId={String(number)}
+      onSetTimeframe={frozen||linkedFrame?undefined:value=>{onConfigurationChange?.();setFrame(value);}}
       {...(drawingBook?drawingChartProps(drawingBook,precision(symbol),Boolean(inspecting)):undefined)} drawings={drawingBook?.items}
       replayCandleTime={selectedCandle} onReplayCandleSelect={onCandleSelect} showSnapshot showDataLegend/> :
       <div className="chart-loading" role="status">{error ?? (candles ? "No completed candles at this time" : "Loading candles…")}</div>}

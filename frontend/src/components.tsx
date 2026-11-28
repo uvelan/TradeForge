@@ -7,7 +7,7 @@ import {useCandleColors} from './candleColors';
 import {chartTimeOptions,useTimezone} from './timezone';
 import {ArrowDownRight,ArrowUpRight,Camera,Check,ChevronDown,LoaderCircle,Maximize,Minimize,SkipForward,TriangleAlert} from 'lucide-react';
 import {normalizeCandles,syncCandleMap,syncCandlestickSeries} from './candleSeriesSync';
-import type {Candle} from './types';
+import type {Candle, Timeframe} from './types';
 import type {ChartLink} from './ChartLink';
 import {DrawingLayer,type Anchor,type Drawing} from './Drawings';
 import {installPlacement,type DrawPoint,type PlacementDrag} from './drawingPlacement';
@@ -26,7 +26,7 @@ export function PriceChange({value}:{value:number}){return <span className={valu
 export type ChartLevel = {id:string; price:number};
 export type ComparisonPlacement = 'Overlay' | 'New pane';
 
-export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,resolvePlacementAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,captureButtonRef,onSaveSnapshot,savingSnapshot,snapshotStatus,replayCandleTime,onReplayCandleSelect}:{
+export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLevel,showSnapshot=false,showDataLegend=false,drawingPrompt,symbol='EURUSD',precision=5,indicators,comparison,timeframe,focus,link,linkId,drawings,onAnchor,resolvePlacementAnchor,placementDraft,placementInteraction,placementDrag,requirePlacementCandle,onPlacementPreview,onDrawingSelect,directEdit,onSmtSelect,captureButtonRef,onSaveSnapshot,savingSnapshot,snapshotStatus,replayCandleTime,onReplayCandleSelect,onFocusPane,onSetTimeframe}:{
   candles:Candle[];height?:number;levels?:ChartLevel[];drawMode?:boolean;
   onAddLevel?:(price:number)=>void;showSnapshot?:boolean;showDataLegend?:boolean;symbol?:string;precision?:number;indicators?:IndicatorResult[]
   timeframe?: string;
@@ -34,6 +34,8 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   focus?: {epoch:number;sequence:number};
   replayCandleTime?:number;
   onReplayCandleSelect?:(time:number)=>void;
+  onFocusPane?:()=>void;
+  onSetTimeframe?:(timeframe:Timeframe)=>void;
   link?:ChartLink; linkId?:string;
   drawings?:Drawing[]; onAnchor?:(anchors:Anchor[])=>void;
   resolvePlacementAnchor?:(bar:Candle,price:number)=>Anchor;
@@ -55,6 +57,10 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
   replayGuideTime.current=replayCandleTime;
   const replaySelection=useRef(onReplayCandleSelect);
   replaySelection.current=onReplayCandleSelect;
+  const focusPaneRef=useRef(onFocusPane);
+  focusPaneRef.current=onFocusPane;
+  const setTimeframeRef=useRef(onSetTimeframe);
+  setTimeframeRef.current=onSetTimeframe;
   const surface=useRef<HTMLDivElement>(null);
   const [fullscreen,setFullscreen]=useState(false);
   const [localSnapshotStatus,setLocalSnapshotStatus]=useState("");
@@ -164,7 +170,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     if(drawing.current)toolLayer.showPreview(draft.current);
     else toolLayer.select(editing.current?.selected??'');
     const release=link&&linkId?link.register(linkId,{chart,series,bars:()=>linkedBars.current,missing:setMissingLinkedTime,
-      linkedTime:setCursorTime}):undefined;
+      linkedTime:setCursorTime,fit:()=>chart.timeScale().fitContent(),setTimeframe:tf=>setTimeframeRef.current?.(tf)}):undefined;
     const scale=chart.timeScale();
     const viewport=()=>{editReset.current?.();clearKeyboard();updateReplayGuide();if(linkId)link?.viewport(linkId);};
     const activate=()=>{if(linkId)link?.activate(linkId);setMissingLinkedTime(undefined);};
@@ -713,7 +719,10 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
       </span>)}</>:<span>No candle at this time</span>}
     </div>;
   }
-  return <div ref={surface} className={'chart-container chart-surface '+(drawMode?'drawing-enabled':'')} style={{height}}>
+  return <div ref={surface} className={'chart-container chart-surface '+(drawMode?'drawing-enabled':'')} style={{height}}
+    onPointerEnter={()=>{if(linkId)link?.activate(linkId);focusPaneRef.current?.();}}
+    onPointerDownCapture={()=>{if(linkId)link?.activate(linkId);focusPaneRef.current?.();}}
+    onFocusCapture={()=>{if(linkId)link?.activate(linkId);focusPaneRef.current?.();}}>
     <div ref={element} className="chart-input" style={{height:'100%',width:'100%'}} aria-label="Interactive market candlestick chart"
       role={keyboardPlacement?'group':undefined} tabIndex={keyboardPlacement?0:undefined}
       aria-describedby={keyboardPlacement?drawingPromptId:undefined}
