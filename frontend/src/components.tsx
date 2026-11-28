@@ -272,7 +272,7 @@ export function CandleChart({candles,height=340,levels=[],drawMode=false,onAddLe
     });
     placementReset.current=input.reset;
     editReset.current=input.cancelEdit;
-    const cancelOnEscape=(event:KeyboardEvent)=>{if(event.key==='Escape')input.cancelEdit();};
+    const cancelOnEscape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!(event.target as Element|null)?.closest?.('dialog:modal'))input.cancelEdit();};
     const size=()=>[container.clientWidth,container.clientHeight];
     let dimensions=size();
     const resize=new ResizeObserver(()=>{

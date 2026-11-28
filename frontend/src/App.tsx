@@ -492,6 +492,9 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
       return data?[{view,data}]:[];
     });
   },[replayArchive,replaySession,symbol,timeframe]);
+  useEffect(()=>{
+    if(replayArchive&&initialLocation?.decision&&window.matchMedia('(max-width: 800px)').matches)setSurface('inspector');
+  },[replayArchive,initialLocation?.sequence]);
   const chartViewCount=replayArchive ? Math.max(1,...archivePanes.map(({view})=>view==='primary'||view==='comparison'?1:Number(view))) : Number(viewCount);
   const inspectedPane=archivePanes.find(({view})=>view===replaySelection?.view)??archivePanes[0];
   const drawingView=inspectedPane?.view??'primary';
@@ -700,7 +703,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
         }}>Forex M5 workspace</button>}<Select label="Market data source" value={source} options={chartSources} onChange={s=>setSource(s as ChartSource)}/><Select label="Chart layout" value={String(chartViewCount)} options={['1','2','3','4']} disabled={replayArchive} onChange={value=>setViewCount(value as typeof viewCount)}/><button className="small-tool" onClick={()=>setRefreshCount(n=>n+1)} title="Refresh candles"><RefreshCw size={16}/></button></div>{brokerPicker}</div>
         {last&&<div className="session-strip" aria-label="Session hours at chart time" ref={setStrip}/>}
         <div className="terminal-action-strip">
-          <button onClick={()=>setSurface('layers')}>Indicators &amp; layers</button>
+          <button disabled={!indicator.controls} title={!indicator.controls?'Indicator evidence requires a supported chart feed with loaded candles':undefined} onClick={()=>setSurface('layers')}>Indicators &amp; layers</button>
           <button disabled={!last} onClick={()=>setSurface('sessions')}>Sessions</button>
           <button onClick={()=>inspectSection('terminal-evidence')}>Inspect evidence</button>
           <button className="decision-trigger" onClick={()=>{setPassStatus('');setSurface('decision');}}>Record decision</button>
@@ -793,7 +796,18 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
           onCandle={time=>setReplaySelection({view:inspectedPane.view,time})}/>}
           {counterpart&&openTime!==undefined&&['primary','comparison'].includes(inspectedPane?.view??'')&&<p className="peer-readout">
             {counterpart} · same UTC open <strong>{companionAtOpen?companionAtOpen.close.toFixed(precisionFor(counterpart)):comparison.error??'Missing candle at this open'}</strong></p>}
-<div className="indicator-controls comparison-controls"><label>SMT comparison
+          {openTime!==undefined&&inspectedPane?.view==='primary'&&indicator.data.length>0&&<details className="data-trust">
+            <summary>Indicator evidence at selected open</summary>
+            {indicator.data.map(result=><section key={result.id}><strong>{result.id}</strong>
+              {Object.entries(result.series).map(([name,points])=>{
+                const point=points.find(item=>item.time===openTime);
+                return <p key={name}>{name} · {point?`${point.value} · ${point.status}`:'No published point at this open'}</p>;
+              })}
+              {result.warnings.length>0&&<p>{result.warnings.join(' · ')}</p>}
+              {result.coverage&&<p>{result.coverage.confirmation_status} · {result.coverage.status}</p>}
+            </section>)}
+          </details>}
+          <div className="indicator-controls comparison-controls"><label>SMT comparison
           <Select label="SMT comparison" value={compare||'none'} options={['none',...options.filter(item=>item!==symbol)]} onChange={setComparisonSymbol}/>
           </label>{compare&&<label><input className="smt-toggle" type="checkbox" checked={showSmt==='on'}
             onChange={event=>setShowSmt(event.target.checked?'on':'off')}/> Mark SMT</label>}
@@ -842,7 +856,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
         {savedSource&&cutoff!=null&&firstFeed&&(!compare||secondFeed)&&
           <FrozenSmtReceipt cutoff={cutoff} timeframe={timeframe} primary={firstFeed} comparison={compare?secondFeed:undefined}/>}
           </section>
-          <section id="terminal-watchlist" tabIndex={-1}>      <aside className="market-watchlist"><div className="watch-head"><div><span className="eyebrow">INSTRUMENTS</span><h3>Watchlist</h3></div><ListFilter size={17}/></div><div className="watch-columns"><span>PAIR</span><span>{isBinance?'LAST':'BID'}</span></div>{isBinance&&<div className='watch-row current'><strong>BTCUSDT</strong><span>{last?.close.toFixed(2)??'—'}</span></div>}{(isBinance?[]:watchSymbols).map(w=><button key={w} className={'watch-row '+((source==='MT5'?symbol===w||symbol.toUpperCase().includes(w):symbol===w)?'current':'')} onClick={()=>source==='MT5'?setBrokerSymbol(instruments.find(item=>item.name.toUpperCase().includes(w))?.name ?? w):setSymbol(w)}><span className="watch-symbol"><strong>{w}</strong><small>{w==='XAUUSD'?'Spot gold':w.slice(0,3)+' / '+w.slice(3)}</small></span><span className="watch-price">{quotes[w]===undefined||quotes[w]===null?'—':quotes[w]?.toFixed(w==='EURUSD'||w==='GBPUSD'?5:3)}</span></button>)}
+          <section id="terminal-watchlist" tabIndex={-1}>      <aside className="market-watchlist"><div className="watch-head"><div><span className="eyebrow">INSTRUMENTS</span><h3>Watchlist</h3></div><ListFilter size={17}/></div><div className="watch-columns"><span>PAIR</span><span>{replayActive?'CLOSE':isBinance?'LAST':'BID'}</span></div>{isBinance&&<div className='watch-row current'><strong>BTCUSDT</strong><span>{last?.close.toFixed(2)??'—'}</span></div>}{(isBinance?[]:watchSymbols).map(w=><button key={w} className={'watch-row '+((source==='MT5'?symbol===w||symbol.toUpperCase().includes(w):symbol===w)?'current':'')} onClick={()=>source==='MT5'?setBrokerSymbol(instruments.find(item=>item.name.toUpperCase().includes(w))?.name ?? w):setSymbol(w)}><span className="watch-symbol"><strong>{w}</strong><small>{w==='XAUUSD'?'Spot gold':w.slice(0,3)+' / '+w.slice(3)}</small></span><span className="watch-price">{(replayActive?(w===symbol?visibleCandles.at(-1)?.close:w===compare?comparison.candles?.at(-1)?.close:undefined):quotes[w])?.toFixed(precisionFor(w))??'—'}</span></button>)}
         <div className="watch-detail"><span className="eyebrow">ACTIVE WORKSPACE</span><div><span>Feed</span><strong>{source}</strong></div><div><span>Instrument</span><strong>{symbol}</strong></div><div><span>Session clock</span><strong>{zone}</strong></div><p>{source==='DEMO'?'All displayed demo quotes are synthetic and are not suitable for market decisions.':'Broker/data availability is not guaranteed. Confirm quote freshness before use.'}</p></div>
         <div className="watch-shortcuts"><strong>Keyboard</strong><span>Alt + H <em>Horizontal level</em></span><span>Space <em>Play / pause replay</em></span><span>Shift + → <em>Next bar</em></span></div>
       </aside>
@@ -867,7 +881,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
         <p>{inspectedPane?.data.symbol??symbol} · {timeframe}{openTime!==undefined&&' · Candle '+terminalClock(openTime*1000)+' '+zone}</p>
         {cutoff!=null&&<p>Decision cutoff · {terminalClock(cutoff*1000)} {zone}</p>}
         {!chartCapture&&<button disabled={!canSaveCapture||!visibleCandles.length||currentCapture?.saving} onClick={()=>captureButton.current?.click()}>Attach chart capture</button>}
-        {currentCapture?.status&&<p role="status">{currentCapture.status}</p>}
+        {surface==='decision'&&currentCapture?.status&&<p role="status">{currentCapture.status}</p>}
         {onPlan&&watchSymbols.includes(symbol as SymbolName)&&<div className="research-controls">
           <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>{
             closeSurface();if(drawingView!=='primary')selectInspectionPane('primary');

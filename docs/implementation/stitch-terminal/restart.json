@@ -1,0 +1,63 @@
+{
+  "checks": [
+    {
+      "journal": {
+        "entry": "CHART-00001",
+        "trade": "TD-B9F3663C3CD1"
+      },
+      "id": "a67aaf4eee66f121ab3858c20ae2413b39c2729f34ad25ba8b1b51d51f7687a5",
+      "ref": {
+        "comparison_placement": "Overlay",
+        "session_id": "6f823762d2a8b1b7352f8ed482bb095be2f1a5246454fd4a35ff61559d552a57",
+        "position": 12,
+        "view": "comparison",
+        "time": 1794576000
+      },
+      "cutoff": 1794578700,
+      "pins": [
+        [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ]
+      ]
+    },
+    {
+      "journal": {
+        "entry": "CHART-00002"
+      },
+      "id": "43d9ca605505a21925f23ed2c1d7ec08157ec37b4cc71236d4815da732bd2c69",
+      "ref": {
+        "comparison_placement": "New pane",
+        "session_id": "6f823762d2a8b1b7352f8ed482bb095be2f1a5246454fd4a35ff61559d552a57",
+        "position": 13,
+        "view": "primary",
+        "time": 1794576000
+      },
+      "cutoff": 1794579000,
+      "pins": [
+        [
+          {
+            "id": "ca01e9ac45346d7c9fdfdf4263085831a07735bc16158901c9a14187f77aaf4e",
+            "sha256": "fa2af192aa86dc41bb20df51dffe95c29bc48cdf2fe38b643f699985c6b0e09d"
+          }
+        ],
+        [
+          {
+            "id": "1cc6acc1b358b3b043438badc69f72413827a8cd5dad379de8e41dd9aaaecfd0",
+            "sha256": "aed73f09d78bb3df29d3678e0ace1f00949a673a920ed22dcd6d23cb7a173d02"
+          }
+        ]
+      ]
+    }
+  ],
+  "planned": 1,
+  "paperEvents": 0
+}

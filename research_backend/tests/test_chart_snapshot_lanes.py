@@ -237,3 +237,14 @@ def test_replay_lane_reference_requires_pins_and_exclusive_input(client):
     response = client.post(URL, json=body)
     assert response.status_code == 409 and lanes[1]["partitions"][0]["id"] in response.text
     assert one("SELECT COUNT(*) AS n FROM chart_snapshots")["n"] == 0
+
+
+def test_plan_can_use_only_the_bookmarked_peer_or_original_chart(client, plan):
+    start, session, capture, _ = _decision_window(client, 2, "COVERED")
+    capture["decision_replay"]["view"] = "comparison"
+    response = client.post(URL, json={**capture, "cutoff":start+300, "replay_lanes":["primary","comparison"]})
+    assert response.status_code == 201, response.text
+    body = {**plan, "snapshot_id":response.json()["id"], "timeframe":"M5"}
+    for symbol, expected in (("EURUSD", 201), ("GBPUSD", 201), ("USDJPY", 422)):
+        saved = client.post("/api/trades", json={**body, "symbol":symbol})
+        assert saved.status_code == expected, saved.text

@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from .db import one, rows, transaction, utc_now
 from .chart_snapshot_lanes import ChartLane, FrozenChartLane, verified_lanes
 from .indicator_coverage import replay_availability
-from .domain import journal_detail, resolve_signal, resolve_snapshot
+from .domain import journal_detail, resolve_signal, resolve_snapshot, verified_decision_session
 from .market import FRAME_MIN
 from .schemas import SignalReference
 
@@ -91,10 +91,7 @@ class ChartSnapshotRequest(BaseModel):
 
 
 def validate_decision_replay(db, request, ref):
-    row = db.execute("SELECT payload FROM replay_sessions WHERE id=?", (ref.session_id,)).fetchone()
-    if row is None or sha256(row["payload"].encode()).hexdigest() != ref.session_id:
-        raise HTTPException(409, "Decision replay unavailable or changed")
-    session = json.loads(row["payload"])
+    session = verified_decision_session(db, ref.session_id)
     settings, market = session["request"], session["market"]
     cutoffs = market.get("replay_cutoffs", [])
     if (any(settings[key] != getattr(request, key) for key in ("symbol", "source", "timeframe"))

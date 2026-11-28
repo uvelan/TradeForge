@@ -307,3 +307,40 @@ test('inspects the comparison candle without targeting another pane’s drawing 
   await pane.selectOption('primary');
   await expect(page.getByText(/^Drawing toolbox/)).toBeVisible();
 });
+
+
+test('workspace surfaces preserve the cutoff and never publish a drawing or decision on inspection',async({page})=>{
+  const session=capture();
+  await page.route('**/research/api/replay/sessions',route=>route.fulfill({status:201,json:session}));
+  await openArchive(page);
+  await openRange(page);
+  await page.getByRole('button',{name:'Freeze range for replay'}).click();
+  const timeline=page.getByLabel('Replay timeline');
+  await expect(timeline).toBeVisible();
+  await timeline.fill("0");
+  const position=await timeline.inputValue();
+  const writes:string[]=[];
+  page.on('request',request=>{
+    const path=new URL(request.url()).pathname;
+    if(request.method()==='POST' && /\/(drawings|chart-snapshots|trades|journal)$/.test(path))writes.push(path);
+  });
+  for(const [button,title] of [['Indicators & layers','Indicators & layers'],['Sessions','Session settings'],['Record decision','Record decision']]){
+    const trigger=page.getByRole('button',{name:button,exact:true});
+    await trigger.press('Enter');
+    await expect(page.getByRole('dialog',{name:title,exact:true})).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(trigger).toBeFocused();
+    await expect(timeline).toHaveValue(position);
+  }
+  await page.setViewportSize({width:390,height:844});
+  const inspect=page.getByRole('button',{name:'Inspect evidence'});
+  await inspect.press('Enter');
+  const sheet=page.getByRole('dialog',{name:'Inspector',exact:true});
+  await expect(sheet).toBeVisible();
+  await sheet.getByLabel('Inspection pane').selectOption('2');
+  await expect(sheet.getByLabel('Selected candle',{exact:true})).toContainText('1.30010');
+  await page.keyboard.press('Escape');
+  await expect(inspect).toBeFocused();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(writes).toEqual([]);
+});

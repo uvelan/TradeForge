@@ -343,7 +343,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
     setSettings(items => items.map(item => item.id === id ? {...item, ...patch} : item));
   }
   const controls = enabled && <div className="indicator-controls">
-    <label>Indicator <select value={primary ? selected : "none"} onChange={event => {
+    <label>Indicator <select aria-label="Indicator" value={primary ? selected : "none"} onChange={event => {
       setSelected(event.target.value); setPeriod("");
     }}>
       <option value="none">None</option>

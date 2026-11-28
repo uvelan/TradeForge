@@ -80,3 +80,7 @@
 .terminal-surface[aria-label="Trade plan"]:has(.drawer) > :not(header,.drawer-overlay) {display:none}
 .terminal-dock {border-left:0}
 .terminal-dock nav {box-shadow:inset 0 2px #345e68}
+
+@media(max-width:800px){
+  .terminal-surface[aria-label="Inspector"][open]:not(:modal) {display:none}
+}

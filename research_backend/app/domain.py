@@ -51,10 +51,24 @@ def resolve_snapshot(db, snapshot_id:str|None):
     return json.loads(row["metadata"]),row["png"],row["created_at"]
 
 
+def verified_decision_session(db, session_id):
+    row = db.execute("SELECT payload FROM replay_sessions WHERE id=?", (session_id,)).fetchone()
+    if row is None or hashlib.sha256(row["payload"].encode()).hexdigest() != session_id:
+        raise HTTPException(409, "Decision replay unavailable or changed")
+    return json.loads(row["payload"])
+
+
 def validate_plan_snapshot(db,plan:TradePlan):
     capture=resolve_snapshot(db,plan.snapshot_id)
     if capture is not None and (capture[0]["symbol"]!=plan.symbol or capture[0]["timeframe"]!=plan.timeframe):
-        raise HTTPException(422,"Snapshot symbol or timeframe differs from plan")
+        # A captured comparison or numbered pane can be the instrument being planned.
+        bookmark = capture[0].get("decision_replay")
+        pane = {}
+        if bookmark and bookmark["view"] != "primary":
+            session = verified_decision_session(db, bookmark["session_id"])
+            pane = session["views"].get(bookmark["view"], {})
+        if (pane.get("symbol"), pane.get("timeframe")) != (plan.symbol, plan.timeframe):
+            raise HTTPException(422,"Snapshot symbol or timeframe differs from plan")
     return capture
 
 
