@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
-import { Card, Notice, SectionTitle } from './components';
+import { Badge, Card, Notice, SectionTitle, Spinner } from './components';
 
 const path = '/learning/lessons/smt-swing-timing-v1';
 type Candle = {open_utc: string; eurusd_high: string; gbpusd_high: string};
@@ -43,30 +43,30 @@ export default function LearningDrill({saved, openJournal}: {
   return <Card>
     <SectionTitle eyebrow="LEARN · SYNTHETIC ONLY" title={lesson?.title ?? 'Blind SMT drill'}/>
     {error && <Notice tone="red">{error}</Notice>}
-    {!lesson && !error && <p role="status">Loading exercise…</p>}
+    {!lesson && !error && <div className="loading-zone" role="status"><Spinner/><span>Loading exercise…</span></div>}
     {lesson && <>
-      <p>{lesson.objective}</p><p>{lesson.context}</p>
-      <table>
+      <p className="muted">{lesson.objective}</p><p>{lesson.context}</p>
+      <div className="table-scroll"><table>
         <caption>M5 candle highs (synthetic)</caption>
         <thead><tr><th scope="col">Open UTC</th><th scope="col">EURUSD</th><th scope="col">GBPUSD</th></tr></thead>
         <tbody>{[...lesson.candles, ...(attempt ? [attempt.reveal.next_candle] : [])].map(candle =>
           <tr key={candle.open_utc}><th scope="row">{candle.open_utc}</th>
-            <td>{candle.eurusd_high}</td><td>{candle.gbpusd_high}</td></tr>)}</tbody>
-      </table>
+            <td className="mono">{candle.eurusd_high}</td><td className="mono">{candle.gbpusd_high}</td></tr>)}</tbody>
+      </table></div>
       {attempt ? <>
-        <p role="status"><strong>{attempt.correct ? 'Correct' : 'Needs review'}</strong> · {attempt.reveal.explanation}</p>
-        <p>Your recorded hypothesis: {attempt.explanation}</p>
+        <p className={attempt.correct ? 'success-row' : 'notice notice-amber'} role="status"><Badge tone={attempt.correct ? 'green' : 'amber'}>{attempt.correct ? 'Correct' : 'Needs review'}</Badge> {attempt.reveal.explanation}</p>
+        <p className="muted">Your recorded hypothesis: {attempt.explanation}</p>
         <button type="button" className="btn btn-secondary" onClick={() =>
           void openJournal(attempt.journal_id).catch(e => setError(e.message))}>
           Open journal entry {attempt.journal_id}
         </button>
       </> : <form onSubmit={submit}>
-        <fieldset><legend>{lesson.prompt}</legend>{lesson.choices.map(option =>
-          <label className="field" key={option.id}><span>
+        <fieldset className="drill-choices"><legend>{lesson.prompt}</legend>{lesson.choices.map(option =>
+          <label className="field drill-choice" key={option.id}><span>
             <input type="radio" name="learning-hypothesis" value={option.id}
               checked={choice === option.id} onChange={() => setChoice(option.id)} required/> {option.label}
           </span></label>)}</fieldset>
-        <label className="field">Your reasoning (10–1,000 characters)
+        <label className="field"><span>Your reasoning (10–1,000 characters)</span>
           <textarea value={explanation} onChange={e => setExplanation(e.target.value)}
             rows={3} minLength={10} maxLength={1000} required/>
         </label>

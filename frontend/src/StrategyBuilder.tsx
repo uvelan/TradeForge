@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {api} from './api';
 import {useTimestampFormat} from './timezone';
+import {Badge, Notice, SectionTitle, Spinner} from './components';
 import {BoundFields,Choice,GroupFields,Producers,fieldName,groupFor,rulesIn} from './StrategyRules';
 import {AttemptFields,Policies,ScopeFields,upgradeDraft} from './StrategyPolicies';
 import type {Catalog,Definition,Diff,Link,Listed,Phase,RecordVersion,Template,Validation} from './strategyTypes';
@@ -86,6 +87,7 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
   const [catalog,setCatalog]=useState<Catalog>();
   const [templates,setTemplates]=useState<Template[]>([]);
   const [library,setLibrary]=useState<Listed[]>([]);
+  const [libraryLoading,setLibraryLoading]=useState(true);
   const [libraryLoadFailed,setLibraryLoadFailed]=useState(false);
   const [offset,setOffset]=useState(0);
   const [record,setRecord]=useState<RecordVersion>();
@@ -113,6 +115,7 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
         }
         if(items.status==='fulfilled')setLibrary(items.value);
         else setLibraryLoadFailed(true);
+        setLibraryLoading(false);
       });
     return()=>{active=false;};
   },[]);
@@ -178,21 +181,21 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
   }
 
   return <div className="strategy-builder">
-    <div className="page-heading"><div><h1>Strategy Builder</h1><p>Define reusable rules and compare immutable versions.</p></div></div>
+    <div className="page-heading"><div><span className="eyebrow">LIBRARY / RULES ENGINE</span><h1>Strategy Builder</h1><p>Define reusable rules and compare immutable versions.</p></div></div>
     <section className="card strategy-block" aria-label="Strategy library">
-      <h2>Strategy library</h2>
+      <SectionTitle eyebrow="ARCHETYPES & VERSIONS" title="Strategy library" action={library.length>0&&<Badge tone="neutral">{library.length} strategies</Badge>}/>
       <div className="strategy-actions">
         {templates.map(template=><button className="small-tool" key={template.id} type="button" disabled={busy}
           onClick={()=>begin(template)}>Use {template.definition.name} template</button>)}
-        {templates[0]&&<button className="small-tool" type="button" disabled={busy} onClick={()=>begin(templates[0],true)}>New strategy</button>}
+        {templates[0]&&<button className="btn btn-primary" type="button" disabled={busy} onClick={()=>begin(templates[0],true)}>New strategy</button>}
       </div>
-      {library.length?<ul className="strategy-library">{library.map(item=><li key={item.strategy_id}>
+      {libraryLoading?<div className="loading-zone" role="status"><Spinner/><span>Loading strategy library…</span></div>:library.length?<ul className="strategy-library">{library.map(item=><li key={item.strategy_id}>
         <button className="small-tool" disabled={busy} type="button" onClick={()=>void run(async()=>{
           await adopt(await api.get<RecordVersion>(endpoint+'/'+item.strategy_id));
         })}>{item.name}</button>
-        <span>v{item.version} · {item.status} · {purposeLabel(item.purpose)} · {format(item.created_at)}</span>
+        <span>v{item.version} · <Badge tone={item.status==='READY_FOR_EVALUATION'?'green':item.status==='ARCHIVED'?'neutral':'amber'}>{item.status}</Badge> · {purposeLabel(item.purpose)} · {format(item.created_at)}</span>
       </li>)}</ul>:libraryLoadFailed?<div>
-        <p role="status">Could not load the strategy library.</p>
+        <Notice tone="red">Could not load the strategy library.</Notice>
         <button className="small-tool" type="button" disabled={busy}
           onClick={()=>void run(()=>page(0))}>Retry strategy library</button>
       </div>:<p className="muted">No saved strategies on this page.</p>}
@@ -201,8 +204,8 @@ export function StrategyBuilder({openChart}:{openChart?:(location:EvidenceChartL
         {library.length===40&&<button className="small-tool" type="button" disabled={busy} onClick={()=>void run(()=>page(offset+40))}>More strategies</button>}
       </div>
     </section>
-    {error&&<p className="error-banner" role="alert">{error}</p>}
-    {message&&<p role="status">{message}</p>}
+    {error&&<Notice tone="red">{error}</Notice>}
+    {message&&<p className="success-row" role="status">{message}</p>}
     {refreshWarning&&record&&<div><p role="status">{refreshWarning}</p>
       <button type="button" className="small-tool" disabled={busy}
         onClick={()=>void run(()=>refresh(record,true))}>Refresh saved views</button></div>}

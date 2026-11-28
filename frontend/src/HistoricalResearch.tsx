@@ -142,7 +142,7 @@ export function HistoricalResearch({openChart}:{openChart:(location:EvidenceChar
   }
 
   return <section className="card strategy-block" aria-label="Historical strategy evaluation">
-    <div className="strategy-heading"><h2>Historical strategy evaluation</h2></div>
+    <div className="strategy-heading"><div><span className="eyebrow">FORWARD ENGINE</span><h2>Historical strategy evaluation</h2></div></div>
     <p className="muted">Frozen market data · Mechanical opportunities and qualified entry intents</p>
     {!available.length&&<p>Save a ready historical strategy in Strategy Builder to begin.</p>}
     <fieldset className="strategy-edit-fields" disabled={busy||!available.length}>

@@ -1,24 +1,220 @@
- .strategy-builder { display: grid; gap: 1rem; max-width: 1180px; margin-inline: auto; }
-.strategy-block { display: grid; gap: .8rem; padding: 1rem; }
-.strategy-block h2, .strategy-block h3, .strategy-block p { margin-block: 0; }
-.strategy-heading, .strategy-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-.strategy-heading { justify-content: space-between; }
-.strategy-fields { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,12rem),1fr)); gap: .75rem; align-items: end; }
-.strategy-builder label { display: grid; gap: .3rem; min-width: 0; }
-.strategy-builder input:not([type=checkbox]), .strategy-builder textarea, .strategy-builder select { width: 100%; min-width: 0; }
-.strategy-builder label:has(input[type=checkbox]) { grid-template-columns: 1fr auto; align-items: center; }
-.strategy-edit-fields, .strategy-group, .strategy-subgroup { min-width: 0; display: grid; gap: .75rem; }
-.strategy-edit-fields { border: 0; padding: 0; }
-.strategy-group, .strategy-subgroup { border: 1px solid var(--line, #34465b); border-radius: .5rem; padding: .8rem; }
-.strategy-subgroup[open] > :not(summary) { margin-top: .65rem; }
-.strategy-node { display: grid; gap: .6rem; padding: .65rem; border-inline-start: 2px solid #418c89; }
-.strategy-library, .strategy-history { margin: 0; padding-inline-start: 1.4rem; }
-.strategy-library li + li, .strategy-history li + li { margin-block-start: .5rem; }
-.strategy-library span { display: inline-block; margin-inline-start: .7rem; }
-.strategy-builder code, .strategy-builder td { overflow-wrap: anywhere; }
-.strategy-policies { display: grid; gap: .75rem; }
-@media (max-width: 600px) {
-  .strategy-block { padding: .7rem; }
-  .strategy-group, .strategy-node { padding-inline: .45rem; }
+/* Strategy Builder & Causal Rules Engine aligned with TradeForge tokens */
+.strategy-builder {
+  display: grid;
+  gap: 18px;
+  max-width: 1280px;
+  margin-inline: auto;
 }
-.strategy-trace { max-height: 28rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.strategy-block {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.strategy-block h2,
+.strategy-block h3,
+.strategy-block p {
+  margin-block: 0;
+}
+
+.strategy-heading,
+.strategy-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.strategy-heading {
+  justify-content: space-between;
+}
+
+.strategy-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.strategy-builder label,
+.strategy-block > label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--tf-text-xs);
+  font-weight: 600;
+  color: var(--tf-text-secondary);
+}
+
+.strategy-builder input:not([type='checkbox']),
+.strategy-builder textarea,
+.strategy-builder select {
+  width: 100%;
+  min-width: 0;
+}
+
+.strategy-builder label:has(input[type='checkbox']) {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  min-height: var(--tf-touch-min);
+}
+
+.strategy-edit-fields,
+.strategy-group,
+.strategy-subgroup {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.strategy-edit-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.strategy-group,
+.strategy-subgroup {
+  border: 1px solid var(--tf-border-default);
+  border-radius: var(--tf-radius-md);
+  background: rgba(10, 18, 29, 0.55);
+  padding: 14px;
+}
+
+.strategy-group legend,
+.strategy-subgroup legend {
+  padding: 0 8px;
+  font-family: var(--tf-font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tf-accent);
+  font-weight: 700;
+}
+
+.strategy-subgroup[open] > :not(summary) {
+  margin-top: 10px;
+}
+
+.strategy-node {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border-inline-start: 3px solid var(--tf-accent);
+  background: var(--tf-bg-surface);
+  border-radius: 0 var(--tf-radius-md) var(--tf-radius-md) 0;
+}
+
+.strategy-library,
+.strategy-history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.strategy-library li,
+.strategy-history li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: var(--tf-radius-md);
+  background: var(--tf-bg-input);
+}
+
+.strategy-library span {
+  font-family: var(--tf-font-mono);
+  font-size: 12px;
+  color: var(--tf-text-secondary);
+}
+
+.strategy-builder code,
+.strategy-builder td {
+  overflow-wrap: anywhere;
+}
+
+.strategy-policies {
+  display: grid;
+  gap: 14px;
+}
+
+.strategy-trace {
+  max-height: 28rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--tf-bg-canvas);
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: var(--tf-radius-md);
+  padding: 14px;
+  font-family: var(--tf-font-mono);
+  font-size: 12px;
+}
+
+.drill-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 10px;
+  border: 1px solid var(--tf-border-subtle);
+  border-radius: var(--tf-radius-md);
+  padding: 14px;
+  margin: 14px 0;
+  background: var(--tf-bg-input);
+}
+
+.drill-choices legend {
+  padding: 0 8px;
+  font-weight: 700;
+  color: var(--tf-text-primary);
+}
+
+.drill-choice {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  min-height: var(--tf-touch-min);
+  border: 1px solid var(--tf-border-default);
+  border-radius: var(--tf-radius-md);
+  background: var(--tf-bg-surface);
+  cursor: pointer;
+  margin-bottom: 0 !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.drill-choice:has(input:checked) {
+  border-color: var(--tf-accent);
+  background: var(--tf-accent-soft);
+}
+
+.drill-choice span {
+  font-family: var(--tf-font-sans) !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  font-size: var(--tf-text-sm) !important;
+  font-weight: 500 !important;
+  color: var(--tf-text-primary) !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .strategy-block {
+    padding: 14px;
+  }
+  .strategy-group,
+  .strategy-subgroup {
+    padding: 10px;
+  }
+  .strategy-node {
+    padding: 10px;
+  }
+}

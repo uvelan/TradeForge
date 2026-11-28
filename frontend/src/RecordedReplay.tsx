@@ -51,9 +51,10 @@ export function RecordedReplay({runId,start,end}:{runId:string;start:number;end:
       }
     }catch(e){setError(String(e));}finally{setBusy(false);}
   }
-  return <section aria-label="Recorded quote replay">
+  return <section className="card strategy-block" aria-label="Recorded quote replay">
     <h3>Recorded quote replay</h3>
-    <p>Local Dukascopy bid/ask · zero modeled delivery delay · normalized position quantities</p>
+    <p className="muted">Local Dukascopy bid/ask · zero modeled delivery delay · normalized position quantities</p>
+    <div className="research-controls">
     {options.length>0&&receipt&&<>
       <label>Recorded session and layout<select value={receipt.session_id} disabled={busy} onChange={e=>{
         localStorage.setItem(preference,e.target.value);setSelection({session:e.target.value,time:''});
@@ -68,6 +69,7 @@ export function RecordedReplay({runId,start,end}:{runId:string;start:number;end:
     <button className="small-tool" disabled={busy||!Number.isFinite(cutoff)||cutoff<(receipt?.cutoff_ms??start*1000)
       ||cutoff>(receipt?.binding.end??end)*1000} onClick={()=>void advance()}>
       {receipt?'Resume recorded replay':'Save replay checkpoint'}</button>
+    </div>
     {error&&<p role="alert">{error}</p>}
     {receipt&&<><p>Saved through {new Date(receipt.cutoff_ms).toISOString()} · {receipt.observed_quotes} quotes · {receipt.positions.length} qualified intents through cutoff</p>
       {receipt.positions.map(p=><p key={p.intent_id}>{p.status} · Closed {quantity(p.closed)} · Remaining {quantity(p.remaining)}
