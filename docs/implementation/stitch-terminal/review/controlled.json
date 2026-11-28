@@ -1,0 +1,44 @@
+{
+  "fixture": "controlled numbered H1 pane",
+  "session": "43da7ac27ba5045a0d60c2e3f6fba895b8038e246966533c03014c67ab4a2856",
+  "pins": {
+    "EURUSD": {
+      "id": "197552d04c9ae5b18356ad56dad2de2013025d0ad5f15dee75046de17ebf3225",
+      "sha256": "afda33911fe5895da361941364952f6939b70101c8219e5b4fde8d51b5476f2b"
+    },
+    "GBPUSD": {
+      "id": "7b2fff525de5c9016ce98069fbb874315cbe5b6e620ecfc0958e39da3f269f63",
+      "sha256": "06bff5b5a63efa6a11bf4c6d2a03051f974c72cd0802b9439c795123f87fa59c"
+    }
+  },
+  "reopened": [
+    {
+      "id": "066bfe8b42a5a37e3375870a74e9a949bd0ba70587e4218df247d65fc97c977f",
+      "bookmark": {
+        "position": 23,
+        "session_id": "43da7ac27ba5045a0d60c2e3f6fba895b8038e246966533c03014c67ab4a2856",
+        "time": 1583236800,
+        "view": "2"
+      },
+      "cutoff": 1583244000
+    },
+    {
+      "id": "50692fb583cf202a883a928764a5b6d53e7c35a1275408e08c064428dbae9c83",
+      "bookmark": {
+        "position": 23,
+        "session_id": "43da7ac27ba5045a0d60c2e3f6fba895b8038e246966533c03014c67ab4a2856",
+        "time": 1583240400,
+        "view": "2"
+      },
+      "cutoff": 1583244000
+    }
+  ],
+  "trade": "TD-3F9CC323BCD2",
+  "context": "DUKASCOPY_SAVED · controlled-peer-h1 · BID",
+  "count": {
+    "journal_entries": 2,
+    "chart_snapshots": 2,
+    "trades": 1,
+    "plan_paper_events": 0
+  }
+}

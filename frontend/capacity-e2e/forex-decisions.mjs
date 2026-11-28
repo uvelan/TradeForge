@@ -9,6 +9,7 @@ export async function verifyDecisions(origin,restart){
   const browserErrors=[];
   async function createPage(){
     const page=await browser.newPage({viewport:{width:1536,height:960}});
+    page.setDefaultTimeout(90000);
     page.on('pageerror',error=>browserErrors.push(error.stack??error.message));
     return page;
   }
@@ -18,6 +19,36 @@ export async function verifyDecisions(origin,restart){
   const captured=[];
   const journal=[];
   const checks=[];
+  const plots=[];
+  async function measurePlot(target,kind){
+    const chart=target.locator('.primary-chart .chart-input');
+    const measure=()=>chart.evaluate(host=>{
+      const row=host.querySelector('table').rows[0],plot=row.cells[1],axis=row.cells[2];
+      const bounds=el=>{const rect=el.getBoundingClientRect();return [rect.left,rect.right];};
+      // The last-price badge paints a saturated band across the right scale. Gridlines and
+      // scale tick text alone must not satisfy this check.
+      const label=Array.from(axis.querySelectorAll('canvas')).some(canvas=>{
+        if(!canvas.width||!canvas.height)return false;
+        const {width:w,height:h}=canvas;
+        const data=canvas.getContext('2d').getImageData(0,0,w,h).data;
+        for(let y=0;y<h;y++){
+          let colored=0;
+          for(let x=0;x<w;x++){
+            const i=(y*w+x)*4;
+            if(data[i+3]>180&&Math.max(data[i],data[i+1],data[i+2])-Math.min(data[i],data[i+1],data[i+2])>55)colored++;
+          }
+          if(colored>w*.65)return true;
+        }
+        return false;
+      });
+      return {viewport:innerWidth,host:bounds(host),plot:bounds(plot),axis:bounds(axis),lastPriceLabel:label};
+    });
+    await expect.poll(async()=>{
+      const m=await measure();return Math.abs(m.host[1]-m.axis[1])<3&&m.axis[1]<=m.viewport&&m.plot[1]<=m.axis[0]+1&&m.axis[1]-m.axis[0]>0&&m.lastPriceLabel;
+    }).toBe(true);
+    await expect(target.locator('.terminal-head-price strong')).toHaveText('1.10527');
+    plots.push({kind,...await measure(),lastClose:'1.10527'});
+  }
   async function posted(path,action){
     const [response]=await Promise.all([page.waitForResponse(r=>r.url().endsWith(path)&&r.request().method()==='POST'),action()]);
     assert(response.ok(),await response.text());
@@ -32,6 +63,7 @@ export async function verifyDecisions(origin,restart){
     return posted('/api/replay/sessions',()=>click('Freeze range for replay'));
   }
   try{
+    await page.addInitScript(()=>localStorage.setItem('tradeforge.workspace.source','DUKASCOPY_SAVED'));
     await page.goto(origin);
     await click('Market Terminal');
     await click('Forex M5 workspace');
@@ -50,9 +82,33 @@ export async function verifyDecisions(origin,restart){
           await page.setViewportSize({width,height});
           await page.locator('.terminal-suite-header').scrollIntoViewIfNeeded();
           await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+          await measurePlot(page,'desktop-resized');
           await page.screenshot({animations:'disabled',path:join(dir,`terminal-${width}.png`)});
 
         }
+        const phone=await browser.newPage({viewport:{width:390,height:844}});
+        await phone.addInitScript(()=>localStorage.setItem('tradeforge.workspace.source','DUKASCOPY_SAVED'));
+        await phone.goto(origin);
+        await phone.getByRole('button',{name:'Open navigation'}).click();
+        await phone.getByRole('button',{name:'Market Terminal',exact:true}).click();
+        await phone.getByRole('button',{name:/Chart settings/}).click();
+        await phone.getByRole('button',{name:'Forex M5 workspace'}).click();
+        for(const [label,value] of [['From UTC','2026-11-13'],['Until UTC (exclusive)','2026-11-13'],['From time (UTC)','13:00'],['Until time (UTC)','15:00']])
+          await phone.getByLabel(label,{exact:true}).fill(value);
+        await phone.getByRole('button',{name:'Load saved range'}).click();
+        await phone.getByRole('button',{name:'Freeze range for replay'}).click();
+        await phone.getByLabel('Replay timeline').fill('12');
+        await phone.getByRole('button',{name:/Chart settings/}).click();
+        const inspect=phone.getByRole('button',{name:'Inspect evidence'});
+        await inspect.press('Enter');await phone.getByLabel('Inspection pane').selectOption('comparison');
+        await phone.getByLabel('Inspect candle',{exact:true}).fill('4');
+        await expect(phone.getByLabel('Selected candle OHLC')).toContainText('1.32289');
+        await phone.keyboard.press('Escape');await expect(inspect).toBeFocused();
+        await expect(phone.getByLabel('Replay timeline')).toHaveValue('12');
+        await measurePlot(phone,'fresh-phone');
+        await phone.locator('.terminal-suite-header').scrollIntoViewIfNeeded();
+        await phone.screenshot({animations:'disabled',path:join(dir,'fresh-phone.png')});
+        await phone.close();
         await page.setViewportSize({width:1536,height:960});
       }
       const modern=await button('Record decision').count()>0;
@@ -151,7 +207,8 @@ export async function verifyDecisions(origin,restart){
       const saved=await (await page.request.get(origin+'/research/api/chart-snapshots/'+id)).json();
       assert.deepEqual(saved.decision_replay,ref);assert.equal(saved.cutoff,cutoff);
       assert.deepEqual(saved.lanes.map(l=>l.partitions),pins);
-      checks.push({journal:item,...captured[index]});
+      checks.push({journal:item,...captured[index],reopenedId:saved.id});
+      assert.equal(saved.id,id);
     }
     const trades=await (await page.request.get(origin+'/research/api/trades')).json();
     assert.equal(trades.length,1);
@@ -159,7 +216,7 @@ export async function verifyDecisions(origin,restart){
     const paper=await (await page.request.get(origin+'/research/api/paper/plans/'+trades[0].id)).json();
     assert.deepEqual(paper.events,[]);
     assert.deepEqual(browserErrors,[]);
-    return {checks,planned:trades.length,paperEvents:paper.events.length};
+    return {checks,plots,journalWrites:journal.length,planned:trades.length,paperEvents:paper.events.length};
   }catch(error){
     console.error(browserErrors,await page.locator('body').innerText().catch(()=>'Page closed'));
     throw error;

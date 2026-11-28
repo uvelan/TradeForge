@@ -1,3 +1,4 @@
+import {installProbe} from './workspace-probe';
 import {expect, test, type Page} from '@playwright/test';
 import type {Candle, ReplaySelection, ReplaySession, Timeframe} from '../src/types';
 
@@ -45,6 +46,8 @@ async function openArchive(page: Page, preferences: Record<string,string> = {}) 
     status:404,json:{detail:'Archive preview unavailable'},
   }));
   await page.goto('/');
+  const menu=page.getByRole('button',{name:'Open navigation'});
+  if(await menu.isVisible())await menu.click();
   await page.getByRole('button',{name:'Market Terminal',exact:true}).press('Enter');
 }
 
@@ -344,3 +347,142 @@ test('workspace surfaces preserve the cutoff and never publish a drawing or deci
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   expect(writes).toEqual([]);
 });
+
+
+async function reviewReplay(page:Page,session=capture()){
+  await page.route('**/research/api/replay/sessions',route=>route.fulfill({status:201,json:session}));
+  await openArchive(page);
+  await openRange(page);
+  await page.getByRole('button',{name:'Freeze range for replay'}).click();
+  await expect(page.getByLabel('Replay timeline')).toBeVisible();
+  await page.route('**/research/api/chart-snapshots',route=>{
+    const ref=route.request().postDataJSON().decision_replay;
+    return route.fulfill({status:201,json:{id:'capture-'+ref.time}});
+  });
+}
+
+async function attachDecision(page:Page){
+  await page.getByRole('button',{name:'Record decision',exact:true}).click();
+  const drawer=page.getByRole('dialog',{name:'Record decision'});
+  await drawer.getByRole('button',{name:'Attach chart capture'}).click();
+  await expect(drawer.getByLabel('Reason to pass')).toBeVisible();
+  return drawer;
+}
+
+for(const scenario of ['other decision','late rejection','same draft edit']){
+  test('decision response belongs to its submitted draft: '+scenario,async({page})=>{
+    await reviewReplay(page);
+    const received=Promise.withResolvers<void>(),release=Promise.withResolvers<void>();
+    const writes:{snapshot_id:string;content:string}[]=[];
+    let requests=0,reads=0,paper=0;
+    page.on('request',r=>{if(r.method()==='POST'&&r.url().includes('/paper/'))paper++;});
+    await page.route('**/research/api/journal',async route=>{
+      if(route.request().method()==='GET'){reads++;return route.fulfill({json:[]});}
+      const body=route.request().postDataJSON();
+      if(++requests===1){received.resolve();await release.promise;
+        if(scenario==='late rejection')return route.fulfill({status:503,json:{detail:'A unavailable'}});
+      }
+      writes.push(body);return route.fulfill({status:201,json:{id:'entry-'+requests}});
+    });
+    await page.getByRole('navigation',{name:'Inspector views'}).getByRole('button',{name:'Journal'}).click();
+    await expect(page.locator("#terminal-journal")).toContainText("No journal entries");
+    const initialReads=reads;
+    const slider=page.getByLabel('Inspect candle',{exact:true});
+    await slider.fill('0');const timeA=await slider.getAttribute('aria-valuetext');
+    let drawer=await attachDecision(page);
+    await drawer.getByLabel('Reason to pass').fill('Original reason A');
+    await drawer.getByText('Save pass to journal',{exact:true}).click();await received.promise;
+    let timeB=timeA;
+    if(scenario!=='same draft edit'){
+      await page.keyboard.press('Escape');await slider.fill('1');timeB=await slider.getAttribute('aria-valuetext');
+      expect(timeB).not.toBe(timeA);drawer=await attachDecision(page);
+    }
+    await drawer.getByLabel('Reason to pass').fill('New observation B');
+    const done=page.waitForResponse(r=>r.url().endsWith('/journal')&&r.request().method()==='POST');
+    release.resolve();await done;
+    if(scenario!=='late rejection')await expect.poll(()=>reads).toBeGreaterThan(initialReads);
+    await expect(drawer.getByLabel('Reason to pass')).toHaveValue('New observation B');
+    if(scenario==='same draft edit')await expect(drawer.getByRole('status').filter({hasText:'earlier text'})).toBeVisible();
+    else await expect(drawer).not.toContainText(/Pass saved|A unavailable/);
+    expect(writes.map(x=>x.snapshot_id)).toEqual(scenario==='late rejection'?[]:['capture-'+Date.parse(timeA!)/1000]);
+    await drawer.getByText('Save pass to journal',{exact:true}).click();await expect(drawer).toContainText('Pass saved');
+    expect(writes.at(-1)).toMatchObject({snapshot_id:'capture-'+Date.parse(timeB!)/1000,content:'New observation B'});
+    expect(writes).toHaveLength(scenario==='late rejection'?1:2);expect(paper).toBe(0);
+  });
+}
+
+test('numbered H1 decision keeps its own feed and basis',async({page})=>{
+  const session=capture(),h1=session.views['2']!;
+  if(!('candles' in h1))throw Error('Missing test lane');
+  Object.assign(h1,{timeframe:'H1',feed_id:'peer-hour-export',price_basis:'ASK',
+    candles:[{...h1.candles[0],time:start-3600,available_at:start}]});
+  await reviewReplay(page,session);await page.getByLabel('Inspection pane').selectOption('2');
+  const snapshot=page.waitForRequest(r=>r.url().endsWith('/chart-snapshots')&&r.method()==='POST');
+  const drawer=await attachDecision(page);
+  expect((await snapshot).postDataJSON()).toMatchObject({symbol:'EURUSD',timeframe:'M5',decision_replay:{view:'2',time:start-3600}});
+  await expect.soft(drawer).toContainText('GBPUSD · H1');
+  await drawer.getByText('Create trade plan',{exact:true}).click();
+  await expect(page.getByLabel(/01 · Context/)).toHaveValue(/peer-hour-export · ASK/);
+});
+
+for(const populated of [true,false]){
+  test('journal read recovers in place '+(populated?'with entries':'empty'),async({page})=>{
+    await reviewReplay(page);
+    let gets=0,writes=0,recover=false;
+    const hold=Promise.withResolvers<void>(),started=Promise.withResolvers<void>();
+    await page.route('**/research/api/journal',async route=>{
+      if(route.request().method()!=='GET')writes++;
+      if(!recover)return route.fulfill({status:503,json:{detail:'Journal storage unavailable'}});
+      if(++gets===1){started.resolve();await hold.promise;return route.fulfill({json:[{id:'old',snapshot_id:'old',title:'Obsolete entry'}]});}
+      return route.fulfill({json:populated?[{id:'J1',snapshot_id:'current',title:'Pinned decision'}]:[]});
+    });
+    const journal=page.locator('#terminal-journal');
+    const open=page.getByRole('navigation',{name:'Inspector views'}).getByRole('button',{name:'Journal'});
+    await open.click();await expect(journal.getByRole('alert')).toBeVisible();
+    recover=true;await journal.getByRole('button',{name:'Retry journal'}).click({timeout:3000});await started.promise;
+    await open.click();await expect(journal).toContainText(populated?'Pinned decision':'No journal entries');
+    hold.resolve();await expect(journal.getByRole('alert')).toHaveCount(0);await expect(journal).not.toContainText('Obsolete');
+    if(populated){
+      await page.route('**/chart-snapshots/current',r=>r.fulfill({json:{symbol:'EURUSD',source:'DUKASCOPY_SAVED',timeframe:'M5',cutoff:start}}));
+      await journal.locator('summary').click();
+      await expect(journal).toContainText('Frozen chart cutoff: '+new Date(start*1000).toISOString());
+    }
+    expect(writes).toBe(0);
+  });
+}
+
+for(const width of [390,1280]){
+  test('phone chart bounds from '+width,async({page},info)=>{
+    await page.setViewportSize({width,height:width===390?844:800});
+    await installProbe(page);
+    const drawing={id:'00000000-0000-4000-8000-000000000046',kind:'horizontal',label:'Saved level',
+      anchors:[{time:start,price:'1.14010'}],color:'#ab639e',visible:true,locked:false,created_at:start,updated_at:start};
+    const writes:string[]=[];
+    await page.route('**/research/api/drawings?**',route=>{
+      if(route.request().method()==='POST')writes.push(route.request().url());
+      return route.fulfill({json:{schema_version:1,revision:3,items:[drawing]}});
+    });
+    await reviewReplay(page);
+    await page.getByText(/^Drawing toolbox/).click();
+    const picker=page.getByLabel('Select drawing');await picker.selectOption(drawing.id);
+
+    const plot=page.locator('.primary-chart .chart-input');
+    const size=()=>plot.evaluate(host=>{
+      const table=host.querySelector('table')!,scale=table.rows[0].cells[2];
+      return {host:host.getBoundingClientRect().right,axis:scale.getBoundingClientRect().right,
+        scale:scale.clientWidth,viewport:innerWidth};
+    });
+    const cutoff=await page.getByLabel('Replay timeline').inputValue();
+    if(width!==390)await page.setViewportSize({width:390,height:844});
+    await expect.poll(async()=>{const r=await size();return r.scale>0&&r.axis<=391&&Math.abs(r.host-r.axis)<3;}).toBe(true);
+    const point=await page.evaluate(({selector,time,price})=>window.workspaceProbe.candlePoint(selector,time,price),
+      {selector:'.primary-chart .chart-input',time:start+600,price:1.1501});
+    expect(point.x).toBeGreaterThan(0);expect(point.x).toBeLessThan((await size()).axis-(await size()).scale);
+    await expect(picker).toHaveValue(drawing.id);
+    console.log('Phone plot settled',width,await size(),point);
+    await page.getByRole('button',{name:'Inspect evidence'}).press('Enter');await page.keyboard.press('Escape');
+    await expect(page.getByRole('button',{name:'Inspect evidence'})).toBeFocused();await expect(page.getByLabel('Replay timeline')).toHaveValue(cutoff!);
+    expect(writes).toEqual([]);
+    await page.screenshot({path:info.outputPath('phone.png')});
+  });
+}

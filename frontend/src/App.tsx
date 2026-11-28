@@ -13,7 +13,7 @@ import {useBinanceCandles} from './useBinanceCandles';
 import './style.css';
 import './workspace.css';
 import './terminalWorkspace.css';
-import {TerminalSurface, ChartJournal} from './TerminalSurface';
+import {TerminalSurface, ChartJournal, ChartPassEditor} from './TerminalSurface';
 import {TimezonePicker,useTimestampFormat,useTimezone} from './timezone';
 import {CandleColorSettings} from './candleColors';
 import {useWorkspacePreference} from './useWorkspacePreference';
@@ -191,9 +191,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   const [surface,setSurface]=useState<'layers'|'sessions'|'decision'|'inspector'>();
   const [journalVisible,setJournalVisible]=useState(false);
   const [journalRevision,setJournalRevision]=useState(0);
-  const [passReason,setPassReason]=useState('');
-  const [passStatus,setPassStatus]=useState('');
-  const [postingPass,setPostingPass]=useState(false);
   const captureButton=useRef<HTMLButtonElement>(null);
   const terminalClock=useTimestampFormat();
   const [planPrices,setPlanPrices]=useState<string[]>([]);
@@ -572,7 +569,6 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
   },[canSaveCapture,captureGeneration]);
   const currentCapture=canSaveCapture&&captureState?.generation===captureGeneration?captureState:undefined;
   const chartCapture=currentCapture?.id;
-  useEffect(()=>{setPassReason('');setPassStatus('');},[captureKey]);
   async function saveChartEvidence(png:string) {
     if(liveCaptureGeneration.current!==captureGeneration)return;
     const sequence=++captureSequence.current;
@@ -682,13 +678,16 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
     <div className="chart-frame">{busy?<div className="chart-loading"><Spinner/> Loading candles</div>:error?<div className="chart-loading error-text"><CloudOff/> {error}</div>:candles.length?<CandleChart candles={candles} height={300} symbol={symbol} precision={digits}/>:<Empty title="No candles" body="Connect MT5 or import a validated dataset."/>}</div>
     <div className="chart-footer"><span>{label} {latestNotice} {pollError}</span><span>{candles.length} candles · {zone}</span></div>
   </Card>;
+  const decisionSymbol=inspectedPane?.data.symbol??symbol;
+  const decisionFrame=inspectedPane?.data.timeframe??timeframe;
+  const decisionFeed=inspectedPane?inspectionFeed:indicatorFeed;
   const openTime=decisionTime;
   const companionAtOpen=compare && openTime!==undefined && ['primary','comparison'].includes(inspectedPane?.view??'')
     ? (inspectedPane?.view==='comparison'?visibleCandles:comparison.candles)?.find(bar=>bar.time===openTime) : undefined;
   const counterpart=inspectedPane?.view==='comparison'?symbol:compare;
   const closeSurface=()=>setSurface(undefined);
   function inspectSection(id:string){
-    if(id==='terminal-journal')setJournalVisible(true);
+    if(id==='terminal-journal'){setJournalVisible(true);setJournalRevision(value=>value+1);}
     if(window.matchMedia('(max-width: 800px)').matches)setSurface('inspector');
     requestAnimationFrame(()=>document.getElementById(id)?.focus({preventScroll:false}));
   }
@@ -706,7 +705,7 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
           <button disabled={!indicator.controls} title={!indicator.controls?'Indicator evidence requires a supported chart feed with loaded candles':undefined} onClick={()=>setSurface('layers')}>Indicators &amp; layers</button>
           <button disabled={!last} onClick={()=>setSurface('sessions')}>Sessions</button>
           <button onClick={()=>inspectSection('terminal-evidence')}>Inspect evidence</button>
-          <button className="decision-trigger" onClick={()=>{setPassStatus('');setSurface('decision');}}>Record decision</button>
+          <button className="decision-trigger" onClick={()=>setSurface('decision')}>Record decision</button>
         </div>
         {activeBook&&<div className="terminal-drawing-tools"><DrawingToolbox key={drawingView} book={activeBook} destination={drawingDestination}/></div>}
         <div className="terminal-chart-zone"><div className="chart-tool-rail"><button className={'rail-tool '+((!activeBook||activeBook.interaction.mode==='navigate')?'active':'')} title="Crosshair (Esc)" onClick={()=>activeBook?.setEdit(undefined)}><Crosshair size={18}/></button><button className={'rail-tool '+(interaction.mode==='level'?'active':'')} title="Place horizontal level (Alt+H)" disabled={levels.length>=50} onClick={toggleLevel}><Minus size={19}/></button><div className="rail-separator"/><button className="rail-tool" title="Remove all saved levels" disabled={levels.length===0} onClick={clearLevels}><Eraser size={18}/></button><span className="rail-count">{levels.length}</span></div>
@@ -878,18 +877,18 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
         </aside>
       </TerminalSurface>
       <TerminalSurface title="Record decision" active={surface==='decision'} close={closeSurface} inline>
-        <p>{inspectedPane?.data.symbol??symbol} · {timeframe}{openTime!==undefined&&' · Candle '+terminalClock(openTime*1000)+' '+zone}</p>
+        <p>{decisionSymbol} · {decisionFrame}{openTime!==undefined&&' · Candle '+terminalClock(openTime*1000)+' '+zone}</p>
         {cutoff!=null&&<p>Decision cutoff · {terminalClock(cutoff*1000)} {zone}</p>}
         {!chartCapture&&<button disabled={!canSaveCapture||!visibleCandles.length||currentCapture?.saving} onClick={()=>captureButton.current?.click()}>Attach chart capture</button>}
         {surface==='decision'&&currentCapture?.status&&<p role="status">{currentCapture.status}</p>}
-        {onPlan&&watchSymbols.includes(symbol as SymbolName)&&<div className="research-controls">
+        {onPlan&&watchSymbols.includes(decisionSymbol as SymbolName)&&<div className="research-controls">
           <button className="small-tool" disabled={busy||Boolean(error)} onClick={()=>{
             closeSurface();if(drawingView!=='primary')selectInspectionPane('primary');
             setPlanPrices([]);setInteraction(picking?{mode:'navigate'}:{mode:'plan',prices:[]});
           }}>{picking?'Cancel level selection':'Select plan levels'}</button>
           {picking&&<span role="status">Click primary price for {['entry','stop','target'][picked.length]}</span>}
           <button className="small-tool" disabled={replayArchive&&!chartCapture||!replayActive&&(busy||Boolean(error))} onClick={()=>{closeSurface();onPlan({
-            symbol:(inspectedPane?.data.symbol??symbol) as SymbolName,timeframe:inspectedPane?.data.timeframe??timeframe,snapshot_id:chartCapture,knowledge_cutoff_utc:cutoff==null?undefined:new Date(cutoff*1000).toISOString(),context:`${source} · ${indicatorFeed?.feed_id??'unverified feed'} · ${indicatorFeed?.price_basis??'unverified basis'}`,
+            symbol:decisionSymbol as SymbolName,timeframe:decisionFrame,snapshot_id:chartCapture,knowledge_cutoff_utc:cutoff==null?undefined:new Date(cutoff*1000).toISOString(),context:`${decisionFeed?.source??source} · ${decisionFeed?.feed_id??'unverified feed'} · ${decisionFeed?.price_basis??'unverified basis'}`,
             entry:inspectedPane&&inspectedPane.view!=='primary'?'':picked[0]??'',stop:inspectedPane&&inspectedPane.view!=='primary'?'':picked[1]??'',target:inspectedPane&&inspectedPane.view!=='primary'?'':picked[2]??'',
           });}}>Create trade plan</button>
           {replayArchive&&compare&&!comparison.candles?.length&&<p role="status">{compare} · {comparison.error?
@@ -897,14 +896,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
           {replayArchive&&!chartCapture&&<small>Save chart evidence to attach this candle to a decision.</small>}
           {chartCapture&&onChartLesson&&<button className="small-tool" onClick={()=>onChartLesson(chartCapture)}>Record chart lesson</button>}
         </div>}
-        {surface==='decision'&&chartCapture&&<form onSubmit={async event=>{
-          event.preventDefault();if(postingPass||passReason.trim().length<5)return;
-          setPostingPass(true);
-          try{await api.addJournal('CHART','No trade · '+(inspectedPane?.data.symbol??symbol),passReason.trim(),undefined,{snapshot_id:chartCapture,tags:['no-trade']});
-            setPassReason('');setPassStatus('Pass saved to journal');setJournalRevision(value=>value+1);
-          }catch(error){setPassStatus((error as Error).message);}finally{setPostingPass(false);}
-        }}><TextArea label="Reason to pass" value={passReason} onChange={setPassReason}/><button disabled={postingPass||passReason.trim().length<5}>Save pass to journal</button></form>}
-        {passStatus&&<p role="status">{passStatus}</p>}
+        {chartCapture&&<ChartPassEditor key={chartCapture} snapshot={chartCapture} symbol={decisionSymbol}
+          active={surface==='decision'} onCommitted={()=>setJournalRevision(value=>value+1)}/>}
       </TerminalSurface>
     </div></WorkspacePanels>
   </div>;

@@ -84,3 +84,6 @@
 @media(max-width:800px){
   .terminal-surface[aria-label="Inspector"][open]:not(:modal) {display:none}
 }
+
+/* The chart renderer sizes its own table, including both price scales. */
+.terminal-suite .chart-input table {min-width:0}

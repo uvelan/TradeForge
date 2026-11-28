@@ -31,10 +31,26 @@ def prepare():
     return fixtures
 
 
+def numbered_decision():
+    start = int(datetime(2020, 3, 3, 12, tzinfo=UTC).timestamp())
+    pins = {}
+    for symbol, frame, step, feed, price in (
+        ("EURUSD", "M5", 300, "controlled-primary-m5", 110000),
+        ("GBPUSD", "H1", 3600, "controlled-peer-h1", 130000),
+    ):
+        rows = [dict(time=start+i*step, open=(price+i)/100000, high=(price+i+2)/100000,
+                     low=(price+i-1)/100000, close=(price+i+1)/100000) for i in range(7200//step)]
+        part = storage.write_partition("DUKASCOPY", feed, symbol, "candles", frame, "BID", rows)
+        pins[symbol] = {key:part[key] for key in ("id","sha256")}
+    return dict(start=start, pins=pins)
+
+
 if __name__ == "__main__":
     if sys.argv[1:] == ["counts"]:
         print(json.dumps({table:db.one(f"SELECT count(*) AS n FROM {table}")["n"]
                           for table in ("journal_entries", "chart_snapshots", "trades", "plan_paper_events")}))
+    elif sys.argv[1:] == ["numbered"]:
+        print(json.dumps(numbered_decision()))
     elif not sys.argv[1:]:
         print(json.dumps(prepare()))
     else:
