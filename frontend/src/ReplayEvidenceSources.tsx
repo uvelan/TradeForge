@@ -1,4 +1,5 @@
-import {useState, type ReactNode} from 'react';
+import {useEffect, useRef, useState, type ReactNode} from 'react';
+import {api} from './api';
 
 type Partition = {id: string; sha256: string};
 export type ReplaySourceBar = {
@@ -44,4 +45,47 @@ export function ReplaySourceTable({name, rows, direct = false}: {name: string; r
       </tr>)}</tbody>
     </table>
   </div>;
+}
+
+export function ReplayReceiptFields({label, fields}: {label: string; fields: ReadonlyArray<readonly [string, ReactNode]>}) {
+  return <dl className="evidence-grid" aria-label={label}>
+    {fields.map(([term, value]) => <div key={term}><dt>{term}</dt><dd>{value}</dd></div>)}
+  </dl>;
+}
+
+export function useReplayEndpoint<T>(url: string | null, validate?: (value: T) => void) {
+  const [response, setResponse] = useState<{url: string; page: T}>();
+  const [error, setError] = useState<{url: string; message: string}>();
+  const inflight = useRef<{url: string; promise: Promise<T>}>(undefined);
+  const validateRef = useRef(validate);
+  validateRef.current = validate;
+
+  useEffect(() => {
+    if (!url) {
+      inflight.current = undefined;
+      return;
+    }
+    let current = true;
+    // Reuse the in-flight fetch if React repeats setup for the same mount.
+    const promise = inflight.current?.url === url ? inflight.current.promise : api.get<T>(url);
+    inflight.current = {url, promise};
+    promise.then(page => {
+      validateRef.current?.(page);
+      if (current) {
+        setResponse({url, page});
+        setError(undefined);
+      }
+    }).catch(reason => {
+      if (current) setError({url, message: reason instanceof Error ? reason.message : String(reason)});
+    });
+    return () => {current = false;};
+  }, [url]);
+
+  const active = Boolean(url);
+  return {
+    page: active ? response?.page : undefined,
+    resolved: active && response?.url === url ? response.page : undefined,
+    pending: active && response?.url !== url,
+    error: active && error?.url === url ? error.message : undefined,
+  };
 }

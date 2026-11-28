@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
+import { isValidIndicatorPeriod, loadIndicatorCatalog, periodBounds, type CatalogParameters } from "./indicatorCatalog";
 import type { Candle, CandleResponse, ChartSource, Timeframe } from "./types";
 import { useWorkspacePreference } from "./useWorkspacePreference";
 
@@ -78,7 +79,7 @@ export type StructureEvent = {
 const structureVisibility: StructureVisibility = {swings: true, breaks: true, candidates: true};
 
 type Definition = { id: string; label: string; period: number | null; timeframes: Timeframe[];
-  parameters: { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure; liquidity?: Liquidity; fvg?: FvgRules; ob?: ObRules; crt?:CrtRules;crt_frames?:Partial<Record<Timeframe,NonNullable<CrtRules['reference_frame']>[]>> } };
+  parameters: CatalogParameters & { session?: Window; schedule?: Schedule["kind"][]; structure?: Structure; liquidity?: Liquidity; fvg?: FvgRules; ob?: ObRules; crt?:CrtRules;crt_frames?:Partial<Record<Timeframe,NonNullable<CrtRules['reference_frame']>[]>> } };
 type Settings = { id: string; period?: string; session?: Window; schedules?: Record<string, Schedule>; structure?: Structure; visibility?: StructureVisibility; liquidity?: Liquidity; liquidityVisibility?: LiquidityVisibility; fvg?: FvgRules; fvgVisibility?: FvgVisibility; ob?: ObRules; obVisibility?:ObVisibility; crt?:CrtRules;crtVisibility?:CrtVisibility; contextPolicy?:ContextPolicy; tickSize?: Record<string,{size:number;reference:string}> };
 type Point = { time: number; value: number; pivot_time?: number; status: "confirmed" | "provisional" };
 export type IndicatorResult = {
@@ -186,7 +187,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       const definition = definitions.find(row => row.id === item.id && row.timeframes.includes(timeframe));
       if (!definition) return [];
       const period = item.period ? Number(item.period) : definition.period;
-      if (period !== null && !(Number.isInteger(period) && period >= 2 && period <= 200)) return [];
+      if (!isValidIndicatorPeriod(period, definition)) return [];
       const session = item.session ?? definition.parameters.session;
       if (session && (!session.timezone || !session.start || !session.end || session.start === session.end)) return [];
       const schedule = definition.parameters.schedule ? item.schedules?.[scheduleScope] : undefined;
@@ -231,7 +232,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
   useEffect(() => {
     if (!enabled) return;
     let active = true;
-    api.get<Definition[]>("/indicators").then(items => {
+    loadIndicatorCatalog<Definition>().then(items => {
       if (active) { setDefinitions(items); setLibraryError(""); }
     }).catch(error => {
       if (active) setLibraryError(error.message);
@@ -349,7 +350,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
       <option value="none">None</option>
       {definitions.filter(item => item.period !== null).map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
     </select></label>
-    {primary && <label>Period <input type="number" min={2} max={200} step={1}
+    {primary && <label>Period <input type="number" {...periodBounds(primary)} step={1}
       value={periodText} placeholder={String(primary.period)} onChange={event => setPeriod(event.target.value)}/></label>}
     <details className="indicator-library">
       <summary>Indicator library</summary>
@@ -376,7 +377,7 @@ export function useChartIndicator(enabled: boolean, candles: Candle[], source: C
           {schedules:{...item.schedules,[scheduleScope]:{...schedule,...patch}}});
         return <fieldset key={item.id}>
           <legend>{definition.label}</legend>
-          {definition.period !== null && <label>Period <input type="number" min={2} max={200} step={1}
+          {definition.period !== null && <label>Period <input type="number" {...periodBounds(definition)} step={1}
             value={item.period ?? ""} placeholder={String(definition.period)} onChange={event => update(item.id,{period:event.target.value})}/></label>}
           {session && <>
             <label>Timezone <input value={session.timezone} onChange={event => update(item.id, {session:{...session, timezone:event.target.value}})}/></label>

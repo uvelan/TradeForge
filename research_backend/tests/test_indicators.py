@@ -109,3 +109,15 @@ def test_preview_rejects_nonfinite_calculated_quotes(client, name):
     response = client.post("/api/indicators/calculate", json=payload)
     assert response.status_code == 422, response.text
     assert response.json()["detail"] == "Indicator calculation exceeded supported numeric range"
+
+
+def test_registry_metadata_flows_to_catalog(client):
+    items = {entry["id"]: entry for entry in client.get("/api/indicators").json()}
+    for key, definition in REGISTRY.items():
+        entry = items[key]
+        assert entry["label"] == definition.label
+        assert entry["render"] == definition.render
+        assert entry["period"] == definition.period
+        assert entry["unit"] == definition.unit
+        assert entry["required_fields"] == list(definition.required_fields)
+        assert entry["parameters"]["period"] == {"min": definition.min_period, "max": definition.max_period}

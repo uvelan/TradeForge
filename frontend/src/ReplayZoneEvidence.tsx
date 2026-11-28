@@ -1,7 +1,6 @@
-import {useEffect, useRef, useState, type ReactNode} from 'react';
-import {api} from './api';
-import {EvidenceDisclosure, ReplaySourcePins, ReplaySourceTable, evidenceWords as words, replayUtc as utc,
-  type ReplaySourceCandle} from './ReplayEvidenceSources';
+import {useState, type ReactNode} from 'react';
+import {EvidenceDisclosure, ReplayReceiptFields, ReplaySourcePins, ReplaySourceTable, evidenceWords as words, replayUtc as utc,
+  useReplayEndpoint, type ReplaySourceCandle} from './ReplayEvidenceSources';
 import {replayEvidenceLanes, replayLaneLabel, type ReplayEvidenceProps, type ReplayLane} from './replayEvidenceLanes';
 import type {ReplayZoneContinuity, ReplayZoneMitigation, ReplayZonePage, ReplayZoneReceipt, ReplayZoneRevision,
   ReplayZoneStructure} from './replayZoneTypes';
@@ -12,11 +11,7 @@ const zoneType = (type: ReplayZoneRevision['type']) => type === 'FVG' ? 'FVG' : 
 const bounds = (lower: number, upper: number) => lower + ' – ' + upper;
 
 type Fields = [string, ReactNode][];
-function ReceiptFields({label, fields}: {label: string; fields: Fields}) {
-  return <dl className="evidence-grid" aria-label={label}>
-    {fields.map(([term, value]) => <div key={term}><dt>{term}</dt><dd>{value}</dd></div>)}
-  </dl>;
-}
+const ReceiptFields = ReplayReceiptFields;
 
 export function ReplayZoneEvidence({session, cutoff, symbol, timeframe, linkedViews}: ReplayEvidenceProps) {
   const [preferred, setPreferred] = useWorkspacePreference<string>('replay-zones-pane.' + session.id, 'primary');
@@ -58,43 +53,21 @@ function ZoneSelection({sessionId, cutoff, lane, active, mitigation}: Query & {a
 }
 
 function ZoneResults({sessionId, cutoff, lane, mitigation, id, onSelect}: Query & {id: string; onSelect: (id: string) => void}) {
-  const [response, setResponse] = useState<{url: string; page: ReplayZonePage}>();
-  const [error, setError] = useState<{url: string; message: string}>();
   const [before, setBefore] = useState<number>();
-  const request = useRef<{url: string; promise: Promise<ReplayZonePage>}>(undefined);
   const {view, symbol} = lane;
   const query = new URLSearchParams({view, cutoff: String(cutoff), mitigation,
     ...(id ? {zone_id: id} : {}), ...(before == null ? {} : {before: String(before)}),
   });
   const url = '/replay/sessions/' + encodeURIComponent(sessionId) + '/zones?' + query;
-
-  useEffect(() => {
-    let current = true;
-    // Reuse the in-flight fetch if React repeats setup for the same mount.
-    const promise = request.current?.url === url ? request.current.promise : api.get<ReplayZonePage>(url);
-    request.current = {url, promise};
-    promise.then(page => {
-      if (page.session_id !== sessionId || page.view !== view || page.symbol !== symbol || page.cutoff !== cutoff ||
-          page.source !== 'DUKASCOPY_SAVED' || page.price_basis !== 'BID' || page.timeframe !== 'M5' ||
-          page.authority !== 'RESEARCH_ONLY' || page.rules.fvg.mitigation !== mitigation || page.rules.ob.mitigation !== mitigation) {
-        throw new Error('Replay zones did not match this pane, cutoff, and mitigation rule.');
-      }
-      if (current) {
-        setResponse({url, page});
-        setError(undefined);
-      }
-    }).catch(reason => {
-      if (current) setError({url, message: reason instanceof Error ? reason.message : String(reason)});
-    });
-    return () => {current = false;};
-  }, [url, sessionId, view, symbol, cutoff, mitigation]);
-
-  const failure = error?.url === url ? error.message : undefined;
+  const {page, pending, error: failure} = useReplayEndpoint<ReplayZonePage>(url, result => {
+    if (result.session_id !== sessionId || result.view !== view || result.symbol !== symbol || result.cutoff !== cutoff ||
+        result.source !== 'DUKASCOPY_SAVED' || result.price_basis !== 'BID' || result.timeframe !== 'M5' ||
+        result.authority !== 'RESEARCH_ONLY' || result.rules.fvg.mitigation !== mitigation || result.rules.ob.mitigation !== mitigation) {
+      throw new Error('Replay zones did not match this pane, cutoff, and mitigation rule.');
+    }
+  });
   if (failure) return <p role="alert">{failure}</p>;
-  if (!response) return <p role="status">Loading replay zones…</p>;
-
-  const {page} = response;
-  const pending = response.url !== url;
+  if (!page) return <p role="status">Loading replay zones…</p>;
   const selected = !pending && page.selected?.zone_id === id ? page.selected : null;
   return <>
     <p>{page.symbol} {page.timeframe} · {page.price_basis} · {page.feed_id} · Research only</p>

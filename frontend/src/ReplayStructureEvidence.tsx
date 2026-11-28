@@ -1,7 +1,6 @@
-import {useEffect, useRef, useState} from 'react';
-import {api} from './api';
+import {useState} from 'react';
 import type {Timeframe} from './types';
-import {EvidenceDisclosure, ReplaySourcePins, ReplaySourceTable, evidenceWords as words, replayUtc as utc, type ReplaySourceCandle} from './ReplayEvidenceSources';
+import {EvidenceDisclosure, ReplaySourcePins, ReplaySourceTable, evidenceWords as words, replayUtc as utc, useReplayEndpoint, type ReplaySourceCandle} from './ReplayEvidenceSources';
 import {replayEvidenceLanes, replayLaneLabel, type ReplayEvidenceProps, type ReplayLane} from './replayEvidenceLanes';
 import {useWorkspacePreference} from './useWorkspacePreference';
 
@@ -53,10 +52,7 @@ function LaneEvidence({sessionId, cutoff, lane, active}: {
 function CutoffEvidence({sessionId, cutoff, lane, eventId, onEvent}: {
   sessionId: string; cutoff: number; lane: ReplayLane; eventId: string; onEvent: (id: string) => void;
 }) {
-  const [response, setResponse] = useState<{eventId: string; url: string; page: Evidence}>();
-  const [error, setError] = useState<{url: string; message: string}>();
   const [before, setBefore] = useState<number>();
-  const activeRequest = useRef<{url: string; receipt: Promise<Evidence>}>(undefined);
   const {view, symbol} = lane;
   const path = '/replay/sessions/' + encodeURIComponent(sessionId) + '/structure-liquidity';
   const query = new URLSearchParams({
@@ -64,31 +60,13 @@ function CutoffEvidence({sessionId, cutoff, lane, eventId, onEvent}: {
     ...(before != null ? {before: String(before)} : {}),
   });
   const url = path + '?' + query;
-
-  useEffect(() => {
-    let current = true;
-    // React's development remount can repeat setup for the same view.
-    const receipt = activeRequest.current?.url === url ? activeRequest.current.receipt : api.get<Evidence>(url);
-    activeRequest.current = {url, receipt};
-    receipt.then(receipt => {
-      if (receipt.session_id !== sessionId || receipt.view !== view || receipt.symbol !== symbol || receipt.cutoff !== cutoff) {
-        throw new Error('Replay event evidence did not match this pane and cutoff.');
-      }
-      if (current) {
-        setResponse({eventId, url, page: receipt});
-        setError(undefined);
-      }
-    }).catch(reason => {
-      if (current) setError({url, message: reason instanceof Error ? reason.message : String(reason)});
-    });
-    return () => {current = false;};
-  }, [url, sessionId, view, symbol, cutoff, eventId]);
-
-  const page = response?.page;
-  const selected = response?.eventId === eventId && page?.selected?.id === eventId ? page.selected : null;
+  const {page, pending, error: failure} = useReplayEndpoint<Evidence>(url, receipt => {
+    if (receipt.session_id !== sessionId || receipt.view !== view || receipt.symbol !== symbol || receipt.cutoff !== cutoff) {
+      throw new Error('Replay event evidence did not match this pane and cutoff.');
+    }
+  });
+  const selected = !pending && page?.selected?.id === eventId ? page.selected : null;
   const inList = page?.events.some(event => event.id === eventId);
-  const pending = response?.url !== url;
-  const failure = error?.url === url ? error.message : undefined;
   if (failure) return <p role="alert">{failure}</p>;
   if (!page) return <p role="status">Loading replay events…</p>;
   return <>

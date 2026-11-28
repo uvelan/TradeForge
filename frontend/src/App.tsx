@@ -25,11 +25,7 @@ import {useChartIndicator} from './indicators';
 import {smtCoverageNotice,smtFeed,useSmt} from './smt';
 import {SmtMonitor} from './SmtMonitor';
 import {FrozenSmtReceipt} from './FrozenSmtReceipt';
-import {ReplayH1Evidence} from './ReplayH1Evidence';
-import {ReplayStructureEvidence} from './ReplayStructureEvidence';
-import {ReplayZoneEvidence} from './ReplayZoneEvidence';
-import {ReplayCrtEvidence} from './ReplayCrtEvidence';
-import {ReplayConfluenceEvidence} from './ReplayConfluenceEvidence';
+import {ReplayEvidencePanels} from './ReplayEvidencePanels';
 import {ArchiveSmtWatch} from './ArchiveSmtWatch';
 import {ArrivalPanel} from './ArrivalPanel';
 import {ReplayControls, visibleAt} from './ReplayControls';
@@ -926,18 +922,8 @@ function Terminal({expanded=false,onPlan,onSignal,initialLocation,onChartLesson,
         </div>
         {source === 'DUKASCOPY_SAVED' && cutoff != null && replaySession?.market.source === source &&
           (replayArchive||loadedPrimaryGeneration === primaryLoadGeneration) &&
-          <>
-            <ReplayH1Evidence key={replaySession.id} session={replaySession} cutoff={cutoff} symbol={symbol} timeframe={timeframe}
-              linkedViews={replayLinked ? chartViewCount : 1}/>
-            <ReplayStructureEvidence key={'events:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
-            <ReplayZoneEvidence key={'zones:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
-            <ReplayCrtEvidence key={'crt:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
-            <ReplayConfluenceEvidence key={'confluence:' + replaySession.id} session={replaySession} cutoff={cutoff}
-              symbol={symbol} timeframe={timeframe} linkedViews={replayLinked ? chartViewCount : 1}/>
-          </>}
+          <ReplayEvidencePanels session={replaySession} cutoff={cutoff} symbol={symbol} timeframe={timeframe}
+            linkedViews={replayLinked ? chartViewCount : 1}/>}
         {savedSource&&cutoff!=null&&firstFeed&&(!compare||secondFeed)&&
           <FrozenSmtReceipt cutoff={cutoff} timeframe={timeframe} primary={firstFeed} comparison={compare?secondFeed:undefined}/>}
           </section>
