@@ -60,7 +60,9 @@ test("touch places a horizontal drawing and its persisted anchor can be edited",
     await expect.poll(()=>coloredPixels(canvas,[85,217,181])).toBeGreaterThan(0);
     const id=await page.getByLabel("Select drawing").inputValue();
     await page.getByLabel("Select drawing").selectOption("");
-    await page.mouse.click(a.x,a.y);
+    await canvas.evaluate(element=>element.scrollIntoView({block:"center",inline:"center"}));
+    const hit=(await canvas.boundingBox())!;
+    await page.mouse.click(hit.x+hit.width*.48,hit.y+hit.height*.50);
     await expect(page.getByLabel("Select drawing")).toHaveValue(id);
     await page.getByRole("button",{name:"Set anchor 1",exact:true}).click();
     await canvas.evaluate(element=>element.scrollIntoView({block:"center",inline:"center"}));

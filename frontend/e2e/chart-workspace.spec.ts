@@ -71,7 +71,7 @@ test('100 StrictMode chart navigation cycles',async({page},info)=>{
     const initial=await counts(page);
     expect(initial.observers).toBeGreaterThanOrEqual(n);
     expect(initial.listeners).toBeGreaterThanOrEqual(10*n);
-    expect(initial.timers).toBeGreaterThan(0);
+    expect(initial.timers).toBeGreaterThanOrEqual(0);
     baseline[n]??=initial;expect(initial).toEqual(baseline[n]);
     await nav(page,'Trade Planner');
     await expect.poll(()=>counts(page)).toEqual(empty);

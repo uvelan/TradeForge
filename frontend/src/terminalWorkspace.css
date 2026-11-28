@@ -51,6 +51,12 @@
   gap: 6px;
 }
 
+.terminal-suite .workspace-dock-controls .small-tool {
+  min-height: 24px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
 .terminal-suite .workspace-dock-controls .small-tool[aria-pressed='true'] {
   border-color: var(--tf-accent-border);
   background: var(--tf-accent-soft);
